@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Containers/Array.h"
-
-struct FAnalyticsEventAttribute;
+#include "AnalyticsEventAttribute.h"
 
 class IAnalyticsProvider
 {

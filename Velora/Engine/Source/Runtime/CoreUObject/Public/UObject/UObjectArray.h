@@ -12,9 +12,24 @@ struct FUObjectItem
     int32 ClusterRootIndex;
     int32 SerialNumber;
 
+    FORCEINLINE int32 GetSerialNumber() const
+    {
+        return SerialNumber;
+    }
+
     FORCEINLINE void SetRootSet()
     {
         Flags |= int32(EInternalObjectFlags::RootSet);
+    }
+
+    FORCEINLINE bool IsPendingKill() const
+    {
+        return !!(Flags & int32(EInternalObjectFlags::PendingKill));
+    }
+
+    FORCEINLINE bool IsUnreachable() const
+    {
+        return !!(Flags & int32(EInternalObjectFlags::Unreachable));
     }
 };
 
@@ -45,6 +60,21 @@ public:
             return const_cast<FUObjectItem*>(&ObjObjects[Index]);
 
         return nullptr;
+    }
+
+    FORCEINLINE bool IsValid(FUObjectItem* ObjectItem, bool bEvenIfPendingKill)
+    {
+        if (ObjectItem)
+            return bEvenIfPendingKill ? !ObjectItem->IsUnreachable() : !(ObjectItem->IsUnreachable() || ObjectItem->IsPendingKill());
+
+        return false;
+    }
+
+    FORCEINLINE FUObjectItem* IndexToValidObject(int32 Index, bool bEvenIfPendingKill)
+    {
+        FUObjectItem* ObjectItem = IndexToObject(Index);
+
+        return IsValid(ObjectItem, bEvenIfPendingKill) ? ObjectItem : nullptr;
     }
 
     typedef FFixedUObjectArray TUObjectArray;

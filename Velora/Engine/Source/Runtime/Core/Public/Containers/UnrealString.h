@@ -3,9 +3,6 @@
 #include "HAL/Platform.h"
 #include "Containers/Array.h"
 
-template<>
-void TArray<TCHAR>::ResizeGrow(int32 OldNum);
-
 class FString
 {
 private:
@@ -15,6 +12,7 @@ private:
 public:
     FString() = default;
     FString(FString&&) = default;
+    FString(const FString&) = default;
 
     FORCEINLINE FString(const TCHAR* Src)
     {

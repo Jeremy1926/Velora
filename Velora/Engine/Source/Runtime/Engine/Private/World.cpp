@@ -6,6 +6,7 @@
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
 #include "hde/hde64.h"
@@ -49,6 +50,99 @@ static auto Listen = DetourCall([]
 
     return Call;
 }(), &UWorld::Listen);
+
+AGameNetworkManager* UWorld::GetNetworkManager() const
+{
+    static auto NetworkManager = GetClass()->FindPropertyByName(FName(TEXT("NetworkManager")));
+
+    return *NetworkManager->ContainerPtrToValuePtr<AGameNetworkManager*>(this);
+}
+
+ULevel* UWorld::GetCurrentLevelPendingVisibility() const
+{
+    static auto CurrentLevelPendingVisibility = GetClass()->FindPropertyByName(FName(TEXT("CurrentLevelPendingVisibility")));
+
+    return *CurrentLevelPendingVisibility->ContainerPtrToValuePtr<ULevel*>(this);
+}
+
+ULevel* UWorld::GetCurrentLevelPendingInvisibility() const
+{
+    static auto CurrentLevelPendingInvisibility = GetClass()->FindPropertyByName(FName(TEXT("CurrentLevelPendingInvisibility")));
+
+    return *CurrentLevelPendingInvisibility->ContainerPtrToValuePtr<ULevel*>(this);
+}
+
+float UWorld::GetTimeSeconds() const
+{
+    static auto TimeSeconds = []
+    {
+        auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")))->GetNativeFunc());
+        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Thunk));
+        const uint8_t* Call = nullptr;
+
+        for (auto Address = Thunk; Address < End;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8)
+                Call = Address + Length + (int32_t)Instruction.imm.imm32;
+
+            Address += Length;
+        }
+
+        for (auto Address = Call;;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0x10 && Instruction.p_rep && Instruction.modrm_mod == 2)
+                return (int32_t)Instruction.disp.disp32;
+
+            Address += Length;
+        }
+    }();
+
+    return *(float*)((uint8_t*)this + TimeSeconds);
+}
+
+AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
+{
+    static auto GetWorldSettings = []
+    {
+        auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")))->GetNativeFunc());
+        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Thunk));
+        const uint8_t* Call = nullptr;
+
+        for (auto Address = Thunk; Address < End;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8)
+                Call = Address + Length + (int32_t)Instruction.imm.imm32;
+
+            Address += Length;
+        }
+
+        auto ImplEnd = Scanner::FindFunctionEnd(Scanner::FindFunction(Call));
+
+        for (auto Address = Call; Address < ImplEnd;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8)
+                Call = Address + Length + (int32_t)Instruction.imm.imm32;
+
+            Address += Length;
+        }
+
+        return (AWorldSettings* (*)(const UWorld*, bool, bool))Call;
+    }();
+
+    return GetWorldSettings(this, bCheckStreamingPesistent, bChecked);
+}
 
 UNetDriver* UWorld::GetNetDriver() const
 {

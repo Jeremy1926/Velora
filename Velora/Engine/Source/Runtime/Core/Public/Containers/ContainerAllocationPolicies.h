@@ -3,6 +3,64 @@
 #include "HAL/Platform.h"
 #include "HAL/UnrealMemory.h"
 
+FORCEINLINE int32 DefaultCalculateSlackShrink(int32 NumElements, int32 NumAllocatedElements, SIZE_T BytesPerElement, bool bAllowQuantize, uint32 Alignment = 0)
+{
+    int32 Retval;
+
+    const SIZE_T CurrentSlackElements = NumAllocatedElements - NumElements;
+    const SIZE_T CurrentSlackBytes = (NumAllocatedElements - NumElements) * BytesPerElement;
+    const bool bTooManySlackBytes = CurrentSlackBytes >= 16384;
+    const bool bTooManySlackElements = 3 * NumElements < 2 * NumAllocatedElements;
+
+    if ((bTooManySlackBytes || bTooManySlackElements) && (CurrentSlackElements > 64 || !NumElements))
+    {
+        Retval = NumElements;
+
+        if (Retval > 0 && bAllowQuantize)
+            Retval = (int32)(FMemory::QuantizeSize(Retval * BytesPerElement, Alignment) / BytesPerElement);
+    }
+    else
+    {
+        Retval = NumAllocatedElements;
+    }
+
+    return Retval;
+}
+
+FORCEINLINE int32 DefaultCalculateSlackGrow(int32 NumElements, int32 NumAllocatedElements, SIZE_T BytesPerElement, bool bAllowQuantize, uint32 Alignment = 0)
+{
+    int32 Retval;
+    SIZE_T Grow = 4;
+
+    if (NumAllocatedElements || SIZE_T(NumElements) > Grow)
+        Grow = SIZE_T(NumElements) + 3 * SIZE_T(NumElements) / 8 + 16;
+
+    if (bAllowQuantize)
+        Retval = (int32)(FMemory::QuantizeSize(Grow * BytesPerElement, Alignment) / BytesPerElement);
+    else
+        Retval = (int32)Grow;
+
+    if (NumElements > Retval)
+        Retval = 0x7FFFFFFF;
+
+    return Retval;
+}
+
+FORCEINLINE int32 DefaultCalculateSlackReserve(int32 NumElements, SIZE_T BytesPerElement, bool bAllowQuantize, uint32 Alignment = 0)
+{
+    int32 Retval = NumElements;
+
+    if (bAllowQuantize)
+    {
+        Retval = (int32)(FMemory::QuantizeSize(SIZE_T(Retval) * SIZE_T(BytesPerElement), Alignment) / BytesPerElement);
+
+        if (NumElements > Retval)
+            Retval = 0x7FFFFFFF;
+    }
+
+    return Retval;
+}
+
 struct FScriptContainerElement
 {
 };
@@ -44,6 +102,27 @@ public:
             return Data;
         }
 
+        FORCEINLINE void ResizeAllocation(int32 PreviousNumElements, int32 NumElements, SIZE_T NumBytesPerElement)
+        {
+            if (Data || NumElements)
+                Data = (FScriptContainerElement*)FMemory::Realloc(Data, NumElements * NumBytesPerElement);
+        }
+
+        FORCEINLINE int32 CalculateSlackReserve(int32 NumElements, SIZE_T NumBytesPerElement) const
+        {
+            return DefaultCalculateSlackReserve(NumElements, NumBytesPerElement, true);
+        }
+
+        FORCEINLINE int32 CalculateSlackShrink(int32 NumElements, int32 NumAllocatedElements, SIZE_T NumBytesPerElement) const
+        {
+            return DefaultCalculateSlackShrink(NumElements, NumAllocatedElements, NumBytesPerElement, true);
+        }
+
+        FORCEINLINE int32 CalculateSlackGrow(int32 NumElements, int32 NumAllocatedElements, SIZE_T NumBytesPerElement) const
+        {
+            return DefaultCalculateSlackGrow(NumElements, NumAllocatedElements, NumBytesPerElement, true);
+        }
+
     private:
         ForAnyElementType(const ForAnyElementType&);
         ForAnyElementType& operator=(const ForAnyElementType&);
@@ -66,4 +145,31 @@ class FDefaultAllocator : public FHeapAllocator
 {
 public:
     typedef FHeapAllocator Typedef;
+};
+
+template<uint32 NumInlineElements, typename SecondaryAllocator = FDefaultAllocator>
+class TInlineAllocator
+{
+public:
+    enum { NeedsElementType = true };
+
+    template<typename ElementType>
+    class ForElementType
+    {
+    public:
+        FORCEINLINE ElementType* GetAllocation() const
+        {
+            return SecondaryData.GetAllocation() ? SecondaryData.GetAllocation() : (ElementType*)InlineData;
+        }
+
+    private:
+        alignas(ElementType) uint8 InlineData[NumInlineElements * sizeof(ElementType)];
+        typename SecondaryAllocator::template ForElementType<ElementType> SecondaryData;
+    };
+
+    typedef void ForAnyElementType;
+};
+
+class FDefaultBitArrayAllocator : public TInlineAllocator<4>
+{
 };

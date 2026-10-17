@@ -10,4 +10,9 @@ public:
     {
         GUObjectArray.IndexToObject((int32)GetUniqueID())->SetRootSet();
     }
+
+    FORCEINLINE bool IsPendingKill() const
+    {
+        return GUObjectArray.IndexToObject((int32)GetUniqueID())->IsPendingKill();
+    }
 };

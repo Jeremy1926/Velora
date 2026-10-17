@@ -189,6 +189,8 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectArray.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\PlatformTLS.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformTLS.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -216,7 +218,6 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Containers\UnrealString.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectGlobals.cpp" />

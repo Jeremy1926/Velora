@@ -4,6 +4,7 @@
 #include "Containers/ContainersFwd.h"
 #include "Containers/ContainerAllocationPolicies.h"
 #include "Templates/ChooseClass.h"
+#include <new>
 
 template<typename InElementType, typename InAllocator>
 class TArray
@@ -18,9 +19,19 @@ public:
     {
     }
 
+    FORCEINLINE TArray(const TArray& Other)
+    {
+        CopyToEmpty(Other.GetData(), Other.Num(), 0, 0);
+    }
+
     FORCEINLINE TArray(TArray&& Other)
     {
         MoveOrCopy(*this, Other, 0);
+    }
+
+    FORCEINLINE ~TArray()
+    {
+        DestructItems(GetData(), ArrayNum);
     }
 
     FORCEINLINE ElementType* GetData() const
@@ -31,6 +42,41 @@ public:
     FORCEINLINE int32 Num() const
     {
         return ArrayNum;
+    }
+
+    FORCEINLINE int32 Max() const
+    {
+        return ArrayMax;
+    }
+
+    FORCEINLINE ElementType& operator[](int32 Index)
+    {
+        return GetData()[Index];
+    }
+
+    FORCEINLINE const ElementType& operator[](int32 Index) const
+    {
+        return GetData()[Index];
+    }
+
+    FORCEINLINE ElementType* begin()
+    {
+        return GetData();
+    }
+
+    FORCEINLINE const ElementType* begin() const
+    {
+        return GetData();
+    }
+
+    FORCEINLINE ElementType* end()
+    {
+        return GetData() + Num();
+    }
+
+    FORCEINLINE const ElementType* end() const
+    {
+        return GetData() + Num();
     }
 
     FORCEINLINE int32 AddUninitialized(int32 Count = 1)
@@ -45,6 +91,68 @@ public:
         return OldNum;
     }
 
+    FORCEINLINE int32 Add(const ElementType& Item)
+    {
+        const int32 Index = AddUninitialized(1);
+        new(GetData() + Index) ElementType(Item);
+
+        return Index;
+    }
+
+    FORCEINLINE void Reserve(int32 Number)
+    {
+        if (Number > ArrayMax)
+        {
+            ResizeTo(Number);
+        }
+    }
+
+    void Reset(int32 NewSize = 0)
+    {
+        if (NewSize <= ArrayMax)
+        {
+            DestructItems(GetData(), ArrayNum);
+            ArrayNum = 0;
+        }
+        else
+        {
+            Empty(NewSize);
+        }
+    }
+
+    void Empty(int32 Slack = 0)
+    {
+        DestructItems(GetData(), ArrayNum);
+        ArrayNum = 0;
+
+        if (ArrayMax != Slack)
+        {
+            ResizeTo(Slack);
+        }
+    }
+
+    void RemoveAt(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
+    {
+        if (Count)
+        {
+            DestructItems(GetData() + Index, Count);
+
+            const int32 NumToMove = ArrayNum - Index - Count;
+
+            if (NumToMove)
+            {
+                memmove(GetData() + Index, GetData() + Index + Count, NumToMove * sizeof(ElementType));
+            }
+
+            ArrayNum -= Count;
+
+            if (bAllowShrinking)
+            {
+                ResizeShrink();
+            }
+        }
+    }
+
     int32 RemoveSingle(const ElementType& Item)
     {
         for (int32 Index = 0; Index < ArrayNum; Index++)
@@ -53,7 +161,7 @@ public:
 
             if (*RemovePtr == Item)
             {
-                RemovePtr->~ElementType();
+                DestructItems(RemovePtr, 1);
                 memmove(RemovePtr, RemovePtr + 1, (ArrayNum - (Index + 1)) * sizeof(ElementType));
                 --ArrayNum;
 
@@ -87,5 +195,86 @@ private:
         FromArray.ArrayMax = 0;
     }
 
-    FORCENOINLINE void ResizeGrow(int32 OldNum);
+    void CopyToEmpty(const ElementType* OtherData, int32 OtherNum, int32 PrevMax, int32 ExtraSlack)
+    {
+        ArrayNum = OtherNum;
+
+        if (OtherNum || ExtraSlack || PrevMax)
+        {
+            ResizeForCopy(OtherNum + ExtraSlack, PrevMax);
+
+            for (int32 Index = 0; Index < OtherNum; Index++)
+            {
+                new(GetData() + Index) ElementType(OtherData[Index]);
+            }
+        }
+        else
+        {
+            ArrayMax = 0;
+        }
+    }
+
+    static FORCEINLINE void DestructItems(ElementType* Element, int32 Count)
+    {
+        while (Count)
+        {
+            Element->~ElementType();
+            ++Element;
+            --Count;
+        }
+    }
+
+    FORCENOINLINE void ResizeGrow(int32 OldNum)
+    {
+        ArrayMax = AllocatorInstance.CalculateSlackGrow(ArrayNum, ArrayMax, sizeof(ElementType));
+        AllocatorInstance.ResizeAllocation(OldNum, ArrayMax, sizeof(ElementType));
+    }
+
+    FORCEINLINE void ResizeShrink()
+    {
+        const int32 NewArrayMax = AllocatorInstance.CalculateSlackShrink(ArrayNum, ArrayMax, sizeof(ElementType));
+
+        if (NewArrayMax != ArrayMax)
+        {
+            ArrayMax = NewArrayMax;
+            AllocatorInstance.ResizeAllocation(ArrayNum, ArrayMax, sizeof(ElementType));
+        }
+    }
+
+    FORCENOINLINE void ResizeTo(int32 NewMax)
+    {
+        if (NewMax)
+        {
+            NewMax = AllocatorInstance.CalculateSlackReserve(NewMax, sizeof(ElementType));
+        }
+
+        if (NewMax != ArrayMax)
+        {
+            ArrayMax = NewMax;
+            AllocatorInstance.ResizeAllocation(ArrayNum, ArrayMax, sizeof(ElementType));
+        }
+    }
+
+    FORCENOINLINE void ResizeForCopy(int32 NewMax, int32 PrevMax)
+    {
+        if (NewMax)
+        {
+            NewMax = AllocatorInstance.CalculateSlackReserve(NewMax, sizeof(ElementType));
+        }
+
+        if (NewMax != PrevMax)
+        {
+            AllocatorInstance.ResizeAllocation(0, NewMax, sizeof(ElementType));
+        }
+
+        ArrayMax = NewMax;
+    }
 };
+
+template <typename T, typename AllocatorType>
+void* operator new(size_t Size, TArray<T, AllocatorType>& Array)
+{
+    const int32 Index = Array.AddUninitialized(1);
+
+    return &Array[Index];
+}

@@ -29,6 +29,34 @@ static auto CommandletFlags = []
 bool& GIsClient = *CommandletFlags[0];
 bool& GIsServer = *CommandletFlags[1];
 
+static auto GameThreadGlobals = []
+{
+    auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")));
+    auto End = Scanner::FindFunctionEnd(Function);
+    std::array<const uint8_t*, 3> Globals = {};
+    auto Count = 1ull;
+
+    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End && Count < Globals.size();)
+    {
+        hde64s Instruction;
+        auto Length = hde64_disasm(Address, &Instruction);
+        auto Target = Address + Length + (int32_t)Instruction.disp.disp32;
+
+        if (Instruction.opcode == 0x80 && Instruction.modrm == 0x3D && Instruction.imm.imm8 == 0)
+            Globals[0] = Target;
+        else if (Globals[0] && Instruction.opcode == 0x3B && (Instruction.modrm & 0xC7) == 0x05)
+            Globals[Count++] = Target;
+
+        Address += Length;
+    }
+
+    return Globals;
+}();
+
+bool& GIsGameThreadIdInitialized = *(bool*)GameThreadGlobals[0];
+uint32& GGameThreadId = *(uint32*)GameThreadGlobals[1];
+uint32& GSlateLoadingThreadId = *(uint32*)GameThreadGlobals[2];
+
 FOutputDeviceRedirector* GetGlobalLogSingleton()
 {
     static auto GetGlobalLogSingleton = []

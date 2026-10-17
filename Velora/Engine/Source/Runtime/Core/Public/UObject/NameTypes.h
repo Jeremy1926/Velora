@@ -20,6 +20,16 @@ public:
         return CompositeComparisonValue == Other.CompositeComparisonValue;
     }
 
+    FORCEINLINE bool operator!=(const FName& Other) const
+    {
+        return !(*this == Other);
+    }
+
+    friend FORCEINLINE uint32 GetTypeHash(const FName N)
+    {
+        return N.ComparisonIndex + N.Number;
+    }
+
     FORCEINLINE FName(EName N)
         : ComparisonIndex(N)
         , Number(0)

@@ -22,6 +22,10 @@ public:
         void Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const;
     };
 
+    float GetNetClientTicksPerSecond() const;
+
+    float GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing = true) const;
+
     UGameViewportClient* GetGameViewport() const;
 
     UClass* GetConsoleClass() const;

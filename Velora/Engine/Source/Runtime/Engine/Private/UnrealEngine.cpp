@@ -81,6 +81,40 @@ void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
     *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
 }
 
+float UEngine::GetNetClientTicksPerSecond() const
+{
+    static auto NetClientTicksPerSecond = GetClass()->FindPropertyByName(FName(TEXT("NetClientTicksPerSecond")));
+
+    return *NetClientTicksPerSecond->ContainerPtrToValuePtr<float>(this);
+}
+
+float UEngine::GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing) const
+{
+    static auto GetMaxTickRate = []
+    {
+        auto Reference = Scanner::FindStringReference(TEXT("Bringing %s up for play (max tick rate %i) at %s"));
+        auto Function = Scanner::FindFunction(Reference);
+        int32_t Slot = 0;
+
+        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
+                Slot = (int32_t)Instruction.disp.disp32;
+
+            Address += Length;
+        }
+
+        return Slot;
+    }();
+
+    auto VTable = *(uint8_t**)this;
+
+    return (*(float (**)(const UEngine*, float, bool))(VTable + GetMaxTickRate))(this, DeltaTime, bAllowFrameRateSmoothing);
+}
+
 UGameViewportClient* UEngine::GetGameViewport() const
 {
     static auto GameViewport = GetClass()->FindPropertyByName(FName(TEXT("GameViewport")));

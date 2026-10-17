@@ -2,6 +2,10 @@
 
 #include "UObject/Object.h"
 
+class APlayerController;
+
 class UPlayer : public UObject
 {
+public:
+    APlayerController* GetPlayerController() const;
 };

@@ -13,6 +13,8 @@ public:
     static void AssertIfInConstructor(UObject* Outer, const TCHAR* ErrorMessage);
 };
 
+UObject* StaticFindObject(UClass* Class, UObject* InOuter, const TCHAR* Name, bool ExactClass = false);
+
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name = NAME_None, EObjectFlags SetFlags = RF_NoFlags, EInternalObjectFlags InternalSetFlags = EInternalObjectFlags::None, UObject* Template = nullptr, bool bCopyTransientsFromClassDefaults = false, struct FObjectInstancingGraph* InstanceGraph = nullptr, bool bAssumeTemplateIsArchetype = false);
 
 template<class T>

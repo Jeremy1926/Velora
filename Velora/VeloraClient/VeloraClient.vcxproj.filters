@@ -31,9 +31,6 @@
     <Filter Include="Engine\Source\Runtime\Core\Private">
       <UniqueIdentifier>{87F54C15-5029-4F11-99E4-11CD8306A2F6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\Source\Runtime\Core\Private\Containers">
-      <UniqueIdentifier>{EBFF9F10-4CF3-4A69-9DAC-A2E68ED8FC8C}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\HAL">
       <UniqueIdentifier>{E6F1C4D8-0466-4D67-AB3C-5506D048BEBB}</UniqueIdentifier>
     </Filter>
@@ -60,6 +57,9 @@
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\UObject">
       <UniqueIdentifier>{D6B2F636-09E6-47F7-A101-0D8F9BCB3BFA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Windows">
+      <UniqueIdentifier>{99A9C183-523C-48FA-BD7E-C324CF9A9E8F}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Engine">
       <UniqueIdentifier>{C2D812D2-5A32-477E-AD7B-A72DDC2008D5}</UniqueIdentifier>
@@ -234,6 +234,12 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectArray.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\PlatformTLS.h">
+      <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformTLS.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -263,9 +269,6 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Containers\UnrealString.cpp">
-      <Filter>Engine\Source\Runtime\Core\Private\Containers</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\UObject</Filter>

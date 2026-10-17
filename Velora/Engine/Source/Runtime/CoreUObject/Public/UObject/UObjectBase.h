@@ -22,6 +22,21 @@ public:
         return ClassPrivate;
     }
 
+    FORCEINLINE UObject* GetOuter() const
+    {
+        return OuterPrivate;
+    }
+
+    FORCEINLINE FName GetFName() const
+    {
+        return NamePrivate;
+    }
+
+    FORCEINLINE EObjectFlags GetFlags() const
+    {
+        return ObjectFlags;
+    }
+
 private:
     EObjectFlags ObjectFlags;
     int32 InternalIndex;

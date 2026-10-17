@@ -30,6 +30,13 @@ void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* Erro
     AssertIfInConstructor(Outer, ErrorMessage);
 }
 
+UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const TCHAR* OrigInName, bool ExactClass)
+{
+    static auto StaticFindObject = (UObject* (*)(UClass*, UObject*, const TCHAR*, bool))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Illegal call to StaticFindObject() while collecting garbage!")))->BeginAddress);
+
+    return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
+}
+
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
 {
     static auto StaticConstructObject_Internal = (UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool))NewObjectCalls[1];

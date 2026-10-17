@@ -32,7 +32,17 @@ public:
         return *this;
     }
 
+    FORCEINLINE ObjectType& operator*() const
+    {
+        return *Object;
+    }
+
     FORCEINLINE ObjectType* operator->() const
+    {
+        return Object;
+    }
+
+    FORCEINLINE ObjectType* Get() const
     {
         return Object;
     }
