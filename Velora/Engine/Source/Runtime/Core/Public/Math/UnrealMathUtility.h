@@ -3,8 +3,14 @@
 #include "HAL/Platform.h"
 #include <xmmintrin.h>
 
+struct FVector;
+
 struct FMath
 {
+    static FVector VRand();
+
+    static FVector VRandCone(FVector const& Dir, float ConeHalfAngleRad);
+
     template<class T>
     static FORCEINLINE T Max(const T A, const T B)
     {

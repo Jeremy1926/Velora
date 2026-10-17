@@ -33,6 +33,16 @@ struct FVector
     {
     }
 
+    FORCEINLINE FVector operator+(const FVector& V) const
+    {
+        return FVector(X + V.X, Y + V.Y, Z + V.Z);
+    }
+
+    FORCEINLINE FVector operator*(float Scale) const
+    {
+        return FVector(X * Scale, Y * Scale, Z * Scale);
+    }
+
     FORCEINLINE FVector operator-(const FVector& V) const
     {
         return FVector(X - V.X, Y - V.Y, Z - V.Z);

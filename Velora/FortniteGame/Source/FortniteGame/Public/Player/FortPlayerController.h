@@ -3,16 +3,22 @@
 #include "GameFramework/PlayerController.h"
 #include "Misc/Guid.h"
 
+class ABuildingSMActor;
 class AFortInventory;
 class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
 class UFortRegisteredPlayerInfo;
 enum class EFortQuickBars : uint8;
+enum class EFortResourceType : uint8;
 
 class AFortPlayerController : public APlayerController
 {
 public:
+    static UClass* StaticClass();
+
+    void ClientReportDamagedResourceBuilding(ABuildingSMActor* BuildingSMActor, EFortResourceType PotentialResourceType, int32 PotentialResourceCount, bool bDestroyed, bool bJustHitWeakspot);
+
     class FOnMcpProfilesInitialized;
 
     bool InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized);

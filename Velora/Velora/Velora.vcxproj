@@ -271,6 +271,10 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Character.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\DataTable.h" />
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagsManager.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\BoxSphereBounds.h" />
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AttributeSet.h" />
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemBlueprintLibrary.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootTier.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootPackage.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootLevel.h" />
@@ -390,6 +394,9 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagsManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Particles\ParticleComponents.cpp" />
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AttributeSet.cpp" />
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemBlueprintLibrary.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootTier.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootPackage.cpp" />

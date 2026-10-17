@@ -3,6 +3,7 @@
 #include "McpItemDefinitionBase.h"
 
 class UAbilitySystemComponent;
+struct FGameplayTagContainer;
 
 enum class EFortItemType : uint8
 {
@@ -93,6 +94,8 @@ class UFortItemDefinition : public UMcpItemDefinitionBase
 {
 public:
     int32 GetMinLevel() const;
+
+    void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const;
 
     EFortItemType GetItemType() const;
 

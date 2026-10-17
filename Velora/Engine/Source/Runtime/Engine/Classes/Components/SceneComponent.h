@@ -2,11 +2,14 @@
 
 #include "UObject/Object.h"
 #include "Math/TransformVectorized.h"
+#include "Math/BoxSphereBounds.h"
 
 class USceneComponent : public UObject
 {
 public:
     const FTransform& GetComponentTransform() const;
+
+    const FBoxSphereBounds& GetBounds() const;
 
     FORCEINLINE FVector GetComponentLocation() const
     {

@@ -10,6 +10,10 @@ public:
 
     void SilentDie();
 
+    float GetMaxHealth() const;
+
+    bool HasHealthLeft() const;
+
     const FGameplayTagContainer& GetStaticGameplayTags() const;
 
     bool GetDestroyed() const;

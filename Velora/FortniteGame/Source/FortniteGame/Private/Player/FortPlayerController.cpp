@@ -4,6 +4,7 @@
 #include "Items/FortQuickBars.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "Items/FortResourceItemDefinition.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -248,6 +249,29 @@ void AFortPlayerController::ServerExecuteInventoryItem_Implementation(FGuid Item
             return;
         }
     }
+}
+
+UClass* AFortPlayerController::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController"));
+
+    return Class;
+}
+
+void AFortPlayerController::ClientReportDamagedResourceBuilding(ABuildingSMActor* BuildingSMActor, EFortResourceType PotentialResourceType, int32 PotentialResourceCount, bool bDestroyed, bool bJustHitWeakspot)
+{
+    static auto ClientReportDamagedResourceBuilding = FindFunctionChecked(FName(TEXT("ClientReportDamagedResourceBuilding")));
+
+    struct
+    {
+        ABuildingSMActor* BuildingSMActor;
+        EFortResourceType PotentialResourceType;
+        int32 PotentialResourceCount;
+        bool bDestroyed;
+        bool bJustHitWeakspot;
+    } Parms{ BuildingSMActor, PotentialResourceType, PotentialResourceCount, bDestroyed, bJustHitWeakspot };
+
+    ProcessEvent(ClientReportDamagedResourceBuilding, &Parms);
 }
 
 bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)

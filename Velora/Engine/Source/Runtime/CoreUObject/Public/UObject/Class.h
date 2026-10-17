@@ -46,6 +46,8 @@ class UScriptStruct : public UStruct
 class UClass : public UStruct
 {
 public:
+    static UClass* StaticClass();
+
     UObject* GetDefaultObject(bool bCreateIfNeeded = true) const;
 
     template<class T>

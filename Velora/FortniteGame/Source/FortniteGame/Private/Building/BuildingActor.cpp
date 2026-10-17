@@ -62,6 +62,34 @@ void ABuildingActor::SilentDie()
     ProcessEvent(SilentDie, nullptr);
 }
 
+float ABuildingActor::GetMaxHealth() const
+{
+    static auto GetMaxHealth = FindFunctionChecked(FName(TEXT("GetMaxHealth")));
+
+    struct
+    {
+        float ReturnValue;
+    } Parms{};
+
+    const_cast<ABuildingActor*>(this)->ProcessEvent(GetMaxHealth, &Parms);
+
+    return Parms.ReturnValue;
+}
+
+bool ABuildingActor::HasHealthLeft() const
+{
+    static auto HasHealthLeft = FindFunctionChecked(FName(TEXT("HasHealthLeft")));
+
+    struct
+    {
+        bool ReturnValue;
+    } Parms{};
+
+    const_cast<ABuildingActor*>(this)->ProcessEvent(HasHealthLeft, &Parms);
+
+    return Parms.ReturnValue;
+}
+
 const FGameplayTagContainer& ABuildingActor::GetStaticGameplayTags() const
 {
     static auto StaticGameplayTags = GetClass()->FindPropertyByName(FName(TEXT("StaticGameplayTags")));

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
 
@@ -87,4 +88,11 @@ UObject* UClass::InternalCreateDefaultObjectWrapper() const
     auto VTable = *(uint8_t**)this;
 
     return (*(UObject* (**)(const UClass*))(VTable + CreateDefaultObject))(this);
+}
+
+UClass* UClass::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Class"));
+
+    return Class;
 }

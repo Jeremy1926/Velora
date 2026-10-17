@@ -53,6 +53,8 @@ struct FGameplayTagContainer
         return GameplayTags;
     }
 
+    void AppendTags(FGameplayTagContainer const& Other);
+
     FString ToStringSimple(bool bQuoted = false) const;
 
 protected:

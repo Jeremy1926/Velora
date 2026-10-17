@@ -3,6 +3,8 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
+#include "Building/BuildingSMActor.h"
+#include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
 #include "Player/FortPlayerState.h"
 #include "Items/FortInventory.h"
@@ -131,6 +133,46 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
             Address += Length;
         }
+    }();
+
+    static auto AttemptSpawnResources = []
+    {
+        auto Reference = Scanner::FindStringReference("OwnedBuildingDamaged");
+        int32_t AttemptSpawnResources = 0;
+        auto Calls = 0;
+
+        for (auto Address = Reference; !AttemptSpawnResources;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2 && ++Calls == 2)
+                AttemptSpawnResources = (int32_t)Instruction.disp.disp32;
+
+            Address += Length;
+        }
+
+        auto BuildingSMActorClass = ABuildingSMActor::StaticClass();
+        auto Stub = (*(void***)BuildingSMActorClass->GetDefaultObject(false))[AttemptSpawnResources / sizeof(void*)];
+
+        for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+        {
+            auto ObjectItem = GUObjectArray.IndexToObject(Index);
+            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(BuildingSMActorClass))
+                continue;
+
+            if (auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false))
+            {
+                auto Slot = *(void***)DefaultObject + AttemptSpawnResources / sizeof(void*);
+
+                if (*Slot == Stub)
+                    DetourVTable(Slot, &ABuildingSMActor::AttemptSpawnResources);
+            }
+        }
+
+        return AttemptSpawnResources;
     }();
 
     static auto BeginPlay = []

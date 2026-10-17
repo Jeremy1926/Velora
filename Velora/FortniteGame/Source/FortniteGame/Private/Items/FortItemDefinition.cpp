@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Items/FortItemDefinition.h"
 #include "UObject/UnrealType.h"
+#include "GameplayTagContainer.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
@@ -126,4 +127,11 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
     auto VTable = *(uint8_t**)this;
 
     return (*(int32 (**)(const UFortItemDefinition*, const UAbilitySystemComponent*))(VTable + GetMaxStackSize))(this, AbilitySystemComponent);
+}
+
+void UFortItemDefinition::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
+{
+    static auto GameplayTags = GetClass()->FindPropertyByName(FName(TEXT("GameplayTags")));
+
+    TagContainer.AppendTags(*GameplayTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this));
 }

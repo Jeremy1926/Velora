@@ -54,6 +54,11 @@ public:
 class FUObjectArray
 {
 public:
+    FORCEINLINE int32 GetObjectArrayNum() const
+    {
+        return ObjObjects.Num();
+    }
+
     FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
     {
         if (Index < ObjObjects.Num())

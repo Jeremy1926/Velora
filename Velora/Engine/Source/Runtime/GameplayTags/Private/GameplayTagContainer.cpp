@@ -33,3 +33,18 @@ FString FGameplayTagContainer::ToStringSimple(bool bQuoted) const
 
     return RetString;
 }
+
+void FGameplayTagContainer::AppendTags(FGameplayTagContainer const& Other)
+{
+    for (const FGameplayTag& OtherTag : Other.GameplayTags)
+    {
+        if (!GameplayTags.Contains(OtherTag))
+            GameplayTags.Add(OtherTag);
+    }
+
+    for (const FGameplayTag& OtherTag : Other.ParentTags)
+    {
+        if (!ParentTags.Contains(OtherTag))
+            ParentTags.Add(OtherTag);
+    }
+}

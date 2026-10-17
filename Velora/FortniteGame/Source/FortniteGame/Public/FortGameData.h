@@ -8,6 +8,8 @@
 #include "UObject/AssetPtr.h"
 
 class UFortAbilitySet;
+class UFortResourceItemDefinition;
+enum class EFortResourceType : uint8;
 struct FFortLootPackageData;
 struct FFortLootTierData;
 
@@ -17,6 +19,8 @@ public:
     static UFortGameData* Get();
 
     UFortAbilitySet* GetGenericPlayerAbilitySet() const;
+
+    UFortResourceItemDefinition* GetResourceItemDefinition(EFortResourceType ResourceType) const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTables() const;
 
