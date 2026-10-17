@@ -34,6 +34,26 @@ namespace Scanner
         return nullptr;
     }
 
+    inline const uint8_t* FindCallReference(const void* Target)
+    {
+        for (auto& Section : Sections())
+        {
+            if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                continue;
+
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            for (auto Address = Begin; Address + 5 <= End; Address++)
+            {
+                if ((Address[0] == 0xE8 || Address[0] == 0xE9) && Address + 5 + *(int32_t*)(Address + 1) == Target)
+                    return Address;
+            }
+        }
+
+        return nullptr;
+    }
+
     inline const uint8_t* FindStringReference(const wchar_t* String)
     {
         auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
@@ -46,6 +66,28 @@ namespace Scanner
             for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
             {
                 if (*(wchar_t*)Address == *String && !memcmp(Address, String, Size))
+                {
+                    if (auto Reference = FindReference(Address))
+                        return Reference;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    inline const uint8_t* FindStringReference(const char* String)
+    {
+        auto Size = strlen(String) + 1;
+
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            for (auto Address = Begin; Address + Size <= End; Address++)
+            {
+                if (*(char*)Address == *String && !memcmp(Address, String, Size))
                 {
                     if (auto Reference = FindReference(Address))
                         return Reference;

@@ -239,3 +239,22 @@ UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, 
 
     return CreateChannel(this, Type, bOpenedLocally, ChannelIndex);
 }
+
+void UNetConnection::FlushDormancy(AActor* Actor)
+{
+    static auto FlushDormancy = []
+    {
+        auto Function = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("FlushDormancy: %s. Connection: %s")))->BeginAddress;
+        auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
+        auto Index = 0;
+
+        while (VTable[Index] != Function)
+            Index++;
+
+        return Index;
+    }();
+
+    auto VTable = *(void (***)(UNetConnection*, AActor*))this;
+
+    VTable[FlushDormancy](this, Actor);
+}

@@ -34,6 +34,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         GIsClient = false;
         GIsServer = true;
 
+        extern bool& GIsAllowingParticles;
+        GIsAllowingParticles = false;
+
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 

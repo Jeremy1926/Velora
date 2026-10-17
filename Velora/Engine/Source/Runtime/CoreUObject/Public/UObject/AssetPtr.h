@@ -12,9 +12,19 @@ public:
         return WeakPtr.Get();
     }
 
+    FORCEINLINE bool IsValid() const
+    {
+        return !!Get();
+    }
+
     FORCEINLINE bool IsPending() const
     {
         return !Get() && ObjectID.IsValid();
+    }
+
+    FORCEINLINE bool IsNull() const
+    {
+        return !IsValid() && !ObjectID.IsValid();
     }
 
     FORCEINLINE const FStringAssetReference& GetUniqueID() const
@@ -32,6 +42,11 @@ template<class T>
 class TAssetPtr
 {
 public:
+    FORCEINLINE bool IsNull() const
+    {
+        return AssetPtr.IsNull();
+    }
+
     T* LoadSynchronous() const
     {
         UObject* Asset = AssetPtr.Get();

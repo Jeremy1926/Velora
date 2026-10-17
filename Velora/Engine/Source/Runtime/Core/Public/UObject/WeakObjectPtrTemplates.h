@@ -24,6 +24,11 @@ public:
         return (T*)TWeakObjectPtrBase::Get();
     }
 
+    FORCEINLINE bool IsValid() const
+    {
+        return TWeakObjectPtrBase::IsValid();
+    }
+
     FORCEINLINE bool HasSameIndexAndSerialNumber(const TWeakObjectPtr& Other) const
     {
         return static_cast<const TWeakObjectPtrBase&>(*this).HasSameIndexAndSerialNumber(static_cast<const TWeakObjectPtrBase&>(Other));

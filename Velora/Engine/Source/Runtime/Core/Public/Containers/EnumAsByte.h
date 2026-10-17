@@ -15,6 +15,11 @@ public:
     {
     }
 
+    FORCEINLINE operator TEnum() const
+    {
+        return (TEnum)Value;
+    }
+
 private:
     uint8 Value;
 };

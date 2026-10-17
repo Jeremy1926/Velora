@@ -39,6 +39,10 @@ private:
     UStruct* SuperStruct;
 };
 
+class UScriptStruct : public UStruct
+{
+};
+
 class UClass : public UStruct
 {
 public:

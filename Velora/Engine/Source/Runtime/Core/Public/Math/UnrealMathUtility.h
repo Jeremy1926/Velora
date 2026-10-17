@@ -18,6 +18,12 @@ struct FMath
     }
 
     template<class T>
+    static FORCEINLINE T Abs(const T A)
+    {
+        return (A >= (T)0) ? A : -A;
+    }
+
+    template<class T>
     static FORCEINLINE T Clamp(const T X, const T Min, const T Max)
     {
         return X < Min ? Min : X < Max ? X : Max;
@@ -50,6 +56,34 @@ struct FMath
     static FORCEINLINE uint32 RoundUpToPowerOfTwo(uint32 Arg)
     {
         return 1 << CeilLogTwo(Arg);
+    }
+
+    static FORCEINLINE int32 FloorToInt(float F)
+    {
+        return _mm_cvt_ss2si(_mm_set_ss(F + F - 0.5f)) >> 1;
+    }
+
+    static FORCEINLINE float InvSqrt(float F)
+    {
+        const __m128 fOneHalf = _mm_set_ss(0.5f);
+        __m128 Y0, X0, X1, X2, FOver2;
+        float temp;
+
+        Y0 = _mm_set_ss(F);
+        X0 = _mm_rsqrt_ss(Y0);
+        FOver2 = _mm_mul_ss(Y0, fOneHalf);
+
+        X1 = _mm_mul_ss(X0, X0);
+        X1 = _mm_sub_ss(fOneHalf, _mm_mul_ss(FOver2, X1));
+        X1 = _mm_add_ss(X0, _mm_mul_ss(X0, X1));
+
+        X2 = _mm_mul_ss(X1, X1);
+        X2 = _mm_sub_ss(fOneHalf, _mm_mul_ss(FOver2, X2));
+        X2 = _mm_add_ss(X1, _mm_mul_ss(X1, X2));
+
+        _mm_store_ss(&temp, X2);
+
+        return temp;
     }
 
     static FORCEINLINE int32 TruncToInt(float F)

@@ -206,3 +206,37 @@ void AActor::ForceNetUpdate()
 
     (*(void (**)(AActor*))(VTable + ForceNetUpdate))(this);
 }
+
+bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
+{
+    static auto Destroy = []
+    {
+        int32_t K2_DestroyActor = 0;
+
+        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor:K2_DestroyActor")))->GetNativeFunc()); !K2_DestroyActor;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
+                K2_DestroyActor = (int32_t)Instruction.disp.disp32;
+
+            Address += Length;
+        }
+
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
+
+        for (auto Address = VTable[K2_DestroyActor / sizeof(void*)];;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8 || Instruction.opcode == 0xE9)
+                return (bool (*)(AActor*, bool, bool))(Address + Length + (int32_t)Instruction.imm.imm32);
+
+            Address += Length;
+        }
+    }();
+
+    return Destroy(this, bNetForce, bShouldModifyLevel);
+}

@@ -60,6 +60,8 @@ public:
     int32 IsNetReady(bool Saturate);
 
     UChannel* CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex = -1);
+
+    void FlushDormancy(AActor* Actor);
 };
 
 class UChildConnection : public UNetConnection

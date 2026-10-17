@@ -6,6 +6,16 @@ template<class TClass>
 class TSubclassOf
 {
 public:
+    FORCEINLINE TSubclassOf()
+        : Class(nullptr)
+    {
+    }
+
+    FORCEINLINE TSubclassOf(UClass* From)
+        : Class(From)
+    {
+    }
+
     FORCEINLINE TClass* GetDefaultObject() const
     {
         UObject* Result = nullptr;

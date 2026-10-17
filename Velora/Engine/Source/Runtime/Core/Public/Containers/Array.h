@@ -153,6 +153,23 @@ public:
         }
     }
 
+    FORCEINLINE bool Contains(const ElementType& Item) const
+    {
+        for (const ElementType* Data = GetData(), *DataEnd = Data + ArrayNum; Data != DataEnd; ++Data)
+        {
+            if (*Data == Item)
+                return true;
+        }
+
+        return false;
+    }
+
+    void Append(const TArray& Source)
+    {
+        for (const ElementType& Item : Source)
+            Add(Item);
+    }
+
     int32 RemoveSingle(const ElementType& Item)
     {
         for (int32 Index = 0; Index < ArrayNum; Index++)

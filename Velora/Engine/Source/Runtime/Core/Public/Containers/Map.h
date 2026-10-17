@@ -55,6 +55,31 @@ public:
         return Pair ? &Pair->Value : nullptr;
     }
 
+    FORCEINLINE const ValueType* Find(const KeyType& Key) const
+    {
+        auto Pair = Pairs.Find(Key);
+
+        return Pair ? &Pair->Value : nullptr;
+    }
+
+    FORCEINLINE ValueType& FindOrAdd(const KeyType& Key)
+    {
+        if (auto Pair = Pairs.Find(Key))
+            return Pair->Value;
+
+        return Add(Key, ValueType());
+    }
+
+    FORCEINLINE bool Contains(const KeyType& Key) const
+    {
+        return Pairs.Contains(Key);
+    }
+
+    FORCEINLINE int32 Remove(const KeyType& InKey)
+    {
+        return Pairs.Remove(InKey);
+    }
+
     FORCEINLINE ValueType FindRef(const KeyType& Key) const
     {
         if (const auto Pair = Pairs.Find(Key))
@@ -75,6 +100,16 @@ public:
     FORCEINLINE void Reset()
     {
         Pairs.Reset();
+    }
+
+    FORCEINLINE auto begin() const
+    {
+        return Pairs.begin();
+    }
+
+    FORCEINLINE auto end() const
+    {
+        return Pairs.end();
     }
 
 private:

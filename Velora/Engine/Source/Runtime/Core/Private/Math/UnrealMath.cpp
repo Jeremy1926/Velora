@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Math/Rotator.h"
+#include "Math/TransformVectorized.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -31,3 +32,5 @@ FVector FRotator::Vector() const
 
     return *Vector(this, &Result);
 }
+
+const FTransform FTransform::Identity;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Math/UnrealMathUtility.h"
 
 enum EForceInit
 {
@@ -45,5 +46,22 @@ struct FVector
     FORCEINLINE float SizeSquared() const
     {
         return X * X + Y * Y + Z * Z;
+    }
+
+    FORCEINLINE bool Normalize(float Tolerance = 1.e-8f)
+    {
+        const float SquareSum = X * X + Y * Y + Z * Z;
+
+        if (SquareSum > Tolerance)
+        {
+            const float Scale = FMath::InvSqrt(SquareSum);
+            X *= Scale;
+            Y *= Scale;
+            Z *= Scale;
+
+            return true;
+        }
+
+        return false;
     }
 };

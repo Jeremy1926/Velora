@@ -91,6 +91,14 @@ struct FFortItemEntry : public FFastArraySerializerItem
     TArray<FFortItemEntryStateValue> StateValues;
     TWeakObjectPtr<AFortInventory> ParentInventory;
     FGameplayAbilitySpecHandle GameplayAbilitySpecHandle;
+
+    void SetCount(int32 NewCount);
+
+    void SetDurability(float NewDurability);
+
+    void SetLoadedAmmo(int32 NewLoadedAmmo);
+
+    void SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue);
 };
 
 struct FFortItemList : public FFastArraySerializer
@@ -107,4 +115,6 @@ public:
     FFortItemList& GetInventory();
 
     void HandleInventoryLocalUpdate();
+
+    void SetItemRequiresUpdate(FFortItemEntry& ItemEntry);
 };

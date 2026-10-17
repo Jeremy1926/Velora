@@ -2,6 +2,7 @@
 #include "Items/FortWorldItemDefinition.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
 
@@ -58,4 +59,26 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
     auto VTable = *(uint8_t**)this;
 
     return (*(bool (**)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*))(VTable + ServerExecute))(this, Item, PlayerController);
+}
+
+float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
+{
+    static auto GetMaxDurability = FindFunctionChecked(FName(TEXT("GetMaxDurability")));
+
+    struct
+    {
+        int32 ItemLevel;
+        float ReturnValue;
+    } Parms{ ItemLevel };
+
+    const_cast<UFortWorldItemDefinition*>(this)->ProcessEvent(GetMaxDurability, &Parms);
+
+    return Parms.ReturnValue;
+}
+
+const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() const
+{
+    static auto LootLevelData = GetClass()->FindPropertyByName(FName(TEXT("LootLevelData")));
+
+    return *LootLevelData->ContainerPtrToValuePtr<FDataTableCategoryHandle>(this);
 }

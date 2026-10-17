@@ -101,6 +101,8 @@ public:
 
     void TickFlush(float DeltaSeconds);
 
+    void FlushActorDormancy(AActor* Actor);
+
     bool IsServer() const;
 
     ENetMode GetNetMode() const;

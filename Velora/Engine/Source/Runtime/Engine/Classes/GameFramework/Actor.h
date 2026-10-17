@@ -45,6 +45,18 @@ public:
         return RootComponent ? RootComponent->GetComponentLocation() : FVector(0.f, 0.f, 0.f);
     }
 
+    FORCEINLINE const FTransform& GetTransform() const
+    {
+        return ActorToWorld();
+    }
+
+    FORCEINLINE const FTransform& ActorToWorld() const
+    {
+        auto RootComponent = GetRootComponent();
+
+        return RootComponent ? RootComponent->GetComponentTransform() : FTransform::Identity;
+    }
+
     bool IsPendingKillPending() const;
 
     bool IsActorInitialized() const;
@@ -62,6 +74,8 @@ public:
     bool GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth);
 
     void ForceNetUpdate();
+
+    bool Destroy(bool bNetForce = false, bool bShouldModifyLevel = true);
 
     void CallPreReplication(UNetDriver* NetDriver);
 };

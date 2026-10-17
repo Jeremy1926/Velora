@@ -18,6 +18,11 @@ public:
         return ((X.A ^ Y.A) | (X.B ^ Y.B) | (X.C ^ Y.C) | (X.D ^ Y.D)) == 0;
     }
 
+    friend bool operator!=(const FGuid& X, const FGuid& Y)
+    {
+        return ((X.A ^ Y.A) | (X.B ^ Y.B) | (X.C ^ Y.C) | (X.D ^ Y.D)) != 0;
+    }
+
     static FGuid NewGuid();
 
     uint32 A;

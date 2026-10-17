@@ -16,6 +16,7 @@
 #include "Misc/Parse.h"
 #include "Templates/Sorting.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -356,12 +357,71 @@ void UNetDriver::SetWorld(UWorld* InWorld)
 
 void UNetDriver::TickFlush(float DeltaSeconds)
 {
+    static auto FlushActorDormancy = []
+    {
+        for (auto ActorFunction : { TEXT("/Script/Engine.Actor:FlushNetDormancy"), TEXT("/Script/Engine.Actor:SetNetDormancy") })
+        {
+            auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, ActorFunction))->GetNativeFunc());
+            const uint8_t* Function = nullptr;
+
+            for (auto Address = Thunk;;)
+            {
+                hde64s Instruction;
+                auto Length = hde64_disasm(Address, &Instruction);
+
+                if (Instruction.opcode == 0xE8 || Instruction.opcode == 0xE9)
+                    Function = Address + Length + (int32_t)Instruction.imm.imm32;
+
+                if (Instruction.opcode == 0xE9 || Instruction.opcode == 0xC3)
+                    break;
+
+                Address += Length;
+            }
+
+            auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Function));
+            std::array<const uint8_t*, 2> Calls = {};
+
+            for (auto Address = Function; Address < End;)
+            {
+                hde64s Instruction;
+                auto Length = hde64_disasm(Address, &Instruction);
+
+                if (Instruction.opcode == 0xE8)
+                    Calls = { Calls[1], Address };
+
+                Address += Length;
+            }
+
+            for (auto Call : Calls)
+                DetourCall(Call, &UNetDriver::FlushActorDormancy);
+        }
+
+        return true;
+    }();
+
     if (IsServer() && GetClientConnections().Num() > 0 && GetClientConnections()[0]->GetInternalAck() == false)
     {
         ServerReplicateActors(DeltaSeconds);
     }
 
     (this->*::TickFlush)(DeltaSeconds);
+}
+
+void UNetDriver::FlushActorDormancy(AActor* Actor)
+{
+    static auto CVarSetNetDormancyEnabled = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("net.DormancyEnable"));
+
+    if (CVarSetNetDormancyEnabled->GetValueOnAnyThread() == 0)
+        return;
+
+    for (int32 i = 0; i < GetClientConnections().Num(); ++i)
+    {
+        UNetConnection* NetConnection = GetClientConnections()[i];
+        if (NetConnection != NULL)
+        {
+            NetConnection->FlushDormancy(Actor);
+        }
+    }
 }
 
 bool UNetDriver::IsServer() const

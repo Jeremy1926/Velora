@@ -73,6 +73,14 @@ private:
     int32 CachedNumItemsToConsiderForWriting;
 };
 
+struct FVector_NetQuantize10 : public FVector
+{
+};
+
 struct FVector_NetQuantize100 : public FVector
+{
+};
+
+struct FVector_NetQuantizeNormal : public FVector
 {
 };

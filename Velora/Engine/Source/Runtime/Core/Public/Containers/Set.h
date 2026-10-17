@@ -3,6 +3,7 @@
 #include "HAL/Platform.h"
 #include "Containers/SparseArray.h"
 #include "Containers/ContainerAllocationPolicies.h"
+#include "Templates/TypeHash.h"
 
 class FSetElementId
 {
@@ -90,6 +91,11 @@ public:
         FORCEINLINE const ElementType& operator*() const
         {
             return Set.Elements[Index].Value;
+        }
+
+        FORCEINLINE const ElementType* operator->() const
+        {
+            return &Set.Elements[Index].Value;
         }
 
         FORCEINLINE bool operator!=(const TConstIterator& Other) const

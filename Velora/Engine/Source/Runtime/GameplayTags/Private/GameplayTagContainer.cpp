@@ -1,5 +1,11 @@
 #include "pch.h"
 #include "GameplayTagContainer.h"
+#include "GameplayTagsManager.h"
+
+FGameplayTag FGameplayTag::RequestGameplayTag(FName TagName, bool ErrorIfNotFound)
+{
+    return UGameplayTagsManager::Get().RequestGameplayTag(TagName, ErrorIfNotFound);
+}
 
 FString FGameplayTagContainer::ToStringSimple(bool bQuoted) const
 {

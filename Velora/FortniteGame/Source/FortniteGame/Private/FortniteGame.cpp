@@ -18,3 +18,25 @@ FLogCategoryBase& LogFort = *[]
         Address += Length;
     }
 }();
+
+FLogCategoryBase& LogFortBuilding = *[]
+{
+    auto Reference = Scanner::FindStringReference(TEXT("LogFortBuilding"));
+
+    hde64s Instruction;
+    auto Address = Reference + hde64_disasm(Reference, &Instruction);
+    auto Length = hde64_disasm(Address, &Instruction);
+
+    return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
+}();
+
+FLogCategoryBase& LogFortLoot = *[]
+{
+    auto Reference = Scanner::FindStringReference(TEXT("LogFortLoot"));
+
+    hde64s Instruction;
+    auto Address = Reference + hde64_disasm(Reference, &Instruction);
+    auto Length = hde64_disasm(Address, &Instruction);
+
+    return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
+}();
