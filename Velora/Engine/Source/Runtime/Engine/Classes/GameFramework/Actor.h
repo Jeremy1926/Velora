@@ -20,6 +20,8 @@ public:
 
     ENetRole GetRemoteRole() const;
 
+    bool HasAuthority() const;
+
     ENetDormancy GetNetDormancy() const;
 
     float GetNetUpdateFrequency() const;

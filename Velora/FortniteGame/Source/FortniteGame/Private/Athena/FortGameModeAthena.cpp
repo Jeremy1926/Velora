@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Player/FortPlayerState.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
@@ -59,5 +60,11 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         return nullptr;
     }
 
-    return AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
+    auto Pawn = AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
+    auto PlayerState = Cast<AFortPlayerState>(NewPlayer->GetPlayerState());
+
+    if (Pawn && PlayerState)
+        PlayerState->ApplyCharacterCustomization(Pawn);
+
+    return Pawn;
 }

@@ -26,6 +26,13 @@ APawn* AController::GetPawn() const
     return *Pawn->ContainerPtrToValuePtr<APawn*>(this);
 }
 
+APlayerState* AController::GetPlayerState() const
+{
+    static auto PlayerState = GetClass()->FindPropertyByName(FName(TEXT("PlayerState")));
+
+    return *PlayerState->ContainerPtrToValuePtr<APlayerState*>(this);
+}
+
 AActor* AController::GetViewTarget() const
 {
     static auto GetViewTarget = FindExecSlot(TEXT("/Script/Engine.Controller:GetViewTarget"));

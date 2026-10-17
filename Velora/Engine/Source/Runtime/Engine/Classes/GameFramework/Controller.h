@@ -4,10 +4,14 @@
 #include "GameFramework/Pawn.h"
 #include "Math/Rotator.h"
 
+class APlayerState;
+
 class AController : public AActor
 {
 public:
     APawn* GetPawn() const;
+
+    APlayerState* GetPlayerState() const;
 
     AActor* GetViewTarget() const;
 

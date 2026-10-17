@@ -33,6 +33,13 @@ ENetRole AActor::GetRemoteRole() const
     return (ENetRole)*RemoteRole->ContainerPtrToValuePtr<uint8>(this);
 }
 
+bool AActor::HasAuthority() const
+{
+    static auto Role = GetClass()->FindPropertyByName(FName(TEXT("Role")));
+
+    return (ENetRole)*Role->ContainerPtrToValuePtr<uint8>(this) == ROLE_Authority;
+}
+
 ENetDormancy AActor::GetNetDormancy() const
 {
     static auto NetDormancy = GetClass()->FindPropertyByName(FName(TEXT("NetDormancy")));
