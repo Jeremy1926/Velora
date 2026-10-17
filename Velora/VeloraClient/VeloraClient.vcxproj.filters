@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{0A35CFFB-3B79-4A7E-9787-B37AB5EB139B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source">
+      <UniqueIdentifier>{0A42E003-FB75-4155-9264-5F58CB44311A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime">
+      <UniqueIdentifier>{33033F69-725D-46C8-8BAA-8EFF856009B1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core">
+      <UniqueIdentifier>{138725C0-28AC-480B-81E9-3BA070B236B4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private">
+      <UniqueIdentifier>{89C9C533-77DB-47E6-B633-99704BC007EE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Misc">
+      <UniqueIdentifier>{7B4F597F-9F04-4099-964B-6832A3482A94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public">
+      <UniqueIdentifier>{CEDEE09F-7550-4187-AD81-29ACB65D4D64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Containers">
+      <UniqueIdentifier>{990EEEEB-54F2-4BEC-9099-36F9508E5449}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\HAL">
+      <UniqueIdentifier>{0F084E2D-CF9E-4FE7-A46E-AA723438795D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Misc">
+      <UniqueIdentifier>{374DDF15-EDF0-4633-A900-28EEB7A67816}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Templates">
+      <UniqueIdentifier>{018E96B7-22EB-4663-BA2A-AC622BE86C6C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Launch">
+      <UniqueIdentifier>{A3D828C4-05A0-495F-AC43-34E9E0FB9A3B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Launch\Private">
+      <UniqueIdentifier>{A26A5E24-DF3E-4E72-A708-D6773B41B2D6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Launch\Private\Windows">
+      <UniqueIdentifier>{8C674B5C-BE44-4771-A1C3-C7DA4E0B2CFE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{F5624349-99C0-4761-A810-69BD8D191523}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\MinHook">
+      <UniqueIdentifier>{84031BE6-FE68-470D-A0C0-C42044BF77A3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\MinHook\src">
+      <UniqueIdentifier>{D264AB45-B8C5-487D-947B-8A0F6F00577D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\MinHook\src\hde">
+      <UniqueIdentifier>{5D291698-D797-4759-8668-5E467D433787}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="..\Scanner.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\hde64.h">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\pstdint.h">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\table64.h">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\Platform.h">
+      <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\UnrealMemory.h">
+      <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainersFwd.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainerAllocationPolicies.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\Array.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\UnrealString.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\ChooseClass.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersionBase.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersion.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde64.c">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp">
+      <Filter>Engine\Source\Runtime\Launch\Private\Windows</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
