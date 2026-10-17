@@ -10,6 +10,11 @@ struct FMemory
 
     static SIZE_T QuantizeSize(SIZE_T Count, uint32 Alignment = 0);
 
+    static FORCEINLINE void* Memset(void* Dest, uint8 Char, SIZE_T Count)
+    {
+        return memset(Dest, Char, Count);
+    }
+
     static FORCEINLINE void* Memzero(void* Dest, SIZE_T Count)
     {
         return memset(Dest, 0, Count);

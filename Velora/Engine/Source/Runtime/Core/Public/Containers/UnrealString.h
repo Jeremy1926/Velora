@@ -44,6 +44,11 @@ public:
         return Data.Num() ? Data.GetData() : TEXT("");
     }
 
+    FORCEINLINE bool IsEmpty() const
+    {
+        return Data.Num() <= 1;
+    }
+
     FORCEINLINE friend bool operator==(const FString& Lhs, const FString& Rhs)
     {
         for (auto String1 = *Lhs, String2 = *Rhs; *String1 || *String2; String1++, String2++)

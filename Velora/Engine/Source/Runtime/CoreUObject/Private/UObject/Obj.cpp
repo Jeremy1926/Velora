@@ -1,7 +1,15 @@
 #include "pch.h"
 #include "UObject/Object.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
+
+UClass* UObject::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Object"));
+
+    return Class;
+}
 
 UWorld* UObject::GetWorld() const
 {

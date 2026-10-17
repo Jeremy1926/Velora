@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "FortGameModeZone.h"
+#include "Items/FortInventory.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
 #include "hde/hde64.h"
@@ -35,4 +37,11 @@ static auto FinishWorldInitialization = DetourCall([]
 void AFortGameModeZone::FinishWorldInitialization()
 {
     Super::FinishWorldInitialization();
+}
+
+TArray<FItemAndCount>& AFortGameModeZone::GetStartingItems()
+{
+    static auto StartingItems = GetClass()->FindPropertyByName(FName(TEXT("StartingItems")));
+
+    return *StartingItems->ContainerPtrToValuePtr<TArray<FItemAndCount>>(this);
 }

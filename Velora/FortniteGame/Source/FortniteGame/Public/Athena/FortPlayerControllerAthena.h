@@ -2,8 +2,17 @@
 
 #include "Player/FortPlayerControllerPvP.h"
 
+class UAthenaPickaxeItemDefinition;
+
+struct FFortAthenaLoadout
+{
+    UAthenaPickaxeItemDefinition*& GetPickaxe();
+};
+
 class AFortPlayerControllerAthena : public AFortPlayerControllerPvP
 {
 public:
     static UClass* StaticClass();
+
+    FFortAthenaLoadout& GetCustomizationLoadout();
 };

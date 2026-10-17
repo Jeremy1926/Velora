@@ -243,6 +243,16 @@ public:
         return NumRemovedElements;
     }
 
+    void Reset()
+    {
+        Elements.Reset();
+
+        for (int32 HashIndex = 0, LocalHashSize = HashSize; HashIndex < LocalHashSize; ++HashIndex)
+        {
+            GetTypedHash(HashIndex) = FSetElementId();
+        }
+    }
+
 private:
     FORCEINLINE FSetElementId& GetTypedHash(int32 HashIndex) const
     {

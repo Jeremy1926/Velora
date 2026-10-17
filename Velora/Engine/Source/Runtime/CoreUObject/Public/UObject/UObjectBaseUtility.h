@@ -17,4 +17,6 @@ public:
     }
 
     bool IsA(const UClass* SomeBase) const;
+
+    void* GetInterfaceAddress(UClass* InterfaceClass);
 };

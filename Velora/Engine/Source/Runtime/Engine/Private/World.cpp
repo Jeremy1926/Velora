@@ -51,6 +51,22 @@ static auto Listen = DetourCall([]
     return Call;
 }(), &UWorld::Listen);
 
+static auto InternalGetNetMode = Detour([]
+{
+    auto Address = Scanner::FindStringReference(TEXT("UGameplayStatics::SpawnEmitterAttached: NULL AttachComponent specified!"));
+
+    for (auto Calls = 0;;)
+    {
+        hde64s Instruction;
+        auto Length = hde64_disasm(Address, &Instruction);
+
+        if (Instruction.opcode == 0xE8 && ++Calls == 3)
+            return Address + Length + (int32_t)Instruction.imm.imm32;
+
+        Address += Length;
+    }
+}(), &UWorld::InternalGetNetMode);
+
 AGameModeBase* UWorld::GetAuthGameMode() const
 {
     static auto AuthorityGameMode = GetClass()->FindPropertyByName(FName(TEXT("AuthorityGameMode")));
@@ -156,6 +172,16 @@ UNetDriver* UWorld::GetNetDriver() const
     static auto NetDriver = GetClass()->FindPropertyByName(FName(TEXT("NetDriver")));
 
     return *NetDriver->ContainerPtrToValuePtr<UNetDriver*>(this);
+}
+
+ENetMode UWorld::InternalGetNetMode() const
+{
+    if (GetNetDriver() != nullptr)
+    {
+        return GetNetDriver()->GetNetMode();
+    }
+
+    return (this->*::InternalGetNetMode)();
 }
 
 void UWorld::SetNetDriver(UNetDriver* NewDriver)

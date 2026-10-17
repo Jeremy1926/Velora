@@ -72,6 +72,11 @@ public:
         return Pair->Value;
     }
 
+    FORCEINLINE void Reset()
+    {
+        Pairs.Reset();
+    }
+
 private:
     TSet<TPair<KeyType, ValueType>, KeyFuncs> Pairs;
 };

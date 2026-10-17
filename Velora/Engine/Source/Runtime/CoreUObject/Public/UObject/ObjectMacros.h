@@ -1,5 +1,10 @@
 #pragma once
 
+enum ELoadFlags
+{
+    LOAD_None = 0x00000000,
+};
+
 enum EObjectFlags
 {
     RF_NoFlags = 0x00000000,

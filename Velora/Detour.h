@@ -35,6 +35,34 @@ inline void* DetourCall(const uint8_t* Call, void* Function)
     return Original;
 }
 
+inline void* DetourVTable(void** Slot, void* Function)
+{
+    DWORD Protect;
+    VirtualProtect(Slot, sizeof(void*), PAGE_READWRITE, &Protect);
+
+    auto Original = *Slot;
+    *Slot = Function;
+
+    VirtualProtect(Slot, sizeof(void*), Protect, &Protect);
+
+    return Original;
+}
+
+inline const uint8_t* PatchBranch(const uint8_t* Branch, const uint8_t* Target)
+{
+    auto Displacement = (int32_t*)(Branch + 2);
+
+    DWORD Protect;
+    VirtualProtect(Displacement, sizeof(int32_t), PAGE_EXECUTE_READWRITE, &Protect);
+
+    *Displacement = (int32_t)(Target - (Branch + 6));
+
+    VirtualProtect(Displacement, sizeof(int32_t), Protect, &Protect);
+    FlushInstructionCache(GetCurrentProcess(), Branch, 6);
+
+    return Branch;
+}
+
 inline const uint8_t* Patch(const uint8_t* Address, uint8_t Byte)
 {
     DWORD Protect;
@@ -69,6 +97,19 @@ inline FunctionType DetourCall(const uint8_t* Call, FunctionType Function)
 
     FunctionType Original = {};
     auto Target = DetourCall(Call, Address);
+    memcpy(&Original, &Target, sizeof(Target));
+
+    return Original;
+}
+
+template<typename FunctionType>
+inline FunctionType DetourVTable(void** Slot, FunctionType Function)
+{
+    void* Address = nullptr;
+    memcpy(&Address, &Function, sizeof(Address));
+
+    FunctionType Original = {};
+    auto Target = DetourVTable(Slot, Address);
     memcpy(&Original, &Target, sizeof(Target));
 
     return Original;

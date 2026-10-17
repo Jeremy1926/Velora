@@ -66,6 +66,13 @@ public:
         }
     }
 
+    void Reset()
+    {
+        FMemory::Memset(GetData(), 0, FMath::DivideAndRoundUp(NumBits, 32) * sizeof(uint32));
+
+        NumBits = 0;
+    }
+
 private:
     FORCEINLINE uint32* GetData() const
     {

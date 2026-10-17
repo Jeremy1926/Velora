@@ -2,6 +2,7 @@
 
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/PendingNetGame.h"
 
@@ -71,6 +72,8 @@ public:
     UNetDriver* GetNetDriver() const;
 
     void SetNetDriver(UNetDriver* NewDriver);
+
+    ENetMode InternalGetNetMode() const;
 
     void SetNextSwitchCountdown(float InNextSwitchCountdown);
 

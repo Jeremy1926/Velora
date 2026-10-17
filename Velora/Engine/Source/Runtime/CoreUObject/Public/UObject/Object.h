@@ -7,6 +7,8 @@ class UWorld;
 class UObject : public UObjectBaseUtility
 {
 public:
+    static UClass* StaticClass();
+
     UWorld* GetWorld() const;
 
     FORCEINLINE UObject* GetArchetype() const

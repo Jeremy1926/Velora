@@ -37,6 +37,13 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
     return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
 }
 
+UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename, uint32 LoadFlags, UPackageMap* Sandbox, bool bAllowObjectReconciliation)
+{
+    static auto StaticLoadObject = (UObject* (*)(UClass*, UObject*, const TCHAR*, const TCHAR*, uint32, UPackageMap*, bool))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'")))->BeginAddress);
+
+    return StaticLoadObject(Class, InOuter, Name, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation);
+}
+
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
 {
     static auto StaticConstructObject_Internal = (UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool))NewObjectCalls[1];

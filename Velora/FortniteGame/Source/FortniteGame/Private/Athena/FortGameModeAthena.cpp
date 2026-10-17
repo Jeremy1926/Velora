@@ -1,29 +1,19 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Player/FortPlayerState.h"
+#include "Items/FortInventory.h"
+#include "Items/FortWorldItemDefinition.h"
+#include "FortniteGame.h"
+#include "FortGlobals.h"
+#include "FortKismetLibrary.h"
+#include "AbilitySystemInterface.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include "hde/hde64.h"
-
-static FLogCategoryBase& LogFort = *[]
-{
-    auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no world")));
-
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress;;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0x80 && Instruction.modrm_reg == 7 && (Instruction.modrm & 0xC7) == 0x05)
-            return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
-
-        Address += Length;
-    }
-}();
 
 static auto SpawnDefaultPawnFor = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no world")))->BeginAddress, &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
 
@@ -36,7 +26,9 @@ UClass* AFortGameModeAthena::StaticClass()
 
 APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
-    if (!Cast<AFortPlayerControllerAthena>(NewPlayer))
+    auto PlayerController = Cast<AFortPlayerControllerAthena>(NewPlayer);
+
+    if (!PlayerController)
     {
         UE_LOG(LogFort, Warning, TEXT("SpawnDefaultPawnFor: Failed due to no player controller"));
         return nullptr;
@@ -64,7 +56,22 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     auto PlayerState = Cast<AFortPlayerState>(NewPlayer->GetPlayerState());
 
     if (Pawn && PlayerState)
+    {
         PlayerState->ApplyCharacterCustomization(Pawn);
+        UFortGlobals::InitializePlayerGameplayAbilities(Cast<IAbilitySystemInterface>(PlayerState));
+
+        if (auto Pickaxe = PlayerController->GetCustomizationLoadout().GetPickaxe())
+        {
+            if (!PlayerController->K2_FindExistingItemForDefinition(Pickaxe->GetWeaponDefinition(), false))
+                UFortKismetLibrary::K2_GiveItemToPlayer(PlayerController, Pickaxe->GetWeaponDefinition(), 1);
+        }
+
+        for (auto& StartingItem : GetStartingItems())
+        {
+            if (!PlayerController->K2_FindExistingItemForDefinition(StartingItem.Item, false))
+                UFortKismetLibrary::K2_GiveItemToPlayer(PlayerController, Cast<UFortWorldItemDefinition>(StartingItem.Item), StartingItem.Count);
+        }
+    }
 
     return Pawn;
 }

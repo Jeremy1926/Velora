@@ -151,6 +151,22 @@ public:
         AllocationFlags.Empty();
     }
 
+    void Reset()
+    {
+        for (int32 Index = 0; Index < GetMaxIndex(); Index++)
+        {
+            if (IsAllocated(Index))
+            {
+                ((ElementType&)GetData(Index).ElementData).~ElementType();
+            }
+        }
+
+        Data.Reset();
+        FirstFreeIndex = -1;
+        NumFreeIndices = 0;
+        AllocationFlags.Reset();
+    }
+
 private:
     typedef TSparseArrayElementOrFreeListLink<TAlignedBytes<sizeof(ElementType), alignof(ElementType)>> FElementOrFreeListLink;
 
