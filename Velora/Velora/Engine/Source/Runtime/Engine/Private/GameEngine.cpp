@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
+#include "ContentStreaming.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HAL/PlatformProperties.h"
 #include "FortGameInstance.h"
@@ -30,6 +31,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
     {
         GIsClient = false;
         GIsServer = true;
+
+        IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
+        IStreamingManager::Get().Tick(0.0f);
 
         GameInstance->GetWorldContext()->SetRunAsDedicated(true);
 

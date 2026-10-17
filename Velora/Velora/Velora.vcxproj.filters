@@ -97,6 +97,9 @@
     <Filter Include="Engine\Source\Runtime\Engine\Private">
       <UniqueIdentifier>{3AF0CD2E-E05F-4488-85FF-00DA8BFB311E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Public">
+      <UniqueIdentifier>{EC691659-A5B2-4C58-973D-0B544BD1CDB3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Launch">
       <UniqueIdentifier>{EC673985-82EB-4371-8E17-1D896FE1314B}</UniqueIdentifier>
     </Filter>
@@ -315,6 +318,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces\IAnalyticsProvider.h">
       <Filter>Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\ContentStreaming.h">
+      <Filter>Engine\Source\Runtime\Engine\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -382,6 +388,9 @@
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkDriver.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\ContentStreaming.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp">
