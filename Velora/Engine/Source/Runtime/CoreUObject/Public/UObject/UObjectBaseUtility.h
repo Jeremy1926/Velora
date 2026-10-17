@@ -15,4 +15,6 @@ public:
     {
         return GUObjectArray.IndexToObject((int32)GetUniqueID())->IsPendingKill();
     }
+
+    bool IsA(const UClass* SomeBase) const;
 };

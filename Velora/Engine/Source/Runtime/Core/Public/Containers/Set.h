@@ -108,9 +108,47 @@ public:
         int32 Index;
     };
 
+    FORCEINLINE TSet()
+        : HashSize(0)
+    {
+    }
+
     FORCEINLINE int32 Num() const
     {
         return Elements.Num();
+    }
+
+    FORCEINLINE ElementType& operator[](FSetElementId Id)
+    {
+        return Elements[Id].Value;
+    }
+
+    FSetElementId Add(const InElementType& InElement)
+    {
+        FSparseArrayAllocationInfo ElementAllocation = Elements.AddUninitialized();
+        TSetElement<InElementType>& Element = *new(ElementAllocation) TSetElement<InElementType>{ InElement };
+        FSetElementId ElementId(ElementAllocation.Index);
+
+        if (Elements.Num() != 1)
+        {
+            FSetElementId ExistingId = FindId(KeyFuncs::GetSetKey(Element.Value));
+
+            if (ExistingId.IsValidId())
+            {
+                Elements[ExistingId].Value.~InElementType();
+                memmove((void*)&Elements[ExistingId].Value, (void*)&Element.Value, sizeof(InElementType));
+                Elements.RemoveAtUninitialized(ElementId);
+
+                return ExistingId;
+            }
+        }
+
+        if (!ConditionalRehash(Elements.Num()))
+        {
+            HashElement(ElementId, Element);
+        }
+
+        return ElementId;
     }
 
     FORCEINLINE TConstIterator begin() const
@@ -209,6 +247,63 @@ private:
     FORCEINLINE FSetElementId& GetTypedHash(int32 HashIndex) const
     {
         return Hash.GetAllocation()[HashIndex & (HashSize - 1)];
+    }
+
+    static FORCEINLINE uint32 GetNumberOfHashBuckets(uint32 NumHashedElements)
+    {
+        if (NumHashedElements >= 4)
+        {
+            return FMath::RoundUpToPowerOfTwo(NumHashedElements / 2 + 8);
+        }
+
+        return 1;
+    }
+
+    FORCEINLINE void HashElement(FSetElementId ElementId, const TSetElement<InElementType>& Element) const
+    {
+        Element.HashIndex = KeyFuncs::GetKeyHash(KeyFuncs::GetSetKey(Element.Value)) & (HashSize - 1);
+        Element.HashNextId = GetTypedHash(Element.HashIndex);
+        GetTypedHash(Element.HashIndex) = ElementId;
+    }
+
+    FORCEINLINE bool ConditionalRehash(int32 NumHashedElements, bool bAllowShrinking = false) const
+    {
+        const int32 DesiredHashSize = GetNumberOfHashBuckets(NumHashedElements);
+
+        if (NumHashedElements > 0 && (!HashSize || HashSize < DesiredHashSize || (HashSize > DesiredHashSize && bAllowShrinking)))
+        {
+            HashSize = DesiredHashSize;
+            Rehash();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void Rehash() const
+    {
+        Hash.ResizeAllocation(0, 0, sizeof(FSetElementId));
+
+        int32 LocalHashSize = HashSize;
+
+        if (LocalHashSize)
+        {
+            Hash.ResizeAllocation(0, LocalHashSize, sizeof(FSetElementId));
+
+            for (int32 HashIndex = 0; HashIndex < LocalHashSize; ++HashIndex)
+            {
+                GetTypedHash(HashIndex) = FSetElementId();
+            }
+
+            for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
+            {
+                if (Elements.IsAllocated(Index))
+                {
+                    HashElement(FSetElementId(Index), Elements[Index]);
+                }
+            }
+        }
     }
 
     TSparseArray<TSetElement<InElementType>> Elements;

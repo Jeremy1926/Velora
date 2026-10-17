@@ -5,6 +5,17 @@
 #include "Containers/BitArray.h"
 #include "Templates/TypeCompatibleBytes.h"
 
+struct FSparseArrayAllocationInfo
+{
+    int32 Index;
+    void* Pointer;
+};
+
+FORCEINLINE void* operator new(size_t Size, const FSparseArrayAllocationInfo& Allocation)
+{
+    return Allocation.Pointer;
+}
+
 template<typename ElementType>
 union TSparseArrayElementOrFreeListLink
 {
@@ -22,6 +33,17 @@ class TSparseArray
 {
 public:
     typedef InElementType ElementType;
+
+    FORCEINLINE TSparseArray()
+        : FirstFreeIndex(-1)
+        , NumFreeIndices(0)
+    {
+    }
+
+    FORCEINLINE ~TSparseArray()
+    {
+        Empty();
+    }
 
     FORCEINLINE int32 Num() const
     {
@@ -48,6 +70,41 @@ public:
         return *(const ElementType*)&GetData(Index).ElementData;
     }
 
+    FSparseArrayAllocationInfo AllocateIndex(int32 Index)
+    {
+        AllocationFlags.SetBit(Index, true);
+
+        FSparseArrayAllocationInfo Result;
+        Result.Index = Index;
+        Result.Pointer = &GetData(Result.Index).ElementData;
+
+        return Result;
+    }
+
+    FSparseArrayAllocationInfo AddUninitialized()
+    {
+        int32 Index;
+
+        if (NumFreeIndices)
+        {
+            Index = FirstFreeIndex;
+            FirstFreeIndex = GetData(FirstFreeIndex).NextFreeIndex;
+            --NumFreeIndices;
+
+            if (NumFreeIndices)
+            {
+                GetData(FirstFreeIndex).PrevFreeIndex = -1;
+            }
+        }
+        else
+        {
+            Index = Data.AddUninitialized(1);
+            AllocationFlags.Add(false);
+        }
+
+        return AllocateIndex(Index);
+    }
+
     void RemoveAt(int32 Index, int32 Count = 1)
     {
         for (int32 It = Index, ItCount = Count; ItCount; ++It, --ItCount)
@@ -55,6 +112,11 @@ public:
             ((ElementType&)GetData(It).ElementData).~ElementType();
         }
 
+        RemoveAtUninitialized(Index, Count);
+    }
+
+    void RemoveAtUninitialized(int32 Index, int32 Count = 1)
+    {
         for (; Count; --Count)
         {
             if (NumFreeIndices)
@@ -71,6 +133,22 @@ public:
 
             ++Index;
         }
+    }
+
+    void Empty()
+    {
+        for (int32 Index = 0; Index < GetMaxIndex(); Index++)
+        {
+            if (IsAllocated(Index))
+            {
+                ((ElementType&)GetData(Index).ElementData).~ElementType();
+            }
+        }
+
+        Data.Empty();
+        FirstFreeIndex = -1;
+        NumFreeIndices = 0;
+        AllocationFlags.Empty();
     }
 
 private:

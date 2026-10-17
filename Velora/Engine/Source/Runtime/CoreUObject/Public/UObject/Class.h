@@ -18,6 +18,25 @@ class UStruct : public UField
 {
 public:
     UProperty* FindPropertyByName(FName InName) const;
+
+    FORCEINLINE UStruct* GetSuperStruct() const
+    {
+        return SuperStruct;
+    }
+
+    bool IsChildOf(const UStruct* SomeBase) const
+    {
+        for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())
+        {
+            if (Struct == SomeBase)
+                return true;
+        }
+
+        return false;
+    }
+
+private:
+    UStruct* SuperStruct;
 };
 
 class UClass : public UStruct

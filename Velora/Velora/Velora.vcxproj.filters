@@ -37,6 +37,9 @@
     <Filter Include="Engine\Source\Runtime\CoreUObject\Public">
       <UniqueIdentifier>{2089E329-421C-488C-9DFA-F710C1D06B3C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject\Public\Templates">
+      <UniqueIdentifier>{D09718ED-2868-411B-8EBB-4ED9EF3A7200}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\CoreUObject\Public\UObject">
       <UniqueIdentifier>{9EF7598F-D5FC-435D-B5C1-594276413E8A}</UniqueIdentifier>
     </Filter>
@@ -139,6 +142,9 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Analytics">
       <UniqueIdentifier>{7507820F-DAFA-429F-A49F-08C973F7FCED}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena">
+      <UniqueIdentifier>{127598B4-07DE-47B4-8458-3FA6DA769025}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Online">
       <UniqueIdentifier>{F12F1556-29B4-4C7C-8570-2688D70F170D}</UniqueIdentifier>
     </Filter>
@@ -147,6 +153,9 @@
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Analytics">
       <UniqueIdentifier>{3C9C04F9-83DB-4ABB-A35B-F619B350053C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena">
+      <UniqueIdentifier>{CE7AFDB7-37B3-49CE-868C-1BB3A3805ECE}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{84F43CF4-1467-4D67-B8DD-60526250041C}</UniqueIdentifier>
@@ -444,6 +453,33 @@
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\AnalyticsEventAttribute.h">
       <Filter>Engine\Source\Runtime\Analytics\Analytics\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameModeBase.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameMode.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\Casts.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Info.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -575,6 +611,24 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetConnection.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Crc.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectBaseUtility.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameMode.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameModeAthena.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameModeZone.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortGameSession.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>

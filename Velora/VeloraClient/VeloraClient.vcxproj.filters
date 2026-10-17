@@ -240,6 +240,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformTLS.h">
       <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

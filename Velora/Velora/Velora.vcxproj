@@ -238,6 +238,15 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PackageMapClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\DataBunch.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\AnalyticsEventAttribute.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameModeBase.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameMode.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\Casts.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Info.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
   </ItemGroup>
@@ -299,6 +308,12 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataBunch.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataChannel.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetConnection.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Crc.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectBaseUtility.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameMode.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameModeAthena.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameModeZone.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortGameSession.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />

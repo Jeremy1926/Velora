@@ -191,6 +191,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectArray.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\PlatformTLS.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformTLS.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

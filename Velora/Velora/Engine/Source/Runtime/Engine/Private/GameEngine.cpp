@@ -2,6 +2,9 @@
 #include "Engine/GameEngine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
+#include "Athena/FortGameModeAthena.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
 #include "ContentStreaming.h"
@@ -47,6 +50,21 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         }
 
         UGameplayStatics::OpenLevel(GameInstance, FName(TEXT("/Game/Athena/Maps/Athena_Terrain")));
+    }
+    else if (auto World = GetGameInstance()->GetWorld())
+    {
+        static AFortGameModeAthena* AssignedGameMode = nullptr;
+
+        auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
+
+        if (GameMode && GameMode != AssignedGameMode && GameMode->GetMatchState() == MatchState::WaitingToStart)
+        {
+            TMap<FString, FString> MatchOptions;
+            MatchOptions.Add(TEXT("match.option.warmupRequiredPlayerCount"), TEXT("1"));
+
+            GameMode->OnGivenMatchAssignment(MatchOptions);
+            AssignedGameMode = GameMode;
+        }
     }
 
     (this->*::Tick)(DeltaSeconds, bIdleMode);

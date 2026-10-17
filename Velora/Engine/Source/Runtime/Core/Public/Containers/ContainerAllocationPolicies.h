@@ -157,12 +157,53 @@ public:
     class ForElementType
     {
     public:
+        ForElementType()
+        {
+        }
+
         FORCEINLINE ElementType* GetAllocation() const
         {
-            return SecondaryData.GetAllocation() ? SecondaryData.GetAllocation() : (ElementType*)InlineData;
+            return SecondaryData.GetAllocation() ? SecondaryData.GetAllocation() : GetInlineElements();
+        }
+
+        void ResizeAllocation(int32 PreviousNumElements, int32 NumElements, SIZE_T NumBytesPerElement)
+        {
+            if (NumElements <= NumInlineElements)
+            {
+                if (SecondaryData.GetAllocation())
+                {
+                    memmove((void*)InlineData, (void*)SecondaryData.GetAllocation(), PreviousNumElements * sizeof(ElementType));
+                    SecondaryData.ResizeAllocation(0, 0, NumBytesPerElement);
+                }
+            }
+            else
+            {
+                if (!SecondaryData.GetAllocation())
+                {
+                    SecondaryData.ResizeAllocation(0, NumElements, NumBytesPerElement);
+                    memmove((void*)SecondaryData.GetAllocation(), (void*)GetInlineElements(), PreviousNumElements * sizeof(ElementType));
+                }
+                else
+                {
+                    SecondaryData.ResizeAllocation(PreviousNumElements, NumElements, NumBytesPerElement);
+                }
+            }
+        }
+
+        FORCEINLINE int32 CalculateSlackGrow(int32 NumElements, int32 NumAllocatedElements, SIZE_T NumBytesPerElement) const
+        {
+            return NumElements <= NumInlineElements ? NumInlineElements : SecondaryData.CalculateSlackGrow(NumElements, NumAllocatedElements, NumBytesPerElement);
         }
 
     private:
+        ForElementType(const ForElementType&);
+        ForElementType& operator=(const ForElementType&);
+
+        FORCEINLINE ElementType* GetInlineElements() const
+        {
+            return (ElementType*)InlineData;
+        }
+
         alignas(ElementType) uint8 InlineData[NumInlineElements * sizeof(ElementType)];
         typename SecondaryAllocator::template ForElementType<ElementType> SecondaryData;
     };

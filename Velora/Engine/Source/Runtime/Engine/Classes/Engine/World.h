@@ -4,6 +4,7 @@
 #include "Engine/EngineTypes.h"
 #include "Engine/PendingNetGame.h"
 
+class AGameModeBase;
 class AGameNetworkManager;
 class AGameStateBase;
 class AWorldSettings;
@@ -28,6 +29,8 @@ private:
 class UWorld final : public UObject, public FNetworkNotify
 {
 public:
+    AGameModeBase* GetAuthGameMode() const;
+
     AGameNetworkManager* GetNetworkManager() const;
 
     ULevel* GetCurrentLevelPendingVisibility() const;

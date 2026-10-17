@@ -2,6 +2,8 @@
 
 #include "HAL/Platform.h"
 #include "Containers/Array.h"
+#include "Misc/Crc.h"
+#include <cwctype>
 
 class FString
 {
@@ -40,5 +42,21 @@ public:
     FORCEINLINE const TCHAR* operator*() const
     {
         return Data.Num() ? Data.GetData() : TEXT("");
+    }
+
+    FORCEINLINE friend bool operator==(const FString& Lhs, const FString& Rhs)
+    {
+        for (auto String1 = *Lhs, String2 = *Rhs; *String1 || *String2; String1++, String2++)
+        {
+            if (towupper(*String1) != towupper(*String2))
+                return false;
+        }
+
+        return true;
+    }
+
+    FORCEINLINE friend uint32 GetTypeHash(const FString& S)
+    {
+        return FCrc::Strihash_DEPRECATED(*S);
     }
 };

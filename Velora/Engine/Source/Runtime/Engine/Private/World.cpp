@@ -51,6 +51,13 @@ static auto Listen = DetourCall([]
     return Call;
 }(), &UWorld::Listen);
 
+AGameModeBase* UWorld::GetAuthGameMode() const
+{
+    static auto AuthorityGameMode = GetClass()->FindPropertyByName(FName(TEXT("AuthorityGameMode")));
+
+    return *AuthorityGameMode->ContainerPtrToValuePtr<AGameModeBase*>(this);
+}
+
 AGameNetworkManager* UWorld::GetNetworkManager() const
 {
     static auto NetworkManager = GetClass()->FindPropertyByName(FName(TEXT("NetworkManager")));
