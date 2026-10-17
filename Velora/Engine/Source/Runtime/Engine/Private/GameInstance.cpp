@@ -1,13 +1,14 @@
 #include "pch.h"
 #include "Engine/GameInstance.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
 
-bool UGameInstance::RemoveLocalPlayer(ULocalPlayer* ExistingPlayer)
+TArray<ULocalPlayer*>& UGameInstance::GetLocalPlayers()
 {
-    static auto RemoveLocalPlayer = (bool (*)(UGameInstance*, ULocalPlayer*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("UGameInstance::RemovePlayer: Removed player %s with ControllerId %i at index %i (%i remaining players)")))->BeginAddress);
+    static auto LocalPlayers = GetClass()->FindPropertyByName(FName(TEXT("LocalPlayers")));
 
-    return RemoveLocalPlayer(this, ExistingPlayer);
+    return *LocalPlayers->ContainerPtrToValuePtr<TArray<ULocalPlayer*>>(this);
 }
 
 ULocalPlayer* UGameInstance::GetFirstGamePlayer() const

@@ -45,6 +45,25 @@ public:
         return OldNum;
     }
 
+    int32 RemoveSingle(const ElementType& Item)
+    {
+        for (int32 Index = 0; Index < ArrayNum; Index++)
+        {
+            auto RemovePtr = GetData() + Index;
+
+            if (*RemovePtr == Item)
+            {
+                RemovePtr->~ElementType();
+                memmove(RemovePtr, RemovePtr + 1, (ArrayNum - (Index + 1)) * sizeof(ElementType));
+                --ArrayNum;
+
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
 protected:
     typedef typename TChooseClass<
         Allocator::NeedsElementType,

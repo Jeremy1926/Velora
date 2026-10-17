@@ -35,6 +35,19 @@ inline void* DetourCall(const uint8_t* Call, void* Function)
     return Original;
 }
 
+inline const uint8_t* Patch(const uint8_t* Address, uint8_t Byte)
+{
+    DWORD Protect;
+    VirtualProtect((LPVOID)Address, sizeof(Byte), PAGE_EXECUTE_READWRITE, &Protect);
+
+    *(uint8_t*)Address = Byte;
+
+    VirtualProtect((LPVOID)Address, sizeof(Byte), Protect, &Protect);
+    FlushInstructionCache(GetCurrentProcess(), Address, sizeof(Byte));
+
+    return Address;
+}
+
 template<typename FunctionType>
 inline FunctionType Detour(const void* Target, FunctionType Function)
 {

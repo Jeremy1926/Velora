@@ -12,6 +12,11 @@ class UObjectBase
 public:
     virtual ~UObjectBase();
 
+    FORCEINLINE uint32 GetUniqueID() const
+    {
+        return (uint32)InternalIndex;
+    }
+
     FORCEINLINE UClass* GetClass() const
     {
         return ClassPrivate;

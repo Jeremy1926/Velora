@@ -15,10 +15,3 @@ void UGameViewportClient::SetViewportConsole(UConsole* InViewportConsole)
 
     *ViewportConsole->ContainerPtrToValuePtr<UConsole*>(this) = InViewportConsole;
 }
-
-UWorld* UGameViewportClient::GetWorld() const
-{
-    static auto World = GetClass()->FindPropertyByName(FName(TEXT("World")));
-
-    return *World->ContainerPtrToValuePtr<UWorld*>(this);
-}
