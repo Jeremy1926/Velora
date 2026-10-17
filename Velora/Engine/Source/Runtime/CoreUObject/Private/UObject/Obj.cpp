@@ -68,3 +68,36 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
 
     return GetArchetypeFromRequiredInfo(Class, Outer, Name, ObjectFlags);
 }
+
+UFunction* UObject::FindFunctionChecked(FName InName) const
+{
+    static auto FindFunctionChecked = (UFunction* (*)(const UObject*, FName))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Failed to find function %s in %s")))->BeginAddress);
+
+    return FindFunctionChecked(this, InName);
+}
+
+void UObject::ProcessEvent(UFunction* Function, void* Parms)
+{
+    static auto ProcessEvent = []
+    {
+        auto NotifyEventTriggered = Scanner::FindFunction(Scanner::FindStringReference(TEXT("NotifyEventTriggered: Unable to find function '%s'")));
+        auto End = Scanner::FindFunctionEnd(NotifyEventTriggered);
+
+        for (auto Address = (const uint8_t*)Scanner::Base() + NotifyEventTriggered->BeginAddress; Address < End;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
+                return (int32_t)Instruction.disp.disp32;
+
+            Address += Length;
+        }
+
+        return 0;
+    }();
+
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(UObject*, UFunction*, void*))(VTable + ProcessEvent))(this, Function, Parms);
+}

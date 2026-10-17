@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Containers/UnrealString.h"
 #include "UObject/UnrealNames.h"
 
 typedef int32 NAME_INDEX;
@@ -37,6 +38,8 @@ public:
     }
 
     FName(const WIDECHAR* Name, EFindName FindType = FNAME_Add);
+
+    FString ToString() const;
 
 private:
     union

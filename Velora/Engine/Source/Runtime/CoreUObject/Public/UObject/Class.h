@@ -41,6 +41,16 @@ private:
 
 class UClass : public UStruct
 {
+public:
+    UObject* GetDefaultObject(bool bCreateIfNeeded = true) const;
+
+    template<class T>
+    T* GetDefaultObject() const
+    {
+        return (T*)GetDefaultObject();
+    }
+
+    UObject* InternalCreateDefaultObjectWrapper() const;
 };
 
 class UFunction : public UStruct

@@ -6,9 +6,12 @@
 #include "Items/FortInventory.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "FortniteGame.h"
-#include "FortGlobals.h"
+#include "FortGameData.h"
+#include "Abilities/FortAbilitySet.h"
+#include "Abilities/FortAbilitySystemComponent.h"
+#include "Abilities/FortGameplayAbility.h"
+#include "GameplayAbilitySpec.h"
 #include "FortKismetLibrary.h"
-#include "AbilitySystemInterface.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
@@ -58,7 +61,12 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     if (Pawn && PlayerState)
     {
         PlayerState->ApplyCharacterCustomization(Pawn);
-        UFortGlobals::InitializePlayerGameplayAbilities(Cast<IAbilitySystemInterface>(PlayerState));
+
+        if (auto AbilitySet = UFortGameData::Get()->GetGenericPlayerAbilitySet())
+        {
+            for (auto& GameplayAbility : AbilitySet->GetGameplayAbilities())
+                PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
+        }
 
         if (auto Pickaxe = PlayerController->GetCustomizationLoadout().GetPickaxe())
         {

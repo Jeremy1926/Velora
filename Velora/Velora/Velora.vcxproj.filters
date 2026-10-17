@@ -20,10 +20,16 @@
       <UniqueIdentifier>{9CB0BB8F-5E39-4876-A756-A4DFB0729FB0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private">
-      <UniqueIdentifier>{CDEC2C48-4606-42CE-A471-0D58EC80E780}</UniqueIdentifier>
+      <UniqueIdentifier>{A99D6A3C-3480-4F05-8CFD-DF961A8FDD0D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities">
+      <UniqueIdentifier>{2E2738E3-B9BA-4BE1-8185-C7B6419E6F26}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public">
       <UniqueIdentifier>{14197606-A164-49A1-967C-7F7F440CDB15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities">
+      <UniqueIdentifier>{67C23BDE-4528-46E4-AD7C-CC292BA8EBDF}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source">
       <UniqueIdentifier>{E3488E56-AE57-418A-BEEA-DC93B0340757}</UniqueIdentifier>
@@ -53,7 +59,7 @@
       <UniqueIdentifier>{C9EA0E8F-2A7D-475A-A8BA-846F171AB6E3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\CoreUObject\Private\Misc">
-      <UniqueIdentifier>{799CE3FE-B1D7-4519-88AC-EBE6CBCEDB45}</UniqueIdentifier>
+      <UniqueIdentifier>{66065DBD-582A-4125-8153-4822FDCD7629}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\CoreUObject\Private\UObject">
       <UniqueIdentifier>{74EF9FE4-2C98-4365-B228-292B9708D666}</UniqueIdentifier>
@@ -62,7 +68,7 @@
       <UniqueIdentifier>{2089E329-421C-488C-9DFA-F710C1D06B3C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\CoreUObject\Public\Misc">
-      <UniqueIdentifier>{4432F4B0-0B4D-415E-AF27-E12E4376F1D3}</UniqueIdentifier>
+      <UniqueIdentifier>{6CE0E09A-C62C-419C-9E6D-8B1ACD5E8838}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\CoreUObject\Public\Templates">
       <UniqueIdentifier>{D09718ED-2868-411B-8EBB-4ED9EF3A7200}</UniqueIdentifier>
@@ -93,6 +99,9 @@
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Containers">
       <UniqueIdentifier>{4AAA4934-BCB8-430D-9917-DEC48B5078D3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Delegates">
+      <UniqueIdentifier>{FC5659DC-2E2D-4DE5-BB8B-76D1EA7E0DF0}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\HAL">
       <UniqueIdentifier>{F9147F1C-DC74-44D1-80D9-A827DDB04A15}</UniqueIdentifier>
@@ -145,6 +154,21 @@
     <Filter Include="Engine\Source\Runtime\Engine\Public\Net">
       <UniqueIdentifier>{EB1E85E6-79F8-405D-B340-D23242F75D1C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\GameplayTags">
+      <UniqueIdentifier>{2A53A3AB-00E1-4FCA-B5AC-F328453CA1F8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\GameplayTags\Classes">
+      <UniqueIdentifier>{D5F97567-C208-4496-BC23-9F6120C73EF8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\GameplayTags\Private">
+      <UniqueIdentifier>{99611277-C959-4BF6-B579-21C56322BB39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\GameplayTasks">
+      <UniqueIdentifier>{9224A783-1F7E-44DB-A361-5BDD4FF1CB49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\GameplayTasks\Classes">
+      <UniqueIdentifier>{2816F677-299E-4269-9D64-DA88AFEDC0D4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Launch">
       <UniqueIdentifier>{EC673985-82EB-4371-8E17-1D896FE1314B}</UniqueIdentifier>
     </Filter>
@@ -185,7 +209,7 @@
       <UniqueIdentifier>{6F643786-6C82-4706-8FA1-45EFB52460CC}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Abilities">
-      <UniqueIdentifier>{97DEA1BD-D0E8-4216-93F4-4ED1510292B4}</UniqueIdentifier>
+      <UniqueIdentifier>{3C451855-D476-486C-AAE7-38BF4CCDEF21}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Analytics">
       <UniqueIdentifier>{7507820F-DAFA-429F-A49F-08C973F7FCED}</UniqueIdentifier>
@@ -209,7 +233,7 @@
       <UniqueIdentifier>{37226608-48E8-4BB6-AFE5-7F0F0A011747}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Abilities">
-      <UniqueIdentifier>{32229836-9407-4574-86DE-1F39F30740C1}</UniqueIdentifier>
+      <UniqueIdentifier>{FB8377D6-DE42-465A-ACAF-4376C3108F29}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Analytics">
       <UniqueIdentifier>{3C9C04F9-83DB-4ABB-A35B-F619B350053C}</UniqueIdentifier>
@@ -540,28 +564,10 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerState.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Interface.h">
-      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h">
-      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h">
-      <Filter>Engine\Source\Runtime\CoreUObject\Public\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\DataAsset.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h">
-      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemInterface.h">
-      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayAbilitySpec.h">
-      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffectTypes.h">
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Guid.h">
@@ -569,6 +575,81 @@
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetSerialization.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\CoreMiscDefines.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\TypeHash.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateBase.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\MulticastDelegateBase.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateSignatureImpl.inl">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\ActorComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\GameplayTasks\Classes\GameplayTasksComponent.h">
+      <Filter>Engine\Source\Runtime\GameplayTasks\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagContainer.h">
+      <Filter>Engine\Source\Runtime\GameplayTags\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffectTypes.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayPrediction.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities\GameplayAbility.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities\GameplayAbilityTypes.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities\GameplayAbilityTargetTypes.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\Abilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemLog.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemComponent.h">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameData.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortAssetManager.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySet.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortGameplayAbility.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySystemComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRegisteredPlayerInfo.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
@@ -611,18 +692,6 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortniteGame.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGlobals.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameData.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortAssetManager.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySet.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerState.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
@@ -804,14 +873,38 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\LevelActor.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Guid.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\Misc\StringAssetReference.cpp">
       <Filter>Engine\Source\Runtime\CoreUObject\Private\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemInterface.cpp">
+    <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagContainer.cpp">
+      <Filter>Engine\Source\Runtime\GameplayTags\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemLog.cpp">
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
     </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Guid.cpp">
-      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayPrediction.cpp">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayAbilitySpec.cpp">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbilityTargetTypes.cpp">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemComponent_Abilities.cpp">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameData.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortAssetManager.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortAbilitySet.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRegisteredPlayerInfo.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
@@ -839,18 +932,6 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortniteGame.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGlobals.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameData.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortAssetManager.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortAbilitySet.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerState.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>

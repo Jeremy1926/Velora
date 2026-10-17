@@ -16,7 +16,22 @@ public:
         return GUObjectArray.IndexToObject((int32)GetUniqueID())->IsPendingKill();
     }
 
-    bool IsA(const UClass* SomeBase) const;
+    FORCEINLINE FString GetName() const
+    {
+        return GetFName().ToString();
+    }
 
-    void* GetInterfaceAddress(UClass* InterfaceClass);
+    bool IsA(const UClass* SomeBase) const;
 };
+
+FORCEINLINE FString GetNameSafe(const UObjectBaseUtility* Object)
+{
+    if (Object == NULL)
+    {
+        return TEXT("None");
+    }
+    else
+    {
+        return Object->GetName();
+    }
+}

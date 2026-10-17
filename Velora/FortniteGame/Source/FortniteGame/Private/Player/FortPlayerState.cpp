@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Player/FortPlayerState.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "hde/hde64.h"
@@ -85,4 +86,11 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
     }();
 
     ApplyCharacterCustomization(this, Pawn);
+}
+
+UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
+{
+    static auto AbilitySystemComponent = GetClass()->FindPropertyByName(FName(TEXT("AbilitySystemComponent")));
+
+    return *AbilitySystemComponent->ContainerPtrToValuePtr<UFortAbilitySystemComponent*>(this);
 }

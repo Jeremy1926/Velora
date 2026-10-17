@@ -49,6 +49,41 @@ public:
         return Data.Num() <= 1;
     }
 
+    FORCEINLINE int32 Len() const
+    {
+        return Data.Num() ? Data.Num() - 1 : 0;
+    }
+
+    FORCEINLINE void AppendChars(const TCHAR* Array, int32 Count)
+    {
+        if (!Count)
+            return;
+
+        int32 Index = Data.Num();
+
+        Data.AddUninitialized(Count + (Index ? 0 : 1));
+
+        TCHAR* EndPtr = Data.GetData() + Index - (Index ? 1 : 0);
+
+        memcpy(EndPtr, Array, Count * sizeof(TCHAR));
+
+        *(EndPtr + Count) = 0;
+    }
+
+    FORCEINLINE FString& operator+=(const TCHAR* Str)
+    {
+        AppendChars(Str, (int32)wcslen(Str));
+
+        return *this;
+    }
+
+    FORCEINLINE FString& operator+=(const FString& Str)
+    {
+        AppendChars(*Str, Str.Len());
+
+        return *this;
+    }
+
     FORCEINLINE friend bool operator==(const FString& Lhs, const FString& Rhs)
     {
         for (auto String1 = *Lhs, String2 = *Rhs; *String1 || *String2; String1++, String2++)

@@ -5,6 +5,7 @@
 #include "Containers/Map.h"
 #include "Containers/Set.h"
 #include "Misc/NetworkGuid.h"
+#include "Math/Vector.h"
 
 struct FFastArraySerializerItem
 {
@@ -70,4 +71,8 @@ struct FFastArraySerializer
 private:
     int32 CachedNumItems;
     int32 CachedNumItemsToConsiderForWriting;
+};
+
+struct FVector_NetQuantize100 : public FVector
+{
 };

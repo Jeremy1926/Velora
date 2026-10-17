@@ -34,3 +34,28 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
 
     Constructor(this, Name, FindType);
 }
+
+FString FName::ToString() const
+{
+    static auto ToString = []
+    {
+        auto Address = (const uint8_t*)Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Failed to find function %s in %s")))->BeginAddress;
+
+        for (auto Calls = 0;;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8 && ++Calls == 3)
+                return (void (*)(const FName*, FString&))(Address + Length + (int32_t)Instruction.imm.imm32);
+
+            Address += Length;
+        }
+    }();
+
+    FString Out;
+
+    ToString(this, Out);
+
+    return Out;
+}
