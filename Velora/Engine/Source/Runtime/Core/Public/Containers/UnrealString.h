@@ -27,6 +27,18 @@ public:
         }
     }
 
+    FORCEINLINE FString(const ANSICHAR* Src)
+    {
+        if (Src && *Src)
+        {
+            int32 SrcLen = (int32)strlen(Src) + 1;
+            Data.AddUninitialized(SrcLen);
+
+            for (int32 Index = 0; Index < SrcLen; Index++)
+                Data.GetData()[Index] = (uint8)Src[Index] < 0x80 ? (TCHAR)Src[Index] : TEXT('?');
+        }
+    }
+
     FORCEINLINE const TCHAR* operator*() const
     {
         return Data.Num() ? Data.GetData() : TEXT("");

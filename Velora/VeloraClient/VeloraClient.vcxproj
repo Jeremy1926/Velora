@@ -79,7 +79,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,7 +115,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

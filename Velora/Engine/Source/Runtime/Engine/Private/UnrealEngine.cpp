@@ -49,6 +49,38 @@ static auto NetworkFailureEvent = []
     return std::pair<int32_t, const uint8_t*>();
 }();
 
+void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
+{
+    static auto RunAsDedicated = []
+    {
+        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("TeamChatroom")));
+        auto End = Scanner::FindFunctionEnd(Function);
+
+        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8 && !memcmp(Address + Length, "\x84\xC0\x0F\x85", 4))
+            {
+                for (auto Body = Address + Length + (int32_t)Instruction.imm.imm32; Instruction.opcode != 0xC3;)
+                {
+                    Body += hde64_disasm(Body, &Instruction);
+
+                    if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0xB6 && Instruction.modrm_mod == 2)
+                        return (int32_t)Instruction.disp.disp32;
+                }
+            }
+
+            Address += Length;
+        }
+
+        return 0;
+    }();
+
+    *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
+}
+
 UGameViewportClient* UEngine::GetGameViewport() const
 {
     static auto GameViewport = GetClass()->FindPropertyByName(FName(TEXT("GameViewport")));

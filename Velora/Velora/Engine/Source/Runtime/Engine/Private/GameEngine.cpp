@@ -5,6 +5,10 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
+#include "Interfaces/IAnalyticsProvider.h"
+#include "HAL/PlatformProperties.h"
+#include "FortGameInstance.h"
+#include "Analytics/FortAnalytics.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -26,6 +30,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
     {
         GIsClient = false;
         GIsServer = true;
+
+        GameInstance->GetWorldContext()->SetRunAsDedicated(true);
+
+        auto FortGameInstance = static_cast<UFortGameInstance*>(GameInstance);
+        FortGameInstance->GetServerAnalyticsProvider() = UFortAnalytics::CreateAnalyticsProvider(FString(), FString(), FString(FPlatformProperties::IniPlatformName()), EAnalyticsProviderType::ServerGameInstance, FString());
+        FortGameInstance->GetServerAnalyticsProvider()->StartSession();
 
         UGameplayStatics::OpenLevel(GameInstance, FName(TEXT("/Game/Athena/Maps/Athena_Terrain")));
     }

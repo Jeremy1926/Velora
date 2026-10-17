@@ -79,7 +79,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,7 +115,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -197,6 +197,13 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PendingNetGame.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\World.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetDriver.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\SharedPointerInternals.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\SharedPointer.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformProperties.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\PlatformProperties.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces\IAnalyticsProvider.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -235,6 +242,8 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\World.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkDriver.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
   </ItemGroup>

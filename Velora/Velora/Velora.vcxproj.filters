@@ -10,6 +10,18 @@
     <Filter Include="Engine\Source\Runtime">
       <UniqueIdentifier>{54189C91-E4BC-4785-90AB-8A1700323A5B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Analytics">
+      <UniqueIdentifier>{E7116672-0DCD-4215-9726-721585872067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Analytics\Analytics">
+      <UniqueIdentifier>{47290CE7-EBFE-4B41-B1E7-E02C7F9CF63C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Analytics\Analytics\Public">
+      <UniqueIdentifier>{EB2309AB-E4F6-40E5-BC24-43CD24CCDE28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces">
+      <UniqueIdentifier>{5D5DF874-FFA5-4805-9A8C-D02DDA621ED1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core">
       <UniqueIdentifier>{F21B7894-B351-4298-9999-1819FD006966}</UniqueIdentifier>
     </Filter>
@@ -67,6 +79,9 @@
     <Filter Include="Engine\Source\Runtime\Core\Public\UObject">
       <UniqueIdentifier>{6F78A728-F287-4613-9514-6221CA5A3D6B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Windows">
+      <UniqueIdentifier>{E35EFF2E-6947-4E1C-9F7F-4009535D74E5}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Engine">
       <UniqueIdentifier>{44A48F16-8F8C-409C-94C2-86D3B55D107E}</UniqueIdentifier>
     </Filter>
@@ -90,6 +105,27 @@
     </Filter>
     <Filter Include="Engine\Source\Runtime\Launch\Private\Windows">
       <UniqueIdentifier>{8EA35B9C-FD76-4305-976D-51A1F5BC3811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame">
+      <UniqueIdentifier>{6BA766B1-FB2A-452B-AA5F-C8364C62F67F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source">
+      <UniqueIdentifier>{DEDC68AA-35BE-4799-9743-54171A350431}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame">
+      <UniqueIdentifier>{88302CC5-69C1-4224-A9F1-647531DBF813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private">
+      <UniqueIdentifier>{6F643786-6C82-4706-8FA1-45EFB52460CC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Analytics">
+      <UniqueIdentifier>{7507820F-DAFA-429F-A49F-08C973F7FCED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public">
+      <UniqueIdentifier>{37226608-48E8-4BB6-AFE5-7F0F0A011747}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Analytics">
+      <UniqueIdentifier>{3C9C04F9-83DB-4ABB-A35B-F619B350053C}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{84F43CF4-1467-4D67-B8DD-60526250041C}</UniqueIdentifier>
@@ -264,6 +300,27 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetDriver.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\SharedPointerInternals.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\SharedPointer.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsPlatformProperties.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\PlatformProperties.h">
+      <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces\IAnalyticsProvider.h">
+      <Filter>Engine\Source\Runtime\Analytics\Analytics\Public\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Analytics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -326,6 +383,12 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkDriver.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Analytics</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>

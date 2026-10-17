@@ -8,6 +8,11 @@ class UGameViewportClient;
 class UNetDriver;
 class UWorld;
 
+struct FWorldContext
+{
+    void SetRunAsDedicated(bool bInRunAsDedicated);
+};
+
 class UEngine : public UObject
 {
 public:
