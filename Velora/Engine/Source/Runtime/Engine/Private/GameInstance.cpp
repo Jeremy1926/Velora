@@ -4,7 +4,7 @@
 
 bool UGameInstance::RemoveLocalPlayer(ULocalPlayer* ExistingPlayer)
 {
-    static auto RemoveLocalPlayer = (bool (*)(UGameInstance*, ULocalPlayer*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindReference(Scanner::FindString(TEXT("UGameInstance::RemovePlayer: Removed player %s with ControllerId %i at index %i (%i remaining players)"))))->BeginAddress);
+    static auto RemoveLocalPlayer = (bool (*)(UGameInstance*, ULocalPlayer*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("UGameInstance::RemovePlayer: Removed player %s with ControllerId %i at index %i (%i remaining players)")))->BeginAddress);
 
     return RemoveLocalPlayer(this, ExistingPlayer);
 }

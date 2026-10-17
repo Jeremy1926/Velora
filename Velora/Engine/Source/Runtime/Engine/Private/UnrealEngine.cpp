@@ -1,0 +1,127 @@
+#include "pch.h"
+#include "Engine/Engine.h"
+#include "UObject/UnrealType.h"
+#include "Scanner.h"
+#include "hde/hde64.h"
+
+UEngine*& GEngine = *[]
+{
+    auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
+    auto Function = Scanner::FindFunction(Reference);
+    UEngine** Engine = nullptr;
+
+    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
+    {
+        hde64s Instruction;
+        auto Length = hde64_disasm(Address, &Instruction);
+
+        if (Instruction.opcode == 0x8B && Instruction.rex_w && Instruction.modrm == 0x0D)
+            Engine = (UEngine**)(Address + Length + (int32_t)Instruction.disp.disp32);
+
+        Address += Length;
+    }
+
+    return Engine;
+}();
+
+static auto NetworkFailureEvent = []
+{
+    auto Reference = Scanner::FindStringReference(TEXT("Server switch level: %s"));
+    auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
+    int32_t Offset = 0;
+    bool bPendingConnectionFailure = false;
+
+    for (auto Address = Reference; Address < End;)
+    {
+        hde64s Instruction;
+        auto Length = hde64_disasm(Address, &Instruction);
+
+        if (Instruction.opcode == 0xE8 && bPendingConnectionFailure)
+            return std::pair(Offset, Address + Length + (int32_t)Instruction.imm.imm32);
+        else if (Instruction.opcode == 0x8D && Instruction.modrm_reg == 1 && Instruction.modrm_mod == 2)
+            Offset = (int32_t)Instruction.disp.disp32;
+        else if (Instruction.opcode == 0xB9 && Instruction.rex_b && Instruction.imm.imm32 == ENetworkFailure::PendingConnectionFailure)
+            bPendingConnectionFailure = true;
+
+        Address += Length;
+    }
+
+    return std::pair<int32_t, const uint8_t*>();
+}();
+
+UGameViewportClient* UEngine::GetGameViewport() const
+{
+    static auto GameViewport = GetClass()->FindPropertyByName(FName(TEXT("GameViewport")));
+
+    return *GameViewport->ContainerPtrToValuePtr<UGameViewportClient*>(this);
+}
+
+UClass* UEngine::GetConsoleClass() const
+{
+    static auto ConsoleClass = GetClass()->FindPropertyByName(FName(TEXT("ConsoleClass")));
+
+    return *ConsoleClass->ContainerPtrToValuePtr<UClass*>(this);
+}
+
+UEngine::FOnNetworkFailure& UEngine::OnNetworkFailure()
+{
+    return *(FOnNetworkFailure*)((uint8_t*)this + NetworkFailureEvent.first);
+}
+
+void UEngine::FOnNetworkFailure::Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const
+{
+    static auto Broadcast = (void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&))NetworkFailureEvent.second;
+
+    Broadcast(this, World, NetDriver, FailureType, ErrorString);
+}
+
+bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition)
+{
+    static auto CreateNamedNetDriver = []
+    {
+        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
+        auto Function = Scanner::FindFunction(Reference);
+        const uint8_t* Call = nullptr;
+
+        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8)
+                Call = Address + Length + (int32_t)Instruction.imm.imm32;
+
+            Address += Length;
+        }
+
+        return (bool (*)(UEngine*, UWorld*, FName, FName))Call;
+    }();
+
+    return CreateNamedNetDriver(this, InWorld, NetDriverName, NetDriverDefinition);
+}
+
+UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
+{
+    static auto FindNamedNetDriver = []
+    {
+        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
+        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
+        bool bEngine = false;
+
+        for (auto Address = Reference; Address < End;)
+        {
+            hde64s Instruction;
+            auto Length = hde64_disasm(Address, &Instruction);
+
+            if (Instruction.opcode == 0xE8 && bEngine)
+                return (UNetDriver* (*)(UEngine*, UWorld*, FName))(Address + Length + (int32_t)Instruction.imm.imm32);
+
+            bEngine = Instruction.opcode == 0x8B && Instruction.rex_w && Instruction.modrm == 0x0D && Address + Length + (int32_t)Instruction.disp.disp32 == (const uint8_t*)&GEngine;
+            Address += Length;
+        }
+
+        return (UNetDriver* (*)(UEngine*, UWorld*, FName))nullptr;
+    }();
+
+    return FindNamedNetDriver(this, InWorld, NetDriverName);
+}

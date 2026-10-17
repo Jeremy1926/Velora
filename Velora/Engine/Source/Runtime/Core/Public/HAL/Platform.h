@@ -5,6 +5,7 @@ typedef unsigned short int uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 typedef signed int int32;
+typedef char ANSICHAR;
 typedef wchar_t WIDECHAR;
 typedef WIDECHAR TCHAR;
 

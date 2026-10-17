@@ -2,67 +2,128 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Engine">
-      <UniqueIdentifier>{0A35CFFB-3B79-4A7E-9787-B37AB5EB139B}</UniqueIdentifier>
+      <UniqueIdentifier>{634DC1A5-3B33-4164-89A8-DF9724CFDC16}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source">
-      <UniqueIdentifier>{0A42E003-FB75-4155-9264-5F58CB44311A}</UniqueIdentifier>
+      <UniqueIdentifier>{B386E820-104C-44C1-BDBC-EC8D8B029E17}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime">
-      <UniqueIdentifier>{33033F69-725D-46C8-8BAA-8EFF856009B1}</UniqueIdentifier>
+      <UniqueIdentifier>{9231E38C-6D97-4E43-A787-A060920F7E4F}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core">
-      <UniqueIdentifier>{138725C0-28AC-480B-81E9-3BA070B236B4}</UniqueIdentifier>
+      <UniqueIdentifier>{D0034C8C-AEBF-4260-BED6-606633D4E5EB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject">
+      <UniqueIdentifier>{20482361-874D-4646-98F4-05388CA4A4F0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject\Private">
+      <UniqueIdentifier>{EB891E85-F112-43B8-8B69-A5D51E343DD4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject\Private\UObject">
+      <UniqueIdentifier>{D4F18BDA-9A5B-4E35-A013-E4022968892C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject\Public">
+      <UniqueIdentifier>{8B5B6BB6-9EC7-4675-8076-CAA3E1B81A07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\CoreUObject\Public\UObject">
+      <UniqueIdentifier>{1B59696C-DBEE-4C05-906A-94904C8911A8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private">
-      <UniqueIdentifier>{89C9C533-77DB-47E6-B633-99704BC007EE}</UniqueIdentifier>
+      <UniqueIdentifier>{87F54C15-5029-4F11-99E4-11CD8306A2F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Containers">
+      <UniqueIdentifier>{EBFF9F10-4CF3-4A69-9DAC-A2E68ED8FC8C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\HAL">
+      <UniqueIdentifier>{E6F1C4D8-0466-4D67-AB3C-5506D048BEBB}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\Misc">
-      <UniqueIdentifier>{7B4F597F-9F04-4099-964B-6832A3482A94}</UniqueIdentifier>
+      <UniqueIdentifier>{E64042BD-38B3-4458-8C56-D8B497D8BF71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\UObject">
+      <UniqueIdentifier>{11089BD0-056E-499B-ABF3-2F092B60AC27}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public">
-      <UniqueIdentifier>{CEDEE09F-7550-4187-AD81-29ACB65D4D64}</UniqueIdentifier>
+      <UniqueIdentifier>{71E6811A-D907-42CA-A95A-73AF034BC48E}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Containers">
-      <UniqueIdentifier>{990EEEEB-54F2-4BEC-9099-36F9508E5449}</UniqueIdentifier>
+      <UniqueIdentifier>{D85BCE4F-AA21-4E3F-9C8C-C5718966A2B8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\HAL">
-      <UniqueIdentifier>{0F084E2D-CF9E-4FE7-A46E-AA723438795D}</UniqueIdentifier>
+      <UniqueIdentifier>{49C8FC9A-4D15-4931-AD26-A8749559A6EE}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Misc">
-      <UniqueIdentifier>{374DDF15-EDF0-4633-A900-28EEB7A67816}</UniqueIdentifier>
+      <UniqueIdentifier>{2611CF28-010B-4559-B464-8083D4B2BB80}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Templates">
-      <UniqueIdentifier>{018E96B7-22EB-4663-BA2A-AC622BE86C6C}</UniqueIdentifier>
+      <UniqueIdentifier>{D82DB5BF-B998-4044-B4EF-F15293270944}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\UObject">
+      <UniqueIdentifier>{D6B2F636-09E6-47F7-A101-0D8F9BCB3BFA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine">
+      <UniqueIdentifier>{C2D812D2-5A32-477E-AD7B-A72DDC2008D5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Classes">
+      <UniqueIdentifier>{3A6CF605-95FC-409C-BA29-D069EB50A2CD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Classes\Engine">
+      <UniqueIdentifier>{DF1537E5-0443-4848-8B34-CE6F4F14E24E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Classes\Kismet">
+      <UniqueIdentifier>{F919ADA6-87B0-461F-8369-8FD9FF63DCFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Private">
+      <UniqueIdentifier>{5C90CDF0-C43F-464B-98AA-17A0F234C8AD}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Launch">
-      <UniqueIdentifier>{A3D828C4-05A0-495F-AC43-34E9E0FB9A3B}</UniqueIdentifier>
+      <UniqueIdentifier>{DFADDA88-DB3C-446E-83CE-7919ED3453CD}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Launch\Private">
-      <UniqueIdentifier>{A26A5E24-DF3E-4E72-A708-D6773B41B2D6}</UniqueIdentifier>
+      <UniqueIdentifier>{7D043B82-3E86-47A9-B5AF-E4DD12E11125}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Launch\Private\Windows">
-      <UniqueIdentifier>{8C674B5C-BE44-4771-A1C3-C7DA4E0B2CFE}</UniqueIdentifier>
+      <UniqueIdentifier>{18144DD0-760E-4752-8946-34BF12D2E65B}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty">
-      <UniqueIdentifier>{F5624349-99C0-4761-A810-69BD8D191523}</UniqueIdentifier>
+      <UniqueIdentifier>{83A62A4E-4FC8-41FC-9117-DDC1EFCB2C26}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty\MinHook">
-      <UniqueIdentifier>{84031BE6-FE68-470D-A0C0-C42044BF77A3}</UniqueIdentifier>
+      <UniqueIdentifier>{157A8940-D2D2-43DE-9C8B-082A49A96C13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\MinHook\include">
+      <UniqueIdentifier>{53D159FE-5A41-4B75-97D1-E0FEABB452B1}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty\MinHook\src">
-      <UniqueIdentifier>{D264AB45-B8C5-487D-947B-8A0F6F00577D}</UniqueIdentifier>
+      <UniqueIdentifier>{A9965C71-4CF5-4CBD-A2F2-7DC6B9C046E3}</UniqueIdentifier>
     </Filter>
     <Filter Include="ThirdParty\MinHook\src\hde">
-      <UniqueIdentifier>{5D291698-D797-4759-8668-5E467D433787}</UniqueIdentifier>
+      <UniqueIdentifier>{00B3248B-4961-4C5C-A9D4-D777482E0284}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
+    <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\include\MinHook.h">
+      <Filter>ThirdParty\MinHook\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\buffer.h">
+      <Filter>ThirdParty\MinHook\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\trampoline.h">
+      <Filter>ThirdParty\MinHook\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\hde32.h">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\hde64.h">
       <Filter>ThirdParty\MinHook\src\hde</Filter>
     </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\pstdint.h">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\table32.h">
       <Filter>ThirdParty\MinHook\src\hde</Filter>
     </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\table64.h">
@@ -73,6 +134,9 @@
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\UnrealMemory.h">
       <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\CoreGlobals.h">
+      <Filter>Engine\Source\Runtime\Core\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainersFwd.h">
       <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
@@ -86,7 +150,16 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\UnrealString.h">
       <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\EnumAsByte.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\ChooseClass.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\RemoveReference.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\UnrealTemplate.h">
       <Filter>Engine\Source\Runtime\Core\Public\Templates</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersionBase.h">
@@ -95,14 +168,119 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersion.h">
       <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDevice.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h">
+      <Filter>Engine\Source\Runtime\Core\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\UnrealNames.h">
+      <Filter>Engine\Source\Runtime\Core\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectMacros.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBase.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBaseUtility.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Object.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Class.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNetTypes.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UnrealType.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectGlobals.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Engine.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameEngine.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameInstance.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ScriptViewportClient.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameViewportClient.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\BlueprintFunctionLibrary.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Kismet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Kismet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\ThirdParty\MinHook\src\buffer.c">
+      <Filter>ThirdParty\MinHook\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\hook.c">
+      <Filter>ThirdParty\MinHook\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\trampoline.c">
+      <Filter>ThirdParty\MinHook\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde32.c">
+      <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde64.c">
       <Filter>ThirdParty\MinHook\src\hde</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Containers\UnrealString.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectGlobals.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UnrealEngine.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp">
       <Filter>Engine\Source\Runtime\Launch\Private\Windows</Filter>

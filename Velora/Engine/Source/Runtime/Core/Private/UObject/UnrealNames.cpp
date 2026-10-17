@@ -7,10 +7,11 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
     static auto Constructor = []
     {
-        auto Function = Scanner::FindFunction(Scanner::FindReference(Scanner::FindString(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))));
+        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Illegal call to StaticFindObject() while collecting garbage!")));
+        auto End = Scanner::FindFunctionEnd(Function);
         bool bFindTypeAdd = false;
 
-        for (auto Address = Scanner::Base() + Function->BeginAddress; Address < Scanner::Base() + Function->EndAddress;)
+        for (auto Address = Scanner::Base() + Function->BeginAddress; Address < End;)
         {
             hde64s Instruction;
             auto Length = hde64_disasm(Address, &Instruction);

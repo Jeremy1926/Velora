@@ -167,7 +167,10 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\UnrealTemplate.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersionBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersion.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDevice.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\UnrealNames.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectMacros.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBaseUtility.h" />
@@ -175,11 +178,25 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Class.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNetTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UnrealType.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectGlobals.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Engine.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameEngine.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameInstance.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ScriptViewportClient.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameViewportClient.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\BlueprintFunctionLibrary.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogVerbosity.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogCategory.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogMacros.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Parse.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\CommandLine.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineTypes.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PendingNetGame.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\World.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetDriver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -211,6 +228,13 @@
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameInstance.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameplayStatics.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CommandLine.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UnrealEngine.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\World.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkDriver.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
   </ItemGroup>

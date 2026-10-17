@@ -2,6 +2,12 @@
 
 #include "MinHook.h"
 
+extern "C"
+{
+#include "buffer.h"
+#include "trampoline.h"
+}
+
 inline void* Detour(void* Target, void* Function)
 {
     static auto Status = MH_Initialize();
@@ -12,8 +18,45 @@ inline void* Detour(void* Target, void* Function)
     return Original;
 }
 
+inline void* DetourCall(const uint8_t* Call, void* Function)
+{
+    auto Jump = (JMP_ABS*)AllocateBuffer((LPVOID)Call);
+    *Jump = { 0xFF, 0x25, 0, (UINT64)Function };
+
+    DWORD Protect;
+    VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), PAGE_EXECUTE_READWRITE, &Protect);
+
+    auto Original = (void*)(Call + 5 + *(int32_t*)(Call + 1));
+    *(int32_t*)(Call + 1) = (int32_t)((uint8_t*)Jump - (Call + 5));
+
+    VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), Protect, &Protect);
+    FlushInstructionCache(GetCurrentProcess(), Call, 5);
+
+    return Original;
+}
+
 template<typename FunctionType>
 inline FunctionType Detour(const void* Target, FunctionType Function)
 {
-    return std::bit_cast<FunctionType>(Detour((void*)Target, std::bit_cast<void*>(Function)));
+    void* Address = nullptr;
+    memcpy(&Address, &Function, sizeof(Address));
+
+    FunctionType Original = {};
+    auto Trampoline = Detour((void*)Target, Address);
+    memcpy(&Original, &Trampoline, sizeof(Trampoline));
+
+    return Original;
+}
+
+template<typename FunctionType>
+inline FunctionType DetourCall(const uint8_t* Call, FunctionType Function)
+{
+    void* Address = nullptr;
+    memcpy(&Address, &Function, sizeof(Address));
+
+    FunctionType Original = {};
+    auto Target = DetourCall(Call, Address);
+    memcpy(&Original, &Target, sizeof(Target));
+
+    return Original;
 }

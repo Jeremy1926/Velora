@@ -32,3 +32,19 @@ enum EObjectFlags
     RF_Dynamic = 0x04000000,
     RF_WillBeLoaded = 0x08000000,
 };
+
+enum class EInternalObjectFlags : int32
+{
+    None = 0,
+    ReachableInCluster = 1 << 23,
+    ClusterRoot = 1 << 24,
+    Native = 1 << 25,
+    Async = 1 << 26,
+    AsyncLoading = 1 << 27,
+    Unreachable = 1 << 28,
+    PendingKill = 1 << 29,
+    RootSet = 1 << 30,
+    NoStrongReference = 1 << 31,
+    GarbageCollectionKeepFlags = Native | Async | AsyncLoading,
+    AllFlags = ReachableInCluster | ClusterRoot | Native | Async | AsyncLoading | Unreachable | PendingKill | RootSet | NoStrongReference
+};

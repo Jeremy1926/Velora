@@ -14,25 +14,6 @@ namespace Scanner
         return { IMAGE_FIRST_SECTION(Headers), Headers->FileHeader.NumberOfSections };
     }
 
-    inline const wchar_t* FindString(const wchar_t* String)
-    {
-        auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
-
-        for (auto& Section : Sections())
-        {
-            auto Begin = Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
-
-            for (auto Address = Begin + sizeof(wchar_t); Address + Size <= End; Address += sizeof(wchar_t))
-            {
-                if (*(wchar_t*)Address == *String && *(wchar_t*)(Address - sizeof(wchar_t)) == 0 && !memcmp(Address, String, Size))
-                    return (const wchar_t*)Address;
-            }
-        }
-
-        return nullptr;
-    }
-
     inline const uint8_t* FindReference(const void* Target)
     {
         for (auto& Section : Sections())
@@ -47,6 +28,28 @@ namespace Scanner
             {
                 if (Address[0] == 0x8D && (Address[1] & 0xC7) == 0x05 && Address + 6 + *(int32_t*)(Address + 2) == Target)
                     return Address;
+            }
+        }
+
+        return nullptr;
+    }
+
+    inline const uint8_t* FindStringReference(const wchar_t* String)
+    {
+        auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
+
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
+            {
+                if (*(wchar_t*)Address == *String && !memcmp(Address, String, Size))
+                {
+                    if (auto Reference = FindReference(Address))
+                        return Reference;
+                }
             }
         }
 
@@ -109,5 +112,21 @@ namespace Scanner
         }
 
         return Function;
+    }
+
+    inline const uint8_t* FindFunctionEnd(const RUNTIME_FUNCTION* Function)
+    {
+        auto End = Base() + Function->EndAddress;
+        DWORD64 ImageBase = 0;
+
+        while (auto Chunk = RtlLookupFunctionEntry((DWORD64)End, &ImageBase, nullptr))
+        {
+            if (FindFunction(End)->BeginAddress != Function->BeginAddress)
+                break;
+
+            End = Base() + Chunk->EndAddress;
+        }
+
+        return End;
     }
 }

@@ -7,12 +7,11 @@ const FEngineVersion& FEngineVersion::Current()
 {
     static auto Current = []
     {
-        auto Reference = Scanner::FindReference(Scanner::FindString(TEXT("Engine Version: %s")));
-        DWORD64 ImageBase = 0;
-        auto Function = RtlLookupFunctionEntry((DWORD64)Reference, &ImageBase, nullptr);
+        auto Reference = Scanner::FindStringReference(TEXT("Engine Version: %s"));
+        auto Function = Scanner::FindFunction(Reference);
         const uint8* Calls[2] = {};
 
-        for (auto Address = (const uint8*)ImageBase + Function->BeginAddress; Address < Reference;)
+        for (auto Address = (const uint8*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
         {
             hde64s Instruction;
             Address += hde64_disasm(Address, &Instruction);

@@ -145,18 +145,49 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
+    <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\include\MinHook.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\src\buffer.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\src\trampoline.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\hde32.h" />
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\hde64.h" />
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\pstdint.h" />
+    <ClInclude Include="..\ThirdParty\MinHook\src\hde\table32.h" />
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\table64.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\Platform.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\UnrealMemory.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\CoreGlobals.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainersFwd.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainerAllocationPolicies.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\Array.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\UnrealString.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\EnumAsByte.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\ChooseClass.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\RemoveReference.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\UnrealTemplate.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersionBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersion.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDevice.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\UnrealNames.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectMacros.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBase.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectBaseUtility.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Object.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Class.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNetTypes.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UnrealType.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectGlobals.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Engine.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameEngine.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameInstance.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ScriptViewportClient.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameViewportClient.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\BlueprintFunctionLibrary.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -165,10 +196,32 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\buffer.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\hook.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\trampoline.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde32.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde64.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Containers\UnrealString.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectGlobals.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UnrealEngine.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

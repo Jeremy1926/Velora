@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "UObject/UnrealNames.h"
 
 typedef int32 NAME_INDEX;
 
@@ -14,9 +15,28 @@ enum EFindName
 class FName
 {
 public:
+    FORCEINLINE bool operator==(const FName& Other) const
+    {
+        return CompositeComparisonValue == Other.CompositeComparisonValue;
+    }
+
+    FORCEINLINE FName(EName N)
+        : ComparisonIndex(N)
+        , Number(0)
+    {
+    }
+
     FName(const WIDECHAR* Name, EFindName FindType = FNAME_Add);
 
 private:
-    NAME_INDEX ComparisonIndex;
-    int32 Number;
+    union
+    {
+        struct
+        {
+            NAME_INDEX ComparisonIndex;
+            uint32 Number;
+        };
+
+        uint64 CompositeComparisonValue;
+    };
 };
