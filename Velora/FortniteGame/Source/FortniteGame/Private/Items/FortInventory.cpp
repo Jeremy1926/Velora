@@ -21,7 +21,13 @@ void AFortInventory::HandleInventoryLocalUpdate()
 
 void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
 {
-    static auto SetItemRequiresUpdate = (void (*)(AFortInventory*, FFortItemEntry&))Scanner::Native(TEXT("/Script/FortniteGame.FortOutpostFunctionLibrary:StorageVaultStoreItem")).Call(3).Find("ret").Last("call 0x*").Call().Get(TEXT("AFortInventory::SetItemRequiresUpdate"));
+    static auto SetItemRequiresUpdate = []
+    {
+        auto UpdateQuantity = Scanner::String(TEXT("UFortWorldItem::UpdateQuantity: Got mcp request to change quantity on item %s*"));
+        auto Call = UpdateQuantity.Find("mov rcx, rax; mov rdx, rbx; call 0x*");
+
+        return (void (*)(AFortInventory*, FFortItemEntry&))(Call.Get() ? Call : UpdateQuantity.Find("mov edx, ebp; call 0x*").Call().Find("mov rcx, rax; mov rdx, rbx; call 0x*")).Call().Get(TEXT("AFortInventory::SetItemRequiresUpdate"));
+    }();
 
     SetItemRequiresUpdate(this, ItemEntry);
 }
