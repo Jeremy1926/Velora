@@ -123,7 +123,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
         {
             SetContainerSearched(Searcher);
 
-            if (GetDestroyContainerOnSearch())
+            if (GetDestroyContainerOnSearch() && !(Searcher && Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode())))
                 SilentDie();
         }
     }
