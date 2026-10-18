@@ -11,12 +11,13 @@ static int32_t GetNetPrioritySlot()
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
 
-        for (auto Index = 0; Index * (int32_t)sizeof(void*) < IsNetRelevantForSlot; Index++)
+        for (auto Index = IsNetRelevantForSlot / (int32_t)sizeof(void*) - 1; Index > 0; Index--)
         {
             auto Function = Scanner::At(VTable[Index]);
+            auto Self = std::format("[*+{:#x}]", Index * sizeof(void*));
 
-            if (Function.Is("movss xmm0, dword ptr [0x*]; ret") && *(float*)Function.Target() == -17.0f)
-                return Scanner::Slot(TEXT("AActor::GetNetPriority"), (Index + 1) * (int32_t)sizeof(void*));
+            if (Function.Has("call " + Self) || Function.Has("jmp " + Self))
+                return Scanner::Slot(TEXT("AActor::GetNetPriority"), Index * (int32_t)sizeof(void*));
         }
 
         return Scanner::Slot(TEXT("AActor::GetNetPriority"), 0);
@@ -44,12 +45,12 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
     static auto GetNetDormancy = []
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto Index = GetNetPrioritySlot() / (int32_t)sizeof(void*);
+        auto Index = GetNetPrioritySlot() / (int32_t)sizeof(void*) + 2;
 
-        while (!Scanner::At(VTable[Index]).Start().Has(std::format("jmp [*+{:#x}]", (Index + 1) * sizeof(void*))))
+        if (Scanner::At(VTable[Index]).Has(std::format("jmp [*+{:#x}]", (Index + 1) * sizeof(void*))))
             Index++;
 
-        return Scanner::Slot(TEXT("AActor::GetNetDormancy"), (Index + 1) * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AActor::GetNetDormancy"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;

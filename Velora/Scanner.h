@@ -221,7 +221,7 @@ namespace Scanner
     template<typename ValueType>
     inline ValueType Offset(const TCHAR* Name, ValueType Value)
     {
-        if (Value)
+        if ((int64)Value > 0)
         {
             UE_LOG(LogVelora, Log, TEXT("Found %s offset 0x%llX"), Name, (int64)Value);
         }
@@ -236,7 +236,7 @@ namespace Scanner
     template<typename ValueType>
     inline ValueType Slot(const TCHAR* Name, ValueType Value)
     {
-        if (Value)
+        if ((int64)Value > 0 && (int64)Value < 0x10000 && !((int64)Value % sizeof(void*)))
         {
             UE_LOG(LogVelora, Log, TEXT("Found %s vtable slot 0x%llX"), Name, (int64)Value);
         }

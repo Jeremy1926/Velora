@@ -6,7 +6,8 @@
 struct FCloseBunch
 {
     const uint8_t* Constructor;
-    int32_t Flags;
+    int32_t ReliableOffset;
+    int32_t DormantOffset;
     uint8_t DormantMask;
     uint8_t ReliableMask;
 };
@@ -14,13 +15,28 @@ struct FCloseBunch
 static auto CloseBunch = []
 {
     auto Close = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1");
-    auto Flags = Close.Find("movzx *, byte ptr [rsp+0x*]");
+    auto Base = Close.Find("lea rcx, [rsp+0x*]").Disp();
+    auto Reliable = Close.Find("mov byte ptr [rsp+0x*], 0x1");
     FCloseBunch Bunch;
 
     Bunch.Constructor = Close.Call().Get(TEXT("FOutBunch::FOutBunch"));
-    Bunch.Flags = Scanner::Offset(TEXT("FOutBunch::bReliable"), Flags.Disp() - Close.Find("lea rcx, [rsp+0x*]").Disp());
-    Bunch.DormantMask = (uint8_t)~Flags.Find("and al, 0x*").Imm();
-    Bunch.ReliableMask = (uint8_t)(Flags.Find("or cl, 0x*").Imm() << Flags.Find("shl cl, 0x*").Imm());
+
+    if (Reliable.Get())
+    {
+        Bunch.ReliableOffset = Scanner::Offset(TEXT("FOutBunch::bReliable"), Reliable.Disp() - Base);
+        Bunch.DormantOffset = Scanner::Offset(TEXT("FOutBunch::bDormant"), Reliable.Find("mov [rsp+0x*], al").Disp() - Base);
+        Bunch.DormantMask = 1;
+        Bunch.ReliableMask = 1;
+    }
+    else
+    {
+        auto Flags = Close.Find("movzx *, byte ptr [rsp+0x*]");
+
+        Bunch.ReliableOffset = Scanner::Offset(TEXT("FOutBunch::bReliable"), Flags.Disp() - Base);
+        Bunch.DormantOffset = Bunch.ReliableOffset;
+        Bunch.DormantMask = (uint8_t)~Flags.Find("and al, 0x*").Imm();
+        Bunch.ReliableMask = (uint8_t)(Flags.Find("or cl, 0x*").Imm() << Flags.Find("shl cl, 0x*").Imm());
+    }
 
     return Bunch;
 }();
@@ -51,14 +67,14 @@ FOutBunch::~FOutBunch()
 
 void FOutBunch::SetReliable(bool bInReliable)
 {
-    auto& Flags = *((uint8_t*)this + CloseBunch.Flags);
+    auto& Flags = *((uint8_t*)this + CloseBunch.ReliableOffset);
 
     Flags = (Flags & ~CloseBunch.ReliableMask) | (bInReliable ? CloseBunch.ReliableMask : 0);
 }
 
 void FOutBunch::SetDormant(bool bInDormant)
 {
-    auto& Flags = *((uint8_t*)this + CloseBunch.Flags);
+    auto& Flags = *((uint8_t*)this + CloseBunch.DormantOffset);
 
     Flags = (Flags & ~CloseBunch.DormantMask) | (bInDormant ? CloseBunch.DormantMask : 0);
 }

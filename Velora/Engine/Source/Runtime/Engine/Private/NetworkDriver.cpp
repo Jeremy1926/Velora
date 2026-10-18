@@ -24,7 +24,7 @@
 
 static auto TickFlushFunction = Scanner::String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s")).Last("call 0x*").Target(TEXT("UNetDriver::TickFlush"));
 
-static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [*]").Slot(TEXT("UNetDriver::IsServer"));
+static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [rax+0x*]").Slot(TEXT("UNetDriver::IsServer"));
 
 static auto TickFlush = Detour(TEXT("UNetDriver::TickFlush"), TickFlushFunction, &UNetDriver::TickFlush);
 
