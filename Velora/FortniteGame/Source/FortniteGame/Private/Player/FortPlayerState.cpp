@@ -40,10 +40,3 @@ UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
 
     return *AbilitySystemComponent->ContainerPtrToValuePtr<UFortAbilitySystemComponent*>(this);
 }
-
-FFortPlayerAttributeSets& AFortPlayerState::GetAttributeSets()
-{
-    static auto AttributeSets = GetClass()->FindPropertyByName(FName(TEXT("AttributeSets")));
-
-    return *AttributeSets->ContainerPtrToValuePtr<FFortPlayerAttributeSets>(this);
-}
