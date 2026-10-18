@@ -137,7 +137,7 @@ float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
 {
     static auto DetermineMaxResourcesToSpawn = []
     {
-        auto Function = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")))->BeginAddress;
+        auto Function = Scanner::String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")).Start().Get();
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
         auto Index = 0;
 

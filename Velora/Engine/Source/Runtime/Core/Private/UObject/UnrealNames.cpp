@@ -1,57 +1,17 @@
 #include "pch.h"
 #include "UObject/NameTypes.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
-    static auto Constructor = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Illegal call to StaticFindObject() while collecting garbage!")));
-        auto End = Scanner::FindFunctionEnd(Function);
-        bool bFindTypeAdd = false;
-
-        for (auto Address = Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-            {
-                if (bFindTypeAdd)
-                    return (void (*)(FName*, const WIDECHAR*, EFindName))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-                bFindTypeAdd = false;
-            }
-            else if (Instruction.opcode == 0xB8 && Instruction.rex_b && Instruction.imm.imm32 == FNAME_Add)
-                bFindTypeAdd = true;
-
-            Address += Length;
-        }
-
-        return (void (*)(FName*, const WIDECHAR*, EFindName))nullptr;
-    }();
+    static auto Constructor = (void (*)(FName*, const WIDECHAR*, EFindName))Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!")).Start().Find("mov r8d, 0x1").Call().Get();
 
     Constructor(this, Name, FindType);
 }
 
 FString FName::ToString() const
 {
-    static auto ToString = []
-    {
-        auto Address = (const uint8_t*)Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Failed to find function %s in %s")))->BeginAddress;
-
-        for (auto Calls = 0;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8 && ++Calls == 3)
-                return (void (*)(const FName*, FString&))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            Address += Length;
-        }
-    }();
+    static auto ToString = (void (*)(const FName*, FString&))Scanner::String(TEXT("Failed to find function %s in %s")).Start().Call(3).Get();
 
     FString Out;
 

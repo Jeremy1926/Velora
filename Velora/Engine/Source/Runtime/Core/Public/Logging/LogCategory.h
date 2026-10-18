@@ -6,6 +6,8 @@
 
 struct FLogCategoryBase
 {
+    FLogCategoryBase(const TCHAR* CategoryName, ELogVerbosity::Type InDefaultVerbosity, ELogVerbosity::Type InCompileTimeVerbosity);
+
     FORCEINLINE bool IsSuppressed(ELogVerbosity::Type VerbosityLevel) const
     {
         if ((VerbosityLevel & ELogVerbosity::VerbosityMask) <= Verbosity)

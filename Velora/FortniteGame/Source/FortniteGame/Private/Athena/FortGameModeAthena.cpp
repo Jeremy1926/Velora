@@ -22,11 +22,10 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include "hde/hde64.h"
 
-static auto SpawnDefaultPawnFor = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no world")))->BeginAddress, &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
+static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
 
-static auto OnGivenMatchAssignment = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("match.option.warmupRequiredPlayerCount")))->BeginAddress, &AFortGameModeAthena::OnGivenMatchAssignment);
+static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get(), &AFortGameModeAthena::OnGivenMatchAssignment);
 
 UClass* AFortGameModeAthena::StaticClass()
 {
@@ -76,7 +75,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                 PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
         }
 
-        if (auto Pickaxe = PlayerController->GetCustomizationLoadout().GetPickaxe())
+        auto CustomizationLoadout = PlayerController->GetCustomizationLoadout();
+
+        if (auto Pickaxe = CustomizationLoadout ? CustomizationLoadout->GetPickaxe() : nullptr)
         {
             if (!PlayerController->K2_FindExistingItemForDefinition(Pickaxe->GetWeaponDefinition(), false))
                 UFortKismetLibrary::K2_GiveItemToPlayer(PlayerController, Pickaxe->GetWeaponDefinition(), 1);
@@ -96,64 +97,30 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 {
     static auto SpawnLoot = []
     {
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
+        auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Disp();
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-            {
-                auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
-
-                return DetourVTable((void**)(VTable + (int32_t)Instruction.disp.disp32 + sizeof(void*)), &ABuildingContainer::SpawnLoot);
-            }
-
-            Address += Length;
-        }
+        return DetourVTable(TEXT("ABuildingContainer::SpawnLoot"), (void**)(VTable + BounceContainer + sizeof(void*)), &ABuildingContainer::SpawnLoot);
     }();
 
     static auto GivePickupTo = []
     {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")));
+        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Disp();
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup"));
+        auto AthenaVTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
 
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
+        DetourVTable(TEXT("AFortPickupAthena::GivePickupTo"), (void**)(AthenaVTable + GivePickupTo), &AFortPickup::GivePickupTo);
 
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 4 && Instruction.modrm_mod == 2)
-            {
-                auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup"));
-                auto AthenaVTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
-
-                DetourVTable((void**)(AthenaVTable + (int32_t)Instruction.disp.disp32), &AFortPickup::GivePickupTo);
-
-                return DetourVTable((void**)(VTable + (int32_t)Instruction.disp.disp32), &AFortPickup::GivePickupTo);
-            }
-
-            Address += Length;
-        }
+        return DetourVTable(TEXT("AFortPickup::GivePickupTo"), (void**)(VTable + GivePickupTo), &AFortPickup::GivePickupTo);
     }();
 
     static auto AttemptSpawnResources = []
     {
-        auto Reference = Scanner::FindStringReference("OwnedBuildingDamaged");
-        int32_t AttemptSpawnResources = 0;
-        auto Calls = 0;
-
-        for (auto Address = Reference; !AttemptSpawnResources;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2 && ++Calls == 2)
-                AttemptSpawnResources = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
+        auto AttemptSpawnResources = Scanner::String("OwnedBuildingDamaged").Find("call [*+0x*]", 2).Disp();
         auto BuildingSMActorClass = ABuildingSMActor::StaticClass();
         auto Stub = (*(void***)BuildingSMActorClass->GetDefaultObject(false))[AttemptSpawnResources / sizeof(void*)];
+
+        auto Classes = 0;
 
         for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
         {
@@ -168,47 +135,23 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
                 auto Slot = *(void***)DefaultObject + AttemptSpawnResources / sizeof(void*);
 
                 if (*Slot == Stub)
-                    DetourVTable(Slot, &ABuildingSMActor::AttemptSpawnResources);
+                {
+                    DetourVTable(nullptr, Slot, &ABuildingSMActor::AttemptSpawnResources);
+                    Classes++;
+                }
             }
         }
+
+        UE_LOG(LogVelora, Log, TEXT("Hooked ABuildingSMActor::AttemptSpawnResources in %d classes"), Classes);
 
         return AttemptSpawnResources;
     }();
 
     static auto BeginPlay = []
     {
-        auto Reference = Scanner::FindStringReference(TEXT("ReceiveBeginPlay"));
-        const uint8_t* ReceiveBeginPlayName = nullptr;
-
-        for (auto Address = Reference; !ReceiveBeginPlayName;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Address != Reference && Instruction.opcode == 0x8D && (Instruction.modrm & 0xC7) == 0x05)
-                ReceiveBeginPlayName = Address + Length + (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        const uint8_t* ReceiveBeginPlay = nullptr;
-
-        for (auto& Section : Scanner::Sections())
-        {
-            if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
-                continue;
-
-            auto Begin = Scanner::Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
-
-            for (auto Address = Begin; Address + 7 <= End && !ReceiveBeginPlay; Address++)
-            {
-                if (Address[0] == 0x48 && Address[1] == 0x8B && Address[2] == 0x15 && Address + 7 + *(int32_t*)(Address + 3) == ReceiveBeginPlayName)
-                    ReceiveBeginPlay = Scanner::Base() + Scanner::FindFunction(Address)->BeginAddress;
-            }
-        }
-
-        auto ActorBeginPlay = Scanner::Base() + Scanner::FindFunction(Scanner::FindCallReference(ReceiveBeginPlay))->BeginAddress;
+        auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target();
+        auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get();
+        auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get();
         auto ActorVTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto Index = 0;
 
@@ -217,7 +160,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
-        return DetourVTable((void**)(VTable + Index * sizeof(void*)), &ABuildingContainer::BeginPlay);
+        return DetourVTable(TEXT("ABuildingContainer::BeginPlay"), (void**)(VTable + Index * sizeof(void*)), &ABuildingContainer::BeginPlay);
     }();
 
     (this->*::OnGivenMatchAssignment)(MatchOptions);
@@ -236,7 +179,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
-    static auto RedirectLootTierGroup = (FName* (*)(const AFortGameModeAthena*, FName*, FName))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference("Loot_AthenaSupplyDrop"))->BeginAddress);
+    static auto RedirectLootTierGroup = (FName* (*)(const AFortGameModeAthena*, FName*, FName))Scanner::String("Loot_AthenaSupplyDrop").Start().Get();
 
     FName Result(NAME_None);
 

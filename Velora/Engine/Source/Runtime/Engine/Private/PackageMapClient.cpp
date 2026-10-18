@@ -4,7 +4,7 @@
 
 bool FNetGUIDCache::SupportsObject(const UObject* Object, const TWeakObjectPtr<UObject>* WeakObjectPtr) const
 {
-    static auto SupportsObject = (bool (*)(const FNetGUIDCache*, const UObject*, const TWeakObjectPtr<UObject>*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("FNetGUIDCache::SupportsObject: %s NOT Supported.")))->BeginAddress);
+    static auto SupportsObject = (bool (*)(const FNetGUIDCache*, const UObject*, const TWeakObjectPtr<UObject>*))Scanner::String(TEXT("FNetGUIDCache::SupportsObject: %s NOT Supported.")).Start().Get();
 
     return SupportsObject(this, Object, WeakObjectPtr);
 }

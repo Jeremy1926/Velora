@@ -2,23 +2,10 @@
 #include "GameFramework/GameModeBase.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InController)
 {
-    static auto GetDefaultPawnClassForController = []
-    {
-        for (auto Address = Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no start spot"));;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                return (UClass* (*)(AGameModeBase*, AController*))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            Address += Length;
-        }
-    }();
+    static auto GetDefaultPawnClassForController = (UClass* (*)(AGameModeBase*, AController*))Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot")).Call().Get();
 
     return GetDefaultPawnClassForController(this, InController);
 }
@@ -27,7 +14,7 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
 {
     static auto SpawnDefaultPawnFor = []
     {
-        auto AthenaSpawnDefaultPawnFor = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no world")))->BeginAddress;
+        auto AthenaSpawnDefaultPawnFor = Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get();
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 

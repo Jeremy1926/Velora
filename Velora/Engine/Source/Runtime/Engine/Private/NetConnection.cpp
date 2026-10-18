@@ -3,32 +3,8 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
-static auto RemoteFunctionChecks = []
-{
-    auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")));
-    auto End = Scanner::FindFunctionEnd(Function);
-    std::pair<int32_t, int32_t> Checks = {};
-    bool bSaturate = false;
-
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End && (!Checks.first || !Checks.second);)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0x33 && Instruction.modrm == 0xD2)
-            bSaturate = true;
-        else if (bSaturate && !Checks.first && Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-            Checks.first = (int32_t)Instruction.disp.disp32;
-        else if (!Checks.second && Instruction.opcode == 0x83 && Instruction.modrm_reg == 7 && Instruction.modrm_mod == 2 && Instruction.imm.imm8 == USOCK_Closed)
-            Checks.second = (int32_t)Instruction.disp.disp32;
-
-        Address += Length;
-    }
-
-    return Checks;
-}();
+static auto IsNetReadySlot = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("xor edx, edx").Find("call [*]").Disp();
 
 TArray<UChildConnection*>& UNetConnection::GetChildren()
 {
@@ -88,7 +64,9 @@ bool UNetConnection::GetInternalAck() const
 
 EConnectionState UNetConnection::GetState() const
 {
-    return *(EConnectionState*)((uint8_t*)this + RemoteFunctionChecks.second);
+    static auto State = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("cmp dword ptr [*], 0x1").Disp();
+
+    return *(EConnectionState*)((uint8_t*)this + State);
 }
 
 double UNetConnection::GetLastReceiveTime() const
@@ -104,16 +82,7 @@ static int32_t TickCountOffset()
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
 
-        for (auto Address = VTable[RemoteFunctionChecks.first / sizeof(void*)];;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x89 && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32 + (int32_t)sizeof(int32);
-
-            Address += Length;
-        }
+        return Scanner::At(VTable[IsNetReadySlot / sizeof(void*)]).Find("mov [*], e*").Disp() + (int32_t)sizeof(int32);
     }();
 
     return TickCount;
@@ -131,97 +100,28 @@ void UNetConnection::SetTickCount(int32 InTickCount)
 
 void UNetConnection::SetTimeSensitive(bool bInTimeSensitive)
 {
-    static auto TimeSensitive = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UNetConnection::Tick: Connection TIMED OUT. Closing connection.")));
-        auto End = Scanner::FindFunctionEnd(Function);
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x80 && Instruction.modrm_reg == 7 && Instruction.modrm_mod == 2 && Instruction.imm.imm8 == 0)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto TimeSensitive = Scanner::String(TEXT("UNetConnection::Tick: Connection TIMED OUT. Closing connection.")).Start().Find("cmp byte ptr [*+0x???], 0x0").Disp();
 
     *(bool*)((uint8_t*)this + TimeSensitive) = bInTimeSensitive;
 }
 
 TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>& UNetConnection::GetActorChannels()
 {
-    static auto ActorChannels = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")));
-        auto End = Scanner::FindFunctionEnd(Function);
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x81 && Instruction.rex_w && Instruction.modrm == 0xC1)
-                return (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto ActorChannels = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("add rcx, 0x*").Imm();
 
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
 }
 
 TSet<FNetworkGUID>& UNetConnection::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("AddClientConnection: Added client connection: %s"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x8D && Instruction.rex_w && !Instruction.rex_r && Instruction.modrm_reg == 1 && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea rcx, [*+0x?????]").Disp();
 
     return *(TSet<FNetworkGUID>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
 TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
 {
-    static auto ClientVisibleLevelNames = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("ServerUpdateLevelVisibility() Removed '%s'"));
-        auto Function = Scanner::FindFunction(Reference);
-        int32_t Offset = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x81 && Instruction.rex_w && Instruction.modrm == 0xC1)
-                Offset = (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        return Offset;
-    }();
+    static auto ClientVisibleLevelNames = Scanner::String(TEXT("ServerUpdateLevelVisibility() Added '%s'")).Last("lea rcx, [*+0x?????]").Disp();
 
     return *(TSet<FName>*)((uint8_t*)this + ClientVisibleLevelNames);
 }
@@ -230,12 +130,12 @@ int32 UNetConnection::IsNetReady(bool Saturate)
 {
     auto VTable = *(uint8_t**)this;
 
-    return (*(int32 (**)(UNetConnection*, bool))(VTable + RemoteFunctionChecks.first))(this, Saturate);
+    return (*(int32 (**)(UNetConnection*, bool))(VTable + IsNetReadySlot))(this, Saturate);
 }
 
 UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex)
 {
-    static auto CreateChannel = (UChannel* (*)(UNetConnection*, EChannelType, bool, int32))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Created channel %i of type %i")))->BeginAddress);
+    static auto CreateChannel = (UChannel* (*)(UNetConnection*, EChannelType, bool, int32))Scanner::String(TEXT("Created channel %i of type %i")).Start().Get();
 
     return CreateChannel(this, Type, bOpenedLocally, ChannelIndex);
 }
@@ -244,7 +144,7 @@ void UNetConnection::FlushDormancy(AActor* Actor)
 {
     static auto FlushDormancy = []
     {
-        auto Function = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("FlushDormancy: %s. Connection: %s")))->BeginAddress;
+        auto Function = Scanner::String(TEXT("FlushDormancy: %s. Connection: %s")).Start().Get();
         auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
         auto Index = 0;
 

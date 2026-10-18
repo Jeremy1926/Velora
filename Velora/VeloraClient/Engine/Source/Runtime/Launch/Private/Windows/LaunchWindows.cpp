@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "Misc/EngineVersion.h"
+#include "Logging/LogCategory.h"
 #include "MinHook.h"
+
+#pragma warning(disable: 4073)
+#pragma init_seg(lib)
+
+FLogCategoryBase LogVelora(TEXT("LogVelora"), ELogVerbosity::Log, ELogVerbosity::All);
 
 void Main()
 {

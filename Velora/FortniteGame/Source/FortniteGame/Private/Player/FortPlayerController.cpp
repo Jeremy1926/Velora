@@ -12,161 +12,53 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include "hde/hde64.h"
 
-static auto InitializeMcpProfile = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Initialized MCP profile for %s")))->BeginAddress, &AFortPlayerController::InitializeMcpProfile);
+static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::InitializeMcpProfile"), Scanner::String(TEXT("Initialized MCP profile for %s")).Start().Get(), &AFortPlayerController::InitializeMcpProfile);
 
-static auto ActivateSlot = DetourCall([]
-{
-    auto Reference = Scanner::FindStringReference(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"));
-    auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-    auto bUpdatePreviousFocusedSlot = false;
+static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
-    for (auto Address = Reference; Address < End;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0xE8 && bUpdatePreviousFocusedSlot)
-            return Address;
-
-        bUpdatePreviousFocusedSlot |= !memcmp(Address, "\xC6\x44\x24\x20\x01", 5);
-        Address += Length;
-    }
-
-    return (const uint8_t*)nullptr;
-}(), &AFortPlayerController::ActivateSlot);
+static auto RemoveAllInventoryItems = DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*", 3).Get(), &AFortPlayerController::RemoveAllInventoryItems);
 
 bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized)
 {
     static auto ServerExecuteInventoryItem = []
     {
-        auto Function = Scanner::FindFunction(std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerExecuteInventoryItem")))->GetNativeFunc()));
-        auto End = Scanner::FindFunctionEnd(Function);
-        int32_t ServerExecuteInventoryItem_Implementation = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-                ServerExecuteInventoryItem_Implementation = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
+        auto ServerExecuteInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerExecuteInventoryItem")).Find("call [rax+*]", 2).Disp();
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-        return DetourVTable((void**)(VTable + ServerExecuteInventoryItem_Implementation), &AFortPlayerController::ServerExecuteInventoryItem_Implementation);
+        return DetourVTable(TEXT("AFortPlayerController::ServerExecuteInventoryItem_Implementation"), (void**)(VTable + ServerExecuteInventoryItem_Implementation), &AFortPlayerController::ServerExecuteInventoryItem_Implementation);
     }();
 
     static auto RemoveInventoryItem = []
     {
-        auto Function = Scanner::FindFunction(std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")))->GetNativeFunc()));
-        auto End = Scanner::FindFunctionEnd(Function);
-        int32_t ServerRemoveInventoryItem_Implementation = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                ServerRemoveInventoryItem_Implementation = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-        int32_t InventoryOwner = 0;
-        int32_t RemoveInventoryItem = 0;
-
-        for (auto Address = *(const uint8_t**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation); !RemoveInventoryItem;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x81 && Instruction.modrm_mod == 3 && Instruction.modrm_reg == 0)
-                InventoryOwner = (int32_t)Instruction.imm.imm32;
-
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-                RemoveInventoryItem = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        static auto InventoryOwnerOffset = InventoryOwner;
+        auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Disp();
+        auto RemoveInventoryItem = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [rax+*]");
+        static auto InventoryOwnerOffset = RemoveInventoryItem.Last("add rcx, 0x*").Imm();
 
         auto InventoryOwnerRemoveInventoryItem = +[](uint8_t* InventoryOwnerInterface, const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
         {
             return ((AFortPlayerController*)(InventoryOwnerInterface - InventoryOwnerOffset))->RemoveInventoryItem(ItemGuid, Count, bForceRemoveFromQuickBars);
         };
 
-        return DetourVTable((void**)(*(uint8_t**)(PlayerController + InventoryOwner) + RemoveInventoryItem), (void*)InventoryOwnerRemoveInventoryItem);
+        return DetourVTable(TEXT("AFortPlayerController::RemoveInventoryItem"), (void**)(*(uint8_t**)(PlayerController + InventoryOwnerOffset) + RemoveInventoryItem.Disp()), (void*)InventoryOwnerRemoveInventoryItem);
     }();
 
     static auto SetLoadedAmmo = []
     {
-        auto Function = Scanner::FindFunction(std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")))->GetNativeFunc()));
-        auto End = Scanner::FindFunctionEnd(Function);
-        int32_t ServerRemoveInventoryItem_Implementation = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                ServerRemoveInventoryItem_Implementation = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-        int32_t InventoryOwner = 0;
-        int32_t RemoveInventoryItem = 0;
-
-        for (auto Address = *(const uint8_t**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation); !RemoveInventoryItem;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x81 && Instruction.modrm_mod == 3 && Instruction.modrm_reg == 0)
-                InventoryOwner = (int32_t)Instruction.imm.imm32;
-
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-                RemoveInventoryItem = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
+        auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Disp();
+        auto InventoryOwner = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [rax+*]").Last("add rcx, 0x*").Imm();
         auto InventoryOwnerVTable = *(const uint8_t***)(PlayerController + InventoryOwner);
+        auto Index = 0;
 
-        for (auto Index = 0;; Index++)
-        {
-            auto Function = Scanner::FindFunction(InventoryOwnerVTable[Index]);
+        while (!Scanner::At(InventoryOwnerVTable[Index]).Start().Has("jmp [r8+*]"))
+            Index++;
 
-            if (!Function)
-                continue;
+        auto SetLoadedAmmo = Scanner::At(InventoryOwnerVTable[Index]).Start().Find("jmp [r8+*]").Disp();
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWorldItem"));
 
-            auto End = Scanner::FindFunctionEnd(Function);
-
-            for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-            {
-                hde64s Instruction;
-                auto Length = hde64_disasm(Address, &Instruction);
-
-                if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 4 && Instruction.modrm_mod == 2 && Instruction.rex_b)
-                {
-                    auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWorldItem"));
-
-                    return DetourVTable((void**)(VTable + (int32_t)Instruction.disp.disp32), &UFortWorldItem::SetLoadedAmmo);
-                }
-
-                Address += Length;
-            }
-        }
+        return DetourVTable(TEXT("UFortWorldItem::SetLoadedAmmo"), (void**)(VTable + SetLoadedAmmo), &UFortWorldItem::SetLoadedAmmo);
     }();
 
     auto bInitialized = (this->*::InitializeMcpProfile)(OnMcpProfilesInitialized);
@@ -184,22 +76,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
 
 void AFortPlayerController::AddItemToQuickBars(UFortItemDefinition* ItemDefinition, EFortQuickBars QuickBarType, int32 SlotIndex)
 {
-    static auto AddItemToQuickBars = []
-    {
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:AddItemToQuickBars")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                return (void (*)(AFortPlayerController*, UFortItemDefinition*, EFortQuickBars, int32))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-    }();
+    static auto AddItemToQuickBars = (void (*)(AFortPlayerController*, UFortItemDefinition*, EFortQuickBars, int32))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:AddItemToQuickBars")).Get();
 
     AddItemToQuickBars(this, ItemDefinition, QuickBarType, SlotIndex);
 }
@@ -212,22 +89,7 @@ void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, 
 
 UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const
 {
-    static auto K2_FindExistingItemForDefinition = []
-    {
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                return (UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-    }();
+    static auto K2_FindExistingItemForDefinition = (UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition")).Get();
 
     return K2_FindExistingItemForDefinition(this, ItemDefinition, bInStorageVault);
 }
@@ -314,6 +176,23 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
     }
 
     return false;
+}
+
+void AFortPlayerController::RemoveAllInventoryItems()
+{
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory)
+        return;
+
+    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+
+    for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
+    {
+        const FGuid ItemGuid = ReplicatedEntries[Index].ItemGuid;
+
+        RemoveInventoryItem(ItemGuid, ReplicatedEntries[Index].Count, true);
+    }
 }
 
 void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition)

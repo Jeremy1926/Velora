@@ -7,7 +7,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto OnPlayerPawnReady = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindCallReference(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("ExitAircraft: %s (Pawn %s)")))->BeginAddress))->BeginAddress, &AFortPlayerPawnAthena::OnPlayerPawnReady);
+static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start().Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {

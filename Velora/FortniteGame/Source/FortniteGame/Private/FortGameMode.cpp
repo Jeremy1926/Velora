@@ -7,7 +7,7 @@ void AFortGameMode::FinishWorldInitialization()
 {
     static auto FinishWorldInitialization = []
     {
-        auto AthenaFinishWorldInitialization = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")))->BeginAddress;
+        auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get();
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 
@@ -26,7 +26,7 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
 {
     static auto OnGivenMatchAssignment = []
     {
-        auto AthenaOnGivenMatchAssignment = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("match.option.warmupRequiredPlayerCount")))->BeginAddress;
+        auto AthenaOnGivenMatchAssignment = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get();
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 

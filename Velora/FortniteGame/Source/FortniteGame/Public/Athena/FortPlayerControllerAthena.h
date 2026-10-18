@@ -14,5 +14,5 @@ class AFortPlayerControllerAthena : public AFortPlayerControllerPvP
 public:
     static UClass* StaticClass();
 
-    FFortAthenaLoadout& GetCustomizationLoadout();
+    FFortAthenaLoadout* GetCustomizationLoadout();
 };

@@ -16,7 +16,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
-#include "hde/hde64.h"
+#include "Scanner.h"
 
 UClass* ABuildingContainer::StaticClass()
 {
@@ -35,19 +35,7 @@ void ABuildingContainer::BeginPlay()
 
 bool ABuildingContainer::IsAlreadySearched() const
 {
-    static auto IsAlreadySearched = []
-    {
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32 - (int32_t)sizeof(void*);
-
-            Address += Length;
-        }
-    }();
+    static auto IsAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Disp() - (int32_t)sizeof(void*);
 
     auto VTable = *(uint8_t**)this;
 
@@ -150,19 +138,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
 
 void ABuildingContainer::SetContainerSearched(AFortPawn* Searcher)
 {
-    static auto SetContainerSearched = []
-    {
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32 + 5 * (int32_t)sizeof(void*);
-
-            Address += Length;
-        }
-    }();
+    static auto SetContainerSearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Disp() + 5 * (int32_t)sizeof(void*);
 
     auto VTable = *(uint8_t**)this;
 

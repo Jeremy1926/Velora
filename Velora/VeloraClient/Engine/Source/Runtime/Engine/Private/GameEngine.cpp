@@ -8,7 +8,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto Tick = Detour(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)")))->BeginAddress, &UGameEngine::Tick);
+static auto Tick = Detour(TEXT("UGameEngine::Tick"), Scanner::String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)")).Start().Get(), &UGameEngine::Tick);
 
 void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 {

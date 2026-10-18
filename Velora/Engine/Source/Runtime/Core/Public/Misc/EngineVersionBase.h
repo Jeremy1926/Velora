@@ -20,6 +20,11 @@ public:
         return Patch;
     }
 
+    FORCEINLINE uint32 GetChangelist() const
+    {
+        return Changelist & (uint32)0x7fffffffU;
+    }
+
 protected:
     uint16 Major;
     uint16 Minor;

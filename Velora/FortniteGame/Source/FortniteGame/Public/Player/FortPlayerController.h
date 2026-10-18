@@ -31,6 +31,8 @@ public:
 
     bool RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars);
 
+    void RemoveAllInventoryItems();
+
     void RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition);
 
     void ServerExecuteInventoryItem_Implementation(FGuid ItemGuid);

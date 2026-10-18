@@ -9,69 +9,25 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include "hde/hde64.h"
 
-static FLogCategoryBase& LogWorld = *[]
-{
-    auto Reference = Scanner::FindStringReference(TEXT("Bringing %s up for play (max tick rate %i) at %s"));
-    auto Function = Scanner::FindFunction(Reference);
-    FLogCategoryBase* Category = nullptr;
+static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target();
 
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
+static auto Listen = DetourCall(TEXT("UWorld::Listen"), Scanner::String(TEXT("LoadMap: failed to Listen(%s)")).Last("call 0x*; test al, al").Get(), &UWorld::Listen);
 
-        if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0xB6 && (Instruction.modrm & 0xC7) == 0x05)
-            Category = (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
-
-        Address += Length;
-    }
-
-    return Category;
-}();
-
-static auto Listen = DetourCall([]
-{
-    auto Reference = Scanner::FindStringReference(TEXT("LoadMap: failed to Listen(%s)"));
-    auto Function = Scanner::FindFunction(Reference);
-    const uint8_t* Call = nullptr;
-
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0xE8 && !memcmp(Address + Length, "\x84\xC0", 2))
-            Call = Address;
-
-        Address += Length;
-    }
-
-    return Call;
-}(), &UWorld::Listen);
-
-static auto InternalGetNetMode = Detour([]
-{
-    auto Address = Scanner::FindStringReference(TEXT("UGameplayStatics::SpawnEmitterAttached: NULL AttachComponent specified!"));
-
-    for (auto Calls = 0;;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0xE8 && ++Calls == 3)
-            return Address + Length + (int32_t)Instruction.imm.imm32;
-
-        Address += Length;
-    }
-}(), &UWorld::InternalGetNetMode);
+static auto InternalGetNetMode = Detour(TEXT("UWorld::InternalGetNetMode"), Scanner::String(TEXT("UGameplayStatics::SpawnEmitterAttached: NULL AttachComponent specified!")).Call(3).Get(), &UWorld::InternalGetNetMode);
 
 AGameModeBase* UWorld::GetAuthGameMode() const
 {
     static auto AuthorityGameMode = GetClass()->FindPropertyByName(FName(TEXT("AuthorityGameMode")));
 
     return *AuthorityGameMode->ContainerPtrToValuePtr<AGameModeBase*>(this);
+}
+
+AGameStateBase* UWorld::GetGameState() const
+{
+    static auto GameState = GetClass()->FindPropertyByName(FName(TEXT("GameState")));
+
+    return *GameState->ContainerPtrToValuePtr<AGameStateBase*>(this);
 }
 
 AGameNetworkManager* UWorld::GetNetworkManager() const
@@ -97,72 +53,14 @@ ULevel* UWorld::GetCurrentLevelPendingInvisibility() const
 
 float UWorld::GetTimeSeconds() const
 {
-    static auto TimeSeconds = []
-    {
-        auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")))->GetNativeFunc());
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Thunk));
-        const uint8_t* Call = nullptr;
-
-        for (auto Address = Thunk; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                Call = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        for (auto Address = Call;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0x10 && Instruction.p_rep && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-    }();
+    static auto TimeSeconds = Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")).Find("movss xmm0, dword ptr [rax+*]").Disp();
 
     return *(float*)((uint8_t*)this + TimeSeconds);
 }
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
 {
-    static auto GetWorldSettings = []
-    {
-        auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")))->GetNativeFunc());
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Thunk));
-        const uint8_t* Call = nullptr;
-
-        for (auto Address = Thunk; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                Call = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        auto ImplEnd = Scanner::FindFunctionEnd(Scanner::FindFunction(Call));
-
-        for (auto Address = Call; Address < ImplEnd;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                Call = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        return (AWorldSettings* (*)(const UWorld*, bool, bool))Call;
-    }();
+    static auto GetWorldSettings = (AWorldSettings* (*)(const UWorld*, bool, bool))Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get();
 
     return GetWorldSettings(this, bCheckStreamingPesistent, bChecked);
 }
@@ -193,54 +91,14 @@ void UWorld::SetNetDriver(UNetDriver* NewDriver)
 
 void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 {
-    static auto NextSwitchCountdown = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("Server switch level: %s"));
-        auto Function = Scanner::FindFunction(Reference);
-        bool bSubtract = false;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0x5C)
-                bSubtract = true;
-            else if (bSubtract && Instruction.opcode == 0x0F && Instruction.opcode2 == 0x11 && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto NextSwitchCountdown = Scanner::String(TEXT("Server switch level: %s")).Start().Find("subss *").Find("movss [*], xmm*").Disp();
 
     *(float*)((uint8_t*)this + NextSwitchCountdown) = InNextSwitchCountdown;
 }
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)
 {
-    static auto FindCollectionByType = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-        bool bDynamicSourceLevels = false;
-
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8 && bDynamicSourceLevels)
-                return (FLevelCollection* (*)(UWorld*, ELevelCollectionType))(Address + Length + (int32_t)Instruction.imm.imm32);
-            else if (Instruction.opcode == 0x33 && Instruction.modrm == 0xD2)
-                bDynamicSourceLevels = true;
-
-            Address += Length;
-        }
-
-        return (FLevelCollection* (*)(UWorld*, ELevelCollectionType))nullptr;
-    }();
+    static auto FindCollectionByType = (FLevelCollection* (*)(UWorld*, ELevelCollectionType))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Call().Get();
 
     return FindCollectionByType(this, InType);
 }
@@ -303,5 +161,8 @@ bool UWorld::Listen(FURL& InURL)
         GetNetDriver()->SetMaxClientRate(GetNetDriver()->GetMaxInternetClientRate());
 
     SetNextSwitchCountdown(GetNetDriver()->GetServerTravelPause());
+
+    UE_LOG(LogVelora, Display, TEXT("Listening on port %d"), InURL.Port);
+
     return true;
 }

@@ -5,7 +5,6 @@
 #include "Net/DataBunch.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 UNetConnection* UChannel::GetConnection() const
 {
@@ -16,96 +15,34 @@ UNetConnection* UChannel::GetConnection() const
 
 bool UChannel::GetClosing() const
 {
-    static auto Closing = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")));
-        auto End = Scanner::FindFunctionEnd(Function);
+    static auto Closing = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("test byte ptr [*], 0x*");
+    static auto Offset = Closing.Disp();
+    static auto Mask = Closing.Imm();
 
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xF6 && Instruction.modrm_reg == 0 && Instruction.modrm_mod == 1)
-                return std::pair((int32_t)(int8_t)Instruction.disp.disp8, Instruction.imm.imm8);
-
-            Address += Length;
-        }
-
-        return std::pair<int32_t, uint8_t>();
-    }();
-
-    return *((uint8_t*)this + Closing.first) & Closing.second;
+    return *((uint8_t*)this + Offset) & Mask;
 }
 
 bool UChannel::GetDormant() const
 {
-    static auto Dormant = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")));
-        auto End = Scanner::FindFunctionEnd(Function);
+    static auto Dormant = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("test byte ptr [*], 0x*");
+    static auto Offset = Dormant.Disp();
+    static auto Mask = Dormant.Imm();
 
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xF6 && Instruction.modrm_reg == 0 && Instruction.modrm_mod == 1)
-                return std::pair((int32_t)(int8_t)Instruction.disp.disp8, Instruction.imm.imm8);
-
-            Address += Length;
-        }
-
-        return std::pair<int32_t, uint8_t>();
-    }();
-
-    return *((uint8_t*)this + Dormant.first) & Dormant.second;
+    return *((uint8_t*)this + Offset) & Mask;
 }
 
 bool UChannel::GetPendingDormancy() const
 {
-    static auto bPendingDormancy = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("StartBecomingDormant: %s")));
-        auto End = Scanner::FindFunctionEnd(Function);
+    static auto bPendingDormancy = Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Find("or dword ptr [*], 0x*");
+    static auto Offset = bPendingDormancy.Disp();
+    static auto Mask = bPendingDormancy.Imm();
 
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x81 && Instruction.modrm_reg == 1 && Instruction.modrm_mod == 1)
-                return std::pair((int32_t)(int8_t)Instruction.disp.disp8, Instruction.imm.imm32);
-
-            Address += Length;
-        }
-
-        return std::pair<int32_t, uint32_t>();
-    }();
-
-    return *(uint32_t*)((uint8_t*)this + bPendingDormancy.first) & bPendingDormancy.second;
+    return *(uint32_t*)((uint8_t*)this + Offset) & Mask;
 }
 
 int32 UChannel::GetNumOutRec() const
 {
-    static auto NumOutRec = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")));
-        auto End = Scanner::FindFunctionEnd(Function);
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x83 && Instruction.modrm_reg == 7 && Instruction.modrm_mod == 1 && Instruction.imm.imm8 == 0)
-                return (int32_t)(int8_t)Instruction.disp.disp8;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto NumOutRec = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cmp dword ptr [*], 0x0").Disp();
 
     return *(int32*)((uint8_t*)this + NumOutRec);
 }
@@ -122,30 +59,7 @@ int32 UChannel::IsNetReady(bool Saturate)
 
 FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
 {
-    static auto SendBunch = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")));
-        auto End = Scanner::FindFunctionEnd(Function);
-        bool bClose = false;
-        bool bCloseBunch = false;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xB0 && Instruction.rex_b && Instruction.imm.imm8 == 1)
-                bClose = true;
-            else if (bClose && Instruction.opcode == 0xE8)
-                bCloseBunch = true;
-            else if (bCloseBunch && Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto SendBunch = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1").Find("call 0x*").Find("call [*]").Disp();
 
     auto VTable = *(uint8_t**)this;
     FPacketIdRange Result;
@@ -160,27 +74,7 @@ AActor* UActorChannel::GetActor() const
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
-static auto LastUpdateTime = []
-{
-    auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")));
-    auto End = Scanner::FindFunctionEnd(Function);
-    bool bTime = false;
-
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0x0F && Instruction.opcode2 == 0x5A && !Instruction.p_66 && !Instruction.p_rep)
-            bTime = true;
-        else if (bTime && Instruction.opcode == 0x0F && Instruction.opcode2 == 0x11 && Instruction.p_rep == 0xF2 && Instruction.modrm_mod == 2)
-            return (int32_t)Instruction.disp.disp32;
-
-        Address += Length;
-    }
-
-    return 0;
-}();
+static auto LastUpdateTime = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Disp();
 
 double UActorChannel::GetRelevantTime() const
 {
@@ -199,28 +93,28 @@ double UActorChannel::GetLastUpdateTime() const
 
 void UActorChannel::Close()
 {
-    static auto Close = (void (*)(UActorChannel*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")))->BeginAddress);
+    static auto Close = (void (*)(UActorChannel*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get();
 
     Close(this);
 }
 
 void UActorChannel::StartBecomingDormant()
 {
-    static auto StartBecomingDormant = (void (*)(UActorChannel*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("StartBecomingDormant: %s")))->BeginAddress);
+    static auto StartBecomingDormant = (void (*)(UActorChannel*))Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get();
 
     StartBecomingDormant(this);
 }
 
 bool UActorChannel::ReplicateActor()
 {
-    static auto ReplicateActor = (bool (*)(UActorChannel*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")))->BeginAddress);
+    static auto ReplicateActor = (bool (*)(UActorChannel*))Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get();
 
     return ReplicateActor(this);
 }
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    static auto SetChannelActor = (void (*)(UActorChannel*, AActor*))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("SetChannelActor: ChIndex: %i, Actor: %s, NetGUID: %s")))->BeginAddress);
+    static auto SetChannelActor = (void (*)(UActorChannel*, AActor*))Scanner::String(TEXT("SetChannelActor: ChIndex: %i, Actor: %s, NetGUID: %s")).Start().Get();
 
     SetChannelActor(this, InActor);
 }

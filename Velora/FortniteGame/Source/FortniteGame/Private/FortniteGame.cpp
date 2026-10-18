@@ -1,42 +1,9 @@
 #include "pch.h"
 #include "FortniteGame.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
-FLogCategoryBase& LogFort = *[]
-{
-    auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnDefaultPawnFor: Failed due to no world")));
+FLogCategoryBase& LogFort = *(FLogCategoryBase*)Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Find("cmp byte ptr [0x*], *").Target();
 
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress;;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
+FLogCategoryBase& LogFortBuilding = *(FLogCategoryBase*)Scanner::String(TEXT("LogFortBuilding")).Find("lea rcx, [0x*]").Target();
 
-        if (Instruction.opcode == 0x80 && Instruction.modrm_reg == 7 && (Instruction.modrm & 0xC7) == 0x05)
-            return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
-
-        Address += Length;
-    }
-}();
-
-FLogCategoryBase& LogFortBuilding = *[]
-{
-    auto Reference = Scanner::FindStringReference(TEXT("LogFortBuilding"));
-
-    hde64s Instruction;
-    auto Address = Reference + hde64_disasm(Reference, &Instruction);
-    auto Length = hde64_disasm(Address, &Instruction);
-
-    return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
-}();
-
-FLogCategoryBase& LogFortLoot = *[]
-{
-    auto Reference = Scanner::FindStringReference(TEXT("LogFortLoot"));
-
-    hde64s Instruction;
-    auto Address = Reference + hde64_disasm(Reference, &Instruction);
-    auto Length = hde64_disasm(Address, &Instruction);
-
-    return (FLogCategoryBase*)(Address + Length + (int32_t)Instruction.disp.disp32);
-}();
+FLogCategoryBase& LogFortLoot = *(FLogCategoryBase*)Scanner::String(TEXT("LogFortLoot")).Find("lea rcx, [0x*]").Target();

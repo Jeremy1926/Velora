@@ -94,6 +94,9 @@
     <Filter Include="Engine\Source\Runtime\Core\Private\UObject">
       <UniqueIdentifier>{7E7A8E70-F564-4578-900E-C9CACF8D16B8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Windows">
+      <UniqueIdentifier>{F7FA644A-7E96-4082-BC44-FC46025E6F54}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public">
       <UniqueIdentifier>{0059C8CD-1D3A-4827-A0DE-E197594F67F4}</UniqueIdentifier>
     </Filter>
@@ -277,11 +280,17 @@
     <Filter Include="ThirdParty\MinHook\src\hde">
       <UniqueIdentifier>{04999667-9D3D-47B6-8DED-BA0B815F1CBC}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty\Zydis">
+      <UniqueIdentifier>{201074FC-BA63-4829-8A3F-A07F7AFB3E58}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
     <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\ThirdParty\Zydis\Zydis.h">
+      <Filter>ThirdParty\Zydis</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\include\MinHook.h">
       <Filter>ThirdParty\MinHook\include</Filter>
     </ClInclude>
@@ -666,6 +675,18 @@
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemBlueprintLibrary.h">
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceFile.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsConsoleOutputDevice.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameStateBase.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameStateAthena.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
@@ -809,6 +830,9 @@
     </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\hook.c">
       <Filter>ThirdParty\MinHook\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Zydis\Zydis.c">
+      <Filter>ThirdParty\Zydis</Filter>
     </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\trampoline.c">
       <Filter>ThirdParty\MinHook\src</Filter>
@@ -980,6 +1004,27 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemBlueprintLibrary.cpp">
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogCategory.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceFile.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Windows\WindowsConsoleOutputDevice.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameStateBase.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerState.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Building</Filter>

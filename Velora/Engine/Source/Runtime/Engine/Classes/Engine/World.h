@@ -59,6 +59,8 @@ public:
 
     AGameModeBase* GetAuthGameMode() const;
 
+    AGameStateBase* GetGameState() const;
+
     AGameNetworkManager* GetNetworkManager() const;
 
     ULevel* GetCurrentLevelPendingVisibility() const;

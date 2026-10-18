@@ -12,15 +12,31 @@ class UNetConnection;
 struct FNetworkObjectInfo
 {
     AActor* Actor;
-    TWeakObjectPtr<AActor> WeakActor;
-    double NextUpdateTime;
-    double LastNetReplicateTime;
-    float OptimalNetUpdateDelta;
-    float LastNetUpdateTime;
-    uint32 bPendingNetUpdate : 1;
-    uint32 bForceRelevantNextUpdate : 1;
-    TSet<TWeakObjectPtr<UNetConnection>> DormantConnections;
-    TSet<TWeakObjectPtr<UNetConnection>> RecentlyDormantConnections;
+
+    TWeakObjectPtr<AActor> GetWeakActor() const;
+
+    double& GetNextUpdateTime();
+
+    double& GetLastNetReplicateTime();
+
+    float& GetOptimalNetUpdateDelta();
+
+    float& GetLastNetUpdateTime();
+
+    bool GetPendingNetUpdate() const;
+
+    void SetPendingNetUpdate(bool bInPendingNetUpdate);
+
+    bool GetForceRelevantNextUpdate() const;
+
+    void SetForceRelevantNextUpdate(bool bInForceRelevantNextUpdate);
+
+    TSet<TWeakObjectPtr<UNetConnection>>& GetDormantConnections();
+
+    TSet<TWeakObjectPtr<UNetConnection>>& GetRecentlyDormantConnections();
+
+private:
+    static int32 GetFlagsOffset();
 };
 
 class FNetworkObjectList

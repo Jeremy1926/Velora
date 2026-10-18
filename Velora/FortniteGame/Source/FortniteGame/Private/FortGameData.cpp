@@ -11,7 +11,7 @@
 #include "Items/FortResourceItemDefinition.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
-#include "hde/hde64.h"
+#include "Scanner.h"
 
 UFortGameData* UFortGameData::Get()
 {
@@ -68,36 +68,7 @@ bool UFortGameData::HasLootPackageData() const
 
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
 {
-    static auto GetResourceItemDefinition = []
-    {
-        const uint8_t* InventoryContextGetResourceItemDefinition = nullptr;
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")))->GetNativeFunc()); !InventoryContextGetResourceItemDefinition;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                InventoryContextGetResourceItemDefinition = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-
-        auto Calls = 0;
-
-        for (auto Address = InventoryContextGetResourceItemDefinition;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if ((Instruction.opcode == 0xE8 || Instruction.opcode == 0xE9) && ++Calls == 2)
-                return (UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            Address += Length;
-        }
-    }();
+    static auto GetResourceItemDefinition = (UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType))Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call(2).Get();
 
     return GetResourceItemDefinition(this, ResourceType);
 }

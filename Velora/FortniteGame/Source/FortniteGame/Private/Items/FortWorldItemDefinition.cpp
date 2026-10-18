@@ -4,7 +4,6 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 UClass* UFortWorldItemDefinition::StaticClass()
 {
@@ -17,43 +16,14 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
 {
     static auto ServerExecute = []
     {
-        const uint8_t* EquipWeaponDefinition = nullptr;
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")))->GetNativeFunc()); !EquipWeaponDefinition;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                EquipWeaponDefinition = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-
+        auto EquipWeaponDefinition = std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get());
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"));
+        auto Index = 0;
 
-        for (auto Index = 0;; Index++)
-        {
-            auto Function = Scanner::FindFunction(VTable[Index]);
+        while (!Scanner::At(VTable[Index]).Start().Has(EquipWeaponDefinition))
+            Index++;
 
-            if (!Function)
-                continue;
-
-            auto End = Scanner::FindFunctionEnd(Function);
-
-            for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-            {
-                hde64s Instruction;
-                auto Length = hde64_disasm(Address, &Instruction);
-
-                if (Instruction.opcode == 0xE8 && Address + Length + (int32_t)Instruction.imm.imm32 == EquipWeaponDefinition)
-                    return Index * (int32_t)sizeof(void*);
-
-                Address += Length;
-            }
-        }
+        return Index * (int32_t)sizeof(void*);
     }();
 
     auto VTable = *(uint8_t**)this;

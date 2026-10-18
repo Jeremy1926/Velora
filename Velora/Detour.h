@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MinHook.h"
+#include "Scanner.h"
 
 extern "C"
 {
@@ -8,18 +9,37 @@ extern "C"
 #include "trampoline.h"
 }
 
-inline void* Detour(void* Target, void* Function)
+inline void* Detour(const TCHAR* Name, void* Target, void* Function)
 {
     static auto Status = MH_Initialize();
     void* Original = nullptr;
 
-    MH_CreateHook(Target, Function, &Original);
+    if (!Target)
+    {
+        UE_LOG(LogVelora, Error, TEXT("Could not hook %s, function not found"), Name);
+        return nullptr;
+    }
+
+    if (auto Result = MH_CreateHook(Target, Function, &Original); Result != MH_OK)
+    {
+        UE_LOG(LogVelora, Error, TEXT("Could not hook %s at 0x%llX (%hs)"), Name, (uint8_t*)Target - Scanner::Base(), MH_StatusToString(Result));
+    }
+    else
+    {
+        UE_LOG(LogVelora, Log, TEXT("Hooked %s at 0x%llX"), Name, (uint8_t*)Target - Scanner::Base());
+    }
 
     return Original;
 }
 
-inline void* DetourCall(const uint8_t* Call, void* Function)
+inline void* DetourCall(const TCHAR* Name, const uint8_t* Call, void* Function)
 {
+    if (!Call)
+    {
+        UE_LOG(LogVelora, Error, TEXT("Could not hook %s, call not found"), Name);
+        return nullptr;
+    }
+
     auto Jump = (JMP_ABS*)AllocateBuffer((LPVOID)Call);
     *Jump = { 0xFF, 0x25, 0, (UINT64)Function };
 
@@ -32,10 +52,12 @@ inline void* DetourCall(const uint8_t* Call, void* Function)
     VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), Protect, &Protect);
     FlushInstructionCache(GetCurrentProcess(), Call, 5);
 
+    UE_LOG(LogVelora, Log, TEXT("Hooked %s at call 0x%llX (was 0x%llX)"), Name, Call - Scanner::Base(), (uint8_t*)Original - Scanner::Base());
+
     return Original;
 }
 
-inline void* DetourVTable(void** Slot, void* Function)
+inline void* DetourVTable(const TCHAR* Name, void** Slot, void* Function)
 {
     DWORD Protect;
     VirtualProtect(Slot, sizeof(void*), PAGE_READWRITE, &Protect);
@@ -45,10 +67,15 @@ inline void* DetourVTable(void** Slot, void* Function)
 
     VirtualProtect(Slot, sizeof(void*), Protect, &Protect);
 
+    if (Name)
+    {
+        UE_LOG(LogVelora, Log, TEXT("Hooked %s at vtable entry 0x%llX (was 0x%llX)"), Name, (uint8_t*)Slot - Scanner::Base(), (uint8_t*)Original - Scanner::Base());
+    }
+
     return Original;
 }
 
-inline const uint8_t* PatchBranch(const uint8_t* Branch, const uint8_t* Target)
+inline const uint8_t* PatchBranch(const TCHAR* Name, const uint8_t* Branch, const uint8_t* Target)
 {
     auto Displacement = (int32_t*)(Branch + 2);
 
@@ -60,10 +87,12 @@ inline const uint8_t* PatchBranch(const uint8_t* Branch, const uint8_t* Target)
     VirtualProtect(Displacement, sizeof(int32_t), Protect, &Protect);
     FlushInstructionCache(GetCurrentProcess(), Branch, 6);
 
+    UE_LOG(LogVelora, Log, TEXT("Patched %s at 0x%llX to jump to 0x%llX"), Name, Branch - Scanner::Base(), Target - Scanner::Base());
+
     return Branch;
 }
 
-inline const uint8_t* Patch(const uint8_t* Address, uint8_t Byte)
+inline const uint8_t* Patch(const TCHAR* Name, const uint8_t* Address, uint8_t Byte)
 {
     DWORD Protect;
     VirtualProtect((LPVOID)Address, sizeof(Byte), PAGE_EXECUTE_READWRITE, &Protect);
@@ -73,43 +102,45 @@ inline const uint8_t* Patch(const uint8_t* Address, uint8_t Byte)
     VirtualProtect((LPVOID)Address, sizeof(Byte), Protect, &Protect);
     FlushInstructionCache(GetCurrentProcess(), Address, sizeof(Byte));
 
+    UE_LOG(LogVelora, Log, TEXT("Patched %s at 0x%llX to 0x%02X"), Name, Address - Scanner::Base(), Byte);
+
     return Address;
 }
 
 template<typename FunctionType>
-inline FunctionType Detour(const void* Target, FunctionType Function)
+inline FunctionType Detour(const TCHAR* Name, const void* Target, FunctionType Function)
 {
     void* Address = nullptr;
     memcpy(&Address, &Function, sizeof(Address));
 
     FunctionType Original = {};
-    auto Trampoline = Detour((void*)Target, Address);
+    auto Trampoline = Detour(Name, (void*)Target, Address);
     memcpy(&Original, &Trampoline, sizeof(Trampoline));
 
     return Original;
 }
 
 template<typename FunctionType>
-inline FunctionType DetourCall(const uint8_t* Call, FunctionType Function)
+inline FunctionType DetourCall(const TCHAR* Name, const uint8_t* Call, FunctionType Function)
 {
     void* Address = nullptr;
     memcpy(&Address, &Function, sizeof(Address));
 
     FunctionType Original = {};
-    auto Target = DetourCall(Call, Address);
+    auto Target = DetourCall(Name, Call, Address);
     memcpy(&Original, &Target, sizeof(Target));
 
     return Original;
 }
 
 template<typename FunctionType>
-inline FunctionType DetourVTable(void** Slot, FunctionType Function)
+inline FunctionType DetourVTable(const TCHAR* Name, void** Slot, FunctionType Function)
 {
     void* Address = nullptr;
     memcpy(&Address, &Function, sizeof(Address));
 
     FunctionType Original = {};
-    auto Target = DetourVTable(Slot, Address);
+    auto Target = DetourVTable(Name, Slot, Address);
     memcpy(&Original, &Target, sizeof(Target));
 
     return Original;

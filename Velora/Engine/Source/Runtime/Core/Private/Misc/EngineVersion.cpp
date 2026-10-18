@@ -1,30 +1,10 @@
 #include "pch.h"
 #include "Misc/EngineVersion.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 const FEngineVersion& FEngineVersion::Current()
 {
-    static auto Current = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("Engine Version: %s"));
-        auto Function = Scanner::FindFunction(Reference);
-        const uint8* Calls[2] = {};
-
-        for (auto Address = (const uint8*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-        {
-            hde64s Instruction;
-            Address += hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-            {
-                Calls[0] = Calls[1];
-                Calls[1] = Address + (int32)Instruction.imm.imm32;
-            }
-        }
-
-        return (const FEngineVersion& (*)())Calls[0];
-    }();
+    static auto Current = (const FEngineVersion& (*)())Scanner::String(TEXT("Engine Version: %s")).Last("call 0x*").Last("call 0x*").Target();
 
     return Current();
 }

@@ -18,9 +18,9 @@ UClass* AFortPlayerControllerAthena::StaticClass()
     return Class;
 }
 
-FFortAthenaLoadout& AFortPlayerControllerAthena::GetCustomizationLoadout()
+FFortAthenaLoadout* AFortPlayerControllerAthena::GetCustomizationLoadout()
 {
     static auto CustomizationLoadout = GetClass()->FindPropertyByName(FName(TEXT("CustomizationLoadout")));
 
-    return *CustomizationLoadout->ContainerPtrToValuePtr<FFortAthenaLoadout>(this);
+    return CustomizationLoadout ? CustomizationLoadout->ContainerPtrToValuePtr<FFortAthenaLoadout>(this) : nullptr;
 }

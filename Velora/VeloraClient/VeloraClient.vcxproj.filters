@@ -34,6 +34,9 @@
     <Filter Include="Engine\Source\Runtime\Core\Private\HAL">
       <UniqueIdentifier>{E6F1C4D8-0466-4D67-AB3C-5506D048BEBB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Logging">
+      <UniqueIdentifier>{70DCC36D-C657-4EC3-BCA3-8247026D80BE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\Misc">
       <UniqueIdentifier>{E64042BD-38B3-4458-8C56-D8B497D8BF71}</UniqueIdentifier>
     </Filter>
@@ -48,6 +51,9 @@
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\HAL">
       <UniqueIdentifier>{49C8FC9A-4D15-4931-AD26-A8749559A6EE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Public\Logging">
+      <UniqueIdentifier>{FEED67D7-920A-40BB-8F96-72FEEB80F658}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Misc">
       <UniqueIdentifier>{2611CF28-010B-4559-B464-8083D4B2BB80}</UniqueIdentifier>
@@ -100,11 +106,17 @@
     <Filter Include="ThirdParty\MinHook\src\hde">
       <UniqueIdentifier>{00B3248B-4961-4C5C-A9D4-D777482E0284}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty\Zydis">
+      <UniqueIdentifier>{29CC600E-9989-4390-9180-D5D61ED0EC3F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
     <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\ThirdParty\Zydis\Zydis.h">
+      <Filter>ThirdParty\Zydis</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\include\MinHook.h">
       <Filter>ThirdParty\MinHook\include</Filter>
     </ClInclude>
@@ -243,6 +255,15 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h">
       <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogMacros.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogCategory.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Logging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogVerbosity.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Logging</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -251,6 +272,9 @@
     </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\hook.c">
       <Filter>ThirdParty\MinHook\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Zydis\Zydis.c">
+      <Filter>ThirdParty\Zydis</Filter>
     </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\trampoline.c">
       <Filter>ThirdParty\MinHook\src</Filter>
@@ -287,6 +311,12 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogCategory.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Logging</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>

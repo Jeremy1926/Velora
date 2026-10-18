@@ -3,7 +3,6 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 bool AActor::GetOnlyRelevantToOwner() const
 {
@@ -98,50 +97,20 @@ USceneComponent* AActor::GetRootComponent() const
 
 bool AActor::IsPendingKillPending() const
 {
-    static auto bActorIsBeingDestroyed = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("Destroying %s, which doesn't have a valid world pointer"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
+    static auto bActorIsBeingDestroyed = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer")).Find("test byte ptr [*], 0x*");
+    static auto Offset = bActorIsBeingDestroyed.Disp();
+    static auto Mask = bActorIsBeingDestroyed.Imm();
 
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xF6 && Instruction.modrm_reg == 0 && Instruction.modrm_mod == 2)
-                return std::pair((int32_t)Instruction.disp.disp32, Instruction.imm.imm8);
-
-            Address += Length;
-        }
-
-        return std::pair<int32_t, uint8_t>();
-    }();
-
-    return (*((uint8_t*)this + bActorIsBeingDestroyed.first) & bActorIsBeingDestroyed.second) || IsPendingKill();
+    return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
 }
 
 bool AActor::IsActorInitialized() const
 {
-    static auto bActorInitialized = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "));
-        auto Function = Scanner::FindFunction(Reference);
+    static auto bActorInitialized = Scanner::String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. ")).Start().Find("test byte ptr [*], 0x*");
+    static auto Offset = bActorInitialized.Disp();
+    static auto Mask = bActorInitialized.Imm();
 
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xF6 && Instruction.modrm_reg == 0 && Instruction.modrm_mod == 2)
-                return std::pair((int32_t)Instruction.disp.disp32, Instruction.imm.imm8);
-
-            Address += Length;
-        }
-
-        return std::pair<int32_t, uint8_t>();
-    }();
-
-    return *((uint8_t*)this + bActorInitialized.first) & bActorInitialized.second;
+    return *((uint8_t*)this + Offset) & Mask;
 }
 
 ULevel* AActor::GetLevel() const
@@ -157,7 +126,7 @@ const AActor* AActor::GetNetOwner() const
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto Index = 0;
 
-        while (memcmp(VTable[Index], "\x48\x8B\x81", 3) || *(int32_t*)(VTable[Index] + 3) != Owner || VTable[Index][7] != 0xC3)
+        while (!Scanner::At(VTable[Index]).Is(std::format("mov rax, [rcx+0x{:x}]; ret", Owner)))
             Index++;
 
         return Index * (int32_t)sizeof(void*);
@@ -175,7 +144,7 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto Index = 0;
 
-        while (memcmp(VTable[Index], "\x4C\x3B\xC1\x0F\x94\xC0\xC3", 7))
+        while (!Scanner::At(VTable[Index]).Is("cmp r8, rcx; setz al; ret"))
             Index++;
 
         return Index * (int32_t)sizeof(void*);
@@ -188,19 +157,7 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
 
 void AActor::ForceNetUpdate()
 {
-    static auto ForceNetUpdate = []
-    {
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor:ForceNetUpdate")))->GetNativeFunc());;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-    }();
+    static auto ForceNetUpdate = Scanner::Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate")).Find("jmp [*+0x*]").Disp();
 
     auto VTable = *(uint8_t**)this;
 
@@ -211,31 +168,10 @@ bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
 {
     static auto Destroy = []
     {
-        int32_t K2_DestroyActor = 0;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor:K2_DestroyActor")))->GetNativeFunc()); !K2_DestroyActor;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && (Instruction.modrm_reg == 2 || Instruction.modrm_reg == 4) && Instruction.modrm_mod == 2)
-                K2_DestroyActor = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
+        auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Disp();
 
-        for (auto Address = VTable[K2_DestroyActor / sizeof(void*)];;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8 || Instruction.opcode == 0xE9)
-                return (bool (*)(AActor*, bool, bool))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            Address += Length;
-        }
+        return (bool (*)(AActor*, bool, bool))Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target();
     }();
 
     return Destroy(this, bNetForce, bShouldModifyLevel);

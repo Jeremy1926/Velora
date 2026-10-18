@@ -19,7 +19,7 @@ FActorSpawnParameters::FActorSpawnParameters()
 
 AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters)
 {
-    static auto SpawnActor = (AActor* (*)(UWorld*, UClass*, FTransform const*, const FActorSpawnParameters&))(Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("SpawnActor failed because no class was specified")))->BeginAddress);
+    static auto SpawnActor = (AActor* (*)(UWorld*, UClass*, FTransform const*, const FActorSpawnParameters&))Scanner::String(TEXT("SpawnActor failed because no class was specified")).Start().Get();
 
     return SpawnActor(this, Class, UserTransformPtr, SpawnParameters);
 }

@@ -7,7 +7,7 @@ bool AGameNetworkManager::IsInLowBandwidthMode()
 {
     static auto IsInLowBandwidthMode = []
     {
-        auto UpdateNetSpeeds = Scanner::Base() + Scanner::FindFunction(Scanner::FindStringReference(TEXT("New Dynamic NetSpeed %i vs old %i")))->BeginAddress;
+        auto UpdateNetSpeeds = Scanner::String(TEXT("New Dynamic NetSpeed %i vs old %i")).Start().Get();
         auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameNetworkManager"));
         auto Index = 0;
 

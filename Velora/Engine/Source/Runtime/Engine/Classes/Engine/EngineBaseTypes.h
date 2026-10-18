@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Containers/UnrealString.h"
+#include "Containers/Array.h"
+
 enum ENetMode
 {
     NM_Standalone,
@@ -26,3 +29,15 @@ namespace ENetworkFailure
         NetChecksumMismatch
     };
 }
+
+struct FURL
+{
+    FString Protocol;
+    FString Host;
+    int32 Port;
+    FString Map;
+    FString RedirectURL;
+    TArray<FString> Op;
+    FString Portal;
+    int32 Valid;
+};

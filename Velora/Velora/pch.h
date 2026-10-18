@@ -13,3 +13,4 @@
 #include <span>
 #include <thread>
 #include <vector>
+#include <Zydis.h>

@@ -1,0 +1,11 @@
+#include "pch.h"
+#include "Logging/LogCategory.h"
+#include "Scanner.h"
+
+FLogCategoryBase::FLogCategoryBase(const TCHAR* CategoryName, ELogVerbosity::Type InDefaultVerbosity, ELogVerbosity::Type InCompileTimeVerbosity)
+    : CategoryFName(NAME_None)
+{
+    static auto Constructor = (void (*)(FLogCategoryBase*, const TCHAR*, ELogVerbosity::Type, ELogVerbosity::Type))Scanner::String(TEXT("LogFortBuilding")).Call().Get();
+
+    Constructor(this, CategoryName, InDefaultVerbosity, InCompileTimeVerbosity);
+}

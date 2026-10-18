@@ -11,7 +11,6 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-#include "hde/hde64.h"
 
 UClass* AFortPickup::StaticClass()
 {
@@ -22,37 +21,7 @@ UClass* AFortPickup::StaticClass()
 
 AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass)
 {
-    static auto CreateFromData = []
-    {
-        const uint8_t* SpawnMissionItemPickup = nullptr;
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")))->GetNativeFunc()); !SpawnMissionItemPickup;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                SpawnMissionItemPickup = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-
-        auto bOverrideClass = false;
-
-        for (auto Address = SpawnMissionItemPickup;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bOverrideClass && Instruction.opcode == 0xE8)
-                return (AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            bOverrideClass |= Instruction.opcode == 0xC7 && Instruction.modrm_mod == 1 && Instruction.modrm_rm == 4 && Instruction.disp.disp8 == 0x28;
-            Address += Length;
-        }
-    }();
+    static auto CreateFromData = (AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("mov qword ptr [rsp+0x28], *").Call().Get();
 
     return CreateFromData(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass);
 }
@@ -192,90 +161,14 @@ bool& AFortPickup::GetTossedFromContainer()
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
-    static auto SetPickupTarget = []
-    {
-        const uint8_t* SpawnMissionItemPickup = nullptr;
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")))->GetNativeFunc()); !SpawnMissionItemPickup;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                SpawnMissionItemPickup = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-
-        const uint8_t* SetPickupTarget = nullptr;
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(SpawnMissionItemPickup));
-
-        for (auto Address = SpawnMissionItemPickup; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                SetPickupTarget = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        return (void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool))SetPickupTarget;
-    }();
+    static auto SetPickupTarget = (void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Get();
 
     SetPickupTarget(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
 float AFortPickup::GetFlyTime() const
 {
-    static auto GetFlyTime = []
-    {
-        const uint8_t* SpawnMissionItemPickup = nullptr;
-        auto bFinished = false;
-
-        for (auto Address = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")))->GetNativeFunc()); !SpawnMissionItemPickup;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bFinished && Instruction.opcode == 0xE8)
-                SpawnMissionItemPickup = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            bFinished |= Instruction.opcode == 0x89 && Instruction.rex_w && Instruction.modrm_mod == 1 && Instruction.modrm_rm != 4 && Instruction.disp.disp8 == 0x20;
-            Address += Length;
-        }
-
-        const uint8_t* SetPickupTarget = nullptr;
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(SpawnMissionItemPickup));
-
-        for (auto Address = SpawnMissionItemPickup; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-                SetPickupTarget = Address + Length + (int32_t)Instruction.imm.imm32;
-
-            Address += Length;
-        }
-
-        auto bCompared = false;
-
-        for (auto Address = SetPickupTarget;;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (bCompared && Instruction.opcode == 0xE8)
-                return (float (*)(const AFortPickup*))(Address + Length + (int32_t)Instruction.imm.imm32);
-
-            bCompared |= Instruction.opcode == 0x0F && Instruction.opcode2 == 0x2F;
-            Address += Length;
-        }
-    }();
+    static auto GetFlyTime = (float (*)(const AFortPickup*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Find("comiss *").Call().Get();
 
     return GetFlyTime(this);
 }

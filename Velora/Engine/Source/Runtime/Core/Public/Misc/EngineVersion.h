@@ -9,6 +9,11 @@ class FEngineVersion : public FEngineVersionBase
 public:
     static const FEngineVersion& Current();
 
+    FString GetBranch() const
+    {
+        return Branch;
+    }
+
 private:
     FString Branch;
 };

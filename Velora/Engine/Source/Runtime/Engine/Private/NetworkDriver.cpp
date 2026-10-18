@@ -20,47 +20,12 @@
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include "hde/hde64.h"
 
-static auto TickFlushFunction = []
-{
-    auto Reference = Scanner::FindStringReference(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"));
-    auto Function = Scanner::FindFunction(Reference);
-    const uint8_t* Call = nullptr;
+static auto TickFlushFunction = Scanner::String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s")).Last("call 0x*").Target();
 
-    for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
+static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [*]").Disp();
 
-        if (Instruction.opcode == 0xE8)
-            Call = Address + Length + (int32_t)Instruction.imm.imm32;
-
-        Address += Length;
-    }
-
-    return Call;
-}();
-
-static auto IsServerSlot = []
-{
-    auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(TickFlushFunction));
-
-    for (auto Address = TickFlushFunction; Address < End;)
-    {
-        hde64s Instruction;
-        auto Length = hde64_disasm(Address, &Instruction);
-
-        if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-            return (int32_t)Instruction.disp.disp32;
-
-        Address += Length;
-    }
-
-    return 0;
-}();
-
-static auto TickFlush = Detour(TickFlushFunction, &UNetDriver::TickFlush);
+static auto TickFlush = Detour(TEXT("UNetDriver::TickFlush"), TickFlushFunction, &UNetDriver::TickFlush);
 
 int32 UNetDriver::GetMaxInternetClientRate() const
 {
@@ -127,50 +92,14 @@ float UNetDriver::GetRelevantTimeout() const
 
 TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
 {
-    static auto GuidCache = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("ReadContentBlockHeader: Stably named sub-object not found. Component: %s, Actor: %s"));
-        auto Function = Scanner::FindFunction(Reference);
-        int32_t Offset = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < Reference;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x8B && Instruction.rex_w && Instruction.modrm == 0x89)
-                Offset = (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return Offset;
-    }();
+    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found. Component: %s, Actor: %s")).Last("mov rcx, [rcx+0x*]").Disp();
 
     return *(TSharedPtr<FNetGUIDCache>*)((uint8_t*)this + GuidCache);
 }
 
 static int32_t NetTagOffset()
 {
-    static auto NetTag = []
-    {
-        for (auto Address = Scanner::FindPattern("C7 43 ? 10 27 00 00 C7 43 ? 98 3A 00 00");;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x89 && Instruction.modrm_mod == 2)
-            {
-                hde64s Next;
-                hde64_disasm(Address + Length, &Next);
-
-                if (Next.opcode == 0x88 && Next.modrm_mod == 2 && Next.disp.disp32 == Instruction.disp.disp32 + sizeof(int32))
-                    return (int32_t)Instruction.disp.disp32;
-            }
-
-            Address += Length;
-        }
-    }();
+    static auto NetTag = Scanner::Pattern("C7 43 ? 10 27 00 00 C7 43 ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l").Disp();
 
     return NetTag;
 }
@@ -187,51 +116,14 @@ void UNetDriver::SetNetTag(int32 InNetTag)
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("AddClientConnection: Added client connection: %s"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0x8D && Instruction.rex_w && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea r*, [*+0x???]").Disp();
 
     return *(TMap<FNetworkGUID, FActorDestructionInfo>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
 static int32_t ReplicationFrameOffset()
 {
-    static auto ReplicationFrame = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")));
-        auto End = Scanner::FindFunctionEnd(Function);
-        bool bIncrement = false;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-            auto bIncrementDword = Instruction.opcode == 0xFF && Instruction.modrm_reg == 0 && Instruction.modrm_mod == 2;
-
-            if (bIncrement && bIncrementDword)
-                return (int32_t)Instruction.disp.disp32;
-
-            bIncrement = bIncrementDword;
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto ReplicationFrame = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]").Find("inc [*]").Disp();
 
     return ReplicationFrame;
 }
@@ -248,74 +140,14 @@ void UNetDriver::SetReplicationFrame(uint32 InReplicationFrame)
 
 FNetworkObjectList& UNetDriver::GetNetworkObjectList()
 {
-    static auto NetworkObjects = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-        const uint8_t* SetWorld = nullptr;
-        const uint8_t* Call = nullptr;
-        bool bDynamicSourceLevels = false;
-
-        for (auto Address = Reference; Address < End && !SetWorld;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-            {
-                if (bDynamicSourceLevels)
-                    SetWorld = Call;
-
-                Call = Address + Length + (int32_t)Instruction.imm.imm32;
-            }
-            else if (Instruction.opcode == 0x33 && Instruction.modrm == 0xD2)
-                bDynamicSourceLevels = true;
-
-            Address += Length;
-        }
-
-        auto SetWorldEnd = Scanner::FindFunctionEnd(Scanner::FindFunction(SetWorld));
-        int32_t Offset = 0;
-        int32_t Load = 0;
-
-        for (auto Address = SetWorld; Address < SetWorldEnd;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8 && Load)
-                Offset = Load;
-
-            Load = Instruction.opcode == 0x8B && Instruction.rex_w && Instruction.modrm_reg == 1 && Instruction.modrm_mod == 2 ? (int32_t)Instruction.disp.disp32 : 0;
-            Address += Length;
-        }
-
-        return Offset;
-    }();
+    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp();
 
     return **(TSharedPtr<FNetworkObjectList>*)((uint8_t*)this + NetworkObjects);
 }
 
 bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReuseAddressAndPort, FString& Error)
 {
-    static auto InitListen = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2)
-                return (int32_t)Instruction.disp.disp32;
-
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto InitListen = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("call [*]").Disp();
 
     auto VTable = *(uint8_t**)this;
 
@@ -324,33 +156,7 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = []
-    {
-        auto Reference = Scanner::FindStringReference(TEXT("RecordReplay: failed to create demo net driver!"));
-        auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Reference));
-        const uint8_t* Call = nullptr;
-        bool bDynamicSourceLevels = false;
-
-        for (auto Address = Reference; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Instruction.opcode == 0xE8)
-            {
-                if (bDynamicSourceLevels)
-                    return (void (*)(UNetDriver*, UWorld*))Call;
-
-                Call = Address + Length + (int32_t)Instruction.imm.imm32;
-            }
-            else if (Instruction.opcode == 0x33 && Instruction.modrm == 0xD2)
-                bDynamicSourceLevels = true;
-
-            Address += Length;
-        }
-
-        return (void (*)(UNetDriver*, UWorld*))nullptr;
-    }();
+    static auto SetWorld = (void (*)(UNetDriver*, UWorld*))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target();
 
     SetWorld(this, InWorld);
 }
@@ -359,41 +165,12 @@ void UNetDriver::TickFlush(float DeltaSeconds)
 {
     static auto FlushActorDormancy = []
     {
-        for (auto ActorFunction : { TEXT("/Script/Engine.Actor:FlushNetDormancy"), TEXT("/Script/Engine.Actor:SetNetDormancy") })
+        for (auto ActorFunction : { Scanner::At(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target()), Scanner::Native(TEXT("/Script/Engine.Actor:SetNetDormancy")) })
         {
-            auto Thunk = std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, ActorFunction))->GetNativeFunc());
-            const uint8_t* Function = nullptr;
+            auto DemoNetDriverCall = ActorFunction.Find("ret").Last("call 0x*");
 
-            for (auto Address = Thunk;;)
-            {
-                hde64s Instruction;
-                auto Length = hde64_disasm(Address, &Instruction);
-
-                if (Instruction.opcode == 0xE8 || Instruction.opcode == 0xE9)
-                    Function = Address + Length + (int32_t)Instruction.imm.imm32;
-
-                if (Instruction.opcode == 0xE9 || Instruction.opcode == 0xC3)
-                    break;
-
-                Address += Length;
-            }
-
-            auto End = Scanner::FindFunctionEnd(Scanner::FindFunction(Function));
-            std::array<const uint8_t*, 2> Calls = {};
-
-            for (auto Address = Function; Address < End;)
-            {
-                hde64s Instruction;
-                auto Length = hde64_disasm(Address, &Instruction);
-
-                if (Instruction.opcode == 0xE8)
-                    Calls = { Calls[1], Address };
-
-                Address += Length;
-            }
-
-            for (auto Call : Calls)
-                DetourCall(Call, &UNetDriver::FlushActorDormancy);
+            DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Last("call 0x*").Get(), &UNetDriver::FlushActorDormancy);
+            DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Get(), &UNetDriver::FlushActorDormancy);
         }
 
         return true;
@@ -438,26 +215,7 @@ ENetMode UNetDriver::GetNetMode() const
 
 bool UNetDriver::IsLevelInitializedForActor(const AActor* InActor, const UNetConnection* InConnection) const
 {
-    static auto IsLevelInitializedForActor = []
-    {
-        auto Function = Scanner::FindFunction(Scanner::FindStringReference(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")));
-        auto End = Scanner::FindFunctionEnd(Function);
-        int32_t Slot = 0;
-
-        for (auto Address = (const uint8_t*)Scanner::Base() + Function->BeginAddress; Address < End;)
-        {
-            hde64s Instruction;
-            auto Length = hde64_disasm(Address, &Instruction);
-
-            if (Slot && Instruction.opcode == 0x84 && Instruction.modrm == 0xC0)
-                return Slot;
-
-            Slot = Instruction.opcode == 0xFF && Instruction.modrm_reg == 2 && Instruction.modrm_mod == 2 ? (int32_t)Instruction.disp.disp32 : 0;
-            Address += Length;
-        }
-
-        return 0;
-    }();
+    static auto IsLevelInitializedForActor = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("call [*]; test al, al").Disp();
 
     auto VTable = *(uint8_t**)this;
 
@@ -576,7 +334,7 @@ static FORCEINLINE UNetConnection* IsActorOwnedByAndRelevantToConnection(const A
 
 static FORCEINLINE bool IsActorDormant(FNetworkObjectInfo* ActorInfo, const TWeakObjectPtr<UNetConnection>& Connection)
 {
-    return ActorInfo->DormantConnections.Contains(Connection);
+    return ActorInfo->GetDormantConnections().Contains(Connection);
 }
 
 static FORCEINLINE bool ShouldActorGoDormant(AActor* Actor, const TArray<FNetViewer>& ConnectionViewers, UActorChannel* Channel, const float Time, const bool bLowNetBandwidth)
@@ -698,7 +456,7 @@ void UNetDriver::ServerReplicateActors_BuildConsiderList(TArray<FNetworkObjectIn
     {
         FNetworkObjectInfo* ActorInfo = ObjectInfo.Get();
 
-        if (!ActorInfo->bPendingNetUpdate && GetWorld()->GetTimeSeconds() <= ActorInfo->NextUpdateTime)
+        if (!ActorInfo->GetPendingNetUpdate() && GetWorld()->GetTimeSeconds() <= ActorInfo->GetNextUpdateTime())
         {
             continue;
         }
@@ -741,13 +499,13 @@ void UNetDriver::ServerReplicateActors_BuildConsiderList(TArray<FNetworkObjectIn
             continue;
         }
 
-        if (ActorInfo->LastNetReplicateTime == 0)
+        if (ActorInfo->GetLastNetReplicateTime() == 0)
         {
-            ActorInfo->LastNetReplicateTime = GetWorld()->GetTimeSeconds();
-            ActorInfo->OptimalNetUpdateDelta = 1.0f / Actor->GetNetUpdateFrequency();
+            ActorInfo->GetLastNetReplicateTime() = GetWorld()->GetTimeSeconds();
+            ActorInfo->GetOptimalNetUpdateDelta() = 1.0f / Actor->GetNetUpdateFrequency();
         }
 
-        const float LastReplicateDelta = GetWorld()->GetTimeSeconds() - ActorInfo->LastNetReplicateTime;
+        const float LastReplicateDelta = GetWorld()->GetTimeSeconds() - ActorInfo->GetLastNetReplicateTime();
 
         if (LastReplicateDelta > 2.0f)
         {
@@ -760,19 +518,19 @@ void UNetDriver::ServerReplicateActors_BuildConsiderList(TArray<FNetworkObjectIn
             const float MaxOptimalDelta = FMath::Max(1.0f / Actor->GetMinNetUpdateFrequency(), MinOptimalDelta);
 
             const float Alpha = FMath::Clamp((LastReplicateDelta - 2.0f) / 5.0f, 0.0f, 1.0f);
-            ActorInfo->OptimalNetUpdateDelta = FMath::Lerp(MinOptimalDelta, MaxOptimalDelta, Alpha);
+            ActorInfo->GetOptimalNetUpdateDelta() = FMath::Lerp(MinOptimalDelta, MaxOptimalDelta, Alpha);
         }
 
-        if (!ActorInfo->bPendingNetUpdate)
+        if (!ActorInfo->GetPendingNetUpdate())
         {
-            const float NextUpdateDelta = bUseAdapativeNetFrequency ? ActorInfo->OptimalNetUpdateDelta : 1.0f / Actor->GetNetUpdateFrequency();
+            const float NextUpdateDelta = bUseAdapativeNetFrequency ? ActorInfo->GetOptimalNetUpdateDelta() : 1.0f / Actor->GetNetUpdateFrequency();
 
-            ActorInfo->NextUpdateTime = GetWorld()->GetTimeSeconds() + FMath::SRand() * ServerTickTime + NextUpdateDelta;
+            ActorInfo->GetNextUpdateTime() = GetWorld()->GetTimeSeconds() + FMath::SRand() * ServerTickTime + NextUpdateDelta;
 
-            ActorInfo->LastNetUpdateTime = GetTime();
+            ActorInfo->GetLastNetUpdateTime() = GetTime();
         }
 
-        ActorInfo->bPendingNetUpdate = false;
+        ActorInfo->SetPendingNetUpdate(false);
 
         OutConsiderList.Add(ActorInfo);
 
@@ -816,7 +574,7 @@ int32 UNetDriver::ServerReplicateActors_PrioritizeActors(UNetConnection* Connect
         {
             AActor* Actor = ActorInfo->Actor;
 
-            UActorChannel* Channel = Connection->GetActorChannels().FindRef(ActorInfo->WeakActor);
+            UActorChannel* Channel = Connection->GetActorChannels().FindRef(ActorInfo->GetWeakActor());
 
             if (!Channel)
             {
@@ -943,9 +701,9 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
                 }
             }
 
-            const bool bIsRecentlyRelevant = bIsRelevant || (Channel && GetTime() - Channel->GetRelevantTime() < GetRelevantTimeout()) || ActorInfo->bForceRelevantNextUpdate;
+            const bool bIsRecentlyRelevant = bIsRelevant || (Channel && GetTime() - Channel->GetRelevantTime() < GetRelevantTimeout()) || ActorInfo->GetForceRelevantNextUpdate();
 
-            ActorInfo->bForceRelevantNextUpdate = false;
+            ActorInfo->SetForceRelevantNextUpdate(false);
 
             if (bIsRecentlyRelevant)
             {
@@ -964,7 +722,7 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
                     }
                     else if (Actor->GetNetUpdateFrequency() < 1.0f)
                     {
-                        ActorInfo->NextUpdateTime = Actor->GetWorld()->GetTimeSeconds() + 0.2f * FMath::FRand();
+                        ActorInfo->GetNextUpdateTime() = Actor->GetWorld()->GetTimeSeconds() + 0.2f * FMath::FRand();
                     }
                 }
 
@@ -983,10 +741,10 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
 
                             const float MinOptimalDelta = 1.0f / Actor->GetNetUpdateFrequency();
                             const float MaxOptimalDelta = FMath::Max(1.0f / Actor->GetMinNetUpdateFrequency(), MinOptimalDelta);
-                            const float DeltaBetweenReplications = (GetWorld()->GetTimeSeconds() - ActorInfo->LastNetReplicateTime);
+                            const float DeltaBetweenReplications = (GetWorld()->GetTimeSeconds() - ActorInfo->GetLastNetReplicateTime());
 
-                            ActorInfo->OptimalNetUpdateDelta = FMath::Clamp(DeltaBetweenReplications * 0.7f, MinOptimalDelta, MaxOptimalDelta);
-                            ActorInfo->LastNetReplicateTime = GetWorld()->GetTimeSeconds();
+                            ActorInfo->GetOptimalNetUpdateDelta() = FMath::Clamp(DeltaBetweenReplications * 0.7f, MinOptimalDelta, MaxOptimalDelta);
+                            ActorInfo->GetLastNetReplicateTime() = GetWorld()->GetTimeSeconds();
                         }
 
                         ActorUpdatesThisConnection++;
@@ -1065,13 +823,13 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
             {
                 AActor* Actor = ConsiderList[ConsiderIdx]->Actor;
 
-                if (Actor != nullptr && !ConsiderList[ConsiderIdx]->bPendingNetUpdate)
+                if (Actor != nullptr && !ConsiderList[ConsiderIdx]->GetPendingNetUpdate())
                 {
-                    UActorChannel* Channel = Connection->GetActorChannels().FindRef(ConsiderList[ConsiderIdx]->WeakActor);
+                    UActorChannel* Channel = Connection->GetActorChannels().FindRef(ConsiderList[ConsiderIdx]->GetWeakActor());
 
-                    if (Channel != nullptr && Channel->GetLastUpdateTime() < ConsiderList[ConsiderIdx]->LastNetUpdateTime)
+                    if (Channel != nullptr && Channel->GetLastUpdateTime() < ConsiderList[ConsiderIdx]->GetLastNetUpdateTime())
                     {
-                        ConsiderList[ConsiderIdx]->bPendingNetUpdate = true;
+                        ConsiderList[ConsiderIdx]->SetPendingNetUpdate(true);
                     }
                 }
             }
@@ -1126,11 +884,11 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
 
                 if (Channel != nullptr && GetTime() - Channel->GetRelevantTime() <= 1.f)
                 {
-                    PriorityActors[k]->ActorInfo->bPendingNetUpdate = true;
+                    PriorityActors[k]->ActorInfo->SetPendingNetUpdate(true);
                 }
                 else if (IsActorRelevantToConnection(Actor, ConnectionViewers))
                 {
-                    PriorityActors[k]->ActorInfo->bPendingNetUpdate = true;
+                    PriorityActors[k]->ActorInfo->SetPendingNetUpdate(true);
 
                     if (Channel != nullptr)
                     {
