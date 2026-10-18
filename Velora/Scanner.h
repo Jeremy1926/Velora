@@ -77,7 +77,8 @@ namespace Scanner
         if (Cached)
             return Cached;
 
-        auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
+        auto Length = wcslen(String);
+        auto Size = (String[Length - 1] == TEXT('*') ? Length - 1 : Length + 1) * sizeof(wchar_t);
 
         for (auto& Section : Sections())
         {
@@ -116,7 +117,8 @@ namespace Scanner
         if (Cached)
             return Cached;
 
-        auto Size = strlen(String) + 1;
+        auto Length = strlen(String);
+        auto Size = String[Length - 1] == '*' ? Length - 1 : Length + 1;
 
         for (auto& Section : Sections())
         {

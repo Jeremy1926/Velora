@@ -34,7 +34,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::InitializeMcpProfile"), Scanner::String(TEXT("Initialized MCP profile for %s")).Start().Get(), &AFortPlayerController::InitializeMcpProfile);
+static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::InitializeMcpProfile"), Scanner::String(TEXT("Initialized MCP profile for %s*")).Start().Get(), &AFortPlayerController::InitializeMcpProfile);
 
 static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
@@ -83,7 +83,7 @@ static void InstallImplementation(const TCHAR* Name, const TCHAR* FunctionPath, 
     DetourVTable(Name, (void**)(VTable + Slot), Implementation);
 }
 
-bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized)
+bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync)
 {
     static auto Building = []
     {
@@ -152,7 +152,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         return DetourVTable(TEXT("UFortWorldItem::SetLoadedAmmo"), (void**)(VTable + SetLoadedAmmo), &UFortWorldItem::SetLoadedAmmo);
     }();
 
-    auto bInitialized = (this->*::InitializeMcpProfile)(OnMcpProfilesInitialized);
+    auto bInitialized = (this->*::InitializeMcpProfile)(OnMcpProfilesInitialized, bForceSync);
 
     if (HasAuthority() && !GetQuickBars())
     {

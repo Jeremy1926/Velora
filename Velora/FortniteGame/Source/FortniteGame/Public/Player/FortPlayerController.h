@@ -87,7 +87,7 @@ public:
 
     class FOnMcpProfilesInitialized;
 
-    bool InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized);
+    bool InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync);
 
     void AddItemToQuickBars(UFortItemDefinition* ItemDefinition, EFortQuickBars QuickBarType, int32 SlotIndex);
 
