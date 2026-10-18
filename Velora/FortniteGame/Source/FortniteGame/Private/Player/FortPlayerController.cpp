@@ -40,7 +40,13 @@ static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"
 
 static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("FortGameModeAthena: Player [%s] killed after %d seconds.  Removing from alive players list.")).Start().Call().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
 
-static auto RemoveAllInventoryItems = DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*", 3).Get(), &AFortPlayerController::RemoveAllInventoryItems);
+static auto RemoveAllInventoryItems = []
+{
+    auto StartAircraftPhase = Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1");
+    auto Call = StartAircraftPhase.Find("call 0x*", 3);
+
+    return Call.Target() == StartAircraftPhase.Find("call 0x*").Target() ? DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Call.Get(), &AFortPlayerController::RemoveAllInventoryItems) : nullptr;
+}();
 
 static Scanner::FCode ClientBuild()
 {
@@ -195,6 +201,9 @@ void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, 
 {
     if (GetQuickBars())
         GetQuickBars()->ActivateSlot(InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot);
+
+    if (!::RemoveAllInventoryItems)
+        RemoveAllInventoryItems();
 }
 
 UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const

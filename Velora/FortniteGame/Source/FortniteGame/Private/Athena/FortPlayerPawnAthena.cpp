@@ -26,10 +26,10 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
 
     if (PlayerController)
     {
-        PlayerController->ActivateSlot(EFortQuickBars::Primary, 0, 0.f, true);
-
         if (auto QuickBars = PlayerController->GetQuickBars())
         {
+            QuickBars->ActivateSlot(EFortQuickBars::Primary, 0, 0.f, true);
+
             auto& Slots = QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots;
 
             if (Slots.Num() && Slots[0].Items.Num())
