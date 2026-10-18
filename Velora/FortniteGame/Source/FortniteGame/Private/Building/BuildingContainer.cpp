@@ -123,7 +123,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
         {
             SetContainerSearched(Searcher);
 
-            if (GetDestroyContainerOnSearch() && !(Searcher && Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode())))
+            if (ShouldDestroyContainerOnSearch())
                 SilentDie();
         }
     }
@@ -182,11 +182,11 @@ EFortRarity& ABuildingContainer::GetHighestRarity()
     return *HighestRarity->ContainerPtrToValuePtr<EFortRarity>(this);
 }
 
-bool ABuildingContainer::GetDestroyContainerOnSearch() const
+bool ABuildingContainer::ShouldDestroyContainerOnSearch() const
 {
-    static auto bDestroyContainerOnSearch = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bDestroyContainerOnSearch")));
+    static auto ShouldDestroyContainerOnSearch = (bool (*)(const ABuildingContainer*))Scanner::String(TEXT("Container %s has an empty SearchedMesh in its tier mesh set, and is not destroyed on search.")).Last("test al, al").Last("call 0x*").Target(TEXT("ABuildingContainer::ShouldDestroyContainerOnSearch"));
 
-    return bDestroyContainerOnSearch->GetPropertyValue_InContainer(this);
+    return ShouldDestroyContainerOnSearch(this);
 }
 
 bool ABuildingContainer::GetStartAlreadySearched_Athena() const

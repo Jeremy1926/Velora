@@ -38,7 +38,7 @@ public:
 
     EFortRarity& GetHighestRarity();
 
-    bool GetDestroyContainerOnSearch() const;
+    bool ShouldDestroyContainerOnSearch() const;
 
     bool GetStartAlreadySearched_Athena() const;
 
