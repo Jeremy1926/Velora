@@ -6,6 +6,10 @@ FOutputDeviceFile::FOutputDeviceFile(const TCHAR* InFilename)
     : LogFile(nullptr)
 {
     wcscpy_s(Filename, InFilename);
+
+    CreateBackupCopy(Filename);
+
+    LogFile = _wfsopen(Filename, TEXT("w, ccs=UTF-8"), _SH_DENYWR);
 }
 
 void FOutputDeviceFile::Serialize(const TCHAR* Data, ELogVerbosity::Type Verbosity, const FName& Category, const double Time)
@@ -14,14 +18,7 @@ void FOutputDeviceFile::Serialize(const TCHAR* Data, ELogVerbosity::Type Verbosi
         return;
 
     if (!LogFile)
-    {
-        CreateBackupCopy(Filename);
-
-        LogFile = _wfsopen(Filename, TEXT("w, ccs=UTF-8"), _SH_DENYWR);
-
-        if (!LogFile)
-            return;
-    }
+        return;
 
     SYSTEMTIME LocalTime;
     GetLocalTime(&LocalTime);

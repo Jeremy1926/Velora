@@ -13,6 +13,10 @@
 static auto CheckPendingDestroyedDueToDurability = []
 {
     auto bPendingDestroyDueToDurabilityOrStackCount = (UBoolProperty*)AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount")));
+
+    if (!bPendingDestroyDueToDurabilityOrStackCount)
+        return Detour(TEXT("AFortWeapon::CheckPendingDestroyedDueToDurability"), nullptr, &AFortWeapon::CheckPendingDestroyedDueToDurability);
+
     auto Offset = bPendingDestroyDueToDurabilityOrStackCount->GetOffset_ForInternal() + bPendingDestroyDueToDurabilityOrStackCount->GetByteOffset();
     auto Signature = std::format("F6 ? {:02X} {:02X} {:02X} {:02X} {:02X}", Offset & 0xFF, (Offset >> 8) & 0xFF, (Offset >> 16) & 0xFF, (Offset >> 24) & 0xFF, bPendingDestroyDueToDurabilityOrStackCount->GetFieldMask());
 
