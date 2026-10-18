@@ -31,7 +31,7 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
     static auto CallRemoteFunction = []
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
-        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Slot(TEXT("UObject::ProcessEvent")) / sizeof(void*);
+        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp() / sizeof(void*);
 
         return Scanner::At(VTable[Index]).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Slot(TEXT("UObject::CallRemoteFunction"));
     }();
