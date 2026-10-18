@@ -55,6 +55,8 @@ struct FGameplayTagContainer
 
     void AppendTags(FGameplayTagContainer const& Other);
 
+    void AddTag(const FGameplayTag& TagToAdd);
+
     FString ToStringSimple(bool bQuoted = false) const;
 
 protected:

@@ -99,3 +99,10 @@ AFortGameSession* AFortGameMode::GetFortGameSession()
 
     return *FortGameSession->ContainerPtrToValuePtr<AFortGameSession*>(this);
 }
+
+TAssetPtr<UFortGameDeathPenalty>& AFortGameMode::GetDeathPenaltyData()
+{
+    static auto DeathPenaltyData = GetClass()->FindPropertyByName(FName(TEXT("DeathPenaltyData")));
+
+    return *DeathPenaltyData->ContainerPtrToValuePtr<TAssetPtr<UFortGameDeathPenalty>>(this);
+}

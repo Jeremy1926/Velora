@@ -128,6 +128,22 @@ FGameplayAbilitySpecContainer& UAbilitySystemComponent::GetActivatableAbilities(
     return *ActivatableAbilities->ContainerPtrToValuePtr<FGameplayAbilitySpecContainer>(this);
 }
 
+void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithTags, const FGameplayTagContainer* WithoutTags, UGameplayAbility* Ignore)
+{
+    static auto CancelAbilities = (void (*)(UAbilitySystemComponent*, const FGameplayTagContainer*, const FGameplayTagContainer*, UGameplayAbility*))Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start().Find("xor r9d, r9d; lea rdx, *; xor r8d, r8d; mov rcx, *; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::CancelAbilities"));
+
+    CancelAbilities(this, WithTags, WithoutTags, Ignore);
+}
+
+int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
+{
+    static auto HandleGameplayEvent = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor")).Find("mov r8, rax; mov rcx, *").Call().Find("call [*+0x*]", 2).Slot(TEXT("UAbilitySystemComponent::HandleGameplayEvent"));
+
+    auto VTable = *(uint8_t**)this;
+
+    return (*(int32 (**)(UAbilitySystemComponent*, FGameplayTag, const FGameplayEventData*))(VTable + HandleGameplayEvent))(this, EventTag, Payload);
+}
+
 TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>& UAbilitySystemComponent::GetAbilityTargetDataMap()
 {
     static auto AbilityTargetDataMap = Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("lea *, [*+0x???]").Disp(TEXT("UAbilitySystemComponent::AbilityTargetDataMap"));

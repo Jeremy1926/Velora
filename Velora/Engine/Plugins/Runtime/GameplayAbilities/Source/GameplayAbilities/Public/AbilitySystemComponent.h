@@ -9,10 +9,48 @@
 #include "Abilities/GameplayAbility.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "Abilities/GameplayAbilityTargetTypes.h"
+#include "GameplayEffectTypes.h"
+
+class UGameplayEffect;
+struct FActiveGameplayCueContainer;
+struct FGameplayEffectSpec;
 
 class UAbilitySystemComponent : public UGameplayTasksComponent
 {
 public:
+    FGameplayEffectContextHandle MakeEffectContext() const;
+
+    FGameplayEffectSpecHandle MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const;
+
+    FActiveGameplayEffectHandle ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& GameplayEffect, FPredictionKey PredictionKey = FPredictionKey());
+
+    FORCEINLINE void RemoveLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count = 1)
+    {
+        UpdateTagMap(GameplayTag, -Count);
+    }
+
+    FORCEINLINE void UpdateTagMap(const FGameplayTag& BaseTag, int32 CountDelta)
+    {
+        if (GetGameplayTagCountContainer().UpdateTagCount(BaseTag, CountDelta))
+        {
+            OnTagUpdated(BaseTag, CountDelta > 0);
+        }
+    }
+
+    void OnTagUpdated(const FGameplayTag& Tag, bool TagExists);
+
+    void RemoveGameplayCue(const FGameplayTag GameplayCueTag);
+
+    void RemoveGameplayCue_Internal(const FGameplayTag GameplayCueTag, FActiveGameplayCueContainer& GameplayCueContainer);
+
+    void CancelAbilities(const FGameplayTagContainer* WithTags = nullptr, const FGameplayTagContainer* WithoutTags = nullptr, UGameplayAbility* Ignore = nullptr);
+
+    int32 HandleGameplayEvent(FGameplayTag EventTag, const FGameplayEventData* Payload);
+
+    FActiveGameplayCueContainer& GetActiveGameplayCues();
+
+    FGameplayTagCountContainer& GetGameplayTagCountContainer();
+
     FGameplayAbilitySpecHandle GiveAbility(const FGameplayAbilitySpec& AbilitySpec);
 
     FGameplayAbilitySpec* FindAbilitySpecFromHandle(FGameplayAbilitySpecHandle Handle);

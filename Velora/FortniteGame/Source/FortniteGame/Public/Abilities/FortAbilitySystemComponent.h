@@ -4,4 +4,6 @@
 
 class UFortAbilitySystemComponent : public UAbilitySystemComponent
 {
+public:
+    static UClass* StaticClass();
 };

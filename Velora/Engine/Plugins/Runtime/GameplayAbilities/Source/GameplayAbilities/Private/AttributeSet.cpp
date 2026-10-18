@@ -9,3 +9,8 @@ FGameplayAttribute::FGameplayAttribute(UProperty* NewProperty)
     , AttributeOwner(NewProperty ? (UStruct*)NewProperty->GetOuter() : nullptr)
 {
 }
+
+float FGameplayAttributeData::GetCurrentValue() const
+{
+    return CurrentValue;
+}

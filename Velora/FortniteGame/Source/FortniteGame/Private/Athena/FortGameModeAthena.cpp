@@ -152,6 +152,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), (void**)(VTable + ServerHandlePickup), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation);
     }();
 
+    static auto ServerReviveFromDBNO = []
+    {
+        auto ServerReviveFromDBNO = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"));
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+
+        return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), (void**)(VTable + ServerReviveFromDBNO), &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation);
+    }();
+
     static auto AttemptSpawnResources = []
     {
         auto AttemptSpawnResources = Scanner::String("OwnedBuildingDamaged").Find("call [*+0x*]", 2).Slot(TEXT("ABuildingSMActor::AttemptSpawnResources"));

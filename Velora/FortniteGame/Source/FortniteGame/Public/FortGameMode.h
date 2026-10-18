@@ -3,10 +3,12 @@
 #include "GameFramework/GameMode.h"
 #include "Containers/Map.h"
 #include "Containers/UnrealString.h"
+#include "UObject/AssetPtr.h"
 
 class ABuildingActor;
 class AFortGameSession;
 class AFortPlayerController;
+class UFortGameDeathPenalty;
 
 class AFortGameMode : public AGameMode
 {
@@ -24,4 +26,6 @@ public:
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
     AFortGameSession* GetFortGameSession();
+
+    TAssetPtr<UFortGameDeathPenalty>& GetDeathPenaltyData();
 };

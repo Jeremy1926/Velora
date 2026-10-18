@@ -835,3 +835,23 @@ TAssetPtr<UObject>& AFortPlayerController::GetStartRepairSound()
 
     return *StartRepairSound->ContainerPtrToValuePtr<TAssetPtr<UObject>>(this);
 }
+
+void AFortPlayerController::ResetQuickBarToPrimary()
+{
+    static auto ResetQuickBarToPrimary = []
+    {
+        auto ClientOnPawnDied = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied")).Find("call [*+0x*]").Slot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"));
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
+
+        return (void (*)(AFortPlayerController*))Scanner::At(VTable[ClientOnPawnDied / sizeof(void*)]).Call(2).Get(TEXT("AFortPlayerController::ResetQuickBarToPrimary"));
+    }();
+
+    ResetQuickBarToPrimary(this);
+}
+
+UStatManager* AFortPlayerController::GetStatManager() const
+{
+    static auto StatManager = GetClass()->FindPropertyByName(FName(TEXT("StatManager")));
+
+    return *StatManager->ContainerPtrToValuePtr<UStatManager*>(this);
+}

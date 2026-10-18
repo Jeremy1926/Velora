@@ -4,6 +4,8 @@
 #include "GameFramework/Controller.h"
 #include "FortRegisteredPlayerInfo.h"
 #include "Items/FortQuickBars.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -43,9 +45,33 @@ void AFortPlayerPawnAthena::ServerHandlePickup_Implementation(AFortPickup* Picku
     AFortPlayerPawn::ServerHandlePickup_Implementation(Pickup, InFlyTime / GetPickupSpeedMultiplier(), InStartDirection, bPlayPickupSound);
 }
 
+void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
+{
+    AFortPlayerPawn::ServerReviveFromDBNO_Implementation(EventInstigator);
+
+    if (!GetIsDBNO())
+    {
+        GetDBNORevivalStacking() = 0;
+
+        static auto DBNOBeingRevivedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Status.DBNOBeingRevived")));
+        static auto BeingRevivedFromDBNOCueTag = FGameplayTag::RequestGameplayTag(FName(TEXT("GameplayCue.Athena.Player.BeingRevivedFromDBNO")));
+
+        auto AbilitySystemComponent = GetAbilitySystemComponent();
+        AbilitySystemComponent->RemoveLooseGameplayTag(DBNOBeingRevivedTag);
+        AbilitySystemComponent->RemoveGameplayCue(BeingRevivedFromDBNOCueTag);
+    }
+}
+
 float AFortPlayerPawnAthena::GetPickupSpeedMultiplier() const
 {
     static auto PickupSpeedMultiplier = GetClass()->FindPropertyByName(FName(TEXT("PickupSpeedMultiplier")));
 
     return *PickupSpeedMultiplier->ContainerPtrToValuePtr<float>(this);
+}
+
+uint8& AFortPlayerPawnAthena::GetDBNORevivalStacking()
+{
+    static auto DBNORevivalStacking = GetClass()->FindPropertyByName(FName(TEXT("DBNORevivalStacking")));
+
+    return *DBNORevivalStacking->ContainerPtrToValuePtr<uint8>(this);
 }

@@ -14,6 +14,7 @@ class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
 class UFortRegisteredPlayerInfo;
+class UStatManager;
 enum class EFortQuickBars : uint8;
 enum class EFortResourceType : uint8;
 
@@ -96,6 +97,8 @@ public:
 
     void ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot);
 
+    void ResetQuickBarToPrimary();
+
     UFortItem* K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const;
 
     bool RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars);
@@ -117,4 +120,6 @@ public:
     AFortInventory*& GetWorldInventory();
 
     UFortRegisteredPlayerInfo*& GetMyPlayerInfo();
+
+    UStatManager* GetStatManager() const;
 };

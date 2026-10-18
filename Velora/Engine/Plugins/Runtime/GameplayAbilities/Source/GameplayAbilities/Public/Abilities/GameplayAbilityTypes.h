@@ -3,8 +3,44 @@
 #include "HAL/Platform.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayPrediction.h"
+#include "GameplayEffectTypes.h"
+#include "GameplayTagContainer.h"
+#include "Abilities/GameplayAbilityTargetTypes.h"
 
-struct FGameplayEventData;
+class AActor;
+class UObject;
+
+struct FGameplayEventData
+{
+    FGameplayEventData()
+        : Instigator(nullptr)
+        , Target(nullptr)
+        , OptionalObject(nullptr)
+        , OptionalObject2(nullptr)
+        , EventMagnitude(0.f)
+    {
+    }
+
+    FGameplayTag EventTag;
+
+    const AActor* Instigator;
+
+    const AActor* Target;
+
+    const UObject* OptionalObject;
+
+    const UObject* OptionalObject2;
+
+    FGameplayEffectContextHandle ContextHandle;
+
+    FGameplayTagContainer InstigatorTags;
+
+    FGameplayTagContainer TargetTags;
+
+    float EventMagnitude;
+
+    FGameplayAbilityTargetDataHandle TargetData;
+};
 
 struct FGameplayAbilitySpecHandleAndPredictionKey
 {

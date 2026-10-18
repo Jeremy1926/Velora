@@ -47,6 +47,11 @@ public:
         return Object;
     }
 
+    FORCEINLINE const bool IsValid() const
+    {
+        return Object != nullptr;
+    }
+
 private:
     ObjectType* Object;
     SharedPointerInternals::FSharedReferencer<Mode> SharedReferenceCount;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
+#include "Scanner.h"
 
 FGameplayTag FGameplayTag::RequestGameplayTag(FName TagName, bool ErrorIfNotFound)
 {
@@ -47,4 +48,11 @@ void FGameplayTagContainer::AppendTags(FGameplayTagContainer const& Other)
         if (!ParentTags.Contains(OtherTag))
             ParentTags.Add(OtherTag);
     }
+}
+
+void FGameplayTagContainer::AddTag(const FGameplayTag& TagToAdd)
+{
+    static auto AddTag = (void (*)(FGameplayTagContainer*, const FGameplayTag&))Scanner::Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag")).Call().Get(TEXT("FGameplayTagContainer::AddTag"));
+
+    AddTag(this, TagToAdd);
 }
