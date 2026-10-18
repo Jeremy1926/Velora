@@ -1,12 +1,8 @@
 # Velora
 
-Velora is a universal Fortnite gameserver. It turns a normal Fortnite client into a dedicated server that loads the map, accepts players and runs full Battle Royale matches.
+Velora is a universal gameserver for Fortnite.
 
-Client builds ship without most of Epic's server code. Velora puts back only what is missing and leaves everything else to the game itself. Every rebuilt function follows Epic's own code as closely as possible, so matches play the way they did back then. Functions are found by what the code does (strings, calls, instructions), not by hardcoded byte patterns, so one DLL runs on every supported build.
-
-This repository does not include Fortnite game files, a launcher or a backend.
-
-> Velora is an independent project. It is not affiliated with, endorsed by or supported by Epic Games.
+> Velora is not affiliated with Epic Games.
 
 ## Version support
 
@@ -16,19 +12,15 @@ This repository does not include Fortnite game files, a launcher or a backend.
 | 1.8 (CL-3724489) | Playable, in testing |
 | 1.10 (CL-3790078) | In development |
 
-- **Playable** means a full match works from warmup to Victory Royale.
-- **In development** means work has started but the build is not playable yet.
-- The goal is every Battle Royale build up to Chapter 1 Season 7, one engine version at a time.
-
 ## Features
 
 - Warmup island, Battle Bus, skydiving and gliding
-- Storm with the build's own phases and timings
+- Storm
 - Solo, Duo and Squad, knocked state and revive
 - Building, editing and repairing
 - Harvesting
-- Chests, floor loot, ammo boxes and supply drops with the build's own loot tables
-- Inventory, quickbars, picking up, dropping and swapping items
+- Chests, floor loot, ammo boxes and supply drops
+- Picking up, dropping and swapping items
 - Traps and jump pads
 - Emotes (1.8 and later)
 - Locker cosmetics (1.8 and later)
@@ -74,7 +66,7 @@ The playlist can also be set without rebuilding by adding `-playlistId=2` (Solo)
 - `Velora.dll` goes into the server process.
 - `VeloraClient.dll` goes into every client.
 
-Most launchers have a slot for a game server DLL and one for a client or console DLL. Velora writes `Velora.log` next to the game executable, and the console window shows the same lines.
+Velora writes `Velora.log` next to the game executable.
 
 ## Reporting issues
 
