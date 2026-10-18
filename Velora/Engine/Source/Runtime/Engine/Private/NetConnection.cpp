@@ -114,14 +114,14 @@ TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObje
 
 TSet<FNetworkGUID>& UNetConnection::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea rcx, [*+0x?????]").Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));
+    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list")).Find("lea rcx, [*+0x*]; add r8, *").Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));
 
     return *(TSet<FNetworkGUID>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
 TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
 {
-    static auto ClientVisibleLevelNames = Scanner::String(TEXT("ServerUpdateLevelVisibility() Added '%s'")).Last("lea rcx, [*+0x?????]").Disp(TEXT("UNetConnection::ClientVisibleLevelNames"));
+    static auto ClientVisibleLevelNames = Scanner::String(TEXT("ServerUpdateLevelVisibility() Added '%s'")).Last("lea rcx, [*+0x*]; xor r9d, r9d").Disp(TEXT("UNetConnection::ClientVisibleLevelNames"));
 
     return *(TSet<FName>*)((uint8_t*)this + ClientVisibleLevelNames);
 }

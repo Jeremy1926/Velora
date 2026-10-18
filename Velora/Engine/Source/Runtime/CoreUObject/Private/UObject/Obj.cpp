@@ -21,7 +21,7 @@ UWorld* UObject::GetWorld() const
 
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
 {
-    static auto GetArchetypeFromRequiredInfo = Scanner::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags)>(Scanner::String(TEXT("Component archetype is not the CDO nor a default subobject of my class. Me = %s, Component = %s, Archetype = %s")).Last("mov r9d, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*").Call().Get(TEXT("UObject::GetArchetypeFromRequiredInfo")));
+    static auto GetArchetypeFromRequiredInfo = Scanner::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags)>(Scanner::String(TEXT("Component archetype is not the CDO nor a default subobject of my class. Me = %s, Component = %s, Archetype = %s")).Last("xor r14b, r14b").Call().Find("mov r9d, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*").Call().Get(TEXT("UObject::GetArchetypeFromRequiredInfo")));
 
     return GetArchetypeFromRequiredInfo(Class, Outer, Name, ObjectFlags);
 }

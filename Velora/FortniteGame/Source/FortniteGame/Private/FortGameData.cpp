@@ -91,7 +91,13 @@ bool UFortGameData::HasLootPackageData() const
 
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
 {
-    static auto GetResourceItemDefinition = Scanner::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>(Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call(2).Get(TEXT("UFortGameData::GetResourceItemDefinition")));
+    static auto GetResourceItemDefinition = Scanner::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>([]
+    {
+        auto Native = Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"));
+        auto Call = Native.Call(2);
+
+        return Call.Get() ? Call.Get(TEXT("UFortGameData::GetResourceItemDefinition")) : Native.Find("jmp 0x*").Target(TEXT("UFortGameData::GetResourceItemDefinition"));
+    }());
 
     return GetResourceItemDefinition(this, ResourceType);
 }

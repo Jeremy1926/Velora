@@ -31,7 +31,7 @@ TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
 
 int32 IConsoleVariable::GetInt() const
 {
-    static auto GetInt = Scanner::String(TEXT("sg.ShadowQuality")).Find("call [*+0x*]", 2).Slot(TEXT("IConsoleVariable::GetInt"));
+    static auto GetInt = Scanner::String(TEXT("sg.ShadowQuality"), "lea rdx, [0x*]; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]").Find("call [*+0x*]", 2).Slot(TEXT("IConsoleVariable::GetInt"));
 
     auto VTable = *(uint8_t**)this;
 

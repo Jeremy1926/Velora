@@ -604,6 +604,28 @@ namespace Scanner
         return FCode();
     }
 
+    inline FCode String(const wchar_t* String, std::string_view Pattern)
+    {
+        auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
+
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
+            {
+                if (*(wchar_t*)Address == *String && !memcmp(Address, String, Size))
+                {
+                    if (auto Code = Reference(Address, Pattern); Code.Get())
+                        return Code;
+                }
+            }
+        }
+
+        return FCode();
+    }
+
     inline FCode Event(const TCHAR* FunctionName)
     {
         return Reference(String(FunctionName).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start();

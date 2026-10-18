@@ -183,7 +183,7 @@ void UNetDriver::SetReplicationFrame(uint32 InReplicationFrame)
 
 FNetworkObjectList& UNetDriver::GetNetworkObjectList()
 {
-    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp(TEXT("UNetDriver::NetworkObjects"));
+    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx; mov rcx, *").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp(TEXT("UNetDriver::NetworkObjects"));
 
     return **(TSharedPtr<FNetworkObjectList>*)((uint8_t*)this + NetworkObjects);
 }
@@ -199,7 +199,7 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = Scanner::Function<void (*)(UNetDriver*, UWorld*)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld")));
+    static auto SetWorld = Scanner::Function<void (*)(UNetDriver*, UWorld*)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx; mov rcx, *").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld")));
 
     SetWorld(this, InWorld);
 }
