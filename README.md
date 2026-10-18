@@ -1,84 +1,81 @@
 # Velora
 
-Velora is a universal gameserver for Fortnite.
+Universal gameserver for Fortnite.
 
-> Velora is not affiliated with Epic Games.
+> Not affiliated with Epic Games.
 
 ## Version support
 
-| Fortnite version | Status |
+| Version | Status |
 | --- | --- |
-| 1.7.2 (CL-3700114) | Playable, in testing |
-| 1.8 (CL-3724489) | Playable, in testing |
+| 1.7.2 (CL-3700114) | Playable |
+| 1.8 (CL-3724489) | Playable |
 | 1.10 (CL-3790078) | In development |
 
 ## Features
 
-- Warmup island, Battle Bus, skydiving and gliding
+- Warmup, Battle Bus, skydiving
 - Storm
-- Solo, Duo and Squad, knocked state and revive
-- Building, editing and repairing
+- Solo, Duo, Squad
+- Knocked and revive
+- Building, editing, repairing
 - Harvesting
-- Chests, floor loot, ammo boxes and supply drops
-- Picking up, dropping and swapping items
-- Traps and jump pads
-- Emotes (1.8 and later)
-- Locker cosmetics (1.8 and later)
-- Death, spectating, eliminations and Victory Royale
-- Automatic restart for the next match
+- Chests, floor loot, ammo boxes, supply drops
+- Picking up, dropping, swapping
+- Traps, jump pads
+- Emotes (1.8+)
+- Locker cosmetics (1.8+)
+- Spectating, Victory Royale
+- Restart after every match
+
+## To-do
+
+- XP and challenges
+- Season 2 to 7
 
 ## Configuration
 
-Basic settings are in [`Velora/Config.h`](Velora/Config.h):
+`Velora/Config.h`
 
-| Setting | What it does |
+| Option | Description |
 | --- | --- |
-| `Map` | Map that loads at startup and after every match |
+| `Map` | Map to load |
 | `Playlist` | `AthenaSolo`, `AthenaDuo` or `AthenaSquad` |
-| `Port` | Port the server listens on |
-| `WarmupRequiredPlayerCount` | Players needed before the warmup starts |
-| `bRestartAfterMatch` | Reload the map after a match ends |
-| `bConsole` | Show the log console window |
+| `Port` | Listen port |
+| `WarmupRequiredPlayerCount` | Players needed to start warmup |
+| `bRestartAfterMatch` | Restart when the match ends |
+| `bConsole` | Open a console window |
 
 ## Building
 
-### Requirements
+Needs Visual Studio 2022 with Desktop development with C++.
 
-- Windows 10 or 11
-- Visual Studio 2022 with the Desktop development with C++ workload
+1. `git clone https://github.com/Jeremy1926/Velora`
+2. Open `Velora/Velora.sln`
+3. Build Release x64
 
-### Steps
-
-1. Clone the repository:
-
-   ```
-   git clone https://github.com/Jeremy1926/Velora
-   ```
-
-2. Open `Velora/Velora.sln` in Visual Studio.
-3. Select **Release** and **x64**.
-4. Build. The DLLs are in `Velora/x64/Release`.
+Output: `Velora/x64/Release`
 
 ## Usage
 
 - `Velora.dll`: server
 - `VeloraClient.dll`: clients
-- Log: `Velora.log` next to the game executable
+- Log: `Velora.log` next to the game exe
 
-## Reporting issues
+## Issues
 
-Please include:
+Include:
 
-1. Fortnite version and CL
-2. Playlist and number of players
-3. What you did and what happened
-4. `Velora.log` and the server's game log
-5. Screenshots
+- Fortnite version and CL
+- Playlist and player count
+- Steps to reproduce
+- `Velora.log` and the game log
+- Screenshots
 
 ## Credits
 
-- [Zydis](https://github.com/zyantific/zydis) for instruction decoding
-- [MinHook](https://github.com/TsudaKageyu/minhook) for hooking
+- [Zydis](https://github.com/zyantific/zydis)
+- [MinHook](https://github.com/TsudaKageyu/minhook)
 
 ## License
 
