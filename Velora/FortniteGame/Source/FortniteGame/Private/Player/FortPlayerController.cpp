@@ -4,6 +4,7 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Player/FortPlayerState.h"
+#include "Abilities/FortHealthSet.h"
 #include "Player/FortPlayerStateZone.h"
 #include "Building/BuildingSMActor.h"
 #include "Items/FortInventory.h"
@@ -422,6 +423,14 @@ void AFortPlayerController::RemoveAllInventoryItems()
         const FGuid ItemGuid = ReplicatedEntries[Index].ItemGuid;
 
         RemoveInventoryItem(ItemGuid, ReplicatedEntries[Index].Count, true);
+    }
+
+    auto PlayerState = Cast<AFortPlayerState>(GetPlayerState());
+
+    if (auto HealthSet = PlayerState ? (UFortHealthSet*)PlayerState->GetAttributeSets().HealthSet : nullptr)
+    {
+        HealthSet->SetNumericAttributeBase(UFortHealthSet::GetHealthAttribute(), HealthSet->GetMaxHealth().GetCurrentValue());
+        HealthSet->SetNumericAttributeBase(UFortHealthSet::GetCurrentShieldAttribute(), 0.0f);
     }
 }
 
