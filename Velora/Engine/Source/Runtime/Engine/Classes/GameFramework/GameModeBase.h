@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Info.h"
+#include "Containers/UnrealString.h"
 
 class AController;
 class APawn;
@@ -11,4 +12,6 @@ public:
     UClass* GetDefaultPawnClassForController(AController* InController);
 
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
+
+    FString& GetOptionsString();
 };

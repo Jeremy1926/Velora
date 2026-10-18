@@ -5,6 +5,7 @@
 #include "Containers/UnrealString.h"
 
 class ABuildingActor;
+class AFortGameSession;
 class AFortPlayerController;
 
 class AFortGameMode : public AGameMode
@@ -21,4 +22,6 @@ public:
     void FinishWorldInitialization();
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
+
+    AFortGameSession* GetFortGameSession();
 };

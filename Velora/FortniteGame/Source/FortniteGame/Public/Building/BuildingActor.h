@@ -64,6 +64,8 @@ public:
 
     bool GetDestroyOnPlayerBuildingPlacement() const;
 
+    float GetCullDistance() const;
+
     EFortBuildingType GetBuildingType() const;
 
     float GetMaxHealth() const;

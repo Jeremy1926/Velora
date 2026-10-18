@@ -45,9 +45,11 @@ bool ABuildingContainer::IsAlreadySearched() const
 
 void ABuildingContainer::BounceContainer()
 {
-    static auto BounceContainer = FindFunctionChecked(FName(TEXT("BounceContainer")));
+    static auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*+0x*]").Disp();
 
-    ProcessEvent(BounceContainer, nullptr);
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(ABuildingContainer*))(VTable + BounceContainer))(this);
 }
 
 bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)

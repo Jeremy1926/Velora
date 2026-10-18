@@ -69,6 +69,8 @@ public:
 
     void SetMaxClientRate(int32 InMaxClientRate);
 
+    int32 GetNetServerMaxTickRate() const;
+
     float GetServerTravelPause() const;
 
     TArray<UNetConnection*>& GetClientConnections();

@@ -8,3 +8,10 @@ bool FParse::Param(const TCHAR* Stream, const TCHAR* Param)
 
     return ParseParam(Stream, Param);
 }
+
+bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int32& Value)
+{
+    static auto ParseValue = (bool (*)(const TCHAR*, const TCHAR*, int32&))Scanner::String(TEXT("MaxTeamSize=")).Find("call 0x*").Target();
+
+    return ParseValue(Stream, Match, Value);
+}

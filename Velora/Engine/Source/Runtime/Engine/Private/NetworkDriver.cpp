@@ -17,7 +17,7 @@
 #include "Templates/Sorting.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
-#include "Building/BuildingSMActor.h"
+#include "Building/BuildingActor.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -47,6 +47,13 @@ void UNetDriver::SetMaxClientRate(int32 InMaxClientRate)
     static auto MaxClientRate = GetClass()->FindPropertyByName(FName(TEXT("MaxClientRate")));
 
     *MaxClientRate->ContainerPtrToValuePtr<int32>(this) = InMaxClientRate;
+}
+
+int32 UNetDriver::GetNetServerMaxTickRate() const
+{
+    static auto NetServerMaxTickRate = GetClass()->FindPropertyByName(FName(TEXT("NetServerMaxTickRate")));
+
+    return *NetServerMaxTickRate->ContainerPtrToValuePtr<int32>(this);
 }
 
 float UNetDriver::GetServerTravelPause() const
@@ -719,11 +726,6 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
                         if (Channel)
                         {
                             Channel->SetChannelActor(Actor);
-
-                            if (!Actor->IsNetStartupActor() && Actor->IsA(ABuildingSMActor::StaticClass()))
-                            {
-                                UE_LOG(LogVelora, Log, TEXT("Opened channel for %s at %.3f"), *Actor->GetName(), GetWorld()->GetTimeSeconds());
-                            }
                         }
                     }
                     else if (Actor->GetNetUpdateFrequency() < 1.0f)
@@ -772,6 +774,11 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
             {
                 if (!bLevelInitializedForActor || !Actor->IsNetStartupActor())
                 {
+                    if (!Actor->IsNetStartupActor() && (Actor->IsA(ABuildingActor::StaticClass()) || Actor->GetAlwaysRelevant()))
+                    {
+                        UE_LOG(LogVelora, Log, TEXT("Closed channel for %s to %s at %.3f, %.1f m away, level initialized %d"), *Actor->GetName(), Connection->GetPlayerController() ? *Connection->GetPlayerController()->GetName() : TEXT("None"), GetWorld()->GetTimeSeconds(), (Actor->GetActorLocation() - ConnectionViewers[0].ViewLocation).Size() / 100.f, bLevelInitializedForActor);
+                    }
+
                     Channel->Close();
                 }
             }
@@ -787,6 +794,14 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
     {
         return 0;
     }
+
+    static float StatsStartTime = GetTime();
+    static int32 StatsFrames = 0;
+    static int32 StatsActorUpdates = 0;
+    static int32 StatsConnectionUpdates = 0;
+    static int32 StatsSaturatedUpdates = 0;
+
+    StatsFrames++;
 
     int32 Updated = 0;
 
@@ -877,6 +892,13 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
 
             const int32 LastProcessedActor = ServerReplicateActors_ProcessPrioritizedActors(Connection, ConnectionViewers, PriorityActors, FinalSortedCount, Updated);
 
+            StatsConnectionUpdates++;
+
+            if (LastProcessedActor < FinalSortedCount)
+            {
+                StatsSaturatedUpdates++;
+            }
+
             for (int32 k = LastProcessedActor; k < FinalSortedCount; k++)
             {
                 if (!PriorityActors[k]->ActorInfo)
@@ -921,6 +943,26 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
             GetClientConnections().Add(Connection);
             NumConnectionsToMove--;
         }
+    }
+
+    StatsActorUpdates += Updated;
+
+    if (GetTime() - StatsStartTime >= 60.f)
+    {
+        UE_LOG(LogVelora, Log, TEXT("Replication over %.1f s: %.1f server fps, max tick rate %.1f, NetServerMaxTickRate %d, %d network actors, %d actor updates, %d of %d connection updates saturated"), GetTime() - StatsStartTime, StatsFrames / (GetTime() - StatsStartTime), GEngine->GetMaxTickRate(DeltaSeconds), GetNetServerMaxTickRate(), GetNetworkObjectList().GetActiveObjects().Num(), StatsActorUpdates, StatsSaturatedUpdates, StatsConnectionUpdates);
+
+        for (int32 i = 0; i < GetClientConnections().Num(); i++)
+        {
+            UNetConnection* Connection = GetClientConnections()[i];
+
+            UE_LOG(LogVelora, Log, TEXT("Replication to %s: NetSpeed %d, %d actor channels"), Connection->GetPlayerController() ? *Connection->GetPlayerController()->GetName() : TEXT("None"), Connection->GetCurrentNetSpeed(), Connection->GetActorChannels().Num());
+        }
+
+        StatsStartTime = GetTime();
+        StatsFrames = 0;
+        StatsActorUpdates = 0;
+        StatsConnectionUpdates = 0;
+        StatsSaturatedUpdates = 0;
     }
 
     return Updated;

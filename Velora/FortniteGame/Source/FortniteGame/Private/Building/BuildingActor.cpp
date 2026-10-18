@@ -54,9 +54,11 @@ void ABuildingActor::BeginPlay()
 
 void ABuildingActor::SilentDie()
 {
-    static auto SilentDie = FindFunctionChecked(FName(TEXT("SilentDie")));
+    static auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Disp();
 
-    ProcessEvent(SilentDie, nullptr);
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(ABuildingActor*))(VTable + SilentDie))(this);
 }
 
 void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser)
@@ -103,6 +105,13 @@ bool ABuildingActor::GetDestroyOnPlayerBuildingPlacement() const
     return bDestroyOnPlayerBuildingPlacement->GetPropertyValue_InContainer(this);
 }
 
+float ABuildingActor::GetCullDistance() const
+{
+    static auto CullDistance = ABuildingActor::StaticClass()->FindPropertyByName(FName(TEXT("CullDistance")));
+
+    return *CullDistance->ContainerPtrToValuePtr<float>(this);
+}
+
 EFortBuildingType ABuildingActor::GetBuildingType() const
 {
     static auto BuildingType = GetClass()->FindPropertyByName(FName(TEXT("BuildingType")));
@@ -112,30 +121,18 @@ EFortBuildingType ABuildingActor::GetBuildingType() const
 
 float ABuildingActor::GetMaxHealth() const
 {
-    static auto GetMaxHealth = FindFunctionChecked(FName(TEXT("GetMaxHealth")));
+    static auto GetMaxHealth = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetMaxHealth")).Find("call [*+0x*]").Disp();
 
-    struct
-    {
-        float ReturnValue;
-    } Parms{};
+    auto VTable = *(uint8_t**)this;
 
-    const_cast<ABuildingActor*>(this)->ProcessEvent(GetMaxHealth, &Parms);
-
-    return Parms.ReturnValue;
+    return (*(float (**)(const ABuildingActor*))(VTable + GetMaxHealth))(this);
 }
 
 bool ABuildingActor::HasHealthLeft() const
 {
-    static auto HasHealthLeft = FindFunctionChecked(FName(TEXT("HasHealthLeft")));
+    static auto HasHealthLeft = (bool (*)(const ABuildingActor*))Scanner::Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft")).Get();
 
-    struct
-    {
-        bool ReturnValue;
-    } Parms{};
-
-    const_cast<ABuildingActor*>(this)->ProcessEvent(HasHealthLeft, &Parms);
-
-    return Parms.ReturnValue;
+    return HasHealthLeft(this);
 }
 
 const FGameplayTagContainer& ABuildingActor::GetStaticGameplayTags() const

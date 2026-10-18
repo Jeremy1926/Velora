@@ -13,7 +13,7 @@ void FWindowsConsoleOutputDevice::Serialize(const TCHAR* Data, ELogVerbosity::Ty
     if (!ConsoleHandle || ConsoleHandle == INVALID_HANDLE_VALUE)
         return;
 
-    if (AllowedCategories.Num() && !AllowedCategories.Contains(Category))
+    if (ExcludedCategories.Contains(Category))
         return;
 
     SYSTEMTIME LocalTime;
@@ -34,8 +34,10 @@ void FWindowsConsoleOutputDevice::Serialize(const TCHAR* Data, ELogVerbosity::Ty
         Color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
     }
 
+    const auto CategoryName = Category == NAME_None ? FString() : Category.ToString();
+
     TCHAR Line[2048];
-    auto Length = _snwprintf_s(Line, _TRUNCATE, TEXT("[%02hu:%02hu:%02hu] %s%s\r\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, Prefix, Data);
+    auto Length = _snwprintf_s(Line, _TRUNCATE, TEXT("[%02hu:%02hu:%02hu] %s%s%s%s\r\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, *CategoryName, CategoryName.Len() ? TEXT(": ") : TEXT(""), Prefix, Data);
 
     if (Length < 0)
         Length = (int32)wcslen(Line);
@@ -51,7 +53,7 @@ void FWindowsConsoleOutputDevice::Serialize(const TCHAR* Data, ELogVerbosity::Ty
     Serialize(Data, Verbosity, Category, -1.0);
 }
 
-void FWindowsConsoleOutputDevice::IncludeCategory(const FName& InCategoryName)
+void FWindowsConsoleOutputDevice::ExcludeCategory(const FName& InCategoryName)
 {
-    AllowedCategories.Add(InCategoryName);
+    ExcludedCategories.Add(InCategoryName);
 }

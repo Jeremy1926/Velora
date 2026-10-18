@@ -12,7 +12,7 @@ public:
 
     void ApplyCharacterCustomization(APawn* Pawn);
 
-    int32 GetWorldPlayerId() const;
+    int32& GetWorldPlayerId();
 
     UFortAbilitySystemComponent*& GetAbilitySystemComponent();
 };

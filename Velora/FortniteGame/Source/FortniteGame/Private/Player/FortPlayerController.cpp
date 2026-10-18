@@ -7,6 +7,7 @@
 #include "Player/FortPlayerStateZone.h"
 #include "Building/BuildingSMActor.h"
 #include "Items/FortInventory.h"
+#include "Items/FortMontageItemDefinitionBase.h"
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
 #include "Items/FortQuickBars.h"
@@ -39,6 +40,8 @@ static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::Initializ
 static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
 static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("FortGameModeAthena: Player [%s] killed after %d seconds.  Removing from alive players list.")).Start().Call().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
+
+static void (AFortPlayerController::*ServerPlayEmoteItem)(UFortMontageItemDefinitionBase*) = nullptr;
 
 static auto RemoveAllInventoryItems = DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*", 3).Get(), &AFortPlayerController::RemoveAllInventoryItems);
 
@@ -110,6 +113,19 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
         return DetourVTable(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"), (void**)(VTable + ServerSpawnInventoryDrop_Implementation), &AFortPlayerController::ServerSpawnInventoryDrop_Implementation);
+    }();
+
+    static auto bServerPlayEmoteItemInstalled = []
+    {
+        if (!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem")))
+            return false;
+
+        auto ServerPlayEmoteItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem")).Find("call [rax+*]", 2).Disp();
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
+        ::ServerPlayEmoteItem = DetourVTable(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"), (void**)(VTable + ServerPlayEmoteItem_Implementation), &AFortPlayerController::ServerPlayEmoteItem_Implementation);
+
+        return true;
     }();
 
     static auto ServerRemoveItemInternal = []
@@ -292,6 +308,15 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
     UE_LOG(LogVelora, Display, TEXT("%s died, dropped %d item%s"), GetPlayerState() ? *GetPlayerState()->GetPlayerName() : TEXT("Player"), DroppedItems, DroppedItems == 1 ? TEXT("") : TEXT("s"));
 }
 
+void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)
+{
+    auto PlayerState = GetPlayerState();
+
+    UE_LOG(LogVelora, Log, TEXT("%s plays emote %s"), PlayerState ? *PlayerState->GetPlayerName() : *GetName(), EmoteAsset ? *EmoteAsset->GetName() : TEXT("None"));
+
+    (this->*::ServerPlayEmoteItem)(EmoteAsset);
+}
+
 UClass* AFortPlayerController::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController"));
@@ -301,7 +326,7 @@ UClass* AFortPlayerController::StaticClass()
 
 void AFortPlayerController::ClientReportDamagedResourceBuilding(ABuildingSMActor* BuildingSMActor, EFortResourceType PotentialResourceType, int32 PotentialResourceCount, bool bDestroyed, bool bJustHitWeakspot)
 {
-    static auto ClientReportDamagedResourceBuilding = FindFunctionChecked(FName(TEXT("ClientReportDamagedResourceBuilding")));
+    static auto ClientReportDamagedResourceBuilding = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ClientReportDamagedResourceBuilding"));
 
     struct
     {
@@ -312,7 +337,7 @@ void AFortPlayerController::ClientReportDamagedResourceBuilding(ABuildingSMActor
         bool bJustHitWeakspot;
     } Parms{ BuildingSMActor, PotentialResourceType, PotentialResourceCount, bDestroyed, bJustHitWeakspot };
 
-    ProcessEvent(ClientReportDamagedResourceBuilding, &Parms);
+    CallRemoteFunction(ClientReportDamagedResourceBuilding, &Parms, nullptr, nullptr);
 }
 
 bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
@@ -392,14 +417,9 @@ void AFortPlayerController::RemoveAllInventoryItems()
 
 void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition)
 {
-    static auto RemoveItemFromQuickBars = FindFunctionChecked(FName(TEXT("RemoveItemFromQuickBars")));
+    static auto RemoveItemFromQuickBars = (void (*)(AFortPlayerController*, UFortItemDefinition*))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars")).Get();
 
-    struct
-    {
-        UFortItemDefinition* ItemDefinition;
-    } Parms{ ItemDefinition };
-
-    ProcessEvent(RemoveItemFromQuickBars, &Parms);
+    RemoveItemFromQuickBars(this, ItemDefinition);
 }
 
 AFortQuickBars*& AFortPlayerController::GetQuickBars()
@@ -778,11 +798,16 @@ int32 AFortPlayerController::GetWorldPlayerId() const
 
 void AFortPlayerController::ClientSendMessage(const FText& MESSAGE)
 {
-    static auto ClientSendMessage = FindFunctionChecked(FName(TEXT("ClientSendMessage")));
+    static auto ClientSendMessage = (void (*)(AFortPlayerController*, const FText&))Scanner::Event(TEXT("ClientSendMessage")).Get();
 
-    FText Parms = MESSAGE;
+    ClientSendMessage(this, MESSAGE);
+}
 
-    ProcessEvent(ClientSendMessage, &Parms);
+void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute)
+{
+    static auto ClientExecuteInventoryItem = (void (*)(AFortPlayerController*, const FGuid&, float, bool))Scanner::Event(TEXT("ClientExecuteInventoryItem")).Get();
+
+    ClientExecuteInventoryItem(this, ItemGuid, Delay, bForceExecute);
 }
 
 void AFortPlayerController::TriggerUIFeedbackEvent(FName EventName)

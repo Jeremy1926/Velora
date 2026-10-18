@@ -64,6 +64,9 @@
     <Filter Include="Engine\Source\Runtime\Core\Public\UObject">
       <UniqueIdentifier>{D6B2F636-09E6-47F7-A101-0D8F9BCB3BFA}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Windows">
+      <UniqueIdentifier>{5CDE8E2D-B47F-47C2-BBB2-B8AFFE5D79F5}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Public\Windows">
       <UniqueIdentifier>{99A9C183-523C-48FA-BD7E-C324CF9A9E8F}</UniqueIdentifier>
     </Filter>
@@ -186,6 +189,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h">
       <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsConsoleOutputDevice.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h">
       <Filter>Engine\Source\Runtime\Core\Public\UObject</Filter>
     </ClInclude>
@@ -293,6 +299,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Windows\WindowsConsoleOutputDevice.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>

@@ -48,6 +48,19 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromHandle(FGamepl
     return nullptr;
 }
 
+FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
+{
+    for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().Items)
+    {
+        if (Spec.Ability->GetClass() == InAbilityClass)
+        {
+            return &Spec;
+        }
+    }
+
+    return nullptr;
+}
+
 void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec)
 {
     static auto MarkAbilitySpecDirty = (void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&))Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Find("ret").Last("call 0x*").Call().Get();
@@ -64,12 +77,13 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 
 void UAbilitySystemComponent::ClientActivateAbilityFailed(FGameplayAbilitySpecHandle AbilityToActivate, int16 PredictionKey)
 {
-    static FName NAME_UAbilitySystemComponent_ClientActivateAbilityFailed = FName(TEXT("ClientActivateAbilityFailed"));
+    static auto ClientActivateAbilityFailed = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ClientActivateAbilityFailed"));
 
     AbilitySystemComponent_eventClientActivateAbilityFailed_Parms Parms;
     Parms.AbilityToActivate = AbilityToActivate;
     Parms.PredictionKey = PredictionKey;
-    ProcessEvent(FindFunctionChecked(NAME_UAbilitySystemComponent_ClientActivateAbilityFailed), &Parms);
+
+    CallRemoteFunction(ClientActivateAbilityFailed, &Parms, nullptr, nullptr);
 }
 
 void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpecHandle Handle, bool InputPressed, const FPredictionKey& PredictionKey, const FGameplayEventData* TriggerEventData)

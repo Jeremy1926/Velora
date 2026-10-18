@@ -2,9 +2,15 @@
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "Net/DataBunch.h"
 #include "UObject/UnrealType.h"
+#include "Building/BuildingActor.h"
 #include "Scanner.h"
+#include "Detour.h"
+
+static auto SetChannelActor = DetourCall(TEXT("UActorChannel::SetChannelActor"), Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Get(), &UActorChannel::SetChannelActor);
 
 UNetConnection* UChannel::GetConnection() const
 {
@@ -114,9 +120,16 @@ bool UActorChannel::ReplicateActor()
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    static auto SetChannelActor = (void (*)(UActorChannel*, AActor*))Scanner::String(TEXT("SetChannelActor: ChIndex: %i, Actor: %s, NetGUID: %s")).Start().Get();
+    (this->*::SetChannelActor)(InActor);
 
-    SetChannelActor(this, InActor);
+    if (!InActor->IsNetStartupActor() && (InActor->IsA(ABuildingActor::StaticClass()) || InActor->GetAlwaysRelevant()))
+    {
+        APlayerController* PlayerController = GetConnection()->GetPlayerController();
+        AActor* ViewTarget = GetConnection()->GetViewTarget();
+        ABuildingActor* BuildingActor = InActor->IsA(ABuildingActor::StaticClass()) ? (ABuildingActor*)InActor : nullptr;
+
+        UE_LOG(LogVelora, Log, TEXT("Opened channel for %s to %s at %.3f, %.1f m away, cull distance %.1f m"), *InActor->GetName(), PlayerController ? *PlayerController->GetName() : TEXT("None"), InActor->GetWorld()->GetTimeSeconds(), ViewTarget ? (InActor->GetActorLocation() - ViewTarget->GetActorLocation()).Size() / 100.f : -1.f, BuildingActor ? BuildingActor->GetCullDistance() / 100.f : -1.f);
+    }
 }
 
 void UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo)

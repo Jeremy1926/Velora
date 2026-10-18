@@ -26,18 +26,17 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
     return GetArchetypeFromRequiredInfo(Class, Outer, Name, ObjectFlags);
 }
 
-UFunction* UObject::FindFunctionChecked(FName InName) const
+bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack)
 {
-    static auto FindFunctionChecked = (UFunction* (*)(const UObject*, FName))Scanner::String(TEXT("Failed to find function %s in %s")).Start().Get();
+    static auto CallRemoteFunction = []
+    {
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
+        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp() / sizeof(void*);
 
-    return FindFunctionChecked(this, InName);
-}
-
-void UObject::ProcessEvent(UFunction* Function, void* Parms)
-{
-    static auto ProcessEvent = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp();
+        return Scanner::At(VTable[Index]).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Disp();
+    }();
 
     auto VTable = *(uint8_t**)this;
 
-    (*(void (**)(UObject*, UFunction*, void*))(VTable + ProcessEvent))(this, Function, Parms);
+    return (*(bool (**)(UObject*, UFunction*, void*, FOutParmRec*, FFrame*))(VTable + CallRemoteFunction))(this, Function, Parms, OutParms, Stack);
 }

@@ -235,6 +235,9 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Online">
       <UniqueIdentifier>{F12F1556-29B4-4C7C-8570-2688D70F170D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Online">
+      <UniqueIdentifier>{9F99FF29-B847-414E-9F8B-2CDA9F74117E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Player">
       <UniqueIdentifier>{5BF30DF8-BA3F-4264-B35E-C06601EBBCD4}</UniqueIdentifier>
     </Filter>
@@ -309,6 +312,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
     <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\Config.h" />
     <ClInclude Include="..\ThirdParty\Zydis\Zydis.h">
       <Filter>ThirdParty\Zydis</Filter>
     </ClInclude>
@@ -603,6 +607,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Info.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameSession.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerState.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
     </ClInclude>
@@ -768,6 +775,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortMontageItemDefinitionBase.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Internationalization\Text.h">
       <Filter>Engine\Source\Runtime\Core\Public\Internationalization</Filter>
     </ClInclude>
@@ -809,6 +819,9 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortPlaylistManager.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventory.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
@@ -857,6 +870,9 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortGameSession.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
@@ -1121,6 +1137,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventory.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Items</Filter>

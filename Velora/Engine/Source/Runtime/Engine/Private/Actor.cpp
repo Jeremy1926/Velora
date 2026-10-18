@@ -25,6 +25,13 @@ bool AActor::IsNetStartupActor() const
     return bNetStartup->GetPropertyValue_InContainer(this);
 }
 
+bool AActor::GetAlwaysRelevant() const
+{
+    static auto bAlwaysRelevant = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bAlwaysRelevant")));
+
+    return bAlwaysRelevant->GetPropertyValue_InContainer(this);
+}
+
 ENetRole AActor::GetRemoteRole() const
 {
     static auto RemoteRole = GetClass()->FindPropertyByName(FName(TEXT("RemoteRole")));

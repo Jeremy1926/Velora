@@ -25,6 +25,13 @@ int32 AFortGameStateAthena::GetPlayersLeft() const
     return *PlayersLeft->ContainerPtrToValuePtr<int32>(this);
 }
 
+int32 AFortGameStateAthena::GetTeamsLeft() const
+{
+    static auto TeamsLeft = GetClass()->FindPropertyByName(FName(TEXT("TeamsLeft")));
+
+    return *TeamsLeft->ContainerPtrToValuePtr<int32>(this);
+}
+
 const FString& AFortGameStateAthena::GetWinningPlayerName() const
 {
     static auto WinningPlayerName = GetClass()->FindPropertyByName(FName(TEXT("WinningPlayerName")));

@@ -27,7 +27,7 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
     ApplyCharacterCustomization(this, Pawn);
 }
 
-int32 AFortPlayerState::GetWorldPlayerId() const
+int32& AFortPlayerState::GetWorldPlayerId()
 {
     static auto WorldPlayerId = GetClass()->FindPropertyByName(FName(TEXT("WorldPlayerId")));
 

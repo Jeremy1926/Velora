@@ -559,6 +559,11 @@ namespace Scanner
         return FCode();
     }
 
+    inline FCode Event(const TCHAR* FunctionName)
+    {
+        return Reference(String(FunctionName).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start();
+    }
+
     inline FCode Exec(const TCHAR* FunctionPath)
     {
         return FCode(std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath))->GetNativeFunc()), true);

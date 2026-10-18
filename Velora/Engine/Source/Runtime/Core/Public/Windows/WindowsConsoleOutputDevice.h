@@ -13,9 +13,9 @@ public:
 
     virtual void Serialize(const TCHAR* Data, ELogVerbosity::Type Verbosity, const FName& Category) override;
 
-    void IncludeCategory(const FName& InCategoryName);
+    void ExcludeCategory(const FName& InCategoryName);
 
 private:
     HANDLE ConsoleHandle;
-    TArray<FName> AllowedCategories;
+    TArray<FName> ExcludedCategories;
 };

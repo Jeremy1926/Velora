@@ -6,6 +6,7 @@
 #include "Windows/WindowsConsoleOutputDevice.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
+#include "Config.h"
 #include "MinHook.h"
 
 #pragma warning(disable: 4073)
@@ -22,13 +23,15 @@ static auto bOutputDevicesRegistered = []
     wcscpy_s(Filename + Length, MAX_PATH - Length, TEXT("Velora.log"));
 
     auto LogFile = new FOutputDeviceFile(Filename);
-    auto LogConsole = new FWindowsConsoleOutputDevice();
-
     LogFile->IncludeCategory(FName(TEXT("LogVelora")));
-    LogConsole->IncludeCategory(FName(TEXT("LogVelora")));
-
     GLog->AddOutputDevice(LogFile);
-    GLog->AddOutputDevice(LogConsole);
+
+    if (Config::bConsole)
+    {
+        auto LogConsole = new FWindowsConsoleOutputDevice();
+        LogConsole->ExcludeCategory(FName(TEXT("LogVelora")));
+        GLog->AddOutputDevice(LogConsole);
+    }
 
     return true;
 }();

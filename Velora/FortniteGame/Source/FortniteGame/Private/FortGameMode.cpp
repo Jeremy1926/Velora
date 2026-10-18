@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "FortGameMode.h"
+#include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 static int32_t OnPlayerCreatedBuildingSlot()
@@ -89,4 +91,11 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
     auto VTable = *(uint8_t**)this;
 
     (*(void (**)(AFortGameMode*, const TMap<FString, FString>&))(VTable + OnGivenMatchAssignment))(this, MatchOptions);
+}
+
+AFortGameSession* AFortGameMode::GetFortGameSession()
+{
+    static auto FortGameSession = GetClass()->FindPropertyByName(FName(TEXT("FortGameSession")));
+
+    return *FortGameSession->ContainerPtrToValuePtr<AFortGameSession*>(this);
 }

@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "GameFramework/GameModeBase.h"
+#include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InController)
@@ -27,4 +29,11 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
     }();
 
     return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);
+}
+
+FString& AGameModeBase::GetOptionsString()
+{
+    static auto OptionsString = GetClass()->FindPropertyByName(FName(TEXT("OptionsString")));
+
+    return *OptionsString->ContainerPtrToValuePtr<FString>(this);
 }

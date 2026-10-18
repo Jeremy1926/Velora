@@ -28,6 +28,11 @@ public:
         return (TClass*)Result;
     }
 
+    FORCEINLINE operator UClass*() const
+    {
+        return Class;
+    }
+
 private:
     UClass* Class;
 };

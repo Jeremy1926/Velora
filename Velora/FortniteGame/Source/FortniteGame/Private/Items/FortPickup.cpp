@@ -31,17 +31,9 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
 
 void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss)
 {
-    static auto TossPickup = FindFunctionChecked(FName(TEXT("TossPickup")));
+    static auto TossPickup = (void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup")).Get();
 
-    struct
-    {
-        FVector FinalLocation;
-        AFortPawn* ItemOwner;
-        int32 OverrideMaxStackCount;
-        bool bToss;
-    } Parms{ FinalLocation, ItemOwner, OverrideMaxStackCount, bToss };
-
-    ProcessEvent(TossPickup, &Parms);
+    TossPickup(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss);
 }
 
 void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner)
@@ -139,6 +131,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             if (auto Item = FindItem(ItemGuid))
                 PlayerController->TryAddToQuickBar(Item);
+
+            if (ItemDefinition->IsA(DecoItemDefinitionClass))
+                UE_LOG(LogVelora, Log, TEXT("Picked up trap %s, %s"), *ItemDefinition->GetName(), QuickBars && IsOnQuickBar(ItemGuid) ? TEXT("added to a trap slot") : TEXT("no free trap slot"));
 
             if (!bNeedsPrimarySlot || !QuickBars || IsOnQuickBar(ItemGuid))
                 continue;

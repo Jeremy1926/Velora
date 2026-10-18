@@ -54,17 +54,11 @@ bool UFortWorldItemDefinition::ShouldDropOnDeath() const
 
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
-    static auto GetMaxDurability = FindFunctionChecked(FName(TEXT("GetMaxDurability")));
+    static auto GetMaxDurability = Scanner::Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability")).Find("call [*+0x*]").Disp();
 
-    struct
-    {
-        int32 ItemLevel;
-        float ReturnValue;
-    } Parms{ ItemLevel };
+    auto VTable = *(uint8_t**)this;
 
-    const_cast<UFortWorldItemDefinition*>(this)->ProcessEvent(GetMaxDurability, &Parms);
-
-    return Parms.ReturnValue;
+    return (*(float (**)(const UFortWorldItemDefinition*, int32))(VTable + GetMaxDurability))(this, ItemLevel);
 }
 
 const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() const

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Containers/Map.h"
+#include "Templates/SubclassOf.h"
 #include "GameplayTasksComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayPrediction.h"
@@ -15,6 +16,8 @@ public:
     FGameplayAbilitySpecHandle GiveAbility(const FGameplayAbilitySpec& AbilitySpec);
 
     FGameplayAbilitySpec* FindAbilitySpecFromHandle(FGameplayAbilitySpecHandle Handle);
+
+    FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
 
     void MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec);
 

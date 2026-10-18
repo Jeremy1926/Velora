@@ -146,6 +146,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="..\Scanner.h" />
     <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="..\Config.h" />
     <ClInclude Include="..\ThirdParty\Zydis\Zydis.h" />
     <ClInclude Include="..\ThirdParty\MinHook\include\MinHook.h" />
     <ClInclude Include="..\ThirdParty\MinHook\src\buffer.h" />
@@ -244,6 +245,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Crc.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\Casts.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Info.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameSession.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerState.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\DataAsset.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayAbilitySpec.h" />
@@ -299,6 +301,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySystemComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRegisteredPlayerInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortMontageItemDefinitionBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Internationalization\Text.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Quat.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStateZone.h" />
@@ -313,6 +316,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaPickaxeItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpItemDefinitionBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortPlaylistManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventory.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortItemDefinition.h" />
@@ -329,6 +333,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortGameSession.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
@@ -459,6 +464,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameModeZone.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortGameSession.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />

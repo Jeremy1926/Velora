@@ -4,6 +4,8 @@
 
 class UFunction;
 class UWorld;
+struct FOutParmRec;
+struct FFrame;
 
 class UObject : public UObjectBaseUtility
 {
@@ -19,7 +21,5 @@ public:
 
     static UObject* GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags);
 
-    UFunction* FindFunctionChecked(FName InName) const;
-
-    void ProcessEvent(UFunction* Function, void* Parms);
+    bool CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack);
 };

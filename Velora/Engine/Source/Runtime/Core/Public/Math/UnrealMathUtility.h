@@ -69,6 +69,11 @@ struct FMath
         return _mm_cvt_ss2si(_mm_set_ss(F + F - 0.5f)) >> 1;
     }
 
+    static FORCEINLINE float Sqrt(float Value)
+    {
+        return sqrtf(Value);
+    }
+
     static FORCEINLINE float InvSqrt(float F)
     {
         const __m128 fOneHalf = _mm_set_ss(0.5f);

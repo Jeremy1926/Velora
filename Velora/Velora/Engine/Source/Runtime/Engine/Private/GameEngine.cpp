@@ -6,6 +6,7 @@
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Online/FortGameSession.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -13,9 +14,13 @@
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HAL/PlatformProperties.h"
 #include "Misc/EngineVersion.h"
+#include "Misc/Parse.h"
+#include "Misc/CommandLine.h"
+#include "Online/FortPlaylistManager.h"
 #include "FortGameInstance.h"
 #include "Analytics/FortAnalytics.h"
 #include "CoreGlobals.h"
+#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -59,25 +64,44 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             GameInstance->GetLocalPlayers().RemoveSingle(LocalPlayer);
         }
 
-        UE_LOG(LogVelora, Display, TEXT("Loading /Game/Athena/Maps/Athena_Terrain"));
+        int32 PlaylistId = std::array<int32, 3>{ 2, 10, 9 }[(uint8)Config::Playlist];
+        FParse::Value(FCommandLine::Get(), TEXT("playlistId="), PlaylistId);
 
-        UGameplayStatics::OpenLevel(GameInstance, FName(TEXT("/Game/Athena/Maps/Athena_Terrain")));
+        int32 MaxTeamCount;
+        int32 MaxTeamSize;
+        int32 MaxSquadSize;
+        int32 MaxPlayers;
+        TCHAR Options[128];
+
+        if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
+            swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), PlaylistId, MaxPlayers, MaxTeamSize);
+        else
+            swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
+
+        UE_LOG(LogVelora, Display, TEXT("Loading %s?%s"), Config::Map, Options);
+
+        UGameplayStatics::OpenLevel(GameInstance, FName(Config::Map), true, FString(Options));
     }
     else if (auto World = GetGameInstance()->GetWorld())
     {
         static AFortGameModeAthena* AssignedGameMode = nullptr;
+        static bool bWinnerLogged = false;
 
         auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
 
         if (GameMode && GameMode != AssignedGameMode && GameMode->GetMatchState() == MatchState::WaitingToStart)
         {
+            TCHAR WarmupRequiredPlayerCount[16];
+            swprintf_s(WarmupRequiredPlayerCount, TEXT("%d"), Config::WarmupRequiredPlayerCount);
+
             TMap<FString, FString> MatchOptions;
-            MatchOptions.Add(TEXT("match.option.warmupRequiredPlayerCount"), TEXT("1"));
+            MatchOptions.Add(TEXT("match.option.warmupRequiredPlayerCount"), WarmupRequiredPlayerCount);
 
             GameMode->OnGivenMatchAssignment(MatchOptions);
             AssignedGameMode = GameMode;
+            bWinnerLogged = false;
 
-            UE_LOG(LogVelora, Display, TEXT("Match assigned, warmup starts with 1 player"));
+            UE_LOG(LogVelora, Display, TEXT("Match assigned, warmup starts with %d player%s"), Config::WarmupRequiredPlayerCount, Config::WarmupRequiredPlayerCount == 1 ? TEXT("") : TEXT("s"));
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
@@ -87,9 +111,19 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             case EAthenaGamePhase::Aircraft:
             case EAthenaGamePhase::SafeZones:
                 State = TEXT("Match Started");
+
+                if (Config::bRestartAfterMatch && GameMode == AssignedGameMode && !GameState->GetPlayerArray().Num() && GameMode->GetFortGameSession())
+                {
+                    UE_LOG(LogVelora, Display, TEXT("Everyone left during the match"));
+
+                    AssignedGameMode = nullptr;
+                    GameMode->GetFortGameSession()->Restart();
+                }
+
                 break;
             case EAthenaGamePhase::EndGame:
                 State = TEXT("Match Ended");
+                AssignedGameMode = nullptr;
                 break;
             default:
                 State = TEXT("Joinable");
@@ -105,7 +139,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 UE_LOG(LogVelora, Display, TEXT("%d player%s left alive"), LastPlayersLeft, LastPlayersLeft == 1 ? TEXT("") : TEXT("s"));
             }
 
-            static bool bWinnerLogged = false;
+            static int32 LastTeamsLeft = -1;
+
+            if (GameState->GetTeamsLeft() != LastTeamsLeft)
+            {
+                LastTeamsLeft = GameState->GetTeamsLeft();
+
+                if (LastTeamsLeft != GameState->GetPlayersLeft())
+                    UE_LOG(LogVelora, Display, TEXT("%d team%s left alive"), LastTeamsLeft, LastTeamsLeft == 1 ? TEXT("") : TEXT("s"));
+            }
 
             if (!bWinnerLogged && GameState->GetWinningPlayerName().Len())
             {
@@ -145,14 +187,28 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         }
     }
 
+    static const FString Build = []
+    {
+        auto& Version = FEngineVersion::Current();
+        auto Branch = Version.GetBranch();
+        auto Release = wcsstr(*Branch, TEXT("Release-"));
+
+        TCHAR Label[64];
+
+        if (Release && iswdigit(Release[8]))
+            swprintf_s(Label, TEXT("FN %s, UE %hu.%hu"), Release + 8, Version.GetMajor(), Version.GetMinor());
+        else
+            swprintf_s(Label, TEXT("CL %u, UE %hu.%hu"), Version.GetChangelist(), Version.GetMajor(), Version.GetMinor());
+
+        return FString(Label);
+    }();
+
     static const TCHAR* LastState = nullptr;
 
     if (State != LastState)
     {
-        auto& Version = FEngineVersion::Current();
-
         TCHAR Title[128];
-        swprintf_s(Title, TEXT("Velora UE %hu.%hu | %s"), Version.GetMajor(), Version.GetMinor(), State);
+        swprintf_s(Title, TEXT("Velora (%s): %s"), *Build, State);
         SetConsoleTitleW(Title);
 
         UE_LOG(LogVelora, Display, TEXT("State: %s"), State);

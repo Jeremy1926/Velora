@@ -1,4 +1,9 @@
 #include "pch.h"
+#include "Online/FortGameSession.h"
+#include "Engine/World.h"
+#include "GameFramework/GameModeBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -12,3 +17,18 @@ static auto ValidatePlayer = []
 
     return Branches;
 }();
+
+void AFortGameSession::Restart()
+{
+    if (!Config::bRestartAfterMatch)
+        return;
+
+    UE_LOG(LogVelora, Display, TEXT("Restarting the server for the next match"));
+
+    auto Options = *GetWorld()->GetAuthGameMode()->GetOptionsString();
+
+    if (*Options == TEXT('?'))
+        Options++;
+
+    UGameplayStatics::OpenLevel(this, FName(Config::Map), true, FString(Options));
+}

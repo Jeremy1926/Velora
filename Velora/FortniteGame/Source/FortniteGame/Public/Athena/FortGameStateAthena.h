@@ -22,5 +22,7 @@ public:
 
     int32 GetPlayersLeft() const;
 
+    int32 GetTeamsLeft() const;
+
     const FString& GetWinningPlayerName() const;
 };

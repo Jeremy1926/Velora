@@ -18,6 +18,8 @@ public:
 
     bool IsNetStartupActor() const;
 
+    bool GetAlwaysRelevant() const;
+
     ENetRole GetRemoteRole() const;
 
     bool HasAuthority() const;

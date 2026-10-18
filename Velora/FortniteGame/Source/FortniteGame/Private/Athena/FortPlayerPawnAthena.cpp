@@ -31,18 +31,7 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
             auto& Slots = QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots;
 
             if (Slots.Num() && Slots[0].Items.Num())
-            {
-                static auto ClientExecuteInventoryItem = PlayerController->FindFunctionChecked(FName(TEXT("ClientExecuteInventoryItem")));
-
-                struct
-                {
-                    FGuid ItemGuid;
-                    float Delay;
-                    bool bForceExecute;
-                } Parms{ Slots[0].Items[0], 0.0f, false };
-
-                PlayerController->ProcessEvent(ClientExecuteInventoryItem, &Parms);
-            }
+                PlayerController->ClientExecuteInventoryItem(Slots[0].Items[0], 0.0f, false);
         }
     }
 }

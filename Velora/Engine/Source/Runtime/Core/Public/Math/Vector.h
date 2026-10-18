@@ -53,6 +53,11 @@ struct FVector
         return X * V.X + Y * V.Y + Z * V.Z;
     }
 
+    FORCEINLINE float Size() const
+    {
+        return FMath::Sqrt(X * X + Y * Y + Z * Z);
+    }
+
     FORCEINLINE float SizeSquared() const
     {
         return X * X + Y * Y + Z * Z;

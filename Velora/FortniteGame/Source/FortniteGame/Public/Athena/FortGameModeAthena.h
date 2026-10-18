@@ -12,4 +12,8 @@ public:
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
     FName RedirectLootTierGroup(FName LootTierGroup) const;
+
+    void StartSafeZones();
+
+    void TrySupplyDrop();
 };

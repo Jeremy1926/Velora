@@ -7,6 +7,7 @@
 #include "Misc/Parse.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -134,6 +135,8 @@ bool UWorld::Listen(FURL& InURL)
     }
 
     FString Error;
+
+    InURL.Port = Config::Port;
 
     if (!GetNetDriver()->InitListen(this, InURL, false, Error))
     {
