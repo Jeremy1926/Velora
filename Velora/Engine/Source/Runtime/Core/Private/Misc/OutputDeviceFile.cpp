@@ -34,7 +34,7 @@ void FOutputDeviceFile::Serialize(const TCHAR* Data, ELogVerbosity::Type Verbosi
     else if (LogVerbosity == ELogVerbosity::Warning)
         Prefix = TEXT("Warning: ");
 
-    fwprintf(LogFile, TEXT("[%04hu-%02hu-%02hu %02hu:%02hu:%02hu.%03hu] %s%s\n"), LocalTime.wYear, LocalTime.wMonth, LocalTime.wDay, LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, LocalTime.wMilliseconds, Prefix, Data);
+    fwprintf(LogFile, TEXT("[%02hu:%02hu:%02hu.%03hu] %s%s\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, LocalTime.wMilliseconds, Prefix, Data);
     fflush(LogFile);
 }
 

@@ -43,7 +43,7 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
-    static auto BroadcastSoundAtLocation = (void (*)(UObject*, USoundBase*, const FVector&, float, float))Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get();
+    static auto BroadcastSoundAtLocation = (void (*)(UObject*, USoundBase*, const FVector&, float, float))Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation"));
 
     BroadcastSoundAtLocation(WorldContextObject, InSound, Location, VolumeMultiplier, PitchMultiplier);
 }
@@ -56,11 +56,7 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
     if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, LootTier, TierGroupName, WorldLevel, FGameplayTagContainer()))
         return false;
 
-    auto bPicked = UFortLootPackage::PickLootDrops(*OutLootToDrop, WorldLevel, LootTierKey, FGameplayTagContainer(), false, false);
-
-    UE_LOG(LogVelora, Log, TEXT("PickLootDrops %s picked %s with %d items"), *TierGroupName.ToString(), *LootTierKey.ToString(), OutLootToDrop->Num());
-
-    return bPicked;
+    return UFortLootPackage::PickLootDrops(*OutLootToDrop, WorldLevel, LootTierKey, FGameplayTagContainer(), false, false);
 }
 
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
@@ -90,8 +86,6 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
 
     if (Pickup && (bToss || !bHasToss))
         Pickup->TossPickup(Position, nullptr, OverrideMaxStackCount, true);
-
-    UE_LOG(LogVelora, Log, TEXT("K2_SpawnPickupInWorld spawned %s x%d"), *ItemDefinition->GetName(), NumberToSpawn);
 
     return Pickup;
 }

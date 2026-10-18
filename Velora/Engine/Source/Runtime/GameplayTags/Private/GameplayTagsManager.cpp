@@ -4,7 +4,7 @@
 
 UGameplayTagsManager& UGameplayTagsManager::Get()
 {
-    static auto SingletonManager = (UGameplayTagsManager**)Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Target();
+    static auto SingletonManager = (UGameplayTagsManager**)Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Target(TEXT("UGameplayTagsManager::SingletonManager"));
 
     if (*SingletonManager == nullptr)
     {
@@ -16,14 +16,14 @@ UGameplayTagsManager& UGameplayTagsManager::Get()
 
 void UGameplayTagsManager::InitializeManager()
 {
-    static auto InitializeManager = (void (*)())Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Call().Get();
+    static auto InitializeManager = (void (*)())Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Call().Get(TEXT("UGameplayTagsManager::InitializeManager"));
 
     InitializeManager();
 }
 
 FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorIfNotFound) const
 {
-    static auto RequestGameplayTag = (FGameplayTag* (*)(const UGameplayTagsManager*, FGameplayTag*, FName, bool))Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Call(2).Get();
+    static auto RequestGameplayTag = (FGameplayTag* (*)(const UGameplayTagsManager*, FGameplayTag*, FName, bool))Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Call(2).Get(TEXT("UGameplayTagsManager::RequestGameplayTag"));
 
     FGameplayTag Result;
 

@@ -775,9 +775,6 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortMontageItemDefinitionBase.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Internationalization\Text.h">
       <Filter>Engine\Source\Runtime\Core\Public\Internationalization</Filter>
     </ClInclude>
@@ -1076,9 +1073,6 @@
       <Filter>Engine\Source\Runtime\Core\Private\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameStateBase.cpp">
-      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerState.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp">

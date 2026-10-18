@@ -3,7 +3,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-static auto IsNetRelevantForSlot = Scanner::String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)")).Start().Find("call [*+0x*]").Disp();
+static auto IsNetRelevantForSlot = Scanner::String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)")).Start().Find("call [*+0x*]").Slot(TEXT("AActor::IsNetRelevantFor"));
 
 static int32_t GetNetPrioritySlot()
 {
@@ -16,10 +16,10 @@ static int32_t GetNetPrioritySlot()
             auto Function = Scanner::At(VTable[Index]);
 
             if (Function.Is("movss xmm0, dword ptr [0x*]; ret") && *(float*)Function.Target() == -17.0f)
-                return (Index + 1) * (int32_t)sizeof(void*);
+                return Scanner::Slot(TEXT("AActor::GetNetPriority"), (Index + 1) * (int32_t)sizeof(void*));
         }
 
-        return 0;
+        return Scanner::Slot(TEXT("AActor::GetNetPriority"), 0);
     }();
 
     return GetNetPriority;
@@ -49,7 +49,7 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
         while (!Scanner::At(VTable[Index]).Start().Has(std::format("jmp [*+{:#x}]", (Index + 1) * sizeof(void*))))
             Index++;
 
-        return (Index + 1) * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AActor::GetNetDormancy"), (Index + 1) * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -59,7 +59,7 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
 
 void AActor::CallPreReplication(UNetDriver* NetDriver)
 {
-    static auto CallPreReplication = (void (*)(AActor*, UNetDriver*))Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Last("xor r9d, r9d").Last("call 0x*").Target();
+    static auto CallPreReplication = (void (*)(AActor*, UNetDriver*))Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Last("xor r9d, r9d").Last("call 0x*").Target(TEXT("AActor::CallPreReplication"));
 
     CallPreReplication(this, NetDriver);
 }

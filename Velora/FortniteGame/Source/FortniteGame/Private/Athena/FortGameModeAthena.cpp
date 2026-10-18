@@ -31,12 +31,6 @@ static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefault
 
 static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get(), &AFortGameModeAthena::OnGivenMatchAssignment);
 
-static auto SupplyDrops = (TArray<AActor*>*)Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:TrySupplyDrop")).Find("jmp 0x*").Target()).Find("lea r9, [0x*]").Target();
-
-static auto StartSafeZones = Detour(TEXT("AFortGameModeAthena::StartSafeZones"), Scanner::CallTo(Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:TrySupplyDrop")).Find("jmp 0x*").Target()).Find("lea r9, [0x*]").Find("call 0x*").Find("jmp 0x*").Target()).Start().Get(), &AFortGameModeAthena::StartSafeZones);
-
-static auto TrySupplyDrop = Detour(TEXT("AFortGameModeAthena::TrySupplyDrop"), Scanner::Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:TrySupplyDrop")).Find("jmp 0x*").Target(), &AFortGameModeAthena::TrySupplyDrop);
-
 UClass* AFortGameModeAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
@@ -88,8 +82,6 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             }
 
             PlayerState->GetWorldPlayerId() = WorldPlayerId;
-
-            UE_LOG(LogVelora, Log, TEXT("%s got world player id %d"), *PlayerState->GetPlayerName(), WorldPlayerId);
         }
 
         PlayerState->ApplyCharacterCustomization(Pawn);
@@ -125,8 +117,8 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 {
     static auto Restart = []
     {
-        auto ReturnPlayersToLobby = Scanner::String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame].")).Start().Find("lea rax, [0x*]").Target();
-        auto Restart = Scanner::At(ReturnPlayersToLobby).Find("ret").Last("call [rax+0x*]").Disp();
+        auto ReturnPlayersToLobby = Scanner::String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame].")).Start().Find("lea rax, [0x*]").Target(TEXT("AFortGameModeAthena::ReturnPlayersToLobby"));
+        auto Restart = Scanner::At(ReturnPlayersToLobby).Find("ret").Last("call [rax+0x*]").Slot(TEXT("AFortGameSession::Restart"));
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameSession"));
 
         return DetourVTable(TEXT("AFortGameSession::Restart"), (void**)(VTable + Restart), &AFortGameSession::Restart);
@@ -134,7 +126,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto SpawnLoot = []
     {
-        auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Disp();
+        auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::BounceContainer"));
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
         return DetourVTable(TEXT("ABuildingContainer::SpawnLoot"), (void**)(VTable + BounceContainer + sizeof(void*)), &ABuildingContainer::SpawnLoot);
@@ -142,7 +134,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto GivePickupTo = []
     {
-        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Disp();
+        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Slot(TEXT("AFortPickup::GivePickupTo"));
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup"));
         auto AthenaVTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
 
@@ -153,7 +145,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto AttemptSpawnResources = []
     {
-        auto AttemptSpawnResources = Scanner::String("OwnedBuildingDamaged").Find("call [*+0x*]", 2).Disp();
+        auto AttemptSpawnResources = Scanner::String("OwnedBuildingDamaged").Find("call [*+0x*]", 2).Slot(TEXT("ABuildingSMActor::AttemptSpawnResources"));
         auto BuildingSMActorClass = ABuildingSMActor::StaticClass();
         auto Stub = (*(void***)BuildingSMActorClass->GetDefaultObject(false))[AttemptSpawnResources / sizeof(void*)];
 
@@ -186,9 +178,9 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto BeginPlay = []
     {
-        auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target();
-        auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get();
-        auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get();
+        auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
+        auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
+        auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
         auto ActorVTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto Index = 0;
 
@@ -216,30 +208,9 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
-    static auto RedirectLootTierGroup = (FName* (*)(const AFortGameModeAthena*, FName*, FName))Scanner::String("Loot_AthenaSupplyDrop").Start().Get();
+    static auto RedirectLootTierGroup = (FName* (*)(const AFortGameModeAthena*, FName*, FName))Scanner::String("Loot_AthenaSupplyDrop").Start().Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
 
     FName Result(NAME_None);
 
     return *RedirectLootTierGroup(this, &Result, LootTierGroup);
-}
-
-void AFortGameModeAthena::StartSafeZones()
-{
-    (this->*::StartSafeZones)();
-
-    UE_LOG(LogVelora, Log, TEXT("Safe zones started, supply drop timer armed"));
-}
-
-void AFortGameModeAthena::TrySupplyDrop()
-{
-    (this->*::TrySupplyDrop)();
-
-    UE_LOG(LogVelora, Log, TEXT("TrySupplyDrop spawned %d supply drop%s"), SupplyDrops->Num(), SupplyDrops->Num() == 1 ? TEXT("") : TEXT("s"));
-
-    for (auto SupplyDrop : *SupplyDrops)
-    {
-        const FVector Location = SupplyDrop->GetActorLocation();
-
-        UE_LOG(LogVelora, Log, TEXT("Supply drop %s at %.0f %.0f %.0f, dormancy %d"), *SupplyDrop->GetName(), Location.X, Location.Y, Location.Z, (int32)SupplyDrop->GetNetDormancy());
-    }
 }

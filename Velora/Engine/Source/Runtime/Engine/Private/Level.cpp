@@ -14,7 +14,7 @@ UWorld* ULevel::GetOwningWorld() const
 bool ULevel::IsAssociatingLevel() const
 {
     static auto bIsAssociatingLevel = Scanner::String(TEXT("sorting actor list")).Start().Find("lea *, [rdx+0x*]");
-    static auto Offset = bIsAssociatingLevel.Disp();
+    static auto Offset = bIsAssociatingLevel.Disp(TEXT("ULevel::bIsAssociatingLevel"));
     static auto Mask = bIsAssociatingLevel.Find("or byte ptr [*], 0x*").Imm();
 
     return *((uint8_t*)this + Offset) & Mask;

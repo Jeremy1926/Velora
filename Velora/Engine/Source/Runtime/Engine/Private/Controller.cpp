@@ -20,7 +20,7 @@ APlayerState* AController::GetPlayerState() const
 
 AActor* AController::GetViewTarget() const
 {
-    static auto GetViewTarget = Scanner::Exec(TEXT("/Script/Engine.Controller:GetViewTarget")).Find("call [*+0x*]").Disp();
+    static auto GetViewTarget = Scanner::Exec(TEXT("/Script/Engine.Controller:GetViewTarget")).Find("call [*+0x*]").Slot(TEXT("AController::GetViewTarget"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -29,7 +29,7 @@ AActor* AController::GetViewTarget() const
 
 FRotator AController::GetControlRotation() const
 {
-    static auto GetControlRotation = Scanner::Exec(TEXT("/Script/Engine.Controller:GetControlRotation")).Find("call [*+0x*]").Disp();
+    static auto GetControlRotation = Scanner::Exec(TEXT("/Script/Engine.Controller:GetControlRotation")).Find("call [*+0x*]").Slot(TEXT("AController::GetControlRotation"));
 
     auto VTable = *(uint8_t**)this;
     FRotator Result;
@@ -41,14 +41,14 @@ void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) cons
 {
     static auto GetPlayerViewPoint = []
     {
-        auto GetActorEyesViewPoint = Scanner::Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint")).Find("call [*+0x*]").Disp();
+        auto GetActorEyesViewPoint = Scanner::Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint")).Find("call [*+0x*]").Slot(TEXT("AActor::GetActorEyesViewPoint"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Controller"));
         auto Index = 0;
 
         while (!Scanner::At(VTable[Index]).Is(std::format("mov rax, [rcx]; jmp [rax+0x{:x}]", GetActorEyesViewPoint)))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AController::GetPlayerViewPoint"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;

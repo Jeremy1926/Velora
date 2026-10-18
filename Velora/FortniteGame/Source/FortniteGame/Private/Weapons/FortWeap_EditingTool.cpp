@@ -24,7 +24,7 @@ void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
         while (!Scanner::At(VTable[Index]).Is(Store))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AFortWeap_EditingTool::SetEditActor"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;

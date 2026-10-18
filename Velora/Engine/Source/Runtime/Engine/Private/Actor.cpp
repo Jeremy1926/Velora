@@ -25,13 +25,6 @@ bool AActor::IsNetStartupActor() const
     return bNetStartup->GetPropertyValue_InContainer(this);
 }
 
-bool AActor::GetAlwaysRelevant() const
-{
-    static auto bAlwaysRelevant = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bAlwaysRelevant")));
-
-    return bAlwaysRelevant->GetPropertyValue_InContainer(this);
-}
-
 ENetRole AActor::GetRemoteRole() const
 {
     static auto RemoteRole = GetClass()->FindPropertyByName(FName(TEXT("RemoteRole")));
@@ -105,7 +98,7 @@ USceneComponent* AActor::GetRootComponent() const
 bool AActor::IsPendingKillPending() const
 {
     static auto bActorIsBeingDestroyed = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer")).Find("test byte ptr [*], 0x*");
-    static auto Offset = bActorIsBeingDestroyed.Disp();
+    static auto Offset = bActorIsBeingDestroyed.Disp(TEXT("AActor::bActorIsBeingDestroyed"));
     static auto Mask = bActorIsBeingDestroyed.Imm();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
@@ -114,7 +107,7 @@ bool AActor::IsPendingKillPending() const
 bool AActor::IsActorInitialized() const
 {
     static auto bActorInitialized = Scanner::String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. ")).Start().Find("test byte ptr [*], 0x*");
-    static auto Offset = bActorInitialized.Disp();
+    static auto Offset = bActorInitialized.Disp(TEXT("AActor::bActorInitialized"));
     static auto Mask = bActorInitialized.Imm();
 
     return *((uint8_t*)this + Offset) & Mask;
@@ -136,7 +129,7 @@ const AActor* AActor::GetNetOwner() const
         while (!Scanner::At(VTable[Index]).Is(std::format("mov rax, [rcx+0x{:x}]; ret", Owner)))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AActor::GetNetOwner"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -154,7 +147,7 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
         while (!Scanner::At(VTable[Index]).Is("cmp r8, rcx; setz al; ret"))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AActor::IsRelevancyOwnerFor"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -164,7 +157,7 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
 
 void AActor::ForceNetUpdate()
 {
-    static auto ForceNetUpdate = Scanner::Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate")).Find("jmp [*+0x*]").Disp();
+    static auto ForceNetUpdate = Scanner::Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate")).Find("jmp [*+0x*]").Slot(TEXT("AActor::ForceNetUpdate"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -176,9 +169,9 @@ bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
     static auto Destroy = []
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Disp();
+        auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Slot(TEXT("AActor::K2_DestroyActor"));
 
-        return (bool (*)(AActor*, bool, bool))Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target();
+        return (bool (*)(AActor*, bool, bool))Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target(TEXT("AActor::Destroy"));
     }();
 
     return Destroy(this, bNetForce, bShouldModifyLevel);

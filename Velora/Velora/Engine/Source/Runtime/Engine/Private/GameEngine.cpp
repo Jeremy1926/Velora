@@ -7,7 +7,6 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Online/FortGameSession.h"
-#include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
 #include "ContentStreaming.h"
@@ -39,8 +38,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
     if (!GIsServer)
     {
-        UE_LOG(LogVelora, Display, TEXT("Starting dedicated server"));
-
         auto GameInstance = GetGameInstance();
 
         GIsClient = false;
@@ -78,14 +75,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         else
             swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
 
-        UE_LOG(LogVelora, Display, TEXT("Loading %s?%s"), Config::Map, Options);
-
         UGameplayStatics::OpenLevel(GameInstance, FName(Config::Map), true, FString(Options));
     }
     else if (auto World = GetGameInstance()->GetWorld())
     {
         static AFortGameModeAthena* AssignedGameMode = nullptr;
-        static bool bWinnerLogged = false;
 
         auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
 
@@ -99,9 +93,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             GameMode->OnGivenMatchAssignment(MatchOptions);
             AssignedGameMode = GameMode;
-            bWinnerLogged = false;
-
-            UE_LOG(LogVelora, Display, TEXT("Match assigned, warmup starts with %d player%s"), Config::WarmupRequiredPlayerCount, Config::WarmupRequiredPlayerCount == 1 ? TEXT("") : TEXT("s"));
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
@@ -114,8 +105,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
                 if (Config::bRestartAfterMatch && GameMode == AssignedGameMode && !GameState->GetPlayerArray().Num() && GameMode->GetFortGameSession())
                 {
-                    UE_LOG(LogVelora, Display, TEXT("Everyone left during the match"));
-
                     AssignedGameMode = nullptr;
                     GameMode->GetFortGameSession()->Restart();
                 }
@@ -128,61 +117,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             default:
                 State = TEXT("Joinable");
                 break;
-            }
-
-            static int32 LastPlayersLeft = -1;
-
-            if (GameState->GetPlayersLeft() != LastPlayersLeft)
-            {
-                LastPlayersLeft = GameState->GetPlayersLeft();
-
-                UE_LOG(LogVelora, Display, TEXT("%d player%s left alive"), LastPlayersLeft, LastPlayersLeft == 1 ? TEXT("") : TEXT("s"));
-            }
-
-            static int32 LastTeamsLeft = -1;
-
-            if (GameState->GetTeamsLeft() != LastTeamsLeft)
-            {
-                LastTeamsLeft = GameState->GetTeamsLeft();
-
-                if (LastTeamsLeft != GameState->GetPlayersLeft())
-                    UE_LOG(LogVelora, Display, TEXT("%d team%s left alive"), LastTeamsLeft, LastTeamsLeft == 1 ? TEXT("") : TEXT("s"));
-            }
-
-            if (!bWinnerLogged && GameState->GetWinningPlayerName().Len())
-            {
-                bWinnerLogged = true;
-
-                UE_LOG(LogVelora, Display, TEXT("%s won the match"), *GameState->GetWinningPlayerName());
-            }
-
-            static TArray<APlayerState*> Players;
-            static TArray<FString> PlayerNames;
-
-            auto& PlayerArray = GameState->GetPlayerArray();
-
-            for (auto PlayerState : PlayerArray)
-            {
-                if (PlayerState && !Players.Contains(PlayerState))
-                {
-                    Players.Add(PlayerState);
-                    PlayerNames.Add(PlayerState->GetPlayerName());
-
-                    UE_LOG(LogVelora, Display, TEXT("%s joined, %d player%s online"), *PlayerNames[PlayerNames.Num() - 1], Players.Num(), Players.Num() == 1 ? TEXT("") : TEXT("s"));
-                }
-            }
-
-            for (int32 Index = Players.Num() - 1; Index >= 0; Index--)
-            {
-                if (!PlayerArray.Contains(Players[Index]))
-                {
-                    const int32 Online = Players.Num() - 1;
-
-                    UE_LOG(LogVelora, Display, TEXT("%s left, %d player%s online"), *PlayerNames[Index], Online, Online == 1 ? TEXT("") : TEXT("s"));
-
-                    Players.RemoveAt(Index);
-                    PlayerNames.RemoveAt(Index);
-                }
             }
         }
     }
@@ -210,8 +144,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         TCHAR Title[128];
         swprintf_s(Title, TEXT("Velora (%s): %s"), *Build, State);
         SetConsoleTitleW(Title);
-
-        UE_LOG(LogVelora, Display, TEXT("State: %s"), State);
 
         LastState = State;
     }

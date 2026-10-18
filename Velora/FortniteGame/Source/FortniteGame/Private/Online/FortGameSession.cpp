@@ -23,8 +23,6 @@ void AFortGameSession::Restart()
     if (!Config::bRestartAfterMatch)
         return;
 
-    UE_LOG(LogVelora, Display, TEXT("Restarting the server for the next match"));
-
     auto Options = *GetWorld()->GetAuthGameMode()->GetOptionsString();
 
     if (*Options == TEXT('?'))

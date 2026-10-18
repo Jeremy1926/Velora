@@ -4,7 +4,7 @@
 
 TSharedPtr<IAnalyticsProvider>& UFortGameInstance::GetServerAnalyticsProvider()
 {
-    static auto ServerAnalyticsProvider = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; add r*, 0x???*").Find("add r*, 0x???*").Imm();
+    static auto ServerAnalyticsProvider = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; add r*, 0x???*").Find("add r*, 0x???*").Imm(TEXT("UFortGameInstance::ServerAnalyticsProvider"));
 
     return *(TSharedPtr<IAnalyticsProvider>*)((uint8_t*)this + ServerAnalyticsProvider);
 }

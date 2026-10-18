@@ -36,7 +36,7 @@ void ABuildingContainer::BeginPlay()
 
 bool ABuildingContainer::IsAlreadySearched() const
 {
-    static auto IsAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Disp() - (int32_t)sizeof(void*);
+    static auto IsAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::OnRep_bAlreadySearched")) - (int32_t)sizeof(void*);
 
     auto VTable = *(uint8_t**)this;
 
@@ -45,7 +45,7 @@ bool ABuildingContainer::IsAlreadySearched() const
 
 void ABuildingContainer::BounceContainer()
 {
-    static auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*+0x*]").Disp();
+    static auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingContainer::BounceContainer"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -147,7 +147,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
 
 void ABuildingContainer::SetContainerSearched(AFortPawn* Searcher)
 {
-    static auto SetContainerSearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Disp() + 5 * (int32_t)sizeof(void*);
+    static auto SetContainerSearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::BounceContainer")) + 5 * (int32_t)sizeof(void*);
 
     auto VTable = *(uint8_t**)this;
 

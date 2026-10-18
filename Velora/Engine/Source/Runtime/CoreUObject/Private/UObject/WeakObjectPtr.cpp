@@ -4,7 +4,7 @@
 
 void FWeakObjectPtr::operator=(const UObject* Object)
 {
-    static auto Assign = (void (*)(FWeakObjectPtr*, const UObject*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("add rcx, 0x*").Last("call 0x*").Target();
+    static auto Assign = (void (*)(FWeakObjectPtr*, const UObject*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("add rcx, 0x*").Last("call 0x*").Target(TEXT("FWeakObjectPtr::operator="));
 
     Assign(this, Object);
 }

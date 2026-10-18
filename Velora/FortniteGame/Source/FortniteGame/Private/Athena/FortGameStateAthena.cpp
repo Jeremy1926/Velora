@@ -17,24 +17,3 @@ EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
 
     return *GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
 }
-
-int32 AFortGameStateAthena::GetPlayersLeft() const
-{
-    static auto PlayersLeft = GetClass()->FindPropertyByName(FName(TEXT("PlayersLeft")));
-
-    return *PlayersLeft->ContainerPtrToValuePtr<int32>(this);
-}
-
-int32 AFortGameStateAthena::GetTeamsLeft() const
-{
-    static auto TeamsLeft = GetClass()->FindPropertyByName(FName(TEXT("TeamsLeft")));
-
-    return *TeamsLeft->ContainerPtrToValuePtr<int32>(this);
-}
-
-const FString& AFortGameStateAthena::GetWinningPlayerName() const
-{
-    static auto WinningPlayerName = GetClass()->FindPropertyByName(FName(TEXT("WinningPlayerName")));
-
-    return *WinningPlayerName->ContainerPtrToValuePtr<FString>(this);
-}

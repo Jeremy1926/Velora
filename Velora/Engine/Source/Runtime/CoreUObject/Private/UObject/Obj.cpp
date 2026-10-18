@@ -12,7 +12,7 @@ UClass* UObject::StaticClass()
 
 UWorld* UObject::GetWorld() const
 {
-    static auto GetWorld = Scanner::String(TEXT("Changing GameSessionId from '%s' to '%s'")).Start().Find("call [*+0x*]").Disp();
+    static auto GetWorld = Scanner::String(TEXT("Changing GameSessionId from '%s' to '%s'")).Start().Find("call [*+0x*]").Slot(TEXT("UObject::GetWorld"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -21,7 +21,7 @@ UWorld* UObject::GetWorld() const
 
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
 {
-    static auto GetArchetypeFromRequiredInfo = (UObject* (*)(UClass*, UObject*, FName, EObjectFlags))Scanner::String(TEXT("Component archetype is not the CDO nor a default subobject of my class. Me = %s, Component = %s, Archetype = %s")).Last("mov r9d, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*").Call().Get();
+    static auto GetArchetypeFromRequiredInfo = (UObject* (*)(UClass*, UObject*, FName, EObjectFlags))Scanner::String(TEXT("Component archetype is not the CDO nor a default subobject of my class. Me = %s, Component = %s, Archetype = %s")).Last("mov r9d, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*").Call().Get(TEXT("UObject::GetArchetypeFromRequiredInfo"));
 
     return GetArchetypeFromRequiredInfo(Class, Outer, Name, ObjectFlags);
 }
@@ -31,9 +31,9 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
     static auto CallRemoteFunction = []
     {
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
-        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp() / sizeof(void*);
+        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Slot(TEXT("UObject::ProcessEvent")) / sizeof(void*);
 
-        return Scanner::At(VTable[Index]).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Disp();
+        return Scanner::At(VTable[Index]).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Slot(TEXT("UObject::CallRemoteFunction"));
     }();
 
     auto VTable = *(uint8_t**)this;

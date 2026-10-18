@@ -7,7 +7,7 @@ bool UPackageMap::WriteObject(FArchive& Ar, UObject* InOuter, FNetworkGUID NetGU
 {
     static auto WriteObject = [this]
     {
-        auto Function = Scanner::String(TEXT("WroteObject %s NetGUID <%s>")).Start().Get();
+        auto Function = Scanner::String(TEXT("WroteObject %s NetGUID <%s>")).Start().Get(TEXT("UPackageMapClient::WriteObject"));
         auto VTable = *(uint8_t***)this;
         auto Index = 0;
 

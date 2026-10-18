@@ -6,7 +6,7 @@
 
 FVector FRotator::Vector() const
 {
-    static auto Vector = (FVector* (*)(const FRotator*, FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector")).Get();
+    static auto Vector = (FVector* (*)(const FRotator*, FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector")).Get(TEXT("FRotator::Vector"));
 
     FVector Result;
 
@@ -33,7 +33,7 @@ FQuat FRotator::Quaternion() const
 
 FRotator FQuat::Rotator() const
 {
-    static auto Rotator = (FRotator* (*)(const FQuat*, FRotator*))Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Call().Get();
+    static auto Rotator = (FRotator* (*)(const FQuat*, FRotator*))Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Call().Get(TEXT("FQuat::Rotator"));
 
     FRotator Result;
 
@@ -44,7 +44,7 @@ const FTransform FTransform::Identity;
 
 FVector FMath::VRand()
 {
-    static auto VRand = (FVector* (*)(FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Call().Get();
+    static auto VRand = (FVector* (*)(FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Call().Get(TEXT("FMath::VRand"));
 
     FVector Result;
 
@@ -53,7 +53,7 @@ FVector FMath::VRand()
 
 FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
 {
-    static auto VRandCone = (FVector* (*)(FVector*, FVector const&, float))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone")).Get();
+    static auto VRandCone = (FVector* (*)(FVector*, FVector const&, float))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone")).Get(TEXT("FMath::VRandCone"));
 
     FVector Result;
 

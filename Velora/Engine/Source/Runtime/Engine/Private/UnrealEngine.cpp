@@ -3,11 +3,11 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
-UEngine*& GEngine = *(UEngine**)Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov rcx, [0x*]").Target();
+UEngine*& GEngine = *(UEngine**)Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov rcx, [0x*]").Target(TEXT("GEngine"));
 
 void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
 {
-    static auto RunAsDedicated = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; test al, al; jnz *").Call().Find("movzx *, byte ptr [*+0x*]").Disp();
+    static auto RunAsDedicated = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; test al, al; jnz *").Call().Find("movzx *, byte ptr [*+0x*]").Disp(TEXT("FWorldContext::RunAsDedicated"));
 
     *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
 }
@@ -21,7 +21,7 @@ float UEngine::GetNetClientTicksPerSecond() const
 
 float UEngine::GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing) const
 {
-    static auto GetMaxTickRate = Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("call [*+0x*]").Disp();
+    static auto GetMaxTickRate = Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("call [*+0x*]").Slot(TEXT("UEngine::GetMaxTickRate"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -44,28 +44,28 @@ UClass* UEngine::GetConsoleClass() const
 
 UEngine::FOnNetworkFailure& UEngine::OnNetworkFailure()
 {
-    static auto NetworkFailureEvent = Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Last("lea rcx, [*+0x*]").Disp();
+    static auto NetworkFailureEvent = Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Last("lea rcx, [*+0x*]").Disp(TEXT("UEngine::NetworkFailureEvent"));
 
     return *(FOnNetworkFailure*)((uint8_t*)this + NetworkFailureEvent);
 }
 
 void UEngine::FOnNetworkFailure::Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const
 {
-    static auto Broadcast = (void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&))Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Call().Get();
+    static auto Broadcast = (void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&))Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Call().Get(TEXT("FOnNetworkFailure::Broadcast"));
 
     Broadcast(this, World, NetDriver, FailureType, ErrorString);
 }
 
 bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition)
 {
-    static auto CreateNamedNetDriver = (bool (*)(UEngine*, UWorld*, FName, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("call 0x*").Target();
+    static auto CreateNamedNetDriver = (bool (*)(UEngine*, UWorld*, FName, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("call 0x*").Target(TEXT("UEngine::CreateNamedNetDriver"));
 
     return CreateNamedNetDriver(this, InWorld, NetDriverName, NetDriverDefinition);
 }
 
 UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
 {
-    static auto FindNamedNetDriver = (UNetDriver* (*)(UEngine*, UWorld*, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]; call 0x*").Call().Get();
+    static auto FindNamedNetDriver = (UNetDriver* (*)(UEngine*, UWorld*, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]; call 0x*").Call().Get(TEXT("UEngine::FindNamedNetDriver"));
 
     return FindNamedNetDriver(this, InWorld, NetDriverName);
 }

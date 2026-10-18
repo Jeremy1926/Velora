@@ -2,15 +2,9 @@
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
-#include "Engine/World.h"
-#include "GameFramework/PlayerController.h"
 #include "Net/DataBunch.h"
 #include "UObject/UnrealType.h"
-#include "Building/BuildingActor.h"
 #include "Scanner.h"
-#include "Detour.h"
-
-static auto SetChannelActor = DetourCall(TEXT("UActorChannel::SetChannelActor"), Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Get(), &UActorChannel::SetChannelActor);
 
 UNetConnection* UChannel::GetConnection() const
 {
@@ -22,7 +16,7 @@ UNetConnection* UChannel::GetConnection() const
 bool UChannel::GetClosing() const
 {
     static auto Closing = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("test byte ptr [*], 0x*");
-    static auto Offset = Closing.Disp();
+    static auto Offset = Closing.Disp(TEXT("UChannel::Closing"));
     static auto Mask = Closing.Imm();
 
     return *((uint8_t*)this + Offset) & Mask;
@@ -31,7 +25,7 @@ bool UChannel::GetClosing() const
 bool UChannel::GetDormant() const
 {
     static auto Dormant = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("test byte ptr [*], 0x*");
-    static auto Offset = Dormant.Disp();
+    static auto Offset = Dormant.Disp(TEXT("UChannel::Dormant"));
     static auto Mask = Dormant.Imm();
 
     return *((uint8_t*)this + Offset) & Mask;
@@ -40,7 +34,7 @@ bool UChannel::GetDormant() const
 bool UChannel::GetPendingDormancy() const
 {
     static auto bPendingDormancy = Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Find("or dword ptr [*], 0x*");
-    static auto Offset = bPendingDormancy.Disp();
+    static auto Offset = bPendingDormancy.Disp(TEXT("UChannel::bPendingDormancy"));
     static auto Mask = bPendingDormancy.Imm();
 
     return *(uint32_t*)((uint8_t*)this + Offset) & Mask;
@@ -48,7 +42,7 @@ bool UChannel::GetPendingDormancy() const
 
 int32 UChannel::GetNumOutRec() const
 {
-    static auto NumOutRec = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cmp dword ptr [*], 0x0").Disp();
+    static auto NumOutRec = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cmp dword ptr [*], 0x0").Disp(TEXT("UChannel::NumOutRec"));
 
     return *(int32*)((uint8_t*)this + NumOutRec);
 }
@@ -65,7 +59,7 @@ int32 UChannel::IsNetReady(bool Saturate)
 
 FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
 {
-    static auto SendBunch = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1").Find("call 0x*").Find("call [*]").Disp();
+    static auto SendBunch = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1").Find("call 0x*").Find("call [*]").Slot(TEXT("UChannel::SendBunch"));
 
     auto VTable = *(uint8_t**)this;
     FPacketIdRange Result;
@@ -80,7 +74,7 @@ AActor* UActorChannel::GetActor() const
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
-static auto LastUpdateTime = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Disp();
+static auto LastUpdateTime = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Disp(TEXT("UActorChannel::LastUpdateTime"));
 
 double UActorChannel::GetRelevantTime() const
 {
@@ -99,37 +93,30 @@ double UActorChannel::GetLastUpdateTime() const
 
 void UActorChannel::Close()
 {
-    static auto Close = (void (*)(UActorChannel*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get();
+    static auto Close = (void (*)(UActorChannel*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get(TEXT("UActorChannel::Close"));
 
     Close(this);
 }
 
 void UActorChannel::StartBecomingDormant()
 {
-    static auto StartBecomingDormant = (void (*)(UActorChannel*))Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get();
+    static auto StartBecomingDormant = (void (*)(UActorChannel*))Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get(TEXT("UActorChannel::StartBecomingDormant"));
 
     StartBecomingDormant(this);
 }
 
 bool UActorChannel::ReplicateActor()
 {
-    static auto ReplicateActor = (bool (*)(UActorChannel*))Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get();
+    static auto ReplicateActor = (bool (*)(UActorChannel*))Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get(TEXT("UActorChannel::ReplicateActor"));
 
     return ReplicateActor(this);
 }
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    (this->*::SetChannelActor)(InActor);
+    static auto SetChannelActor = (void (*)(UActorChannel*, AActor*))Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
 
-    if (!InActor->IsNetStartupActor() && (InActor->IsA(ABuildingActor::StaticClass()) || InActor->GetAlwaysRelevant()))
-    {
-        APlayerController* PlayerController = GetConnection()->GetPlayerController();
-        AActor* ViewTarget = GetConnection()->GetViewTarget();
-        ABuildingActor* BuildingActor = InActor->IsA(ABuildingActor::StaticClass()) ? (ABuildingActor*)InActor : nullptr;
-
-        UE_LOG(LogVelora, Log, TEXT("Opened channel for %s to %s at %.3f, %.1f m away, cull distance %.1f m"), *InActor->GetName(), PlayerController ? *PlayerController->GetName() : TEXT("None"), InActor->GetWorld()->GetTimeSeconds(), ViewTarget ? (InActor->GetActorLocation() - ViewTarget->GetActorLocation()).Size() / 100.f : -1.f, BuildingActor ? BuildingActor->GetCullDistance() / 100.f : -1.f);
-    }
+    SetChannelActor(this, InActor);
 }
 
 void UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo)

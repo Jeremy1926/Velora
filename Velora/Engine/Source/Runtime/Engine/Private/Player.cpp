@@ -8,10 +8,3 @@ APlayerController* UPlayer::GetPlayerController() const
 
     return *PlayerController->ContainerPtrToValuePtr<APlayerController*>(this);
 }
-
-int32 UPlayer::GetCurrentNetSpeed() const
-{
-    static auto CurrentNetSpeed = GetClass()->FindPropertyByName(FName(TEXT("CurrentNetSpeed")));
-
-    return *CurrentNetSpeed->ContainerPtrToValuePtr<int32>(this);
-}

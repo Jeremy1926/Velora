@@ -14,7 +14,7 @@ UClass* AFortQuickBars::StaticClass()
 
 void AFortQuickBars::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot)
 {
-    static auto ActivateSlot = (void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool))Scanner::String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d.")).Find("mov byte ptr [rsp+0x20], 0x1; call 0x*").Call().Get();
+    static auto ActivateSlot = (void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool))Scanner::String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d.")).Find("mov byte ptr [rsp+0x20], 0x1; call 0x*").Call().Get(TEXT("AFortQuickBars::ActivateSlot"));
 
     ActivateSlot(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot);
 }
@@ -29,7 +29,7 @@ FQuickBar& AFortQuickBars::GetQuickBar(EFortQuickBars InQuickBar)
 
 void AFortQuickBars::OnQuickBarChanged(EFortQuickBars InQuickBar)
 {
-    static auto OnQuickBarChanged = (void (*)(AFortQuickBars*, EFortQuickBars))Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:OnRep_SecondaryQuickBar")).Find("jmp 0x*").Target()).Find("jmp 0x*").Target();
+    static auto OnQuickBarChanged = (void (*)(AFortQuickBars*, EFortQuickBars))Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:OnRep_SecondaryQuickBar")).Find("jmp 0x*").Target()).Find("jmp 0x*").Target(TEXT("AFortQuickBars::OnQuickBarChanged"));
 
     OnQuickBarChanged(this, InQuickBar);
 }

@@ -17,14 +17,13 @@
 #include "Templates/Sorting.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
-#include "Building/BuildingActor.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto TickFlushFunction = Scanner::String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s")).Last("call 0x*").Target();
+static auto TickFlushFunction = Scanner::String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s")).Last("call 0x*").Target(TEXT("UNetDriver::TickFlush"));
 
-static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [*]").Disp();
+static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [*]").Slot(TEXT("UNetDriver::IsServer"));
 
 static auto TickFlush = Detour(TEXT("UNetDriver::TickFlush"), TickFlushFunction, &UNetDriver::TickFlush);
 
@@ -47,13 +46,6 @@ void UNetDriver::SetMaxClientRate(int32 InMaxClientRate)
     static auto MaxClientRate = GetClass()->FindPropertyByName(FName(TEXT("MaxClientRate")));
 
     *MaxClientRate->ContainerPtrToValuePtr<int32>(this) = InMaxClientRate;
-}
-
-int32 UNetDriver::GetNetServerMaxTickRate() const
-{
-    static auto NetServerMaxTickRate = GetClass()->FindPropertyByName(FName(TEXT("NetServerMaxTickRate")));
-
-    return *NetServerMaxTickRate->ContainerPtrToValuePtr<int32>(this);
 }
 
 float UNetDriver::GetServerTravelPause() const
@@ -100,14 +92,14 @@ float UNetDriver::GetRelevantTimeout() const
 
 TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
 {
-    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found. Component: %s, Actor: %s")).Last("mov rcx, [rcx+0x*]").Disp();
+    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found. Component: %s, Actor: %s")).Last("mov rcx, [rcx+0x*]").Disp(TEXT("UNetDriver::GuidCache"));
 
     return *(TSharedPtr<FNetGUIDCache>*)((uint8_t*)this + GuidCache);
 }
 
 static int32_t NetTagOffset()
 {
-    static auto NetTag = Scanner::Pattern("C7 43 ? 10 27 00 00 C7 43 ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l").Disp();
+    static auto NetTag = Scanner::Pattern("C7 43 ? 10 27 00 00 C7 43 ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l").Disp(TEXT("UNetDriver::NetTag"));
 
     return NetTag;
 }
@@ -124,14 +116,14 @@ void UNetDriver::SetNetTag(int32 InNetTag)
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea r*, [*+0x???]").Disp();
+    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea r*, [*+0x???]").Disp(TEXT("UNetDriver::DestroyedStartupOrDormantActors"));
 
     return *(TMap<FNetworkGUID, FActorDestructionInfo>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
 static int32_t ReplicationFrameOffset()
 {
-    static auto ReplicationFrame = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]").Find("inc [*]").Disp();
+    static auto ReplicationFrame = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]").Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
 
     return ReplicationFrame;
 }
@@ -148,14 +140,14 @@ void UNetDriver::SetReplicationFrame(uint32 InReplicationFrame)
 
 FNetworkObjectList& UNetDriver::GetNetworkObjectList()
 {
-    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp();
+    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp(TEXT("UNetDriver::NetworkObjects"));
 
     return **(TSharedPtr<FNetworkObjectList>*)((uint8_t*)this + NetworkObjects);
 }
 
 bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReuseAddressAndPort, FString& Error)
 {
-    static auto InitListen = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("call [*]").Disp();
+    static auto InitListen = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("call [*]").Slot(TEXT("UNetDriver::InitListen"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -164,7 +156,7 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = (void (*)(UNetDriver*, UWorld*))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target();
+    static auto SetWorld = (void (*)(UNetDriver*, UWorld*))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld"));
 
     SetWorld(this, InWorld);
 }
@@ -173,7 +165,7 @@ void UNetDriver::TickFlush(float DeltaSeconds)
 {
     static auto FlushActorDormancy = []
     {
-        for (auto ActorFunction : { Scanner::At(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target()), Scanner::Native(TEXT("/Script/Engine.Actor:SetNetDormancy")) })
+        for (auto ActorFunction : { Scanner::At(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target(TEXT("AActor::FlushNetDormancy"))), Scanner::Native(TEXT("/Script/Engine.Actor:SetNetDormancy")) })
         {
             auto DemoNetDriverCall = ActorFunction.Find("ret").Last("call 0x*");
 
@@ -223,7 +215,7 @@ ENetMode UNetDriver::GetNetMode() const
 
 bool UNetDriver::IsLevelInitializedForActor(const AActor* InActor, const UNetConnection* InConnection) const
 {
-    static auto IsLevelInitializedForActor = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("call [*]; test al, al").Disp();
+    static auto IsLevelInitializedForActor = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("call [*]; test al, al").Slot(TEXT("UNetDriver::IsLevelInitializedForActor"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -774,11 +766,6 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
             {
                 if (!bLevelInitializedForActor || !Actor->IsNetStartupActor())
                 {
-                    if (!Actor->IsNetStartupActor() && (Actor->IsA(ABuildingActor::StaticClass()) || Actor->GetAlwaysRelevant()))
-                    {
-                        UE_LOG(LogVelora, Log, TEXT("Closed channel for %s to %s at %.3f, %.1f m away, level initialized %d"), *Actor->GetName(), Connection->GetPlayerController() ? *Connection->GetPlayerController()->GetName() : TEXT("None"), GetWorld()->GetTimeSeconds(), (Actor->GetActorLocation() - ConnectionViewers[0].ViewLocation).Size() / 100.f, bLevelInitializedForActor);
-                    }
-
                     Channel->Close();
                 }
             }
@@ -794,14 +781,6 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
     {
         return 0;
     }
-
-    static float StatsStartTime = GetTime();
-    static int32 StatsFrames = 0;
-    static int32 StatsActorUpdates = 0;
-    static int32 StatsConnectionUpdates = 0;
-    static int32 StatsSaturatedUpdates = 0;
-
-    StatsFrames++;
 
     int32 Updated = 0;
 
@@ -892,13 +871,6 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
 
             const int32 LastProcessedActor = ServerReplicateActors_ProcessPrioritizedActors(Connection, ConnectionViewers, PriorityActors, FinalSortedCount, Updated);
 
-            StatsConnectionUpdates++;
-
-            if (LastProcessedActor < FinalSortedCount)
-            {
-                StatsSaturatedUpdates++;
-            }
-
             for (int32 k = LastProcessedActor; k < FinalSortedCount; k++)
             {
                 if (!PriorityActors[k]->ActorInfo)
@@ -943,26 +915,6 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
             GetClientConnections().Add(Connection);
             NumConnectionsToMove--;
         }
-    }
-
-    StatsActorUpdates += Updated;
-
-    if (GetTime() - StatsStartTime >= 60.f)
-    {
-        UE_LOG(LogVelora, Log, TEXT("Replication over %.1f s: %.1f server fps, max tick rate %.1f, NetServerMaxTickRate %d, %d network actors, %d actor updates, %d of %d connection updates saturated"), GetTime() - StatsStartTime, StatsFrames / (GetTime() - StatsStartTime), GEngine->GetMaxTickRate(DeltaSeconds), GetNetServerMaxTickRate(), GetNetworkObjectList().GetActiveObjects().Num(), StatsActorUpdates, StatsSaturatedUpdates, StatsConnectionUpdates);
-
-        for (int32 i = 0; i < GetClientConnections().Num(); i++)
-        {
-            UNetConnection* Connection = GetClientConnections()[i];
-
-            UE_LOG(LogVelora, Log, TEXT("Replication to %s: NetSpeed %d, %d actor channels"), Connection->GetPlayerController() ? *Connection->GetPlayerController()->GetName() : TEXT("None"), Connection->GetCurrentNetSpeed(), Connection->GetActorChannels().Num());
-        }
-
-        StatsStartTime = GetTime();
-        StatsFrames = 0;
-        StatsActorUpdates = 0;
-        StatsConnectionUpdates = 0;
-        StatsSaturatedUpdates = 0;
     }
 
     return Updated;

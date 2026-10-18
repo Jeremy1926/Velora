@@ -46,23 +46,16 @@ static auto bStartupLogged = []
     tm Built;
     _localtime64_s(&Built, &LinkTime);
 
-    UE_LOG(LogVelora, Display, TEXT("Velora built %04d-%02d-%02d %02d:%02d:%02d"), Built.tm_year + 1900, Built.tm_mon + 1, Built.tm_mday, Built.tm_hour, Built.tm_min, Built.tm_sec);
-
     auto& Version = FEngineVersion::Current();
 
-    UE_LOG(LogVelora, Display, TEXT("Unreal Engine %hu.%hu.%hu-%u+%s"), Version.GetMajor(), Version.GetMinor(), Version.GetPatch(), Version.GetChangelist(), *Version.GetBranch());
-    UE_LOG(LogVelora, Display, TEXT("Image base 0x%p"), Scanner::Base());
+    UE_LOG(LogVelora, Display, TEXT("Velora built %04d-%02d-%02d %02d:%02d:%02d, CL %u, UE %hu.%hu, base 0x%llX"), Built.tm_year + 1900, Built.tm_mon + 1, Built.tm_mday, Built.tm_hour, Built.tm_min, Built.tm_sec, Version.GetChangelist(), Version.GetMajor(), Version.GetMinor(), (uintptr_t)Scanner::Base());
 
     return true;
 }();
 
 void Main()
 {
-    if (auto Status = MH_EnableHook(MH_ALL_HOOKS); Status == MH_OK)
-    {
-        UE_LOG(LogVelora, Display, TEXT("Hooks enabled"));
-    }
-    else
+    if (auto Status = MH_EnableHook(MH_ALL_HOOKS); Status != MH_OK)
     {
         UE_LOG(LogVelora, Error, TEXT("Could not enable hooks (%hs)"), MH_StatusToString(Status));
     }

@@ -11,7 +11,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target();
+static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target(TEXT("LogWorld"));
 
 static auto Listen = DetourCall(TEXT("UWorld::Listen"), Scanner::String(TEXT("LoadMap: failed to Listen(%s)")).Last("call 0x*; test al, al").Get(), &UWorld::Listen);
 
@@ -54,14 +54,14 @@ ULevel* UWorld::GetCurrentLevelPendingInvisibility() const
 
 float UWorld::GetTimeSeconds() const
 {
-    static auto TimeSeconds = Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")).Find("movss xmm0, dword ptr [rax+*]").Disp();
+    static auto TimeSeconds = Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")).Find("movss xmm0, dword ptr [rax+*]").Disp(TEXT("UWorld::TimeSeconds"));
 
     return *(float*)((uint8_t*)this + TimeSeconds);
 }
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
 {
-    static auto GetWorldSettings = (AWorldSettings* (*)(const UWorld*, bool, bool))Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get();
+    static auto GetWorldSettings = (AWorldSettings* (*)(const UWorld*, bool, bool))Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get(TEXT("UWorld::GetWorldSettings"));
 
     return GetWorldSettings(this, bCheckStreamingPesistent, bChecked);
 }
@@ -92,14 +92,14 @@ void UWorld::SetNetDriver(UNetDriver* NewDriver)
 
 void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 {
-    static auto NextSwitchCountdown = Scanner::String(TEXT("Server switch level: %s")).Start().Find("subss *").Find("movss [*], xmm*").Disp();
+    static auto NextSwitchCountdown = Scanner::String(TEXT("Server switch level: %s")).Start().Find("subss *").Find("movss [*], xmm*").Disp(TEXT("UWorld::NextSwitchCountdown"));
 
     *(float*)((uint8_t*)this + NextSwitchCountdown) = InNextSwitchCountdown;
 }
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)
 {
-    static auto FindCollectionByType = (FLevelCollection* (*)(UWorld*, ELevelCollectionType))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Call().Get();
+    static auto FindCollectionByType = (FLevelCollection* (*)(UWorld*, ELevelCollectionType))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Call().Get(TEXT("UWorld::FindCollectionByType"));
 
     return FindCollectionByType(this, InType);
 }
@@ -164,8 +164,6 @@ bool UWorld::Listen(FURL& InURL)
         GetNetDriver()->SetMaxClientRate(GetNetDriver()->GetMaxInternetClientRate());
 
     SetNextSwitchCountdown(GetNetDriver()->GetServerTravelPause());
-
-    UE_LOG(LogVelora, Display, TEXT("Listening on port %d"), InURL.Port);
 
     return true;
 }

@@ -17,8 +17,8 @@ static auto CloseBunch = []
     auto Flags = Close.Find("movzx *, byte ptr [rsp+0x*]");
     FCloseBunch Bunch;
 
-    Bunch.Constructor = Close.Call().Get();
-    Bunch.Flags = Flags.Disp() - Close.Find("lea rcx, [rsp+0x*]").Disp();
+    Bunch.Constructor = Close.Call().Get(TEXT("FOutBunch::FOutBunch"));
+    Bunch.Flags = Scanner::Offset(TEXT("FOutBunch::bReliable"), Flags.Disp() - Close.Find("lea rcx, [rsp+0x*]").Disp());
     Bunch.DormantMask = (uint8_t)~Flags.Find("and al, 0x*").Imm();
     Bunch.ReliableMask = (uint8_t)(Flags.Find("or cl, 0x*").Imm() << Flags.Find("shl cl, 0x*").Imm());
 
@@ -28,7 +28,7 @@ static auto CloseBunch = []
 void* FOutBunch::operator new(size_t Size)
 {
     static auto Allocation = Scanner::String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s")).Start().Find("mov ecx, 0x*; call 0x*; test rax, rax");
-    static auto New = (void* (*)(size_t))Allocation.Call().Get();
+    static auto New = (void* (*)(size_t))Allocation.Call().Get(TEXT("operator new"));
     static auto BunchSize = (size_t)Allocation.Imm();
 
     return New(BunchSize);

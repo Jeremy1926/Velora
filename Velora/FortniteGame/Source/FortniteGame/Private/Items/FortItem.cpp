@@ -6,7 +6,7 @@
 
 UFortItemDefinition* UFortItem::GetItemDefinitionBP() const
 {
-    static auto GetItemDefinitionBP = Scanner::Exec(TEXT("/Script/FortniteGame.FortItem:GetItemDefinitionBP")).Find("call [*]").Disp();
+    static auto GetItemDefinitionBP = Scanner::Exec(TEXT("/Script/FortniteGame.FortItem:GetItemDefinitionBP")).Find("call [*]").Slot(TEXT("UFortItem::GetItemDefinitionBP"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -15,7 +15,7 @@ UFortItemDefinition* UFortItem::GetItemDefinitionBP() const
 
 FGuid UFortItem::GetItemGuid() const
 {
-    static auto GetItemGuid = Scanner::Exec(TEXT("/Script/FortniteGame.FortItem:GetItemGuid")).Find("call [*]").Disp();
+    static auto GetItemGuid = Scanner::Exec(TEXT("/Script/FortniteGame.FortItem:GetItemGuid")).Find("call [*]").Slot(TEXT("UFortItem::GetItemGuid"));
 
     auto VTable = *(uint8_t**)this;
     FGuid Result;

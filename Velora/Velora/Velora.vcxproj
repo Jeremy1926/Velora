@@ -301,7 +301,6 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySystemComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRegisteredPlayerInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortMontageItemDefinitionBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Internationalization\Text.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Quat.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStateZone.h" />
@@ -421,7 +420,6 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceFile.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Windows\WindowsConsoleOutputDevice.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameStateBase.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerState.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />

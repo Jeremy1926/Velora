@@ -4,7 +4,7 @@
 
 FGuid FGuid::NewGuid()
 {
-    static auto NewGuid = (FGuid* (*)(FGuid*))Scanner::String(TEXT("FIX GUID FOR: %s")).Call(3).Get();
+    static auto NewGuid = (FGuid* (*)(FGuid*))Scanner::String(TEXT("FIX GUID FOR: %s")).Call(3).Get(TEXT("FGuid::NewGuid"));
 
     FGuid Result;
     NewGuid(&Result);

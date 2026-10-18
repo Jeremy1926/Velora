@@ -24,14 +24,14 @@ UClass* AFortPickup::StaticClass()
 
 AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass)
 {
-    static auto CreateFromData = (AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("mov qword ptr [rsp+0x28], *").Call().Get();
+    static auto CreateFromData = (AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("mov qword ptr [rsp+0x28], *").Call().Get(TEXT("AFortPickup::CreateFromData"));
 
     return CreateFromData(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass);
 }
 
 void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss)
 {
-    static auto TossPickup = (void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup")).Get();
+    static auto TossPickup = (void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup")).Get(TEXT("AFortPickup::TossPickup"));
 
     TossPickup(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss);
 }
@@ -132,9 +132,6 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             if (auto Item = FindItem(ItemGuid))
                 PlayerController->TryAddToQuickBar(Item);
 
-            if (ItemDefinition->IsA(DecoItemDefinitionClass))
-                UE_LOG(LogVelora, Log, TEXT("Picked up trap %s, %s"), *ItemDefinition->GetName(), QuickBars && IsOnQuickBar(ItemGuid) ? TEXT("added to a trap slot") : TEXT("no free trap slot"));
-
             if (!bNeedsPrimarySlot || !QuickBars || IsOnQuickBar(ItemGuid))
                 continue;
 
@@ -144,19 +141,13 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             if (FocusedSlot >= 0 && FocusedSlot < QuickBar.Slots.Num() && QuickBar.Slots[FocusedSlot].Items.Num())
             {
                 const FGuid SwapItemGuid = QuickBar.Slots[FocusedSlot].Items[0];
-                UFortItemDefinition* SwapItemDefinition = nullptr;
                 int32 SwapCount = 0;
 
                 for (auto& Entry : Inventory.ReplicatedEntries)
                 {
                     if (Entry.ItemGuid == SwapItemGuid)
-                    {
-                        SwapItemDefinition = Entry.ItemDefinition;
                         SwapCount = Entry.Count;
-                    }
                 }
-
-                UE_LOG(LogVelora, Log, TEXT("No quickbar slot for %s, swapping it with %s in slot %d"), *ItemDefinition->GetName(), SwapItemDefinition ? *SwapItemDefinition->GetName() : TEXT("None"), FocusedSlot);
 
                 if (SwapCount > 0)
                     PlayerController->ServerSpawnInventoryDrop_Implementation(SwapItemGuid, SwapCount);
@@ -167,8 +158,6 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             if (IsOnQuickBar(ItemGuid))
                 continue;
-
-            UE_LOG(LogVelora, Log, TEXT("No quickbar slot for %s after the swap, tossing it back"), *ItemDefinition->GetName());
 
             PlayerController->RemoveInventoryItem(ItemGuid, ItemCount, true);
             NumberToGive += ItemCount;
@@ -231,14 +220,14 @@ bool& AFortPickup::GetTossedFromContainer()
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
-    static auto SetPickupTarget = (void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Get();
+    static auto SetPickupTarget = (void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Get(TEXT("AFortPickup::SetPickupTarget"));
 
     SetPickupTarget(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
 float AFortPickup::GetFlyTime() const
 {
-    static auto GetFlyTime = (float (*)(const AFortPickup*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Find("comiss *").Call().Get();
+    static auto GetFlyTime = (float (*)(const AFortPickup*))Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Find("comiss *").Call().Get(TEXT("AFortPickup::GetFlyTime"));
 
     return GetFlyTime(this);
 }

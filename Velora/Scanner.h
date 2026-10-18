@@ -57,14 +57,10 @@ namespace Scanner
             for (auto Address = Begin; Address + 5 <= End; Address++)
             {
                 if ((Address[0] == 0xE8 || Address[0] == 0xE9) && Address + 5 + *(int32_t*)(Address + 1) == Target)
-                {
-                    UE_LOG(LogVelora, Log, TEXT("Found a call to 0x%llX at 0x%llX"), (const uint8_t*)Target - Base(), Address - Base());
                     return Address;
-                }
             }
         }
 
-        UE_LOG(LogVelora, Error, TEXT("Could not find a call to 0x%llX"), (const uint8_t*)Target - Base());
         return nullptr;
     }
 
@@ -98,14 +94,12 @@ namespace Scanner
                         References.emplace(String, Reference);
                         ReleaseSRWLockExclusive(&Lock);
 
-                        UE_LOG(LogVelora, Log, TEXT("Found \"%s\" at 0x%llX"), String, Reference - Base());
                         return Reference;
                     }
                 }
             }
         }
 
-        UE_LOG(LogVelora, Error, TEXT("Could not find \"%s\""), String);
         return nullptr;
     }
 
@@ -139,14 +133,12 @@ namespace Scanner
                         References.emplace(String, Reference);
                         ReleaseSRWLockExclusive(&Lock);
 
-                        UE_LOG(LogVelora, Log, TEXT("Found \"%hs\" at 0x%llX"), String, Reference - Base());
                         return Reference;
                     }
                 }
             }
         }
 
-        UE_LOG(LogVelora, Error, TEXT("Could not find \"%hs\""), String);
         return nullptr;
     }
 
@@ -183,14 +175,10 @@ namespace Scanner
                     Index++;
 
                 if (Index == Bytes.size())
-                {
-                    UE_LOG(LogVelora, Log, TEXT("Found pattern %hs at 0x%llX"), Pattern, Address - Base());
                     return Address;
-                }
             }
         }
 
-        UE_LOG(LogVelora, Error, TEXT("Could not find pattern %hs"), Pattern);
         return nullptr;
     }
 
@@ -226,6 +214,36 @@ namespace Scanner
         }
 
         return End;
+    }
+
+    template<typename ValueType>
+    inline ValueType Offset(const TCHAR* Name, ValueType Value)
+    {
+        if (Value)
+        {
+            UE_LOG(LogVelora, Log, TEXT("Found %s offset 0x%llX"), Name, (int64)Value);
+        }
+        else
+        {
+            UE_LOG(LogVelora, Error, TEXT("Could not find %s"), Name);
+        }
+
+        return Value;
+    }
+
+    template<typename ValueType>
+    inline ValueType Slot(const TCHAR* Name, ValueType Value)
+    {
+        if (Value)
+        {
+            UE_LOG(LogVelora, Log, TEXT("Found %s vtable slot 0x%llX"), Name, (int64)Value);
+        }
+        else
+        {
+            UE_LOG(LogVelora, Error, TEXT("Could not find %s"), Name);
+        }
+
+        return Value;
     }
 }
 
@@ -333,17 +351,10 @@ namespace Scanner
 
         FCode Find(std::string_view Pattern, int32 Index = 1) const
         {
-            auto Found = Walk(bEntry, [&](const FWalkInstruction& Instruction)
+            return FCode(Walk(bEntry, [&](const FWalkInstruction& Instruction)
             {
                 return Matches(Instruction.Address, Pattern) && --Index == 0;
-            });
-
-            if (Address && !Found)
-            {
-                UE_LOG(LogVelora, Error, TEXT("Could not find \"%hs\" after 0x%llX"), std::string(Pattern).c_str(), Address - Base());
-            }
-
-            return FCode(Found);
+            }));
         }
 
         FCode Last(std::string_view Pattern) const
@@ -358,11 +369,6 @@ namespace Scanner
                 return Instruction.Address + Instruction.Info.length >= Address;
             });
 
-            if (Address && !Found)
-            {
-                UE_LOG(LogVelora, Error, TEXT("Could not find \"%hs\" before 0x%llX"), std::string(Pattern).c_str(), Address - Base());
-            }
-
             return FCode(Found);
         }
 
@@ -372,11 +378,6 @@ namespace Scanner
             {
                 return Instruction.Info.mnemonic == ZYDIS_MNEMONIC_CALL && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE && --Index == 0;
             });
-
-            if (Address && !Found)
-            {
-                UE_LOG(LogVelora, Error, TEXT("Could not find a call after 0x%llX"), Address - Base());
-            }
 
             return FCode(FCode(Found).Target(), true);
         }
@@ -404,6 +405,16 @@ namespace Scanner
             return 0;
         }
 
+        int32 Disp(const TCHAR* Name) const
+        {
+            return Offset(Name, Disp());
+        }
+
+        int32 Slot(const TCHAR* Name) const
+        {
+            return Scanner::Slot(Name, Disp());
+        }
+
         int64 Imm() const
         {
             FInstruction Instruction;
@@ -418,6 +429,11 @@ namespace Scanner
             }
 
             return 0;
+        }
+
+        int64 Imm(const TCHAR* Name) const
+        {
+            return Offset(Name, Imm());
         }
 
         const uint8_t* Target() const
@@ -442,6 +458,11 @@ namespace Scanner
             return nullptr;
         }
 
+        const uint8_t* Target(const TCHAR* Name) const
+        {
+            return FCode(Target()).Get(Name);
+        }
+
         bool Is(std::string_view Pattern) const
         {
             return Address && Matches(Address, Pattern);
@@ -457,6 +478,20 @@ namespace Scanner
 
         const uint8_t* Get() const
         {
+            return Address;
+        }
+
+        const uint8_t* Get(const TCHAR* Name) const
+        {
+            if (Address)
+            {
+                UE_LOG(LogVelora, Log, TEXT("Found %s at 0x%llX"), Name, Address - Base());
+            }
+            else
+            {
+                UE_LOG(LogVelora, Error, TEXT("Could not find %s"), Name);
+            }
+
             return Address;
         }
 
@@ -547,15 +582,11 @@ namespace Scanner
                     FCode Code(Instruction);
 
                     if (Code.Target() == Target && Code.Is(Pattern))
-                    {
-                        UE_LOG(LogVelora, Log, TEXT("Found \"%hs\" for 0x%llX at 0x%llX"), std::string(Pattern).c_str(), (const uint8_t*)Target - Base(), Instruction - Base());
                         return Code;
-                    }
                 }
             }
         }
 
-        UE_LOG(LogVelora, Error, TEXT("Could not find \"%hs\" for 0x%llX"), std::string(Pattern).c_str(), (const uint8_t*)Target - Base());
         return FCode();
     }
 

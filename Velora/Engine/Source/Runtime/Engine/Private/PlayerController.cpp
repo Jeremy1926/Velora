@@ -17,7 +17,7 @@ void APlayerController::SendClientAdjustment()
         while (!Scanner::At(VTable[Index]).Is(std::format("push *; sub rsp, *; mov *, [rcx+0x{:x}]; cmp [rcx+0x{:x}], *; jz *; cmp qword ptr [rcx+0x{:x}], 0x0", Pawn, AcknowledgedPawn, SpectatorPawn)))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("APlayerController::SendClientAdjustment"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;

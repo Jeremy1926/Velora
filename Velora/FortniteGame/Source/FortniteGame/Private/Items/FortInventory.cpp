@@ -14,14 +14,14 @@ FFortItemList& AFortInventory::GetInventory()
 
 void AFortInventory::HandleInventoryLocalUpdate()
 {
-    static auto HandleInventoryLocalUpdate = (void (*)(AFortInventory*))Scanner::Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate")).Find("jmp 0x*").Target();
+    static auto HandleInventoryLocalUpdate = (void (*)(AFortInventory*))Scanner::Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate")).Find("jmp 0x*").Target(TEXT("AFortInventory::HandleInventoryLocalUpdate"));
 
     HandleInventoryLocalUpdate(this);
 }
 
 void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
 {
-    static auto SetItemRequiresUpdate = (void (*)(AFortInventory*, FFortItemEntry&))Scanner::Native(TEXT("/Script/FortniteGame.FortOutpostFunctionLibrary:StorageVaultStoreItem")).Call(3).Find("ret").Last("call 0x*").Call().Get();
+    static auto SetItemRequiresUpdate = (void (*)(AFortInventory*, FFortItemEntry&))Scanner::Native(TEXT("/Script/FortniteGame.FortOutpostFunctionLibrary:StorageVaultStoreItem")).Call(3).Find("ret").Last("call 0x*").Call().Get(TEXT("AFortInventory::SetItemRequiresUpdate"));
 
     SetItemRequiresUpdate(this, ItemEntry);
 }

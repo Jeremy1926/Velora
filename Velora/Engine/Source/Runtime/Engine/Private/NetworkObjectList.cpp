@@ -4,14 +4,14 @@
 
 void FNetworkObjectList::Remove(AActor* const Actor)
 {
-    static auto Remove = (void (*)(FNetworkObjectList*, AActor*))Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*").Call().Get();
+    static auto Remove = (void (*)(FNetworkObjectList*, AActor*))Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*").Call().Get(TEXT("FNetworkObjectList::Remove"));
 
     Remove(this, Actor);
 }
 
 int32 FNetworkObjectInfo::GetFlagsOffset()
 {
-    static auto FlagsOffset = Scanner::String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s")).Start().Find("mov ecx, 0x*").Call(2).Find("and dword ptr [*], 0xfffffffc").Disp();
+    static auto FlagsOffset = Scanner::String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s")).Start().Find("mov ecx, 0x*").Call(2).Find("and dword ptr [*], 0xfffffffc").Disp(TEXT("FNetworkObjectInfo::bPendingNetUpdate"));
 
     return FlagsOffset;
 }

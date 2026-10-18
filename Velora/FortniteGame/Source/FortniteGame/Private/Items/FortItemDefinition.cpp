@@ -21,14 +21,14 @@ EFortItemType UFortItemDefinition::GetItemType() const
 
 EFortRarity UFortItemDefinition::GetRarity() const
 {
-    static auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]").Disp();
+    static auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]").Slot(TEXT("UFortItemDefinition::GetRarity"));
 
     return (*(EFortRarity (**)(const UFortItemDefinition*))(*(const uint8_t**)this + GetRarity))(this);
 }
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
-    static auto ClampItemLevel = Scanner::Native(TEXT("/Script/FortniteGame.FortItemDefinition:CreateTemporaryItemInstanceBP")).Find("call [*]").Disp();
+    static auto ClampItemLevel = Scanner::Native(TEXT("/Script/FortniteGame.FortItemDefinition:CreateTemporaryItemInstanceBP")).Find("call [*]").Slot(TEXT("UFortItemDefinition::ClampItemLevel"));
 
     auto VTable = *(uint8_t**)this;
 
@@ -47,7 +47,7 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
         while (!Scanner::At(VTable[Index]).Is(Getter))
             Index++;
 
-        return Index * (int32)sizeof(void*);
+        return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), Index * (int32)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -67,7 +67,7 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
         while (!Scanner::At(VTable[Index]).Start().Has(Compare))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;

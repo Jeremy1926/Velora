@@ -16,14 +16,14 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
 {
     static auto ServerExecute = []
     {
-        auto EquipWeaponDefinition = std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get());
+        auto EquipWeaponDefinition = std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get(TEXT("AFortPawn::EquipWeaponDefinition")));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"));
         auto Index = 0;
 
         while (!Scanner::At(VTable[Index]).Start().Has(EquipWeaponDefinition))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("UFortWorldItemDefinition::ServerExecute"), Index * (int32_t)sizeof(void*));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -54,7 +54,7 @@ bool UFortWorldItemDefinition::ShouldDropOnDeath() const
 
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
-    static auto GetMaxDurability = Scanner::Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability")).Find("call [*+0x*]").Disp();
+    static auto GetMaxDurability = Scanner::Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability")).Find("call [*+0x*]").Slot(TEXT("UFortWorldItemDefinition::GetMaxDurability"));
 
     auto VTable = *(uint8_t**)this;
 

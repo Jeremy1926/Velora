@@ -14,8 +14,8 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
 {
     static auto PlayWeaponFireFX = []
     {
-        auto OnPlayWeaponFireFX = Scanner::Reference(Scanner::String(TEXT("OnPlayWeaponFireFX")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get();
-        auto Function = Scanner::CallTo(OnPlayWeaponFireFX).Start().Get();
+        auto OnPlayWeaponFireFX = Scanner::Reference(Scanner::String(TEXT("OnPlayWeaponFireFX")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get(TEXT("AFortWeapon::OnPlayWeaponFireFX"));
+        auto Function = Scanner::CallTo(OnPlayWeaponFireFX).Start().Get(TEXT("AFortWeapon::PlayWeaponFireFX"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeapon"));
         auto Index = 0;
 

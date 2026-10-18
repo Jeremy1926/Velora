@@ -15,13 +15,13 @@ static int32_t OnPlayerCreatedBuildingSlot()
         while (!Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*"))
             Index++;
 
-        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(VTable[Index]).Find("jmp 0x*").Target());
+        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(VTable[Index]).Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
         Index = 0;
 
         while (!Scanner::At(VTable[Index]).Start().Has(BuildingAction))
             Index++;
 
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"), Index * (int32_t)sizeof(void*));
     }();
 
     return OnPlayerCreatedBuilding;
@@ -59,7 +59,7 @@ void AFortGameMode::FinishWorldInitialization()
 {
     static auto FinishWorldInitialization = []
     {
-        auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get();
+        auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get(TEXT("AFortGameModeAthena::FinishWorldInitialization"));
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 
@@ -78,7 +78,7 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
 {
     static auto OnGivenMatchAssignment = []
     {
-        auto AthenaOnGivenMatchAssignment = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get();
+        auto AthenaOnGivenMatchAssignment = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"));
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 

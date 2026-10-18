@@ -4,7 +4,7 @@
 
 const TCHAR* FCommandLine::Get()
 {
-    static auto Get = (const TCHAR* (*)())Scanner::String(TEXT("NOCONSOLE")).Last("call 0x*").Target();
+    static auto Get = (const TCHAR* (*)())Scanner::String(TEXT("NOCONSOLE")).Last("call 0x*").Target(TEXT("FCommandLine::Get"));
 
     return Get();
 }
