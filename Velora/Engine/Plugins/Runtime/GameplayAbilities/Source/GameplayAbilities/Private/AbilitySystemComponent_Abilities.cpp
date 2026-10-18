@@ -13,8 +13,6 @@ struct AbilitySystemComponent_eventClientActivateAbilityFailed_Parms
     int16 PredictionKey;
 };
 
-FGameplayTagContainer& UAbilitySystemComponent::InternalTryActivateAbilityFailureTags = *(FGameplayTagContainer*)Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Find("lea rcx, [0x*]").Target(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"));
-
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayAbilitySpec& Spec)
 {
     static auto GiveAbility = (FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&))Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Get(TEXT("UAbilitySystemComponent::GiveAbility"));
@@ -75,6 +73,15 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
     return InternalTryActivateAbility(this, Handle, &InPredictionKey, OutInstancedAbility, OnGameplayAbilityEndedDelegate, TriggerEventData);
 }
 
+FGameplayTagContainer& UAbilitySystemComponent::GetInternalTryActivateAbilityFailureTags()
+{
+    static auto Reset = Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Find("xor edx, edx").Last("lea *, [*]");
+    static auto Global = Reset.Is("lea *, [0x*]") ? (FGameplayTagContainer*)Reset.Target(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags")) : nullptr;
+    static auto Offset = Global ? 0 : Reset.Disp(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"));
+
+    return Global ? *Global : *(FGameplayTagContainer*)((uint8_t*)this + Offset);
+}
+
 void UAbilitySystemComponent::ClientActivateAbilityFailed(FGameplayAbilitySpecHandle AbilityToActivate, int16 PredictionKey)
 {
     static auto ClientActivateAbilityFailed = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ClientActivateAbilityFailed"));
@@ -105,7 +112,7 @@ void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpe
 
     if (!InternalTryActivateAbility(Handle, PredictionKey, &InstancedAbility, nullptr, TriggerEventData))
     {
-        ABILITY_LOG(Display, TEXT("InternalServerTryActiveAbility. Rejecting ClientActivation of %s. InternalTryActivateAbility failed: %s"), *GetNameSafe(Spec->Ability), *InternalTryActivateAbilityFailureTags.ToStringSimple());
+        ABILITY_LOG(Display, TEXT("InternalServerTryActiveAbility. Rejecting ClientActivation of %s. InternalTryActivateAbility failed: %s"), *GetNameSafe(Spec->Ability), *GetInternalTryActivateAbilityFailureTags().ToStringSimple());
         ClientActivateAbilityFailed(Handle, PredictionKey.Current);
         Spec->InputPressed = false;
     }
