@@ -141,7 +141,14 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             NumberToGive -= ItemCount;
 
-            Inventory.MarkItemDirty(*ItemEntry);
+            ItemEntry->ParentInventory = WorldInventory;
+            ItemEntry->bIsReplicatedCopy = true;
+
+            if (ItemEntry->ParentInventory.IsValid())
+                ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+
+            ItemEntry->bIsDirty = true;
+
             WorldInventory->HandleInventoryLocalUpdate();
 
             if (auto Item = FindItem(ItemGuid))

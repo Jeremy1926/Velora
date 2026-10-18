@@ -381,6 +381,7 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
 
             Inventory.ReplicatedEntries.RemoveAt(Index);
             Inventory.MarkArrayDirty();
+            WorldInventory->ForceNetUpdate();
         }
 
         WorldInventory->HandleInventoryLocalUpdate();

@@ -35,7 +35,14 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
     auto& Inventory = WorldInventory->GetInventory();
     auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
 
-    Inventory.MarkItemDirty(*ItemEntry);
+    ItemEntry->ParentInventory = WorldInventory;
+    ItemEntry->bIsReplicatedCopy = true;
+
+    if (ItemEntry->ParentInventory.IsValid())
+        ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+
+    ItemEntry->bIsDirty = true;
+
     WorldInventory->HandleInventoryLocalUpdate();
 
     PlayerController->AddItemToQuickBars(ItemDefinition, EFortQuickBars::Max_None, -1);
