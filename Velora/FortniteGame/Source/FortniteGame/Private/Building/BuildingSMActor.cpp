@@ -222,20 +222,48 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 
     if (ResourceCount > 0)
     {
-        FFortItemEntry ItemEntry(ResourceItemDefinition, ResourceCount, 0);
-
-        const FVector SpawnLocation = GetRootComponent()->GetBounds().Origin + FMath::VRand() * 200.0f;
-
-        ItemEntry.SetStateValue(EFortItemEntryState::DoNotShowSpawnParticles, 1);
-
-        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, SpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }))
+        if (auto WorldInventory = PlayerController->GetWorldInventory())
         {
-            const FVector StartDirection = FMath::VRand();
+            auto& Inventory = WorldInventory->GetInventory();
+            const int32 MaxStackSize = ResourceItemDefinition->GetMaxStackSize();
+            FFortItemEntry* ResourceItemEntry = nullptr;
 
-            Pickup->SetPickupTarget(InstigatorPawn, Pickup->GetFlyTime(), StartDirection, true);
+            for (auto& ItemEntry : Inventory.ReplicatedEntries)
+            {
+                if (ItemEntry.ItemDefinition == ResourceItemDefinition)
+                {
+                    ResourceItemEntry = &ItemEntry;
+                    break;
+                }
+            }
 
-            PlayerController->ClientReportDamagedResourceBuilding(this, ResourceType, ResourceCount, bDestroyed, bJustHitWeakspot);
+            if (ResourceItemEntry)
+            {
+                const int32 NumberToStack = FMath::Min(ResourceCount, MaxStackSize - ResourceItemEntry->Count);
+
+                if (NumberToStack > 0)
+                {
+                    ResourceItemEntry->SetCount(ResourceItemEntry->Count + NumberToStack);
+                    Inventory.MarkItemDirty(*ResourceItemEntry);
+                }
+            }
+            else
+            {
+                auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ResourceItemDefinition, FMath::Min(ResourceCount, MaxStackSize), 0);
+
+                ItemEntry->ParentInventory = WorldInventory;
+                ItemEntry->bIsReplicatedCopy = true;
+
+                if (ItemEntry->ParentInventory.IsValid())
+                    ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+
+                ItemEntry->bIsDirty = true;
+            }
+
+            WorldInventory->HandleInventoryLocalUpdate();
         }
+
+        PlayerController->ClientReportDamagedResourceBuilding(this, ResourceType, ResourceCount, bDestroyed, bJustHitWeakspot);
     }
 }
 
