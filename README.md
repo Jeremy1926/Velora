@@ -40,8 +40,6 @@ Basic settings are in [`Velora/Config.h`](Velora/Config.h):
 | `bRestartAfterMatch` | Reload the map after a match ends |
 | `bConsole` | Show the log console window |
 
-The playlist can also be set without rebuilding by adding `-playlistId=2` (Solo), `-playlistId=10` (Duo) or `-playlistId=9` (Squad) to the server's launch arguments.
-
 ## Building
 
 ### Requirements
@@ -59,14 +57,13 @@ The playlist can also be set without rebuilding by adding `-playlistId=2` (Solo)
 
 2. Open `Velora/Velora.sln` in Visual Studio.
 3. Select **Release** and **x64**.
-4. Build the solution. The output is in `Velora/x64/Release`.
+4. Build. The DLLs are in `Velora/x64/Release`.
 
 ## Usage
 
-- `Velora.dll` goes into the server process.
-- `VeloraClient.dll` goes into every client.
-
-Velora writes `Velora.log` next to the game executable.
+- `Velora.dll`: server
+- `VeloraClient.dll`: clients
+- Log: `Velora.log` next to the game executable
 
 ## Reporting issues
 
@@ -76,7 +73,7 @@ Please include:
 2. Playlist and number of players
 3. What you did and what happened
 4. `Velora.log` and the server's game log
-5. Screenshots if it is something you can see
+5. Screenshots
 
 ## Credits
 
@@ -85,4 +82,4 @@ Please include:
 
 ## License
 
-Velora is released under the [MIT License](LICENSE).
+[MIT](LICENSE)
