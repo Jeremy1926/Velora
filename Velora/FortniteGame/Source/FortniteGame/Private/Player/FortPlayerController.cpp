@@ -180,7 +180,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
 
 void AFortPlayerController::AddItemToQuickBars(UFortItemDefinition* ItemDefinition, EFortQuickBars QuickBarType, int32 SlotIndex)
 {
-    static auto AddItemToQuickBars = (void (*)(AFortPlayerController*, UFortItemDefinition*, EFortQuickBars, int32))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:AddItemToQuickBars")).Get(TEXT("AFortPlayerController::AddItemToQuickBars"));
+    static auto AddItemToQuickBars = Scanner::Function<void (*)(AFortPlayerController*, UFortItemDefinition*, EFortQuickBars, int32)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:AddItemToQuickBars")).Get(TEXT("AFortPlayerController::AddItemToQuickBars")));
 
     AddItemToQuickBars(this, ItemDefinition, QuickBarType, SlotIndex);
 }
@@ -215,7 +215,7 @@ void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, 
 
 UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const
 {
-    static auto K2_FindExistingItemForDefinition = (UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition")).Get(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition"));
+    static auto K2_FindExistingItemForDefinition = Scanner::Function<UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition")).Get(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition")));
 
     return K2_FindExistingItemForDefinition(this, ItemDefinition, bInStorageVault);
 }
@@ -427,7 +427,7 @@ void AFortPlayerController::RemoveAllInventoryItems()
 
 void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition)
 {
-    static auto RemoveItemFromQuickBars = (void (*)(AFortPlayerController*, UFortItemDefinition*))Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars")).Get(TEXT("AFortPlayerController::RemoveItemFromQuickBars"));
+    static auto RemoveItemFromQuickBars = Scanner::Function<void (*)(AFortPlayerController*, UFortItemDefinition*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars")).Get(TEXT("AFortPlayerController::RemoveItemFromQuickBars")));
 
     RemoveItemFromQuickBars(this, ItemDefinition);
 }
@@ -804,14 +804,14 @@ int32 AFortPlayerController::GetWorldPlayerId() const
 
 void AFortPlayerController::ClientSendMessage(const FText& MESSAGE)
 {
-    static auto ClientSendMessage = (void (*)(AFortPlayerController*, const FText&))Scanner::Event(TEXT("ClientSendMessage")).Get(TEXT("AFortPlayerController::ClientSendMessage"));
+    static auto ClientSendMessage = Scanner::Function<void (*)(AFortPlayerController*, const FText&)>(Scanner::Event(TEXT("ClientSendMessage")).Get(TEXT("AFortPlayerController::ClientSendMessage")));
 
     ClientSendMessage(this, MESSAGE);
 }
 
 void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute)
 {
-    static auto ClientExecuteInventoryItem = (void (*)(AFortPlayerController*, const FGuid&, float, bool))Scanner::Event(TEXT("ClientExecuteInventoryItem")).Get(TEXT("AFortPlayerController::ClientExecuteInventoryItem"));
+    static auto ClientExecuteInventoryItem = Scanner::Function<void (*)(AFortPlayerController*, const FGuid&, float, bool)>(Scanner::Event(TEXT("ClientExecuteInventoryItem")).Get(TEXT("AFortPlayerController::ClientExecuteInventoryItem")));
 
     ClientExecuteInventoryItem(this, ItemGuid, Delay, bForceExecute);
 }
@@ -844,7 +844,7 @@ void AFortPlayerController::ResetQuickBarToPrimary()
         auto ClientOnPawnDied = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied")).Find("call [*+0x*]").Slot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
-        return (void (*)(AFortPlayerController*))Scanner::At(VTable[ClientOnPawnDied / sizeof(void*)]).Call(2).Get(TEXT("AFortPlayerController::ResetQuickBarToPrimary"));
+        return Scanner::Function<void (*)(AFortPlayerController*)>(Scanner::At(VTable[ClientOnPawnDied / sizeof(void*)]).Call(2).Get(TEXT("AFortPlayerController::ResetQuickBarToPrimary")));
     }();
 
     ResetQuickBarToPrimary(this);

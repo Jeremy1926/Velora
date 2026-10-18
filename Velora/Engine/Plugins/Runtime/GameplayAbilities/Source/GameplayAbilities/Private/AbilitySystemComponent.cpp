@@ -8,7 +8,7 @@
 
 FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
 {
-    static auto MakeEffectContext = (FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*))Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext")).Get(TEXT("UAbilitySystemComponent::MakeEffectContext"));
+    static auto MakeEffectContext = Scanner::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext")).Get(TEXT("UAbilitySystemComponent::MakeEffectContext")));
 
     FGameplayEffectContextHandle Context;
     MakeEffectContext(this, &Context);
@@ -18,7 +18,7 @@ FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
 
 FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const
 {
-    static auto MakeOutgoingSpec = (FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle))Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec")).Get(TEXT("UAbilitySystemComponent::MakeOutgoingSpec"));
+    static auto MakeOutgoingSpec = Scanner::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec")).Get(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")));
 
     FGameplayEffectSpecHandle SpecHandle;
     MakeOutgoingSpec(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
@@ -28,7 +28,7 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
 
 FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey)
 {
-    static auto ApplyGameplayEffectSpecToSelf = (FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey))Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf")).Call().Get(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf"));
+    static auto ApplyGameplayEffectSpecToSelf = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf")).Call().Get(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")));
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
     ApplyGameplayEffectSpecToSelf(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
@@ -67,7 +67,7 @@ void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag Game
         auto K2_RemoveGameplayCue = Scanner::Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue")).Find("call [*+0x*]").Slot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
 
-        return (void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&))Scanner::At(VTable[K2_RemoveGameplayCue / sizeof(void*)]).Find("lea r8, [*+0x*]; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal"));
+        return Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Scanner::At(VTable[K2_RemoveGameplayCue / sizeof(void*)]).Find("lea r8, [*+0x*]; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
     }();
 
     RemoveGameplayCue_Internal(this, GameplayCueTag, GameplayCueContainer);

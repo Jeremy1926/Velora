@@ -4,14 +4,14 @@
 
 TSharedPtr<IAnalyticsProvider> UFortAnalytics::CreateAnalyticsProvider(const FString& UserID, const FString& GameSessionID, const FString& Platform, EAnalyticsProviderType ProviderType, const FString& GameState)
 {
-    static auto CreateAnalyticsProvider = (TSharedPtr<IAnalyticsProvider> (*)(const FString&, const FString&, const FString&, EAnalyticsProviderType, const FString&))Scanner::String(TEXT("TeamChatroom")).Start().Find("mov dword ptr [rsp+0x20], 0x2").Find("call 0x*").Target(TEXT("UFortAnalytics::CreateAnalyticsProvider"));
+    static auto CreateAnalyticsProvider = Scanner::Function<TSharedPtr<IAnalyticsProvider> (*)(const FString&, const FString&, const FString&, EAnalyticsProviderType, const FString&)>(Scanner::String(TEXT("TeamChatroom")).Start().Find("mov dword ptr [rsp+0x20], 0x2").Find("call 0x*").Target(TEXT("UFortAnalytics::CreateAnalyticsProvider")));
 
     return CreateAnalyticsProvider(UserID, GameSessionID, Platform, ProviderType, GameState);
 }
 
 void UFortAnalytics::FireEvent_BuildingAction(AFortPlayerController* PlayerController, const TCHAR* ActionType, ABuildingActor* BuildingActor, int32 ResourcesUsed)
 {
-    static auto FireEvent_BuildingAction = (void (*)(AFortPlayerController*, const TCHAR*, ABuildingActor*, int32))Scanner::String(TEXT("Building.BuildingAction")).Start().Get(TEXT("UFortAnalytics::FireEvent_BuildingAction"));
+    static auto FireEvent_BuildingAction = Scanner::Function<void (*)(AFortPlayerController*, const TCHAR*, ABuildingActor*, int32)>(Scanner::String(TEXT("Building.BuildingAction")).Start().Get(TEXT("UFortAnalytics::FireEvent_BuildingAction")));
 
     FireEvent_BuildingAction(PlayerController, ActionType, BuildingActor, ResourcesUsed);
 }

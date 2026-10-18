@@ -6,7 +6,7 @@
 
 FVector FRotator::Vector() const
 {
-    static auto Vector = (FVector* (*)(const FRotator*, FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector")).Get(TEXT("FRotator::Vector"));
+    static auto Vector = Scanner::Function<FVector* (*)(const FRotator*, FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector")).Get(TEXT("FRotator::Vector")));
 
     FVector Result;
 
@@ -33,7 +33,7 @@ FQuat FRotator::Quaternion() const
 
 FRotator FQuat::Rotator() const
 {
-    static auto Rotator = (FRotator* (*)(const FQuat*, FRotator*))Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Call().Get(TEXT("FQuat::Rotator"));
+    static auto Rotator = Scanner::Function<FRotator* (*)(const FQuat*, FRotator*)>(Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Call().Get(TEXT("FQuat::Rotator")));
 
     FRotator Result;
 
@@ -44,7 +44,7 @@ const FTransform FTransform::Identity;
 
 FVector FMath::VRand()
 {
-    static auto VRand = (FVector* (*)(FVector*))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Call().Get(TEXT("FMath::VRand"));
+    static auto VRand = Scanner::Function<FVector* (*)(FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Call().Get(TEXT("FMath::VRand")));
 
     FVector Result;
 
@@ -57,7 +57,7 @@ FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
     {
         auto RandomUnitVectorInCone = Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone"));
 
-        return (FVector* (*)(FVector*, FVector const&, float))(RandomUnitVectorInCone.Get() ? RandomUnitVectorInCone : Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))).Get(TEXT("FMath::VRandCone"));
+        return Scanner::Function<FVector* (*)(FVector*, FVector const&, float)>((RandomUnitVectorInCone.Get() ? RandomUnitVectorInCone : Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))).Get(TEXT("FMath::VRandCone")));
     }();
 
     FVector Result;

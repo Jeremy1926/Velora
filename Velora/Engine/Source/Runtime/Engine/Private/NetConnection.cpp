@@ -135,7 +135,7 @@ int32 UNetConnection::IsNetReady(bool Saturate)
 
 UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex)
 {
-    static auto CreateChannel = (UChannel* (*)(UNetConnection*, EChannelType, bool, int32))Scanner::String(TEXT("Created channel %i of type %i")).Start().Get(TEXT("UNetConnection::CreateChannel"));
+    static auto CreateChannel = Scanner::Function<UChannel* (*)(UNetConnection*, EChannelType, bool, int32)>(Scanner::String(TEXT("Created channel %i of type %i")).Start().Get(TEXT("UNetConnection::CreateChannel")));
 
     return CreateChannel(this, Type, bOpenedLocally, ChannelIndex);
 }

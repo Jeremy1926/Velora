@@ -123,7 +123,7 @@ float ABuildingActor::GetMaxHealth() const
 
 bool ABuildingActor::HasHealthLeft() const
 {
-    static auto HasHealthLeft = (bool (*)(const ABuildingActor*))Scanner::Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft")).Get(TEXT("ABuildingActor::HasHealthLeft"));
+    static auto HasHealthLeft = Scanner::Function<bool (*)(const ABuildingActor*)>(Scanner::Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft")).Get(TEXT("ABuildingActor::HasHealthLeft")));
 
     return HasHealthLeft(this);
 }

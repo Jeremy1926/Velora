@@ -184,7 +184,7 @@ EFortRarity& ABuildingContainer::GetHighestRarity()
 
 bool ABuildingContainer::ShouldDestroyContainerOnSearch() const
 {
-    static auto ShouldDestroyContainerOnSearch = (bool (*)(const ABuildingContainer*))Scanner::String(TEXT("Container %s has an empty SearchedMesh in its tier mesh set, and is not destroyed on search.")).Last("test al, al").Last("call 0x*").Target(TEXT("ABuildingContainer::ShouldDestroyContainerOnSearch"));
+    static auto ShouldDestroyContainerOnSearch = Scanner::Function<bool (*)(const ABuildingContainer*)>(Scanner::String(TEXT("Container %s has an empty SearchedMesh in its tier mesh set, and is not destroyed on search.")).Last("test al, al").Last("call 0x*").Target(TEXT("ABuildingContainer::ShouldDestroyContainerOnSearch")));
 
     return ShouldDestroyContainerOnSearch(this);
 }

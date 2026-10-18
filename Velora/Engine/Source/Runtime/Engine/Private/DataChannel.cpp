@@ -93,28 +93,28 @@ double UActorChannel::GetLastUpdateTime() const
 
 void UActorChannel::Close()
 {
-    static auto Close = (void (*)(UActorChannel*))Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get(TEXT("UActorChannel::Close"));
+    static auto Close = Scanner::Function<void (*)(UActorChannel*)>(Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get(TEXT("UActorChannel::Close")));
 
     Close(this);
 }
 
 void UActorChannel::StartBecomingDormant()
 {
-    static auto StartBecomingDormant = (void (*)(UActorChannel*))Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get(TEXT("UActorChannel::StartBecomingDormant"));
+    static auto StartBecomingDormant = Scanner::Function<void (*)(UActorChannel*)>(Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get(TEXT("UActorChannel::StartBecomingDormant")));
 
     StartBecomingDormant(this);
 }
 
 bool UActorChannel::ReplicateActor()
 {
-    static auto ReplicateActor = (bool (*)(UActorChannel*))Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get(TEXT("UActorChannel::ReplicateActor"));
+    static auto ReplicateActor = Scanner::Function<bool (*)(UActorChannel*)>(Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get(TEXT("UActorChannel::ReplicateActor")));
 
     return ReplicateActor(this);
 }
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    static auto SetChannelActor = (void (*)(UActorChannel*, AActor*))Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
+    static auto SetChannelActor = Scanner::Function<void (*)(UActorChannel*, AActor*)>(Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor")));
 
     SetChannelActor(this, InActor);
 }

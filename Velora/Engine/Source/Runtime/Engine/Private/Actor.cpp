@@ -178,7 +178,7 @@ bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Slot(TEXT("AActor::K2_DestroyActor"));
 
-        return (bool (*)(AActor*, bool, bool))Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target(TEXT("AActor::Destroy"));
+        return Scanner::Function<bool (*)(AActor*, bool, bool)>(Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target(TEXT("AActor::Destroy")));
     }();
 
     return Destroy(this, bNetForce, bShouldModifyLevel);

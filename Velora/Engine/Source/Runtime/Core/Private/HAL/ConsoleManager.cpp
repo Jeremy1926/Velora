@@ -6,7 +6,7 @@ IConsoleManager*& IConsoleManager::Singleton = *(IConsoleManager**)Scanner::Stri
 
 void IConsoleManager::SetupSingleton()
 {
-    static auto SetupSingleton = (void (*)())Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Call().Get(TEXT("IConsoleManager::SetupSingleton"));
+    static auto SetupSingleton = Scanner::Function<void (*)()>(Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Call().Get(TEXT("IConsoleManager::SetupSingleton")));
 
     SetupSingleton();
 }

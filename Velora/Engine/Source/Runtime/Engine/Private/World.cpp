@@ -66,7 +66,7 @@ float UWorld::GetTimeSeconds() const
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
 {
-    static auto GetWorldSettings = (AWorldSettings* (*)(const UWorld*, bool, bool))Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get(TEXT("UWorld::GetWorldSettings"));
+    static auto GetWorldSettings = Scanner::Function<AWorldSettings* (*)(const UWorld*, bool, bool)>(Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get(TEXT("UWorld::GetWorldSettings")));
 
     return GetWorldSettings(this, bCheckStreamingPesistent, bChecked);
 }
@@ -104,7 +104,7 @@ void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)
 {
-    static auto FindCollectionByType = (FLevelCollection* (*)(UWorld*, ELevelCollectionType))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Call().Get(TEXT("UWorld::FindCollectionByType"));
+    static auto FindCollectionByType = Scanner::Function<FLevelCollection* (*)(UWorld*, ELevelCollectionType)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Call().Get(TEXT("UWorld::FindCollectionByType")));
 
     return FindCollectionByType(this, InType);
 }

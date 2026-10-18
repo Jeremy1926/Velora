@@ -513,8 +513,17 @@ namespace Scanner
             auto End = Function ? FindFunctionEnd(Function) : nullptr;
             FWalkInstruction Instruction;
 
-            for (Instruction.Address = Address; (!End || Instruction.Address < End) && Decode(Instruction.Address, Instruction); Instruction.Address += Instruction.Info.length)
+            for (Instruction.Address = Address; !End || Instruction.Address < End; Instruction.Address += Instruction.Info.length)
             {
+                if (!Decode(Instruction.Address, Instruction))
+                {
+                    if (!End)
+                        break;
+
+                    Instruction.Info.length = 1;
+                    continue;
+                }
+
                 if ((bInclusive || Instruction.Address != Address) && Predicate(Instruction))
                     return Instruction.Address;
 
@@ -618,5 +627,16 @@ namespace Scanner
         }
 
         return FCode();
+    }
+
+    inline uint64 NullFunction()
+    {
+        return 0;
+    }
+
+    template<typename FunctionType>
+    inline FunctionType Function(const void* Address)
+    {
+        return (FunctionType)(Address ? Address : (const void*)&NullFunction);
     }
 }

@@ -4,7 +4,7 @@
 
 void FNetworkObjectList::Remove(AActor* const Actor)
 {
-    static auto Remove = (void (*)(FNetworkObjectList*, AActor*))Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*").Call().Get(TEXT("FNetworkObjectList::Remove"));
+    static auto Remove = Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*").Call().Get(TEXT("FNetworkObjectList::Remove")));
 
     Remove(this, Actor);
 }

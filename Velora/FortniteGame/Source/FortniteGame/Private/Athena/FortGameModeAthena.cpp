@@ -225,7 +225,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
-    static auto RedirectLootTierGroup = (FName* (*)(const AFortGameModeAthena*, FName*, FName))Scanner::String("Loot_AthenaSupplyDrop").Start().Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
+    static auto RedirectLootTierGroup = Scanner::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>(Scanner::String("Loot_AthenaSupplyDrop").Start().Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup")));
 
     FName Result(NAME_None);
 

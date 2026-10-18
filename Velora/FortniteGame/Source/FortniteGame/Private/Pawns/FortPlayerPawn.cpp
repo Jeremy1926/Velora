@@ -136,7 +136,7 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 
 void AFortPlayerPawn::UpdateDBNOInteractCollision()
 {
-    static auto UpdateDBNOInteractCollision = (void (*)(AFortPlayerPawn*))Scanner::String(TEXT("DBNOInteractCollision")).Start().Get(TEXT("AFortPlayerPawn::UpdateDBNOInteractCollision"));
+    static auto UpdateDBNOInteractCollision = Scanner::Function<void (*)(AFortPlayerPawn*)>(Scanner::String(TEXT("DBNOInteractCollision")).Start().Get(TEXT("AFortPlayerPawn::UpdateDBNOInteractCollision")));
 
     UpdateDBNOInteractCollision(this);
 }

@@ -11,7 +11,7 @@ void FAbilityReplicatedDataCache::Reset()
         auto ServerSetReplicatedTargetDataCancelled_Implementation = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerSetReplicatedTargetDataCancelled")).Find("call [*]", 2).Slot(TEXT("UAbilitySystemComponent::ServerSetReplicatedTargetDataCancelled_Implementation"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"));
 
-        return (void (*)(FAbilityReplicatedDataCache*))Scanner::At(VTable[ServerSetReplicatedTargetDataCancelled_Implementation / sizeof(void*)]).Call(3).Get(TEXT("FAbilityReplicatedDataCache::Reset"));
+        return Scanner::Function<void (*)(FAbilityReplicatedDataCache*)>(Scanner::At(VTable[ServerSetReplicatedTargetDataCancelled_Implementation / sizeof(void*)]).Call(3).Get(TEXT("FAbilityReplicatedDataCache::Reset")));
     }();
 
     Reset(this);

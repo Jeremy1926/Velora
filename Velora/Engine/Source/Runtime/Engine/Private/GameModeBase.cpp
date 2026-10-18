@@ -7,7 +7,7 @@
 
 UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InController)
 {
-    static auto GetDefaultPawnClassForController = (UClass* (*)(AGameModeBase*, AController*))Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot")).Call().Get(TEXT("AGameModeBase::GetDefaultPawnClassForController"));
+    static auto GetDefaultPawnClassForController = Scanner::Function<UClass* (*)(AGameModeBase*, AController*)>(Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot")).Call().Get(TEXT("AGameModeBase::GetDefaultPawnClassForController")));
 
     return GetDefaultPawnClassForController(this, InController);
 }

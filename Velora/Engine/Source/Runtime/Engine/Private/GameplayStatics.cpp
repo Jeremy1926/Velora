@@ -7,14 +7,14 @@
 
 void UGameplayStatics::OpenLevel(const UObject* WorldContextObject, FName LevelName, bool bAbsolute, FString Options)
 {
-    static auto OpenLevel = (void (*)(const UObject*, FName, bool, FString))Scanner::String(TEXT("WARNING: The map '%s' does not exist.")).Start().Get(TEXT("UGameplayStatics::OpenLevel"));
+    static auto OpenLevel = Scanner::Function<void (*)(const UObject*, FName, bool, FString)>(Scanner::String(TEXT("WARNING: The map '%s' does not exist.")).Start().Get(TEXT("UGameplayStatics::OpenLevel")));
 
     OpenLevel(WorldContextObject, LevelName, bAbsolute, MoveTemp(Options));
 }
 
 void UGameplayStatics::GetAllActorsOfClass(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, TArray<AActor*>& OutActors)
 {
-    static auto GetAllActorsOfClass = (void (*)(const UObject*, TSubclassOf<AActor>, TArray<AActor*>&))Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass")).Get(TEXT("UGameplayStatics::GetAllActorsOfClass"));
+    static auto GetAllActorsOfClass = Scanner::Function<void (*)(const UObject*, TSubclassOf<AActor>, TArray<AActor*>&)>(Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass")).Get(TEXT("UGameplayStatics::GetAllActorsOfClass")));
 
     GetAllActorsOfClass(WorldContextObject, ActorClass, OutActors);
 }

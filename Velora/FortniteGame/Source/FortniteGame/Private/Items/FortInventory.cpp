@@ -14,7 +14,7 @@ FFortItemList& AFortInventory::GetInventory()
 
 void AFortInventory::HandleInventoryLocalUpdate()
 {
-    static auto HandleInventoryLocalUpdate = (void (*)(AFortInventory*))Scanner::Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate")).Find("jmp 0x*").Target(TEXT("AFortInventory::HandleInventoryLocalUpdate"));
+    static auto HandleInventoryLocalUpdate = Scanner::Function<void (*)(AFortInventory*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate")).Find("jmp 0x*").Target(TEXT("AFortInventory::HandleInventoryLocalUpdate")));
 
     HandleInventoryLocalUpdate(this);
 }
@@ -24,9 +24,9 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
     static auto SetItemRequiresUpdate = []
     {
         auto UpdateQuantity = Scanner::String(TEXT("UFortWorldItem::UpdateQuantity: Got mcp request to change quantity on item %s*"));
-        auto Call = UpdateQuantity.Find("mov rcx, rax; mov rdx, rbx; call 0x*");
+        auto Call = UpdateQuantity.Find("mov rcx, rax; mov rdx, *; call 0x*");
 
-        return (void (*)(AFortInventory*, FFortItemEntry&))(Call.Get() ? Call : UpdateQuantity.Find("mov edx, ebp; call 0x*").Call().Find("mov rcx, rax; mov rdx, rbx; call 0x*")).Call().Get(TEXT("AFortInventory::SetItemRequiresUpdate"));
+        return Scanner::Function<void (*)(AFortInventory*, FFortItemEntry&)>((Call.Get() ? Call : UpdateQuantity.Find("mov edx, ebp; call 0x*").Call().Find("mov rcx, rax; mov rdx, *; call 0x*")).Call().Get(TEXT("AFortInventory::SetItemRequiresUpdate")));
     }();
 
     SetItemRequiresUpdate(this, ItemEntry);
@@ -34,14 +34,14 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
 
 FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
 {
-    static auto Constructor = (void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const TArray<UObject*>*))Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::FFortItemEntry"));
+    static auto Constructor = Scanner::Function<void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const TArray<UObject*>*)>(Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::FFortItemEntry")));
 
     Constructor(this, InItemDefinition, InCount, InLevel, nullptr);
 }
 
 FFortItemEntry::~FFortItemEntry()
 {
-    static auto Destructor = (void (*)(FFortItemEntry*))Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("lea rdx, [*]; call 0x*").Find("lea rcx, [*]; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::~FFortItemEntry"));
+    static auto Destructor = Scanner::Function<void (*)(FFortItemEntry*)>(Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("lea rdx, [*]; call 0x*").Find("lea rcx, [*]; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::~FFortItemEntry")));
 
     Destructor(this);
 }

@@ -199,7 +199,7 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = (void (*)(UNetDriver*, UWorld*))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld"));
+    static auto SetWorld = Scanner::Function<void (*)(UNetDriver*, UWorld*)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld")));
 
     SetWorld(this, InWorld);
 }

@@ -5,7 +5,7 @@
 
 int32 UFortLootLevel::GetItemLevel(const FDataTableCategoryHandle& LootLevelData, int32 WorldLevel)
 {
-    static auto GetItemLevel = (int32 (*)(const FDataTableCategoryHandle&, int32))Scanner::String(TEXT("UFortLootLevel::GetItemLevel")).Start().Get(TEXT("UFortLootLevel::GetItemLevel"));
+    static auto GetItemLevel = Scanner::Function<int32 (*)(const FDataTableCategoryHandle&, int32)>(Scanner::String(TEXT("UFortLootLevel::GetItemLevel")).Start().Get(TEXT("UFortLootLevel::GetItemLevel")));
 
     return GetItemLevel(LootLevelData, WorldLevel);
 }

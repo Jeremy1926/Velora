@@ -15,7 +15,7 @@ struct AbilitySystemComponent_eventClientActivateAbilityFailed_Parms
 
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayAbilitySpec& Spec)
 {
-    static auto GiveAbility = (FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&))Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Get(TEXT("UAbilitySystemComponent::GiveAbility"));
+    static auto GiveAbility = Scanner::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Get(TEXT("UAbilitySystemComponent::GiveAbility")));
 
     static auto InternalServerTryActiveAbility = [this]
     {
@@ -61,14 +61,14 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclas
 
 void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec)
 {
-    static auto MarkAbilitySpecDirty = (void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&))Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty"));
+    static auto MarkAbilitySpecDirty = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty")));
 
     MarkAbilitySpecDirty(this, Spec);
 }
 
 bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHandle Handle, FPredictionKey InPredictionKey, UGameplayAbility** OutInstancedAbility, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)
 {
-    static auto InternalTryActivateAbility = (bool (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle, FPredictionKey*, UGameplayAbility**, FOnGameplayAbilityEnded::FDelegate*, const FGameplayEventData*))Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Get(TEXT("UAbilitySystemComponent::InternalTryActivateAbility"));
+    static auto InternalTryActivateAbility = Scanner::Function<bool (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle, FPredictionKey*, UGameplayAbility**, FOnGameplayAbilityEnded::FDelegate*, const FGameplayEventData*)>(Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Get(TEXT("UAbilitySystemComponent::InternalTryActivateAbility")));
 
     return InternalTryActivateAbility(this, Handle, &InPredictionKey, OutInstancedAbility, OnGameplayAbilityEndedDelegate, TriggerEventData);
 }
@@ -137,7 +137,7 @@ FGameplayAbilitySpecContainer& UAbilitySystemComponent::GetActivatableAbilities(
 
 void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithTags, const FGameplayTagContainer* WithoutTags, UGameplayAbility* Ignore)
 {
-    static auto CancelAbilities = (void (*)(UAbilitySystemComponent*, const FGameplayTagContainer*, const FGameplayTagContainer*, UGameplayAbility*))Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start().Find("xor r9d, r9d; lea rdx, *; xor r8d, r8d; mov rcx, *; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::CancelAbilities"));
+    static auto CancelAbilities = Scanner::Function<void (*)(UAbilitySystemComponent*, const FGameplayTagContainer*, const FGameplayTagContainer*, UGameplayAbility*)>(Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start().Find("xor r9d, r9d; lea rdx, *; xor r8d, r8d; mov rcx, *; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::CancelAbilities")));
 
     CancelAbilities(this, WithTags, WithoutTags, Ignore);
 }

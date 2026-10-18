@@ -12,7 +12,7 @@ TArray<ULocalPlayer*>& UGameInstance::GetLocalPlayers()
 
 ULocalPlayer* UGameInstance::GetFirstGamePlayer() const
 {
-    static auto GetFirstGamePlayer = (ULocalPlayer* (*)(const UGameInstance*))Scanner::Pattern("83 79 40 00 7E ? 48 8B 41 38 48 8B 00 C3 33 C0 C3").Get(TEXT("UGameInstance::GetFirstGamePlayer"));
+    static auto GetFirstGamePlayer = Scanner::Function<ULocalPlayer* (*)(const UGameInstance*)>(Scanner::Pattern("83 79 40 00 7E ? 48 8B 41 38 48 8B 00 C3 33 C0 C3").Get(TEXT("UGameInstance::GetFirstGamePlayer")));
 
     return GetFirstGamePlayer(this);
 }

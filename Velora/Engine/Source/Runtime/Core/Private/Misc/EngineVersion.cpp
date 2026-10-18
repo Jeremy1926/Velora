@@ -4,7 +4,7 @@
 
 const FEngineVersion& FEngineVersion::Current()
 {
-    static auto Current = (const FEngineVersion& (*)())Scanner::String(TEXT("Engine Version: %s")).Last("call 0x*").Last("call 0x*").Target();
+    static auto Current = Scanner::Function<const FEngineVersion& (*)()>(Scanner::String(TEXT("Engine Version: %s")).Last("call 0x*").Last("call 0x*").Target());
 
     return Current();
 }

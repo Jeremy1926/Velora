@@ -60,7 +60,7 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
 
 void AActor::CallPreReplication(UNetDriver* NetDriver)
 {
-    static auto CallPreReplication = (void (*)(AActor*, UNetDriver*))Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Last("xor r9d, r9d").Last("call 0x*").Target(TEXT("AActor::CallPreReplication"));
+    static auto CallPreReplication = Scanner::Function<void (*)(AActor*, UNetDriver*)>(Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Last("xor r9d, r9d").Last("call 0x*").Target(TEXT("AActor::CallPreReplication")));
 
     CallPreReplication(this, NetDriver);
 }

@@ -91,7 +91,7 @@ bool UFortGameData::HasLootPackageData() const
 
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
 {
-    static auto GetResourceItemDefinition = (UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType))Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call(2).Get(TEXT("UFortGameData::GetResourceItemDefinition"));
+    static auto GetResourceItemDefinition = Scanner::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>(Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call(2).Get(TEXT("UFortGameData::GetResourceItemDefinition")));
 
     return GetResourceItemDefinition(this, ResourceType);
 }

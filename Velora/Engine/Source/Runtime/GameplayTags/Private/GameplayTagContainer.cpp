@@ -52,7 +52,7 @@ void FGameplayTagContainer::AppendTags(FGameplayTagContainer const& Other)
 
 void FGameplayTagContainer::AddTag(const FGameplayTag& TagToAdd)
 {
-    static auto AddTag = (void (*)(FGameplayTagContainer*, const FGameplayTag&))Scanner::Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag")).Call().Get(TEXT("FGameplayTagContainer::AddTag"));
+    static auto AddTag = Scanner::Function<void (*)(FGameplayTagContainer*, const FGameplayTag&)>(Scanner::Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag")).Call().Get(TEXT("FGameplayTagContainer::AddTag")));
 
     AddTag(this, TagToAdd);
 }

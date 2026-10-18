@@ -51,21 +51,21 @@ UEngine::FOnNetworkFailure& UEngine::OnNetworkFailure()
 
 void UEngine::FOnNetworkFailure::Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const
 {
-    static auto Broadcast = (void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&))Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Call().Get(TEXT("FOnNetworkFailure::Broadcast"));
+    static auto Broadcast = Scanner::Function<void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&)>(Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Call().Get(TEXT("FOnNetworkFailure::Broadcast")));
 
     Broadcast(this, World, NetDriver, FailureType, ErrorString);
 }
 
 bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition)
 {
-    static auto CreateNamedNetDriver = (bool (*)(UEngine*, UWorld*, FName, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("call 0x*").Target(TEXT("UEngine::CreateNamedNetDriver"));
+    static auto CreateNamedNetDriver = Scanner::Function<bool (*)(UEngine*, UWorld*, FName, FName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("call 0x*").Target(TEXT("UEngine::CreateNamedNetDriver")));
 
     return CreateNamedNetDriver(this, InWorld, NetDriverName, NetDriverDefinition);
 }
 
 UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
 {
-    static auto FindNamedNetDriver = (UNetDriver* (*)(UEngine*, UWorld*, FName))Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]; call 0x*").Call().Get(TEXT("UEngine::FindNamedNetDriver"));
+    static auto FindNamedNetDriver = Scanner::Function<UNetDriver* (*)(UEngine*, UWorld*, FName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]; call 0x*").Call().Get(TEXT("UEngine::FindNamedNetDriver")));
 
     return FindNamedNetDriver(this, InWorld, NetDriverName);
 }

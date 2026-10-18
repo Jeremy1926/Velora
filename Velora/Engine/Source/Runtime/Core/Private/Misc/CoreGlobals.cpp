@@ -16,7 +16,7 @@ uint32* GSlateLoadingThreadId = []
 
 FOutputDeviceRedirector* GetGlobalLogSingleton()
 {
-    static auto GetGlobalLogSingleton = (FOutputDeviceRedirector* (*)())Scanner::String(TEXT("NOCONSOLE")).Call(2).Get(TEXT("GetGlobalLogSingleton"));
+    static auto GetGlobalLogSingleton = Scanner::Function<FOutputDeviceRedirector* (*)()>(Scanner::String(TEXT("NOCONSOLE")).Call(2).Get(TEXT("GetGlobalLogSingleton")));
 
     return GetGlobalLogSingleton();
 }
