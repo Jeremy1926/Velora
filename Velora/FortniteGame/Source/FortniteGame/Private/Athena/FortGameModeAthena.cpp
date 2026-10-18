@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
@@ -141,6 +142,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         DetourVTable(TEXT("AFortPickupAthena::GivePickupTo"), (void**)(AthenaVTable + GivePickupTo), &AFortPickup::GivePickupTo);
 
         return DetourVTable(TEXT("AFortPickup::GivePickupTo"), (void**)(VTable + GivePickupTo), &AFortPickup::GivePickupTo);
+    }();
+
+    static auto ServerHandlePickup = []
+    {
+        auto ServerHandlePickup = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickup")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickup_Implementation"));
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+
+        return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), (void**)(VTable + ServerHandlePickup), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation);
     }();
 
     static auto AttemptSpawnResources = []

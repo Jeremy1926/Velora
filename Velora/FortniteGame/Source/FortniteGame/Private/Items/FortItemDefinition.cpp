@@ -28,7 +28,7 @@ EFortRarity UFortItemDefinition::GetRarity() const
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
-    static auto ClampItemLevel = Scanner::Native(TEXT("/Script/FortniteGame.FortItemDefinition:CreateTemporaryItemInstanceBP")).Find("call [*]").Slot(TEXT("UFortItemDefinition::ClampItemLevel"));
+    static auto ClampItemLevel = Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Call().Find("call [*]").Slot(TEXT("UFortItemDefinition::ClampItemLevel"));
 
     auto VTable = *(uint8_t**)this;
 

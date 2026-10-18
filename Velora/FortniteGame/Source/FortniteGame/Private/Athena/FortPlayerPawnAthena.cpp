@@ -5,6 +5,8 @@
 #include "FortRegisteredPlayerInfo.h"
 #include "Items/FortQuickBars.h"
 #include "Templates/Casts.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -34,4 +36,16 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
                 PlayerController->ClientExecuteInventoryItem(Slots[0].Items[0], 0.0f, false);
         }
     }
+}
+
+void AFortPlayerPawnAthena::ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+{
+    AFortPlayerPawn::ServerHandlePickup_Implementation(Pickup, InFlyTime / GetPickupSpeedMultiplier(), InStartDirection, bPlayPickupSound);
+}
+
+float AFortPlayerPawnAthena::GetPickupSpeedMultiplier() const
+{
+    static auto PickupSpeedMultiplier = GetClass()->FindPropertyByName(FName(TEXT("PickupSpeedMultiplier")));
+
+    return *PickupSpeedMultiplier->ContainerPtrToValuePtr<float>(this);
 }

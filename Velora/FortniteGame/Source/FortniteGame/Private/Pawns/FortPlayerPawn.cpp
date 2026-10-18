@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Items/FortPickup.h"
 #include "Scanner.h"
 
 void AFortPlayerPawn::OnBlueprintPlace()
@@ -12,4 +13,10 @@ void AFortPlayerPawn::OnBlueprintPlace()
     }();
 
     OnBlueprintPlace(this);
+}
+
+void AFortPlayerPawn::ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+{
+    if (Pickup && !Pickup->IsPendingKill())
+        Pickup->SetPickupTarget(this, InFlyTime, InStartDirection, bPlayPickupSound);
 }
