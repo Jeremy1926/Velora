@@ -64,6 +64,16 @@ public:
         return GetPropertyValue(ContainerPtrToValuePtr<void>(A, ArrayIndex));
     }
 
+    FORCEINLINE uint8 GetByteOffset() const
+    {
+        return ByteOffset;
+    }
+
+    FORCEINLINE uint8 GetFieldMask() const
+    {
+        return FieldMask;
+    }
+
 private:
     uint8 FieldSize;
     uint8 ByteOffset;

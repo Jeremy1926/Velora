@@ -8,4 +8,8 @@ public:
     static UClass* StaticClass();
 
     void PlayWeaponFireFX(bool bPersistentFire);
+
+    bool CheckPendingDestroyedDueToDurability();
+
+    bool GetPendingDestroyDueToDurabilityOrStackCount() const;
 };

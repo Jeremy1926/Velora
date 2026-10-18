@@ -5,6 +5,7 @@
 #include "Components/SceneComponent.h"
 #include "Math/Vector.h"
 
+class APawn;
 class UActorChannel;
 class ULevel;
 class UNetDriver;
@@ -37,6 +38,8 @@ public:
     FName GetNetDriverName() const;
 
     USceneComponent* GetRootComponent() const;
+
+    APawn* GetInstigator() const;
 
     FORCEINLINE FVector GetActorLocation() const
     {

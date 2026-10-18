@@ -34,6 +34,13 @@ void AFortQuickBars::OnQuickBarChanged(EFortQuickBars InQuickBar)
     OnQuickBarChanged(this, InQuickBar);
 }
 
+int32 AFortQuickBars::TrySetFocused(EFortQuickBars InQuickBar, int32 Slot, bool bUpdatePreviousFocusedSlot)
+{
+    static auto TrySetFocused = (int32 (*)(AFortQuickBars*, EFortQuickBars, int32, bool))Scanner::String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d.")).Find("mov byte ptr [rsp+0x20], 0x1; call 0x*").Call().Find("call 0x*").Target(TEXT("AFortQuickBars::TrySetFocused"));
+
+    return TrySetFocused(this, InQuickBar, Slot, bUpdatePreviousFocusedSlot);
+}
+
 void AFortQuickBars::ServerRemoveItemInternal_Implementation(const FGuid& Item, bool bFindReplacement, bool bForce)
 {
     for (auto QuickBarType : { EFortQuickBars::Primary, EFortQuickBars::Secondary })

@@ -55,5 +55,7 @@ public:
 
     void OnQuickBarChanged(EFortQuickBars InQuickBar);
 
+    int32 TrySetFocused(EFortQuickBars InQuickBar, int32 Slot, bool bUpdatePreviousFocusedSlot);
+
     void ServerRemoveItemInternal_Implementation(const FGuid& Item, bool bFindReplacement, bool bForce);
 };

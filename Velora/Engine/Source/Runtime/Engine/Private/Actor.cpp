@@ -95,6 +95,13 @@ USceneComponent* AActor::GetRootComponent() const
     return *RootComponent->ContainerPtrToValuePtr<USceneComponent*>(this);
 }
 
+APawn* AActor::GetInstigator() const
+{
+    static auto Instigator = GetClass()->FindPropertyByName(FName(TEXT("Instigator")));
+
+    return *Instigator->ContainerPtrToValuePtr<APawn*>(this);
+}
+
 bool AActor::IsPendingKillPending() const
 {
     static auto bActorIsBeingDestroyed = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer")).Find("test byte ptr [*], 0x*");
