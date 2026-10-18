@@ -54,24 +54,24 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
     if (!WorldInventory)
         return;
 
-    auto GiveItemEntry = [&](const FFortItemEntry& PickupItemEntry)
+    auto GiveItemEntry = [&](FFortItemEntry& PickupItemEntry)
     {
-        auto ItemDefinition = PickupItemEntry.ItemDefinition;
+        auto ItemDefinition = PickupItemEntry.GetItemDefinition();
 
         if (!ItemDefinition)
             return;
 
         auto& Inventory = WorldInventory->GetInventory();
         const int32 MaxStackSize = ItemDefinition->GetMaxStackSize();
-        int32 NumberToGive = PickupItemEntry.Count;
+        int32 NumberToGive = PickupItemEntry.GetCount();
         auto bCanAddStack = true;
 
         for (auto& ItemEntry : Inventory.ReplicatedEntries)
         {
-            if (ItemEntry.ItemDefinition != ItemDefinition)
+            if (ItemEntry.GetItemDefinition() != ItemDefinition)
                 continue;
 
-            const int32 NumberToStack = FMath::Min(NumberToGive, MaxStackSize - ItemEntry.Count);
+            const int32 NumberToStack = FMath::Min(NumberToGive, MaxStackSize - ItemEntry.GetCount());
 
             if (NumberToStack > 0)
             {
@@ -80,7 +80,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
                 ItemEntry.GetStateValue(EFortItemEntryState::NewItemCount, NewItemCount);
 
-                ItemEntry.SetCount(ItemEntry.Count + NumberToStack);
+                ItemEntry.SetCount(ItemEntry.GetCount() + NumberToStack);
                 ItemEntry.SetStateValue(EFortItemEntryState::NewItemCount, NewItemCount + NumberToStack);
 
                 if (PickupItemEntry.GetStateValue(EFortItemEntryState::ShouldShowItemToast, ShouldShowItemToast))
@@ -127,27 +127,27 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         while (bCanAddStack && NumberToGive > 0)
         {
-            auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.Level);
-            ItemEntry->LoadedAmmo = PickupItemEntry.LoadedAmmo;
-            ItemEntry->Durability = PickupItemEntry.Durability;
+            auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.GetLevel());
+            ItemEntry->GetLoadedAmmo() = PickupItemEntry.GetLoadedAmmo();
+            ItemEntry->GetDurability() = PickupItemEntry.GetDurability();
 
-            for (auto& StateValue : PickupItemEntry.StateValues)
+            for (auto& StateValue : PickupItemEntry.GetStateValues())
                 ItemEntry->SetStateValue(StateValue.StateType, StateValue.IntValue);
 
-            ItemEntry->SetStateValue(EFortItemEntryState::NewItemCount, ItemEntry->Count);
+            ItemEntry->SetStateValue(EFortItemEntryState::NewItemCount, ItemEntry->GetCount());
 
-            const FGuid ItemGuid = ItemEntry->ItemGuid;
-            const int32 ItemCount = ItemEntry->Count;
+            const FGuid ItemGuid = ItemEntry->GetItemGuid();
+            const int32 ItemCount = ItemEntry->GetCount();
 
             NumberToGive -= ItemCount;
 
-            ItemEntry->ParentInventory = WorldInventory;
-            ItemEntry->bIsReplicatedCopy = true;
+            ItemEntry->GetParentInventory() = WorldInventory;
+            ItemEntry->GetIsReplicatedCopy() = true;
 
-            if (ItemEntry->ParentInventory.IsValid())
-                ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+            if (ItemEntry->GetParentInventory().IsValid())
+                ItemEntry->GetParentInventory().Get()->SetItemRequiresUpdate(*ItemEntry);
 
-            ItemEntry->bIsDirty = true;
+            ItemEntry->GetIsDirty() = true;
 
             WorldInventory->HandleInventoryLocalUpdate();
 
@@ -167,8 +167,8 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
                 for (auto& Entry : Inventory.ReplicatedEntries)
                 {
-                    if (Entry.ItemGuid == SwapItemGuid)
-                        SwapCount = Entry.Count;
+                    if (Entry.GetItemGuid() == SwapItemGuid)
+                        SwapCount = Entry.GetCount();
                 }
 
                 if (SwapCount > 0)
@@ -188,9 +188,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         if (NumberToGive > 0)
         {
-            FFortItemEntry LeftoverItemEntry(ItemDefinition, NumberToGive, PickupItemEntry.Level);
-            LeftoverItemEntry.LoadedAmmo = PickupItemEntry.LoadedAmmo;
-            LeftoverItemEntry.Durability = PickupItemEntry.Durability;
+            FFortItemEntry LeftoverItemEntry(ItemDefinition, NumberToGive, PickupItemEntry.GetLevel());
+            LeftoverItemEntry.GetLoadedAmmo() = PickupItemEntry.GetLoadedAmmo();
+            LeftoverItemEntry.GetDurability() = PickupItemEntry.GetDurability();
 
             const FVector Location = PickupTarget->GetActorLocation();
 

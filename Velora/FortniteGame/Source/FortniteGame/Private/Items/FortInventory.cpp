@@ -26,56 +26,154 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
     SetItemRequiresUpdate(this, ItemEntry);
 }
 
+FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
+{
+    static auto Constructor = (void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const TArray<UObject*>*))Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::FFortItemEntry"));
+
+    Constructor(this, InItemDefinition, InCount, InLevel, nullptr);
+}
+
+FFortItemEntry::~FFortItemEntry()
+{
+    static auto Destructor = (void (*)(FFortItemEntry*))Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("lea rdx, [*]; call 0x*").Find("lea rcx, [*]; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::~FFortItemEntry"));
+
+    Destructor(this);
+}
+
+UScriptStruct* FFortItemEntry::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemEntry"));
+
+    return Struct;
+}
+
+int32 FFortItemEntry::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+int32& FFortItemEntry::GetCount()
+{
+    static auto Count = StaticStruct()->FindPropertyByName(FName(TEXT("Count")));
+
+    return *Count->ContainerPtrToValuePtr<int32>(this);
+}
+
+UFortItemDefinition*& FFortItemEntry::GetItemDefinition()
+{
+    static auto ItemDefinition = StaticStruct()->FindPropertyByName(FName(TEXT("ItemDefinition")));
+
+    return *ItemDefinition->ContainerPtrToValuePtr<UFortItemDefinition*>(this);
+}
+
+float& FFortItemEntry::GetDurability()
+{
+    static auto Durability = StaticStruct()->FindPropertyByName(FName(TEXT("Durability")));
+
+    return *Durability->ContainerPtrToValuePtr<float>(this);
+}
+
+int32& FFortItemEntry::GetLevel()
+{
+    static auto Level = StaticStruct()->FindPropertyByName(FName(TEXT("Level")));
+
+    return *Level->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32& FFortItemEntry::GetLoadedAmmo()
+{
+    static auto LoadedAmmo = StaticStruct()->FindPropertyByName(FName(TEXT("LoadedAmmo")));
+
+    return *LoadedAmmo->ContainerPtrToValuePtr<int32>(this);
+}
+
+FGuid& FFortItemEntry::GetItemGuid()
+{
+    static auto ItemGuid = StaticStruct()->FindPropertyByName(FName(TEXT("ItemGuid")));
+
+    return *ItemGuid->ContainerPtrToValuePtr<FGuid>(this);
+}
+
+bool& FFortItemEntry::GetIsReplicatedCopy()
+{
+    static auto bIsReplicatedCopy = StaticStruct()->FindPropertyByName(FName(TEXT("bIsReplicatedCopy")));
+
+    return *bIsReplicatedCopy->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool& FFortItemEntry::GetIsDirty()
+{
+    static auto bIsDirty = StaticStruct()->FindPropertyByName(FName(TEXT("bIsDirty")));
+
+    return *bIsDirty->ContainerPtrToValuePtr<bool>(this);
+}
+
+TArray<FFortItemEntryStateValue>& FFortItemEntry::GetStateValues()
+{
+    static auto StateValues = StaticStruct()->FindPropertyByName(FName(TEXT("StateValues")));
+
+    return *StateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(this);
+}
+
+TWeakObjectPtr<AFortInventory>& FFortItemEntry::GetParentInventory()
+{
+    static auto ParentInventory = StaticStruct()->FindPropertyByName(FName(TEXT("ParentInventory")));
+
+    return *ParentInventory->ContainerPtrToValuePtr<TWeakObjectPtr<AFortInventory>>(this);
+}
+
 void FFortItemEntry::SetCount(int32 NewCount)
 {
     NewCount = FMath::Max(NewCount, 0);
 
-    if (Count != NewCount)
+    if (GetCount() != NewCount)
     {
-        Count = NewCount;
+        GetCount() = NewCount;
 
-        if (ParentInventory.IsValid())
+        if (GetParentInventory().IsValid())
         {
-            ParentInventory.Get()->SetItemRequiresUpdate(*this);
+            GetParentInventory().Get()->SetItemRequiresUpdate(*this);
         }
 
-        bIsDirty = true;
+        GetIsDirty() = true;
     }
 }
 
 void FFortItemEntry::SetDurability(float NewDurability)
 {
-    if (Durability != NewDurability)
+    if (GetDurability() != NewDurability)
     {
-        Durability = NewDurability;
+        GetDurability() = NewDurability;
 
-        if (ParentInventory.IsValid())
+        if (GetParentInventory().IsValid())
         {
-            ParentInventory.Get()->SetItemRequiresUpdate(*this);
+            GetParentInventory().Get()->SetItemRequiresUpdate(*this);
         }
 
-        bIsDirty = true;
+        GetIsDirty() = true;
     }
 }
 
 void FFortItemEntry::SetLoadedAmmo(int32 NewLoadedAmmo)
 {
-    if (LoadedAmmo != NewLoadedAmmo)
+    if (GetLoadedAmmo() != NewLoadedAmmo)
     {
-        LoadedAmmo = NewLoadedAmmo;
+        GetLoadedAmmo() = NewLoadedAmmo;
 
-        if (ParentInventory.IsValid())
+        if (GetParentInventory().IsValid())
         {
-            ParentInventory.Get()->SetItemRequiresUpdate(*this);
+            GetParentInventory().Get()->SetItemRequiresUpdate(*this);
         }
 
-        bIsDirty = true;
+        GetIsDirty() = true;
     }
 }
 
-bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue) const
+bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue)
 {
-    for (auto& StateValue : StateValues)
+    for (auto& StateValue : GetStateValues())
     {
         if (StateValue.StateType == StateType)
         {
@@ -89,6 +187,7 @@ bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& O
 
 void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue)
 {
+    auto& StateValues = GetStateValues();
     int32 StateValueIndex = 0;
 
     while (StateValueIndex < StateValues.Num() && StateValues[StateValueIndex].StateType != StateType)
@@ -105,28 +204,30 @@ void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 In
         StateValues.Add(FFortItemEntryStateValue{ IntValue, FName(NAME_None), StateType });
     }
 
-    if (ParentInventory.IsValid())
+    if (GetParentInventory().IsValid())
     {
-        ParentInventory.Get()->SetItemRequiresUpdate(*this);
+        GetParentInventory().Get()->SetItemRequiresUpdate(*this);
     }
 
-    bIsDirty = true;
+    GetIsDirty() = true;
 }
 
 void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
 {
+    auto& StateValues = GetStateValues();
+
     for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
     {
         if (StateValues[StateValueIndex].StateType == StateType)
         {
             StateValues.RemoveAt(StateValueIndex);
 
-            if (ParentInventory.IsValid())
+            if (GetParentInventory().IsValid())
             {
-                ParentInventory.Get()->SetItemRequiresUpdate(*this);
+                GetParentInventory().Get()->SetItemRequiresUpdate(*this);
             }
 
-            bIsDirty = true;
+            GetIsDirty() = true;
 
             return;
         }

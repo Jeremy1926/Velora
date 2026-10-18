@@ -1,10 +1,14 @@
 #pragma once
 
 #include "UObject/WeakObjectPtr.h"
+#include "UObject/SoftObjectPath.h"
 #include "Misc/StringAssetReference.h"
+#include "Misc/EngineVersion.h"
+#include "Containers/Array.h"
 #include "Templates/Casts.h"
 
-struct FAssetPtr
+template<class TObjectID>
+struct TPersistentObjectPtr
 {
 public:
     FORCEINLINE UObject* Get() const
@@ -27,36 +31,64 @@ public:
         return !IsValid() && !ObjectID.IsValid();
     }
 
-    FORCEINLINE const FStringAssetReference& GetUniqueID() const
+    FORCEINLINE const TObjectID& GetUniqueID() const
     {
         return ObjectID;
+    }
+
+    UObject* LoadSynchronous() const
+    {
+        UObject* Asset = Get();
+
+        if (IsPending())
+            Asset = GetUniqueID().TryLoad();
+
+        return Asset;
     }
 
 private:
     mutable FWeakObjectPtr WeakPtr;
     mutable int32 TagAtLastTest;
-    FStringAssetReference ObjectID;
+    TObjectID ObjectID;
+};
+
+struct FAssetPtr : public TPersistentObjectPtr<FStringAssetReference>
+{
+};
+
+struct FSoftObjectPtr : public TPersistentObjectPtr<FSoftObjectPath>
+{
 };
 
 template<class T>
 class TAssetPtr
 {
 public:
+    static int32 GetTypeSize()
+    {
+        return IsSoftObjectPtr() ? (int32)sizeof(FSoftObjectPtr) : (int32)sizeof(FAssetPtr);
+    }
+
     FORCEINLINE bool IsNull() const
     {
-        return AssetPtr.IsNull();
+        return IsSoftObjectPtr() ? ((const FSoftObjectPtr*)this)->IsNull() : ((const FAssetPtr*)this)->IsNull();
     }
 
     T* LoadSynchronous() const
     {
-        UObject* Asset = AssetPtr.Get();
-
-        if (AssetPtr.IsPending())
-            Asset = AssetPtr.GetUniqueID().TryLoad();
-
-        return Cast<T>(Asset);
+        return Cast<T>(IsSoftObjectPtr() ? ((const FSoftObjectPtr*)this)->LoadSynchronous() : ((const FAssetPtr*)this)->LoadSynchronous());
     }
 
 private:
-    FAssetPtr AssetPtr;
+    static bool IsSoftObjectPtr()
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 18;
+    }
+};
+
+template<class T>
+class TArray<TAssetPtr<T>, FDefaultAllocator> : public TRuntimeSizedArray<TAssetPtr<T>>
+{
 };

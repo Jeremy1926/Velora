@@ -85,6 +85,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (GameMode && GameMode != AssignedGameMode && GameMode->GetMatchState() == MatchState::WaitingToStart)
         {
+            if (!World->GetNetDriver())
+            {
+                FURL URL{};
+                World->Listen(URL);
+            }
+
             TCHAR WarmupRequiredPlayerCount[16];
             swprintf_s(WarmupRequiredPlayerCount, TEXT("%d"), Config::WarmupRequiredPlayerCount);
 

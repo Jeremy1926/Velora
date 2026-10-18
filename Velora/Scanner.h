@@ -561,11 +561,14 @@ namespace Scanner
 
     inline FCode CallTo(const void* Function)
     {
-        return FCode(FindCallReference(Function));
+        return FCode(Function ? FindCallReference(Function) : nullptr);
     }
 
     inline FCode Reference(const void* Target, std::string_view Pattern)
     {
+        if (!Target)
+            return FCode();
+
         for (auto& Section : Sections())
         {
             if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
@@ -599,7 +602,9 @@ namespace Scanner
 
     inline FCode Exec(const TCHAR* FunctionPath)
     {
-        return FCode(std::bit_cast<const uint8_t*>(((UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath))->GetNativeFunc()), true);
+        auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath);
+
+        return FCode(Function ? std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) : nullptr, true);
     }
 
     inline FCode Native(const TCHAR* FunctionPath)

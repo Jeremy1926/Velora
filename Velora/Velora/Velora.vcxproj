@@ -259,6 +259,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\ActorComponent.h" />
@@ -389,6 +390,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Math\UnrealMath.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectGlobals.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\WeakObjectPtr.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\SoftObjectPath.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Obj.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\CoreNet.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Actor.cpp" />

@@ -10,6 +10,8 @@
 #include "Logging/LogMacros.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
 UScriptStruct* FFortLootPackageData::StaticStruct()
@@ -17,6 +19,27 @@ UScriptStruct* FFortLootPackageData::StaticStruct()
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortLootPackageData"));
 
     return Struct;
+}
+
+const TAssetPtr<UFortItemDefinition>& FFortLootPackageData::GetItemDefinition() const
+{
+    static auto ItemDefinition = StaticStruct()->FindPropertyByName(FName(TEXT("ItemDefinition")));
+
+    return *ItemDefinition->ContainerPtrToValuePtr<TAssetPtr<UFortItemDefinition>>(this);
+}
+
+int32 FFortLootPackageData::GetMinWorldLevel() const
+{
+    static auto MinWorldLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MinWorldLevel")));
+
+    return *MinWorldLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootPackageData::GetMaxWorldLevel() const
+{
+    static auto MaxWorldLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MaxWorldLevel")));
+
+    return *MaxWorldLevel->ContainerPtrToValuePtr<int32>(this);
 }
 
 static bool PackageMeetsCriteria(const FFortLootPackageData& LootPackageData, FName LootPackageName, int32 LootPackageCategory, const FGameplayTagContainer& GameplayTags, int32 WorldLevel)
@@ -32,10 +55,10 @@ static bool PackageMeetsCriteria(const FFortLootPackageData& LootPackageData, FN
 
     if (WorldLevel >= 0)
     {
-        if (LootPackageData.MaxWorldLevel >= 0 && WorldLevel > LootPackageData.MaxWorldLevel)
+        if (LootPackageData.GetMaxWorldLevel() >= 0 && WorldLevel > LootPackageData.GetMaxWorldLevel())
             return false;
 
-        if (LootPackageData.MinWorldLevel >= 0 && WorldLevel < LootPackageData.MinWorldLevel)
+        if (LootPackageData.GetMinWorldLevel() >= 0 && WorldLevel < LootPackageData.GetMinWorldLevel())
             return false;
     }
 
@@ -102,13 +125,13 @@ bool UFortLootPackage::PickLootDrops(TArray<FFortItemEntry>& OutLootToDrop, int3
 
     for (int32 Index = 0; Index < OutLootToDrop.Num(); ++Index)
     {
-        if (OutLootToDrop[Index].ItemDefinition && !OutLootToDrop[Index].ItemDefinition->DoesAllowMultipleStacks())
+        if (OutLootToDrop[Index].GetItemDefinition() && !OutLootToDrop[Index].GetItemDefinition()->DoesAllowMultipleStacks())
         {
             for (int32 OtherIndex = Index + 1; OtherIndex < OutLootToDrop.Num(); ++OtherIndex)
             {
-                if (OutLootToDrop[Index].ItemDefinition == OutLootToDrop[OtherIndex].ItemDefinition)
+                if (OutLootToDrop[Index].GetItemDefinition() == OutLootToDrop[OtherIndex].GetItemDefinition())
                 {
-                    OutLootToDrop[Index].SetCount(OutLootToDrop[Index].Count + OutLootToDrop[OtherIndex].Count);
+                    OutLootToDrop[Index].SetCount(OutLootToDrop[Index].GetCount() + OutLootToDrop[OtherIndex].GetCount());
                     OutLootToDrop.RemoveAt(OtherIndex);
                     --OtherIndex;
                 }
@@ -154,9 +177,9 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
 
             if (LootPackageData->LootPackageCall.IsEmpty())
             {
-                if (!LootPackageData->ItemDefinition.IsNull())
+                if (!LootPackageData->GetItemDefinition().IsNull())
                 {
-                    if (auto ItemDefinition = LootPackageData->ItemDefinition.LoadSynchronous())
+                    if (auto ItemDefinition = LootPackageData->GetItemDefinition().LoadSynchronous())
                     {
                         int32 ItemLevel = 0;
 
@@ -170,7 +193,7 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
                             const int32 NumberToStack = FMath::Min(NumberToDrop, ItemDefinition->GetMaxStackSize());
 
                             auto ItemEntry = new(OutLootToDrop) FFortItemEntry(ItemDefinition, NumberToStack, FMath::Max(ItemLevel, 0));
-                            ItemEntry->Level = ItemDefinition->ClampItemLevel(ItemEntry->Level);
+                            ItemEntry->GetLevel() = ItemDefinition->ClampItemLevel(ItemEntry->GetLevel());
 
                             NumberToDrop -= NumberToStack;
                         }

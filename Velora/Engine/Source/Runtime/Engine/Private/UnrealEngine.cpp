@@ -7,7 +7,7 @@ UEngine*& GEngine = *(UEngine**)Scanner::String(TEXT("RecordReplay: failed to cr
 
 void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
 {
-    static auto RunAsDedicated = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; test al, al; jnz *").Call().Find("movzx *, byte ptr [*+0x*]").Disp(TEXT("FWorldContext::RunAsDedicated"));
+    static auto RunAsDedicated = Scanner::Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3").Find("movzx *, byte ptr [*+0x*]").Disp(TEXT("FWorldContext::RunAsDedicated"));
 
     *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
 }

@@ -46,7 +46,7 @@ static auto RemoveAllInventoryItems = []
 
 static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
-static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("FortGameModeAthena: Player [%s] killed after %d seconds.  Removing from alive players list.")).Start().Call().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
+static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("Deaths")).Start().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
 
 static Scanner::FCode ClientBuild()
 {
@@ -249,24 +249,24 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
 
     for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
     {
-        if (ItemEntry.ItemGuid != ItemGuid)
+        if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
 
-        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ItemEntry.ItemDefinition);
+        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition());
 
         if (!ItemDefinition || !ItemDefinition->CanBeDropped())
             return;
 
-        FFortItemEntry DropItemEntry(ItemEntry.ItemDefinition, FMath::Min(Count, ItemEntry.Count), ItemEntry.Level);
-        DropItemEntry.LoadedAmmo = ItemEntry.LoadedAmmo;
-        DropItemEntry.Durability = ItemEntry.Durability;
+        FFortItemEntry DropItemEntry(ItemEntry.GetItemDefinition(), FMath::Min(Count, ItemEntry.GetCount()), ItemEntry.GetLevel());
+        DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
+        DropItemEntry.GetDurability() = ItemEntry.GetDurability();
 
         const FVector Location = Pawn->GetActorLocation();
 
         if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
             Pickup->TossPickup(Location, Pawn, 0, true);
 
-        RemoveInventoryItem(ItemGuid, DropItemEntry.Count, false);
+        RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), false);
 
         return;
     }
@@ -283,7 +283,7 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 
     for (auto& ItemEntry : Inventory.ReplicatedEntries)
     {
-        if (ItemEntry.ItemGuid != ItemGuid)
+        if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
 
         ItemEntry.RemoveStateValue(StateValueType);
@@ -306,21 +306,21 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
 
     for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
     {
-        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ReplicatedEntries[Index].ItemDefinition);
+        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ReplicatedEntries[Index].GetItemDefinition());
 
-        if (!ItemDefinition || !ItemDefinition->ShouldDropOnDeath() || ReplicatedEntries[Index].Count <= 0)
+        if (!ItemDefinition || !ItemDefinition->ShouldDropOnDeath() || ReplicatedEntries[Index].GetCount() <= 0)
             continue;
 
-        FFortItemEntry DropItemEntry(ItemDefinition, ReplicatedEntries[Index].Count, ReplicatedEntries[Index].Level);
-        DropItemEntry.LoadedAmmo = ReplicatedEntries[Index].LoadedAmmo;
-        DropItemEntry.Durability = ReplicatedEntries[Index].Durability;
+        FFortItemEntry DropItemEntry(ItemDefinition, ReplicatedEntries[Index].GetCount(), ReplicatedEntries[Index].GetLevel());
+        DropItemEntry.GetLoadedAmmo() = ReplicatedEntries[Index].GetLoadedAmmo();
+        DropItemEntry.GetDurability() = ReplicatedEntries[Index].GetDurability();
 
-        const FGuid ItemGuid = ReplicatedEntries[Index].ItemGuid;
+        const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
 
         if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
             Pickup->TossPickup(Location, DestroyedPawn, 0, true);
 
-        RemoveInventoryItem(ItemGuid, DropItemEntry.Count, true);
+        RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), true);
 
         bDroppedItems = true;
     }
@@ -362,14 +362,14 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
     {
         auto& ItemEntry = Inventory.ReplicatedEntries[Index];
 
-        if (ItemEntry.ItemGuid != ItemGuid)
+        if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
 
-        auto ItemDefinition = ItemEntry.ItemDefinition;
+        auto ItemDefinition = ItemEntry.GetItemDefinition();
 
-        if (ItemEntry.Count > Count)
+        if (ItemEntry.GetCount() > Count)
         {
-            ItemEntry.SetCount(ItemEntry.Count - Count);
+            ItemEntry.SetCount(ItemEntry.GetCount() - Count);
             Inventory.MarkItemDirty(ItemEntry);
 
             if (bForceRemoveFromQuickBars)
@@ -407,7 +407,7 @@ void AFortPlayerController::RemoveAllInventoryItems()
 
     for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
     {
-        auto ItemDefinition = ReplicatedEntries[Index].ItemDefinition;
+        auto ItemDefinition = ReplicatedEntries[Index].GetItemDefinition();
         auto bKeep = Pickaxe && (UFortItemDefinition*)Pickaxe->GetWeaponDefinition() == ItemDefinition;
 
         if (GameMode)
@@ -419,9 +419,9 @@ void AFortPlayerController::RemoveAllInventoryItems()
         if (bKeep)
             continue;
 
-        const FGuid ItemGuid = ReplicatedEntries[Index].ItemGuid;
+        const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
 
-        RemoveInventoryItem(ItemGuid, ReplicatedEntries[Index].Count, true);
+        RemoveInventoryItem(ItemGuid, ReplicatedEntries[Index].GetCount(), true);
     }
 }
 

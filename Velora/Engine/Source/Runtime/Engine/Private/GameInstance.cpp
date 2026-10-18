@@ -19,7 +19,7 @@ ULocalPlayer* UGameInstance::GetFirstGamePlayer() const
 
 FWorldContext* UGameInstance::GetWorldContext() const
 {
-    static auto WorldContext = Scanner::String(TEXT("TeamChatroom")).Start().Find("call 0x*; test al, al; jnz *").Call().Disp(TEXT("UGameInstance::WorldContext"));
+    static auto WorldContext = Scanner::Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3").Disp(TEXT("UGameInstance::WorldContext"));
 
     return *(FWorldContext**)((uint8_t*)this + WorldContext);
 }

@@ -24,6 +24,11 @@ public:
         return SuperStruct;
     }
 
+    FORCEINLINE int32 GetPropertiesSize() const
+    {
+        return PropertiesSize;
+    }
+
     bool IsChildOf(const UStruct* SomeBase) const
     {
         for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())
@@ -37,6 +42,9 @@ public:
 
 private:
     UStruct* SuperStruct;
+    UField* Children;
+    int32 PropertiesSize;
+    int32 MinAlignment;
 };
 
 class UScriptStruct : public UStruct

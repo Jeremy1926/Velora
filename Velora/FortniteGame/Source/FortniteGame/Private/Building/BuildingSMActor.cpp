@@ -197,11 +197,11 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
             {
                 auto& LootDrop = LootToDrop[Index];
 
-                if (Cast<UFortWorldItemDefinition>(LootDrop.ItemDefinition))
+                if (Cast<UFortWorldItemDefinition>(LootDrop.GetItemDefinition()))
                 {
                     const FVector SpawnLocation = GetRootComponent()->GetBounds().Origin + FMath::VRand() * 200.0f;
 
-                    FFortItemEntry ItemEntry(LootDrop.ItemDefinition, LootDrop.Count, 0);
+                    FFortItemEntry ItemEntry(LootDrop.GetItemDefinition(), LootDrop.GetCount(), 0);
                     ItemEntry.SetStateValue(EFortItemEntryState::DoNotShowSpawnParticles, 1);
 
                     if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, SpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }))
@@ -230,7 +230,7 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 
             for (auto& ItemEntry : Inventory.ReplicatedEntries)
             {
-                if (ItemEntry.ItemDefinition == ResourceItemDefinition)
+                if (ItemEntry.GetItemDefinition() == ResourceItemDefinition)
                 {
                     ResourceItemEntry = &ItemEntry;
                     break;
@@ -239,11 +239,11 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 
             if (ResourceItemEntry)
             {
-                const int32 NumberToStack = FMath::Min(ResourceCount, MaxStackSize - ResourceItemEntry->Count);
+                const int32 NumberToStack = FMath::Min(ResourceCount, MaxStackSize - ResourceItemEntry->GetCount());
 
                 if (NumberToStack > 0)
                 {
-                    ResourceItemEntry->SetCount(ResourceItemEntry->Count + NumberToStack);
+                    ResourceItemEntry->SetCount(ResourceItemEntry->GetCount() + NumberToStack);
                     Inventory.MarkItemDirty(*ResourceItemEntry);
                 }
             }
@@ -251,13 +251,13 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
             {
                 auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ResourceItemDefinition, FMath::Min(ResourceCount, MaxStackSize), 0);
 
-                ItemEntry->ParentInventory = WorldInventory;
-                ItemEntry->bIsReplicatedCopy = true;
+                ItemEntry->GetParentInventory() = WorldInventory;
+                ItemEntry->GetIsReplicatedCopy() = true;
 
-                if (ItemEntry->ParentInventory.IsValid())
-                    ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+                if (ItemEntry->GetParentInventory().IsValid())
+                    ItemEntry->GetParentInventory().Get()->SetItemRequiresUpdate(*ItemEntry);
 
-                ItemEntry->bIsDirty = true;
+                ItemEntry->GetIsDirty() = true;
             }
 
             WorldInventory->HandleInventoryLocalUpdate();

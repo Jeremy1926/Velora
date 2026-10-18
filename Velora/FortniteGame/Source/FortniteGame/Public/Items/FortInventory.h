@@ -10,11 +10,9 @@
 #include "UObject/NameTypes.h"
 #include "UObject/WeakObjectPtr.h"
 #include "GameplayAbilitySpec.h"
+#include "UObject/Class.h"
 
 class AFortInventory;
-class FUniqueNetId;
-class UFortAlterationItemDefinition;
-class UFortHeroType;
 class UFortItemDefinition;
 class UFortWorldItem;
 
@@ -49,48 +47,39 @@ struct FFortItemEntryStateValue
     TEnumAsByte<EFortItemEntryState::Type> StateType;
 };
 
-struct FFortGiftingInfo
+struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 {
-    FFortGiftingInfo()
-        : HeroType(nullptr)
-    {
-    }
+    FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel);
 
-    FString PlayerName;
-    UFortHeroType* HeroType;
-    TSharedPtr<const FUniqueNetId> PlayerId;
-};
+    FFortItemEntry(const FFortItemEntry&) = delete;
 
-struct FFortItemEntry : public FFastArraySerializerItem
-{
-    FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
-        : Count(FMath::Max(InCount, 0))
-        , ItemDefinition(InItemDefinition)
-        , Durability(1.0f)
-        , Level(FMath::Max(InLevel, 0))
-        , LoadedAmmo(0)
-        , ItemGuid(FGuid::NewGuid())
-        , inventory_overflow_date(false)
-        , bIsReplicatedCopy(false)
-        , bIsDirty(false)
-    {
-    }
+    FFortItemEntry& operator=(const FFortItemEntry&) = delete;
 
-    int32 Count;
-    UFortItemDefinition* ItemDefinition;
-    float Durability;
-    int32 Level;
-    int32 LoadedAmmo;
-    TArray<UFortAlterationItemDefinition*> AlterationDefinitions;
-    FString ItemSource;
-    FGuid ItemGuid;
-    bool inventory_overflow_date;
-    bool bIsReplicatedCopy;
-    bool bIsDirty;
-    FFortGiftingInfo GiftingInfo;
-    TArray<FFortItemEntryStateValue> StateValues;
-    TWeakObjectPtr<AFortInventory> ParentInventory;
-    FGameplayAbilitySpecHandle GameplayAbilitySpecHandle;
+    ~FFortItemEntry();
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    int32& GetCount();
+
+    UFortItemDefinition*& GetItemDefinition();
+
+    float& GetDurability();
+
+    int32& GetLevel();
+
+    int32& GetLoadedAmmo();
+
+    FGuid& GetItemGuid();
+
+    bool& GetIsReplicatedCopy();
+
+    bool& GetIsDirty();
+
+    TArray<FFortItemEntryStateValue>& GetStateValues();
+
+    TWeakObjectPtr<AFortInventory>& GetParentInventory();
 
     void SetCount(int32 NewCount);
 
@@ -98,11 +87,19 @@ struct FFortItemEntry : public FFastArraySerializerItem
 
     void SetLoadedAmmo(int32 NewLoadedAmmo);
 
-    bool GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue) const;
+    bool GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue);
 
     void SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue);
 
     void RemoveStateValue(EFortItemEntryState::Type StateType);
+
+private:
+    uint8 Data[0x1F4];
+};
+
+template<>
+class TArray<FFortItemEntry, FDefaultAllocator> : public TRuntimeSizedArray<FFortItemEntry>
+{
 };
 
 struct FFortItemList : public FFastArraySerializer

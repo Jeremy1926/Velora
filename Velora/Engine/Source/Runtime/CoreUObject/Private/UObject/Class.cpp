@@ -19,7 +19,7 @@ Native UFunction::GetNativeFunc() const
 
 UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 {
-    static auto ClassDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("cmp qword ptr [*+0x*], 0x0").Disp(TEXT("UClass::ClassDefaultObject"));
+    static auto ClassDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Find("mov *, [*+0x*]").Disp(TEXT("UClass::ClassDefaultObject"));
 
     if (*(UObject**)((uint8_t*)this + ClassDefaultObject) == nullptr && bCreateIfNeeded)
     {
@@ -31,7 +31,7 @@ UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 
 UObject* UClass::InternalCreateDefaultObjectWrapper() const
 {
-    static auto CreateDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("cmp qword ptr [*+0x*], 0x0").Find("call [*+0x*]").Slot(TEXT("UClass::CreateDefaultObject"));
+    static auto CreateDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Slot(TEXT("UClass::CreateDefaultObject"));
 
     auto VTable = *(uint8_t**)this;
 

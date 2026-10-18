@@ -649,6 +649,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\Misc</Filter>
     </ClInclude>
@@ -980,6 +983,9 @@
       <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\WeakObjectPtr.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\SoftObjectPath.cpp">
       <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Obj.cpp">

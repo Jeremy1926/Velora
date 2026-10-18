@@ -295,3 +295,118 @@ void* operator new(size_t Size, TArray<T, AllocatorType>& Array)
 
     return &Array[Index];
 }
+
+template<typename InElementType>
+class TRuntimeSizedArray
+{
+public:
+    typedef InElementType ElementType;
+
+    class TIterator
+    {
+    public:
+        FORCEINLINE TIterator(uint8* InElement)
+            : Element(InElement)
+        {
+        }
+
+        FORCEINLINE ElementType& operator*() const
+        {
+            return *(ElementType*)Element;
+        }
+
+        FORCEINLINE TIterator& operator++()
+        {
+            Element += ElementType::GetTypeSize();
+
+            return *this;
+        }
+
+        FORCEINLINE bool operator!=(const TIterator& Other) const
+        {
+            return Element != Other.Element;
+        }
+
+    private:
+        uint8* Element;
+    };
+
+    FORCEINLINE TRuntimeSizedArray()
+        : ArrayNum(0)
+        , ArrayMax(0)
+    {
+    }
+
+    ~TRuntimeSizedArray()
+    {
+        for (auto& Element : *this)
+            Element.~ElementType();
+    }
+
+    FORCEINLINE int32 Num() const
+    {
+        return ArrayNum;
+    }
+
+    FORCEINLINE ElementType& operator[](int32 Index) const
+    {
+        return *(ElementType*)((uint8*)AllocatorInstance.GetAllocation() + Index * ElementType::GetTypeSize());
+    }
+
+    FORCEINLINE TIterator begin() const
+    {
+        return TIterator((uint8*)AllocatorInstance.GetAllocation());
+    }
+
+    FORCEINLINE TIterator end() const
+    {
+        return TIterator((uint8*)AllocatorInstance.GetAllocation() + ArrayNum * ElementType::GetTypeSize());
+    }
+
+    int32 AddUninitialized(int32 Count = 1)
+    {
+        const int32 OldNum = ArrayNum;
+
+        if ((ArrayNum += Count) > ArrayMax)
+        {
+            ArrayMax = AllocatorInstance.CalculateSlackGrow(ArrayNum, ArrayMax, ElementType::GetTypeSize());
+            AllocatorInstance.ResizeAllocation(OldNum, ArrayMax, ElementType::GetTypeSize());
+        }
+
+        return OldNum;
+    }
+
+    void RemoveAt(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
+    {
+        if (Count)
+        {
+            for (int32 RemoveIndex = Index; RemoveIndex < Index + Count; RemoveIndex++)
+                (*this)[RemoveIndex].~ElementType();
+
+            const int32 NumToMove = ArrayNum - Index - Count;
+
+            if (NumToMove)
+            {
+                memmove(&(*this)[Index], &(*this)[Index + Count], NumToMove * ElementType::GetTypeSize());
+            }
+
+            ArrayNum -= Count;
+
+            if (bAllowShrinking)
+            {
+                const int32 NewArrayMax = AllocatorInstance.CalculateSlackShrink(ArrayNum, ArrayMax, ElementType::GetTypeSize());
+
+                if (NewArrayMax != ArrayMax)
+                {
+                    ArrayMax = NewArrayMax;
+                    AllocatorInstance.ResizeAllocation(ArrayNum, ArrayMax, ElementType::GetTypeSize());
+                }
+            }
+        }
+    }
+
+private:
+    FDefaultAllocator::ForAnyElementType AllocatorInstance;
+    int32 ArrayNum;
+    int32 ArrayMax;
+};

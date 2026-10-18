@@ -13,6 +13,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CommandLine.h"
+#include "Misc/EngineVersion.h"
 #include "Misc/Parse.h"
 #include "Templates/Sorting.h"
 #include "UObject/UnrealType.h"
@@ -112,6 +113,48 @@ int32 UNetDriver::GetNetTag() const
 void UNetDriver::SetNetTag(int32 InNetTag)
 {
     *(int32*)((uint8_t*)this + NetTagOffset()) = InNetTag;
+}
+
+int32 FActorDestructionInfo::GetLevelSize()
+{
+    auto& Version = FEngineVersion::Current();
+
+    return Version.GetMajor() > 4 || Version.GetMinor() >= 19 ? (int32)sizeof(TWeakObjectPtr<UObject>) : 0;
+}
+
+FActorDestructionInfo::FFields& FActorDestructionInfo::GetFields()
+{
+    return *(FFields*)((uint8*)this + GetLevelSize());
+}
+
+int32 FActorDestructionInfo::GetTypeSize()
+{
+    return GetLevelSize() + (int32)sizeof(FFields);
+}
+
+TWeakObjectPtr<UObject>& FActorDestructionInfo::GetObjOuter()
+{
+    return GetFields().ObjOuter;
+}
+
+FVector& FActorDestructionInfo::GetDestroyedPosition()
+{
+    return GetFields().DestroyedPosition;
+}
+
+FNetworkGUID& FActorDestructionInfo::GetNetGUID()
+{
+    return GetFields().NetGUID;
+}
+
+FString& FActorDestructionInfo::GetPathName()
+{
+    return GetFields().PathName;
+}
+
+FName& FActorDestructionInfo::GetStreamingLevelName()
+{
+    return GetFields().StreamingLevelName;
 }
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
@@ -276,7 +319,7 @@ FActorPriority::FActorPriority(UNetConnection* InConnection, FActorDestructionIn
     {
         float Time = InConnection->GetDriver()->GetSpawnPrioritySeconds();
 
-        FVector Dir = DestructionInfo->DestroyedPosition - Viewers[i].ViewLocation;
+        FVector Dir = DestructionInfo->GetDestroyedPosition() - Viewers[i].ViewLocation;
         float DistSq = Dir.SizeSquared();
 
         if ((Viewers[i].ViewDir | Dir) < 0.f)
@@ -663,7 +706,7 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
 
         if (ActorInfo == nullptr && PriorityActors[j]->DestructionInfo)
         {
-            if (PriorityActors[j]->DestructionInfo->StreamingLevelName != NAME_None && !Connection->GetClientVisibleLevelNames().Contains(PriorityActors[j]->DestructionInfo->StreamingLevelName))
+            if (PriorityActors[j]->DestructionInfo->GetStreamingLevelName() != NAME_None && !Connection->GetClientVisibleLevelNames().Contains(PriorityActors[j]->DestructionInfo->GetStreamingLevelName()))
             {
                 continue;
             }
@@ -675,7 +718,7 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
                 FinalRelevantCount++;
 
                 Channel->SetChannelActorForDestroy(PriorityActors[j]->DestructionInfo);
-                Connection->GetDestroyedStartupOrDormantActors().Remove(PriorityActors[j]->DestructionInfo->NetGUID);
+                Connection->GetDestroyedStartupOrDormantActors().Remove(PriorityActors[j]->DestructionInfo->GetNetGUID());
             }
 
             continue;

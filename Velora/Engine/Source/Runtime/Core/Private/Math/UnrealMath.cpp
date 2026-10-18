@@ -53,7 +53,12 @@ FVector FMath::VRand()
 
 FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
 {
-    static auto VRandCone = (FVector* (*)(FVector*, FVector const&, float))Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone")).Get(TEXT("FMath::VRandCone"));
+    static auto VRandCone = []
+    {
+        auto RandomUnitVectorInCone = Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone"));
+
+        return (FVector* (*)(FVector*, FVector const&, float))(RandomUnitVectorInCone.Get() ? RandomUnitVectorInCone : Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))).Get(TEXT("FMath::VRandCone"));
+    }();
 
     FVector Result;
 

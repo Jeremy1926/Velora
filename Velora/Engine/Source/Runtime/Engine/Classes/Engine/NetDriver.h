@@ -53,11 +53,64 @@ struct FCompareFActorPriority
 
 struct FActorDestructionInfo
 {
-    TWeakObjectPtr<UObject> ObjOuter;
-    FVector DestroyedPosition;
-    FNetworkGUID NetGUID;
-    FString PathName;
-    FName StreamingLevelName;
+public:
+    static int32 GetTypeSize();
+
+    TWeakObjectPtr<UObject>& GetObjOuter();
+
+    FVector& GetDestroyedPosition();
+
+    FNetworkGUID& GetNetGUID();
+
+    FString& GetPathName();
+
+    FName& GetStreamingLevelName();
+
+private:
+    struct FFields
+    {
+        TWeakObjectPtr<UObject> ObjOuter;
+        FVector DestroyedPosition;
+        FNetworkGUID NetGUID;
+        FString PathName;
+        FName StreamingLevelName;
+    };
+
+    static int32 GetLevelSize();
+
+    FFields& GetFields();
+};
+
+template<>
+class TMap<FNetworkGUID, FActorDestructionInfo>
+{
+public:
+    FORCEINLINE int32 Num() const
+    {
+        return Elements.Num() - NumFreeIndices;
+    }
+
+    FActorDestructionInfo& FindChecked(const FNetworkGUID& Key)
+    {
+        const int32 ValueOffset = (int32)sizeof(void*);
+        const int32 ElementSize = ValueOffset + FActorDestructionInfo::GetTypeSize() + (int32)sizeof(FSetElementId) + (int32)sizeof(int32);
+        FSetElementId ElementId = Hash.GetAllocation()[GetTypeHash(Key) & (HashSize - 1)];
+
+        while (!(*(FNetworkGUID*)(Elements.GetData() + ElementId * ElementSize) == Key))
+        {
+            ElementId = *(FSetElementId*)(Elements.GetData() + ElementId * ElementSize + ValueOffset + FActorDestructionInfo::GetTypeSize());
+        }
+
+        return *(FActorDestructionInfo*)(Elements.GetData() + ElementId * ElementSize + ValueOffset);
+    }
+
+private:
+    TArray<uint8> Elements;
+    TBitArray<> AllocationFlags;
+    int32 FirstFreeIndex;
+    int32 NumFreeIndices;
+    TInlineAllocator<1>::ForElementType<FSetElementId> Hash;
+    int32 HashSize;
 };
 
 class UNetDriver : public UObject

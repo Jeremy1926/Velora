@@ -127,7 +127,7 @@ void UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInf
         CloseBunch->SetReliable(1);
         CloseBunch->SetDormant(0);
 
-        GetConnection()->GetPackageMap()->WriteObject(*(FArchive*)CloseBunch, DestructInfo->ObjOuter.Get(), DestructInfo->NetGUID, DestructInfo->PathName);
+        GetConnection()->GetPackageMap()->WriteObject(*(FArchive*)CloseBunch, DestructInfo->GetObjOuter().Get(), DestructInfo->GetNetGUID(), DestructInfo->GetPathName());
 
         SendBunch(CloseBunch, 0);
 

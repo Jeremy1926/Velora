@@ -19,12 +19,12 @@ struct FFortLootPackageData : public FTableRowBase
     int32 LootPackageCategory;
     FName RequiredTag;
     FString LootPackageCall;
-    TAssetPtr<UFortItemDefinition> ItemDefinition;
-    FString PersistentLevel;
-    int32 MinWorldLevel;
-    int32 MaxWorldLevel;
-    bool bAllowBonusDrops;
-    FString Annotation;
+
+    const TAssetPtr<UFortItemDefinition>& GetItemDefinition() const;
+
+    int32 GetMinWorldLevel() const;
+
+    int32 GetMaxWorldLevel() const;
 };
 
 class UFortLootPackage

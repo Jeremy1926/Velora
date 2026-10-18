@@ -35,13 +35,13 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
     auto& Inventory = WorldInventory->GetInventory();
     auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
 
-    ItemEntry->ParentInventory = WorldInventory;
-    ItemEntry->bIsReplicatedCopy = true;
+    ItemEntry->GetParentInventory() = WorldInventory;
+    ItemEntry->GetIsReplicatedCopy() = true;
 
-    if (ItemEntry->ParentInventory.IsValid())
-        ItemEntry->ParentInventory.Get()->SetItemRequiresUpdate(*ItemEntry);
+    if (ItemEntry->GetParentInventory().IsValid())
+        ItemEntry->GetParentInventory().Get()->SetItemRequiresUpdate(*ItemEntry);
 
-    ItemEntry->bIsDirty = true;
+    ItemEntry->GetIsDirty() = true;
 
     WorldInventory->HandleInventoryLocalUpdate();
 
@@ -79,14 +79,14 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
 
     if (ItemDefinition->GetItemType() == EFortItemType::WeaponMelee || ItemDefinition->GetItemType() == EFortItemType::WeaponRanged)
     {
-        ItemEntry.SetDurability(ItemDefinition->GetMaxDurability(ItemEntry.Level));
+        ItemEntry.SetDurability(ItemDefinition->GetMaxDurability(ItemEntry.GetLevel()));
         ItemEntry.SetStateValue(EFortItemEntryState::DurabilityInitialized, 1);
     }
 
     if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition))
     {
         if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.Level));
+            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
     }
 
     auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass());

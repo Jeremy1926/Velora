@@ -13,7 +13,12 @@
 
 static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target(TEXT("LogWorld"));
 
-static auto Listen = DetourCall(TEXT("UWorld::Listen"), Scanner::String(TEXT("LoadMap: failed to Listen(%s)")).Last("call 0x*; test al, al").Get(), &UWorld::Listen);
+static auto Listen = []
+{
+    auto Call = Scanner::String(TEXT("LoadMap: failed to Listen(%s)")).Last("call 0x*; test al, al");
+
+    return Call.Get() ? DetourCall(TEXT("UWorld::Listen"), Call.Get(), &UWorld::Listen) : nullptr;
+}();
 
 static auto InternalGetNetMode = Detour(TEXT("UWorld::InternalGetNetMode"), Scanner::String(TEXT("UGameplayStatics::SpawnEmitterAttached: NULL AttachComponent specified!")).Call(3).Get(), &UWorld::InternalGetNetMode);
 
