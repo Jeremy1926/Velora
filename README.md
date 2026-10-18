@@ -10,7 +10,7 @@ Universal gameserver for Fortnite.
 | --- | --- |
 | 1.7.2 (CL-3700114) | Playable |
 | 1.8 (CL-3724489) | Playable |
-| 1.10 (CL-3790078) | In development |
+| 1.10 (CL-3790078) | Playable |
 
 ## Features
 
