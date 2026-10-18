@@ -3,6 +3,56 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+static int32_t OnPlayerCreatedBuildingSlot()
+{
+    static auto OnPlayerCreatedBuilding = []
+    {
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto Index = 0;
+
+        while (!Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*"))
+            Index++;
+
+        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(VTable[Index]).Find("jmp 0x*").Target());
+        Index = 0;
+
+        while (!Scanner::At(VTable[Index]).Start().Has(BuildingAction))
+            Index++;
+
+        return Index * (int32_t)sizeof(void*);
+    }();
+
+    return OnPlayerCreatedBuilding;
+}
+
+UClass* AFortGameMode::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameMode"));
+
+    return Class;
+}
+
+void AFortGameMode::OnPlayerCreatedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
+{
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot()))(this, PlayerController, BuildingActor);
+}
+
+void AFortGameMode::OnPlayerRepairedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
+{
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot() + 3 * sizeof(void*)))(this, PlayerController, BuildingActor);
+}
+
+void AFortGameMode::OnPlayerEditedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
+{
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot() + 4 * sizeof(void*)))(this, PlayerController, BuildingActor);
+}
+
 void AFortGameMode::FinishWorldInitialization()
 {
     static auto FinishWorldInitialization = []

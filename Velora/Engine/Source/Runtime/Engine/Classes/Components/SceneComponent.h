@@ -9,6 +9,8 @@ class USceneComponent : public UObject
 public:
     const FTransform& GetComponentTransform() const;
 
+    FRotator GetComponentRotation() const;
+
     const FBoxSphereBounds& GetBounds() const;
 
     FORCEINLINE FVector GetComponentLocation() const

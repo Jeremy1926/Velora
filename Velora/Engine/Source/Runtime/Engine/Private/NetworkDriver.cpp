@@ -17,6 +17,7 @@
 #include "Templates/Sorting.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Building/BuildingSMActor.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -718,6 +719,11 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
                         if (Channel)
                         {
                             Channel->SetChannelActor(Actor);
+
+                            if (!Actor->IsNetStartupActor() && Actor->IsA(ABuildingSMActor::StaticClass()))
+                            {
+                                UE_LOG(LogVelora, Log, TEXT("Opened channel for %s at %.3f"), *Actor->GetName(), GetWorld()->GetTimeSeconds());
+                            }
                         }
                     }
                     else if (Actor->GetNetUpdateFrequency() < 1.0f)

@@ -13,6 +13,10 @@ public:
 
     bool ServerExecute(UFortWorldItem* Item, AFortPlayerController* PlayerController) const;
 
+    bool SupportsQuickbarFocus() const;
+
+    bool CanBeDropped() const;
+
     float GetMaxDurability(int32 ItemLevel) const;
 
     const FDataTableCategoryHandle& GetLootLevelData() const;

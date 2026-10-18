@@ -6,6 +6,7 @@
 #include "Items/FortLootTier.h"
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
+#include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Pawns/FortPawn.h"
 #include "FortniteGame.h"
@@ -93,6 +94,12 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
                     {
                         ItemEntry.SetDurability(WorldItemDefinition->GetMaxDurability(ItemEntry.Level) * GetLootedWeaponsDurabilityModifier());
                         ItemEntry.SetStateValue(EFortItemEntryState::DurabilityInitialized, 1);
+                    }
+
+                    if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(WorldItemDefinition))
+                    {
+                        if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
+                            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.Level));
                     }
 
                     if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))

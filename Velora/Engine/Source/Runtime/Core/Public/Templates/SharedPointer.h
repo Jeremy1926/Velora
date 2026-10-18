@@ -51,3 +51,22 @@ private:
     ObjectType* Object;
     SharedPointerInternals::FSharedReferencer<Mode> SharedReferenceCount;
 };
+
+template<class ObjectType, ESPMode Mode>
+class TSharedRef
+{
+public:
+    FORCEINLINE TSharedRef()
+        : Object(nullptr)
+    {
+    }
+
+    FORCEINLINE ObjectType& Get() const
+    {
+        return *Object;
+    }
+
+private:
+    ObjectType* Object;
+    SharedPointerInternals::FSharedReferencer<Mode> SharedReferenceCount;
+};

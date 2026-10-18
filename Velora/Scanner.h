@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <mutex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -71,15 +70,16 @@ namespace Scanner
 
     inline const uint8_t* FindStringReference(const wchar_t* String)
     {
-        static std::mutex Mutex;
+        static SRWLOCK Lock = SRWLOCK_INIT;
         static std::unordered_map<std::wstring, const uint8_t*> References;
 
-        {
-            std::scoped_lock Lock(Mutex);
+        AcquireSRWLockShared(&Lock);
+        auto Found = References.find(String);
+        auto Cached = Found != References.end() ? Found->second : nullptr;
+        ReleaseSRWLockShared(&Lock);
 
-            if (auto Found = References.find(String); Found != References.end())
-                return Found->second;
-        }
+        if (Cached)
+            return Cached;
 
         auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
 
@@ -94,8 +94,9 @@ namespace Scanner
                 {
                     if (auto Reference = FindReference(Address))
                     {
-                        std::scoped_lock Lock(Mutex);
+                        AcquireSRWLockExclusive(&Lock);
                         References.emplace(String, Reference);
+                        ReleaseSRWLockExclusive(&Lock);
 
                         UE_LOG(LogVelora, Log, TEXT("Found \"%s\" at 0x%llX"), String, Reference - Base());
                         return Reference;
@@ -110,15 +111,16 @@ namespace Scanner
 
     inline const uint8_t* FindStringReference(const char* String)
     {
-        static std::mutex Mutex;
+        static SRWLOCK Lock = SRWLOCK_INIT;
         static std::unordered_map<std::string, const uint8_t*> References;
 
-        {
-            std::scoped_lock Lock(Mutex);
+        AcquireSRWLockShared(&Lock);
+        auto Found = References.find(String);
+        auto Cached = Found != References.end() ? Found->second : nullptr;
+        ReleaseSRWLockShared(&Lock);
 
-            if (auto Found = References.find(String); Found != References.end())
-                return Found->second;
-        }
+        if (Cached)
+            return Cached;
 
         auto Size = strlen(String) + 1;
 
@@ -133,8 +135,9 @@ namespace Scanner
                 {
                     if (auto Reference = FindReference(Address))
                     {
-                        std::scoped_lock Lock(Mutex);
+                        AcquireSRWLockExclusive(&Lock);
                         References.emplace(String, Reference);
+                        ReleaseSRWLockExclusive(&Lock);
 
                         UE_LOG(LogVelora, Log, TEXT("Found \"%hs\" at 0x%llX"), String, Reference - Base());
                         return Reference;

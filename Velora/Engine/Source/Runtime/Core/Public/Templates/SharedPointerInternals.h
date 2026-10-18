@@ -11,6 +11,8 @@ enum class ESPMode
 
 template<class ObjectType, ESPMode Mode = ESPMode::Fast> class TSharedPtr;
 
+template<class ObjectType, ESPMode Mode = ESPMode::Fast> class TSharedRef;
+
 namespace SharedPointerInternals
 {
     class FReferenceControllerBase
@@ -44,6 +46,25 @@ namespace SharedPointerInternals
         static void ReleaseWeakReference(FReferenceControllerBase* ReferenceController)
         {
             if (--ReferenceController->WeakReferenceCount == 0)
+                delete ReferenceController;
+        }
+    };
+
+    template<>
+    struct FReferenceControllerOps<ESPMode::ThreadSafe>
+    {
+        static FORCEINLINE void ReleaseSharedReference(FReferenceControllerBase* ReferenceController)
+        {
+            if (_InterlockedDecrement((volatile long*)&ReferenceController->SharedReferenceCount) == 0)
+            {
+                ReferenceController->DestroyObject();
+                ReleaseWeakReference(ReferenceController);
+            }
+        }
+
+        static void ReleaseWeakReference(FReferenceControllerBase* ReferenceController)
+        {
+            if (_InterlockedDecrement((volatile long*)&ReferenceController->WeakReferenceCount) == 0)
                 delete ReferenceController;
         }
     };

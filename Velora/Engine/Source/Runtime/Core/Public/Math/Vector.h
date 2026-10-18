@@ -74,4 +74,9 @@ struct FVector
 
         return false;
     }
+
+    FORCEINLINE bool Equals(const FVector& V, float Tolerance = 1.e-4f) const
+    {
+        return FMath::Abs(X - V.X) <= Tolerance && FMath::Abs(Y - V.Y) <= Tolerance && FMath::Abs(Z - V.Z) <= Tolerance;
+    }
 };

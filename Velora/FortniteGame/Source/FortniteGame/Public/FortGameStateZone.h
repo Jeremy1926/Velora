@@ -1,0 +1,29 @@
+#pragma once
+
+#include "GameFramework/GameStateBase.h"
+#include "Building/BuildingActor.h"
+
+enum class EFortResourceType : uint8;
+
+struct FPlayerBuildableClassContainer
+{
+    TArray<UClass*> BuildingClasses;
+};
+
+struct FPlayerBuildableClassFilter
+{
+    EFortResourceType ResourceType;
+    EFortBuildingType BuildingType;
+    int32 BuildingLevel;
+    UObject* EditModePatternData;
+};
+
+class AFortGameStateZone : public AGameStateBase
+{
+public:
+    static UClass* StaticClass();
+
+    void GetPlayerBuildableClasses(TArray<UClass*>& OutBuildingClasses, const FPlayerBuildableClassFilter& Filter) const;
+
+    const FPlayerBuildableClassContainer* GetPlayerBuildableClasses() const;
+};

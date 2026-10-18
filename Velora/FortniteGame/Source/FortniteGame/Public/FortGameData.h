@@ -7,7 +7,10 @@
 #include "Containers/UnrealString.h"
 #include "UObject/AssetPtr.h"
 
+#include "Internationalization/Text.h"
+
 class UFortAbilitySet;
+class UFortWeaponItemDefinition;
 class UFortResourceItemDefinition;
 enum class EFortResourceType : uint8;
 struct FFortLootPackageData;
@@ -21,6 +24,10 @@ public:
     UFortAbilitySet* GetGenericPlayerAbilitySet() const;
 
     UFortResourceItemDefinition* GetResourceItemDefinition(EFortResourceType ResourceType) const;
+
+    FText GetBuildingResourceName(EFortResourceType ResourceType) const;
+
+    UFortWeaponItemDefinition* GetEditToolItem() const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTables() const;
 

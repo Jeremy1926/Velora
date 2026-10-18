@@ -2,6 +2,7 @@
 
 #include "HAL/Platform.h"
 #include "Math/Vector.h"
+#include "Math/Quat.h"
 #include <xmmintrin.h>
 
 typedef __m128 VectorRegister;
@@ -44,6 +45,21 @@ public:
     FORCEINLINE FVector GetTranslation() const
     {
         return FVector(Translation.m128_f32[0], Translation.m128_f32[1], Translation.m128_f32[2]);
+    }
+
+    FORCEINLINE FQuat GetRotation() const
+    {
+        return FQuat(Rotation.m128_f32[0], Rotation.m128_f32[1], Rotation.m128_f32[2], Rotation.m128_f32[3]);
+    }
+
+    FORCEINLINE void SetLocation(const FVector& Origin)
+    {
+        Translation = _mm_setr_ps(Origin.X, Origin.Y, Origin.Z, 0.0f);
+    }
+
+    FORCEINLINE void SetRotation(const FQuat& NewRotation)
+    {
+        Rotation = _mm_setr_ps(NewRotation.X, NewRotation.Y, NewRotation.Z, NewRotation.W);
     }
 
     FORCEINLINE FVector TransformPosition(const FVector& V) const

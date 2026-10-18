@@ -14,8 +14,10 @@ class APawn;
 class AWorldSettings;
 class ULevel;
 class UNetDriver;
+struct FRotator;
 struct FTransform;
 struct FURL;
+struct FVector;
 
 struct FActorSpawnParameters
 {
@@ -56,6 +58,8 @@ class UWorld final : public UObject, public FNetworkNotify
 {
 public:
     AActor* SpawnActor(UClass* InClass, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+
+    AActor* SpawnActor(UClass* Class, FVector const* Location = nullptr, FRotator const* Rotation = nullptr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 
     AGameModeBase* GetAuthGameMode() const;
 

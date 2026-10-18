@@ -27,6 +27,13 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
     ApplyCharacterCustomization(this, Pawn);
 }
 
+int32 AFortPlayerState::GetWorldPlayerId() const
+{
+    static auto WorldPlayerId = GetClass()->FindPropertyByName(FName(TEXT("WorldPlayerId")));
+
+    return *WorldPlayerId->ContainerPtrToValuePtr<int32>(this);
+}
+
 UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
 {
     static auto AbilitySystemComponent = GetClass()->FindPropertyByName(FName(TEXT("AbilitySystemComponent")));

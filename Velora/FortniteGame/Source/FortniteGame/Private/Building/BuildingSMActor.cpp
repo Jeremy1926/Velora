@@ -18,11 +18,117 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+static Scanner::FCode InteractionText()
+{
+    static auto InteractionText = Scanner::String(TEXT("EditHPBlocked")).Start();
+
+    return InteractionText;
+}
+
+static Scanner::FCode ClientRepair()
+{
+    static auto ClientRepair = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerRepairBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
+
+    return ClientRepair;
+}
+
+static int32_t GetEditingPlayerSlot()
+{
+    static auto GetEditingPlayer = InteractionText().Find("call [rax+0x???]", 2).Disp();
+
+    return GetEditingPlayer;
+}
+
+static int32_t CanBePlayerEditedSlot()
+{
+    static auto CanBePlayerEdited = InteractionText().Find("call [rax+0x???]", 5).Disp();
+
+    return CanBePlayerEdited;
+}
+
 UClass* ABuildingSMActor::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingSMActor"));
 
     return Class;
+}
+
+void ABuildingSMActor::SetMirrored(bool bIsMirrored)
+{
+    static auto SetMirrored = []
+    {
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
+        auto ReplaceBuildingActor = VTable[(CanBePlayerEditedSlot() - 2 * (int32_t)sizeof(void*)) / sizeof(void*)];
+        auto SetCurrentBuildingLevel = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel")).Find("call [*+0x*]").Disp() + (int32_t)sizeof(void*);
+
+        return Scanner::At(ReplaceBuildingActor).Find(std::format("call [*+{:#x}]", SetCurrentBuildingLevel)).Find("call [*+0x*]").Disp();
+    }();
+
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(ABuildingSMActor*, bool))(VTable + SetMirrored))(this, bIsMirrored);
+}
+
+ABuildingSMActor* ABuildingSMActor::ReplaceBuildingActor(EBuildingReplacementType ReplacementType, UClass* NewBuildingClass, int32 BuildingLevel, int32 RotationIterations, bool bMirrored, AFortPlayerController* PlayerController)
+{
+    auto VTable = *(uint8_t**)this;
+
+    return (*(ABuildingSMActor* (**)(ABuildingSMActor*, EBuildingReplacementType, UClass*, int32, int32, bool, AFortPlayerController*))(VTable + CanBePlayerEditedSlot() - 2 * sizeof(void*)))(this, ReplacementType, NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
+}
+
+bool ABuildingSMActor::CanBePlayerEdited(AFortPlayerController* PlayerController)
+{
+    auto VTable = *(uint8_t**)this;
+
+    return (*(bool (**)(ABuildingSMActor*, AFortPlayerController*))(VTable + CanBePlayerEditedSlot()))(this, PlayerController);
+}
+
+AFortPlayerStateZone* ABuildingSMActor::GetEditingPlayer() const
+{
+    auto VTable = *(uint8_t**)this;
+
+    return (*(AFortPlayerStateZone* (**)(const ABuildingSMActor*))(VTable + GetEditingPlayerSlot()))(this);
+}
+
+void ABuildingSMActor::SetEditingPlayer(AFortPlayerStateZone* NewEditingPlayer)
+{
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(ABuildingSMActor*, AFortPlayerStateZone*))(VTable + GetEditingPlayerSlot() + sizeof(void*)))(this, NewEditingPlayer);
+}
+
+bool ABuildingSMActor::IsBeingEdited() const
+{
+    static auto IsBeingEdited = ClientRepair().Find("call [*+0x*]", 3).Disp();
+
+    auto VTable = *(uint8_t**)this;
+
+    return (*(bool (**)(const ABuildingSMActor*))(VTable + IsBeingEdited))(this);
+}
+
+bool ABuildingSMActor::NeedsRepair() const
+{
+    static auto NeedsRepair = ClientRepair().Find("call [*+0x*]").Disp();
+
+    auto VTable = *(uint8_t**)this;
+
+    return (*(bool (**)(const ABuildingSMActor*))(VTable + NeedsRepair))(this);
+}
+
+void ABuildingSMActor::RepairBuilding(AFortPlayerController* RepairingController, int32 ResourcesSpent)
+{
+    static auto RepairBuilding = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding")).Find("call [*+0x*]").Disp();
+
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(ABuildingSMActor*, AFortPlayerController*, int32))(VTable + RepairBuilding))(this, RepairingController, ResourcesSpent);
+}
+
+UObject* ABuildingSMActor::GetEditModePatternData() const
+{
+    static auto EditModePatternData = GetClass()->FindPropertyByName(FName(TEXT("EditModePatternData")));
+
+    return *EditModePatternData->ContainerPtrToValuePtr<UObject*>(this);
 }
 
 void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Damage, bool bJustHitWeakspot)

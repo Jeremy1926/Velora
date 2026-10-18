@@ -4,4 +4,6 @@
 
 class AFortPlayerPawn : public AFortPawn
 {
+public:
+    void OnBlueprintPlace();
 };

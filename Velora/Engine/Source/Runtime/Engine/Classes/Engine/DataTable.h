@@ -39,6 +39,21 @@ public:
     TMap<FName, uint8*> RowMap;
 };
 
+struct FDataTableRowHandle
+{
+    template <class T>
+    T* GetRow(const TCHAR* ContextString) const
+    {
+        if (DataTable == nullptr)
+            return nullptr;
+
+        return DataTable->FindRow<T>(RowName, ContextString);
+    }
+
+    const UDataTable* DataTable;
+    FName RowName;
+};
+
 struct FDataTableCategoryHandle
 {
     const UDataTable* DataTable;

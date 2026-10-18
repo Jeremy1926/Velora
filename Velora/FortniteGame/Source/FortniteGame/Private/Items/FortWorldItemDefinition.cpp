@@ -31,6 +31,20 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
     return (*(bool (**)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*))(VTable + ServerExecute))(this, Item, PlayerController);
 }
 
+bool UFortWorldItemDefinition::SupportsQuickbarFocus() const
+{
+    static auto bSupportsQuickbarFocus = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bSupportsQuickbarFocus")));
+
+    return bSupportsQuickbarFocus->GetPropertyValue_InContainer(this);
+}
+
+bool UFortWorldItemDefinition::CanBeDropped() const
+{
+    static auto bCanBeDropped = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bCanBeDropped")));
+
+    return bCanBeDropped->GetPropertyValue_InContainer(this);
+}
+
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
     static auto GetMaxDurability = FindFunctionChecked(FName(TEXT("GetMaxDurability")));

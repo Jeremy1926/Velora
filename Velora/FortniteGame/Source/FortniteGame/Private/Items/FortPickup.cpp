@@ -3,6 +3,8 @@
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortQuickBars.h"
+#include "Items/FortWorldItem.h"
+#include "Items/FortWorldItemDefinition.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Pawns/FortPawn.h"
 #include "Math/Rotator.h"
@@ -91,8 +93,50 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         WorldInventory->HandleInventoryLocalUpdate();
 
+        auto WorldItemDefinition = Cast<UFortWorldItemDefinition>(ItemDefinition);
+        auto QuickBars = PlayerController->GetQuickBars();
+
+        auto HasFreeQuickBarSlot = [&]
+        {
+            auto& QuickBar = QuickBars->GetQuickBar(EFortQuickBars::Primary);
+
+            for (int32 Slot = 0; Slot < QuickBar.Slots.Num(); Slot++)
+            {
+                auto bStaticSlot = Slot < QuickBar.DataDefinition.QuickbarSlots.Num() && QuickBar.DataDefinition.QuickbarSlots[Slot].bStaticSlot;
+
+                if (QuickBar.Slots[Slot].bEnabled && !bStaticSlot && !QuickBar.Slots[Slot].Items.Num())
+                    return true;
+            }
+
+            return false;
+        };
+
         while (bCanAddStack && NumberToGive > 0)
         {
+            if (WorldItemDefinition && WorldItemDefinition->SupportsQuickbarFocus() && QuickBars && !HasFreeQuickBarSlot())
+            {
+                auto& QuickBar = QuickBars->GetQuickBar(EFortQuickBars::Primary);
+                auto FocusedSlot = QuickBar.CurrentFocusedSlot;
+
+                if (FocusedSlot >= 0 && FocusedSlot < QuickBar.Slots.Num() && QuickBar.Slots[FocusedSlot].Items.Num())
+                {
+                    const FGuid SwapItemGuid = QuickBar.Slots[FocusedSlot].Items[0];
+                    int32 SwapCount = 0;
+
+                    for (auto& ItemEntry : Inventory.ReplicatedEntries)
+                    {
+                        if (ItemEntry.ItemGuid == SwapItemGuid)
+                            SwapCount = ItemEntry.Count;
+                    }
+
+                    if (SwapCount > 0)
+                        PlayerController->ServerSpawnInventoryDrop_Implementation(SwapItemGuid, SwapCount);
+                }
+
+                if (!HasFreeQuickBarSlot())
+                    break;
+            }
+
             auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.Level);
             ItemEntry->LoadedAmmo = PickupItemEntry.LoadedAmmo;
             ItemEntry->Durability = PickupItemEntry.Durability;
@@ -102,7 +146,11 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             Inventory.MarkItemDirty(*ItemEntry);
             WorldInventory->HandleInventoryLocalUpdate();
 
-            PlayerController->AddItemToQuickBars(ItemDefinition, EFortQuickBars::Max_None, -1);
+            for (auto Item : Inventory.ItemInstances)
+            {
+                if (Item->GetItemGuid() == ItemEntry->ItemGuid)
+                    PlayerController->TryAddToQuickBar(Item);
+            }
         }
 
         if (NumberToGive > 0)

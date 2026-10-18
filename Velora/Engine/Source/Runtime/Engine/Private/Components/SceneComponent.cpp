@@ -11,6 +11,26 @@ const FTransform& USceneComponent::GetComponentTransform() const
     return *(FTransform*)((uint8_t*)this + ComponentToWorld);
 }
 
+FRotator USceneComponent::GetComponentRotation() const
+{
+    struct FRotationConversionCache
+    {
+        FQuat CachedQuat;
+        FRotator CachedRotator;
+    };
+
+    auto& WorldRotationCache = *(FRotationConversionCache*)((uint8_t*)&GetComponentTransform() + sizeof(FTransform));
+    auto InNormalizedQuat = GetComponentTransform().GetRotation();
+
+    if (InNormalizedQuat != WorldRotationCache.CachedQuat)
+    {
+        WorldRotationCache.CachedQuat = InNormalizedQuat;
+        WorldRotationCache.CachedRotator = InNormalizedQuat.Rotator();
+    }
+
+    return WorldRotationCache.CachedRotator;
+}
+
 const FBoxSphereBounds& USceneComponent::GetBounds() const
 {
     static auto Bounds = Scanner::Native(TEXT("/Script/Engine.KismetSystemLibrary:GetComponentBounds")).Find("movsd xmm0, qword ptr [*]").Disp();

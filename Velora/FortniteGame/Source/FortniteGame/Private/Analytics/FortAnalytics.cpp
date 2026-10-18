@@ -8,3 +8,10 @@ TSharedPtr<IAnalyticsProvider> UFortAnalytics::CreateAnalyticsProvider(const FSt
 
     return CreateAnalyticsProvider(UserID, GameSessionID, Platform, ProviderType, GameState);
 }
+
+void UFortAnalytics::FireEvent_BuildingAction(AFortPlayerController* PlayerController, const TCHAR* ActionType, ABuildingActor* BuildingActor, int32 ResourcesUsed)
+{
+    static auto FireEvent_BuildingAction = (void (*)(AFortPlayerController*, const TCHAR*, ABuildingActor*, int32))Scanner::String(TEXT("Building.BuildingAction")).Start().Get();
+
+    FireEvent_BuildingAction(PlayerController, ActionType, BuildingActor, ResourcesUsed);
+}

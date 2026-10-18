@@ -3,6 +3,7 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "GameFramework/Controller.h"
 #include "FortRegisteredPlayerInfo.h"
+#include "Items/FortQuickBars.h"
 #include "Templates/Casts.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -11,11 +12,26 @@ static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawn
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {
-    if (auto PlayerController = Cast<AFortPlayerControllerAthena>(GetController()))
+    auto PlayerController = Cast<AFortPlayerControllerAthena>(GetController());
+
+    if (PlayerController)
     {
         if (auto MyPlayerInfo = PlayerController->GetMyPlayerInfo())
             MyPlayerInfo->UpdateAbilitySystemActor(false);
     }
 
     (this->*::OnPlayerPawnReady)();
+
+    if (PlayerController)
+    {
+        PlayerController->ActivateSlot(EFortQuickBars::Primary, 0, 0.f, true);
+
+        if (auto QuickBars = PlayerController->GetQuickBars())
+        {
+            auto& Slots = QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots;
+
+            if (Slots.Num() && Slots[0].Items.Num())
+                PlayerController->ServerExecuteInventoryItem_Implementation(Slots[0].Items[0]);
+        }
+    }
 }

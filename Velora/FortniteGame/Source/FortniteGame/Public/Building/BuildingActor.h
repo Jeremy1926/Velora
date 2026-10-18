@@ -3,12 +3,68 @@
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 
+class AController;
+
+enum class EFortBuildingType : uint8
+{
+    Wall,
+    Floor,
+    Corner,
+    Deco,
+    Prop,
+    Stairs,
+    Roof,
+    Pillar,
+    SpawnedItem,
+    Container,
+    Trap,
+    GenericCenterCellActor,
+    None,
+    EFortBuildingType_MAX
+};
+
+enum class EFortBuildingInitializationReason : uint8
+{
+    StaticallyPlaced,
+    Spawned,
+    Replaced,
+    LoadedFromSave,
+    DynamicBuilderPlaced,
+    PlacementTool,
+    TrapTool,
+    None,
+    EFortBuildingInitializationReason_MAX
+};
+
+struct FBuildingClassData
+{
+    UClass* BuildingClass;
+    int32 PreviousBuildingLevel;
+    int32 UpgradeLevel;
+};
+
 class ABuildingActor : public AActor
 {
 public:
+    static UClass* StaticClass();
+
     void BeginPlay();
 
     void SilentDie();
+
+    void Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser);
+
+    void InitializeBuildingActor(EFortBuildingInitializationReason InitializationReason, int32 InOwnerPersistentID, ABuildingActor* BuildingOwner, ABuildingActor* ReplacedBuilding, bool bFlag);
+
+    void PostInitializeSpawnedBuildingActor(EFortBuildingInitializationReason InitializationReason);
+
+    int32 GetCurrentBuildingLevel() const;
+
+    void SetCurrentBuildingLevel(int32 NewLevel);
+
+    bool GetDestroyOnPlayerBuildingPlacement() const;
+
+    EFortBuildingType GetBuildingType() const;
 
     float GetMaxHealth() const;
 

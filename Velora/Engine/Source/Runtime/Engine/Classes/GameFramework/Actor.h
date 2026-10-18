@@ -45,6 +45,13 @@ public:
         return RootComponent ? RootComponent->GetComponentLocation() : FVector(0.f, 0.f, 0.f);
     }
 
+    FORCEINLINE FRotator GetActorRotation() const
+    {
+        auto RootComponent = GetRootComponent();
+
+        return RootComponent ? RootComponent->GetComponentRotation() : FRotator{ 0.f, 0.f, 0.f };
+    }
+
     FORCEINLINE const FTransform& GetTransform() const
     {
         return ActorToWorld();
