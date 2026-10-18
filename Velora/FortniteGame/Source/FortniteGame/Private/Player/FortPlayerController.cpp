@@ -118,6 +118,13 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         return DetourVTable(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"), (void**)(VTable + ServerSpawnInventoryDrop_Implementation), &AFortPlayerController::ServerSpawnInventoryDrop_Implementation);
     }();
 
+    static auto ServerRemoveInventoryStateValue = []
+    {
+        InstallImplementation(TEXT("AFortPlayerController::ServerRemoveInventoryStateValue_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryStateValue"), &AFortPlayerController::ServerRemoveInventoryStateValue_Implementation);
+
+        return true;
+    }();
+
     static auto ServerRemoveItemInternal = []
     {
         auto ServerRemoveItemInternal_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:ServerRemoveItemInternal")).Find("call [*+0x*]", 2).Slot(TEXT("AFortQuickBars::ServerRemoveItemInternal_Implementation"));
@@ -260,6 +267,28 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
             Pickup->TossPickup(Location, Pawn, 0, true);
 
         RemoveInventoryItem(ItemGuid, DropItemEntry.Count, false);
+
+        return;
+    }
+}
+
+void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, TEnumAsByte<EFortItemEntryState::Type> StateValueType)
+{
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory)
+        return;
+
+    auto& Inventory = WorldInventory->GetInventory();
+
+    for (auto& ItemEntry : Inventory.ReplicatedEntries)
+    {
+        if (ItemEntry.ItemGuid != ItemGuid)
+            continue;
+
+        ItemEntry.RemoveStateValue(StateValueType);
+        Inventory.MarkItemDirty(ItemEntry);
+        WorldInventory->HandleInventoryLocalUpdate();
 
         return;
     }

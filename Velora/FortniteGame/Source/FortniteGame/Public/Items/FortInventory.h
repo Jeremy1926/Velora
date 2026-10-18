@@ -98,7 +98,11 @@ struct FFortItemEntry : public FFastArraySerializerItem
 
     void SetLoadedAmmo(int32 NewLoadedAmmo);
 
+    bool GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue) const;
+
     void SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue);
+
+    void RemoveStateValue(EFortItemEntryState::Type StateType);
 };
 
 struct FFortItemList : public FFastArraySerializer

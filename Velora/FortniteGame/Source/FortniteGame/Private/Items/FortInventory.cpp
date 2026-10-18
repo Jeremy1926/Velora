@@ -73,6 +73,20 @@ void FFortItemEntry::SetLoadedAmmo(int32 NewLoadedAmmo)
     }
 }
 
+bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue) const
+{
+    for (auto& StateValue : StateValues)
+    {
+        if (StateValue.StateType == StateType)
+        {
+            OutIntValue = StateValue.IntValue;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue)
 {
     int32 StateValueIndex = 0;
@@ -97,4 +111,24 @@ void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 In
     }
 
     bIsDirty = true;
+}
+
+void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
+{
+    for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
+    {
+        if (StateValues[StateValueIndex].StateType == StateType)
+        {
+            StateValues.RemoveAt(StateValueIndex);
+
+            if (ParentInventory.IsValid())
+            {
+                ParentInventory.Get()->SetItemRequiresUpdate(*this);
+            }
+
+            bIsDirty = true;
+
+            return;
+        }
+    }
 }

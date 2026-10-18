@@ -2,6 +2,7 @@
 
 #include "GameFramework/PlayerController.h"
 #include "Building/BuildingActor.h"
+#include "Items/FortInventory.h"
 #include "Internationalization/Text.h"
 #include "Misc/Guid.h"
 #include "UObject/AssetPtr.h"
@@ -106,6 +107,8 @@ public:
     void ServerExecuteInventoryItem_Implementation(FGuid ItemGuid);
 
     void ServerSpawnInventoryDrop_Implementation(FGuid ItemGuid, int32 Count);
+
+    void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, TEnumAsByte<EFortItemEntryState::Type> StateValueType);
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
 

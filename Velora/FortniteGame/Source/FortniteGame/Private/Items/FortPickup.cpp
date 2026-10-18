@@ -75,7 +75,17 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             if (NumberToStack > 0)
             {
+                int32 NewItemCount = 0;
+                int32 ShouldShowItemToast = 0;
+
+                ItemEntry.GetStateValue(EFortItemEntryState::NewItemCount, NewItemCount);
+
                 ItemEntry.SetCount(ItemEntry.Count + NumberToStack);
+                ItemEntry.SetStateValue(EFortItemEntryState::NewItemCount, NewItemCount + NumberToStack);
+
+                if (PickupItemEntry.GetStateValue(EFortItemEntryState::ShouldShowItemToast, ShouldShowItemToast))
+                    ItemEntry.SetStateValue(EFortItemEntryState::ShouldShowItemToast, ShouldShowItemToast);
+
                 Inventory.MarkItemDirty(ItemEntry);
 
                 NumberToGive -= NumberToStack;
@@ -120,6 +130,11 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.Level);
             ItemEntry->LoadedAmmo = PickupItemEntry.LoadedAmmo;
             ItemEntry->Durability = PickupItemEntry.Durability;
+
+            for (auto& StateValue : PickupItemEntry.StateValues)
+                ItemEntry->SetStateValue(StateValue.StateType, StateValue.IntValue);
+
+            ItemEntry->SetStateValue(EFortItemEntryState::NewItemCount, ItemEntry->Count);
 
             const FGuid ItemGuid = ItemEntry->ItemGuid;
             const int32 ItemCount = ItemEntry->Count;
