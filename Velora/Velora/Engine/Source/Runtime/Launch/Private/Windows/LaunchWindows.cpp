@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <ctime>
 #include "Misc/EngineVersion.h"
 #include "Misc/OutputDeviceFile.h"
 #include "Misc/OutputDeviceRedirector.h"
@@ -34,9 +35,15 @@ static auto bOutputDevicesRegistered = []
 
 FLogCategoryBase LogVelora(TEXT("LogVelora"), ELogVerbosity::Log, ELogVerbosity::All);
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 static auto bStartupLogged = []
 {
-    UE_LOG(LogVelora, Display, TEXT("Velora built %hs %hs"), __DATE__, __TIME__);
+    auto LinkTime = (__time64_t)((IMAGE_NT_HEADERS*)((uint8_t*)&__ImageBase + __ImageBase.e_lfanew))->FileHeader.TimeDateStamp;
+    tm Built;
+    _localtime64_s(&Built, &LinkTime);
+
+    UE_LOG(LogVelora, Display, TEXT("Velora built %04d-%02d-%02d %02d:%02d:%02d"), Built.tm_year + 1900, Built.tm_mon + 1, Built.tm_mday, Built.tm_hour, Built.tm_min, Built.tm_sec);
 
     auto& Version = FEngineVersion::Current();
 

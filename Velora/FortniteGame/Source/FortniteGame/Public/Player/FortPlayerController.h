@@ -105,6 +105,8 @@ public:
 
     void ServerSpawnInventoryDrop_Implementation(FGuid ItemGuid, int32 Count);
 
+    void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
+
     AFortQuickBars*& GetQuickBars();
 
     AFortInventory*& GetWorldInventory();

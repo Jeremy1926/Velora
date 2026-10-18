@@ -96,6 +96,24 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 break;
             }
 
+            static int32 LastPlayersLeft = -1;
+
+            if (GameState->GetPlayersLeft() != LastPlayersLeft)
+            {
+                LastPlayersLeft = GameState->GetPlayersLeft();
+
+                UE_LOG(LogVelora, Display, TEXT("%d player%s left alive"), LastPlayersLeft, LastPlayersLeft == 1 ? TEXT("") : TEXT("s"));
+            }
+
+            static bool bWinnerLogged = false;
+
+            if (!bWinnerLogged && GameState->GetWinningPlayerName().Len())
+            {
+                bWinnerLogged = true;
+
+                UE_LOG(LogVelora, Display, TEXT("%s won the match"), *GameState->GetWinningPlayerName());
+            }
+
             static TArray<APlayerState*> Players;
             static TArray<FString> PlayerNames;
 

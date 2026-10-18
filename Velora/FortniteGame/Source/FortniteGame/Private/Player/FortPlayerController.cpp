@@ -38,6 +38,8 @@ static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::Initializ
 
 static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
+static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("FortGameModeAthena: Player [%s] killed after %d seconds.  Removing from alive players list.")).Start().Call().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
+
 static auto RemoveAllInventoryItems = DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*", 3).Get(), &AFortPlayerController::RemoveAllInventoryItems);
 
 static Scanner::FCode ClientBuild()
@@ -252,6 +254,42 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
 
         return;
     }
+}
+
+void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems)
+{
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory || !DestroyedPawn)
+        return;
+
+    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+    const FVector Location = DestroyedPawn->GetActorLocation();
+    int32 DroppedItems = 0;
+
+    for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
+    {
+        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ReplicatedEntries[Index].ItemDefinition);
+
+        if (!ItemDefinition || !ItemDefinition->ShouldDropOnDeath() || ReplicatedEntries[Index].Count <= 0)
+            continue;
+
+        FFortItemEntry DropItemEntry(ItemDefinition, ReplicatedEntries[Index].Count, ReplicatedEntries[Index].Level);
+        DropItemEntry.LoadedAmmo = ReplicatedEntries[Index].LoadedAmmo;
+        DropItemEntry.Durability = ReplicatedEntries[Index].Durability;
+
+        const FGuid ItemGuid = ReplicatedEntries[Index].ItemGuid;
+
+        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
+            Pickup->TossPickup(Location, DestroyedPawn, 0, true);
+
+        RemoveInventoryItem(ItemGuid, DropItemEntry.Count, true);
+
+        DroppedItems++;
+        bDroppedItems = true;
+    }
+
+    UE_LOG(LogVelora, Display, TEXT("%s died, dropped %d item%s"), GetPlayerState() ? *GetPlayerState()->GetPlayerName() : TEXT("Player"), DroppedItems, DroppedItems == 1 ? TEXT("") : TEXT("s"));
 }
 
 UClass* AFortPlayerController::StaticClass()

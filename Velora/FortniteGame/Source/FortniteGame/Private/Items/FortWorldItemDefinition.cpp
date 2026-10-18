@@ -45,6 +45,13 @@ bool UFortWorldItemDefinition::CanBeDropped() const
     return bCanBeDropped->GetPropertyValue_InContainer(this);
 }
 
+bool UFortWorldItemDefinition::ShouldDropOnDeath() const
+{
+    static auto bDropOnDeath = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bDropOnDeath")));
+
+    return bDropOnDeath->GetPropertyValue_InContainer(this);
+}
+
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
     static auto GetMaxDurability = FindFunctionChecked(FName(TEXT("GetMaxDurability")));

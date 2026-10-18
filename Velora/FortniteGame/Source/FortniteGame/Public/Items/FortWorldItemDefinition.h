@@ -17,6 +17,8 @@ public:
 
     bool CanBeDropped() const;
 
+    bool ShouldDropOnDeath() const;
+
     float GetMaxDurability(int32 ItemLevel) const;
 
     const FDataTableCategoryHandle& GetLootLevelData() const;
