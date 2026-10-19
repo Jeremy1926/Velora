@@ -11,6 +11,8 @@
 
 extern FLogCategoryBase LogVelora;
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 namespace Scanner
 {
     inline uint8_t* Base()
@@ -18,21 +20,24 @@ namespace Scanner
         return (uint8_t*)GetModuleHandleW(nullptr);
     }
 
-    inline std::span<IMAGE_SECTION_HEADER> Sections()
+    inline std::span<IMAGE_SECTION_HEADER> Sections(uint8_t* Module = Base())
     {
-        auto Headers = (IMAGE_NT_HEADERS*)(Base() + ((IMAGE_DOS_HEADER*)Base())->e_lfanew);
+        auto Headers = (IMAGE_NT_HEADERS*)(Module + ((IMAGE_DOS_HEADER*)Module)->e_lfanew);
 
         return { IMAGE_FIRST_SECTION(Headers), Headers->FileHeader.NumberOfSections };
     }
 
     inline bool IsCode(const void* Address)
     {
-        for (auto& Section : Sections())
+        for (auto Module : { Base(), (uint8_t*)&__ImageBase })
         {
-            auto Begin = Base() + Section.VirtualAddress;
+            for (auto& Section : Sections(Module))
+            {
+                auto Begin = Module + Section.VirtualAddress;
 
-            if ((Section.Characteristics & IMAGE_SCN_MEM_EXECUTE) && Address >= Begin && Address < Begin + Section.Misc.VirtualSize)
-                return true;
+                if ((Section.Characteristics & IMAGE_SCN_MEM_EXECUTE) && Address >= Begin && Address < Begin + Section.Misc.VirtualSize)
+                    return true;
+            }
         }
 
         return false;
