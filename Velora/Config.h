@@ -9,5 +9,5 @@ namespace Config
     constexpr int32 Port = 7777;
     constexpr int32 WarmupRequiredPlayerCount = 1;
     constexpr bool bRestartAfterMatch = true;
-    constexpr bool bConsole = false;
+    constexpr bool bConsole = true;
 }
