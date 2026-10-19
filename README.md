@@ -19,6 +19,8 @@ Universal gameserver for Fortnite.
 | 4.0 (CL-4039451) | Playable |
 | 4.5 (CL-4159770) | Playable |
 
+These are the builds we tested. Velora finds everything it needs in the game at runtime, so every build between them (any version or CL from 1.7.2 to 4.5) should work too.
+
 ## Features
 
 - Warmup, Battle Bus, skydiving
