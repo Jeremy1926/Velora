@@ -6,7 +6,7 @@
 
 const FTransform& USceneComponent::GetComponentTransform() const
 {
-    static auto ComponentToWorld = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_GetActorLocation")).Find("movaps xmm*, [*+0x*]").Disp(TEXT("USceneComponent::ComponentToWorld.Translation")) - (int32_t)sizeof(VectorRegister);
+    static auto ComponentToWorld = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_GetActorLocation")).Find("mov?ps xmm*, [*+0x*]").Disp(TEXT("USceneComponent::ComponentToWorld.Translation")) - (int32_t)sizeof(VectorRegister);
 
     return *(FTransform*)((uint8_t*)this + ComponentToWorld);
 }
