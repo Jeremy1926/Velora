@@ -42,9 +42,20 @@ struct FItemAndCount
 
 struct FFortItemEntryStateValue
 {
-    int32 IntValue;
-    FName NameValue;
-    TEnumAsByte<EFortItemEntryState::Type> StateType;
+    FFortItemEntryStateValue(EFortItemEntryState::Type InStateType, int32 InIntValue);
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    int32& GetIntValue();
+
+    TEnumAsByte<EFortItemEntryState::Type>& GetStateType();
+};
+
+template<>
+class TArray<FFortItemEntryStateValue, FDefaultAllocator> : public TRuntimeSizedArray<FFortItemEntryStateValue>
+{
 };
 
 struct alignas(8) FFortItemEntry : public FFastArraySerializerItem

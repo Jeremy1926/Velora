@@ -91,19 +91,19 @@ bool UFortLootPackage::PickLootDrops(TArray<FFortItemEntry>& OutLootToDrop, int3
         return false;
 
     const int32 NumInitialLootToDrop = OutLootToDrop.Num();
-    const FName LootPackage = bUseLootPreviewPackage ? LootTierData->LootPreviewPackage : LootTierData->LootPackage;
+    const FName LootPackage = bUseLootPreviewPackage ? LootTierData->GetLootPreviewPackage() : LootTierData->GetLootPackage();
 
-    UE_LOG(LogFortLoot, Verbose, TEXT("Selecting %f drops from %s"), LootTierData->NumLootPackageDrops, *LootPackage.ToString());
+    UE_LOG(LogFortLoot, Verbose, TEXT("Selecting %f drops from %s"), LootTierData->GetNumLootPackageDrops(), *LootPackage.ToString());
 
     int32 NumLootPackageDrops = 1;
 
-    if (LootPackage != NAME_None && LootTierData->NumLootPackageDrops > 0.0f)
+    if (LootPackage != NAME_None && LootTierData->GetNumLootPackageDrops() > 0.0f)
     {
-        if (!bUseLootPreviewPackage && LootTierData->NumLootPackageDrops >= 1.0f)
+        if (!bUseLootPreviewPackage && LootTierData->GetNumLootPackageDrops() >= 1.0f)
         {
-            NumLootPackageDrops = FMath::FloorToInt(LootTierData->NumLootPackageDrops);
+            NumLootPackageDrops = FMath::FloorToInt(LootTierData->GetNumLootPackageDrops());
 
-            const float Remainder = LootTierData->NumLootPackageDrops - NumLootPackageDrops;
+            const float Remainder = LootTierData->GetNumLootPackageDrops() - NumLootPackageDrops;
 
             if (Remainder > 1.e-5f)
             {

@@ -208,7 +208,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             ItemEntry->GetDurability() = PickupItemEntry.GetDurability();
 
             for (auto& StateValue : PickupItemEntry.GetStateValues())
-                ItemEntry->SetStateValue(StateValue.StateType, StateValue.IntValue);
+                ItemEntry->SetStateValue(StateValue.GetStateType(), StateValue.GetIntValue());
 
             ItemEntry->SetStateValue(EFortItemEntryState::NewItemCount, ItemEntry->GetCount());
 

@@ -3,6 +3,7 @@
 #include "HAL/Platform.h"
 #include "Logging/LogVerbosity.h"
 #include "UObject/NameTypes.h"
+#include "Misc/EngineVersion.h"
 
 struct FLogCategoryBase
 {
@@ -18,7 +19,9 @@ struct FLogCategoryBase
 
     FORCEINLINE FName GetCategoryName() const
     {
-        return CategoryFName;
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 22 ? *(const FName*)(&CompileTimeVerbosity + 1) : CategoryFName;
     }
 
 protected:

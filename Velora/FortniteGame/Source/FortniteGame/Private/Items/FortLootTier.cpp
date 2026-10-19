@@ -15,6 +15,48 @@ UScriptStruct* FFortLootTierData::StaticStruct()
     return Struct;
 }
 
+FName FFortLootTierData::GetLootPackage() const
+{
+    static auto LootPackage = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackage")));
+
+    return *LootPackage->ContainerPtrToValuePtr<FName>(this);
+}
+
+FName FFortLootTierData::GetLootPreviewPackage() const
+{
+    static auto LootPreviewPackage = StaticStruct()->FindPropertyByName(FName(TEXT("LootPreviewPackage")));
+
+    return *LootPreviewPackage->ContainerPtrToValuePtr<FName>(this);
+}
+
+float FFortLootTierData::GetNumLootPackageDrops() const
+{
+    static auto NumLootPackageDrops = StaticStruct()->FindPropertyByName(FName(TEXT("NumLootPackageDrops")));
+
+    return *NumLootPackageDrops->ContainerPtrToValuePtr<float>(this);
+}
+
+const TArray<int32>& FFortLootTierData::GetLootPackageCategoryWeightArray() const
+{
+    static auto LootPackageCategoryWeightArray = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageCategoryWeightArray")));
+
+    return *LootPackageCategoryWeightArray->ContainerPtrToValuePtr<TArray<int32>>(this);
+}
+
+const TArray<int32>& FFortLootTierData::GetLootPackageCategoryMinArray() const
+{
+    static auto LootPackageCategoryMinArray = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageCategoryMinArray")));
+
+    return *LootPackageCategoryMinArray->ContainerPtrToValuePtr<TArray<int32>>(this);
+}
+
+const TArray<int32>& FFortLootTierData::GetLootPackageCategoryMaxArray() const
+{
+    static auto LootPackageCategoryMaxArray = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageCategoryMaxArray")));
+
+    return *LootPackageCategoryMaxArray->ContainerPtrToValuePtr<TArray<int32>>(this);
+}
+
 FGameplayTag FFortLootTierData::GetRequiredGameplayTag() const
 {
     static auto RequiredGameplayTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredGameplayTag")));
@@ -90,14 +132,14 @@ bool UFortLootTier::GetNumLootPackageDropsPerCategory(const FFortLootTierData* L
 {
     OutNumLootPackageDropsPerCategory.Reset();
 
-    if (!LootTierData || LootTierData->LootPackageCategoryMinArray.Num() != LootTierData->LootPackageCategoryWeightArray.Num() || LootTierData->LootPackageCategoryMinArray.Num() != LootTierData->LootPackageCategoryMaxArray.Num())
+    if (!LootTierData || LootTierData->GetLootPackageCategoryMinArray().Num() != LootTierData->GetLootPackageCategoryWeightArray().Num() || LootTierData->GetLootPackageCategoryMinArray().Num() != LootTierData->GetLootPackageCategoryMaxArray().Num())
         return false;
 
     int32 NumDrops = 0;
 
-    for (int32 Category = 0; Category < LootTierData->LootPackageCategoryMinArray.Num(); ++Category)
+    for (int32 Category = 0; Category < LootTierData->GetLootPackageCategoryMinArray().Num(); ++Category)
     {
-        const int32 CategoryMin = LootTierData->LootPackageCategoryMinArray[Category];
+        const int32 CategoryMin = LootTierData->GetLootPackageCategoryMinArray()[Category];
 
         if (CategoryMin > 0)
         {
@@ -108,19 +150,19 @@ bool UFortLootTier::GetNumLootPackageDropsPerCategory(const FFortLootTierData* L
 
     if (NumDrops > NumLootPackageDrops)
     {
-        UE_LOG(LogFort, Warning, TEXT("Requested %i loot drops but minimum drops is %i for loot package %s"), NumLootPackageDrops, NumDrops, *LootTierData->LootPackage.ToString());
+        UE_LOG(LogFort, Warning, TEXT("Requested %i loot drops but minimum drops is %i for loot package %s"), NumLootPackageDrops, NumDrops, *LootTierData->GetLootPackage().ToString());
     }
 
     TMap<int32, int32> CategoryWeights;
     int32 TotalWeight = 0;
 
-    for (int32 Category = 0; Category < LootTierData->LootPackageCategoryWeightArray.Num(); ++Category)
+    for (int32 Category = 0; Category < LootTierData->GetLootPackageCategoryWeightArray().Num(); ++Category)
     {
-        const int32 CategoryWeight = LootTierData->LootPackageCategoryWeightArray[Category];
+        const int32 CategoryWeight = LootTierData->GetLootPackageCategoryWeightArray()[Category];
 
         if (CategoryWeight > 0)
         {
-            const int32 CategoryMax = LootTierData->LootPackageCategoryMaxArray[Category];
+            const int32 CategoryMax = LootTierData->GetLootPackageCategoryMaxArray()[Category];
             const int32* CategoryNum = OutNumLootPackageDropsPerCategory.Find(Category);
 
             if (CategoryMax < 0 || (CategoryNum ? *CategoryNum : 0) < CategoryMax)
@@ -146,7 +188,7 @@ bool UFortLootTier::GetNumLootPackageDropsPerCategory(const FFortLootTierData* L
 
             const int32 Category = It->Key;
             const int32 CategoryWeight = It->Value;
-            const int32 CategoryMax = LootTierData->LootPackageCategoryMaxArray[Category];
+            const int32 CategoryMax = LootTierData->GetLootPackageCategoryMaxArray()[Category];
 
             int32& CategoryNum = OutNumLootPackageDropsPerCategory.FindOrAdd(Category);
             ++CategoryNum;

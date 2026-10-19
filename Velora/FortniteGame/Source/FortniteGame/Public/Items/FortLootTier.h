@@ -43,12 +43,18 @@ struct FFortLootTierData : public FTableRowBase
     int32 StreakBreakerPointsMin;
     int32 StreakBreakerPointsMax;
     int32 StreakBreakerPointsSpend;
-    FName LootPackage;
-    FName LootPreviewPackage;
-    float NumLootPackageDrops;
-    TArray<int32> LootPackageCategoryWeightArray;
-    TArray<int32> LootPackageCategoryMinArray;
-    TArray<int32> LootPackageCategoryMaxArray;
+
+    FName GetLootPackage() const;
+
+    FName GetLootPreviewPackage() const;
+
+    float GetNumLootPackageDrops() const;
+
+    const TArray<int32>& GetLootPackageCategoryWeightArray() const;
+
+    const TArray<int32>& GetLootPackageCategoryMinArray() const;
+
+    const TArray<int32>& GetLootPackageCategoryMaxArray() const;
 
     FGameplayTag GetRequiredGameplayTag() const;
 

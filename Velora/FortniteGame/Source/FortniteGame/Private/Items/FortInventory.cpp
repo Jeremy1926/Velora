@@ -39,6 +39,42 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
     SetItemRequiresUpdate(this, ItemEntry);
 }
 
+FFortItemEntryStateValue::FFortItemEntryStateValue(EFortItemEntryState::Type InStateType, int32 InIntValue)
+{
+    memset(this, 0, GetTypeSize());
+
+    GetIntValue() = InIntValue;
+    GetStateType() = InStateType;
+}
+
+UScriptStruct* FFortItemEntryStateValue::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemEntryStateValue"));
+
+    return Struct;
+}
+
+int32 FFortItemEntryStateValue::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+int32& FFortItemEntryStateValue::GetIntValue()
+{
+    static auto IntValue = StaticStruct()->FindPropertyByName(FName(TEXT("IntValue")));
+
+    return *IntValue->ContainerPtrToValuePtr<int32>(this);
+}
+
+TEnumAsByte<EFortItemEntryState::Type>& FFortItemEntryStateValue::GetStateType()
+{
+    static auto StateType = StaticStruct()->FindPropertyByName(FName(TEXT("StateType")));
+
+    return *StateType->ContainerPtrToValuePtr<TEnumAsByte<EFortItemEntryState::Type>>(this);
+}
+
 FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
 {
     static auto Constructor = Scanner::Function<void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const TArray<UObject*>*)>(Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::FFortItemEntry")));
@@ -188,9 +224,9 @@ bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& O
 {
     for (auto& StateValue : GetStateValues())
     {
-        if (StateValue.StateType == StateType)
+        if (StateValue.GetStateType() == StateType)
         {
-            OutIntValue = StateValue.IntValue;
+            OutIntValue = StateValue.GetIntValue();
             return true;
         }
     }
@@ -203,18 +239,18 @@ void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 In
     auto& StateValues = GetStateValues();
     int32 StateValueIndex = 0;
 
-    while (StateValueIndex < StateValues.Num() && StateValues[StateValueIndex].StateType != StateType)
+    while (StateValueIndex < StateValues.Num() && StateValues[StateValueIndex].GetStateType() != StateType)
     {
         StateValueIndex++;
     }
 
     if (StateValueIndex < StateValues.Num())
     {
-        StateValues[StateValueIndex].IntValue = IntValue;
+        StateValues[StateValueIndex].GetIntValue() = IntValue;
     }
     else
     {
-        StateValues.Add(FFortItemEntryStateValue{ IntValue, FName(NAME_None), StateType });
+        new(StateValues) FFortItemEntryStateValue(StateType, IntValue);
     }
 
     if (GetParentInventory().IsValid())
@@ -231,7 +267,7 @@ void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
 
     for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
     {
-        if (StateValues[StateValueIndex].StateType == StateType)
+        if (StateValues[StateValueIndex].GetStateType() == StateType)
         {
             StateValues.RemoveAt(StateValueIndex);
 
