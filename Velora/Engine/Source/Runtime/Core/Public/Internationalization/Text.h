@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Misc/CoreMiscDefines.h"
+#include "Containers/Array.h"
 #include "Templates/SharedPointer.h"
 #include "Templates/TypeCompatibleBytes.h"
 
 class ITextData;
 class FTextFormat;
 class FFormatArgumentValue;
+
+typedef TArray<FFormatArgumentValue> FFormatOrderedArguments;
 
 class FText
 {
@@ -24,6 +27,8 @@ public:
     FText& operator=(FText&& Source);
 
     bool IsEmpty() const;
+
+    static FText Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments);
 
     static FText Format(FTextFormat Fmt, FFormatArgumentValue v1);
 

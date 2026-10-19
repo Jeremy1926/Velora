@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Internationalization/Text.h"
+#include "Misc/EngineVersion.h"
+#include "Templates/UnrealTemplate.h"
 #include "Scanner.h"
 
 static Scanner::FCode ClientBuild()
@@ -38,7 +40,7 @@ FText& FText::operator=(const FText& Source)
 
 FText& FText::operator=(FText&& Source)
 {
-    static auto MoveAssign = Scanner::Function<FText& (*)(FText*, FText&)>(UnableToAfford().Call(3).Get(TEXT("FText::operator=(FText&&)")));
+    static auto MoveAssign = Scanner::Function<FText& (*)(FText*, FText&)>(Scanner::Pattern("48 8B 02 4C 8B 01 48 89 01 4C 89 02 48 8B 42 08 4C 8B 41 08 48 89 41 08 4C 89 42 08 8B 42 10 89 41 10 48 8B C1 C3").Get(TEXT("FText::operator=(FText&&)")));
 
     return MoveAssign(this, Source);
 }
@@ -50,8 +52,25 @@ bool FText::IsEmpty() const
     return IsEmpty(this);
 }
 
+FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
+{
+    static auto Format = Scanner::Function<FText (*)(FTextFormat, FFormatOrderedArguments&&)>(UnableToAfford().Find("mov r8, rax; lea rdx, *; lea rcx, *; call 0x*").Call().Get(TEXT("FText::Format")));
+
+    return Format(Fmt, MoveTemp(InArguments));
+}
+
 FText FText::Format(FTextFormat Fmt, FFormatArgumentValue v1)
 {
+    auto& Version = FEngineVersion::Current();
+
+    if (Version.GetMajor() > 4 || Version.GetMinor() >= 21)
+    {
+        FFormatOrderedArguments Arguments;
+        new(Arguments) FFormatArgumentValue(v1);
+
+        return Format(Fmt, MoveTemp(Arguments));
+    }
+
     static auto Format = Scanner::Function<FText (*)(FTextFormat, FFormatArgumentValue)>(UnableToAfford().Call(2).Get(TEXT("FText::Format")));
 
     return Format(Fmt, v1);
