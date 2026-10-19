@@ -13,6 +13,8 @@ public:
 
     const FBoxSphereBounds& GetBounds() const;
 
+    void K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport);
+
     FORCEINLINE FVector GetComponentLocation() const
     {
         return GetComponentTransform().GetTranslation();
