@@ -148,9 +148,7 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
         return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), 0);
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(AFortPlayerPawn*, AController*))(VTable + CanReviveFromDBNO))(this, EventInstigator);
+    return Scanner::Virtual<bool (*)(AFortPlayerPawn*, AController*)>(this, CanReviveFromDBNO)(this, EventInstigator);
 }
 
 void AFortPlayerPawn::UpdateDBNOInteractCollision()

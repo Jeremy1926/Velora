@@ -23,7 +23,5 @@ void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
         return Scanner::Slot(TEXT("AFortWeap_EditingTool::SetEditActor"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Store); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortWeap_EditingTool*, ABuildingSMActor*))(VTable + SetEditActor))(this, InEditActor);
+    Scanner::Virtual<void (*)(AFortWeap_EditingTool*, ABuildingSMActor*)>(this, SetEditActor)(this, InEditActor);
 }

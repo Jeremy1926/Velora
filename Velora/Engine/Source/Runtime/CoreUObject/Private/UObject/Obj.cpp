@@ -14,9 +14,7 @@ UWorld* UObject::GetWorld() const
 {
     static auto GetWorld = Scanner::String(TEXT("Changing GameSessionId from '%s' to '%s'")).Start().Find("call [*+0x*]").Slot(TEXT("UObject::GetWorld"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(UWorld* (**)(const UObject*))(VTable + GetWorld))(this);
+    return Scanner::Virtual<UWorld* (*)(const UObject*)>(this, GetWorld)(this);
 }
 
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
@@ -41,13 +39,11 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
 {
     static auto CallRemoteFunction = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
-        auto Index = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp() / sizeof(void*);
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
+        auto ProcessEvent = Scanner::String(TEXT("NotifyEventTriggered: Unable to find function '%s'")).Start().Find("call [*+0x*]").Disp();
 
-        return Scanner::At(VTable[Index]).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Slot(TEXT("UObject::CallRemoteFunction"));
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ProcessEvent)).Find("test dword ptr [*], 0x400").Find("call [*+0x*]", 2).Slot(TEXT("UObject::CallRemoteFunction"));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(UObject*, UFunction*, void*, FOutParmRec*, FFrame*))(VTable + CallRemoteFunction))(this, Function, Parms, OutParms, Stack);
+    return Scanner::Virtual<bool (*)(UObject*, UFunction*, void*, FOutParmRec*, FFrame*)>(this, CallRemoteFunction)(this, Function, Parms, OutParms, Stack);
 }

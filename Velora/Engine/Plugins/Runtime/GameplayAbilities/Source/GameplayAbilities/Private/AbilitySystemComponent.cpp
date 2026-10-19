@@ -12,10 +12,8 @@ FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
     static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeEffectContext")) : 0;
     static auto MakeEffectContext = Scanner::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeEffectContext")));
 
-    auto VTable = *(uint8_t**)this;
-
     FGameplayEffectContextHandle Context;
-    (Slot ? *(decltype(MakeEffectContext)*)(VTable + Slot) : MakeEffectContext)(this, &Context);
+    (Slot ? Scanner::Virtual<decltype(MakeEffectContext)>(this, Slot) : MakeEffectContext)(this, &Context);
 
     return Context;
 }
@@ -26,10 +24,8 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
     static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")) : 0;
     static auto MakeOutgoingSpec = Scanner::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")));
 
-    auto VTable = *(uint8_t**)this;
-
     FGameplayEffectSpecHandle SpecHandle;
-    (Slot ? *(decltype(MakeOutgoingSpec)*)(VTable + Slot) : MakeOutgoingSpec)(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
+    (Slot ? Scanner::Virtual<decltype(MakeOutgoingSpec)>(this, Slot) : MakeOutgoingSpec)(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
 
     return SpecHandle;
 }
@@ -40,10 +36,8 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSe
     static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")) : 0;
     static auto ApplyGameplayEffectSpecToSelf = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")));
 
-    auto VTable = *(uint8_t**)this;
-
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
-    (Slot ? *(decltype(ApplyGameplayEffectSpecToSelf)*)(VTable + Slot) : ApplyGameplayEffectSpecToSelf)(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
+    (Slot ? Scanner::Virtual<decltype(ApplyGameplayEffectSpecToSelf)>(this, Slot) : ApplyGameplayEffectSpecToSelf)(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
 
     return ActiveGameplayEffectHandle;
 }
@@ -58,9 +52,7 @@ void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExis
         return Scanner::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortOnTagUpdated; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(UAbilitySystemComponent*, const FGameplayTag&, bool))(VTable + OnTagUpdated))(this, Tag, TagExists);
+    Scanner::Virtual<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(this, OnTagUpdated)(this, Tag, TagExists);
 }
 
 void UAbilitySystemComponent::RemoveGameplayCue(const FGameplayTag GameplayCueTag)
@@ -73,16 +65,14 @@ void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag Game
     static auto Call = []
     {
         auto K2_RemoveGameplayCue = Scanner::Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue")).Find("call [*+0x*]").Slot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
 
-        return Scanner::At(VTable[K2_RemoveGameplayCue / sizeof(void*)]).Find("lea r8, [*+0x*]; call *").Find("call *");
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_RemoveGameplayCue)).Find("lea r8, [*+0x*]; call *").Find("call *");
     }();
     static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")) : 0;
     static auto RemoveGameplayCue_Internal = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
 
-    auto VTable = *(uint8_t**)this;
-
-    (Slot ? *(decltype(RemoveGameplayCue_Internal)*)(VTable + Slot) : RemoveGameplayCue_Internal)(this, GameplayCueTag, GameplayCueContainer);
+    (Slot ? Scanner::Virtual<decltype(RemoveGameplayCue_Internal)>(this, Slot) : RemoveGameplayCue_Internal)(this, GameplayCueTag, GameplayCueContainer);
 }
 
 FActiveGameplayCueContainer& UAbilitySystemComponent::GetActiveGameplayCues()

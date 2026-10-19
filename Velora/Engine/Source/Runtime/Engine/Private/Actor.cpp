@@ -138,9 +138,7 @@ const AActor* AActor::GetNetOwner() const
         return Scanner::Slot(TEXT("AActor::GetNetOwner"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(const AActor* (**)(const AActor*))(VTable + GetNetOwner))(this);
+    return Scanner::Virtual<const AActor* (*)(const AActor*)>(this, GetNetOwner)(this);
 }
 
 bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* ActorOwner, const AActor* ConnectionActor) const
@@ -152,28 +150,24 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
         return Scanner::Slot(TEXT("AActor::IsRelevancyOwnerFor"), VTable, [](const Scanner::FCode& Entry) { return Entry.Is("cmp r8, rcx; setz al; ret"); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AActor*, const AActor*, const AActor*, const AActor*))(VTable + IsRelevancyOwnerFor))(this, ReplicatedActor, ActorOwner, ConnectionActor);
+    return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const AActor*)>(this, IsRelevancyOwnerFor)(this, ReplicatedActor, ActorOwner, ConnectionActor);
 }
 
 void AActor::ForceNetUpdate()
 {
     static auto ForceNetUpdate = Scanner::Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate")).Find("jmp [*+0x*]").Slot(TEXT("AActor::ForceNetUpdate"));
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AActor*))(VTable + ForceNetUpdate))(this);
+    Scanner::Virtual<void (*)(AActor*)>(this, ForceNetUpdate)(this);
 }
 
 bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
 {
     static auto Destroy = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Slot(TEXT("AActor::K2_DestroyActor"));
 
-        return Scanner::Function<bool (*)(AActor*, bool, bool)>(Scanner::At(VTable[K2_DestroyActor / sizeof(void*)]).Find("jmp 0x*").Target(TEXT("AActor::Destroy")));
+        return Scanner::Function<bool (*)(AActor*, bool, bool)>(Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_DestroyActor)).Find("jmp 0x*").Target(TEXT("AActor::Destroy")));
     }();
 
     return Destroy(this, bNetForce, bShouldModifyLevel);

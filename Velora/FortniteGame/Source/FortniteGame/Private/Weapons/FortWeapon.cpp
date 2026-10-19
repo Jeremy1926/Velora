@@ -41,9 +41,7 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
         return Scanner::Slot(TEXT("AFortWeapon::PlayWeaponFireFX"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortWeapon*, bool))(VTable + PlayWeaponFireFX))(this, bPersistentFire);
+    Scanner::Virtual<void (*)(AFortWeapon*, bool)>(this, PlayWeaponFireFX)(this, bPersistentFire);
 }
 
 bool AFortWeapon::CheckPendingDestroyedDueToDurability()

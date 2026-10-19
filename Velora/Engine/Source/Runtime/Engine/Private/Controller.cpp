@@ -22,19 +22,17 @@ AActor* AController::GetViewTarget() const
 {
     static auto GetViewTarget = Scanner::Exec(TEXT("/Script/Engine.Controller:GetViewTarget")).Find("call [*+0x*]").Slot(TEXT("AController::GetViewTarget"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(AActor* (**)(const AController*))(VTable + GetViewTarget))(this);
+    return Scanner::Virtual<AActor* (*)(const AController*)>(this, GetViewTarget)(this);
 }
 
 FRotator AController::GetControlRotation() const
 {
     static auto GetControlRotation = Scanner::Exec(TEXT("/Script/Engine.Controller:GetControlRotation")).Find("call [*+0x*]").Slot(TEXT("AController::GetControlRotation"));
 
-    auto VTable = *(uint8_t**)this;
-    FRotator Result;
+    FRotator Result{};
+    Scanner::Virtual<FRotator* (*)(const AController*, FRotator*)>(this, GetControlRotation)(this, &Result);
 
-    return *(*(FRotator* (**)(const AController*, FRotator*))(VTable + GetControlRotation))(this, &Result);
+    return Result;
 }
 
 void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
@@ -48,7 +46,5 @@ void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) cons
         return Scanner::Slot(TEXT("AController::GetPlayerViewPoint"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Forward); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(const AController*, FVector&, FRotator&))(VTable + GetPlayerViewPoint))(this, Location, Rotation);
+    Scanner::Virtual<void (*)(const AController*, FVector&, FRotator&)>(this, GetPlayerViewPoint)(this, Location, Rotation);
 }

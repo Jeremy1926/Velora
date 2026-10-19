@@ -23,9 +23,7 @@ float UEngine::GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing) co
 {
     static auto GetMaxTickRate = Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("call [*+0x*]").Slot(TEXT("UEngine::GetMaxTickRate"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(float (**)(const UEngine*, float, bool))(VTable + GetMaxTickRate))(this, DeltaTime, bAllowFrameRateSmoothing);
+    return Scanner::Virtual<float (*)(const UEngine*, float, bool)>(this, GetMaxTickRate)(this, DeltaTime, bAllowFrameRateSmoothing);
 }
 
 UGameViewportClient* UEngine::GetGameViewport() const

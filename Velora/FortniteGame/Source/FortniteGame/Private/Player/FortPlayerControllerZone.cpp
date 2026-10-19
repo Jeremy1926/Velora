@@ -25,14 +25,10 @@ UClass* AFortPlayerControllerZone::StaticClass()
 
 void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortPlayerControllerZone*, AController*))(VTable + OnPawnRevivedSlot()))(this, EventInstigator);
+    Scanner::Virtual<void (*)(AFortPlayerControllerZone*, AController*)>(this, OnPawnRevivedSlot())(this, EventInstigator);
 }
 
 void AFortPlayerControllerZone::ApplyDeathDurabilityPenalty(float DurabilityPenalty)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortPlayerControllerZone*, float))(VTable + OnPawnRevivedSlot() + sizeof(void*)))(this, DurabilityPenalty);
+    Scanner::Virtual<void (*)(AFortPlayerControllerZone*, float)>(this, OnPawnRevivedSlot(), sizeof(void*))(this, DurabilityPenalty);
 }

@@ -12,7 +12,5 @@ bool UPackageMap::WriteObject(FArchive& Ar, UObject* InOuter, FNetworkGUID NetGU
         return Scanner::Slot(TEXT("UPackageMapClient::WriteObject"), *(const void***)this, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(UPackageMap*, FArchive&, UObject*, FNetworkGUID, FString))(VTable + WriteObject))(this, Ar, InOuter, NetGUID, MoveTemp(ObjName));
+    return Scanner::Virtual<bool (*)(UPackageMap*, FArchive&, UObject*, FNetworkGUID, FString)>(this, WriteObject)(this, Ar, InOuter, NetGUID, MoveTemp(ObjName));
 }

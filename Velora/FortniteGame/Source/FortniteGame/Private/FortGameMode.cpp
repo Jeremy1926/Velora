@@ -9,19 +9,15 @@ static int32_t OnPlayerCreatedBuildingSlot()
 {
     static auto OnPlayerCreatedBuilding = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 
-        while (!Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*"))
+        while (Scanner::IsCode(VTable[Index]) && !Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*"))
             Index++;
 
-        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(VTable[Index]).Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
-        Index = 0;
+        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(Scanner::IsCode(VTable[Index]) ? VTable[Index] : nullptr).Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
 
-        while (!Scanner::At(VTable[Index]).Start().Has(BuildingAction))
-            Index++;
-
-        return Scanner::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(BuildingAction); });
     }();
 
     return OnPlayerCreatedBuilding;
@@ -36,23 +32,17 @@ UClass* AFortGameMode::StaticClass()
 
 void AFortGameMode::OnPlayerCreatedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot()))(this, PlayerController, BuildingActor);
+    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot())(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::OnPlayerRepairedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot() + 3 * sizeof(void*)))(this, PlayerController, BuildingActor);
+    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot(), 3 * sizeof(void*))(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::OnPlayerEditedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortGameMode*, AFortPlayerController*, ABuildingActor*))(VTable + OnPlayerCreatedBuildingSlot() + 4 * sizeof(void*)))(this, PlayerController, BuildingActor);
+    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot(), 4 * sizeof(void*))(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::FinishWorldInitialization()
@@ -60,15 +50,10 @@ void AFortGameMode::FinishWorldInitialization()
     static auto FinishWorldInitialization = []
     {
         auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get(TEXT("AFortGameModeAthena::FinishWorldInitialization"));
-        auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto Index = 0;
+        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto FinishWorldInitialization = Scanner::Slot(TEXT("AFortGameMode::FinishWorldInitialization"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaFinishWorldInitialization; });
 
-        while (AthenaVTable[Index] != AthenaFinishWorldInitialization)
-            Index++;
-
-        auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode"));
-
-        return (void (*)(AFortGameMode*))VTable[Index];
+        return Scanner::Virtual<void (*)(AFortGameMode*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode")), FinishWorldInitialization);
     }();
 
     FinishWorldInitialization(this);
@@ -80,18 +65,12 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
     {
         auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
         auto AthenaOnGivenMatchAssignment = (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"));
-        auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto Index = 0;
+        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
 
-        while (AthenaVTable[Index] != AthenaOnGivenMatchAssignment)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaOnGivenMatchAssignment; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortGameMode*, const TMap<FString, FString>&))(VTable + OnGivenMatchAssignment))(this, MatchOptions);
+    Scanner::Virtual<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(this, OnGivenMatchAssignment)(this, MatchOptions);
 }
 
 AFortGameSession* AFortGameMode::GetFortGameSession()

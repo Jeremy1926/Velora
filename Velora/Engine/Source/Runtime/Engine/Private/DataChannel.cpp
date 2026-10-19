@@ -63,10 +63,10 @@ FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
 {
     static auto SendBunch = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1").Find("call 0x*").Find("call [*]").Slot(TEXT("UChannel::SendBunch"));
 
-    auto VTable = *(uint8_t**)this;
     FPacketIdRange Result;
+    Scanner::Virtual<FPacketIdRange* (*)(UChannel*, FPacketIdRange*, FOutBunch*, bool)>(this, SendBunch)(this, &Result, Bunch, Merge);
 
-    return *(*(FPacketIdRange* (**)(UChannel*, FPacketIdRange*, FOutBunch*, bool))(VTable + SendBunch))(this, &Result, Bunch, Merge);
+    return Result;
 }
 
 AActor* UActorChannel::GetActor() const

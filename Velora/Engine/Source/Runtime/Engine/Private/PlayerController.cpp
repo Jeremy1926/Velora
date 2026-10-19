@@ -17,7 +17,5 @@ void APlayerController::SendClientAdjustment()
         return Scanner::Slot(TEXT("APlayerController::SendClientAdjustment"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Body); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(APlayerController*))(VTable + SendClientAdjustment))(this);
+    Scanner::Virtual<void (*)(APlayerController*)>(this, SendClientAdjustment)(this);
 }

@@ -217,9 +217,7 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 {
     static auto InitListen = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("call [*]").Slot(TEXT("UNetDriver::InitListen"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&))(VTable + InitListen))(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
+    return Scanner::Virtual<bool (*)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&)>(this, InitListen)(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
 }
 
 void UNetDriver::SetWorld(UWorld* InWorld)
@@ -278,9 +276,7 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
 
 bool UNetDriver::IsServer() const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const UNetDriver*))(VTable + IsServerSlot))(this);
+    return Scanner::Virtual<bool (*)(const UNetDriver*)>(this, IsServerSlot)(this);
 }
 
 ENetMode UNetDriver::GetNetMode() const
@@ -292,9 +288,7 @@ bool UNetDriver::IsLevelInitializedForActor(const AActor* InActor, const UNetCon
 {
     static auto IsLevelInitializedForActor = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("call [*]; test al, al").Slot(TEXT("UNetDriver::IsLevelInitializedForActor"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const UNetDriver*, const AActor*, const UNetConnection*))(VTable + IsLevelInitializedForActor))(this, InActor, InConnection);
+    return Scanner::Virtual<bool (*)(const UNetDriver*, const AActor*, const UNetConnection*)>(this, IsLevelInitializedForActor)(this, InActor, InConnection);
 }
 
 bool UNetDriver::IsAdaptiveNetUpdateFrequencyEnabled()

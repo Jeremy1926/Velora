@@ -29,9 +29,9 @@ void AFortAthenaVehicle::InitializeServerImplementations()
         auto ServerUpdateInputParams = Scanner::Exec(GetServerFunctionPath(TEXT("ServerUpdateInputParams")));
         auto ServerUpdateInputParams_Implementation = ServerUpdateInputParams.Get() ? ServerUpdateInputParams.Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation")) : 0;
         auto OwnerClass = (UClass*)ServerUpdatePhysicsParams->GetOuter();
-        auto OwnerVTable = *(void***)OwnerClass->GetDefaultObject(false);
-        auto PhysicsStub = OwnerVTable[ServerUpdatePhysicsParams_Implementation / sizeof(void*)];
-        auto InputStub = OwnerVTable[ServerUpdateInputParams_Implementation / sizeof(void*)];
+        auto OwnerDefaultObject = OwnerClass->GetDefaultObject(false);
+        auto PhysicsStub = Scanner::Virtual<const void*>(OwnerDefaultObject, ServerUpdatePhysicsParams_Implementation);
+        auto InputStub = Scanner::Virtual<const void*>(OwnerDefaultObject, ServerUpdateInputParams_Implementation);
 
         for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
         {
@@ -45,11 +45,11 @@ void AFortAthenaVehicle::InitializeServerImplementations()
             {
                 auto VTable = *(void***)DefaultObject;
 
-                if (ServerUpdatePhysicsParams_Implementation && VTable[ServerUpdatePhysicsParams_Implementation / sizeof(void*)] == PhysicsStub)
-                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"), VTable + ServerUpdatePhysicsParams_Implementation / sizeof(void*), &AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation);
+                if (PhysicsStub && Scanner::Virtual<const void*>(DefaultObject, ServerUpdatePhysicsParams_Implementation) == PhysicsStub)
+                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"), VTable, ServerUpdatePhysicsParams_Implementation, &AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation);
 
-                if (ServerUpdateInputParams_Implementation && VTable[ServerUpdateInputParams_Implementation / sizeof(void*)] == InputStub)
-                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation"), VTable + ServerUpdateInputParams_Implementation / sizeof(void*), &AFortAthenaVehicle::ServerUpdateInputParams_Implementation);
+                if (InputStub && Scanner::Virtual<const void*>(DefaultObject, ServerUpdateInputParams_Implementation) == InputStub)
+                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation"), VTable, ServerUpdateInputParams_Implementation, &AFortAthenaVehicle::ServerUpdateInputParams_Implementation);
             }
         }
 
@@ -99,6 +99,5 @@ void AFortAthenaVehicle::WakeUp()
         return (OnRep_InputParams.Is("jmp [rax+*]") ? OnRep_InputParams : Scanner::At(OnRep_InputParams.Target()).Find("jmp [rax+*]")).Slot(TEXT("AFortAthenaVehicle::WakeUp"));
     }();
 
-    if (WakeUp)
-        (*(void (**)(AFortAthenaVehicle*))(*(uint8_t**)this + WakeUp))(this);
+    Scanner::Virtual<void (*)(AFortAthenaVehicle*)>(this, WakeUp)(this);
 }

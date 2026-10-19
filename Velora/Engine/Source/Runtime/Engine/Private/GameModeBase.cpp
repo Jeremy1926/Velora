@@ -17,15 +17,10 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
     static auto SpawnDefaultPawnFor = []
     {
         auto AthenaSpawnDefaultPawnFor = Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"));
-        auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto Index = 0;
+        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto SpawnDefaultPawnFor = Scanner::Slot(TEXT("AGameModeBase::SpawnDefaultPawnFor_Implementation"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaSpawnDefaultPawnFor; });
 
-        while (AthenaVTable[Index] != AthenaSpawnDefaultPawnFor)
-            Index++;
-
-        auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameModeBase"));
-
-        return (APawn* (*)(AGameModeBase*, AController*, AActor*))VTable[Index];
+        return Scanner::Virtual<APawn* (*)(AGameModeBase*, AController*, AActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameModeBase")), SpawnDefaultPawnFor);
     }();
 
     return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);

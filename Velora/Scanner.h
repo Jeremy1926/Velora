@@ -3,6 +3,7 @@
 #include <format>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include "Logging/LogMacros.h"
 #include "UObject/Class.h"
@@ -231,6 +232,11 @@ namespace Scanner
         return End;
     }
 
+    inline bool IsSlot(int64 Value)
+    {
+        return Value > 0 && Value < 0x10000 && !(Value % sizeof(void*));
+    }
+
     template<typename ValueType>
     inline ValueType Offset(const TCHAR* Name, ValueType Value)
     {
@@ -249,7 +255,7 @@ namespace Scanner
     template<typename ValueType>
     inline ValueType Slot(const TCHAR* Name, ValueType Value)
     {
-        if ((int64)Value > 0 && (int64)Value < 0x10000 && !((int64)Value % sizeof(void*)))
+        if (IsSlot((int64)Value))
         {
             UE_LOG(LogVelora, Log, TEXT("Found %s vtable slot 0x%llX"), Name, (int64)Value);
         }
@@ -685,5 +691,26 @@ namespace Scanner
     inline FunctionType Function(const void* Address)
     {
         return (FunctionType)(Address ? Address : (const void*)&NullFunction);
+    }
+
+    template<typename ReturnType, typename... ArgTypes>
+    inline auto NullVirtual(ReturnType (*)(ArgTypes...))
+    {
+        return +[](ArgTypes...) -> ReturnType
+        {
+            return ReturnType();
+        };
+    }
+
+    template<typename FunctionType>
+    inline FunctionType Virtual(const void* Object, int64 Slot, int64 Offset = 0)
+    {
+        if (IsSlot(Slot) && IsSlot(Slot + Offset))
+            return (*(FunctionType* const*)Object)[(Slot + Offset) / sizeof(void*)];
+
+        if constexpr (std::is_function_v<std::remove_pointer_t<FunctionType>>)
+            return NullVirtual(FunctionType());
+        else
+            return nullptr;
     }
 }

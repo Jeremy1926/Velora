@@ -33,9 +33,7 @@ UObject* UClass::InternalCreateDefaultObjectWrapper() const
 {
     static auto CreateDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Slot(TEXT("UClass::CreateDefaultObject"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(UObject* (**)(const UClass*))(VTable + CreateDefaultObject))(this);
+    return Scanner::Virtual<UObject* (*)(const UClass*)>(this, CreateDefaultObject)(this);
 }
 
 UClass* UClass::StaticClass()

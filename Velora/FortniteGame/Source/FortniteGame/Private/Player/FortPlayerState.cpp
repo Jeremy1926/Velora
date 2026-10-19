@@ -16,10 +16,10 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 {
     static auto ApplyCharacterCustomization = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerState"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerState"));
         auto ServerSetShowHeroBackpack_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerState::ServerSetShowHeroBackpack_Implementation"));
-        auto ApplyHeroPartDisplaySettings = Scanner::At(VTable[ServerSetShowHeroBackpack_Implementation / sizeof(void*)]).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"));
-        auto ApplyCustomizationToCharacter = Scanner::At(VTable[ApplyHeroPartDisplaySettings / sizeof(void*)]).Find("ret").Last("call 0x*").Call();
+        auto ApplyHeroPartDisplaySettings = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerSetShowHeroBackpack_Implementation)).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"));
+        auto ApplyCustomizationToCharacter = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ApplyHeroPartDisplaySettings)).Find("ret").Last("call 0x*").Call();
 
         auto TailCall = ApplyCustomizationToCharacter.Find("pop *; jmp 0x*");
 

@@ -37,9 +37,7 @@ void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
         return Scanner::Slot(TEXT("AFortPawn::StopPerformingNativeAction"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(StopNativeAction); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortPawn*, const FGameplayTag&))(VTable + StopPerformingNativeAction))(this, ActionTag);
+    Scanner::Virtual<void (*)(AFortPawn*, const FGameplayTag&)>(this, StopPerformingNativeAction)(this, ActionTag);
 }
 
 bool& AFortPawn::GetIsDBNO()

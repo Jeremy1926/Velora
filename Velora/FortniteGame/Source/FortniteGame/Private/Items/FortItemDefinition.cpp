@@ -23,16 +23,14 @@ EFortRarity UFortItemDefinition::GetRarity() const
 {
     static auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]").Slot(TEXT("UFortItemDefinition::GetRarity"));
 
-    return (*(EFortRarity (**)(const UFortItemDefinition*))(*(const uint8_t**)this + GetRarity))(this);
+    return Scanner::Virtual<EFortRarity (*)(const UFortItemDefinition*)>(this, GetRarity)(this);
 }
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
     static auto ClampItemLevel = Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Call().Find("call [*]").Slot(TEXT("UFortItemDefinition::ClampItemLevel"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(const UFortItemDefinition*, int32))(VTable + ClampItemLevel))(this, ItemLevel);
+    return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, int32)>(this, ClampItemLevel)(this, ItemLevel);
 }
 
 bool UFortItemDefinition::DoesAllowMultipleStacks() const
@@ -46,9 +44,7 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
         return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const UFortItemDefinition*))(VTable + DoesAllowMultipleStacks))(this);
+    return Scanner::Virtual<bool (*)(const UFortItemDefinition*)>(this, DoesAllowMultipleStacks)(this);
 }
 
 int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* AbilitySystemComponent) const
@@ -62,9 +58,7 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
         return Scanner::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(Compare); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(const UFortItemDefinition*, const UAbilitySystemComponent*))(VTable + GetMaxStackSize))(this, AbilitySystemComponent);
+    return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, const UAbilitySystemComponent*)>(this, GetMaxStackSize)(this, AbilitySystemComponent);
 }
 
 void UFortItemDefinition::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const

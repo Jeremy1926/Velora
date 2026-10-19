@@ -57,71 +57,55 @@ void ABuildingSMActor::SetMirrored(bool bIsMirrored)
 {
     static auto SetMirrored = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
-        auto ReplaceBuildingActor = VTable[(CanBePlayerEditedSlot() - 2 * (int32_t)sizeof(void*)) / sizeof(void*)];
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
+        auto ReplaceBuildingActor = Scanner::Virtual<const void*>(DefaultObject, CanBePlayerEditedSlot(), -2 * (int32_t)sizeof(void*));
         auto SetCurrentBuildingLevel = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel")) + (int32_t)sizeof(void*);
 
         return Scanner::At(ReplaceBuildingActor).Find(std::format("call [*+{:#x}]", SetCurrentBuildingLevel)).Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::SetMirrored"));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingSMActor*, bool))(VTable + SetMirrored))(this, bIsMirrored);
+    Scanner::Virtual<void (*)(ABuildingSMActor*, bool)>(this, SetMirrored)(this, bIsMirrored);
 }
 
 ABuildingSMActor* ABuildingSMActor::ReplaceBuildingActor(EBuildingReplacementType ReplacementType, UClass* NewBuildingClass, int32 BuildingLevel, int32 RotationIterations, bool bMirrored, AFortPlayerController* PlayerController)
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(ABuildingSMActor* (**)(ABuildingSMActor*, EBuildingReplacementType, UClass*, int32, int32, bool, AFortPlayerController*))(VTable + CanBePlayerEditedSlot() - 2 * sizeof(void*)))(this, ReplacementType, NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
+    return Scanner::Virtual<ABuildingSMActor* (*)(ABuildingSMActor*, EBuildingReplacementType, UClass*, int32, int32, bool, AFortPlayerController*)>(this, CanBePlayerEditedSlot(), -2 * (int32)sizeof(void*))(this, ReplacementType, NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
 }
 
 bool ABuildingSMActor::CanBePlayerEdited(AFortPlayerController* PlayerController)
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(ABuildingSMActor*, AFortPlayerController*))(VTable + CanBePlayerEditedSlot()))(this, PlayerController);
+    return Scanner::Virtual<bool (*)(ABuildingSMActor*, AFortPlayerController*)>(this, CanBePlayerEditedSlot())(this, PlayerController);
 }
 
 AFortPlayerStateZone* ABuildingSMActor::GetEditingPlayer() const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(AFortPlayerStateZone* (**)(const ABuildingSMActor*))(VTable + GetEditingPlayerSlot()))(this);
+    return Scanner::Virtual<AFortPlayerStateZone* (*)(const ABuildingSMActor*)>(this, GetEditingPlayerSlot())(this);
 }
 
 void ABuildingSMActor::SetEditingPlayer(AFortPlayerStateZone* NewEditingPlayer)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingSMActor*, AFortPlayerStateZone*))(VTable + GetEditingPlayerSlot() + sizeof(void*)))(this, NewEditingPlayer);
+    Scanner::Virtual<void (*)(ABuildingSMActor*, AFortPlayerStateZone*)>(this, GetEditingPlayerSlot(), sizeof(void*))(this, NewEditingPlayer);
 }
 
 bool ABuildingSMActor::IsBeingEdited() const
 {
     static auto IsBeingEdited = ClientRepair().Find("call [*+0x*]", 3).Slot(TEXT("ABuildingSMActor::IsBeingEdited"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const ABuildingSMActor*))(VTable + IsBeingEdited))(this);
+    return Scanner::Virtual<bool (*)(const ABuildingSMActor*)>(this, IsBeingEdited)(this);
 }
 
 bool ABuildingSMActor::NeedsRepair() const
 {
     static auto NeedsRepair = ClientRepair().Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::NeedsRepair"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const ABuildingSMActor*))(VTable + NeedsRepair))(this);
+    return Scanner::Virtual<bool (*)(const ABuildingSMActor*)>(this, NeedsRepair)(this);
 }
 
 void ABuildingSMActor::RepairBuilding(AFortPlayerController* RepairingController, int32 ResourcesSpent)
 {
     static auto RepairBuilding = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding")).Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::RepairBuilding"));
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingSMActor*, AFortPlayerController*, int32))(VTable + RepairBuilding))(this, RepairingController, ResourcesSpent);
+    Scanner::Virtual<void (*)(ABuildingSMActor*, AFortPlayerController*, int32)>(this, RepairBuilding)(this, RepairingController, ResourcesSpent);
 }
 
 UObject* ABuildingSMActor::GetEditModePatternData() const
@@ -272,18 +256,12 @@ float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
     static auto DetermineMaxResourcesToSpawn = []
     {
         auto Function = Scanner::String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")).Start().Get(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
 
-        while (VTable[Index] != Function)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(float (**)(ABuildingSMActor*, bool))(VTable + DetermineMaxResourcesToSpawn))(this, bRandomize);
+    return Scanner::Virtual<float (*)(ABuildingSMActor*, bool)>(this, DetermineMaxResourcesToSpawn)(this, bRandomize);
 }
 
 EFortResourceType ABuildingSMActor::GetResourceType() const

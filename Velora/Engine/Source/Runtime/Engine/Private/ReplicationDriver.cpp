@@ -11,9 +11,7 @@ void UReplicationDriver::FlushNetDormancy(AActor* Actor, bool bWasDormInitial)
         return Scanner::Slot(TEXT("UReplicationDriver::FlushNetDormancy"), *(const void***)this, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(UReplicationDriver*, AActor*, bool))(VTable + FlushNetDormancy))(this, Actor, bWasDormInitial);
+    Scanner::Virtual<void (*)(UReplicationDriver*, AActor*, bool)>(this, FlushNetDormancy)(this, Actor, bWasDormInitial);
 }
 
 int32 UReplicationDriver::ServerReplicateActors(float DeltaSeconds)
@@ -26,7 +24,5 @@ int32 UReplicationDriver::ServerReplicateActors(float DeltaSeconds)
         return Scanner::Slot(TEXT("UReplicationDriver::ServerReplicateActors"), ProcessRemoteFunction ? ProcessRemoteFunction + (int32)sizeof(void*) : 0);
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(UReplicationDriver*, float))(VTable + ServerReplicateActors))(this, DeltaSeconds);
+    return Scanner::Virtual<int32 (*)(UReplicationDriver*, float)>(this, ServerReplicateActors)(this, DeltaSeconds);
 }

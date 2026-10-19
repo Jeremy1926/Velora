@@ -28,34 +28,28 @@ static int32_t GetNetPrioritySlot()
 
 bool AActor::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AActor*, const AActor*, const AActor*, const FVector&))(VTable + IsNetRelevantForSlot))(this, RealViewer, ViewTarget, SrcLocation);
+    return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const FVector&)>(this, IsNetRelevantForSlot)(this, RealViewer, ViewTarget, SrcLocation);
 }
 
 float AActor::GetNetPriority(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth)
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(float (**)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool))(VTable + GetNetPrioritySlot()))(this, ViewPos, ViewDir, Viewer, ViewTarget, InChannel, Time, bLowBandwidth);
+    return Scanner::Virtual<float (*)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool)>(this, GetNetPrioritySlot())(this, ViewPos, ViewDir, Viewer, ViewTarget, InChannel, Time, bLowBandwidth);
 }
 
 bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth)
 {
     static auto GetNetDormancy = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto Index = GetNetPrioritySlot() / (int32_t)sizeof(void*) + 2;
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
+        auto GetNetDormancy = Scanner::IsSlot(GetNetPrioritySlot()) ? GetNetPrioritySlot() + 2 * (int32_t)sizeof(void*) : 0;
 
-        if (Scanner::At(VTable[Index]).Has(std::format("jmp [*+{:#x}]", (Index + 1) * sizeof(void*))))
-            Index++;
+        if (Scanner::At(Scanner::Virtual<const void*>(DefaultObject, GetNetDormancy)).Has(std::format("jmp [*+{:#x}]", GetNetDormancy + sizeof(void*))))
+            GetNetDormancy += (int32_t)sizeof(void*);
 
-        return Scanner::Slot(TEXT("AActor::GetNetDormancy"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AActor::GetNetDormancy"), GetNetDormancy);
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool))(VTable + GetNetDormancy))(this, ViewPos, ViewDir, Viewer, ViewTarget, InChannel, Time, bLowBandwidth);
+    return Scanner::Virtual<bool (*)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool)>(this, GetNetDormancy)(this, ViewPos, ViewDir, Viewer, ViewTarget, InChannel, Time, bLowBandwidth);
 }
 
 void AActor::CallPreReplication(UNetDriver* NetDriver)

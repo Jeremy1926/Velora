@@ -57,19 +57,31 @@ inline void* DetourCall(const TCHAR* Name, const uint8_t* Call, void* Function)
     return Original;
 }
 
-inline void* DetourVTable(const TCHAR* Name, void** Slot, void* Function)
+inline void* DetourVTable(const TCHAR* Name, void** VTable, int64 Slot, void* Function)
 {
+    if (!Scanner::IsSlot(Slot))
+    {
+        if (Name)
+        {
+            UE_LOG(LogVelora, Error, TEXT("Could not find %s"), Name);
+        }
+
+        return nullptr;
+    }
+
+    auto Entry = VTable + Slot / sizeof(void*);
+
     DWORD Protect;
-    VirtualProtect(Slot, sizeof(void*), PAGE_READWRITE, &Protect);
+    VirtualProtect(Entry, sizeof(void*), PAGE_READWRITE, &Protect);
 
-    auto Original = *Slot;
-    *Slot = Function;
+    auto Original = *Entry;
+    *Entry = Function;
 
-    VirtualProtect(Slot, sizeof(void*), Protect, &Protect);
+    VirtualProtect(Entry, sizeof(void*), Protect, &Protect);
 
     if (Name)
     {
-        UE_LOG(LogVelora, Log, TEXT("Hooked %s at vtable entry 0x%llX, was 0x%llX"), Name, (uint8_t*)Slot - Scanner::Base(), (uint8_t*)Original - Scanner::Base());
+        UE_LOG(LogVelora, Log, TEXT("Hooked %s at vtable entry 0x%llX, was 0x%llX"), Name, (uint8_t*)Entry - Scanner::Base(), (uint8_t*)Original - Scanner::Base());
     }
 
     return Original;
@@ -146,13 +158,13 @@ inline FunctionType DetourCall(const TCHAR* Name, const uint8_t* Call, FunctionT
 }
 
 template<typename FunctionType>
-inline FunctionType DetourVTable(const TCHAR* Name, void** Slot, FunctionType Function)
+inline FunctionType DetourVTable(const TCHAR* Name, void** VTable, int64 Slot, FunctionType Function)
 {
     void* Address = nullptr;
     memcpy(&Address, &Function, sizeof(Address));
 
     FunctionType Original = {};
-    auto Target = DetourVTable(Name, Slot, Address);
+    auto Target = DetourVTable(Name, VTable, Slot, Address);
     memcpy(&Original, &Target, sizeof(Target));
 
     return Original;

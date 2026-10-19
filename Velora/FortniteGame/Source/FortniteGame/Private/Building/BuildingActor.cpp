@@ -9,9 +9,9 @@ static int32_t InitializeBuildingActorSlot()
     static auto InitializeBuildingActor = []
     {
         auto InitializeKismetSpawnedBuildingActor = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
 
-        return Scanner::At(VTable[InitializeKismetSpawnedBuildingActor / sizeof(void*)]).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeBuildingActor"));
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, InitializeKismetSpawnedBuildingActor)).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeBuildingActor"));
     }();
 
     return InitializeBuildingActor;
@@ -38,64 +38,46 @@ void ABuildingActor::BeginPlay()
         auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
         auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
         auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
-        auto ActorVTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto Index = 0;
+        auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
 
-        while (ActorVTable[Index] != ActorBeginPlay)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
     }();
 
-    auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingActor"));
-
-    (*(void (**)(ABuildingActor*))(VTable + BeginPlay))(this);
+    Scanner::Virtual<void (*)(ABuildingActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingActor")), BeginPlay)(this);
 }
 
 void ABuildingActor::SilentDie()
 {
     static auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingActor::SilentDie"));
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingActor*))(VTable + SilentDie))(this);
+    Scanner::Virtual<void (*)(ABuildingActor*)>(this, SilentDie)(this);
 }
 
 void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser)
 {
     static auto Die = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingActor::SilentDie")) - (int32_t)sizeof(void*);
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingActor*, FGameplayTag, AController*, AActor*))(VTable + Die))(this, DamageTag, EventInstigator, DamageCauser);
+    Scanner::Virtual<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*)>(this, Die)(this, DamageTag, EventInstigator, DamageCauser);
 }
 
 void ABuildingActor::InitializeBuildingActor(EFortBuildingInitializationReason InitializationReason, int32 InOwnerPersistentID, ABuildingActor* BuildingOwner, ABuildingActor* ReplacedBuilding, bool bFlag)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingActor*, EFortBuildingInitializationReason, int32, ABuildingActor*, ABuildingActor*, bool))(VTable + InitializeBuildingActorSlot()))(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
+    Scanner::Virtual<void (*)(ABuildingActor*, EFortBuildingInitializationReason, int32, ABuildingActor*, ABuildingActor*, bool)>(this, InitializeBuildingActorSlot())(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
 }
 
 void ABuildingActor::PostInitializeSpawnedBuildingActor(EFortBuildingInitializationReason InitializationReason)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingActor*, EFortBuildingInitializationReason))(VTable + InitializeBuildingActorSlot() + sizeof(void*)))(this, InitializationReason);
+    Scanner::Virtual<void (*)(ABuildingActor*, EFortBuildingInitializationReason)>(this, InitializeBuildingActorSlot(), sizeof(void*))(this, InitializationReason);
 }
 
 int32 ABuildingActor::GetCurrentBuildingLevel() const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(const ABuildingActor*))(VTable + GetCurrentBuildingLevelSlot()))(this);
+    return Scanner::Virtual<int32 (*)(const ABuildingActor*)>(this, GetCurrentBuildingLevelSlot())(this);
 }
 
 void ABuildingActor::SetCurrentBuildingLevel(int32 NewLevel)
 {
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingActor*, int32))(VTable + GetCurrentBuildingLevelSlot() + sizeof(void*)))(this, NewLevel);
+    Scanner::Virtual<void (*)(ABuildingActor*, int32)>(this, GetCurrentBuildingLevelSlot(), sizeof(void*))(this, NewLevel);
 }
 
 bool ABuildingActor::GetDestroyOnPlayerBuildingPlacement() const
@@ -116,9 +98,7 @@ float ABuildingActor::GetMaxHealth() const
 {
     static auto GetMaxHealth = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetMaxHealth")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::GetMaxHealth"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(float (**)(const ABuildingActor*))(VTable + GetMaxHealth))(this);
+    return Scanner::Virtual<float (*)(const ABuildingActor*)>(this, GetMaxHealth)(this);
 }
 
 bool ABuildingActor::HasHealthLeft() const

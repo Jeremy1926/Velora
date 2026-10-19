@@ -39,23 +39,19 @@ bool ABuildingContainer::IsAlreadySearched() const
     static auto IsAlreadySearched = [this]
     {
         auto OnRep_bAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::OnRep_bAlreadySearched"));
-        auto OnRep = Scanner::At((*(void***)this)[OnRep_bAlreadySearched / sizeof(void*)]);
+        auto OnRep = Scanner::At(Scanner::Virtual<const void*>(this, OnRep_bAlreadySearched));
 
         return OnRep.Is("test byte ptr [rcx+0x*], 0x*") ? Scanner::Slot(TEXT("ABuildingContainer::IsAlreadySearched"), OnRep_bAlreadySearched - (int32_t)sizeof(void*)) : OnRep.Find("call [rax+0x*]").Slot(TEXT("ABuildingContainer::IsAlreadySearched"));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const ABuildingContainer*))(VTable + IsAlreadySearched))(this);
+    return Scanner::Virtual<bool (*)(const ABuildingContainer*)>(this, IsAlreadySearched)(this);
 }
 
 void ABuildingContainer::BounceContainer()
 {
     static auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingContainer::BounceContainer"));
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingContainer*))(VTable + BounceContainer))(this);
+    Scanner::Virtual<void (*)(ABuildingContainer*)>(this, BounceContainer)(this);
 }
 
 bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
@@ -157,12 +153,10 @@ void ABuildingContainer::SetContainerSearched(AFortPawn* Searcher)
     {
         auto OnRep_bAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::OnRep_bAlreadySearched"));
 
-        return Scanner::At((*(void***)this)[OnRep_bAlreadySearched / sizeof(void*)]).Find("xor edx, edx").Find("jmp [*+0x*]").Slot(TEXT("ABuildingContainer::SetContainerSearched"));
+        return Scanner::At(Scanner::Virtual<const void*>(this, OnRep_bAlreadySearched)).Find("xor edx, edx").Find("jmp [*+0x*]").Slot(TEXT("ABuildingContainer::SetContainerSearched"));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(ABuildingContainer*, AFortPawn*))(VTable + SetContainerSearched))(this, Searcher);
+    Scanner::Virtual<void (*)(ABuildingContainer*, AFortPawn*)>(this, SetContainerSearched)(this, Searcher);
 }
 
 FName ABuildingContainer::GetSearchLootTierGroup() const

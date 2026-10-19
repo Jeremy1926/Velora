@@ -55,9 +55,9 @@ static auto DropItemsOnPawnDestruction = []
         return DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Call.Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
 
     auto Slot = Deaths.Find("mov byte ptr [rsp+0x*], 0x0; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"));
-    auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-    return DetourVTable(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), (void**)(VTable + Slot), &AFortPlayerController::DropItemsOnPawnDestruction);
+    return DetourVTable(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), VTable, Slot, &AFortPlayerController::DropItemsOnPawnDestruction);
 }();
 
 static Scanner::FCode ClientBuild()
@@ -92,9 +92,9 @@ template<typename FunctionType>
 static void InstallImplementation(const TCHAR* Name, const TCHAR* FunctionPath, FunctionType Implementation)
 {
     auto Slot = Scanner::Exec(FunctionPath).Find("call [rax+*]", 2).Slot(Name);
-    auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-    DetourVTable(Name, (void**)(VTable + Slot), Implementation);
+    DetourVTable(Name, VTable, Slot, Implementation);
 }
 
 bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync)
@@ -113,17 +113,17 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     static auto ServerExecuteInventoryItem = []
     {
         auto ServerExecuteInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerExecuteInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerExecuteInventoryItem_Implementation"));
-        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-        return DetourVTable(TEXT("AFortPlayerController::ServerExecuteInventoryItem_Implementation"), (void**)(VTable + ServerExecuteInventoryItem_Implementation), &AFortPlayerController::ServerExecuteInventoryItem_Implementation);
+        return DetourVTable(TEXT("AFortPlayerController::ServerExecuteInventoryItem_Implementation"), VTable, ServerExecuteInventoryItem_Implementation, &AFortPlayerController::ServerExecuteInventoryItem_Implementation);
     }();
 
     static auto ServerSpawnInventoryDrop = []
     {
         auto ServerSpawnInventoryDrop_Implementation = Scanner::Exec(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerSpawnInventoryDrop")) ? TEXT("/Script/FortniteGame.FortPlayerController:ServerSpawnInventoryDrop") : TEXT("/Script/FortniteGame.FortPlayerController:ServerAttemptInventoryDrop")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"));
-        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-        return DetourVTable(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"), (void**)(VTable + ServerSpawnInventoryDrop_Implementation), &AFortPlayerController::ServerSpawnInventoryDrop_Implementation);
+        return DetourVTable(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"), VTable, ServerSpawnInventoryDrop_Implementation, &AFortPlayerController::ServerSpawnInventoryDrop_Implementation);
     }();
 
     static auto ServerRemoveInventoryStateValue = []
@@ -136,16 +136,16 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     static auto ServerRemoveItemInternal = []
     {
         auto ServerRemoveItemInternal_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:ServerRemoveItemInternal")).Find("call [*+0x*]", 2).Slot(TEXT("AFortQuickBars::ServerRemoveItemInternal_Implementation"));
-        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortQuickBars"));
+        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortQuickBars"));
 
-        return DetourVTable(TEXT("AFortQuickBars::ServerRemoveItemInternal_Implementation"), (void**)(VTable + ServerRemoveItemInternal_Implementation), &AFortQuickBars::ServerRemoveItemInternal_Implementation);
+        return DetourVTable(TEXT("AFortQuickBars::ServerRemoveItemInternal_Implementation"), VTable, ServerRemoveItemInternal_Implementation, &AFortQuickBars::ServerRemoveItemInternal_Implementation);
     }();
 
     static auto RemoveInventoryItem = []
     {
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
         auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"));
-        auto RemoveInventoryItem = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]");
+        auto RemoveInventoryItem = Scanner::At(Scanner::Virtual<const void*>(PlayerController, ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]");
         static auto InventoryOwnerOffset = RemoveInventoryItem.Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
 
         auto InventoryOwnerRemoveInventoryItem = +[](uint8_t* InventoryOwnerInterface, const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
@@ -153,24 +153,24 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
             return ((AFortPlayerController*)(InventoryOwnerInterface - InventoryOwnerOffset))->RemoveInventoryItem(ItemGuid, Count, bForceRemoveFromQuickBars);
         };
 
-        return DetourVTable(TEXT("AFortPlayerController::RemoveInventoryItem"), (void**)(*(uint8_t**)(PlayerController + InventoryOwnerOffset) + RemoveInventoryItem.Slot(TEXT("IFortInventoryOwnerInterface::RemoveInventoryItem"))), (void*)InventoryOwnerRemoveInventoryItem);
+        return DetourVTable(TEXT("AFortPlayerController::RemoveInventoryItem"), *(void***)(PlayerController + InventoryOwnerOffset), RemoveInventoryItem.Slot(TEXT("IFortInventoryOwnerInterface::RemoveInventoryItem")), (void*)InventoryOwnerRemoveInventoryItem);
     }();
 
     static auto SetLoadedAmmo = []
     {
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
         auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"));
-        auto InventoryOwner = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]").Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
-        auto InventoryOwnerVTable = *(const uint8_t***)(PlayerController + InventoryOwner);
+        auto InventoryOwner = Scanner::At(Scanner::Virtual<const void*>(PlayerController, ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]").Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
+        auto InventoryOwnerVTable = *(const void***)(PlayerController + InventoryOwner);
         auto Index = 0;
 
-        while (!Scanner::At(InventoryOwnerVTable[Index]).Start().Has("jmp [r8+*]"))
+        while (Scanner::IsCode(InventoryOwnerVTable[Index]) && !Scanner::At(InventoryOwnerVTable[Index]).Start().Has("jmp [r8+*]"))
             Index++;
 
-        auto SetLoadedAmmo = Scanner::At(InventoryOwnerVTable[Index]).Start().Find("jmp [r8+*]").Slot(TEXT("UFortWorldItem::SetLoadedAmmo"));
-        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWorldItem"));
+        auto SetLoadedAmmo = Scanner::At(Scanner::IsCode(InventoryOwnerVTable[Index]) ? InventoryOwnerVTable[Index] : nullptr).Start().Find("jmp [r8+*]").Slot(TEXT("UFortWorldItem::SetLoadedAmmo"));
+        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWorldItem"));
 
-        return DetourVTable(TEXT("UFortWorldItem::SetLoadedAmmo"), (void**)(VTable + SetLoadedAmmo), &UFortWorldItem::SetLoadedAmmo);
+        return DetourVTable(TEXT("UFortWorldItem::SetLoadedAmmo"), VTable, SetLoadedAmmo, &UFortWorldItem::SetLoadedAmmo);
     }();
 
     auto bInitialized = (this->*::InitializeMcpProfile)(OnMcpProfilesInitialized, bForceSync);
@@ -207,9 +207,7 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
         return PlayerControllerSlot(TEXT("AFortPlayerController::TryAddToQuickBar"), TryAddToQuickBarFunction().Get(TEXT("AFortPlayerController::TryAddToQuickBar")));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(AFortPlayerController*, UFortItem*))(VTable + TryAddToQuickBar))(this, Item);
+    Scanner::Virtual<void (*)(AFortPlayerController*, UFortItem*)>(this, TryAddToQuickBar)(this, Item);
 }
 
 bool AFortPlayerController::CanServerTryAddToQuickBar() const
@@ -717,16 +715,12 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
         return Scanner::Slot(TEXT("AFortPlayerController::CanPerformNativeAction"), Call.Disp() ? Call.Disp() : (int32)Call.Last("add *, 0x*").Imm());
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, const FGameplayTag&))(VTable + CanPerformNativeAction))(this, ActionTag);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, const FGameplayTag&)>(this, CanPerformNativeAction)(this, ActionTag);
 }
 
 bool AFortPlayerController::IsBuildingRestricted(const FBuildingClassData& BuildingClassData, const FVector& BuildLoc, const FRotator& BuildRot) const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, const FBuildingClassData&, const FVector&, const FRotator&))(VTable + IsBuildingRestrictedSlot()))(this, BuildingClassData, BuildLoc, BuildRot);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, const FBuildingClassData&, const FVector&, const FRotator&)>(this, IsBuildingRestrictedSlot())(this, BuildingClassData, BuildLoc, BuildRot);
 }
 
 bool AFortPlayerController::HasRequiredBuildingLevel(const FBuildingClassData& BuildingClassData) const
@@ -744,18 +738,14 @@ bool AFortPlayerController::HasRequiredBuildingLevel(const FBuildingClassData& B
 
 bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortResourceType ResourceType) const
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, int32, EFortResourceType))(VTable + IsBuildingRestrictedSlot() + sizeof(void*)))(this, BuildingLevel, ResourceType);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, int32, EFortResourceType)>(this, IsBuildingRestrictedSlot(), sizeof(void*))(this, BuildingLevel, ResourceType);
 }
 
 bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData) const
 {
     static auto CanAffordToPlaceBuildableClass = ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, FBuildingClassData))(VTable + CanAffordToPlaceBuildableClass))(this, BuildingClassData);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, FBuildingClassData)>(this, CanAffordToPlaceBuildableClass)(this, BuildingClassData);
 }
 
 EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings)
@@ -767,28 +757,26 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
         return Scanner::Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"), Call.Get() ? Call.Disp() : IsBuildingRestrictedSlot() + 10 * (int32_t)sizeof(void*));
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(EFortStructuralGridQueryResults (**)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*))(VTable + CanPlaceBuildableClassInStructuralGrid))(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings);
+    return Scanner::Virtual<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*)>(this, CanPlaceBuildableClassInStructuralGrid)(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings);
 }
 
 int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData BuildingClassData)
 {
     static auto PayBuildableClassPlacementCost = PlayerControllerSlot(TEXT("AFortPlayerController::PayBuildableClassPlacementCost"), Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildableClassPlacementCost")));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(AFortPlayerController*, FBuildingClassData))(VTable + PayBuildableClassPlacementCost))(this, BuildingClassData);
+    return Scanner::Virtual<int32 (*)(AFortPlayerController*, FBuildingClassData)>(this, PayBuildableClassPlacementCost)(this, BuildingClassData);
 }
 
 FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralGridQueryResults QueryResults) const
 {
     static auto GetErrorMessageFromStructuralQuery = ClientBuild().Find("mov r8d, *; *; call [*+0x*]; mov rdx, rax").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::GetErrorMessageFromStructuralQuery"));
 
-    auto VTable = *(uint8_t**)this;
+    if (!Scanner::IsSlot(GetErrorMessageFromStructuralQuery))
+        return FText();
+
     FText Result(NoInit);
 
-    (*(FText* (**)(const AFortPlayerController*, FText*, EFortStructuralGridQueryResults))(VTable + GetErrorMessageFromStructuralQuery))(this, &Result, QueryResults);
+    Scanner::Virtual<FText* (*)(const AFortPlayerController*, FText*, EFortStructuralGridQueryResults)>(this, GetErrorMessageFromStructuralQuery)(this, &Result, QueryResults);
 
     return Result;
 }
@@ -797,27 +785,21 @@ bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingAct
 {
     static auto HasPermissionToEditWorld = ClientRepair().Find("call [*+0x*]", 2).Slot(TEXT("AFortPlayerController::HasPermissionToEditWorld"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, ABuildingActor*, const FVector&, const FRotator&))(VTable + HasPermissionToEditWorld))(this, BuildingActor, Location, Rotation);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, ABuildingActor*, const FVector&, const FRotator&)>(this, HasPermissionToEditWorld)(this, BuildingActor, Location, Rotation);
 }
 
 bool AFortPlayerController::CanAffordToRepair(ABuildingSMActor* BuildingActorToRepair) const
 {
     static auto CanAffordToRepair = ClientRepair().Find("call [*+0x*]", 5).Slot(TEXT("AFortPlayerController::CanAffordToRepair"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const AFortPlayerController*, ABuildingSMActor*))(VTable + CanAffordToRepair))(this, BuildingActorToRepair);
+    return Scanner::Virtual<bool (*)(const AFortPlayerController*, ABuildingSMActor*)>(this, CanAffordToRepair)(this, BuildingActorToRepair);
 }
 
 int32 AFortPlayerController::PayBuildingRepairCost(ABuildingSMActor* BuildingActorToRepair)
 {
     static auto PayBuildingRepairCost = PlayerControllerSlot(TEXT("AFortPlayerController::PayBuildingRepairCost"), Scanner::String(TEXT("Failed to remove item %s during repair, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildingRepairCost")));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(AFortPlayerController*, ABuildingSMActor*))(VTable + PayBuildingRepairCost))(this, BuildingActorToRepair);
+    return Scanner::Virtual<int32 (*)(AFortPlayerController*, ABuildingSMActor*)>(this, PayBuildingRepairCost)(this, BuildingActorToRepair);
 }
 
 int32 AFortPlayerController::GetWorldPlayerId() const
@@ -867,9 +849,9 @@ void AFortPlayerController::ResetQuickBarToPrimary()
     static auto ResetQuickBarToPrimary = []
     {
         auto ClientOnPawnDied = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied")).Find("call [*+0x*]").Slot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
-        return Scanner::Function<void (*)(AFortPlayerController*)>(Scanner::At(VTable[ClientOnPawnDied / sizeof(void*)]).Call(2).Get(TEXT("AFortPlayerController::ResetQuickBarToPrimary")));
+        return Scanner::Function<void (*)(AFortPlayerController*)>(Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ClientOnPawnDied)).Call(2).Get(TEXT("AFortPlayerController::ResetQuickBarToPrimary")));
     }();
 
     ResetQuickBarToPrimary(this);

@@ -80,9 +80,9 @@ static int32_t TickCountOffset()
 {
     static auto TickCount = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
 
-        return Scanner::At(VTable[IsNetReadySlot / sizeof(void*)]).Find("mov [*], e*").Disp(TEXT("UNetConnection::QueuedBits")) + (int32_t)sizeof(int32);
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, IsNetReadySlot)).Find("mov [*], e*").Disp(TEXT("UNetConnection::QueuedBits")) + (int32_t)sizeof(int32);
     }();
 
     return TickCount;
@@ -151,9 +151,7 @@ TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
 
 int32 UNetConnection::IsNetReady(bool Saturate)
 {
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(UNetConnection*, bool))(VTable + IsNetReadySlot))(this, Saturate);
+    return Scanner::Virtual<int32 (*)(UNetConnection*, bool)>(this, IsNetReadySlot)(this, Saturate);
 }
 
 UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex)
@@ -173,7 +171,5 @@ void UNetConnection::FlushDormancy(AActor* Actor)
         return Scanner::Slot(TEXT("UNetConnection::FlushDormancy"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    (*(void (**)(UNetConnection*, AActor*))(VTable + FlushDormancy))(this, Actor);
+    Scanner::Virtual<void (*)(UNetConnection*, AActor*)>(this, FlushDormancy)(this, Actor);
 }

@@ -19,11 +19,10 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
 
     static auto InternalServerTryActiveAbility = [this]
     {
-        auto VTable = *(uint8_t**)this;
         auto ServerTryActivateAbility_Implementation = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerTryActivateAbility")).Find("call [*]", 2).Slot(TEXT("UAbilitySystemComponent::ServerTryActivateAbility_Implementation"));
-        auto InternalServerTryActiveAbility = Scanner::At(*(const uint8_t**)(VTable + ServerTryActivateAbility_Implementation)).Find("call [*]").Slot(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"));
+        auto InternalServerTryActiveAbility = Scanner::At(Scanner::Virtual<const void*>(this, ServerTryActivateAbility_Implementation)).Find("call [*]").Slot(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"));
 
-        return DetourVTable(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), (void**)(VTable + InternalServerTryActiveAbility), &UAbilitySystemComponent::InternalServerTryActiveAbility);
+        return DetourVTable(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), *(void***)this, InternalServerTryActiveAbility, &UAbilitySystemComponent::InternalServerTryActiveAbility);
     }();
 
     FGameplayAbilitySpecHandle Handle;
@@ -147,9 +146,7 @@ int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const 
 {
     static auto HandleGameplayEvent = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor")).Find("mov rcx, [rsp+0x*]; call 0x*").Call().Find("call [*+0x*]", 2).Slot(TEXT("UAbilitySystemComponent::HandleGameplayEvent"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(int32 (**)(UAbilitySystemComponent*, FGameplayTag, const FGameplayEventData*))(VTable + HandleGameplayEvent))(this, EventTag, Payload);
+    return Scanner::Virtual<int32 (*)(UAbilitySystemComponent*, FGameplayTag, const FGameplayEventData*)>(this, HandleGameplayEvent)(this, EventTag, Payload);
 }
 
 TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>& UAbilitySystemComponent::GetAbilityTargetDataMap()

@@ -14,7 +14,5 @@ bool AGameNetworkManager::IsInLowBandwidthMode()
         return Scanner::Slot(TEXT("AGameNetworkManager::IsInLowBandwidthMode"), UpdateNetSpeedsSlot ? UpdateNetSpeedsSlot + 2 * (int32)sizeof(void*) : 0);
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(AGameNetworkManager*))(VTable + IsInLowBandwidthMode))(this);
+    return Scanner::Virtual<bool (*)(AGameNetworkManager*)>(this, IsInLowBandwidthMode)(this);
 }

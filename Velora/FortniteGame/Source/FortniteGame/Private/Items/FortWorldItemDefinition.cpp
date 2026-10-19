@@ -22,9 +22,7 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
         return Scanner::Slot(TEXT("UFortWorldItemDefinition::ServerExecute"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(EquipWeaponDefinition); });
     }();
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(bool (**)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*))(VTable + ServerExecute))(this, Item, PlayerController);
+    return Scanner::Virtual<bool (*)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*)>(this, ServerExecute)(this, Item, PlayerController);
 }
 
 bool UFortWorldItemDefinition::SupportsQuickbarFocus() const
@@ -52,9 +50,7 @@ float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
     static auto GetMaxDurability = Scanner::Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability")).Find("call [*+0x*]").Slot(TEXT("UFortWorldItemDefinition::GetMaxDurability"));
 
-    auto VTable = *(uint8_t**)this;
-
-    return (*(float (**)(const UFortWorldItemDefinition*, int32))(VTable + GetMaxDurability))(this, ItemLevel);
+    return Scanner::Virtual<float (*)(const UFortWorldItemDefinition*, int32)>(this, GetMaxDurability)(this, ItemLevel);
 }
 
 const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() const
