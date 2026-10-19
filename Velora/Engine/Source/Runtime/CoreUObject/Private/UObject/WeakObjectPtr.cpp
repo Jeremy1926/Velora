@@ -9,7 +9,7 @@ void FWeakObjectPtr::operator=(const UObject* Object)
         auto Close = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start();
         auto ActorChannels = Close.Find("add rcx, 0x*");
 
-        return ActorChannels.Get() ? ActorChannels.Last("call 0x*").Target(TEXT("FWeakObjectPtr::operator=")) : Close.Find("mov rcx, [*+0x28]; call 0x*").Call().Call().Get(TEXT("FWeakObjectPtr::operator="));
+        return ActorChannels.Get() ? ActorChannels.Last("call 0x*").Target(TEXT("FWeakObjectPtr::operator=")) : Close.Find("mov qword ptr [*], 0x0").Last("call 0x*").Call().Call().Get(TEXT("FWeakObjectPtr::operator="));
     }());
 
     Assign(this, Object);
