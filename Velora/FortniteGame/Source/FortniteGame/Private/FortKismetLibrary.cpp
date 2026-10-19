@@ -46,6 +46,19 @@ static auto K2_SpawnPickupInWorld = []
 
 static auto K2_RemoveItemFromPlayerByGuid = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")) ? Detour(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid"), Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")).Get(), &UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid) : nullptr;
 
+static auto GiveItemToInventoryOwner = []
+{
+    auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode")).Find("lea rcx, [rsp+0x20]; mov rdx, *; call 0x*").Find("call 0x*");
+
+    return Call.Get() && Call.Target() == Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get() ? DetourCall(TEXT("UFortKismetLibrary::GiveItemToInventoryOwner"), Call.Get(), &UFortKismetLibrary::GiveItemToInventoryOwner) : nullptr;
+}();
+
+void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer)
+{
+    if (auto PlayerController = Cast<AFortPlayerController>(InventoryOwner.GetObject()))
+        K2_GiveItemToPlayer(PlayerController, ItemDefinition, NumberToGive);
+}
+
 void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive)
 {
     if (!PlayerController || !ItemDefinition)
@@ -90,13 +103,13 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerC
     auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
     int32 AmountRemoved = 0;
 
-    for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0 && AmountRemoved < AmountToRemove; Index--)
+    for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0 && (AmountToRemove < 0 || AmountRemoved < AmountToRemove); Index--)
     {
         if (ReplicatedEntries[Index].GetItemDefinition() != ItemDefinition)
             continue;
 
         const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
-        const int32 Count = FMath::Min(ReplicatedEntries[Index].GetCount(), AmountToRemove - AmountRemoved);
+        const int32 Count = AmountToRemove < 0 ? ReplicatedEntries[Index].GetCount() : FMath::Min(ReplicatedEntries[Index].GetCount(), AmountToRemove - AmountRemoved);
 
         if (PlayerController->RemoveInventoryItem(ItemGuid, Count, bForceRemoval))
             AmountRemoved += Count;

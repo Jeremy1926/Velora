@@ -260,6 +260,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ScriptInterface.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h" />

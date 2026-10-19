@@ -4,17 +4,21 @@
 #include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "UObject/NameTypes.h"
+#include "UObject/ScriptInterface.h"
 
 class AFortPickup;
 class AFortPlayerController;
 struct FFortItemEntry;
 struct FGuid;
+class IFortInventoryOwnerInterface;
 class UFortWorldItemDefinition;
 class USoundBase;
 
 class UFortKismetLibrary : public UBlueprintFunctionLibrary
 {
 public:
+    static void GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer);
+
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);
 
     static int32 K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval);
