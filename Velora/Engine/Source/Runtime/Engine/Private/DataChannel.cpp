@@ -130,10 +130,10 @@ void UActorChannel::SetChannelActor(AActor* InActor)
 {
     static auto SetChannelActor = Scanner::Function<void (*)(UActorChannel*, AActor*)>([]
     {
+        auto CreateChannel = Scanner::String(TEXT("Created channel %i of type %i")).Start().Get();
         auto ProcessRemoteFunction = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start();
-        auto ChannelType = ProcessRemoteFunction.Find("mov edx, 0x2");
 
-        return (ChannelType.Get() ? ChannelType : ProcessRemoteFunction.Find("lea edx, [*+0x2]")).Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
+        return ProcessRemoteFunction.Find(std::format("call {:#x}", (uintptr_t)CreateChannel)).Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
     }());
 
     SetChannelActor(this, InActor);
