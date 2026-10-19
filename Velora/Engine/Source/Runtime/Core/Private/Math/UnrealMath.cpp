@@ -44,7 +44,7 @@ const FTransform FTransform::Identity;
 
 FVector FMath::VRand()
 {
-    static auto VRand = Scanner::Function<FVector* (*)(FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Call().Get(TEXT("FMath::VRand")));
+    static auto VRand = Scanner::Function<FVector* (*)(FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Get(TEXT("UKismetMathLibrary::RandomUnitVector")));
 
     FVector Result;
 
