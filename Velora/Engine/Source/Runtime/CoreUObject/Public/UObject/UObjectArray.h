@@ -69,7 +69,7 @@ public:
 
     FORCEINLINE FUObjectItem const& operator[](int32 Index) const
     {
-        return Objects[Index / (65 * 1024)][Index % (65 * 1024)];
+        return Objects[Index / (MaxElements / MaxChunks)][Index % (MaxElements / MaxChunks)];
     }
 };
 

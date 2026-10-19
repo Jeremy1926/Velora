@@ -41,13 +41,13 @@ static auto InitializeMcpProfile = Detour(TEXT("AFortPlayerController::Initializ
 
 static auto RemoveAllInventoryItems = []
 {
-    auto StartAircraftPhase = Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1");
+    auto StartAircraftPhase = Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*");
     auto Call = StartAircraftPhase.Find("call 0x*", 3);
 
     return Call.Target() == StartAircraftPhase.Find("call 0x*").Target() ? DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Call.Get(), &AFortPlayerController::RemoveAllInventoryItems) : nullptr;
 }();
 
-static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
+static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
 static auto DropItemsOnPawnDestruction = []
 {
