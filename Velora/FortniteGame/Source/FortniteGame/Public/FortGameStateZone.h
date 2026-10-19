@@ -4,6 +4,7 @@
 #include "Building/BuildingActor.h"
 
 enum class EFortResourceType : uint8;
+class IAbilitySystemInterface;
 
 struct FPlayerBuildableClassContainer
 {
@@ -26,4 +27,6 @@ public:
     void GetPlayerBuildableClasses(TArray<UClass*>& OutBuildingClasses, const FPlayerBuildableClassFilter& Filter) const;
 
     const FPlayerBuildableClassContainer* GetPlayerBuildableClasses() const;
+
+    void OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface);
 };

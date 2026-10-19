@@ -4,6 +4,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
 
 UClass* AFortGameStateZone::StaticClass()
 {
@@ -48,4 +49,11 @@ const FPlayerBuildableClassContainer* AFortGameStateZone::GetPlayerBuildableClas
     static auto PlayerBuildableClasses = GetClass()->FindPropertyByName(FName(TEXT("PlayerBuildableClasses")));
 
     return PlayerBuildableClasses->ContainerPtrToValuePtr<FPlayerBuildableClassContainer>(this);
+}
+
+void AFortGameStateZone::OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface)
+{
+    static auto OnAbilitySystemInterfaceReadyForPersistentGameplayEffects = Scanner::Function<void (*)(AFortGameStateZone*, IAbilitySystemInterface*)>(Scanner::String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects")).Start().Get());
+
+    OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(this, AbilitySystemInterface);
 }

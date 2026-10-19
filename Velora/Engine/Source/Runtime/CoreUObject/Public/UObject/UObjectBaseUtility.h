@@ -22,6 +22,8 @@ public:
     }
 
     bool IsA(const UClass* SomeBase) const;
+
+    void* GetInterfaceAddress(UClass* InterfaceClass);
 };
 
 FORCEINLINE FString GetNameSafe(const UObjectBaseUtility* Object)

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "FortGameStateZone.h"
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
@@ -94,7 +95,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
     if (Pawn && PlayerState)
     {
-        if (PlayerState->GetWorldPlayerId() == -1)
+        auto bInitializeGameplay = PlayerState->GetWorldPlayerId() == -1;
+
+        if (bInitializeGameplay)
         {
             int32 WorldPlayerId = 0;
 
@@ -116,6 +119,15 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                 if (!PlayerState->GetAbilitySystemComponent()->FindAbilitySpecFromClass((UClass*)GameplayAbility))
                     PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
             }
+        }
+
+        static auto bPersistentGameplayEffects = Scanner::String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects")).Get() != nullptr;
+        static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
+
+        if (bInitializeGameplay && bPersistentGameplayEffects)
+        {
+            if (auto GameState = Cast<AFortGameStateZone>(GetWorld()->GetGameState()))
+                GameState->OnAbilitySystemInterfaceReadyForPersistentGameplayEffects((IAbilitySystemInterface*)PlayerState->GetInterfaceAddress(AbilitySystemInterface));
         }
 
         auto CustomizationLoadout = PlayerController->GetCustomizationLoadout();
