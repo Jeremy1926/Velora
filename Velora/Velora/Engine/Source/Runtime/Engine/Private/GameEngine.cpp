@@ -6,6 +6,7 @@
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Building/BGAConsumableSpawner.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -100,6 +101,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             GameMode->OnGivenMatchAssignment(MatchOptions);
             AssignedGameMode = GameMode;
         }
+
+        ABGAConsumableSpawner::TickPendingSpawns();
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
