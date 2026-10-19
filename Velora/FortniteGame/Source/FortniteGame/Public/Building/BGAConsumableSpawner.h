@@ -2,6 +2,7 @@
 
 #include "Building/BuildingActor.h"
 #include "UObject/NameTypes.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 
 class UEnvQuery;
 
@@ -19,4 +20,6 @@ public:
     FName GetSpawnLootTierGroup() const;
 
     UEnvQuery* GetQueryTemplate() const;
+
+    TArray<FAIDynamicParam>& GetQueryConfig();
 };

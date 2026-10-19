@@ -44,6 +44,23 @@ void ABGAConsumableSpawner::SpawnConsumables()
         return;
     }
 
+    for (auto& RuntimeParam : GetQueryConfig())
+    {
+        float Value = RuntimeParam.GetValue();
+
+        if (RuntimeParam.GetParamType() == EAIParamType::Int)
+        {
+            int32 IntValue = (int32)RuntimeParam.GetValue();
+            Value = *((float*)&IntValue);
+        }
+        else if (RuntimeParam.GetParamType() == EAIParamType::Bool)
+        {
+            Value = RuntimeParam.GetValue() > 0 ? 1.0f : -1.0f;
+        }
+
+        QueryInstance->SetNamedParam(RuntimeParam.GetParamName(), Value);
+    }
+
     PendingSpawns.Add(FPendingConsumableSpawn{ this, QueryInstance, 0 });
 }
 
@@ -116,4 +133,11 @@ UEnvQuery* ABGAConsumableSpawner::GetQueryTemplate() const
     static auto QueryTemplate = GetClass()->FindPropertyByName(FName(TEXT("QueryTemplate")));
 
     return *QueryTemplate->ContainerPtrToValuePtr<UEnvQuery*>(this);
+}
+
+TArray<FAIDynamicParam>& ABGAConsumableSpawner::GetQueryConfig()
+{
+    static auto QueryConfig = GetClass()->FindPropertyByName(FName(TEXT("QueryConfig")));
+
+    return *QueryConfig->ContainerPtrToValuePtr<TArray<FAIDynamicParam>>(this);
 }

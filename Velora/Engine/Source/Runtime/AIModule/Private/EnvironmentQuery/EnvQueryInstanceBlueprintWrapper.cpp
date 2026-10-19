@@ -11,3 +11,10 @@ TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
 
     return Locations;
 }
+
+void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Value)
+{
+    static auto SetNamedParam = Scanner::Function<void (*)(UEnvQueryInstanceBlueprintWrapper*, FName, float)>(Scanner::Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam")).Get(TEXT("UEnvQueryInstanceBlueprintWrapper::SetNamedParam")));
+
+    SetNamedParam(this, ParamName, Value);
+}

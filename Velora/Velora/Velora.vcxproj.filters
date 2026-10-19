@@ -1159,6 +1159,9 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\BGAConsumableWrapperItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Items</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryTypes.cpp">
+      <Filter>Engine\Source\Runtime\AIModule\Private\EnvironmentQuery</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
