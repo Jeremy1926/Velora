@@ -41,7 +41,7 @@ FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCo
 
 FFortItemEntry::~FFortItemEntry()
 {
-    static auto Destructor = Scanner::Function<void (*)(FFortItemEntry*)>(Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("lea rdx, [*]; call 0x*").Find("lea rcx, [*]; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::~FFortItemEntry")));
+    static auto Destructor = Scanner::Function<void (*)(FFortItemEntry*)>(Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("add rcx, [*]").Find("lea rcx, [*]; call 0x*").Find("call 0x*").Target(TEXT("FFortItemEntry::~FFortItemEntry")));
 
     Destructor(this);
 }
