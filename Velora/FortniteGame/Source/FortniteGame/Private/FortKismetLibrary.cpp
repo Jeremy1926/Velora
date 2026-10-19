@@ -6,8 +6,8 @@
 #include "Items/FortLootTier.h"
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
-#include "Items/FortQuickBars.h"
 #include "Items/FortWeaponItemDefinition.h"
+#include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Engine/World.h"
 #include "Math/Rotator.h"
@@ -56,6 +56,7 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 
     auto& Inventory = WorldInventory->GetInventory();
     auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
+    const FGuid ItemGuid = ItemEntry->GetItemGuid();
 
     ItemEntry->GetParentInventory() = WorldInventory;
     ItemEntry->GetIsReplicatedCopy() = true;
@@ -67,7 +68,14 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 
     WorldInventory->HandleInventoryLocalUpdate();
 
-    PlayerController->AddItemToQuickBars(ItemDefinition, EFortQuickBars::Max_None, -1);
+    if (!PlayerController->CanServerTryAddToQuickBar())
+        return;
+
+    for (auto Item : Inventory.ItemInstances)
+    {
+        if (Item->GetItemGuid() == ItemGuid)
+            PlayerController->TryAddToQuickBar(Item);
+    }
 }
 
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)

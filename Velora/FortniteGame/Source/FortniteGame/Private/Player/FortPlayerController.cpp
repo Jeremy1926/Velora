@@ -194,13 +194,6 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     return bInitialized;
 }
 
-void AFortPlayerController::AddItemToQuickBars(UFortItemDefinition* ItemDefinition, EFortQuickBars QuickBarType, int32 SlotIndex)
-{
-    static auto AddItemToQuickBars = Scanner::Function<void (*)(AFortPlayerController*, UFortItemDefinition*, EFortQuickBars, int32)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:AddItemToQuickBars")).Get(TEXT("AFortPlayerController::AddItemToQuickBars")));
-
-    AddItemToQuickBars(this, ItemDefinition, QuickBarType, SlotIndex);
-}
-
 static Scanner::FCode TryAddToQuickBarFunction()
 {
     static auto TryAddToQuickBar = Scanner::String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'")).Start();

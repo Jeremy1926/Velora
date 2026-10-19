@@ -91,8 +91,6 @@ public:
 
     bool InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync);
 
-    void AddItemToQuickBars(UFortItemDefinition* ItemDefinition, EFortQuickBars QuickBarType, int32 SlotIndex);
-
     void TryAddToQuickBar(UFortItem* Item);
 
     bool CanServerTryAddToQuickBar() const;
