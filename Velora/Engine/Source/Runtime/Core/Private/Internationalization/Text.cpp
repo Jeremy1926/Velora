@@ -9,11 +9,11 @@ static Scanner::FCode ClientBuild()
     return ClientBuild;
 }
 
-static Scanner::FCode FormatResourceName()
+static Scanner::FCode UnableToAfford()
 {
-    static auto FormatResourceName = ClientBuild().Find("call 0x*; movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*");
+    static auto UnableToAfford = ClientBuild().Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]");
 
-    return FormatResourceName;
+    return UnableToAfford;
 }
 
 FText::FText()
@@ -31,42 +31,55 @@ FText::FText(const FText& Source)
 
 FText& FText::operator=(const FText& Source)
 {
-    static auto CopyAssign = (FText& (*)(FText*, const FText&))ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Call().Get(TEXT("FText::operator=(const FText&)"));
+    static auto CopyAssign = Scanner::Function<FText& (*)(FText*, const FText&)>(ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Call().Get(TEXT("FText::operator=(const FText&)")));
 
     return CopyAssign(this, Source);
 }
 
 FText& FText::operator=(FText&& Source)
 {
-    static auto MoveAssign = (FText& (*)(FText*, FText&))FormatResourceName().Find("lea rdx, [0x*]").Call(3).Get(TEXT("FText::operator=(FText&&)"));
+    static auto MoveAssign = Scanner::Function<FText& (*)(FText*, FText&)>(UnableToAfford().Call(3).Get(TEXT("FText::operator=(FText&&)")));
 
     return MoveAssign(this, Source);
 }
 
 bool FText::IsEmpty() const
 {
-    static auto IsEmpty = (bool (*)(const FText*))ClientBuild().Find("lea rcx, *; call 0x*; test al, al; jnz *; lea rdx, *; mov rcx, *; call 0x*").Call().Get(TEXT("FText::IsEmpty"));
+    static auto IsEmpty = Scanner::Function<bool (*)(const FText*)>(ClientBuild().Find("mov r8d, *; *; call [*+0x*]; mov rdx, rax").Find("lea rcx, *; call 0x*", 2).Call().Get(TEXT("FText::IsEmpty")));
 
     return IsEmpty(this);
 }
 
 FText FText::Format(FTextFormat Fmt, FFormatArgumentValue v1)
 {
-    static auto Format = (FText (*)(FTextFormat, FFormatArgumentValue))FormatResourceName().Find("lea rdx, [0x*]").Call(2).Get(TEXT("FText::Format"));
+    static auto Format = Scanner::Function<FText (*)(FTextFormat, FFormatArgumentValue)>(UnableToAfford().Call(2).Get(TEXT("FText::Format")));
 
     return Format(Fmt, v1);
 }
 
 FTextFormat::FTextFormat(const FText& InText)
 {
-    static auto Constructor = (void (*)(FTextFormat*, const FText&))FormatResourceName().Find("lea rdx, [0x*]").Call().Get(TEXT("FTextFormat::FTextFormat"));
+    static auto Constructor = Scanner::Function<void (*)(FTextFormat*, const FText&)>(UnableToAfford().Call().Get(TEXT("FTextFormat::FTextFormat")));
 
     Constructor(this, InText);
 }
 
 FFormatArgumentValue::FFormatArgumentValue(const FText& Value)
 {
-    static auto Constructor = (void (*)(FFormatArgumentValue*, const FText&))FormatResourceName().Call(4).Get(TEXT("FFormatArgumentValue::FFormatArgumentValue"));
+    static auto Constructor = []
+    {
+        auto Call = UnableToAfford().Last("call 0x*");
 
-    Constructor(this, Value);
+        return Scanner::At(Call.Target()).Has("mov dword ptr [rcx], 0x4") ? (void (*)(FFormatArgumentValue*, const FText&))Call.Target(TEXT("FFormatArgumentValue::FFormatArgumentValue")) : nullptr;
+    }();
+
+    if (Constructor)
+    {
+        Constructor(this, Value);
+        return;
+    }
+
+    Type = 4;
+    new (&TextValue) FText(Value);
+    bIsTextValueSet = true;
 }
