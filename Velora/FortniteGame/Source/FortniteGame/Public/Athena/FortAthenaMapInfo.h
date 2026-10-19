@@ -14,13 +14,17 @@ public:
 
     FVector PickSupplyDropLocation(const FVector& Center, float Radius) const;
 
-    AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass) const;
+    AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
 
     UClass* GetLlamaClass() const;
 
     const FScalableFloat& GetLlamaQuantityMin() const;
 
     const FScalableFloat& GetLlamaQuantityMax() const;
+
+    const FScalableFloat* GetSupplyDropMinPlacementHeight() const;
+
+    const FScalableFloat* GetSupplyDropMaxPlacementHeight() const;
 
     const FScalableFloat* GetSafeZoneRadius() const;
 };

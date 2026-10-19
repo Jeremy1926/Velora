@@ -18,6 +18,8 @@ void AFortAthenaMapInfo::SpawnLlamas()
 {
     auto LlamaClass = GetLlamaClass();
     auto SafeZoneRadius = GetSafeZoneRadius();
+    auto SupplyDropMinPlacementHeight = GetSupplyDropMinPlacementHeight();
+    auto SupplyDropMaxPlacementHeight = GetSupplyDropMaxPlacementHeight();
 
     if (!LlamaClass || !SafeZoneRadius)
         return;
@@ -27,13 +29,15 @@ void AFortAthenaMapInfo::SpawnLlamas()
     const int32 LlamaQuantity = LlamaQuantityMin + (LlamaQuantityRange + 1 > 0 ? FMath::Min(FMath::TruncToInt(FMath::FRand() * (LlamaQuantityRange + 1)), LlamaQuantityRange) : 0);
     const FVector MapCenter = GetActorLocation();
     const float Radius = SafeZoneRadius->GetValueAtLevel(0.0f);
+    const float TraceStartZ = SupplyDropMaxPlacementHeight ? SupplyDropMaxPlacementHeight->GetValueAtLevel(0.0f) : 0.0f;
+    const float TraceEndZ = SupplyDropMinPlacementHeight ? SupplyDropMinPlacementHeight->GetValueAtLevel(0.0f) : 0.0f;
 
     for (int32 Index = 0; Index < LlamaQuantity; Index++)
     {
         const FVector SpawnLocation = PickSupplyDropLocation(MapCenter, Radius);
         const FRotator SpawnRotation{ 0.0f, FMath::FRand() * 360.0f, 0.0f };
 
-        SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, LlamaClass);
+        SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, LlamaClass, TraceStartZ, TraceEndZ);
     }
 }
 
@@ -46,11 +50,11 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
     return *PickSupplyDropLocation(this, &Location, Center, Radius);
 }
 
-AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass) const
+AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
-    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*)>(Scanner::CallTo(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get()).Find("call 0x*").Call().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation")));
+    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(Scanner::CallTo(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get()).Find("mov r9, [*+0x*]").Find("call 0x*").Call().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation")));
 
-    return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass);
+    return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
 }
 
 UClass* AFortAthenaMapInfo::GetLlamaClass() const
@@ -72,6 +76,20 @@ const FScalableFloat& AFortAthenaMapInfo::GetLlamaQuantityMax() const
     static auto LlamaQuantityMax = GetClass()->FindPropertyByName(FName(TEXT("LlamaQuantityMax")));
 
     return *LlamaQuantityMax->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMinPlacementHeight() const
+{
+    static auto SupplyDropMinPlacementHeight = GetClass()->FindPropertyByName(FName(TEXT("SupplyDropMinPlacementHeight")));
+
+    return SupplyDropMinPlacementHeight ? SupplyDropMinPlacementHeight->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
+const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMaxPlacementHeight() const
+{
+    static auto SupplyDropMaxPlacementHeight = GetClass()->FindPropertyByName(FName(TEXT("SupplyDropMaxPlacementHeight")));
+
+    return SupplyDropMaxPlacementHeight ? SupplyDropMaxPlacementHeight->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
 const FScalableFloat* AFortAthenaMapInfo::GetSafeZoneRadius() const

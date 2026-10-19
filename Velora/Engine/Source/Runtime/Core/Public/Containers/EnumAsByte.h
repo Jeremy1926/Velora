@@ -10,6 +10,11 @@ public:
     {
     }
 
+    FORCEINLINE TEnumAsByte(const TEnumAsByte& InValue)
+        : Value(InValue.Value)
+    {
+    }
+
     FORCEINLINE TEnumAsByte(TEnum InValue)
         : Value(static_cast<uint8>(InValue))
     {

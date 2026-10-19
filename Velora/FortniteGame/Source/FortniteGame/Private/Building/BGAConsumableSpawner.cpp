@@ -4,6 +4,8 @@
 #include "Items/BGAConsumableWrapperItemDefinition.h"
 #include "Items/FortInventory.h"
 #include "Items/FortLootPackage.h"
+#include "Items/FortLootTier.h"
+#include "Athena/FortGameModeAthena.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryInstanceBlueprintWrapper.h"
 #include "Engine/World.h"
@@ -66,8 +68,18 @@ void ABGAConsumableSpawner::SpawnConsumables()
 
 void ABGAConsumableSpawner::SpawnConsumablesAtLocations(TArray<FVector> Locations)
 {
+    FName SpawnLootTierGroup = GetSpawnLootTierGroup();
+
+    if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
+        SpawnLootTierGroup = GameMode->RedirectLootTierGroup(SpawnLootTierGroup);
+
+    FName LootTierKey = NAME_None;
+    int32 LootTier = -1;
+
+    UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, LootTier, SpawnLootTierGroup, -1, GetStaticGameplayTags());
+
     TArray<FFortItemEntry> LootToDrop;
-    UFortLootPackage::PickLootDrops(LootToDrop, -1, GetSpawnLootTierGroup(), GetStaticGameplayTags(), true, false);
+    UFortLootPackage::PickLootDrops(LootToDrop, -1, LootTierKey, GetStaticGameplayTags(), true, false);
 
     for (auto& ItemEntry : LootToDrop)
     {

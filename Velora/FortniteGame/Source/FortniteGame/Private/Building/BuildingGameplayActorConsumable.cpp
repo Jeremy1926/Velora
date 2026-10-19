@@ -8,5 +8,5 @@ bool ABuildingGameplayActorConsumable::GetSpawnerCalculateRandomRotation() const
 {
     static auto bSpawnerCalculateRandomRotation = (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingGameplayActorConsumable")))->FindPropertyByName(FName(TEXT("bSpawnerCalculateRandomRotation")));
 
-    return bSpawnerCalculateRandomRotation->GetPropertyValue_InContainer(this);
+    return bSpawnerCalculateRandomRotation && bSpawnerCalculateRandomRotation->GetPropertyValue_InContainer(this);
 }

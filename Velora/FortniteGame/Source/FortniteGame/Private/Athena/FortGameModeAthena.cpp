@@ -1,10 +1,14 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/FortGameStateAthena.h"
+#include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
+#include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingSMActor.h"
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
@@ -257,6 +261,24 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
         if (BuildingContainer->GetStartAlreadySearched_Athena())
             BuildingContainer->SpawnLoot(nullptr);
     }
+
+    if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))
+    {
+        if (auto MapInfo = GameState->GetMapInfo())
+            MapInfo->SpawnLlamas();
+    }
+
+    if (ABGAConsumableSpawner::StaticClass())
+    {
+        TArray<AActor*> ConsumableSpawners;
+        UGameplayStatics::GetAllActorsOfClass(this, ABGAConsumableSpawner::StaticClass(), ConsumableSpawners);
+
+        for (auto ConsumableSpawner : ConsumableSpawners)
+            ((ABGAConsumableSpawner*)ConsumableSpawner)->SpawnConsumables();
+    }
+
+    if (AFortAthenaVehicle::StaticClass())
+        AFortAthenaVehicle::InitializeServerImplementations();
 }
 
 int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()

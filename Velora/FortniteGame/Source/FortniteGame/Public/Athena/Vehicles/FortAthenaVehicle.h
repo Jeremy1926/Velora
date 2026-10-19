@@ -21,6 +21,8 @@ public:
 
     static void InitializeServerImplementations();
 
+    static const TCHAR* GetServerFunctionPath(const TCHAR* FunctionName);
+
     void ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState);
 
     void ServerUpdateInputParams_Implementation(const FReplicatedAthenaVehicleInputState& InState);
