@@ -167,7 +167,13 @@ FName& FActorDestructionInfo::GetStreamingLevelName()
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("AddClientConnection: Added client connection: %s")).Find("lea r*, [*+0x???]").Disp(TEXT("UNetDriver::DestroyedStartupOrDormantActors"));
+    static auto DestroyedStartupOrDormantActors = []
+    {
+        auto AddClientConnection = Scanner::String(TEXT("AddClientConnection: Added client connection: %s"));
+        auto Map = AddClientConnection.Find("lea r*, [*+0x???]");
+
+        return Map.Get() ? Map.Disp(TEXT("UNetDriver::DestroyedStartupOrDormantActors")) : (int32)AddClientConnection.Find("add r*, 0x???").Imm(TEXT("UNetDriver::DestroyedStartupOrDormantActors"));
+    }();
 
     return *(TMap<FNetworkGUID, FActorDestructionInfo>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
