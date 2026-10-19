@@ -69,6 +69,8 @@ public:
 
     void GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner);
 
+    static void (AFortPickup::*GameGivePickupTo)(IFortInventoryOwnerInterface* InventoryOwner);
+
     void GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* InventoryOwner);
 
     FFortItemEntry& GetPrimaryPickupItemEntry();

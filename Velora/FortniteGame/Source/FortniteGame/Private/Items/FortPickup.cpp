@@ -47,13 +47,22 @@ void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner,
     TossPickup(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss);
 }
 
+decltype(AFortPickup::GameGivePickupTo) AFortPickup::GameGivePickupTo = nullptr;
+
 void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner)
 {
+    static auto bStripped = Scanner::At(std::bit_cast<const uint8_t*>(GameGivePickupTo)).Is("ret*");
+
     if (HasAuthority() && InventoryOwner)
     {
         GivePickupItemsToInventoryOwner(InventoryOwner);
-        Destroy();
+
+        if (bStripped)
+            Destroy();
     }
+
+    if (!bStripped)
+        (this->*GameGivePickupTo)(InventoryOwner);
 }
 
 void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* InventoryOwner)

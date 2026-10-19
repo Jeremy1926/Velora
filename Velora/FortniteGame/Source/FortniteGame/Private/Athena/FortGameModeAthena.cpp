@@ -160,10 +160,11 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         {
             auto Role = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role")))->GetOffset_ForInternal();
             auto Body = std::format("cmp byte ptr [rcx+{:#x}], 0x3; jnz *; test rdx, rdx; jz *", Role);
+            auto FrameBody = std::format("push rbx; sub rsp, 0x20; cmp byte ptr [rcx+{:#x}], 0x3; mov rbx, rcx; jnz *; test rdx, rdx; jz *", Role);
 
             for (int32 Index = 0; !GivePickupTo && Index < 512; Index++)
             {
-                if (Scanner::At(((void**)VTable)[Index]).Is(Body))
+                if (Scanner::At(((void**)VTable)[Index]).Is(Body) || Scanner::At(((void**)VTable)[Index]).Is(FrameBody))
                     GivePickupTo = Index * (int32)sizeof(void*);
             }
         }
@@ -173,7 +174,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
         DetourVTable(TEXT("AFortPickupAthena::GivePickupTo"), (void**)(AthenaVTable + GivePickupTo), &AFortPickup::GivePickupTo);
 
-        return DetourVTable(TEXT("AFortPickup::GivePickupTo"), (void**)(VTable + GivePickupTo), &AFortPickup::GivePickupTo);
+        return AFortPickup::GameGivePickupTo = DetourVTable(TEXT("AFortPickup::GivePickupTo"), (void**)(VTable + GivePickupTo), &AFortPickup::GivePickupTo);
     }();
 
     static auto ServerHandlePickup = []
