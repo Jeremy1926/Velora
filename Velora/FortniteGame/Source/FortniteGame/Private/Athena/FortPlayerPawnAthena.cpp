@@ -13,19 +13,37 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start().Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
+static auto PlayerPawnReady = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
+static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), PlayerPawnReady.Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {
-    auto PlayerController = Cast<AFortPlayerControllerAthena>(GetController());
+    static auto bIsPlayerPawnReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsPlayerPawnReady")));
+    static auto bChecksPlayerPawnReady = []
+    {
+        if (!PlayerPawnReady.Has(std::format("cmp byte ptr [rcx+{:#x}], *", bIsPlayerPawnReady->GetOffset_ForInternal())))
+            return false;
 
-    if (PlayerController)
+        auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
+
+        DetourCall(TEXT("UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor"), PlayerPawnReady.Find(std::format("call {:#x}", (uintptr_t)UpdateAbilitySystemActor)).Get(), &UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor);
+
+        return true;
+    }();
+
+    auto PlayerController = Cast<AFortPlayerControllerAthena>(GetController());
+    auto bWasPlayerPawnReady = bIsPlayerPawnReady->GetPropertyValue_InContainer(this);
+
+    if (PlayerController && !bChecksPlayerPawnReady)
     {
         if (auto MyPlayerInfo = PlayerController->GetMyPlayerInfo())
             MyPlayerInfo->UpdateAbilitySystemActor(false);
     }
 
     (this->*::OnPlayerPawnReady)();
+
+    if (bChecksPlayerPawnReady && (bWasPlayerPawnReady || !bIsPlayerPawnReady->GetPropertyValue_InContainer(this)))
+        return;
 
     if (PlayerController)
     {

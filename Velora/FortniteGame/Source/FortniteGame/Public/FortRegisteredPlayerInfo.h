@@ -8,4 +8,6 @@ class UFortRegisteredPlayerInfo : public UObject
 {
 public:
     IAbilitySystemInterface* UpdateAbilitySystemActor(bool bForceUpdate);
+
+    IAbilitySystemInterface* PlayerPawnReadyUpdateAbilitySystemActor(bool bForceUpdate);
 };

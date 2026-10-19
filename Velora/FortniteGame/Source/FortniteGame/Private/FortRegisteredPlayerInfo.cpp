@@ -8,3 +8,10 @@ IAbilitySystemInterface* UFortRegisteredPlayerInfo::UpdateAbilitySystemActor(boo
 
     return UpdateAbilitySystemActor(this, bForceUpdate);
 }
+
+IAbilitySystemInterface* UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor(bool bForceUpdate)
+{
+    UpdateAbilitySystemActor(false);
+
+    return UpdateAbilitySystemActor(bForceUpdate);
+}
