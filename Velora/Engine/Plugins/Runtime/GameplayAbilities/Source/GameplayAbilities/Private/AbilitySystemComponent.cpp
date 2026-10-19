@@ -53,13 +53,9 @@ void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExis
     static auto OnTagUpdated = []
     {
         auto FortOnTagUpdated = Scanner::String(TEXT("UFortAbilitySystemComponent::OnTagUpdated is updating the HealthRegenDelay tag. bTagExists: %s")).Start().Get(TEXT("UFortAbilitySystemComponent::OnTagUpdated"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAbilitySystemComponent"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAbilitySystemComponent"));
 
-        while (VTable[Index] != FortOnTagUpdated)
-            Index++;
-
-        return Scanner::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortOnTagUpdated; });
     }();
 
     auto VTable = *(uint8_t**)this;
