@@ -44,7 +44,7 @@ bool UChannel::GetPendingDormancy() const
 
 int32 UChannel::GetNumOutRec() const
 {
-    static auto NumOutRec = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cmp dword ptr [*], 0x0").Disp(TEXT("UChannel::NumOutRec"));
+    static auto NumOutRec = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("jnb *; cmp *").Find("cmp *").Disp(TEXT("UChannel::NumOutRec"));
 
     return *(int32*)((uint8_t*)this + NumOutRec);
 }
