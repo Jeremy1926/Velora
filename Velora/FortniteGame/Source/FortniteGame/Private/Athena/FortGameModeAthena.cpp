@@ -3,6 +3,7 @@
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
@@ -238,6 +239,9 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         for (auto ConsumableSpawner : ConsumableSpawners)
             ((ABGAConsumableSpawner*)ConsumableSpawner)->SpawnConsumables();
     }
+
+    if (AFortAthenaVehicle::StaticClass())
+        AFortAthenaVehicle::InitializeServerImplementations();
 }
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const

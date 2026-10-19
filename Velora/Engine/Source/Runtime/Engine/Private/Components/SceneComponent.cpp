@@ -37,3 +37,10 @@ const FBoxSphereBounds& USceneComponent::GetBounds() const
 
     return *(FBoxSphereBounds*)((uint8_t*)this + Bounds);
 }
+
+void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport)
+{
+    static auto K2_SetWorldLocationAndRotation = Scanner::Function<void (*)(USceneComponent*, FVector, FRotator, bool, void*, bool)>(Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_SetWorldLocationAndRotation")).Get(TEXT("USceneComponent::K2_SetWorldLocationAndRotation")));
+
+    K2_SetWorldLocationAndRotation(this, NewLocation, NewRotation, bSweep, nullptr, bTeleport);
+}
