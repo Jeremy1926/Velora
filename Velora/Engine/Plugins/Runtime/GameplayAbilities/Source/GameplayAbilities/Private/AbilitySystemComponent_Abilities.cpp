@@ -163,7 +163,7 @@ FAbilityReplicatedDataCache* TMap<FGameplayAbilitySpecHandleAndPredictionKey, FA
 {
     static auto Lookup = Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("imul *, *, 0x*");
     static auto ElementSize = (int32)Lookup.Imm(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>"));
-    static auto HashNextId = Lookup.Find("mov *, [*+*+0x*]").Disp(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>::HashNextId"));
+    static auto HashNextId = Lookup.Find("mov *, [*+0x*]; cmp *, 0xffffffff").Disp(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>::HashNextId"));
 
     if (Elements.Num() == NumFreeIndices)
         return nullptr;
