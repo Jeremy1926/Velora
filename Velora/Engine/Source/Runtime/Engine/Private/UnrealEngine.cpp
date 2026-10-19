@@ -42,18 +42,21 @@ UClass* UEngine::GetConsoleClass() const
     return *ConsoleClass->ContainerPtrToValuePtr<UClass*>(this);
 }
 
-UEngine::FOnNetworkFailure& UEngine::OnNetworkFailure()
+void UEngine::BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-    static auto NetworkFailureEvent = Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Last("lea rcx, [*+0x*]").Disp(TEXT("UEngine::NetworkFailureEvent"));
+    static auto Call = Scanner::String(TEXT("Beacon close from unexpected control message")).Start().Find("mov r9d, 0x6").Find("call 0x*");
 
-    return *(FOnNetworkFailure*)((uint8_t*)this + NetworkFailureEvent);
-}
+    static auto NetworkFailureEvent = []
+    {
+        auto Engine = Call.Last("mov rcx, [0x*]");
+        auto Event = Call.Last("add rcx, 0x*");
 
-void UEngine::FOnNetworkFailure::Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const
-{
-    static auto Broadcast = Scanner::Function<void (*)(const FOnNetworkFailure*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&)>(Scanner::String(TEXT("Server switch level: %s")).Find("mov r9d, 0x8").Call().Get(TEXT("FOnNetworkFailure::Broadcast")));
+        return Event.Get() > Engine.Get() ? (int32)Event.Imm(TEXT("UEngine::NetworkFailureEvent")) : 0;
+    }();
 
-    Broadcast(this, World, NetDriver, FailureType, ErrorString);
+    static auto Broadcast = Scanner::Function<void (*)(void*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&)>(Call.Target(TEXT("UEngine::BroadcastNetworkFailure")));
+
+    Broadcast((uint8_t*)this + NetworkFailureEvent, World, NetDriver, FailureType, ErrorString);
 }
 
 bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition)

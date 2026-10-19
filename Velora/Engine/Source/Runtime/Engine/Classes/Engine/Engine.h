@@ -16,12 +16,6 @@ struct FWorldContext
 class UEngine : public UObject
 {
 public:
-    class FOnNetworkFailure
-    {
-    public:
-        void Broadcast(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString) const;
-    };
-
     float GetNetClientTicksPerSecond() const;
 
     float GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing = true) const;
@@ -30,12 +24,7 @@ public:
 
     UClass* GetConsoleClass() const;
 
-    FOnNetworkFailure& OnNetworkFailure();
-
-    void BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString = TEXT(""))
-    {
-        OnNetworkFailure().Broadcast(World, NetDriver, FailureType, ErrorString);
-    }
+    void BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString = TEXT(""));
 
     bool CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition);
 
