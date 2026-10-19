@@ -12,6 +12,27 @@ UScriptStruct* FFortBaseWeaponStats::StaticStruct()
     return Struct;
 }
 
+const int32& FFortBaseWeaponStats::GetBaseLevel() const
+{
+    static auto BaseLevel = StaticStruct()->FindPropertyByName(FName(TEXT("BaseLevel")));
+
+    return *BaseLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
+const int32& FFortBaseWeaponStats::GetClipSize() const
+{
+    static auto ClipSize = StaticStruct()->FindPropertyByName(FName(TEXT("ClipSize")));
+
+    return *ClipSize->ContainerPtrToValuePtr<int32>(this);
+}
+
+const float& FFortBaseWeaponStats::GetClipScale() const
+{
+    static auto ClipScale = StaticStruct()->FindPropertyByName(FName(TEXT("ClipScale")));
+
+    return *ClipScale->ContainerPtrToValuePtr<float>(this);
+}
+
 UClass* UFortWeaponItemDefinition::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWeaponItemDefinition"));
@@ -24,7 +45,7 @@ int32 UFortWeaponItemDefinition::GetBaseClipSizeWithMods(const FFortBaseWeaponSt
     if (!WeaponStats)
         return 0;
 
-    return (int32)((FMath::Max((float)Level - (float)WeaponStats->BaseLevel, 0.0f) * WeaponStats->ClipScale + 1.0f) * (float)WeaponStats->ClipSize);
+    return (int32)((FMath::Max((float)Level - (float)WeaponStats->GetBaseLevel(), 0.0f) * WeaponStats->GetClipScale() + 1.0f) * (float)WeaponStats->GetClipSize());
 }
 
 const FDataTableRowHandle& UFortWeaponItemDefinition::GetWeaponStatHandle() const
