@@ -145,7 +145,28 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             return false;
         };
 
+        auto HasEmptyPrimarySlot = [&]
+        {
+            for (auto& Slot : QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots)
+            {
+                if (!Slot.Items.Num())
+                    return true;
+            }
+
+            return false;
+        };
+
+        auto bClientSlotsItems = bNeedsPrimarySlot && QuickBars && !PlayerController->CanServerTryAddToQuickBar();
         auto& SwapItemGuid = GetPickupLocationData().PickupGuid;
+
+        if (bCanAddStack && NumberToGive > 0 && SwapItemGuid == FGuid() && bClientSlotsItems && !HasEmptyPrimarySlot())
+        {
+            auto& QuickBar = QuickBars->GetQuickBar(EFortQuickBars::Primary);
+            auto FocusedSlot = QuickBar.CurrentFocusedSlot;
+
+            if (FocusedSlot >= 0 && FocusedSlot < QuickBar.Slots.Num() && QuickBar.Slots[FocusedSlot].Items.Num())
+                SwapItemGuid = QuickBar.Slots[FocusedSlot].Items[0];
+        }
 
         if (bCanAddStack && NumberToGive > 0 && SwapItemGuid != FGuid())
         {
@@ -162,6 +183,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             SwapItemGuid = FGuid();
         }
+
+        if (bClientSlotsItems && !HasEmptyPrimarySlot())
+            bCanAddStack = false;
 
         while (bCanAddStack && NumberToGive > 0)
         {
