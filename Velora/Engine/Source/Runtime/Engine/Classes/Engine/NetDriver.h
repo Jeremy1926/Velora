@@ -16,6 +16,7 @@ class FNetworkNotify;
 class FNetworkObjectList;
 class UActorChannel;
 class UNetConnection;
+class UReplicationDriver;
 class UWorld;
 struct FNetViewer;
 struct FNetworkObjectInfo;
@@ -126,7 +127,7 @@ public:
 
     TArray<UNetConnection*>& GetClientConnections();
 
-    UObject* GetReplicationDriver() const;
+    UReplicationDriver* GetReplicationDriver() const;
 
     FName GetNetDriverName() const;
 

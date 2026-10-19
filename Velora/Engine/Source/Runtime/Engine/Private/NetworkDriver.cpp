@@ -6,6 +6,7 @@
 #include "Engine/NetConnection.h"
 #include "Engine/NetworkObjectList.h"
 #include "Engine/PackageMapClient.h"
+#include "Engine/ReplicationDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/GameNetworkManager.h"
 #include "GameFramework/PlayerController.h"
@@ -63,11 +64,11 @@ TArray<UNetConnection*>& UNetDriver::GetClientConnections()
     return *ClientConnections->ContainerPtrToValuePtr<TArray<UNetConnection*>>(this);
 }
 
-UObject* UNetDriver::GetReplicationDriver() const
+UReplicationDriver* UNetDriver::GetReplicationDriver() const
 {
     static auto ReplicationDriver = GetClass()->FindPropertyByName(FName(TEXT("ReplicationDriver")));
 
-    return ReplicationDriver ? *ReplicationDriver->ContainerPtrToValuePtr<UObject*>(this) : nullptr;
+    return ReplicationDriver ? *ReplicationDriver->ContainerPtrToValuePtr<UReplicationDriver*>(this) : nullptr;
 }
 
 FName UNetDriver::GetNetDriverName() const
@@ -248,27 +249,17 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
 
     if (auto ReplicationDriver = GetReplicationDriver())
     {
-        static auto FlushNetDormancy = [ReplicationDriver]
-        {
-            auto VTable = *(const uint8_t***)ReplicationDriver;
-            auto Function = Scanner::String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*")).Start().Get();
-            int32 Index = 0;
-
-            while (Index < 512 && VTable[Index] != Function)
-                Index++;
-
-            return Scanner::Slot(TEXT("UReplicationDriver::FlushNetDormancy"), Index < 512 ? Index * (int32)sizeof(void*) : 0);
-        }();
-
-        (*(void (**)(UObject*, AActor*, bool))(*(uint8_t**)ReplicationDriver + FlushNetDormancy))(ReplicationDriver, Actor, bWasDormInitial);
+        ReplicationDriver->FlushNetDormancy(Actor, bWasDormInitial);
     }
-
-    for (int32 i = 0; i < GetClientConnections().Num(); ++i)
+    else
     {
-        UNetConnection* NetConnection = GetClientConnections()[i];
-        if (NetConnection != NULL)
+        for (int32 i = 0; i < GetClientConnections().Num(); ++i)
         {
-            NetConnection->FlushDormancy(Actor);
+            UNetConnection* NetConnection = GetClientConnections()[i];
+            if (NetConnection != NULL)
+            {
+                NetConnection->FlushDormancy(Actor);
+            }
         }
     }
 }
@@ -852,6 +843,11 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
     if (GetClientConnections().Num() == 0)
     {
         return 0;
+    }
+
+    if (auto ReplicationDriver = GetReplicationDriver())
+    {
+        return ReplicationDriver->ServerReplicateActors(DeltaSeconds);
     }
 
     int32 Updated = 0;

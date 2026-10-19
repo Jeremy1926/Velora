@@ -207,6 +207,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\ContentStreaming.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectArray.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Player.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ReplicationDriver.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\LocalPlayer.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\BitArray.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\SparseArray.h" />
@@ -404,6 +405,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameNetworkManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Level.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Player.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\ReplicationDriver.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkObjectList.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PackageMapClient.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataBunch.cpp" />
