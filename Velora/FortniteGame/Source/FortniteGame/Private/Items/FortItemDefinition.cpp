@@ -37,9 +37,11 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
 {
     static auto DoesAllowMultipleStacks = []
     {
-        auto bAllowMultipleStacks = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")))->GetOffset_ForInternal();
+        auto bAllowMultipleStacks = (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")));
+        auto Offset = bAllowMultipleStacks->GetOffset_ForInternal() + bAllowMultipleStacks->GetByteOffset();
+        auto Bit = std::countr_zero(bAllowMultipleStacks->GetFieldMask());
         auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
-        auto Getter = std::format("mov* *, *[rcx+{:#x}]; and *", bAllowMultipleStacks);
+        auto Getter = Bit ? std::format("mov* *, *[rcx+{:#x}]; shr al, {:#x}; and *", Offset, Bit) : std::format("mov* *, *[rcx+{:#x}]; and *", Offset);
 
         return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
     }();
