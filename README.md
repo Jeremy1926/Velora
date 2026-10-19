@@ -6,9 +6,15 @@ Universal gameserver for Fortnite.
 
 ## Version support
 
-1.7.2 to 4.5
+| Season | Versions |
+| --- | --- |
+| Pre-Season | 1.7.2 |
+| Season 1 | 1.8 to 1.10 |
+| Season 2 | 1.11 to 2.5 |
+| Season 3 | 3.0 to 3.6 |
+| Season 4 | 4.0 to 4.5 |
 
-If a build in this range doesn't work, open an issue.
+If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
 ## Features
 
