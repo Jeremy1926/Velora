@@ -27,5 +27,7 @@ public:
 
     void OnRep_CurrentPlaylistData();
 
+    void OnRep_CurrentPlaylistInfo();
+
     void StreamAdditionalPlaylistLevels();
 };

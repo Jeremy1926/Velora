@@ -3,6 +3,7 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Online/FortPlaylistManager.h"
 #include "Engine/World.h"
+#include "Misc/CoreMiscDefines.h"
 #include "Templates/Casts.h"
 #include "UObject/AssetPtr.h"
 #include "UObject/Class.h"
@@ -34,13 +35,17 @@ AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));
+    static auto CurrentPlaylistInfo = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistInfo")));
+    static auto BasePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("BasePlaylist"))) : nullptr;
+    static auto PlaylistReplicationKey = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("PlaylistReplicationKey"))) : nullptr;
     static auto bPlaylistDataIsLoaded = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
     static auto bPlaylistDataIsActivelyLoading = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsActivelyLoading")));
     static auto AirCraftBehavior = GetClass()->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
     static auto PlaylistNameProperty = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("PlaylistName")));
     static auto PlaylistAirCraftBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
 
-    auto& Playlist = *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
+    auto PlaylistInfo = CurrentPlaylistInfo ? CurrentPlaylistInfo->ContainerPtrToValuePtr<void>(this) : nullptr;
+    auto& Playlist = PlaylistInfo ? *BasePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo) : *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
 
     if (Playlist && *PlaylistNameProperty->ContainerPtrToValuePtr<FName>(Playlist) == PlaylistName && (*bPlaylistDataIsLoaded->ContainerPtrToValuePtr<bool>(this) || *bPlaylistDataIsActivelyLoading->ContainerPtrToValuePtr<bool>(this)))
         return;
@@ -56,10 +61,28 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
     if (!NewPlaylist)
         return;
 
-    Playlist = NewPlaylist;
+    if (PlaylistInfo)
+    {
+        auto& ReplicationKey = *PlaylistReplicationKey->ContainerPtrToValuePtr<int32>(PlaylistInfo);
+
+        ReplicationKey++;
+        Playlist = NewPlaylist;
+
+        if (ReplicationKey == INDEX_NONE)
+            ReplicationKey++;
+    }
+    else
+    {
+        Playlist = NewPlaylist;
+    }
+
     *AirCraftBehavior->ContainerPtrToValuePtr<uint8>(this) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
 
-    OnRep_CurrentPlaylistData();
+    if (PlaylistInfo)
+        OnRep_CurrentPlaylistInfo();
+    else
+        OnRep_CurrentPlaylistData();
+
     StreamAdditionalPlaylistLevels();
 }
 
@@ -70,12 +93,26 @@ void AFortGameStateAthena::OnRep_CurrentPlaylistData()
     OnRep_CurrentPlaylistData(this);
 }
 
+void AFortGameStateAthena::OnRep_CurrentPlaylistInfo()
+{
+    static auto OnRep_CurrentPlaylistInfo = Scanner::Function<void (*)(AFortGameStateAthena*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:OnRep_CurrentPlaylistInfo")).Find("jmp 0x*").Target(TEXT("AFortGameStateAthena::OnRep_CurrentPlaylistInfo")));
+
+    OnRep_CurrentPlaylistInfo(this);
+}
+
 void AFortGameStateAthena::StreamAdditionalPlaylistLevels()
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));
+    static auto CurrentPlaylistInfo = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistInfo")));
+    static auto BasePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("BasePlaylist"))) : nullptr;
+    static auto OverridePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("OverridePlaylist"))) : nullptr;
     static auto AdditionalLevels = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("AdditionalLevels")));
 
-    auto Playlist = *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
+    auto PlaylistInfo = CurrentPlaylistInfo ? CurrentPlaylistInfo->ContainerPtrToValuePtr<void>(this) : nullptr;
+    auto Playlist = PlaylistInfo ? *OverridePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo) : *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
+
+    if (PlaylistInfo && !Playlist)
+        Playlist = *BasePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo);
 
     if (!HasAuthority() || !Playlist)
         return;
