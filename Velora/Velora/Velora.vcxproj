@@ -282,6 +282,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsConsoleOutputDevice.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameStateBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameStateAthena.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaMapInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootTier.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootPackage.h" />
@@ -431,6 +432,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameStateBase.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootTier.cpp" />
