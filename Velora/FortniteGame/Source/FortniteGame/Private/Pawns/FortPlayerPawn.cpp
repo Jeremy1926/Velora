@@ -139,9 +139,9 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
         auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
         auto Check = std::format("cmp byte ptr [rcx+{:#x}], 0x0; mov r*, rdx; mov r*, rcx", GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")))->GetOffset_ForInternal());
 
-        for (int32 Index = 0; VTable[Index] >= Image && VTable[Index] < ImageEnd; Index++)
+        for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
         {
-            if (Scanner::At(VTable[Index]).Has(Check))
+            if (VTable[Index] >= Image && VTable[Index] < ImageEnd && Scanner::At(VTable[Index]).Has(Check))
                 return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), Index * (int32)sizeof(void*));
         }
 

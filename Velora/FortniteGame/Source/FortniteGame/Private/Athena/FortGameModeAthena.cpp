@@ -338,8 +338,11 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         auto Image = Scanner::Base();
         auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
 
-        for (int32 Index = 0; VTable[Index] >= Image && VTable[Index] < ImageEnd; Index++)
+        for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
         {
+            if (VTable[Index] < Image || VTable[Index] >= ImageEnd)
+                continue;
+
             for (auto Name = Scanner::At(VTable[Index]).Find("lea rdx, [0x*]"); Name.Get(); Name = Name.Find("lea rdx, [0x*]"))
             {
                 auto Target = Name.Target();
@@ -352,7 +355,9 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         return Scanner::At(nullptr).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
     }());
 
-    FName Result(NAME_None);
+    FName Result(LootTierGroup);
 
-    return *RedirectLootTierGroup(this, &Result, LootTierGroup);
+    RedirectLootTierGroup(this, &Result, LootTierGroup);
+
+    return Result;
 }
