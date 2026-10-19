@@ -58,6 +58,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         FortGameInstance->GetServerAnalyticsProvider() = UFortAnalytics::CreateAnalyticsProvider(FString(), FString(), FString(FPlatformProperties::IniPlatformName()), EAnalyticsProviderType::ServerGameInstance, FString());
         FortGameInstance->GetServerAnalyticsProvider()->StartSession();
 
+        if (auto ServerEsportsAnalyticsProvider = FortGameInstance->GetServerEsportsAnalyticsProvider())
+        {
+            *ServerEsportsAnalyticsProvider = UFortAnalytics::CreateAnalyticsProvider(FString(), FString(), FString(FPlatformProperties::IniPlatformName()), EAnalyticsProviderType::EsportsServerGameInstance, FString());
+            (*ServerEsportsAnalyticsProvider)->StartSession();
+        }
+
         if (auto LocalPlayer = GameInstance->GetFirstGamePlayer())
         {
             if (auto PlayerController = LocalPlayer->GetPlayerController())

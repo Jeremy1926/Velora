@@ -9,4 +9,6 @@ class UFortGameInstance : public UGameInstance
 {
 public:
     TSharedPtr<IAnalyticsProvider>& GetServerAnalyticsProvider();
+
+    TSharedPtr<IAnalyticsProvider>* GetServerEsportsAnalyticsProvider();
 };

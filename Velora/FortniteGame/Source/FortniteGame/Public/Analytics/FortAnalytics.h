@@ -11,7 +11,8 @@ enum class EAnalyticsProviderType
 {
     Client,
     Server,
-    ServerGameInstance
+    ServerGameInstance,
+    EsportsServerGameInstance
 };
 
 class UFortAnalytics
