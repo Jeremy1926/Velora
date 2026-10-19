@@ -251,7 +251,15 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return DetourVTable(TEXT("ABuildingContainer::BeginPlay"), (void**)(VTable + Index * sizeof(void*)), &ABuildingContainer::BeginPlay);
     }();
 
-    (this->*::OnGivenMatchAssignment)(MatchOptions);
+    void* Original;
+    memcpy(&Original, &::OnGivenMatchAssignment, sizeof(Original));
+
+    static auto bTakesSucceeded = Scanner::At(Original).Is("test dl, dl");
+
+    if (bTakesSucceeded)
+        ((void (*)(AFortGameModeAthena*, bool, const TMap<FString, FString>&))Original)(this, true, MatchOptions);
+    else
+        (this->*::OnGivenMatchAssignment)(MatchOptions);
 
     if (!::OnPlaylistDataLoaded)
         OnPlaylistDataLoaded();
