@@ -52,7 +52,7 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
-    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(Scanner::CallTo(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get()).Find("mov r9, [*+0x*]").Find("call 0x*").Call().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation")));
+    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(Scanner::CallTo(Scanner::String(TEXT("SupplyDropSpawn")).Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation")));
 
     return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
 }
