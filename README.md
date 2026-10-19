@@ -15,7 +15,7 @@ Universal gameserver for Fortnite.
 | Season 2 | 1.11 to 2.5 |
 | Season 3 | 3.0 to 3.6 |
 | Season 4 | 4.0 to 4.5 |
-| Season 5 | 5.00 |
+| Season 5 | 5.00 to 5.41 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
