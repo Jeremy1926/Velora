@@ -75,7 +75,8 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 
 FGameplayTagContainer& UAbilitySystemComponent::GetInternalTryActivateAbilityFailureTags()
 {
-    static auto Reset = Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Find("xor edx, edx").Last("lea *, [*]");
+    static auto Clear = Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Find("xor edx, edx");
+    static auto Reset = Clear.Is("xor edx, edx; lea rcx, [*]") ? Clear.Find("lea rcx, [*]") : Clear.Last("lea *, [*]");
     static auto Global = Reset.Is("lea *, [0x*]") ? (FGameplayTagContainer*)Reset.Target(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags")) : nullptr;
     static auto Offset = Global ? 0 : Reset.Disp(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"));
 

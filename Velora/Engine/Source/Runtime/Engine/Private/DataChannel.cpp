@@ -15,8 +15,10 @@ UNetConnection* UChannel::GetConnection() const
 
 bool UChannel::GetClosing() const
 {
-    static auto Closing = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("test byte ptr [*], 0x*");
-    static auto Offset = Closing.Disp(TEXT("UChannel::Closing"));
+    static auto Close = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start();
+    static auto Load = Close.Find("mov e*, [rcx+0x*]; test cl, 0x*");
+    static auto Closing = Load.Get() ? Load.Find("test cl, 0x*") : Close.Find("test byte ptr [*], 0x*");
+    static auto Offset = (Load.Get() ? Load : Closing).Disp(TEXT("UChannel::Closing"));
     static auto Mask = Closing.Imm();
 
     return *((uint8_t*)this + Offset) & Mask;

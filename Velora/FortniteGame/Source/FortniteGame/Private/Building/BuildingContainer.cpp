@@ -110,7 +110,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
                             ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
                     }
 
-                    if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
+                    if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::Container))
                     {
                         Pickup->GetTossedFromContainer() = true;
                         Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);

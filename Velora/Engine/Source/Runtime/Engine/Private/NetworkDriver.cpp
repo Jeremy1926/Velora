@@ -178,7 +178,13 @@ static int32_t ReplicationFrameOffset()
     {
         auto Frames = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]");
 
-        return (Frames.Get() ? Frames : Scanner::String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*")).Start().Find("inc [*]; inc [*]")).Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
+        if (!Frames.Get())
+            Frames = Scanner::String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*")).Start().Find("inc [*]; inc [*]");
+
+        if (!Frames.Get())
+            Frames = Scanner::String(TEXT("STAT_ReplayPrioritizeTime")).Last("inc [*]; inc [*]");
+
+        return Frames.Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
     }();
 
     return ReplicationFrame;

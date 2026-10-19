@@ -22,11 +22,22 @@ UClass* AFortPickup::StaticClass()
     return Class;
 }
 
-AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner)
+AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner, EFortPickupSourceTypeFlag SourceTypeFlags, bool bRandomRotation, bool bPickupOnlyRelevantToOwner)
 {
-    static auto CreateFromData = Scanner::Function<AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*, AActor*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("mov qword ptr [rsp+0x28], *").Call().Get(TEXT("AFortPickup::CreateFromData")));
+    static auto SpawnMissionItemPickup = Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"));
+    static auto Arguments = SpawnMissionItemPickup.Find("mov qword ptr [rsp+0x28], *");
+    static auto Address = (Arguments.Get() ? Arguments : SpawnMissionItemPickup.Find("mov byte ptr [rsp+0x*], 0x1")).Call().Get(TEXT("AFortPickup::CreateFromData"));
 
-    return CreateFromData(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner);
+    if (!Arguments.Get())
+    {
+        static auto CreateFromData = Scanner::Function<AFortPickup* (*)(const FortPickupCreationData&)>(Address);
+
+        return CreateFromData({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, (uint32)SourceTypeFlags });
+    }
+
+    static auto CreateFromData = Scanner::Function<AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*, AActor*, bool, bool)>(Address);
+
+    return CreateFromData(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, bPickupOnlyRelevantToOwner);
 }
 
 void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss)

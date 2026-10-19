@@ -204,7 +204,7 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
                     FFortItemEntry ItemEntry(LootDrop.GetItemDefinition(), LootDrop.GetCount(), 0);
                     ItemEntry.SetStateValue(EFortItemEntryState::DoNotShowSpawnParticles, 1);
 
-                    if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, SpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }))
+                    if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, SpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, nullptr, nullptr, EFortPickupSourceTypeFlag::Destruction))
                     {
                         const FVector StartDirection = FMath::VRandCone(FVector(0.0f, 0.0f, 1.0f), 0.2617994f);
                         const float FlyTime = (float)(Pickup->GetFlyTime() + Index * 0.3);

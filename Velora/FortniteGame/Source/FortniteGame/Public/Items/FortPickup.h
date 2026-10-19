@@ -20,6 +20,17 @@ enum class EFortPickupTossState : uint8
     AtRest,
 };
 
+enum class EFortPickupSourceTypeFlag : uint8
+{
+    Other = 0,
+    Player = 1,
+    Destruction = 2,
+    Container = 4,
+    AI = 8,
+    Tossed = 16,
+    FloorLoot = 32,
+};
+
 struct FFortPickupLocationData
 {
     AFortPawn* PickupTarget;
@@ -34,12 +45,25 @@ struct FFortPickupLocationData
     FGuid PickupGuid;
 };
 
+struct FortPickupCreationData
+{
+    UWorld* World;
+    const FFortItemEntry* ItemEntry;
+    const FVector* SpawnLocation;
+    const FRotator* SpawnRotation;
+    AFortPlayerController* OptionalOwnerPC;
+    UClass* OverrideClass;
+    AActor* Owner;
+    bool bRandomRotation;
+    uint32 SourceTypeFlags;
+};
+
 class AFortPickup : public AActor
 {
 public:
     static UClass* StaticClass();
 
-    static AFortPickup* CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC = nullptr, UClass* OverrideClass = nullptr, AActor* Owner = nullptr);
+    static AFortPickup* CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC = nullptr, UClass* OverrideClass = nullptr, AActor* Owner = nullptr, EFortPickupSourceTypeFlag SourceTypeFlags = EFortPickupSourceTypeFlag::Other, bool bRandomRotation = true, bool bPickupOnlyRelevantToOwner = false);
 
     void TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss);
 

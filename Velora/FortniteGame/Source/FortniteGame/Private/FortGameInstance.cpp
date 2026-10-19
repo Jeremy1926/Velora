@@ -6,7 +6,7 @@ TSharedPtr<IAnalyticsProvider>& UFortGameInstance::GetServerAnalyticsProvider()
 {
     static auto ServerAnalyticsProvider = []
     {
-        auto Assign = Scanner::String(TEXT("TeamChatroom")).Start().Find("mov dword ptr [rsp+0x20], 0x2").Find("call 0x*").Find("*");
+        auto Assign = Scanner::Reference(Scanner::String("AnalyticsET").Start().Get(), "call 0x*").Find("*");
 
         return Scanner::Offset(TEXT("UFortGameInstance::ServerAnalyticsProvider"), Assign.Imm() + Assign.Disp());
     }();

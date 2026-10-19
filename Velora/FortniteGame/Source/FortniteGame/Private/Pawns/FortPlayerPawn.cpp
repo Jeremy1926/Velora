@@ -127,7 +127,26 @@ void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInst
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 {
-    static auto CanReviveFromDBNO = Scanner::At(Scanner::String("ResurrectHere").Last("lea rax, [0x*]").Target(TEXT("AFortPlayerControllerZone::ResurrectHere"))).Find("call [*+0x*]").Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"));
+    static auto CanReviveFromDBNO = [this]
+    {
+        auto ResurrectHere = Scanner::String("ResurrectHere").Last("lea rax, [0x*]");
+
+        if (ResurrectHere.Get())
+            return Scanner::At(ResurrectHere.Target(TEXT("AFortPlayerControllerZone::ResurrectHere"))).Find("call [*+0x*]").Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"));
+
+        auto VTable = *(const uint8_t***)this;
+        auto Image = Scanner::Base();
+        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
+        auto Check = std::format("cmp byte ptr [rcx+{:#x}], 0x0; mov rdi, rdx; mov rsi, rcx", GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")))->GetOffset_ForInternal());
+
+        for (int32 Index = 0; VTable[Index] >= Image && VTable[Index] < ImageEnd; Index++)
+        {
+            if (Scanner::At(VTable[Index]).Has(Check))
+                return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), Index * (int32)sizeof(void*));
+        }
+
+        return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), 0);
+    }();
 
     auto VTable = *(uint8_t**)this;
 

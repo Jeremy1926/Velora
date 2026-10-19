@@ -13,9 +13,11 @@ UWorld* ULevel::GetOwningWorld() const
 
 bool ULevel::IsAssociatingLevel() const
 {
-    static auto bIsAssociatingLevel = Scanner::String(TEXT("sorting actor list")).Start().Find("lea *, [rdx+0x*]");
-    static auto Offset = bIsAssociatingLevel.Disp(TEXT("ULevel::bIsAssociatingLevel"));
-    static auto Mask = bIsAssociatingLevel.Find("or byte ptr [*], 0x*").Imm();
+    static auto AddToWorld = Scanner::String(TEXT("sorting actor list")).Start();
+    static auto bIsAssociatingLevel = AddToWorld.Find("lea *, [rdx+0x*]");
+    static auto SetAssociating = bIsAssociatingLevel.Get() ? bIsAssociatingLevel.Find("or byte ptr [*], 0x*") : AddToWorld.Find("or byte ptr [rdx+0x*], 0x*");
+    static auto Offset = (bIsAssociatingLevel.Get() ? bIsAssociatingLevel : SetAssociating).Disp(TEXT("ULevel::bIsAssociatingLevel"));
+    static auto Mask = SetAssociating.Imm();
 
     return *((uint8_t*)this + Offset) & Mask;
 }
