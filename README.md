@@ -6,20 +6,7 @@ Universal gameserver for Fortnite.
 
 ## Version support
 
-| Version | Status |
-| --- | --- |
-| 1.7.2 (CL-3700114) | Playable |
-| 1.8 (CL-3724489) | Playable |
-| 1.10 (CL-3790078) | Playable |
-| 1.11 (CL-3807424) | Playable |
-| 2.4.2 (CL-3870737) | Playable |
-| 2.5.0 (CL-3889387) | Playable |
-| 3.0 (CL-3901517) | Playable |
-| 3.5 (CL-4008490) | Playable |
-| 4.0 (CL-4039451) | Playable |
-| 4.5 (CL-4159770) | Playable |
-
-These are the builds we tested. Velora finds everything it needs in the game at runtime, so every build between them (any version or CL from 1.7.2 to 4.5) should work too.
+1.7.2 to 4.5
 
 ## Features
 
@@ -40,7 +27,7 @@ These are the builds we tested. Velora finds everything it needs in the game at 
 ## To-do
 
 - XP and challenges
-- Season 2 to 7
+- Season 5 to 7
 
 ## Configuration
 
