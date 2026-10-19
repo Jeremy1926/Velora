@@ -49,9 +49,10 @@ struct FFortLootTierData : public FTableRowBase
     TArray<int32> LootPackageCategoryWeightArray;
     TArray<int32> LootPackageCategoryMinArray;
     TArray<int32> LootPackageCategoryMaxArray;
-    FGameplayTag RequiredGameplayTag;
-    bool bAllowBonusLootDrops;
-    FString Annotation;
+
+    FGameplayTag GetRequiredGameplayTag() const;
+
+    bool GetAllowBonusLootDrops() const;
 };
 
 class UFortLootTier

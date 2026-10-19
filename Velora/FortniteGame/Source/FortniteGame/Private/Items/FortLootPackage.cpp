@@ -21,6 +21,20 @@ UScriptStruct* FFortLootPackageData::StaticStruct()
     return Struct;
 }
 
+FName FFortLootPackageData::GetRequiredTag() const
+{
+    static auto RequiredTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredTag")));
+
+    return *RequiredTag->ContainerPtrToValuePtr<FName>(this);
+}
+
+const FString& FFortLootPackageData::GetLootPackageCall() const
+{
+    static auto LootPackageCall = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageCall")));
+
+    return *LootPackageCall->ContainerPtrToValuePtr<FString>(this);
+}
+
 const TAssetPtr<UFortItemDefinition>& FFortLootPackageData::GetItemDefinition() const
 {
     static auto ItemDefinition = StaticStruct()->FindPropertyByName(FName(TEXT("ItemDefinition")));
@@ -47,9 +61,9 @@ static bool PackageMeetsCriteria(const FFortLootPackageData& LootPackageData, FN
     if (LootPackageName != LootPackageData.LootPackageID || (LootPackageCategory != -1 && LootPackageData.LootPackageCategory != LootPackageCategory))
         return false;
 
-    if (LootPackageData.RequiredTag != NAME_None)
+    if (LootPackageData.GetRequiredTag() != NAME_None)
     {
-        if (!GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(LootPackageData.RequiredTag)))
+        if (!GameplayTags.HasTag(FGameplayTag::RequestGameplayTag(LootPackageData.GetRequiredTag())))
             return false;
     }
 
@@ -116,7 +130,7 @@ bool UFortLootPackage::PickLootDrops(TArray<FFortItemEntry>& OutLootToDrop, int3
 
             for (int32 DropIndex = 0; DropIndex < CategoryDrops.Value; ++DropIndex)
             {
-                PickLootDropsFromLootPackage(OutLootToDrop, LootPackage, WorldLevel, CategoryDrops.Key, GameplayTags, !bUseLootPreviewPackage && bAllowBonusLootDrops && LootTierData->bAllowBonusLootDrops);
+                PickLootDropsFromLootPackage(OutLootToDrop, LootPackage, WorldLevel, CategoryDrops.Key, GameplayTags, !bUseLootPreviewPackage && bAllowBonusLootDrops && LootTierData->GetAllowBonusLootDrops());
             }
         }
     }
@@ -175,7 +189,7 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
         {
             UE_LOG(LogFortLoot, Verbose, TEXT("PickLootDropsFromLootPackage selected package %s"), *LootPackageData->LootPackageID.ToString());
 
-            if (LootPackageData->LootPackageCall.IsEmpty())
+            if (LootPackageData->GetLootPackageCall().IsEmpty())
             {
                 if (!LootPackageData->GetItemDefinition().IsNull())
                 {
@@ -212,7 +226,7 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
             {
                 for (int32 Index = 0; Index < LootPackageData->Count; ++Index)
                 {
-                    PickLootDropsFromLootPackage(OutLootToDrop, FName(*LootPackageData->LootPackageCall), WorldLevel, -1, GameplayTags, false);
+                    PickLootDropsFromLootPackage(OutLootToDrop, FName(*LootPackageData->GetLootPackageCall()), WorldLevel, -1, GameplayTags, false);
                 }
             }
 

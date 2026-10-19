@@ -4,6 +4,8 @@
 #include "FortniteGame.h"
 #include "Logging/LogMacros.h"
 #include "Math/UnrealMathUtility.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
 UScriptStruct* FFortLootTierData::StaticStruct()
@@ -11,6 +13,20 @@ UScriptStruct* FFortLootTierData::StaticStruct()
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortLootTierData"));
 
     return Struct;
+}
+
+FGameplayTag FFortLootTierData::GetRequiredGameplayTag() const
+{
+    static auto RequiredGameplayTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredGameplayTag")));
+
+    return RequiredGameplayTag ? *RequiredGameplayTag->ContainerPtrToValuePtr<FGameplayTag>(this) : FGameplayTag();
+}
+
+bool FFortLootTierData::GetAllowBonusLootDrops() const
+{
+    static auto bAllowBonusLootDrops = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bAllowBonusLootDrops")));
+
+    return bAllowBonusLootDrops->GetPropertyValue_InContainer(this);
 }
 
 bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& OutLootTier, const FName& TierGroupName, int32 WorldLevel, const FGameplayTagContainer& GameplayTags, int32 ForcedLootTier)
@@ -29,7 +45,7 @@ bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& Out
         if (ForcedLootTier >= 0 && LootTierData.LootTier != ForcedLootTier)
             return false;
 
-        if (LootTierData.RequiredGameplayTag.IsValid() && !GameplayTags.HasTag(LootTierData.RequiredGameplayTag))
+        if (LootTierData.GetRequiredGameplayTag().IsValid() && !GameplayTags.HasTag(LootTierData.GetRequiredGameplayTag()))
             return false;
 
         if (WorldLevel >= 0)

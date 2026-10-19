@@ -17,8 +17,10 @@ struct FFortLootPackageData : public FTableRowBase
     float Weight;
     int32 Count;
     int32 LootPackageCategory;
-    FName RequiredTag;
-    FString LootPackageCall;
+
+    FName GetRequiredTag() const;
+
+    const FString& GetLootPackageCall() const;
 
     const TAssetPtr<UFortItemDefinition>& GetItemDefinition() const;
 
