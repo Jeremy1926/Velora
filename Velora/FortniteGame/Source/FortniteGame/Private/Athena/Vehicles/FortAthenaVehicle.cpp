@@ -69,12 +69,16 @@ const TCHAR* AFortAthenaVehicle::GetServerFunctionPath(const TCHAR* FunctionName
 
 void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState)
 {
+    static auto bEncodedRotation = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaVehiclePhysicsState")))->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
+
     auto PrimitiveComponent = Cast<UPrimitiveComponent>(GetRootComponent());
 
     if (!PrimitiveComponent)
         return;
 
-    PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.Translation, InState.Rotation.Rotator(), false, true);
+    auto Rotation = bEncodedRotation ? FQuat(InState.Rotation.X - 2.5f, InState.Rotation.Y / 0.3f, InState.Rotation.Z + 2.0f, InState.Rotation.W / -1.2f) : InState.Rotation;
+
+    PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.Translation, Rotation.Rotator(), false, true);
     PrimitiveComponent->SetPhysicsLinearVelocity(InState.LinearVelocity, false, NAME_None);
     PrimitiveComponent->SetPhysicsAngularVelocityInRadians(InState.AngularVelocity, false, NAME_None);
 }
