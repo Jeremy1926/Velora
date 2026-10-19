@@ -539,7 +539,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
     }
 
     static auto BuildingIsRestrictedText = (const FText*)ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Target(TEXT("BuildingIsRestrictedText"));
-    static auto UnableToAfford = (const FText*)ClientBuild().Find("call 0x*; movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]").Target(TEXT("UnableToAfford"));
+    static auto UnableToAfford = (const FText*)ClientBuild().Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]").Target(TEXT("UnableToAfford"));
 
     FText Message;
 
@@ -752,7 +752,7 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
 
 EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings)
 {
-    static auto CanPlaceBuildableClassInStructuralGrid = ClientBuild().Find("or *, 0xffffffff").Find("call [*+0x*]", 2).Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"));
+    static auto CanPlaceBuildableClassInStructuralGrid = Scanner::Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"), IsBuildingRestrictedSlot() + 10 * (int32_t)sizeof(void*));
 
     auto VTable = *(uint8_t**)this;
 
@@ -770,7 +770,7 @@ int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData B
 
 FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralGridQueryResults QueryResults) const
 {
-    static auto GetErrorMessageFromStructuralQuery = ClientBuild().Find("mov r8d, *; lea rdx, *; call [*+0x*]").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::GetErrorMessageFromStructuralQuery"));
+    static auto GetErrorMessageFromStructuralQuery = ClientBuild().Find("mov r8d, *; *; call [*+0x*]; mov rdx, rax").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::GetErrorMessageFromStructuralQuery"));
 
     auto VTable = *(uint8_t**)this;
     FText Result(NoInit);
@@ -830,7 +830,12 @@ void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, fl
 
 void AFortPlayerController::TriggerUIFeedbackEvent(FName EventName)
 {
-    static auto TriggerUIFeedbackEvent = (void (*)(AFortPlayerController*, FName))ClientBuild().Find("mov rdx, *; mov rcx, *; call 0x*; mov rbx, [rsp+0x*]").Call().Get(TEXT("AFortPlayerController::TriggerUIFeedbackEvent"));
+    static auto TriggerUIFeedbackEvent = []
+    {
+        auto Call = ClientBuild().Find("mov rdx, *; mov rcx, *; call 0x*; mov rbx, [rsp+0x*]");
+
+        return Scanner::Function<void (*)(AFortPlayerController*, FName)>((Call.Get() ? Call : ClientBuild().Find("mov rdx, [rsp+0x*]; mov rcx, *; call 0x*; cmp [*], *")).Call().Get(TEXT("AFortPlayerController::TriggerUIFeedbackEvent")));
+    }();
 
     TriggerUIFeedbackEvent(this, EventName);
 }
