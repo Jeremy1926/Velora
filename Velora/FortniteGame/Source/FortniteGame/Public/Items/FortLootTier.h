@@ -57,7 +57,7 @@ struct FFortLootTierData : public FTableRowBase
 class UFortLootTier
 {
 public:
-    static bool ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& OutLootTier, const FName& TierGroupName, int32 WorldLevel, const FGameplayTagContainer& GameplayTags);
+    static bool ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& OutLootTier, const FName& TierGroupName, int32 WorldLevel, const FGameplayTagContainer& GameplayTags, int32 ForcedLootTier = -1);
 
     static bool PickLootTierKeyFromValidRows(FName& OutLootTierKey, int32& OutLootTier, float TotalWeight, const TArray<TPair<FName, FFortLootTierData*>>& ValidRows);
 

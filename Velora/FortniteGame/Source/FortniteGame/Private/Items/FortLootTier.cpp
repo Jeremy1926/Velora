@@ -13,7 +13,7 @@ UScriptStruct* FFortLootTierData::StaticStruct()
     return Struct;
 }
 
-bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& OutLootTier, const FName& TierGroupName, int32 WorldLevel, const FGameplayTagContainer& GameplayTags)
+bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& OutLootTier, const FName& TierGroupName, int32 WorldLevel, const FGameplayTagContainer& GameplayTags, int32 ForcedLootTier)
 {
     TArray<TPair<FName, FFortLootTierData*>> ValidRows;
     float TotalWeight = 0.0f;
@@ -24,6 +24,9 @@ bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& Out
             return false;
 
         if (LootTierData.QuotaLevel != ELootQuotaLevel::Unlimited)
+            return false;
+
+        if (ForcedLootTier >= 0 && LootTierData.LootTier != ForcedLootTier)
             return false;
 
         if (LootTierData.RequiredGameplayTag.IsValid() && !GameplayTags.HasTag(LootTierData.RequiredGameplayTag))
