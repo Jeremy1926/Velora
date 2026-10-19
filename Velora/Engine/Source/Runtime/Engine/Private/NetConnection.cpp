@@ -107,7 +107,13 @@ void UNetConnection::SetTimeSensitive(bool bInTimeSensitive)
 
 TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>& UNetConnection::GetActorChannels()
 {
-    static auto ActorChannels = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("add rcx, 0x*").Imm(TEXT("UNetConnection::ActorChannels"));
+    static auto ActorChannels = []
+    {
+        auto Close = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start();
+        auto Add = Close.Find("add rcx, 0x*");
+
+        return Add.Get() ? (int32)Add.Imm(TEXT("UNetConnection::ActorChannels")) : Close.Find("mov rcx, [*+0x28]; call 0x*").Call().Find("lea rcx, [rbx+0x*]").Disp(TEXT("UNetConnection::ActorChannels"));
+    }();
 
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
 }
@@ -121,7 +127,13 @@ TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AA
 
 TSet<FNetworkGUID>& UNetConnection::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list")).Find("lea rcx, [*+0x*]; add r8, *").Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));
+    static auto DestroyedStartupOrDormantActors = []
+    {
+        auto Destroy = Scanner::String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list"));
+        auto Add = Destroy.Find("lea rcx, [*+0x*]; add r8, *");
+
+        return (Add.Get() ? Add : Destroy.Find("add r8, *; lea rcx, [*+0x*]").Find("lea rcx, [*+0x*]")).Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));
+    }();
 
     return *(TSet<FNetworkGUID>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }

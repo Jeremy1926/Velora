@@ -126,7 +126,13 @@ bool UActorChannel::ReplicateActor()
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    static auto SetChannelActor = Scanner::Function<void (*)(UActorChannel*, AActor*)>(Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("mov edx, 0x2").Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor")));
+    static auto SetChannelActor = Scanner::Function<void (*)(UActorChannel*, AActor*)>([]
+    {
+        auto ProcessRemoteFunction = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start();
+        auto ChannelType = ProcessRemoteFunction.Find("mov edx, 0x2");
+
+        return (ChannelType.Get() ? ChannelType : ProcessRemoteFunction.Find("lea edx, [*+0x2]")).Find("call 0x*").Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
+    }());
 
     SetChannelActor(this, InActor);
 }

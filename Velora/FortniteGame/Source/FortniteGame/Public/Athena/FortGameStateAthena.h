@@ -2,6 +2,8 @@
 
 #include "GameFramework/GameStateBase.h"
 
+class AFortAthenaMapInfo;
+
 enum class EAthenaGamePhase : uint8
 {
     None,
@@ -18,4 +20,6 @@ public:
     static UClass* StaticClass();
 
     EAthenaGamePhase GetGamePhase() const;
+
+    AFortAthenaMapInfo* GetMapInfo() const;
 };

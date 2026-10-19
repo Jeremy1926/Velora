@@ -26,12 +26,18 @@
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
 
 static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
 
-static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get(), &AFortGameModeAthena::OnGivenMatchAssignment);
+static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), []
+{
+    auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
+
+    return (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get();
+}(), &AFortGameModeAthena::OnGivenMatchAssignment);
 
 UClass* AFortGameModeAthena::StaticClass()
 {
@@ -136,8 +142,22 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto GivePickupTo = []
     {
-        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Slot(TEXT("AFortPickup::GivePickupTo"));
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup"));
+        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Disp();
+
+        if (!GivePickupTo)
+        {
+            auto Role = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role")))->GetOffset_ForInternal();
+            auto Body = std::format("cmp byte ptr [rcx+{:#x}], 0x3; jnz *; test rdx, rdx; jz *", Role);
+
+            for (int32 Index = 0; !GivePickupTo && Index < 512; Index++)
+            {
+                if (Scanner::At(((void**)VTable)[Index]).Is(Body))
+                    GivePickupTo = Index * (int32)sizeof(void*);
+            }
+        }
+
+        GivePickupTo = Scanner::Slot(TEXT("AFortPickup::GivePickupTo"), GivePickupTo);
         auto AthenaVTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
 
         DetourVTable(TEXT("AFortPickupAthena::GivePickupTo"), (void**)(AthenaVTable + GivePickupTo), &AFortPickup::GivePickupTo);
@@ -222,17 +242,32 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         if (BuildingContainer->GetStartAlreadySearched_Athena())
             BuildingContainer->SpawnLoot(nullptr);
     }
+}
 
-    TArray<AActor*> MapInfos;
-    UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaMapInfo::StaticClass(), MapInfos);
+int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()
+{
+    static auto WarmupRequiredPlayerCount = GetClass()->FindPropertyByName(FName(TEXT("WarmupRequiredPlayerCount")));
 
-    for (auto MapInfo : MapInfos)
-        ((AFortAthenaMapInfo*)MapInfo)->SpawnLlamas();
+    return *WarmupRequiredPlayerCount->ContainerPtrToValuePtr<int32>(this);
 }
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
-    static auto RedirectLootTierGroup = Scanner::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>(Scanner::String("Loot_AthenaSupplyDrop").Start().Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup")));
+    static auto RedirectLootTierGroup = Scanner::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>([this]
+    {
+        auto VTable = *(void***)this;
+
+        for (int32 Index = 0; Index < 512; Index++)
+        {
+            for (auto Name = Scanner::At(VTable[Index]).Find("lea rdx, [0x*]"); Name.Get(); Name = Name.Find("lea rdx, [0x*]"))
+            {
+                if (!strcmp((const char*)Name.Target(), "Loot_AthenaSupplyDrop"))
+                    return Scanner::At(VTable[Index]).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
+            }
+        }
+
+        return Scanner::At(nullptr).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
+    }());
 
     FName Result(NAME_None);
 

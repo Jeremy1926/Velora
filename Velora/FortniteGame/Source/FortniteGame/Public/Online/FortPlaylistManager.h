@@ -13,5 +13,5 @@ enum class EFortAthenaPlaylist : uint8
 class UFortPlaylistManager : public UObject
 {
 public:
-    static bool GetMaxTeamInfoForPlaylist(int32 PlaylistId, int32& MaxTeamCount, int32& MaxTeamSize, int32& MaxSquadSize, int32& MaxPlayers);
+    static bool GetMaxTeamInfoForPlaylist(UFortPlaylistManager* PlaylistManager, int32 PlaylistId, int32& MaxTeamCount, int32& MaxTeamSize, int32& MaxSquadSize, int32& MaxPlayers);
 };

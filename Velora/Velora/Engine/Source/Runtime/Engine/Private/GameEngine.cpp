@@ -6,6 +6,7 @@
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortAthenaMapInfo.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -70,7 +71,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         int32 MaxPlayers;
         TCHAR Options[128];
 
-        if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
+        if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(nullptr, PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
             swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), PlaylistId, MaxPlayers, MaxTeamSize);
         else
             swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
@@ -98,11 +99,23 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             MatchOptions.Add(TEXT("match.option.warmupRequiredPlayerCount"), WarmupRequiredPlayerCount);
 
             GameMode->OnGivenMatchAssignment(MatchOptions);
+            GameMode->GetWarmupRequiredPlayerCount() = Config::WarmupRequiredPlayerCount;
             AssignedGameMode = GameMode;
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
+            static AFortGameModeAthena* LlamaGameMode = nullptr;
+
+            if (GameMode && GameMode == AssignedGameMode && GameMode != LlamaGameMode)
+            {
+                if (auto MapInfo = GameState->GetMapInfo())
+                {
+                    MapInfo->SpawnLlamas();
+                    LlamaGameMode = GameMode;
+                }
+            }
+
             switch (GameState->GetGamePhase())
             {
             case EAthenaGamePhase::Aircraft:

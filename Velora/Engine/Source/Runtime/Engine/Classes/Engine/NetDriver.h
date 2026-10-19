@@ -126,6 +126,8 @@ public:
 
     TArray<UNetConnection*>& GetClientConnections();
 
+    UObject* GetReplicationDriver() const;
+
     FName GetNetDriverName() const;
 
     float GetTime() const;
@@ -154,7 +156,7 @@ public:
 
     void TickFlush(float DeltaSeconds);
 
-    void FlushActorDormancy(AActor* Actor);
+    void FlushActorDormancy(AActor* Actor, bool bWasDormInitial);
 
     bool IsServer() const;
 

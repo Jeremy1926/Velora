@@ -11,5 +11,7 @@ public:
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
+    int32& GetWarmupRequiredPlayerCount();
+
     FName RedirectLootTierGroup(FName LootTierGroup) const;
 };

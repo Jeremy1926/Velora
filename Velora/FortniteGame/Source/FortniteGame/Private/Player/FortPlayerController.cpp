@@ -124,7 +124,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
 
     static auto ServerSpawnInventoryDrop = []
     {
-        auto ServerSpawnInventoryDrop_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerSpawnInventoryDrop")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"));
+        auto ServerSpawnInventoryDrop_Implementation = Scanner::Exec(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerSpawnInventoryDrop")) ? TEXT("/Script/FortniteGame.FortPlayerController:ServerSpawnInventoryDrop") : TEXT("/Script/FortniteGame.FortPlayerController:ServerAttemptInventoryDrop")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"));
         auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
         return DetourVTable(TEXT("AFortPlayerController::ServerSpawnInventoryDrop_Implementation"), (void**)(VTable + ServerSpawnInventoryDrop_Implementation), &AFortPlayerController::ServerSpawnInventoryDrop_Implementation);
@@ -149,7 +149,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     {
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
         auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"));
-        auto RemoveInventoryItem = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [rax+*]");
+        auto RemoveInventoryItem = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]");
         static auto InventoryOwnerOffset = RemoveInventoryItem.Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
 
         auto InventoryOwnerRemoveInventoryItem = +[](uint8_t* InventoryOwnerInterface, const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
@@ -164,7 +164,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     {
         auto PlayerController = (uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
         auto ServerRemoveInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"));
-        auto InventoryOwner = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [rax+*]").Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
+        auto InventoryOwner = Scanner::At(*(void**)(*(uint8_t**)PlayerController + ServerRemoveInventoryItem_Implementation)).Find("call [*+0x*]").Last("add rcx, 0x*").Imm(TEXT("AFortPlayerController::IFortInventoryOwnerInterface"));
         auto InventoryOwnerVTable = *(const uint8_t***)(PlayerController + InventoryOwner);
         auto Index = 0;
 

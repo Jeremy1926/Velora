@@ -63,6 +63,13 @@ TArray<UNetConnection*>& UNetDriver::GetClientConnections()
     return *ClientConnections->ContainerPtrToValuePtr<TArray<UNetConnection*>>(this);
 }
 
+UObject* UNetDriver::GetReplicationDriver() const
+{
+    static auto ReplicationDriver = GetClass()->FindPropertyByName(FName(TEXT("ReplicationDriver")));
+
+    return ReplicationDriver ? *ReplicationDriver->ContainerPtrToValuePtr<UObject*>(this) : nullptr;
+}
+
 FName UNetDriver::GetNetDriverName() const
 {
     static auto NetDriverName = GetClass()->FindPropertyByName(FName(TEXT("NetDriverName")));
@@ -93,7 +100,7 @@ float UNetDriver::GetRelevantTimeout() const
 
 TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
 {
-    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found. Component: %s, Actor: %s")).Last("mov rcx, [rcx+0x*]").Disp(TEXT("UNetDriver::GuidCache"));
+    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found.*")).Last("mov rcx, [rcx+0x*]").Disp(TEXT("UNetDriver::GuidCache"));
 
     return *(TSharedPtr<FNetGUIDCache>*)((uint8_t*)this + GuidCache);
 }
@@ -166,7 +173,12 @@ TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDorm
 
 static int32_t ReplicationFrameOffset()
 {
-    static auto ReplicationFrame = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]").Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
+    static auto ReplicationFrame = []
+    {
+        auto Frames = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]");
+
+        return (Frames.Get() ? Frames : Scanner::String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*")).Start().Find("inc [*]; inc [*]")).Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
+    }();
 
     return ReplicationFrame;
 }
@@ -227,12 +239,29 @@ void UNetDriver::TickFlush(float DeltaSeconds)
     (this->*::TickFlush)(DeltaSeconds);
 }
 
-void UNetDriver::FlushActorDormancy(AActor* Actor)
+void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
 {
     static auto CVarSetNetDormancyEnabled = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("net.DormancyEnable"));
 
     if (CVarSetNetDormancyEnabled->GetValueOnAnyThread() == 0)
         return;
+
+    if (auto ReplicationDriver = GetReplicationDriver())
+    {
+        static auto FlushNetDormancy = [ReplicationDriver]
+        {
+            auto VTable = *(const uint8_t***)ReplicationDriver;
+            auto Function = Scanner::String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*")).Start().Get();
+            int32 Index = 0;
+
+            while (Index < 512 && VTable[Index] != Function)
+                Index++;
+
+            return Scanner::Slot(TEXT("UReplicationDriver::FlushNetDormancy"), Index < 512 ? Index * (int32)sizeof(void*) : 0);
+        }();
+
+        (*(void (**)(UObject*, AActor*, bool))(*(uint8_t**)ReplicationDriver + FlushNetDormancy))(ReplicationDriver, Actor, bWasDormInitial);
+    }
 
     for (int32 i = 0; i < GetClientConnections().Num(); ++i)
     {
@@ -823,6 +852,23 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
     if (GetClientConnections().Num() == 0)
     {
         return 0;
+    }
+
+    if (auto ReplicationDriver = GetReplicationDriver())
+    {
+        static auto ServerReplicateActors = [ReplicationDriver]
+        {
+            auto VTable = *(const uint8_t***)ReplicationDriver;
+            auto ProcessRemoteFunction = Scanner::String(TEXT("UReplicationGraph::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed*")).Start().Get();
+            int32 Index = 0;
+
+            while (Index < 512 && VTable[Index] != ProcessRemoteFunction)
+                Index++;
+
+            return Scanner::Slot(TEXT("UReplicationDriver::ServerReplicateActors"), Index < 512 ? (Index + 1) * (int32)sizeof(void*) : 0);
+        }();
+
+        return (*(int32 (**)(UObject*, float))(*(uint8_t**)ReplicationDriver + ServerReplicateActors))(ReplicationDriver, DeltaSeconds);
     }
 
     int32 Updated = 0;

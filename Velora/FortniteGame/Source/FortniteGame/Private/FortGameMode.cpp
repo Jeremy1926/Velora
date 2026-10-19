@@ -78,7 +78,8 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
 {
     static auto OnGivenMatchAssignment = []
     {
-        auto AthenaOnGivenMatchAssignment = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount")).Start().Get(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"));
+        auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
+        auto AthenaOnGivenMatchAssignment = (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"));
         auto AthenaVTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 

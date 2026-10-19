@@ -17,3 +17,10 @@ EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
 
     return *GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
 }
+
+AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
+{
+    static auto MapInfo = GetClass()->FindPropertyByName(FName(TEXT("MapInfo")));
+
+    return MapInfo ? *MapInfo->ContainerPtrToValuePtr<AFortAthenaMapInfo*>(this) : nullptr;
+}
