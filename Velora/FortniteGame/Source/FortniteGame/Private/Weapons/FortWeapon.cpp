@@ -71,3 +71,10 @@ bool AFortWeapon::GetPendingDestroyDueToDurabilityOrStackCount() const
 
     return bPendingDestroyDueToDurabilityOrStackCount->GetPropertyValue_InContainer(this);
 }
+
+FGuid& AFortWeapon::GetItemEntryGuid()
+{
+    static auto ItemEntryGuid = GetClass()->FindPropertyByName(FName(TEXT("ItemEntryGuid")));
+
+    return *ItemEntryGuid->ContainerPtrToValuePtr<FGuid>(this);
+}

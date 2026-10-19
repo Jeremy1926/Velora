@@ -8,6 +8,7 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Pawns/FortPawn.h"
+#include "Weapons/FortWeapon.h"
 #include "Math/Rotator.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -86,6 +87,10 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         int32 NumberToGive = PickupItemEntry.GetCount();
         auto bCanAddStack = true;
 
+        static auto DecoItemDefinitionClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoItemDefinition"));
+        auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
+        auto bSwapEquipped = bNeedsPrimarySlot && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
+
         for (auto& ItemEntry : Inventory.ReplicatedEntries)
         {
             if (ItemEntry.GetItemDefinition() != ItemDefinition)
@@ -116,8 +121,6 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         WorldInventory->HandleInventoryLocalUpdate();
 
-        static auto DecoItemDefinitionClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoItemDefinition"));
-        auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
         auto QuickBars = PlayerController->GetQuickBars();
 
         auto FindItem = [&](const FGuid& ItemGuid) -> UFortItem*
@@ -145,28 +148,10 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             return false;
         };
 
-        auto HasEmptyPrimarySlot = [&]
-        {
-            for (auto& Slot : QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots)
-            {
-                if (!Slot.Items.Num())
-                    return true;
-            }
-
-            return false;
-        };
-
-        auto bClientSlotsItems = bNeedsPrimarySlot && QuickBars && !PlayerController->CanServerTryAddToQuickBar();
         auto& SwapItemGuid = GetPickupLocationData().PickupGuid;
 
-        if (bCanAddStack && NumberToGive > 0 && SwapItemGuid == FGuid() && bClientSlotsItems && !HasEmptyPrimarySlot())
-        {
-            auto& QuickBar = QuickBars->GetQuickBar(EFortQuickBars::Primary);
-            auto FocusedSlot = QuickBar.CurrentFocusedSlot;
-
-            if (FocusedSlot >= 0 && FocusedSlot < QuickBar.Slots.Num() && QuickBar.Slots[FocusedSlot].Items.Num())
-                SwapItemGuid = QuickBar.Slots[FocusedSlot].Items[0];
-        }
+        if (bSwapEquipped && SwapItemGuid == FGuid() && PickupTarget->GetCurrentWeapon())
+            SwapItemGuid = PickupTarget->GetCurrentWeapon()->GetItemEntryGuid();
 
         if (bCanAddStack && NumberToGive > 0 && SwapItemGuid != FGuid())
         {
@@ -184,7 +169,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             SwapItemGuid = FGuid();
         }
 
-        if (bClientSlotsItems && !HasEmptyPrimarySlot())
+        if (bSwapEquipped && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0)
             bCanAddStack = false;
 
         while (bCanAddStack && NumberToGive > 0)

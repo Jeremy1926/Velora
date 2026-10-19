@@ -118,4 +118,6 @@ public:
     void HandleInventoryLocalUpdate();
 
     void SetItemRequiresUpdate(FFortItemEntry& ItemEntry);
+
+    int32 GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const;
 };

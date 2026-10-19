@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Misc/Guid.h"
 
 class AFortWeapon : public AActor
 {
@@ -12,4 +13,6 @@ public:
     bool CheckPendingDestroyedDueToDurability();
 
     bool GetPendingDestroyDueToDurabilityOrStackCount() const;
+
+    FGuid& GetItemEntryGuid();
 };

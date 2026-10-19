@@ -19,6 +19,13 @@ void AFortInventory::HandleInventoryLocalUpdate()
     HandleInventoryLocalUpdate(this);
 }
 
+int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const
+{
+    static auto GetOverflowFromAddingItem = Scanner::Function<int32 (*)(const AFortInventory*, const FFortItemEntry&)>(Scanner::String(TEXT("SwapEquippedText")).Find("mov rcx, rax; call 0x*").Call().Get(TEXT("AFortInventory::GetOverflowFromAddingItem")));
+
+    return GetOverflowFromAddingItem(this, ItemEntry);
+}
+
 void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
 {
     static auto SetItemRequiresUpdate = []
