@@ -145,6 +145,24 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             return false;
         };
 
+        auto& SwapItemGuid = GetPickupLocationData().PickupGuid;
+
+        if (bCanAddStack && NumberToGive > 0 && SwapItemGuid != FGuid())
+        {
+            int32 SwapCount = 0;
+
+            for (auto& Entry : Inventory.ReplicatedEntries)
+            {
+                if (Entry.GetItemGuid() == SwapItemGuid)
+                    SwapCount = Entry.GetCount();
+            }
+
+            if (SwapCount > 0)
+                PlayerController->ServerSpawnInventoryDrop_Implementation(SwapItemGuid, SwapCount);
+
+            SwapItemGuid = FGuid();
+        }
+
         while (bCanAddStack && NumberToGive > 0)
         {
             auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.GetLevel());

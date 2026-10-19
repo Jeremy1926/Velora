@@ -186,6 +186,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), (void**)(VTable + ServerHandlePickup), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation);
     }();
 
+    static auto ServerHandlePickupWithSwap = []
+    {
+        auto ServerHandlePickupWithSwap = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithSwap"));
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+
+        return ServerHandlePickupWithSwap.Get() ? DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation"), (void**)(VTable + ServerHandlePickupWithSwap.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickupWithSwap_Implementation"))), &AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation) : nullptr;
+    }();
+
     static auto ServerReviveFromDBNO = []
     {
         auto ServerReviveFromDBNO = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"));

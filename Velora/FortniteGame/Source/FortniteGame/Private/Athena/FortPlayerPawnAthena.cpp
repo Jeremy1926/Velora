@@ -4,6 +4,7 @@
 #include "GameFramework/Controller.h"
 #include "FortRegisteredPlayerInfo.h"
 #include "Items/FortQuickBars.h"
+#include "Items/FortPickup.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "Templates/Casts.h"
@@ -43,6 +44,14 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
 void AFortPlayerPawnAthena::ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
     AFortPlayerPawn::ServerHandlePickup_Implementation(Pickup, InFlyTime / GetPickupSpeedMultiplier(), InStartDirection, bPlayPickupSound);
+}
+
+void AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+{
+    ServerHandlePickup_Implementation(Pickup, InFlyTime, InStartDirection, bPlayPickupSound);
+
+    if (Pickup && !Pickup->IsPendingKill() && Pickup->GetPickupLocationData().PickupTarget == this)
+        Pickup->GetPickupLocationData().PickupGuid = Swap;
 }
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
