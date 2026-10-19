@@ -16,6 +16,7 @@ Universal gameserver for Fortnite.
 | 2.5.0 (CL-3889387) | Playable |
 | 3.0 (CL-3901517) | Playable |
 | 3.5 (CL-4008490) | Playable |
+| 4.0 (CL-4039451) | Playable |
 
 ## Features
 
