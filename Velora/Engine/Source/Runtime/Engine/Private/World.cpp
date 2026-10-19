@@ -20,7 +20,7 @@ static auto Listen = []
     return Call.Get() ? DetourCall(TEXT("UWorld::Listen"), Call.Get(), &UWorld::Listen) : nullptr;
 }();
 
-static auto InternalGetNetMode = Detour(TEXT("UWorld::InternalGetNetMode"), Scanner::String(TEXT("UGameplayStatics::SpawnEmitterAttached: NULL AttachComponent specified!")).Call(3).Get(), &UWorld::InternalGetNetMode);
+static auto InternalGetNetMode = Detour(TEXT("UWorld::InternalGetNetMode"), Scanner::String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail")).Start().Find("mov rcx, rax; call 0x*").Call().Get(), &UWorld::InternalGetNetMode);
 
 AGameModeBase* UWorld::GetAuthGameMode() const
 {

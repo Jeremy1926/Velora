@@ -10,8 +10,10 @@ static int32_t InitializeBuildingActorSlot()
     {
         auto InitializeKismetSpawnedBuildingActor = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"));
         auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
+        auto KismetSpawned = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, InitializeKismetSpawnedBuildingActor));
+        auto Call = KismetSpawned.Find("call [*+0x*]");
 
-        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, InitializeKismetSpawnedBuildingActor)).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeBuildingActor"));
+        return (Call.Get() ? Call : KismetSpawned.Find("mov r10, [r8+0x*]")).Slot(TEXT("ABuildingActor::InitializeBuildingActor"));
     }();
 
     return InitializeBuildingActor;

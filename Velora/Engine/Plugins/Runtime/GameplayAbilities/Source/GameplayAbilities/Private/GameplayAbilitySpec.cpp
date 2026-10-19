@@ -20,7 +20,7 @@ int32 FGameplayAbilitySpec::GetTypeSize()
 
 void FGameplayAbilitySpecHandle::GenerateNewHandle()
 {
-    static auto& GHandle = *(int32*)Scanner::String(TEXT("FGameplayAbilitySpec::FGameplayAbilitySpec for %s from %s")).Start().Find("inc [0x*]").Target(TEXT("FGameplayAbilitySpecHandle::GenerateNewHandle::GHandle"));
+    static auto& GHandle = *(int32*)Scanner::String(TEXT("FGameplayAbilitySpec::FGameplayAbilitySpec for %s from %s")).Start().Find("mov eax, [0x*]").Target(TEXT("FGameplayAbilitySpecHandle::GenerateNewHandle::GHandle"));
 
     Handle = GHandle++;
 }
