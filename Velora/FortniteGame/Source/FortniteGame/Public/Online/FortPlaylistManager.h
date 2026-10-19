@@ -2,14 +2,6 @@
 
 #include "UObject/Object.h"
 
-enum class EFortAthenaPlaylist : uint8
-{
-    AthenaSolo,
-    AthenaDuo,
-    AthenaSquad,
-    EFortAthenaPlaylist_MAX
-};
-
 class UFortPlaylistManager : public UObject
 {
 public:

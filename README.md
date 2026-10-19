@@ -46,7 +46,7 @@ Universal gameserver for Fortnite.
 | Option | Description |
 | --- | --- |
 | `Map` | Map to load |
-| `Playlist` | `AthenaSolo`, `AthenaDuo` or `AthenaSquad` |
+| `Playlist` | Playlist asset path, e.g. `/Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo` |
 | `Port` | Listen port |
 | `WarmupRequiredPlayerCount` | Players needed to start warmup |
 | `bRestartAfterMatch` | Restart when the match ends |

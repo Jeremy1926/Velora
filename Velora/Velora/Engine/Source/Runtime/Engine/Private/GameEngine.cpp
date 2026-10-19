@@ -11,11 +11,11 @@
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "ContentStreaming.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HAL/PlatformProperties.h"
 #include "Misc/EngineVersion.h"
-#include "Misc/Parse.h"
 #include "Misc/CommandLine.h"
 #include "Online/FortPlaylistManager.h"
 #include "FortGameInstance.h"
@@ -63,19 +63,42 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             GameInstance->GetLocalPlayers().RemoveSingle(LocalPlayer);
         }
 
-        int32 PlaylistId = std::array<int32, 3>{ 2, 10, 9 }[(uint8)Config::Playlist];
-        FParse::Value(FCommandLine::Get(), TEXT("playlistId="), PlaylistId);
+        TCHAR Playlist[256];
+        wcscpy_s(Playlist, Config::Playlist);
 
-        int32 MaxTeamCount;
-        int32 MaxTeamSize;
-        int32 MaxSquadSize;
-        int32 MaxPlayers;
-        TCHAR Options[128];
+        if (auto Arg = wcsstr(FCommandLine::Get(), TEXT("-playlist=")))
+        {
+            Arg = wcschr(Arg, '=') + 1;
+            wcsncpy_s(Playlist, Arg, wcscspn(Arg, TEXT(" ")));
+        }
 
-        if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(nullptr, PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
-            swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), PlaylistId, MaxPlayers, MaxTeamSize);
+        TCHAR Options[128] = {};
+
+        if (auto PlaylistClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))
+        {
+            if (auto PlaylistData = StaticLoadObject(PlaylistClass, nullptr, Playlist))
+            {
+                auto Value = [&](const TCHAR* Name)
+                {
+                    return *PlaylistClass->FindPropertyByName(FName(Name))->ContainerPtrToValuePtr<int32>(PlaylistData);
+                };
+
+                swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")));
+            }
+        }
         else
-            swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
+        {
+            int32 PlaylistId = wcsstr(Playlist, TEXT("Playlist_DefaultDuo")) ? 10 : wcsstr(Playlist, TEXT("Playlist_DefaultSquad")) ? 9 : 2;
+            int32 MaxTeamCount;
+            int32 MaxTeamSize;
+            int32 MaxSquadSize;
+            int32 MaxPlayers;
+
+            if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(nullptr, PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
+                swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), PlaylistId, MaxPlayers, MaxTeamSize);
+            else
+                swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
+        }
 
         UGameplayStatics::OpenLevel(GameInstance, FName(Config::Map), true, FString(Options));
     }
