@@ -111,8 +111,12 @@ TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObje
     {
         auto Close = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start();
         auto Add = Close.Find("add rcx, 0x*");
+        auto Remove = Close.Find("mov rcx, [*+0x28]; call 0x*");
 
-        return Add.Get() ? (int32)Add.Imm(TEXT("UNetConnection::ActorChannels")) : Close.Find("mov rcx, [*+0x28]; call 0x*").Call().Find("lea rcx, [rbx+0x*]").Disp(TEXT("UNetConnection::ActorChannels"));
+        if (!Remove.Get())
+            Remove = Close.Find("mov rdx, [*+0x68]; call 0x*");
+
+        return Add.Get() ? (int32)Add.Imm(TEXT("UNetConnection::ActorChannels")) : Remove.Call().Find("lea rcx, [rbx+0x*]").Disp(TEXT("UNetConnection::ActorChannels"));
     }();
 
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
