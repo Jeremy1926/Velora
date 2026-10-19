@@ -131,7 +131,7 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
     {
         auto ResurrectHere = Scanner::String("ResurrectHere").Last("lea rax, [0x*]");
 
-        if (ResurrectHere.Get())
+        if (Scanner::IsCode(ResurrectHere.Target()))
             return Scanner::At(ResurrectHere.Target(TEXT("AFortPlayerControllerZone::ResurrectHere"))).Find("call [*+0x*]").Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"));
 
         auto VTable = *(const uint8_t***)this;
