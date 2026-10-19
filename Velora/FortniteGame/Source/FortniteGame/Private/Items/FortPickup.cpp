@@ -14,7 +14,16 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
+
+struct FPendingSwap
+{
+    TWeakObjectPtr<AFortPickup> Pickup;
+    FGuid SwapItemGuid;
+};
+
+static TArray<FPendingSwap> PendingSwaps;
 
 UClass* AFortPickup::StaticClass()
 {
@@ -66,8 +75,28 @@ void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner)
         (this->*GameGivePickupTo)(InventoryOwner);
 }
 
+void AFortPickup::SetSwapItemGuid(const FGuid& SwapItemGuid)
+{
+    PendingSwaps.Add(FPendingSwap{ this, SwapItemGuid });
+}
+
 void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* InventoryOwner)
 {
+    FGuid SwapItemGuid;
+
+    for (int32 Index = PendingSwaps.Num() - 1; Index >= 0; Index--)
+    {
+        auto Pickup = PendingSwaps[Index].Pickup.Get();
+
+        if (Pickup && Pickup != this)
+            continue;
+
+        if (Pickup)
+            SwapItemGuid = PendingSwaps[Index].SwapItemGuid;
+
+        PendingSwaps.RemoveAt(Index);
+    }
+
     auto PickupTarget = GetPickupLocationData().PickupTarget;
     auto PlayerController = PickupTarget ? Cast<AFortPlayerControllerAthena>(PickupTarget->GetController()) : nullptr;
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
@@ -147,8 +176,6 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             return false;
         };
-
-        auto& SwapItemGuid = GetPickupLocationData().PickupGuid;
 
         if (bSwapEquipped && SwapItemGuid == FGuid() && PickupTarget->GetCurrentWeapon())
             SwapItemGuid = PickupTarget->GetCurrentWeapon()->GetItemEntryGuid();

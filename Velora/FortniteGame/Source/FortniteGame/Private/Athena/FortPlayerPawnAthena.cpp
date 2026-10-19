@@ -69,7 +69,7 @@ void AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation(AFortPicku
     ServerHandlePickup_Implementation(Pickup, InFlyTime, InStartDirection, bPlayPickupSound);
 
     if (Pickup && !Pickup->IsPendingKill() && Pickup->GetPickupLocationData().PickupTarget == this)
-        Pickup->GetPickupLocationData().PickupGuid = Swap;
+        Pickup->SetSwapItemGuid(Swap);
 }
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)

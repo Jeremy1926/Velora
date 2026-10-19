@@ -71,6 +71,8 @@ public:
 
     static void (AFortPickup::*GameGivePickupTo)(IFortInventoryOwnerInterface* InventoryOwner);
 
+    void SetSwapItemGuid(const FGuid& SwapItemGuid);
+
     void GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* InventoryOwner);
 
     FFortItemEntry& GetPrimaryPickupItemEntry();
