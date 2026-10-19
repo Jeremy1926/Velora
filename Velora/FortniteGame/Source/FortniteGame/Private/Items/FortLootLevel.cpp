@@ -9,6 +9,16 @@
 
 int32 UFortLootLevel::GetItemLevel(const FDataTableCategoryHandle& LootLevelData, int32 WorldLevel)
 {
+    static auto GetItemLevel = []
+    {
+        auto GetRows = Scanner::String(TEXT("UFortLootLevel::GetItemLevel")).Start().Find("lea r8, [0x*]");
+
+        return GetRows.Last("cmp *[rcx], *").Get() ? Scanner::Function<int32 (*)(const FDataTableCategoryHandle&, int32)>(GetRows.Start().Get(TEXT("UFortLootLevel::GetItemLevel"))) : nullptr;
+    }();
+
+    if (GetItemLevel)
+        return GetItemLevel(LootLevelData, WorldLevel);
+
     static auto GetRows = Scanner::Function<void (*)(const FDataTableCategoryHandle&, TArray<FFortLootLevelData*>&, const FString&)>(Scanner::String(TEXT("UFortLootLevel::GetItemLevel")).Start().Find("lea r8, [0x*]").Call().Get(TEXT("FDataTableCategoryHandle::GetRows<FFortLootLevelData>")));
 
     int32 ItemLevel = 0;
