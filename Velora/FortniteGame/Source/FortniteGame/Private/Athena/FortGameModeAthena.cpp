@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Online/FortGameSession.h"
@@ -221,6 +222,12 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         if (BuildingContainer->GetStartAlreadySearched_Athena())
             BuildingContainer->SpawnLoot(nullptr);
     }
+
+    TArray<AActor*> MapInfos;
+    UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaMapInfo::StaticClass(), MapInfos);
+
+    for (auto MapInfo : MapInfos)
+        ((AFortAthenaMapInfo*)MapInfo)->SpawnLlamas();
 }
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
