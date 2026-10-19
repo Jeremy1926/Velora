@@ -15,4 +15,6 @@ public:
     static UClass* StaticClass();
 
     FFortAthenaLoadout* GetCustomizationLoadout();
+
+    void ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution);
 };

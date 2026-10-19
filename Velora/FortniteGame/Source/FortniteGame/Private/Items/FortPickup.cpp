@@ -180,6 +180,8 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         if (bSwapEquipped && SwapItemGuid == FGuid() && PickupTarget->GetCurrentWeapon())
             SwapItemGuid = PickupTarget->GetCurrentWeapon()->GetItemEntryGuid();
 
+        auto bEquipNewItem = bSwapEquipped && PickupTarget->GetCurrentWeapon() && PickupTarget->GetCurrentWeapon()->GetItemEntryGuid() == SwapItemGuid;
+
         if (bCanAddStack && NumberToGive > 0 && SwapItemGuid != FGuid())
         {
             int32 SwapCount = 0;
@@ -226,7 +228,14 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             WorldInventory->HandleInventoryLocalUpdate();
 
             if (!PlayerController->CanServerTryAddToQuickBar())
+            {
+                if (bEquipNewItem)
+                    PlayerController->ClientEquipItem(ItemGuid, true);
+
+                bEquipNewItem = false;
+
                 continue;
+            }
 
             if (auto Item = FindItem(ItemGuid))
                 PlayerController->TryAddToQuickBar(Item);
