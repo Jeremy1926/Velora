@@ -238,6 +238,11 @@ void UNetDriver::TickFlush(float DeltaSeconds)
             while (DemoNetDriverCall.Get() && DemoNetDriverCall.Last("call 0x*").Target() != DemoNetDriverCall.Target())
                 DemoNetDriverCall = DemoNetDriverCall.Last("call 0x*");
 
+            auto GameFlushActorDormancy = Scanner::At(DemoNetDriverCall.Target());
+
+            if (!GameFlushActorDormancy.Is("ret*") && !GameFlushActorDormancy.Is("jmp 0x*"))
+                continue;
+
             DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Last("call 0x*").Get(), &UNetDriver::FlushActorDormancy);
             DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Get(), &UNetDriver::FlushActorDormancy);
         }
@@ -257,7 +262,7 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
 {
     static auto CVarSetNetDormancyEnabled = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("net.DormancyEnable"));
 
-    if (CVarSetNetDormancyEnabled->GetValueOnAnyThread() == 0)
+    if (CVarSetNetDormancyEnabled && CVarSetNetDormancyEnabled->GetValueOnAnyThread() == 0)
         return;
 
     if (auto ReplicationDriver = GetReplicationDriver())
@@ -679,7 +684,7 @@ int32 UNetDriver::ServerReplicateActors_PrioritizeActors(UNetConnection* Connect
                     continue;
                 }
             }
-            else if (CVarSetNetDormancyEnabled->GetValueOnGameThread() != 0)
+            else if (!CVarSetNetDormancyEnabled || CVarSetNetDormancyEnabled->GetValueOnGameThread() != 0)
             {
                 if (IsActorDormant(ActorInfo, WeakConnection))
                 {
