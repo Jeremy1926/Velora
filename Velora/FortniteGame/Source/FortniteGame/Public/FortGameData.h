@@ -29,6 +29,8 @@ public:
 
     UFortWeaponItemDefinition* GetEditToolItem() const;
 
+    const TAssetPtr<UClass>& GetEmoteGameplayAbility() const;
+
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTables() const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootPackageDataTables() const;

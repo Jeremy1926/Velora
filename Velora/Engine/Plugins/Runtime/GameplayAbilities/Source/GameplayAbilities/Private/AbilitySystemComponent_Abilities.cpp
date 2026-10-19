@@ -32,6 +32,17 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
     return Handle;
 }
 
+FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(const FGameplayAbilitySpec& Spec)
+{
+    static auto GiveAbilityAndActivateOnce = Scanner::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Start().Get(TEXT("UAbilitySystemComponent::GiveAbilityAndActivateOnce")));
+
+    FGameplayAbilitySpecHandle Handle;
+
+    GiveAbilityAndActivateOnce(this, &Handle, Spec);
+
+    return Handle;
+}
+
 FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromHandle(FGameplayAbilitySpecHandle Handle)
 {
     for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().Items)

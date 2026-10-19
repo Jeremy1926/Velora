@@ -4,4 +4,6 @@
 
 class UFortGameplayAbility : public UGameplayAbility
 {
+public:
+    static UClass* StaticClass();
 };

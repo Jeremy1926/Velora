@@ -48,6 +48,13 @@ UFortWeaponItemDefinition* UFortGameData::GetEditToolItem() const
     return EditToolItem->ContainerPtrToValuePtr<TAssetPtr<UFortWeaponItemDefinition>>(this)->LoadSynchronous();
 }
 
+const TAssetPtr<UClass>& UFortGameData::GetEmoteGameplayAbility() const
+{
+    static auto EmoteGameplayAbility = GetClass()->FindPropertyByName(FName(TEXT("EmoteGameplayAbility")));
+
+    return *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this);
+}
+
 const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootTierDataTables() const
 {
     static auto LootTierDataTables = GetClass()->FindPropertyByName(FName(TEXT("LootTierDataTables")));

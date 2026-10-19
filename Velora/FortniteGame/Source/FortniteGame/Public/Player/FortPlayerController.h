@@ -13,6 +13,7 @@ class AFortPlayerPawn;
 class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
+class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
 class UStatManager;
 enum class EFortQuickBars : uint8;
@@ -112,6 +113,8 @@ public:
     void ServerSpawnInventoryDrop_Implementation(FGuid ItemGuid, int32 Count);
 
     void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, EFortItemEntryState::Type StateValueType);
+
+    void ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset);
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
 

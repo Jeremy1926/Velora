@@ -7,6 +7,7 @@
 #include "Player/FortPlayerStateZone.h"
 #include "Building/BuildingSMActor.h"
 #include "Items/FortInventory.h"
+#include "Items/FortMontageItemDefinitionBase.h"
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
 #include "Items/FortQuickBars.h"
@@ -17,6 +18,7 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Weapons/FortWeap_BuildingTool.h"
 #include "Weapons/FortWeap_EditingTool.h"
+#include "Abilities/FortGameplayAbility.h"
 #include "AI/FortAIFunctionLibrary.h"
 #include "Analytics/FortAnalytics.h"
 #include "FortGameData.h"
@@ -24,6 +26,7 @@
 #include "FortGameStateZone.h"
 #include "FortKismetLibrary.h"
 #include "FortniteGame.h"
+#include "AbilitySystemComponent.h"
 #include "Engine/World.h"
 #include "Logging/LogMacros.h"
 #include "Math/TransformVectorized.h"
@@ -137,6 +140,23 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
     static auto ServerRemoveInventoryStateValue = []
     {
         InstallImplementation(TEXT("AFortPlayerController::ServerRemoveInventoryStateValue_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryStateValue"), &AFortPlayerController::ServerRemoveInventoryStateValue_Implementation);
+
+        return true;
+    }();
+
+    static auto ServerPlayEmoteItem = []
+    {
+        if (!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem")))
+            return false;
+
+        auto ServerPlayEmoteItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"));
+        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+        auto GameImplementation = Scanner::At(*(void**)(VTable + ServerPlayEmoteItem_Implementation));
+
+        if (GameImplementation.Is("test rdx, rdx; jz *") && GameImplementation.Has("mov rdx, rbx; mov rcx, rdi; call 0x*"))
+            return false;
+
+        DetourVTable(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"), (void**)(VTable + ServerPlayEmoteItem_Implementation), &AFortPlayerController::ServerPlayEmoteItem_Implementation);
 
         return true;
     }();
@@ -306,6 +326,27 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 
         return;
     }
+}
+
+void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)
+{
+    if (!EmoteAsset)
+        return;
+
+    EmoteAsset->GetAnimation().LoadSynchronous();
+
+    auto MyFortPawn = GetMyFortPawn();
+    auto AbilitySystemComponent = MyFortPawn ? MyFortPawn->GetAbilitySystemComponent() : nullptr;
+
+    if (!AbilitySystemComponent || !CanPerformNativeAction(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Action.Player.InteractUse")))))
+        return;
+
+    auto EmoteGameplayAbility = UFortGameData::Get()->GetEmoteGameplayAbility().LoadSynchronous();
+
+    if (!EmoteGameplayAbility || !EmoteGameplayAbility->IsChildOf(UFortGameplayAbility::StaticClass()))
+        return;
+
+    AbilitySystemComponent->GiveAbilityAndActivateOnce(FGameplayAbilitySpec(EmoteGameplayAbility->GetDefaultObject<UFortGameplayAbility>(), 1, INDEX_NONE, EmoteAsset));
 }
 
 void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems)
