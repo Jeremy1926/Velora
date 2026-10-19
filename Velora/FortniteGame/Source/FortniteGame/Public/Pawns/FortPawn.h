@@ -5,7 +5,9 @@
 class AFortWeapon;
 class UAbilitySystemComponent;
 class UFortHealthSet;
+class UFortWeaponItemDefinition;
 struct FGameplayTag;
+struct FGuid;
 
 class AFortPawn : public ACharacter
 {
@@ -13,6 +15,8 @@ public:
     static UClass* StaticClass();
 
     AFortWeapon* GetCurrentWeapon() const;
+
+    AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid);
 
     UAbilitySystemComponent* GetAbilitySystemComponent() const;
 

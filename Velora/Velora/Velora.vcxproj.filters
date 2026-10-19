@@ -676,6 +676,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ScriptInterface.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
     </ClInclude>
@@ -1006,6 +1009,9 @@
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp">
       <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\ScriptCore.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameInstance.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
@@ -1139,6 +1145,9 @@
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbilityTargetTypes.cpp">
+      <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbility.cpp">
       <Filter>Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemComponent_Abilities.cpp">

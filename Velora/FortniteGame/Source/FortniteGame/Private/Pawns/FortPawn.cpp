@@ -20,6 +20,13 @@ AFortWeapon* AFortPawn::GetCurrentWeapon() const
     return *CurrentWeapon->ContainerPtrToValuePtr<AFortWeapon*>(this);
 }
 
+AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid)
+{
+    static auto EquipWeaponDefinition = Scanner::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get(TEXT("AFortPawn::EquipWeaponDefinition")));
+
+    return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid);
+}
+
 UAbilitySystemComponent* AFortPawn::GetAbilitySystemComponent() const
 {
     static auto AbilitySystemComponent = GetClass()->FindPropertyByName(FName(TEXT("AbilitySystemComponent")));

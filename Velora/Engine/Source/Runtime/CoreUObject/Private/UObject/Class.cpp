@@ -16,11 +16,21 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
     return FindPropertyByName(this, InName);
 }
 
-Native UFunction::GetNativeFunc() const
+static int32 FuncOffset()
 {
     static auto Func = Scanner::String(TEXT("Failed to bind native function %s.%s")).Start().Find("mov [*+0x*], rax").Disp(TEXT("UFunction::Func"));
 
-    return *(Native*)((uint8_t*)this + Func);
+    return Func;
+}
+
+Native UFunction::GetNativeFunc() const
+{
+    return *(Native*)((uint8_t*)this + FuncOffset());
+}
+
+void UFunction::SetNativeFunc(Native InFunc)
+{
+    *(Native*)((uint8_t*)this + FuncOffset()) = InFunc;
 }
 
 int64 UEnum::GetValueByName(FName InName) const

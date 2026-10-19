@@ -88,6 +88,8 @@ class UFunction : public UStruct
 {
 public:
     Native GetNativeFunc() const;
+
+    void SetNativeFunc(Native InFunc);
 };
 
 class UEnum : public UField

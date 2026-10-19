@@ -261,6 +261,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ScriptInterface.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Misc\StringAssetReference.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h" />
@@ -390,6 +391,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\ScriptCore.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameInstance.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameplayStatics.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
@@ -435,6 +437,7 @@
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayPrediction.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayAbilitySpec.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbilityTargetTypes.cpp" />
+    <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbility.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemComponent_Abilities.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagsManager.cpp" />
