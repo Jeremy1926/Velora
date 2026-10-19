@@ -298,7 +298,7 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
     }
 }
 
-void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, TEnumAsByte<EFortItemEntryState::Type> StateValueType)
+void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, EFortItemEntryState::Type StateValueType)
 {
     auto WorldInventory = GetWorldInventory();
 

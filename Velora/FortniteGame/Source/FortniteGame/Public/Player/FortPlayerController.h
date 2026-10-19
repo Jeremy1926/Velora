@@ -113,7 +113,7 @@ public:
 
     void ServerSpawnInventoryDrop_Implementation(FGuid ItemGuid, int32 Count);
 
-    void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, TEnumAsByte<EFortItemEntryState::Type> StateValueType);
+    void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, EFortItemEntryState::Type StateValueType);
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
 
