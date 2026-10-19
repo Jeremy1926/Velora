@@ -77,7 +77,7 @@ public:
 
     void ClientSendMessage(const FText& MESSAGE);
 
-    void ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute);
+    void ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute, bool bActivateSlotAfterSettingFocused);
 
     void TriggerUIFeedbackEvent(FName EventName);
 

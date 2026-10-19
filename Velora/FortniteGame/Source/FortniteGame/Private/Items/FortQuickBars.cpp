@@ -23,7 +23,7 @@ static const uint8_t* GetActivateSlot(const AFortQuickBars* QuickBars)
 
 void AFortQuickBars::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot)
 {
-    Scanner::Function<void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool)>(GetActivateSlot(this))(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot);
+    Scanner::Function<void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool, bool, bool)>(GetActivateSlot(this))(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot, false, false);
 }
 
 FQuickBar& AFortQuickBars::GetQuickBar(EFortQuickBars InQuickBar)

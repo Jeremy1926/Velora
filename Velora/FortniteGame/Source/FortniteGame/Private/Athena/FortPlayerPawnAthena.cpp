@@ -36,7 +36,7 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
             auto& Slots = QuickBars->GetQuickBar(EFortQuickBars::Primary).Slots;
 
             if (Slots.Num() && Slots[0].Items.Num())
-                PlayerController->ClientExecuteInventoryItem(Slots[0].Items[0], 0.0f, false);
+                PlayerController->ClientExecuteInventoryItem(Slots[0].Items[0], 0.0f, false, true);
         }
     }
 }

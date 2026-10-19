@@ -845,11 +845,11 @@ void AFortPlayerController::ClientSendMessage(const FText& MESSAGE)
     ClientSendMessage(this, MESSAGE);
 }
 
-void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute)
+void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute, bool bActivateSlotAfterSettingFocused)
 {
-    static auto ClientExecuteInventoryItem = Scanner::Function<void (*)(AFortPlayerController*, const FGuid&, float, bool)>(Scanner::Event(TEXT("ClientExecuteInventoryItem")).Get(TEXT("AFortPlayerController::ClientExecuteInventoryItem")));
+    static auto ClientExecuteInventoryItem = Scanner::Function<void (*)(AFortPlayerController*, const FGuid&, float, bool, bool)>(Scanner::Event(TEXT("ClientExecuteInventoryItem")).Get(TEXT("AFortPlayerController::ClientExecuteInventoryItem")));
 
-    ClientExecuteInventoryItem(this, ItemGuid, Delay, bForceExecute);
+    ClientExecuteInventoryItem(this, ItemGuid, Delay, bForceExecute, bActivateSlotAfterSettingFocused);
 }
 
 void AFortPlayerController::TriggerUIFeedbackEvent(FName EventName)
