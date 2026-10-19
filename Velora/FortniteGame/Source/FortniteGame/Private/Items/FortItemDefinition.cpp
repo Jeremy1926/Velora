@@ -5,6 +5,14 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+template<>
+UEnum* StaticEnum<EFortItemType>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortItemType"));
+
+    return Enum;
+}
+
 int32 UFortItemDefinition::GetMinLevel() const
 {
     static auto MinLevel = GetClass()->FindPropertyByName(FName(TEXT("MinLevel")));

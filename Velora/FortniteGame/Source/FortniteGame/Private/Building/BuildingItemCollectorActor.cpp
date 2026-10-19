@@ -173,7 +173,10 @@ void ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables()
             if (!WorldItemDefinition)
                 continue;
 
-            if (WorldItemDefinition->GetItemType() == EFortItemType::WeaponMelee || WorldItemDefinition->GetItemType() == EFortItemType::WeaponRanged)
+            static auto WeaponMelee = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WeaponMelee")));
+            static auto WeaponRanged = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WeaponRanged")));
+
+            if (WorldItemDefinition->GetItemType() == WeaponMelee || WorldItemDefinition->GetItemType() == WeaponRanged)
             {
                 ItemEntry.SetDurability(WorldItemDefinition->GetMaxDurability(ItemEntry.GetLevel()));
                 ItemEntry.SetStateValue(EFortItemEntryState::DurabilityInitialized, 1);

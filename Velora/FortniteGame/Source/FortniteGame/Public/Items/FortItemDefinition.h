@@ -1,6 +1,7 @@
 #pragma once
 
 #include "McpItemDefinitionBase.h"
+#include "UObject/Class.h"
 
 class UAbilitySystemComponent;
 struct FGameplayTagContainer;
@@ -74,6 +75,9 @@ enum class EFortItemType : uint8
     Profile,
     Max_None,
 };
+
+template<>
+UEnum* StaticEnum<EFortItemType>();
 
 enum class EFortRarity : uint8
 {

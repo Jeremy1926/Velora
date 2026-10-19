@@ -2,6 +2,8 @@
 
 #include "UObject/Object.h"
 #include "UObject/NameTypes.h"
+#include "Containers/Map.h"
+#include "Containers/UnrealString.h"
 #include "Misc/EngineVersion.h"
 
 class UProperty;
@@ -87,3 +89,16 @@ class UFunction : public UStruct
 public:
     Native GetNativeFunc() const;
 };
+
+class UEnum : public UField
+{
+public:
+    int64 GetValueByName(FName InName) const;
+
+private:
+    FString CppType;
+    TArray<TPair<FName, int64>> Names;
+};
+
+template<typename T>
+UEnum* StaticEnum();

@@ -23,6 +23,17 @@ Native UFunction::GetNativeFunc() const
     return *(Native*)((uint8_t*)this + Func);
 }
 
+int64 UEnum::GetValueByName(FName InName) const
+{
+    for (auto& Kvp : Names)
+    {
+        if (Kvp.Key == InName)
+            return Kvp.Value;
+    }
+
+    return -1;
+}
+
 UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 {
     static auto ClassDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Find("mov *, [*+0x*]").Disp(TEXT("UClass::ClassDefaultObject"));

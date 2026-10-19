@@ -94,7 +94,10 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
                 {
                     GetHighestRarity() = FMath::Max(GetHighestRarity(), WorldItemDefinition->GetRarity());
 
-                    if (WorldItemDefinition->GetItemType() == EFortItemType::WeaponMelee || WorldItemDefinition->GetItemType() == EFortItemType::WeaponRanged)
+                    static auto WeaponMelee = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WeaponMelee")));
+                    static auto WeaponRanged = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WeaponRanged")));
+
+                    if (WorldItemDefinition->GetItemType() == WeaponMelee || WorldItemDefinition->GetItemType() == WeaponRanged)
                     {
                         ItemEntry.SetDurability(WorldItemDefinition->GetMaxDurability(ItemEntry.GetLevel()) * GetLootedWeaponsDurabilityModifier());
                         ItemEntry.SetStateValue(EFortItemEntryState::DurabilityInitialized, 1);
