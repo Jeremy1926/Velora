@@ -53,6 +53,8 @@ public:
 
     TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>& GetActorChannels();
 
+    TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, double>>& GetLastUpdateTimes();
+
     TSet<FNetworkGUID>& GetDestroyedStartupOrDormantActors();
 
     TSet<FName>& GetClientVisibleLevelNames();

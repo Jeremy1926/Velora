@@ -74,21 +74,33 @@ AActor* UActorChannel::GetActor() const
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
-static auto LastUpdateTime = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Disp(TEXT("UActorChannel::LastUpdateTime"));
+static auto LastUpdateTimeStore = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*");
+
+static auto LastUpdateTime = LastUpdateTimeStore.Is("movsd [*+0x*], xmm*") ? LastUpdateTimeStore.Disp(TEXT("UActorChannel::LastUpdateTime")) : 0;
+
+static int32 GetRelevantTimeOffset(const UActorChannel* Channel)
+{
+    static auto RelevantTime = Channel->GetClass()->FindPropertyByName(FName(TEXT("Actor")))->GetOffset_ForInternal() + (int32)(sizeof(AActor*) + sizeof(FNetworkGUID) + sizeof(float));
+
+    return RelevantTime;
+}
 
 double UActorChannel::GetRelevantTime() const
 {
-    return *(double*)((uint8_t*)this + LastUpdateTime - sizeof(double));
+    return *(double*)((uint8_t*)this + GetRelevantTimeOffset(this));
 }
 
 void UActorChannel::SetRelevantTime(double InRelevantTime)
 {
-    *(double*)((uint8_t*)this + LastUpdateTime - sizeof(double)) = InRelevantTime;
+    *(double*)((uint8_t*)this + GetRelevantTimeOffset(this)) = InRelevantTime;
 }
 
 double UActorChannel::GetLastUpdateTime() const
 {
-    return *(double*)((uint8_t*)this + LastUpdateTime);
+    if (LastUpdateTime)
+        return *(double*)((uint8_t*)this + LastUpdateTime);
+
+    return GetConnection()->GetLastUpdateTimes().FindRef(GetActor());
 }
 
 void UActorChannel::Close()

@@ -112,6 +112,13 @@ TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObje
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
 }
 
+TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, double>>& UNetConnection::GetLastUpdateTimes()
+{
+    static auto LastUpdateTimes = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Last("lea rcx, [*+0x*]; call 0x*; movsxd rax, *; cmp eax, *").Disp(TEXT("UNetConnection::LastUpdateTimes"));
+
+    return *(TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, double>>*)((uint8_t*)this + LastUpdateTimes);
+}
+
 TSet<FNetworkGUID>& UNetConnection::GetDestroyedStartupOrDormantActors()
 {
     static auto DestroyedStartupOrDormantActors = Scanner::String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list")).Find("lea rcx, [*+0x*]; add r8, *").Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));

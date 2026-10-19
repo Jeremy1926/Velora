@@ -26,7 +26,13 @@ static auto PickLootDrops = []
     return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; call 0x*").Find("call 0x*")).Get(), &UFortKismetLibrary::PickLootDrops);
 }();
 
-static auto K2_SpawnPickupInWorld = DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorld"), Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")).Find("call 0x*; mov rbx, [rsp+*]").Get(), &UFortKismetLibrary::K2_SpawnPickupInWorld);
+static auto K2_SpawnPickupInWorld = []
+{
+    auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"));
+    auto Call = Exec.Find("call 0x*; mov rbx, [rsp+*]");
+
+    return DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorld"), (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*")).Get(), &UFortKismetLibrary::K2_SpawnPickupInWorld);
+}();
 
 void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive)
 {
