@@ -108,7 +108,7 @@ TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
 
 static int32_t NetTagOffset()
 {
-    static auto NetTag = Scanner::Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l").Disp(TEXT("UNetDriver::NetTag"));
+    static auto NetTag = Scanner::Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*").Disp(TEXT("UNetDriver::NetTag"));
 
     return NetTag;
 }
