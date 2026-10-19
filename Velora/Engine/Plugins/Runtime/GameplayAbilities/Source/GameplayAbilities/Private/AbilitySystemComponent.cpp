@@ -8,30 +8,42 @@
 
 FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
 {
-    static auto MakeEffectContext = Scanner::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext")).Get(TEXT("UAbilitySystemComponent::MakeEffectContext")));
+    static auto Call = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeEffectContext")) : 0;
+    static auto MakeEffectContext = Scanner::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeEffectContext")));
+
+    auto VTable = *(uint8_t**)this;
 
     FGameplayEffectContextHandle Context;
-    MakeEffectContext(this, &Context);
+    (Slot ? *(decltype(MakeEffectContext)*)(VTable + Slot) : MakeEffectContext)(this, &Context);
 
     return Context;
 }
 
 FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const
 {
-    static auto MakeOutgoingSpec = Scanner::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec")).Get(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")));
+    static auto Call = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")) : 0;
+    static auto MakeOutgoingSpec = Scanner::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")));
+
+    auto VTable = *(uint8_t**)this;
 
     FGameplayEffectSpecHandle SpecHandle;
-    MakeOutgoingSpec(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
+    (Slot ? *(decltype(MakeOutgoingSpec)*)(VTable + Slot) : MakeOutgoingSpec)(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
 
     return SpecHandle;
 }
 
 FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey)
 {
-    static auto ApplyGameplayEffectSpecToSelf = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf")).Call().Get(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")));
+    static auto Call = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf")).Find("call *");
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")) : 0;
+    static auto ApplyGameplayEffectSpecToSelf = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")));
+
+    auto VTable = *(uint8_t**)this;
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
-    ApplyGameplayEffectSpecToSelf(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
+    (Slot ? *(decltype(ApplyGameplayEffectSpecToSelf)*)(VTable + Slot) : ApplyGameplayEffectSpecToSelf)(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
 
     return ActiveGameplayEffectHandle;
 }
