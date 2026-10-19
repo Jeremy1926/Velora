@@ -721,7 +721,12 @@ bool AFortPlayerController::ValidateBuildingClassData(FBuildingClassData& Buildi
 
 bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag) const
 {
-    static auto CanPerformNativeAction = ClientBuild().Find("call 0x*; mov rcx, *; lea rdx, [rax+0x*]; call [*+0x*]").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::CanPerformNativeAction"));
+    static auto CanPerformNativeAction = []
+    {
+        auto Call = ClientBuild().Find("call 0x*; mov rcx, *; lea rdx, [rax+0x*]; call [*]").Find("call [*]");
+
+        return Scanner::Slot(TEXT("AFortPlayerController::CanPerformNativeAction"), Call.Disp() ? Call.Disp() : (int32)Call.Last("add *, 0x*").Imm());
+    }();
 
     auto VTable = *(uint8_t**)this;
 
@@ -849,12 +854,7 @@ void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, fl
 
 void AFortPlayerController::TriggerUIFeedbackEvent(FName EventName)
 {
-    static auto TriggerUIFeedbackEvent = []
-    {
-        auto Call = ClientBuild().Find("mov rdx, *; mov rcx, *; call 0x*; mov rbx, [rsp+0x*]");
-
-        return Scanner::Function<void (*)(AFortPlayerController*, FName)>((Call.Get() ? Call : ClientBuild().Find("mov rdx, [rsp+0x*]; mov rcx, *; call 0x*; cmp [*], *")).Call().Get(TEXT("AFortPlayerController::TriggerUIFeedbackEvent")));
-    }();
+    static auto TriggerUIFeedbackEvent = Scanner::Function<void (*)(AFortPlayerController*, FName)>(Scanner::CallTo(Scanner::Event(TEXT("ClientTriggerUIFeedbackEvent")).Get()).Start().Get(TEXT("AFortPlayerController::TriggerUIFeedbackEvent")));
 
     TriggerUIFeedbackEvent(this, EventName);
 }
