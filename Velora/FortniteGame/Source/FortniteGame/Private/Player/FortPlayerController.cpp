@@ -76,7 +76,7 @@ static Scanner::FCode ClientRepair()
 
 static int32_t IsBuildingRestrictedSlot()
 {
-    static auto IsBuildingRestricted = ClientBuild().Find("or *, 0xffffffff").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::IsBuildingRestricted"));
+    static auto IsBuildingRestricted = ClientBuild().Find("*, 0xffffffff").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::IsBuildingRestricted"));
 
     return IsBuildingRestricted;
 }
