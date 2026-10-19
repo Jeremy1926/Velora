@@ -15,6 +15,21 @@ class UGameplayEffect;
 struct FActiveGameplayCueContainer;
 struct FGameplayEffectSpec;
 
+template<>
+class TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>
+{
+public:
+    FAbilityReplicatedDataCache* Find(const FGameplayAbilitySpecHandleAndPredictionKey& Key);
+
+private:
+    TArray<uint8> Elements;
+    TBitArray<> AllocationFlags;
+    int32 FirstFreeIndex;
+    int32 NumFreeIndices;
+    TInlineAllocator<1>::ForElementType<FSetElementId> Hash;
+    int32 HashSize;
+};
+
 class UAbilitySystemComponent : public UGameplayTasksComponent
 {
 public:

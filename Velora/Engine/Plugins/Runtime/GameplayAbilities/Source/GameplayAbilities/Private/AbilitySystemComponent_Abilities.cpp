@@ -158,3 +158,21 @@ TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>& U
 
     return *(TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>*)((uint8_t*)this + AbilityTargetDataMap);
 }
+
+FAbilityReplicatedDataCache* TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>::Find(const FGameplayAbilitySpecHandleAndPredictionKey& Key)
+{
+    static auto Lookup = Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("imul *, *, 0x*");
+    static auto ElementSize = (int32)Lookup.Imm(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>"));
+    static auto HashNextId = Lookup.Find("mov *, [*+*+0x*]").Disp(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>::HashNextId"));
+
+    if (Elements.Num() == NumFreeIndices)
+        return nullptr;
+
+    for (FSetElementId ElementId = Hash.GetAllocation()[GetTypeHash(Key) & (HashSize - 1)]; ElementId.IsValidId(); ElementId = *(FSetElementId*)(Elements.GetData() + ElementId * ElementSize + HashNextId))
+    {
+        if (*(FGameplayAbilitySpecHandleAndPredictionKey*)(Elements.GetData() + ElementId * ElementSize) == Key)
+            return (FAbilityReplicatedDataCache*)(Elements.GetData() + ElementId * ElementSize + ElementSize - HashNextId);
+    }
+
+    return nullptr;
+}
