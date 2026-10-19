@@ -1,13 +1,10 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
-#include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
-#include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
-#include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingSMActor.h"
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
@@ -40,6 +37,13 @@ static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMa
 
     return (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get();
 }(), &AFortGameModeAthena::OnGivenMatchAssignment);
+
+static auto OnPlaylistDataLoaded = []
+{
+    auto PlaylistDataLoaded = Scanner::String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"));
+
+    return PlaylistDataLoaded.Get() ? Detour(TEXT("AFortGameModeAthena::OnPlaylistDataLoaded"), PlaylistDataLoaded.Start().Get(), &AFortGameModeAthena::OnPlaylistDataLoaded) : nullptr;
+}();
 
 UClass* AFortGameModeAthena::StaticClass()
 {
@@ -233,6 +237,15 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
     }();
 
     (this->*::OnGivenMatchAssignment)(MatchOptions);
+
+    if (!::OnPlaylistDataLoaded)
+        OnPlaylistDataLoaded();
+}
+
+void AFortGameModeAthena::OnPlaylistDataLoaded()
+{
+    if (::OnPlaylistDataLoaded)
+        (this->*::OnPlaylistDataLoaded)();
 
     TArray<AActor*> BuildingContainers;
     UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);

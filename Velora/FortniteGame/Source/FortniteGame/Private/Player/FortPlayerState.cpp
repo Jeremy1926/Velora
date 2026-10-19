@@ -21,7 +21,9 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
         auto ApplyHeroPartDisplaySettings = Scanner::At(VTable[ServerSetShowHeroBackpack_Implementation / sizeof(void*)]).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"));
         auto ApplyCustomizationToCharacter = Scanner::At(VTable[ApplyHeroPartDisplaySettings / sizeof(void*)]).Find("ret").Last("call 0x*").Call();
 
-        return (void (*)(AFortPlayerState*, APawn*))ApplyCustomizationToCharacter.Find("pop *; jmp 0x*").Find("jmp 0x*").Target(TEXT("AFortPlayerState::ApplyCharacterCustomization"));
+        auto TailCall = ApplyCustomizationToCharacter.Find("pop *; jmp 0x*");
+
+        return (void (*)(AFortPlayerState*, APawn*))(TailCall.Get() ? TailCall.Find("jmp 0x*") : ApplyCustomizationToCharacter.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*").Find("call 0x*")).Target(TEXT("AFortPlayerState::ApplyCharacterCustomization"));
     }();
 
     ApplyCharacterCustomization(this, Pawn);

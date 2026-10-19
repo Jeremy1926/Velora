@@ -6,9 +6,6 @@
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
-#include "Athena/FortAthenaMapInfo.h"
-#include "Building/BGAConsumableSpawner.h"
-#include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -105,34 +102,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             AssignedGameMode = GameMode;
         }
 
-        ABGAConsumableSpawner::TickPendingSpawns();
-
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
-            static AFortGameModeAthena* LlamaGameMode = nullptr;
-
-            if (GameMode && GameMode == AssignedGameMode && GameMode != LlamaGameMode)
-            {
-                if (auto MapInfo = GameState->GetMapInfo())
-                {
-                    MapInfo->SpawnLlamas();
-
-                    if (ABGAConsumableSpawner::StaticClass())
-                    {
-                        TArray<AActor*> ConsumableSpawners;
-                        UGameplayStatics::GetAllActorsOfClass(GameMode, ABGAConsumableSpawner::StaticClass(), ConsumableSpawners);
-
-                        for (auto ConsumableSpawner : ConsumableSpawners)
-                            ((ABGAConsumableSpawner*)ConsumableSpawner)->SpawnConsumables();
-                    }
-
-                    if (AFortAthenaVehicle::StaticClass())
-                        AFortAthenaVehicle::InitializeServerImplementations();
-
-                    LlamaGameMode = GameMode;
-                }
-            }
-
             switch (GameState->GetGamePhase())
             {
             case EAthenaGamePhase::Aircraft:
