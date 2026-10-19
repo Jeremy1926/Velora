@@ -197,11 +197,18 @@ void AFortPlayerController::AddItemToQuickBars(UFortItemDefinition* ItemDefiniti
     AddItemToQuickBars(this, ItemDefinition, QuickBarType, SlotIndex);
 }
 
+static Scanner::FCode TryAddToQuickBarFunction()
+{
+    static auto TryAddToQuickBar = Scanner::String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'")).Start();
+
+    return TryAddToQuickBar;
+}
+
 void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
 {
     static auto TryAddToQuickBar = []
     {
-        auto Function = Scanner::String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'")).Start().Get(TEXT("AFortPlayerController::TryAddToQuickBar"));
+        auto Function = TryAddToQuickBarFunction().Get(TEXT("AFortPlayerController::TryAddToQuickBar"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
         auto Index = 0;
 
@@ -214,6 +221,13 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
     auto VTable = *(uint8_t**)this;
 
     (*(void (**)(AFortPlayerController*, UFortItem*))(VTable + TryAddToQuickBar))(this, Item);
+}
+
+bool AFortPlayerController::CanServerTryAddToQuickBar() const
+{
+    static auto bCanServerTryAddToQuickBar = !TryAddToQuickBarFunction().Has("cmp byte ptr [rcx+0x*], 0x3; mov rdi, rdx");
+
+    return bCanServerTryAddToQuickBar;
 }
 
 void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot)

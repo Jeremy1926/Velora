@@ -95,6 +95,8 @@ public:
 
     void TryAddToQuickBar(UFortItem* Item);
 
+    bool CanServerTryAddToQuickBar() const;
+
     void ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot);
 
     void ResetQuickBarToPrimary();

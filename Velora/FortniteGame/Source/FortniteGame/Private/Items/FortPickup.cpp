@@ -151,6 +151,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             WorldInventory->HandleInventoryLocalUpdate();
 
+            if (!PlayerController->CanServerTryAddToQuickBar())
+                continue;
+
             if (auto Item = FindItem(ItemGuid))
                 PlayerController->TryAddToQuickBar(Item);
 
