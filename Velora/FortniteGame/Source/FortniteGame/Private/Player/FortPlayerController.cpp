@@ -110,6 +110,14 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         return true;
     }();
 
+    static auto ServerAcknowledgePossession = []
+    {
+        auto ServerAcknowledgePossession_Implementation = Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession")).Find("call [rax+*]", 2).Slot(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerAcknowledgePossession_Implementation)).Is("ret*") ? DetourVTable(TEXT("AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation"), *(void***)DefaultObject, ServerAcknowledgePossession_Implementation, &AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation) : nullptr;
+    }();
+
     static auto ServerExecuteInventoryItem = []
     {
         auto ServerExecuteInventoryItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerExecuteInventoryItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerExecuteInventoryItem_Implementation"));

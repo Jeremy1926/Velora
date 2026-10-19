@@ -23,6 +23,11 @@ UClass* AFortPlayerControllerZone::StaticClass()
     return Class;
 }
 
+void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn* P)
+{
+    Super::ServerAcknowledgePossession_Implementation(P);
+}
+
 void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
 {
     Scanner::Virtual<void (*)(AFortPlayerControllerZone*, AController*)>(this, OnPawnRevivedSlot())(this, EventInstigator);

@@ -19,3 +19,10 @@ void APlayerController::SendClientAdjustment()
 
     Scanner::Virtual<void (*)(APlayerController*)>(this, SendClientAdjustment)(this);
 }
+
+void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
+{
+    static auto ServerAcknowledgePossession = Scanner::Virtual<void (*)(APlayerController*, APawn*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__PlayerController")), Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession")).Find("call [rax+*]", 2).Slot(TEXT("APlayerController::ServerAcknowledgePossession_Implementation")));
+
+    ServerAcknowledgePossession(this, P);
+}
