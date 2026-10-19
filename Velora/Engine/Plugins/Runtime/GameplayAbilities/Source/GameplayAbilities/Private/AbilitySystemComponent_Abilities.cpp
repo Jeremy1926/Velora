@@ -145,7 +145,7 @@ void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithT
 
 int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
 {
-    static auto HandleGameplayEvent = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor")).Find("mov r8, rax; mov rcx, *").Call().Find("call [*+0x*]", 2).Slot(TEXT("UAbilitySystemComponent::HandleGameplayEvent"));
+    static auto HandleGameplayEvent = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor")).Find("mov rcx, [rsp+0x*]; call 0x*").Call().Find("call [*+0x*]", 2).Slot(TEXT("UAbilitySystemComponent::HandleGameplayEvent"));
 
     auto VTable = *(uint8_t**)this;
 
