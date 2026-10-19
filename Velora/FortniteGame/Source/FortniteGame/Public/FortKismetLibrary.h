@@ -8,15 +8,20 @@
 
 class AFortPickup;
 class AFortPlayerController;
+struct FFortAbilitySetHandle;
 struct FFortItemEntry;
 struct FGuid;
+class IAbilitySystemInterface;
 class IFortInventoryOwnerInterface;
+class UFortAbilitySet;
 class UFortWorldItemDefinition;
 class USoundBase;
 
 class UFortKismetLibrary : public UBlueprintFunctionLibrary
 {
 public:
+    static FFortAbilitySetHandle EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject);
+
     static void GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer);
 
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FortKismetLibrary.h"
+#include "Abilities/FortAbilitySet.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortInventory.h"
 #include "Items/FortLootPackage.h"
@@ -52,6 +53,17 @@ static auto GiveItemToInventoryOwner = []
 
     return Call.Get() && Call.Target() == Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get() ? DetourCall(TEXT("UFortKismetLibrary::GiveItemToInventoryOwner"), Call.Get(), &UFortKismetLibrary::GiveItemToInventoryOwner) : nullptr;
 }();
+
+FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject)
+{
+    static auto EquipFortAbilitySet = Scanner::Function<FFortAbilitySetHandle* (*)(FFortAbilitySetHandle*, TScriptInterface<IAbilitySystemInterface>*, UFortAbilitySet*, UObject*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet")).Find("mov r8, [rsp+0x*]").Call().Get(TEXT("UFortKismetLibrary::EquipFortAbilitySet")));
+
+    FFortAbilitySetHandle Handle;
+
+    EquipFortAbilitySet(&Handle, &AbilitySystemInterfaceActor, AbilitySet, OverrideSourceObject);
+
+    return Handle;
+}
 
 void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer)
 {

@@ -112,6 +112,8 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
         PlayerState->ApplyCharacterCustomization(Pawn);
 
+        static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
+
         if (auto AbilitySet = UFortGameData::Get()->GetGenericPlayerAbilitySet())
         {
             for (auto& GameplayAbility : AbilitySet->GetGameplayAbilities())
@@ -119,10 +121,19 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                 if (!PlayerState->GetAbilitySystemComponent()->FindAbilitySpecFromClass((UClass*)GameplayAbility))
                     PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
             }
+
+            if (bInitializeGameplay)
+            {
+                TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor;
+
+                AbilitySystemInterfaceActor.SetObject(PlayerState);
+                AbilitySystemInterfaceActor.SetInterface(PlayerState->GetInterfaceAddress(AbilitySystemInterface));
+
+                UFortKismetLibrary::EquipFortAbilitySet(AbilitySystemInterfaceActor, AbilitySet, nullptr);
+            }
         }
 
         static auto bPersistentGameplayEffects = Scanner::String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects")).Get() != nullptr;
-        static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
 
         if (bInitializeGameplay && bPersistentGameplayEffects)
         {
