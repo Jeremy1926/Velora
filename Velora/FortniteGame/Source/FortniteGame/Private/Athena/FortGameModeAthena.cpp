@@ -292,13 +292,17 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
     static auto RedirectLootTierGroup = Scanner::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>([this]
     {
-        auto VTable = *(void***)this;
+        auto VTable = *(const uint8_t***)this;
+        auto Image = Scanner::Base();
+        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
 
-        for (int32 Index = 0; Index < 512; Index++)
+        for (int32 Index = 0; VTable[Index] >= Image && VTable[Index] < ImageEnd; Index++)
         {
             for (auto Name = Scanner::At(VTable[Index]).Find("lea rdx, [0x*]"); Name.Get(); Name = Name.Find("lea rdx, [0x*]"))
             {
-                if (!strcmp((const char*)Name.Target(), "Loot_AthenaSupplyDrop"))
+                auto Target = Name.Target();
+
+                if (Target >= Image && Target + sizeof("Loot_AthenaSupplyDrop") <= ImageEnd && !memcmp(Target, "Loot_AthenaSupplyDrop", sizeof("Loot_AthenaSupplyDrop")))
                     return Scanner::At(VTable[Index]).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
             }
         }

@@ -18,7 +18,7 @@ static Scanner::FCode FormatResourceName()
 
 FText::FText()
 {
-    static auto Constructor = (void (*)(FText*))ClientBuild().Find("or *, 0xffffffff").Find("call [*+0x*]", 2).Call().Get(TEXT("FText::FText"));
+    static auto Constructor = Scanner::Function<void (*)(FText*)>(Scanner::Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 10 48 89 13 48 8B 48 08 48 8B C3 48 89 4B 08 48 85 C9 74 04 F0 FF 41 08 C7 43 10 00 00 00 00 48 83 C4 20 5B C3").Get(TEXT("FText::FText")));
 
     Constructor(this);
 }
