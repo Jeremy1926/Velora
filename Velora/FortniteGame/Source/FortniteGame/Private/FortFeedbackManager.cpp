@@ -11,7 +11,7 @@ AFortFeedbackManager* AFortFeedbackManager::GetFeedbackManager(UObject* WorldCon
 
 void AFortFeedbackManager::TriggerEvent(FFortFeedbackHandle Handle, AFortPawn* Instigator, AFortPawn* Recipient, float Delay, bool bOverriddenQueuing, bool bCanQue)
 {
-    static auto TriggerEvent = Scanner::Function<void (*)(AFortFeedbackManager*, FFortFeedbackHandle, AFortPawn*, AFortPawn*, float, bool, bool)>(Scanner::String(TEXT("Invalid EFortDayPhase::Type in AFortTimeOfDayManager::HandleDayPhaseChange.")).Find("mov byte ptr [rsp+0x52], 0x5; call 0x*").Call().Get(TEXT("AFortFeedbackManager::TriggerEvent")));
+    static auto TriggerEvent = Scanner::Function<void (*)(AFortFeedbackManager*, FFortFeedbackHandle, AFortPawn*, AFortPawn*, float, bool, bool)>(Scanner::String(TEXT("Invalid EFortDayPhase::Type in AFortTimeOfDayManager::HandleDayPhaseChange.")).Find("mov byte ptr [rsp+0x*], 0x5; call 0x*").Call().Get(TEXT("AFortFeedbackManager::TriggerEvent")));
 
     TriggerEvent(this, Handle, Instigator, Recipient, Delay, bOverriddenQueuing, bCanQue);
 }
