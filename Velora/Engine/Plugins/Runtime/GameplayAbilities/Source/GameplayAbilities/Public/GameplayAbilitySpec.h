@@ -3,6 +3,7 @@
 #include "HAL/Platform.h"
 #include "Misc/CoreMiscDefines.h"
 #include "Containers/Array.h"
+#include "Containers/Map.h"
 #include "Containers/EnumAsByte.h"
 #include "Templates/TypeHash.h"
 #include "Engine/NetSerialization.h"
@@ -12,6 +13,7 @@
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class UObject;
+class UScriptStruct;
 
 struct FGameplayAbilitySpecHandle
 {
@@ -112,11 +114,17 @@ struct FGameplayAbilitySpec : public FFastArraySerializerItem
     TArray<UGameplayAbility*> ReplicatedInstances;
 
     FActiveGameplayEffectHandle GameplayEffectHandle;
+
+    TMap<FGameplayTag, float> SetByCallerTagMagnitudes;
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
 };
 
 struct FGameplayAbilitySpecContainer : public FFastArraySerializer
 {
-    TArray<FGameplayAbilitySpec> Items;
+    TRuntimeSizedArray<FGameplayAbilitySpec> Items;
 
     UAbilitySystemComponent* Owner;
 };

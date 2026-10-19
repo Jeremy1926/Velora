@@ -104,9 +104,11 @@ APawn* AActor::GetInstigator() const
 
 bool AActor::IsPendingKillPending() const
 {
-    static auto bActorIsBeingDestroyed = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer")).Find("test byte ptr [*], 0x*");
-    static auto Offset = bActorIsBeingDestroyed.Disp(TEXT("AActor::bActorIsBeingDestroyed"));
-    static auto Mask = bActorIsBeingDestroyed.Imm();
+    static auto Destroying = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer"));
+    static auto bActorIsBeingDestroyed = Destroying.Find("test byte ptr [*], 0x*");
+    static auto bActorIsBeingDestroyedSign = Destroying.Find("cmp byte ptr [*], 0x80");
+    static auto Offset = bActorIsBeingDestroyed.Get() ? bActorIsBeingDestroyed.Disp(TEXT("AActor::bActorIsBeingDestroyed")) : bActorIsBeingDestroyedSign.Disp(TEXT("AActor::bActorIsBeingDestroyed"));
+    static auto Mask = bActorIsBeingDestroyed.Get() ? bActorIsBeingDestroyed.Imm() : 0x80;
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
 }

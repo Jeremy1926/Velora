@@ -1,10 +1,16 @@
 #include "pch.h"
 #include "Engine/NetworkObjectList.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 void FNetworkObjectList::Remove(AActor* const Actor)
 {
-    static auto Remove = Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*").Call().Get(TEXT("FNetworkObjectList::Remove")));
+    static auto Remove = []
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*", Version.GetMajor() > 4 || Version.GetMinor() >= 20 ? 2 : 1).Call().Get(TEXT("FNetworkObjectList::Remove")));
+    }();
 
     Remove(this, Actor);
 }

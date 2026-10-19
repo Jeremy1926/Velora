@@ -46,7 +46,19 @@ static auto RemoveAllInventoryItems = []
 
 static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
-static auto DropItemsOnPawnDestruction = DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Scanner::String(TEXT("Deaths")).Start().Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
+static auto DropItemsOnPawnDestruction = []
+{
+    auto Deaths = Scanner::String(TEXT("Deaths")).Start();
+    auto Call = Deaths.Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*");
+
+    if (Call.Get())
+        return DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Call.Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
+
+    auto Slot = Deaths.Find("mov byte ptr [rsp+0x*], 0x0; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"));
+    auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
+    return DetourVTable(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), (void**)(VTable + Slot), &AFortPlayerController::DropItemsOnPawnDestruction);
+}();
 
 static Scanner::FCode ClientBuild()
 {
