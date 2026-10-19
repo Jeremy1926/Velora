@@ -2,6 +2,7 @@
 #include "Engine/GameEngine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
@@ -59,6 +60,14 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (auto LocalPlayer = GameInstance->GetFirstGamePlayer())
         {
+            if (auto PlayerController = LocalPlayer->GetPlayerController())
+            {
+                if (auto Pawn = PlayerController->GetPawn())
+                    Pawn->Destroy(true);
+
+                PlayerController->Destroy(true);
+            }
+
             LocalPlayer->AddToRoot();
             GameInstance->GetLocalPlayers().RemoveSingle(LocalPlayer);
         }
