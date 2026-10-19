@@ -36,13 +36,9 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
     {
         auto OnPlayWeaponFireFX = Scanner::Reference(Scanner::String(TEXT("OnPlayWeaponFireFX")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get(TEXT("AFortWeapon::OnPlayWeaponFireFX"));
         auto Function = Scanner::CallTo(OnPlayWeaponFireFX).Start().Get(TEXT("AFortWeapon::PlayWeaponFireFX"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeapon"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeapon"));
 
-        while (VTable[Index] != Function)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AFortWeapon::PlayWeaponFireFX"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
     auto VTable = *(uint8_t**)this;

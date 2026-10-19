@@ -17,13 +17,9 @@ bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerCo
     static auto ServerExecute = []
     {
         auto EquipWeaponDefinition = std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get(TEXT("AFortPawn::EquipWeaponDefinition")));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"));
 
-        while (!Scanner::At(VTable[Index]).Start().Has(EquipWeaponDefinition))
-            Index++;
-
-        return Scanner::Slot(TEXT("UFortWorldItemDefinition::ServerExecute"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("UFortWorldItemDefinition::ServerExecute"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(EquipWeaponDefinition); });
     }();
 
     auto VTable = *(uint8_t**)this;

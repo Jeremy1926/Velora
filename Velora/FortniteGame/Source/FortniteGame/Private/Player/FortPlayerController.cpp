@@ -81,15 +81,11 @@ static int32_t IsBuildingRestrictedSlot()
     return IsBuildingRestricted;
 }
 
-static int32_t PlayerControllerSlot(const void* Function)
+static int32_t PlayerControllerSlot(const TCHAR* Name, const void* Function)
 {
-    auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-    auto Index = 0;
+    auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-    while (VTable[Index] != Function)
-        Index++;
-
-    return Index * (int32_t)sizeof(void*);
+    return Scanner::Slot(Name, VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
 }
 
 template<typename FunctionType>
@@ -208,14 +204,7 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
 {
     static auto TryAddToQuickBar = []
     {
-        auto Function = TryAddToQuickBarFunction().Get(TEXT("AFortPlayerController::TryAddToQuickBar"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-        auto Index = 0;
-
-        while (VTable[Index] != Function)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return PlayerControllerSlot(TEXT("AFortPlayerController::TryAddToQuickBar"), TryAddToQuickBarFunction().Get(TEXT("AFortPlayerController::TryAddToQuickBar")));
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -785,7 +774,7 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
 int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData BuildingClassData)
 {
-    static auto PayBuildableClassPlacementCost = PlayerControllerSlot(Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildableClassPlacementCost")));
+    static auto PayBuildableClassPlacementCost = PlayerControllerSlot(TEXT("AFortPlayerController::PayBuildableClassPlacementCost"), Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildableClassPlacementCost")));
 
     auto VTable = *(uint8_t**)this;
 
@@ -824,7 +813,7 @@ bool AFortPlayerController::CanAffordToRepair(ABuildingSMActor* BuildingActorToR
 
 int32 AFortPlayerController::PayBuildingRepairCost(ABuildingSMActor* BuildingActorToRepair)
 {
-    static auto PayBuildingRepairCost = PlayerControllerSlot(Scanner::String(TEXT("Failed to remove item %s during repair, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildingRepairCost")));
+    static auto PayBuildingRepairCost = PlayerControllerSlot(TEXT("AFortPlayerController::PayBuildingRepairCost"), Scanner::String(TEXT("Failed to remove item %s during repair, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildingRepairCost")));
 
     auto VTable = *(uint8_t**)this;
 
