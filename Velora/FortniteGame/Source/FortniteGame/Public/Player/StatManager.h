@@ -6,6 +6,7 @@
 enum class EStatRecordingPeriod : uint8
 {
     Minute,
+    AthenaSafeZonePhase,
     Life,
     Map,
     Campaign,
@@ -23,7 +24,7 @@ enum class EStatMod : uint8
 class UStat : public UObject
 {
 public:
-    void ModifyStat(int32 Amount, EStatMod ModType);
+    void ModifyStat(double Amount, EStatMod ModType);
 };
 
 class UStatManager : public UObject
