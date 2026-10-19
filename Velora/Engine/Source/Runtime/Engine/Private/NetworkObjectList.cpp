@@ -9,10 +9,8 @@ void FNetworkObjectList::Remove(AActor* const Actor)
     {
         auto& Version = FEngineVersion::Current();
 
-        auto NetworkObjects = Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*");
-
-        if (Version.GetMajor() > 4 || Version.GetMinor() >= 20)
-            NetworkObjects = NetworkObjects.Find(std::format("mov rcx, [*+{:#x}]", NetworkObjects.Disp()));
+        auto NotifyActorDestroyed = Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor"));
+        auto NetworkObjects = Version.GetMajor() > 4 || Version.GetMinor() >= 20 ? NotifyActorDestroyed.Find("mov rcx, [*]; mov rdx, *; call 0x*; mov rdx, [*+0x18]") : NotifyActorDestroyed.Find("mov rcx, [*]; call 0x*");
 
         return Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(NetworkObjects.Call().Get(TEXT("FNetworkObjectList::Remove")));
     }();
@@ -22,7 +20,13 @@ void FNetworkObjectList::Remove(AActor* const Actor)
 
 int32 FNetworkObjectInfo::GetFlagsOffset()
 {
-    static auto FlagsOffset = Scanner::String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s")).Start().Find("mov ecx, 0x*").Call(2).Find("and dword ptr [*], 0xfffffffc").Disp(TEXT("FNetworkObjectInfo::bPendingNetUpdate"));
+    static auto FlagsOffset = []
+    {
+        auto Allocation = Scanner::String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s")).Start().Find("mov ecx, 0x*");
+        auto Flags = Allocation.Find("and dword ptr [*], 0xfffffffc");
+
+        return (Flags.Get() ? Flags : Allocation.Call(2).Find("and dword ptr [*], 0xfffffffc")).Disp(TEXT("FNetworkObjectInfo::bPendingNetUpdate"));
+    }();
 
     return FlagsOffset;
 }
