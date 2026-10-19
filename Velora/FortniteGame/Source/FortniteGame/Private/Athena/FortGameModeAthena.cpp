@@ -9,6 +9,7 @@
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
 #include "Building/BGAConsumableSpawner.h"
+#include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingSMActor.h"
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
@@ -266,6 +267,15 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
     {
         if (auto MapInfo = GameState->GetMapInfo())
             MapInfo->SpawnLlamas();
+    }
+
+    if (ABuildingItemCollectorActor::StaticClass())
+    {
+        TArray<AActor*> ItemCollectors;
+        UGameplayStatics::GetAllActorsOfClass(this, ABuildingItemCollectorActor::StaticClass(), ItemCollectors);
+
+        for (auto ItemCollector : ItemCollectors)
+            ((ABuildingItemCollectorActor*)ItemCollector)->AthenaPostApplyPlaylistDataTables();
     }
 
     if (ABGAConsumableSpawner::StaticClass())

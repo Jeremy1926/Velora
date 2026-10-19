@@ -78,6 +78,13 @@ const FScalableFloat& AFortAthenaMapInfo::GetLlamaQuantityMax() const
     return *LlamaQuantityMax->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
+const FScalableFloat* AFortAthenaMapInfo::GetVendingMachineRarityCount() const
+{
+    static auto VendingMachineRarityCount = GetClass()->FindPropertyByName(FName(TEXT("VendingMachineRarityCount")));
+
+    return VendingMachineRarityCount ? VendingMachineRarityCount->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMinPlacementHeight() const
 {
     static auto SupplyDropMinPlacementHeight = GetClass()->FindPropertyByName(FName(TEXT("SupplyDropMinPlacementHeight")));

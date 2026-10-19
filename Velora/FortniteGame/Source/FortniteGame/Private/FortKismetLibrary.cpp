@@ -11,6 +11,7 @@
 #include "Items/FortWorldItemDefinition.h"
 #include "Engine/World.h"
 #include "Math/Rotator.h"
+#include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -60,6 +61,31 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
     PlayerController->AddItemToQuickBars(ItemDefinition, EFortQuickBars::Max_None, -1);
 }
 
+int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
+{
+    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory || !ItemDefinition)
+        return 0;
+
+    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+    int32 AmountRemoved = 0;
+
+    for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0 && AmountRemoved < AmountToRemove; Index--)
+    {
+        if (ReplicatedEntries[Index].GetItemDefinition() != ItemDefinition)
+            continue;
+
+        const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
+        const int32 Count = FMath::Min(ReplicatedEntries[Index].GetCount(), AmountToRemove - AmountRemoved);
+
+        if (PlayerController->RemoveInventoryItem(ItemGuid, Count, bForceRemoval))
+            AmountRemoved += Count;
+    }
+
+    return AmountRemoved;
+}
+
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
     static auto BroadcastSoundAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation")));
@@ -72,7 +98,7 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
     FName LootTierKey(NAME_None);
     int32 LootTier = -1;
 
-    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, LootTier, TierGroupName, WorldLevel, FGameplayTagContainer()))
+    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, LootTier, TierGroupName, WorldLevel, FGameplayTagContainer(), ForcedLootTier))
         return false;
 
     return UFortLootPackage::PickLootDrops(*OutLootToDrop, WorldLevel, LootTierKey, FGameplayTagContainer(), false, false);

@@ -22,6 +22,8 @@ public:
 
     const FScalableFloat& GetLlamaQuantityMax() const;
 
+    const FScalableFloat* GetVendingMachineRarityCount() const;
+
     const FScalableFloat* GetSupplyDropMinPlacementHeight() const;
 
     const FScalableFloat* GetSupplyDropMaxPlacementHeight() const;

@@ -292,6 +292,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryTypes.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BGAConsumableSpawner.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorConsumable.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingItemCollectorActor.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\BGAConsumableWrapperItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortLootTier.h" />
@@ -452,6 +453,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BGAConsumableSpawner.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorConsumable.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingItemCollectorActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\BGAConsumableWrapperItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItem.cpp" />
