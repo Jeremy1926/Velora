@@ -127,6 +127,18 @@ struct FMath
         return Rand() / (float)RAND_MAX;
     }
 
+    static FORCEINLINE int32 RandHelper(int32 A)
+    {
+        return A > 0 ? Min(TruncToInt(FRand() * A), A - 1) : 0;
+    }
+
+    static FORCEINLINE int32 RandRange(int32 Min, int32 Max)
+    {
+        const int32 Range = (Max - Min) + 1;
+
+        return Min + RandHelper(Range);
+    }
+
     static float SRand()
     {
         static int32 GSRandSeed;

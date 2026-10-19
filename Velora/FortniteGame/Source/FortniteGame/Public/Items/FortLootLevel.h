@@ -1,8 +1,15 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Engine/DataTable.h"
 
-struct FDataTableCategoryHandle;
+struct FFortLootLevelData : public FTableRowBase
+{
+    FName Category;
+    int32 LootLevel;
+    int32 MinItemLevel;
+    int32 MaxItemLevel;
+};
 
 class UFortLootLevel
 {
