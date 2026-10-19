@@ -157,7 +157,7 @@ void ABuildingContainer::SetContainerSearched(AFortPawn* Searcher)
     {
         auto OnRep_bAlreadySearched = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::OnRep_bAlreadySearched"));
 
-        return Scanner::At((*(void***)this)[OnRep_bAlreadySearched / sizeof(void*)]).Find("xor edx, edx").Find("jmp [rax+0x*]").Slot(TEXT("ABuildingContainer::SetContainerSearched"));
+        return Scanner::At((*(void***)this)[OnRep_bAlreadySearched / sizeof(void*)]).Find("xor edx, edx").Find("jmp [*+0x*]").Slot(TEXT("ABuildingContainer::SetContainerSearched"));
     }();
 
     auto VTable = *(uint8_t**)this;
