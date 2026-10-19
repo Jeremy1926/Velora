@@ -74,15 +74,19 @@ void UAbilitySystemComponent::RemoveGameplayCue(const FGameplayTag GameplayCueTa
 
 void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag GameplayCueTag, FActiveGameplayCueContainer& GameplayCueContainer)
 {
-    static auto RemoveGameplayCue_Internal = []
+    static auto Call = []
     {
         auto K2_RemoveGameplayCue = Scanner::Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue")).Find("call [*+0x*]").Slot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"));
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
 
-        return Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Scanner::At(VTable[K2_RemoveGameplayCue / sizeof(void*)]).Find("lea r8, [*+0x*]; call 0x*").Call().Get(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
+        return Scanner::At(VTable[K2_RemoveGameplayCue / sizeof(void*)]).Find("lea r8, [*+0x*]; call *").Find("call *");
     }();
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")) : 0;
+    static auto RemoveGameplayCue_Internal = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
 
-    RemoveGameplayCue_Internal(this, GameplayCueTag, GameplayCueContainer);
+    auto VTable = *(uint8_t**)this;
+
+    (Slot ? *(decltype(RemoveGameplayCue_Internal)*)(VTable + Slot) : RemoveGameplayCue_Internal)(this, GameplayCueTag, GameplayCueContainer);
 }
 
 FActiveGameplayCueContainer& UAbilitySystemComponent::GetActiveGameplayCues()
