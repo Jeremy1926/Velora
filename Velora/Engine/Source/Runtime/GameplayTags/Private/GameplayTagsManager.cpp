@@ -23,7 +23,7 @@ void UGameplayTagsManager::InitializeManager()
 
 FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorIfNotFound) const
 {
-    static auto RequestGameplayTag = Scanner::Function<FGameplayTag* (*)(const UGameplayTagsManager*, FGameplayTag*, FName, bool)>(Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Call(2).Get(TEXT("UGameplayTagsManager::RequestGameplayTag")));
+    static auto RequestGameplayTag = Scanner::Function<FGameplayTag* (*)(const UGameplayTagsManager*, FGameplayTag*, FName, bool)>(Scanner::String(TEXT("Gameplay tag not found (marking incompatible): %s")).Last("xor r9d, r9d").Call().Get(TEXT("UGameplayTagsManager::RequestGameplayTag")));
 
     FGameplayTag Result;
 
