@@ -48,6 +48,11 @@ public:
         return false;
     }
 
+    virtual bool CanBeUsedOnMultipleThreads() const
+    {
+        return false;
+    }
+
 protected:
     bool bSuppressEventTag;
     bool bAutoEmitLineTerminator;
