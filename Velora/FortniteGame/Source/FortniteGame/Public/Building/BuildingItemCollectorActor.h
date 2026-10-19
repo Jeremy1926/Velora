@@ -7,6 +7,7 @@
 
 class AFortPlayerController;
 class UFortWorldItemDefinition;
+class UScriptStruct;
 struct FFortItemEntry;
 struct FScalableFloat;
 
