@@ -82,7 +82,7 @@ FActiveGameplayCueContainer& UAbilitySystemComponent::GetActiveGameplayCues()
 
 FGameplayTagCountContainer& UAbilitySystemComponent::GetGameplayTagCountContainer()
 {
-    static auto GameplayTagCountContainer = Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start().Find("lea rcx, [*+0x*]; or r8d, 0xffffffff").Disp(TEXT("UAbilitySystemComponent::GameplayTagCountContainer"));
+    static auto GameplayTagCountContainer = Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start().Find("lea rcx, [*+0x*]; * r8d, 0xffffffff").Disp(TEXT("UAbilitySystemComponent::GameplayTagCountContainer"));
 
     return *(FGameplayTagCountContainer*)((uint8_t*)this + GameplayTagCountContainer);
 }
