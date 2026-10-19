@@ -42,13 +42,10 @@ void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) cons
     static auto GetPlayerViewPoint = []
     {
         auto GetActorEyesViewPoint = Scanner::Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint")).Find("call [*+0x*]").Slot(TEXT("AActor::GetActorEyesViewPoint"));
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Controller"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Controller"));
+        auto Forward = std::format("mov rax, [rcx]; jmp [rax+0x{:x}]", GetActorEyesViewPoint);
 
-        while (!Scanner::At(VTable[Index]).Is(std::format("mov rax, [rcx]; jmp [rax+0x{:x}]", GetActorEyesViewPoint)))
-            Index++;
-
-        return Scanner::Slot(TEXT("AController::GetPlayerViewPoint"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AController::GetPlayerViewPoint"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Forward); });
     }();
 
     auto VTable = *(uint8_t**)this;

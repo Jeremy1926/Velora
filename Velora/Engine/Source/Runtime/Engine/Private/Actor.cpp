@@ -132,13 +132,10 @@ const AActor* AActor::GetNetOwner() const
     static auto GetNetOwner = [this]
     {
         auto Owner = GetClass()->FindPropertyByName(FName(TEXT("Owner")))->GetOffset_ForInternal();
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
+        auto Getter = std::format("mov rax, [rcx+0x{:x}]; ret", Owner);
 
-        while (!Scanner::At(VTable[Index]).Is(std::format("mov rax, [rcx+0x{:x}]; ret", Owner)))
-            Index++;
-
-        return Scanner::Slot(TEXT("AActor::GetNetOwner"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AActor::GetNetOwner"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -150,13 +147,9 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
 {
     static auto IsRelevancyOwnerFor = []
     {
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
 
-        while (!Scanner::At(VTable[Index]).Is("cmp r8, rcx; setz al; ret"))
-            Index++;
-
-        return Scanner::Slot(TEXT("AActor::IsRelevancyOwnerFor"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("AActor::IsRelevancyOwnerFor"), VTable, [](const Scanner::FCode& Entry) { return Entry.Is("cmp r8, rcx; setz al; ret"); });
     }();
 
     auto VTable = *(uint8_t**)this;
