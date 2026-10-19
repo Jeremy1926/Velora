@@ -9,7 +9,12 @@ void FNetworkObjectList::Remove(AActor* const Actor)
     {
         auto& Version = FEngineVersion::Current();
 
-        return Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*", Version.GetMajor() > 4 || Version.GetMinor() >= 20 ? 2 : 1).Call().Get(TEXT("FNetworkObjectList::Remove")));
+        auto NetworkObjects = Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor")).Find("mov rcx, [*]; call 0x*");
+
+        if (Version.GetMajor() > 4 || Version.GetMinor() >= 20)
+            NetworkObjects = NetworkObjects.Find(std::format("mov rcx, [*+{:#x}]", NetworkObjects.Disp()));
+
+        return Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(NetworkObjects.Call().Get(TEXT("FNetworkObjectList::Remove")));
     }();
 
     Remove(this, Actor);

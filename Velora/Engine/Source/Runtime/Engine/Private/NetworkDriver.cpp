@@ -854,23 +854,6 @@ int32 UNetDriver::ServerReplicateActors(float DeltaSeconds)
         return 0;
     }
 
-    if (auto ReplicationDriver = GetReplicationDriver())
-    {
-        static auto ServerReplicateActors = [ReplicationDriver]
-        {
-            auto VTable = *(const uint8_t***)ReplicationDriver;
-            auto ProcessRemoteFunction = Scanner::String(TEXT("UReplicationGraph::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed*")).Start().Get();
-            int32 Index = 0;
-
-            while (Index < 512 && VTable[Index] != ProcessRemoteFunction)
-                Index++;
-
-            return Scanner::Slot(TEXT("UReplicationDriver::ServerReplicateActors"), Index < 512 ? (Index + 1) * (int32)sizeof(void*) : 0);
-        }();
-
-        return (*(int32 (**)(UObject*, float))(*(uint8_t**)ReplicationDriver + ServerReplicateActors))(ReplicationDriver, DeltaSeconds);
-    }
-
     int32 Updated = 0;
 
     SetReplicationFrame(GetReplicationFrame() + 1);

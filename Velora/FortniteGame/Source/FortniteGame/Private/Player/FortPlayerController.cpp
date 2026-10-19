@@ -752,7 +752,12 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
 
 EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings)
 {
-    static auto CanPlaceBuildableClassInStructuralGrid = Scanner::Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"), IsBuildingRestrictedSlot() + 10 * (int32_t)sizeof(void*));
+    static auto CanPlaceBuildableClassInStructuralGrid = []
+    {
+        auto Call = Scanner::String(TEXT("Failed to find intersection point!")).Start().Find("call [r10+0x*]");
+
+        return Scanner::Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"), Call.Get() ? Call.Disp() : IsBuildingRestrictedSlot() + 10 * (int32_t)sizeof(void*));
+    }();
 
     auto VTable = *(uint8_t**)this;
 
