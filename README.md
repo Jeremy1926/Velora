@@ -8,6 +8,8 @@ Universal gameserver for Fortnite.
 
 1.7.2 to 4.5
 
+If a build in this range doesn't work, open an issue.
+
 ## Features
 
 - Warmup, Battle Bus, skydiving
