@@ -132,7 +132,10 @@ void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpe
 
 void UAbilitySystemComponent::ConsumeAllReplicatedData(FGameplayAbilitySpecHandle AbilityHandle, FPredictionKey AbilityOriginalPredictionKey)
 {
-    FAbilityReplicatedDataCache* CachedData = GetAbilityTargetDataMap().Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, AbilityOriginalPredictionKey));
+    static auto bReplicatedDataContainer = !Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("imul *, *, 0x*").Get();
+
+    auto& AbilityTargetDataMap = GetAbilityTargetDataMap();
+    FAbilityReplicatedDataCache* CachedData = bReplicatedDataContainer ? ((FGameplayAbilityReplicatedDataContainer&)AbilityTargetDataMap).Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, AbilityOriginalPredictionKey)) : AbilityTargetDataMap.Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, AbilityOriginalPredictionKey));
     if (CachedData)
     {
         CachedData->Reset();
@@ -180,6 +183,19 @@ FAbilityReplicatedDataCache* TMap<FGameplayAbilitySpecHandleAndPredictionKey, FA
     {
         if (*(FGameplayAbilitySpecHandleAndPredictionKey*)(Elements.GetData() + ElementId * ElementSize) == Key)
             return (FAbilityReplicatedDataCache*)(Elements.GetData() + ElementId * ElementSize + ElementSize - HashNextId);
+    }
+
+    return nullptr;
+}
+
+FAbilityReplicatedDataCache* FGameplayAbilityReplicatedDataContainer::Find(const FGameplayAbilitySpecHandleAndPredictionKey& Key)
+{
+    for (const FKeyDataPair& Pair : InUseData)
+    {
+        if (Pair.Key == Key)
+        {
+            return &Pair.Value.Get();
+        }
     }
 
     return nullptr;

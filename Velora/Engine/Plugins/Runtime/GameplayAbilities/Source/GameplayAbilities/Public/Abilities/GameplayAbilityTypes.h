@@ -1,6 +1,9 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Containers/Array.h"
+#include "Containers/Map.h"
+#include "Templates/SharedPointer.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayPrediction.h"
 #include "GameplayEffectTypes.h"
@@ -72,4 +75,15 @@ struct FGameplayAbilitySpecHandleAndPredictionKey
 private:
     FGameplayAbilitySpecHandle AbilityHandle;
     int32 PredictionKeyAtCreation;
+};
+
+struct FGameplayAbilityReplicatedDataContainer
+{
+    FAbilityReplicatedDataCache* Find(const FGameplayAbilitySpecHandleAndPredictionKey& Key);
+
+private:
+    typedef TPair<FGameplayAbilitySpecHandleAndPredictionKey, TSharedRef<FAbilityReplicatedDataCache>> FKeyDataPair;
+
+    TArray<FKeyDataPair> InUseData;
+    TArray<TSharedRef<FAbilityReplicatedDataCache>> FreeData;
 };
