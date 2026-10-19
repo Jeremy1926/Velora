@@ -23,8 +23,17 @@ static auto PickLootDrops = []
 {
     auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"));
     auto Call = Exec.Find("call 0x*; lea rcx, [rsp+0x20]");
+    auto Address = (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; call 0x*").Find("call 0x*")).Get();
 
-    return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; call 0x*").Find("call 0x*")).Get(), &UFortKismetLibrary::PickLootDrops);
+    if (((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("WorldContextObject"))))
+    {
+        return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), Address, (void*)+[](UObject* WorldContextObject, TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier)
+        {
+            return UFortKismetLibrary::PickLootDrops(OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
+        });
+    }
+
+    return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), Address, (void*)&UFortKismetLibrary::PickLootDrops);
 }();
 
 static auto K2_SpawnPickupInWorld = []
