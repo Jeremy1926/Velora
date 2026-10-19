@@ -150,13 +150,13 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
             return false;
 
         auto ServerPlayEmoteItem_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"));
-        auto VTable = *(uint8_t**)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-        auto GameImplementation = Scanner::At(*(void**)(VTable + ServerPlayEmoteItem_Implementation));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+        auto GameImplementation = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerPlayEmoteItem_Implementation));
 
         if (GameImplementation.Is("test rdx, rdx; jz *") && GameImplementation.Has("mov rdx, rbx; mov rcx, rdi; call 0x*"))
             return false;
 
-        DetourVTable(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"), (void**)(VTable + ServerPlayEmoteItem_Implementation), &AFortPlayerController::ServerPlayEmoteItem_Implementation);
+        DetourVTable(TEXT("AFortPlayerController::ServerPlayEmoteItem_Implementation"), *(void***)DefaultObject, ServerPlayEmoteItem_Implementation, &AFortPlayerController::ServerPlayEmoteItem_Implementation);
 
         return true;
     }();
