@@ -24,6 +24,19 @@ namespace Scanner
         return { IMAGE_FIRST_SECTION(Headers), Headers->FileHeader.NumberOfSections };
     }
 
+    inline bool IsCode(const void* Address)
+    {
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+
+            if ((Section.Characteristics & IMAGE_SCN_MEM_EXECUTE) && Address >= Begin && Address < Begin + Section.Misc.VirtualSize)
+                return true;
+        }
+
+        return false;
+    }
+
     inline const uint8_t* FindReference(const void* Target)
     {
         for (auto& Section : Sections())
@@ -561,6 +574,18 @@ namespace Scanner
     inline FCode At(const void* Address)
     {
         return FCode((const uint8_t*)Address, true);
+    }
+
+    template<typename PredicateType>
+    inline int32 Slot(const TCHAR* Name, const void* const* VTable, PredicateType Predicate, int32 Index = 0)
+    {
+        for (; IsCode(VTable[Index]); Index++)
+        {
+            if (Predicate(At(VTable[Index])))
+                return Slot(Name, Index * (int32)sizeof(void*));
+        }
+
+        return Slot(Name, 0);
     }
 
     inline FCode Pattern(const char* Signature)

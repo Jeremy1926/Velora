@@ -40,14 +40,10 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
     static auto DoesAllowMultipleStacks = []
     {
         auto bAllowMultipleStacks = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")))->GetOffset_ForInternal();
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
-        auto Getter = std::format("mov *, [rcx+{:#x}]; and *", bAllowMultipleStacks);
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
+        auto Getter = std::format("mov* *, *[rcx+{:#x}]; and *", bAllowMultipleStacks);
 
-        while (!Scanner::At(VTable[Index]).Is(Getter))
-            Index++;
-
-        return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), Index * (int32)sizeof(void*));
+        return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -60,14 +56,10 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
     static auto GetMaxStackSize = []
     {
         auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")))->GetOffset_ForInternal();
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
         auto Compare = std::format("cmp dword ptr [*+{:#x}], 0x7ffffffe", MaxStackSize);
-        auto Index = 0;
 
-        while (!Scanner::At(VTable[Index]).Start().Has(Compare))
-            Index++;
-
-        return Scanner::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"), Index * (int32_t)sizeof(void*));
+        return Scanner::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(Compare); });
     }();
 
     auto VTable = *(uint8_t**)this;
