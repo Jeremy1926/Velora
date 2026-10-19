@@ -89,9 +89,7 @@ void ABuildingSMActor::SetEditingPlayer(AFortPlayerStateZone* NewEditingPlayer)
 
 bool ABuildingSMActor::IsBeingEdited() const
 {
-    static auto IsBeingEdited = ClientRepair().Find("call [*+0x*]", 3).Slot(TEXT("ABuildingSMActor::IsBeingEdited"));
-
-    return Scanner::Virtual<bool (*)(const ABuildingSMActor*)>(this, IsBeingEdited)(this);
+    return GetEditingPlayer() != nullptr;
 }
 
 bool ABuildingSMActor::NeedsRepair() const
@@ -255,7 +253,8 @@ float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
 {
     static auto DetermineMaxResourcesToSpawn = []
     {
-        auto Function = Scanner::String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")).Start().Get(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"));
+        auto ContextString = Scanner::String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")).Last("mov rcx, [0x*]").Target();
+        auto Function = Scanner::Reference(ContextString, "lea rdx, *").Start().Get(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"));
         auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
 
         return Scanner::Slot(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });

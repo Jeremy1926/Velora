@@ -31,7 +31,8 @@ void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
 {
     static auto StopPerformingNativeAction = []
     {
-        auto StopNativeAction = std::format("mov rcx, [rcx+0x*]; test rcx, rcx; jnz {:#x}", (uintptr_t)Scanner::String(TEXT("Can't stop native action %s, not active!")).Start().Get(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction")));
+        auto NotActive = Scanner::String(TEXT("Can't stop native action %s, not active!"));
+        auto StopNativeAction = std::format("mov rcx, [rcx+0x*]; test rcx, rcx; jnz {:#x}", (uintptr_t)(NotActive.Get() ? NotActive : Scanner::String(TEXT("Native Action Role(%s) Can't stop %s, not active!"))).Start().Get(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction")));
         auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPawn"));
 
         return Scanner::Slot(TEXT("AFortPawn::StopPerformingNativeAction"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(StopNativeAction); });

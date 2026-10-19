@@ -51,8 +51,9 @@ static auto K2_RemoveItemFromPlayer = FColletorUnitInfo::StaticStruct() ? Detour
 UScriptStruct* FColletorUnitInfo::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ColletorUnitInfo"));
+    static auto CollectorUnitInfo = Struct ? Struct : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.CollectorUnitInfo"));
 
-    return Struct;
+    return CollectorUnitInfo;
 }
 
 int32 FColletorUnitInfo::GetTypeSize()

@@ -832,7 +832,7 @@ bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingAct
 
 bool AFortPlayerController::CanAffordToRepair(ABuildingSMActor* BuildingActorToRepair) const
 {
-    static auto CanAffordToRepair = ClientRepair().Find("call [*+0x*]", 5).Slot(TEXT("AFortPlayerController::CanAffordToRepair"));
+    static auto CanAffordToRepair = ClientRepair().Find("call [*+0x*]; test al, al; jz *; mov rdx, *; mov rcx, *; call 0x*").Slot(TEXT("AFortPlayerController::CanAffordToRepair"));
 
     return Scanner::Virtual<bool (*)(const AFortPlayerController*, ABuildingSMActor*)>(this, CanAffordToRepair)(this, BuildingActorToRepair);
 }
