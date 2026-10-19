@@ -27,6 +27,7 @@
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "Math/UnrealMathUtility.h"
+#include "HAL/IConsoleManager.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
@@ -253,6 +254,11 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
     if (::OnPlaylistDataLoaded)
         (this->*::OnPlaylistDataLoaded)();
 
+    static auto bPlaylistGarbageCollection = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f")).Get() != nullptr;
+
+    if (bPlaylistGarbageCollection && GetDisableGCOnServerDuringMatch())
+        IConsoleManager::Get().FindConsoleVariable(TEXT("gc.TimeBetweenPurgingPendingKillObjects"))->Set(TEXT("0"), ECVF_SetByCode);
+
     TArray<AActor*> BuildingContainers;
     UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
 
@@ -290,6 +296,13 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
 
     if (AFortAthenaVehicle::StaticClass())
         AFortAthenaVehicle::InitializeServerImplementations();
+}
+
+bool AFortGameModeAthena::GetDisableGCOnServerDuringMatch() const
+{
+    static auto bDisableGCOnServerDuringMatch = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bDisableGCOnServerDuringMatch")));
+
+    return bDisableGCOnServerDuringMatch->GetPropertyValue_InContainer(this);
 }
 
 int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()

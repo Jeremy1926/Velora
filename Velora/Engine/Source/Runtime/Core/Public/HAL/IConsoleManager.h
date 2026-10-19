@@ -31,6 +31,11 @@ private:
     }
 };
 
+enum EConsoleVariableFlags
+{
+    ECVF_SetByCode = 0x8000000
+};
+
 class IConsoleObject
 {
 public:
@@ -40,6 +45,8 @@ public:
 class IConsoleVariable : public IConsoleObject
 {
 public:
+    void Set(const TCHAR* InValue, EConsoleVariableFlags SetBy);
+
     int32 GetInt() const;
 };
 

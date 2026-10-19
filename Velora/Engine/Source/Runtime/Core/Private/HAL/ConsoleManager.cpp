@@ -29,6 +29,15 @@ TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
     return (*(TConsoleVariableData<int32>* (**)(IConsoleObject*))(VTable + AsVariableInt))(this);
 }
 
+void IConsoleVariable::Set(const TCHAR* InValue, EConsoleVariableFlags SetBy)
+{
+    static auto Set = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f")).Last("call [rax+0x*]").Slot(TEXT("IConsoleVariable::Set"));
+
+    auto VTable = *(uint8_t**)this;
+
+    (*(void (**)(IConsoleVariable*, const TCHAR*, EConsoleVariableFlags))(VTable + Set))(this, InValue, SetBy);
+}
+
 int32 IConsoleVariable::GetInt() const
 {
     static auto GetInt = Scanner::String(TEXT("sg.ShadowQuality"), "lea rdx, [0x*]; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]").Find("call [*+0x*]", 2).Slot(TEXT("IConsoleVariable::GetInt"));
