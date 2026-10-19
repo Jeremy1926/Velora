@@ -3,9 +3,11 @@
 #include "Items/FortInventory.h"
 #include "UObject/UnrealType.h"
 
-void UFortWorldItem::SetLoadedAmmo(int32 NewLoadedAmmo)
+bool UFortWorldItem::SetLoadedAmmo(int32 NewLoadedAmmo)
 {
     GetItemEntry().SetLoadedAmmo(NewLoadedAmmo);
+
+    return true;
 }
 
 FFortItemEntry& UFortWorldItem::GetItemEntry()
