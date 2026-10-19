@@ -15,7 +15,7 @@ struct AbilitySystemComponent_eventClientActivateAbilityFailed_Parms
 
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayAbilitySpec& Spec)
 {
-    static auto GiveAbility = Scanner::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Get(TEXT("UAbilitySystemComponent::GiveAbility")));
+    static auto GiveAbility = Scanner::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Find("lea rdx, [rbp+0x*]").Call().Get(TEXT("UAbilitySystemComponent::GiveAbility")));
 
     static auto InternalServerTryActiveAbility = [this]
     {
@@ -61,7 +61,7 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclas
 
 void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec)
 {
-    static auto MarkAbilitySpecDirty = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Call(3).Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty")));
+    static auto MarkAbilitySpecDirty = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Find("lea rdx, [rbp+0x*]").Call().Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty")));
 
     MarkAbilitySpecDirty(this, Spec);
 }
