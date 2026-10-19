@@ -18,4 +18,6 @@ public:
     static UClass* StaticClass();
 
     EFortGameplayState GetGameplayState() const;
+
+    void StartStreamingAdditionalPlaylistLevel(FName LevelName);
 };

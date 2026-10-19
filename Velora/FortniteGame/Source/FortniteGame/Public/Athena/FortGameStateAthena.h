@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameFramework/GameStateBase.h"
+#include "FortGameStateZone.h"
 
 class AFortAthenaMapInfo;
 
@@ -14,7 +14,7 @@ enum class EAthenaGamePhase : uint8
     EndGame,
 };
 
-class AFortGameStateAthena : public AGameStateBase
+class AFortGameStateAthena : public AFortGameStateZone
 {
 public:
     static UClass* StaticClass();
@@ -22,4 +22,10 @@ public:
     EAthenaGamePhase GetGamePhase() const;
 
     AFortAthenaMapInfo* GetMapInfo() const;
+
+    void SetCurrentPlaylistName(FName PlaylistName);
+
+    void OnRep_CurrentPlaylistData();
+
+    void StreamAdditionalPlaylistLevels();
 };

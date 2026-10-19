@@ -15,6 +15,8 @@ public:
 
     FString ToString() const;
 
+    FString GetLongPackageName() const;
+
     UObject* TryLoad() const;
 
 private:

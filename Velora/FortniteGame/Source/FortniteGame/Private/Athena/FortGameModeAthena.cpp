@@ -251,8 +251,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
     memcpy(&Original, &::OnGivenMatchAssignment, sizeof(Original));
 
     static auto bTakesSucceeded = Scanner::At(Original).Is("test dl, dl");
+    static auto bStripped = Scanner::At(Original).Is("ret*");
 
-    if (bTakesSucceeded)
+    if (bStripped)
+    {
+        if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))
+            GameState->SetCurrentPlaylistName(GetCurrentPlaylistName());
+    }
+    else if (bTakesSucceeded)
         ((void (*)(AFortGameModeAthena*, bool, const TMap<FString, FString>&))Original)(this, true, MatchOptions);
     else
         (this->*::OnGivenMatchAssignment)(MatchOptions);

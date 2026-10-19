@@ -9,6 +9,7 @@ class ABuildingActor;
 class AFortGameSession;
 class AFortPlayerController;
 class UFortGameDeathPenalty;
+class UFortPlaylistManager;
 
 class AFortGameMode : public AGameMode
 {
@@ -28,4 +29,8 @@ public:
     AFortGameSession* GetFortGameSession();
 
     TAssetPtr<UFortGameDeathPenalty>& GetDeathPenaltyData();
+
+    UFortPlaylistManager* GetPlaylistManager() const;
+
+    FName GetCurrentPlaylistName() const;
 };

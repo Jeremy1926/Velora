@@ -12,6 +12,8 @@ public:
         return !AssetLongPathname.IsEmpty();
     }
 
+    FString GetLongPackageName() const;
+
     UObject* TryLoad() const;
 
 private:

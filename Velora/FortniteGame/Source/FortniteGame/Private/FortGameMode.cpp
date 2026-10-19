@@ -85,3 +85,17 @@ TAssetPtr<UFortGameDeathPenalty>& AFortGameMode::GetDeathPenaltyData()
 
     return *DeathPenaltyData->ContainerPtrToValuePtr<TAssetPtr<UFortGameDeathPenalty>>(this);
 }
+
+UFortPlaylistManager* AFortGameMode::GetPlaylistManager() const
+{
+    static auto PlaylistManager = GetClass()->FindPropertyByName(FName(TEXT("PlaylistManager")));
+
+    return *PlaylistManager->ContainerPtrToValuePtr<UFortPlaylistManager*>(this);
+}
+
+FName AFortGameMode::GetCurrentPlaylistName() const
+{
+    static auto CurrentPlaylistName = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistName")));
+
+    return *CurrentPlaylistName->ContainerPtrToValuePtr<FName>(this);
+}

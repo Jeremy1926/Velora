@@ -79,6 +79,11 @@ public:
         return Cast<T>(IsSoftObjectPtr() ? ((const FSoftObjectPtr*)this)->LoadSynchronous() : ((const FAssetPtr*)this)->LoadSynchronous());
     }
 
+    FString GetLongPackageName() const
+    {
+        return IsSoftObjectPtr() ? ((const FSoftObjectPtr*)this)->GetUniqueID().GetLongPackageName() : ((const FAssetPtr*)this)->GetUniqueID().GetLongPackageName();
+    }
+
 private:
     static bool IsSoftObjectPtr()
     {

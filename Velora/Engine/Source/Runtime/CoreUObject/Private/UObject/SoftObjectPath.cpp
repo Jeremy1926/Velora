@@ -19,6 +19,17 @@ FString FSoftObjectPath::ToString() const
     return FullPathString;
 }
 
+FString FSoftObjectPath::GetLongPackageName() const
+{
+    FString PathName = AssetPathName.ToString();
+    FString PackageName;
+
+    if (auto Delimiter = wcschr(*PathName, TEXT('.')))
+        PackageName.AppendChars(*PathName, (int32)(Delimiter - *PathName));
+
+    return PackageName;
+}
+
 UObject* FSoftObjectPath::TryLoad() const
 {
     UObject* LoadedObject = nullptr;

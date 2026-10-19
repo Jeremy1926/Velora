@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameFramework/GameStateBase.h"
+#include "FortGameState.h"
 #include "Building/BuildingActor.h"
 
 enum class EFortResourceType : uint8;
@@ -18,7 +18,7 @@ struct FPlayerBuildableClassFilter
     UObject* EditModePatternData;
 };
 
-class AFortGameStateZone : public AGameStateBase
+class AFortGameStateZone : public AFortGameState
 {
 public:
     static UClass* StaticClass();
