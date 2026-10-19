@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Misc/EngineVersion.h"
 #include "UObject/ObjectMacros.h"
 
 class UObjectBase;
@@ -51,18 +52,43 @@ public:
     }
 };
 
+class FChunkedFixedUObjectArray
+{
+public:
+    FUObjectItem** Objects;
+    FUObjectItem* PreAllocatedObjects;
+    int32 MaxElements;
+    int32 NumElements;
+    int32 MaxChunks;
+    int32 NumChunks;
+
+    FORCEINLINE int32 Num() const
+    {
+        return NumElements;
+    }
+
+    FORCEINLINE FUObjectItem const& operator[](int32 Index) const
+    {
+        return Objects[Index / (65 * 1024)][Index % (65 * 1024)];
+    }
+};
+
 class FUObjectArray
 {
 public:
     FORCEINLINE int32 GetObjectArrayNum() const
     {
-        return ObjObjects.Num();
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 21 ? ((const FChunkedFixedUObjectArray&)ObjObjects).Num() : ObjObjects.Num();
     }
 
     FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
     {
-        if (Index < ObjObjects.Num())
-            return const_cast<FUObjectItem*>(&ObjObjects[Index]);
+        auto& Version = FEngineVersion::Current();
+
+        if (Index < GetObjectArrayNum())
+            return const_cast<FUObjectItem*>(Version.GetMajor() > 4 || Version.GetMinor() >= 21 ? &((const FChunkedFixedUObjectArray&)ObjObjects)[Index] : &ObjObjects[Index]);
 
         return nullptr;
     }
