@@ -2,6 +2,7 @@
 
 #include "UObject/Object.h"
 #include "UObject/NameTypes.h"
+#include "Misc/EngineVersion.h"
 
 class UProperty;
 struct FFrame;
@@ -14,6 +15,13 @@ public:
     UField* Next;
 };
 
+class FStructBaseChain
+{
+private:
+    FStructBaseChain** StructBaseChainArray;
+    int32 NumStructBasesInChainMinusOne;
+};
+
 class UStruct : public UField
 {
 public:
@@ -21,12 +29,12 @@ public:
 
     FORCEINLINE UStruct* GetSuperStruct() const
     {
-        return SuperStruct;
+        return GetStruct()->SuperStruct;
     }
 
     FORCEINLINE int32 GetPropertiesSize() const
     {
-        return PropertiesSize;
+        return GetStruct()->PropertiesSize;
     }
 
     bool IsChildOf(const UStruct* SomeBase) const
@@ -41,6 +49,13 @@ public:
     }
 
 private:
+    FORCEINLINE const UStruct* GetStruct() const
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 22 ? (const UStruct*)((const uint8*)this + sizeof(FStructBaseChain)) : this;
+    }
+
     UStruct* SuperStruct;
     UField* Children;
     int32 PropertiesSize;
