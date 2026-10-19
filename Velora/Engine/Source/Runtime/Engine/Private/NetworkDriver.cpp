@@ -235,6 +235,9 @@ void UNetDriver::TickFlush(float DeltaSeconds)
         {
             auto DemoNetDriverCall = ActorFunction.Find("ret").Last("call 0x*");
 
+            while (DemoNetDriverCall.Get() && DemoNetDriverCall.Last("call 0x*").Target() != DemoNetDriverCall.Target())
+                DemoNetDriverCall = DemoNetDriverCall.Last("call 0x*");
+
             DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Last("call 0x*").Get(), &UNetDriver::FlushActorDormancy);
             DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Get(), &UNetDriver::FlushActorDormancy);
         }
