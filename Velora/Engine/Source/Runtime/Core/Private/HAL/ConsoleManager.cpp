@@ -2,25 +2,25 @@
 #include "HAL/IConsoleManager.h"
 #include "Scanner.h"
 
-IConsoleManager*& IConsoleManager::Singleton = *(IConsoleManager**)Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Target(TEXT("IConsoleManager::Singleton"));
+IConsoleManager*& IConsoleManager::Singleton = *(IConsoleManager**)Scanner::String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Target(TEXT("IConsoleManager::Singleton"));
 
 void IConsoleManager::SetupSingleton()
 {
-    static auto SetupSingleton = Scanner::Function<void (*)()>(Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Call().Get(TEXT("IConsoleManager::SetupSingleton")));
+    static auto SetupSingleton = Scanner::Function<void (*)()>(Scanner::String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Call().Get(TEXT("IConsoleManager::SetupSingleton")));
 
     SetupSingleton();
 }
 
 IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
 {
-    static auto FindConsoleVariable = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Find("call [*+0x*]").Slot(TEXT("IConsoleManager::FindConsoleVariable"));
+    static auto FindConsoleVariable = Scanner::String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Find("call [*+0x*]").Slot(TEXT("IConsoleManager::FindConsoleVariable"));
 
     return Scanner::Virtual<IConsoleVariable* (*)(const IConsoleManager*, const TCHAR*)>(this, FindConsoleVariable)(this, Name);
 }
 
 TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
 {
-    static auto AsVariableInt = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Find("call [*+0x*]", 2).Slot(TEXT("IConsoleObject::AsVariableInt"));
+    static auto AsVariableInt = Scanner::String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms")).Start().Find("mov rcx, [0x*]; test rcx, rcx").Find("call [*+0x*]", 2).Slot(TEXT("IConsoleObject::AsVariableInt"));
 
     return Scanner::Virtual<TConsoleVariableData<int32>* (*)(IConsoleObject*)>(this, AsVariableInt)(this);
 }

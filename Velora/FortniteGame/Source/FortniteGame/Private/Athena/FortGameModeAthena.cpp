@@ -37,12 +37,15 @@
 
 static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
 
-static auto OnGivenMatchAssignment = Detour(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), []
+static auto OnGivenMatchAssignment = []
 {
-    auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
+    auto FortGameModeOnGivenMatchAssignment = Scanner::String(TEXT("Playtest-%s")).Start().Get(TEXT("AFortGameMode::OnGivenMatchAssignment"));
+    auto FortGameModeVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode"));
+    auto Slot = Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), FortGameModeVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortGameModeOnGivenMatchAssignment; });
+    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
 
-    return (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get();
-}(), &AFortGameModeAthena::OnGivenMatchAssignment);
+    return DetourVTable(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), VTable, Slot, &AFortGameModeAthena::OnGivenMatchAssignment);
+}();
 
 static auto OnPlaylistDataLoaded = []
 {

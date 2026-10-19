@@ -63,11 +63,10 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
 {
     static auto OnGivenMatchAssignment = []
     {
-        auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
-        auto AthenaOnGivenMatchAssignment = (Option.Get() ? Option : Scanner::String(TEXT("AFortGameModeAthena::OnGivenMatchAssignment: MaxPlayerCount: %i, NumTeams: %i, WarmupRequiredPlayerCount: %i, Timeout: %.2f"))).Start().Get(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"));
-        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto FortGameModeOnGivenMatchAssignment = Scanner::String(TEXT("Playtest-%s")).Start().Get(TEXT("AFortGameMode::OnGivenMatchAssignment"));
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode"));
 
-        return Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaOnGivenMatchAssignment; });
+        return Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortGameModeOnGivenMatchAssignment; });
     }();
 
     Scanner::Virtual<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(this, OnGivenMatchAssignment)(this, MatchOptions);
