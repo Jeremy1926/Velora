@@ -8,13 +8,10 @@ bool AGameNetworkManager::IsInLowBandwidthMode()
     static auto IsInLowBandwidthMode = []
     {
         auto UpdateNetSpeeds = Scanner::String(TEXT("New Dynamic NetSpeed %i vs old %i")).Start().Get(TEXT("AGameNetworkManager::UpdateNetSpeeds"));
-        auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameNetworkManager"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameNetworkManager"));
+        auto UpdateNetSpeedsSlot = Scanner::Slot(TEXT("AGameNetworkManager::UpdateNetSpeeds"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == UpdateNetSpeeds; });
 
-        while (VTable[Index] != UpdateNetSpeeds)
-            Index++;
-
-        return (Index + 2) * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("AGameNetworkManager::IsInLowBandwidthMode"), UpdateNetSpeedsSlot ? UpdateNetSpeedsSlot + 2 * (int32)sizeof(void*) : 0);
     }();
 
     auto VTable = *(uint8_t**)this;

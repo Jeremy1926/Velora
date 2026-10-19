@@ -164,16 +164,12 @@ void UNetConnection::FlushDormancy(AActor* Actor)
     static auto FlushDormancy = []
     {
         auto Function = Scanner::String(TEXT("FlushDormancy: %s. Connection: %s")).Start().Get(TEXT("UNetConnection::FlushDormancy"));
-        auto VTable = *(uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
-        auto Index = 0;
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
 
-        while (VTable[Index] != Function)
-            Index++;
-
-        return Index;
+        return Scanner::Slot(TEXT("UNetConnection::FlushDormancy"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
-    auto VTable = *(void (***)(UNetConnection*, AActor*))this;
+    auto VTable = *(uint8_t**)this;
 
-    VTable[FlushDormancy](this, Actor);
+    (*(void (**)(UNetConnection*, AActor*))(VTable + FlushDormancy))(this, Actor);
 }

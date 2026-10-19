@@ -6,14 +6,9 @@ void UReplicationDriver::FlushNetDormancy(AActor* Actor, bool bWasDormInitial)
 {
     static auto FlushNetDormancy = [this]
     {
-        auto VTable = *(const uint8_t***)this;
         auto Function = Scanner::String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*")).Start().Get();
-        int32 Index = 0;
 
-        while (Index < 512 && VTable[Index] != Function)
-            Index++;
-
-        return Scanner::Slot(TEXT("UReplicationDriver::FlushNetDormancy"), Index < 512 ? Index * (int32)sizeof(void*) : 0);
+        return Scanner::Slot(TEXT("UReplicationDriver::FlushNetDormancy"), *(const void***)this, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
     auto VTable = *(uint8_t**)this;
@@ -25,14 +20,10 @@ int32 UReplicationDriver::ServerReplicateActors(float DeltaSeconds)
 {
     static auto ServerReplicateActors = [this]
     {
-        auto VTable = *(const uint8_t***)this;
-        auto ProcessRemoteFunction = Scanner::String(TEXT("UReplicationGraph::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed*")).Start().Get();
-        int32 Index = 0;
+        auto Function = Scanner::String(TEXT("UReplicationGraph::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed*")).Start().Get();
+        auto ProcessRemoteFunction = Scanner::Slot(TEXT("UReplicationDriver::ProcessRemoteFunction"), *(const void***)this, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
 
-        while (Index < 512 && VTable[Index] != ProcessRemoteFunction)
-            Index++;
-
-        return Scanner::Slot(TEXT("UReplicationDriver::ServerReplicateActors"), Index < 512 ? (Index + 1) * (int32)sizeof(void*) : 0);
+        return Scanner::Slot(TEXT("UReplicationDriver::ServerReplicateActors"), ProcessRemoteFunction ? ProcessRemoteFunction + (int32)sizeof(void*) : 0);
     }();
 
     auto VTable = *(uint8_t**)this;

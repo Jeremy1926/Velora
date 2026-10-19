@@ -8,13 +8,8 @@ bool UPackageMap::WriteObject(FArchive& Ar, UObject* InOuter, FNetworkGUID NetGU
     static auto WriteObject = [this]
     {
         auto Function = Scanner::String(TEXT("WroteObject %s NetGUID <%s>")).Start().Get(TEXT("UPackageMapClient::WriteObject"));
-        auto VTable = *(uint8_t***)this;
-        auto Index = 0;
 
-        while (VTable[Index] != Function)
-            Index++;
-
-        return Index * (int32_t)sizeof(void*);
+        return Scanner::Slot(TEXT("UPackageMapClient::WriteObject"), *(const void***)this, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
     }();
 
     auto VTable = *(uint8_t**)this;
