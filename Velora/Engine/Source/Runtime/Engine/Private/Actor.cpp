@@ -160,6 +160,13 @@ void AActor::ForceNetUpdate()
     Scanner::Virtual<void (*)(AActor*)>(this, ForceNetUpdate)(this);
 }
 
+void AActor::FlushNetDormancy()
+{
+    static auto FlushNetDormancy = Scanner::Function<void (*)(AActor*)>(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target(TEXT("AActor::FlushNetDormancy")));
+
+    FlushNetDormancy(this);
+}
+
 bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
 {
     static auto Destroy = []

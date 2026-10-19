@@ -85,6 +85,8 @@ public:
 
     void ForceNetUpdate();
 
+    void FlushNetDormancy();
+
     bool Destroy(bool bNetForce = false, bool bShouldModifyLevel = true);
 
     void CallPreReplication(UNetDriver* NetDriver);
