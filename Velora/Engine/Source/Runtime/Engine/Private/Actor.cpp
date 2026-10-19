@@ -115,7 +115,7 @@ bool AActor::IsPendingKillPending() const
 
 bool AActor::IsActorInitialized() const
 {
-    static auto bActorInitialized = Scanner::String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. ")).Start().Find("test byte ptr [*], 0x*");
+    static auto bActorInitialized = Scanner::String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. ")).Last("test byte ptr [*], 0x*");
     static auto Offset = bActorInitialized.Disp(TEXT("AActor::bActorInitialized"));
     static auto Mask = bActorInitialized.Imm();
 
