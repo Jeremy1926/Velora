@@ -2,9 +2,29 @@
 #include "Pawns/FortPawn.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+static auto execMovingEmoteStopped = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"));
+
+    if (!Function || !AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
+        return false;
+
+    auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")).Find("mov [*+0x20], *; jmp 0x*");
+
+    if (!Finish.Get() || !Scanner::At(Finish.Find("jmp 0x*").Target()).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPawn::execMovingEmoteStopped, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPawn::execMovingEmoteStopped);
+
+    return true;
+}();
 
 UClass* AFortPawn::StaticClass()
 {
@@ -74,6 +94,33 @@ void AFortPawn::SetPlayedDying(bool bInPlayedDying)
     static auto bPlayedDying = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlayedDying")));
 
     bPlayedDying->SetPropertyValue_InContainer(this, bInPlayedDying);
+}
+
+void AFortPawn::SetMovingEmote(bool bInMovingEmote)
+{
+    static auto bMovingEmote = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMovingEmote")));
+
+    bMovingEmote->SetPropertyValue_InContainer(this, bInMovingEmote);
+}
+
+void AFortPawn::SetMovingEmoteForwardOnly(bool bInMovingEmoteForwardOnly)
+{
+    static auto bMovingEmoteForwardOnly = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMovingEmoteForwardOnly")));
+
+    bMovingEmoteForwardOnly->SetPropertyValue_InContainer(this, bInMovingEmoteForwardOnly);
+}
+
+void AFortPawn::MovingEmoteStopped()
+{
+    SetMovingEmote(false);
+    SetMovingEmoteForwardOnly(false);
+}
+
+void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result)
+{
+    Stack.Code += !!Stack.Code;
+
+    MovingEmoteStopped();
 }
 
 UFortHealthSet* AFortPawn::GetHealthSet() const

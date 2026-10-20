@@ -7,6 +7,7 @@ class AFortWeapon;
 class UAbilitySystemComponent;
 class UFortHealthSet;
 class UFortWeaponItemDefinition;
+struct FFrame;
 struct FGameplayTag;
 struct FGuid;
 
@@ -30,6 +31,14 @@ public:
     void SetIsDBNO(bool bInIsDBNO);
 
     void SetPlayedDying(bool bInPlayedDying);
+
+    void SetMovingEmote(bool bInMovingEmote);
+
+    void SetMovingEmoteForwardOnly(bool bInMovingEmoteForwardOnly);
+
+    void MovingEmoteStopped();
+
+    void execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result);
 
     UFortHealthSet* GetHealthSet() const;
 
