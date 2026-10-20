@@ -52,7 +52,12 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
-    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(Scanner::CallTo(Scanner::String(TEXT("SupplyDropSpawn")).Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation")));
+    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>([]
+    {
+        auto SupplyDropSpawn = Scanner::String(TEXT("SupplyDropSpawn"));
+
+        return Scanner::CallTo((SupplyDropSpawn.Get() ? SupplyDropSpawn : Scanner::String(TEXT("FortAthenaSupplyDrop"))).Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
+    }());
 
     return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
 }
