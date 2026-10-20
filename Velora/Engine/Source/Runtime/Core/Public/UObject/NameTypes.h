@@ -26,10 +26,7 @@ public:
         return !(*this == Other);
     }
 
-    friend FORCEINLINE uint32 GetTypeHash(const FName N)
-    {
-        return N.ComparisonIndex + N.Number;
-    }
+    friend uint32 GetTypeHash(const FName N);
 
     FName(EName N);
 

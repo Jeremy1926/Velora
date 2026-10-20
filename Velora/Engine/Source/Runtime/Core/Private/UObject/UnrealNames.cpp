@@ -26,6 +26,19 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
     Constructor(this, Name, FindType);
 }
 
+uint32 GetTypeHash(const FName N)
+{
+    auto& Version = FEngineVersion::Current();
+
+    if (Version.GetMajor() == 4 && Version.GetMinor() < 24)
+        return N.ComparisonIndex + N.Number;
+
+    const uint32 Block = N.ComparisonIndex >> 16;
+    const uint32 Offset = N.ComparisonIndex & 0xFFFF;
+
+    return (Block << 19) + Block + (Offset << 16) + Offset + (Offset >> 4) + N.Number;
+}
+
 FString FName::ToString() const
 {
     static auto ToString = Scanner::Function<void (*)(const FName*, FString&)>(Scanner::String(TEXT("Failed to find function %s in %s")).Start().Call(3).Get(TEXT("FName::ToString")));
