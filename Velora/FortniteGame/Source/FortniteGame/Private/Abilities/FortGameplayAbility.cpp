@@ -27,7 +27,9 @@ static int32_t AbilityWeaponItemOffset()
 
 static int32_t AbilityWeaponOffset()
 {
-    static auto AbilityWeapon = ClientEndAbilityWeaponCall().Find("lea *, [*+0x*]").Disp(TEXT("UFortGameplayAbility::AbilityWeaponActor"));
+    static auto Lea = ClientEndAbilityWeaponCall().Find("lea *, [*+0x*]");
+    static auto Add = ClientEndAbilityWeaponCall().Find("add *, 0x*");
+    static auto AbilityWeapon = Add.Get() && (!Lea.Get() || Add.Get() < Lea.Get()) ? (int32_t)Add.Imm(TEXT("UFortGameplayAbility::AbilityWeaponActor")) : Lea.Disp(TEXT("UFortGameplayAbility::AbilityWeaponActor"));
 
     return AbilityWeapon;
 }
