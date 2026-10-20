@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -31,4 +33,18 @@ void AFortPlayerControllerAthena::ClientEquipItem(const FGuid& ItemGuid, bool bF
     static auto ClientEquipItem = Scanner::Function<void (*)(AFortPlayerControllerAthena*, const FGuid&, bool)>(Scanner::Event(TEXT("ClientEquipItem")).Get(TEXT("AFortPlayerControllerAthena::ClientEquipItem")));
 
     ClientEquipItem(this, ItemGuid, bForceExecution);
+}
+
+UAthenaMarkerComponent* AFortPlayerControllerAthena::GetMarkerComponent() const
+{
+    static auto MarkerComponent = GetClass()->FindPropertyByName(FName(TEXT("MarkerComponent")));
+
+    return *MarkerComponent->ContainerPtrToValuePtr<UAthenaMarkerComponent*>(this);
+}
+
+uint8 AFortPlayerControllerAthena::GetSquadId() const
+{
+    auto FortPlayerState = Cast<AFortPlayerStateAthena>(GetPlayerState());
+
+    return FortPlayerState ? FortPlayerState->GetSquadId() : 0;
 }

@@ -260,6 +260,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPtr.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ScriptInterface.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Stack.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPath.h" />
@@ -321,6 +322,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Internationalization\Text.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Quat.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStateZone.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStatePvP.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameStateZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeapon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeap_BuildingTool.h" />
@@ -353,6 +355,8 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerPvP.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerControllerAthena.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AthenaMarkerComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerStateAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h" />
@@ -413,6 +417,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Actor.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\ActorReplication.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SceneComponent.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ActorComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerController.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\WorldSettings.cpp" />
@@ -511,6 +516,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortQuickBars.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerControllerAthena.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AthenaMarkerComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerStateAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameModeAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameModeZone.cpp" />
