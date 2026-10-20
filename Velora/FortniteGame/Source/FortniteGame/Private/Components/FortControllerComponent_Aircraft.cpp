@@ -10,14 +10,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ServerAttemptAircraftJump = []
-{
-    auto ServerAttemptAircraftJump = Scanner::Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump")).Find("call [*+0x*]", 2);
-    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"));
-
-    return ServerAttemptAircraftJump.Get() && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerAttemptAircraftJump.Disp())).Is("ret*") ? DetourVTable(TEXT("UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation"), *(void***)DefaultObject, ServerAttemptAircraftJump.Disp(), &UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation) : nullptr;
-}();
-
 UClass* UFortControllerComponent_Aircraft::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft"));
@@ -39,6 +31,12 @@ bool& UFortControllerComponent_Aircraft::GetIsAttemptingAircraftJump()
     return *(bool*)((uint8_t*)this + bIsAttemptingAircraftJump);
 }
 
+DETOUR(UFortControllerComponent_Aircraft, ServerAttemptAircraftJump_Implementation, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump"))
+    .Find("call [*+0x*]", 2)
+    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"), "ret*")
+    .Optional()
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft")))
 void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation(FRotator ClientRotation)
 {
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
