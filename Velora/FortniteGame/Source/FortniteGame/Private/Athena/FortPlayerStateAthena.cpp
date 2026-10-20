@@ -17,3 +17,10 @@ uint8 AFortPlayerStateAthena::GetSquadId() const
 
     return *SquadId->ContainerPtrToValuePtr<uint8>(this);
 }
+
+uint8 AFortPlayerStateAthena::GetTeamIndex() const
+{
+    static auto TeamIndex = GetClass()->FindPropertyByName(FName(TEXT("TeamIndex")));
+
+    return *TeamIndex->ContainerPtrToValuePtr<uint8>(this);
+}

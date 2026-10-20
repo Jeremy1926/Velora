@@ -9,6 +9,8 @@ public:
 
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
 
+    void PlacePlayerOnTeam(AController* Player);
+
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
     void OnPlaylistDataLoaded();

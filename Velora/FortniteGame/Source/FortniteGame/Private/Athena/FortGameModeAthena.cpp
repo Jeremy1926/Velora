@@ -5,6 +5,7 @@
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
@@ -37,6 +38,8 @@
 #include "Detour.h"
 
 static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
+
+static auto PlacePlayerOnTeam = FGameMemberInfoArray::StaticStruct() ? Detour(TEXT("AFortGameModeAthena::PlacePlayerOnTeam"), Scanner::CallTo(Scanner::String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d")).Start().Get(TEXT("AFortGameMode::PlacePlayerOnTeam"))).Start().Get(), &AFortGameModeAthena::PlacePlayerOnTeam) : nullptr;
 
 static auto OnGivenMatchAssignment = []
 {
@@ -157,6 +160,26 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     }
 
     return Pawn;
+}
+
+void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
+{
+    (this->*::PlacePlayerOnTeam)(Player);
+
+    auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (!PlayerState || !GameState)
+        return;
+
+    auto& GameMemberInfoArray = GameState->GetGameMemberInfoArray();
+    auto Member = new(GameMemberInfoArray.GetMembers()) FGameMemberInfo();
+
+    Member->SquadId = PlayerState->GetSquadId();
+    Member->TeamIndex = PlayerState->GetTeamIndex();
+    Member->MemberUniqueId = PlayerState->GetUniqueId();
+
+    GameMemberInfoArray.MarkItemDirty(*Member);
 }
 
 void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)

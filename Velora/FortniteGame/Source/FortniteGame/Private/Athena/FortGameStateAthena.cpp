@@ -32,6 +32,13 @@ AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
     return MapInfo ? *MapInfo->ContainerPtrToValuePtr<AFortAthenaMapInfo*>(this) : nullptr;
 }
 
+FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()
+{
+    static auto GameMemberInfoArray = GetClass()->FindPropertyByName(FName(TEXT("GameMemberInfoArray")));
+
+    return *GameMemberInfoArray->ContainerPtrToValuePtr<FGameMemberInfoArray>(this);
+}
+
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));
@@ -122,4 +129,18 @@ void AFortGameStateAthena::StreamAdditionalPlaylistLevels()
         if (!Level.IsNull())
             StartStreamingAdditionalPlaylistLevel(FName(*Level.GetLongPackageName()));
     }
+}
+
+UScriptStruct* FGameMemberInfoArray::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.GameMemberInfoArray"));
+
+    return Struct;
+}
+
+TArray<FGameMemberInfo>& FGameMemberInfoArray::GetMembers()
+{
+    static auto Members = StaticStruct()->FindPropertyByName(FName(TEXT("Members")));
+
+    return *Members->ContainerPtrToValuePtr<TArray<FGameMemberInfo>>(this);
 }

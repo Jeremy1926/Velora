@@ -8,4 +8,6 @@ public:
     static UClass* StaticClass();
 
     uint8 GetSquadId() const;
+
+    uint8 GetTeamIndex() const;
 };

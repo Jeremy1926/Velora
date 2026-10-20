@@ -226,6 +226,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\WeakObjectPtrTemplates.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\WeakObjectPtr.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNet.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreOnline.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Actor.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Pawn.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Controller.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Info.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameSession.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerState.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\OnlineReplStructs.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\DataAsset.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayAbilitySpec.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Guid.h" />
@@ -451,6 +453,8 @@
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\Abilities\GameplayAbility.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemComponent_Abilities.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerState.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\OnlineReplStructs.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagsManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Particles\ParticleComponents.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AttributeSet.cpp" />
