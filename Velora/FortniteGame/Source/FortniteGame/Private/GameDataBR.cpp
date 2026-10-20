@@ -12,7 +12,12 @@ UGameDataBR* UGameDataBR::Get()
 
 UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
 {
-    static auto GetPlayerAbilitySetBR = Scanner::Function<UFortAbilitySet* (*)(const UGameDataBR*)>(Scanner::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov rcx, rax; call 0x*").Call(2).Get(TEXT("UGameDataBR::GetPlayerAbilitySetBR")));
+    static auto GetPlayerAbilitySetBR = Anchor::Function<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
+        .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Find("call 0x*; mov rcx, rax; call 0x*")
+        .Call(2)
+        .Get();
 
     return GetPlayerAbilitySetBR(this);
 }
