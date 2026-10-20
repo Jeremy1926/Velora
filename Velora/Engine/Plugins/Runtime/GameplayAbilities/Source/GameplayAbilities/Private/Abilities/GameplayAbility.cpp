@@ -4,7 +4,9 @@
 
 AActor* UGameplayAbility::GetAvatarActorFromActorInfo() const
 {
-    static auto GetAvatarActorFromActorInfo = Scanner::Function<AActor* (*)(const UGameplayAbility*)>(Scanner::Native(TEXT("/Script/GameplayAbilities.GameplayAbility:GetAvatarActorFromActorInfo")).Get(TEXT("UGameplayAbility::GetAvatarActorFromActorInfo")));
+    static auto GetAvatarActorFromActorInfo = Anchor::Function<AActor* (*)(const UGameplayAbility*)>(TEXT("UGameplayAbility::GetAvatarActorFromActorInfo"))
+        .Native(TEXT("/Script/GameplayAbilities.GameplayAbility:GetAvatarActorFromActorInfo"))
+        .Get();
 
     return GetAvatarActorFromActorInfo(this);
 }
