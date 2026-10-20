@@ -4,7 +4,10 @@
 
 void IGameplayTagAssetInterface::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const
 {
-    static auto GetOwnedGameplayTags = Scanner::Exec(TEXT("/Script/GameplayTags.GameplayTagAssetInterface:GetOwnedGameplayTags")).Find("call [*+0x*]").Slot(TEXT("IGameplayTagAssetInterface::GetOwnedGameplayTags"));
+    static auto GetOwnedGameplayTags = Anchor::Slot(TEXT("IGameplayTagAssetInterface::GetOwnedGameplayTags"))
+        .Exec(TEXT("/Script/GameplayTags.GameplayTagAssetInterface:GetOwnedGameplayTags"))
+        .Find("call [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(const IGameplayTagAssetInterface*, FGameplayTagContainer&)>(this, GetOwnedGameplayTags)(this, TagContainer);
 }
