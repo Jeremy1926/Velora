@@ -67,7 +67,10 @@ void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag Game
         auto K2_RemoveGameplayCue = Scanner::Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue")).Find("call [*+0x*]").Slot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"));
         auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
 
-        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_RemoveGameplayCue)).Find("lea r8, [*+0x*]; call *").Find("call *");
+        auto Body = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_RemoveGameplayCue));
+        auto Call = Body.Find("lea r8, [*+0x*]; call *");
+
+        return (Call.Get() ? Call : Body.Find("lea r8, [*+0x*]; mov rdx, *; call *")).Find("call *");
     }();
     static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")) : 0;
     static auto RemoveGameplayCue_Internal = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
