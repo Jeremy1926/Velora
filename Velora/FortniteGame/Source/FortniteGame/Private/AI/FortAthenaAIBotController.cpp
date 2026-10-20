@@ -6,6 +6,7 @@
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortWorldItem.h"
+#include "Items/FortWeaponItemDefinition.h"
 #include "Player/FortPlayerState.h"
 #include "Weapons/FortWeapon.h"
 #include "Templates/Casts.h"
@@ -98,6 +99,12 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
             continue;
 
         auto ItemEntry = new(Inventory->GetInventory().GetReplicatedEntries()) FFortItemEntry(ItemAndCount.Item, ItemAndCount.Count, ItemAndCount.Item->GetMinLevel());
+
+        if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemAndCount.Item))
+        {
+            if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
+                ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+        }
 
         ItemEntry->GetParentInventory() = Inventory;
         ItemEntry->GetIsReplicatedCopy() = true;
