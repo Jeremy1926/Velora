@@ -26,49 +26,13 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto PickLootDrops = []
-{
-    auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"));
-    auto Call = Exec.Find("call 0x*; lea rcx, [rsp+0x20]");
-    auto Address = (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; call 0x*").Find("call 0x*")).Get();
-
-    if (((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("WorldContextObject"))))
-    {
-        return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), Address, (void*)+[](UObject* WorldContextObject, TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier)
-        {
-            return UFortKismetLibrary::PickLootDrops(OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
-        });
-    }
-
-    return DetourCall(TEXT("UFortKismetLibrary::PickLootDrops"), Address, (void*)&UFortKismetLibrary::PickLootDrops);
-}();
-
-static auto K2_SpawnPickupInWorld = []
-{
-    auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"));
-    auto Call = Exec.Find("call 0x*; mov rbx, [rsp+*]");
-
-    return DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorld"), (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*")).Get(), &UFortKismetLibrary::K2_SpawnPickupInWorld);
-}();
-
-static auto K2_SpawnPickupInWorldWithClass = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")) ? DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorldWithClass"), Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")).Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*").Get(), &UFortKismetLibrary::K2_SpawnPickupInWorldWithClass) : nullptr;
-
-static auto K2_RemoveItemFromPlayerByGuid = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")) ? Detour(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid"), Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")).Get(), &UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid) : nullptr;
-
-static auto GiveItemToInventoryOwner = []
-{
-    auto GameGiveItemToInventoryOwner = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get();
-    auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode")).Find("call 0x*");
-
-    while (Call.Get() && Call.Target() != GameGiveItemToInventoryOwner)
-        Call = Call.Find("call 0x*");
-
-    return Call.Get() ? DetourCall(TEXT("UFortKismetLibrary::GiveItemToInventoryOwner"), Call.Get(), &UFortKismetLibrary::GiveItemToInventoryOwner) : nullptr;
-}();
-
 FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject)
 {
-    static auto EquipFortAbilitySet = Scanner::Function<FFortAbilitySetHandle* (*)(FFortAbilitySetHandle*, TScriptInterface<IAbilitySystemInterface>*, UFortAbilitySet*, UObject*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet")).Find("mov r8, [rsp+0x*]").Call().Get(TEXT("UFortKismetLibrary::EquipFortAbilitySet")));
+    static auto EquipFortAbilitySet = Anchor::Function<FFortAbilitySetHandle* (*)(FFortAbilitySetHandle*, TScriptInterface<IAbilitySystemInterface>*, UFortAbilitySet*, UObject*)>(TEXT("UFortKismetLibrary::EquipFortAbilitySet"))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
+        .Find("mov r8, [rsp+0x*]")
+        .Call()
+        .Get();
 
     FFortAbilitySetHandle Handle;
 
@@ -77,26 +41,22 @@ FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<I
     return Handle;
 }
 
-static auto execGiveItemToInventoryOwner = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"));
-
-    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execGiveItemToInventoryOwner, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&UFortKismetLibrary::execGiveItemToInventoryOwner);
-
-    return true;
-}();
-
+DETOUR(UFortKismetLibrary, GiveItemToInventoryOwner, Anchor::Hook()
+    .Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode"))
+    .FindCall(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get())
+    .Optional()
+    .AtCall())
 void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer)
 {
     if (auto PlayerController = Cast<AFortPlayerController>(InventoryOwner.GetObject()))
         K2_GiveItemToPlayer(PlayerController, ItemDefinition, NumberToGive);
 }
 
+DETOUR(UFortKismetLibrary, execGiveItemToInventoryOwner, Anchor::Hook()
+    .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")))
 void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result)
 {
     static auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"));
@@ -195,6 +155,10 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerC
     return AmountRemoved;
 }
 
+DETOUR(UFortKismetLibrary, K2_RemoveItemFromPlayerByGuid, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")))
+    .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+    .Inline())
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(AFortPlayerController* PlayerController, const FGuid& ItemGuid, int32 AmountToRemove, bool bForceRemoval)
 {
     auto WorldInventory = PlayerController && ItemGuid.IsValid() ? PlayerController->GetWorldInventory() : nullptr;
@@ -214,20 +178,6 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(AFortPlayerController* P
 
     return 0;
 }
-
-static auto execK2_RemoveFortItemFromPlayer = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer"));
-
-    if (!Function || Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() != Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execK2_RemoveFortItemFromPlayer, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&UFortKismetLibrary::execK2_RemoveFortItemFromPlayer);
-
-    return true;
-}();
 
 int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* PlayerController, UFortItem* Item, int32 AmountToRemove, bool bForceRemoval)
 {
@@ -251,6 +201,9 @@ int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* Pla
     return 0;
 }
 
+DETOUR(UFortKismetLibrary, execK2_RemoveFortItemFromPlayer, Anchor::Hook()
+    .If(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
+    .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")))
 void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
 {
     AFortPlayerController* PlayerController = nullptr;
@@ -269,25 +222,42 @@ void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* co
 
 AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AActor* Actor)
 {
-    static auto GetFortPlayerControllerFromActor = Scanner::Function<AFortPlayerController* (*)(AActor*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor")).Get(TEXT("UFortKismetLibrary::GetFortPlayerControllerFromActor")));
+    static auto GetFortPlayerControllerFromActor = Anchor::Function<AFortPlayerController* (*)(AActor*)>(TEXT("UFortKismetLibrary::GetFortPlayerControllerFromActor"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor"))
+        .Get();
 
     return GetFortPlayerControllerFromActor(Actor);
 }
 
 void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise)
 {
-    static auto BroadcastAbilityImpactAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, UObject*, const FVector&, float, FName, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastAbilityImpactAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation")));
+    static auto BroadcastAbilityImpactAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, UObject*, const FVector&, float, FName, bool)>(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastAbilityImpactAtLocation"))
+        .Get();
 
     BroadcastAbilityImpactAtLocation(WorldContextObject, InSound, Instigator, Position, Radius, Tag, bSubtractLocalNoise);
 }
 
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
-    static auto BroadcastSoundAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation")));
+    static auto BroadcastSoundAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation"))
+        .Get();
 
     BroadcastSoundAtLocation(WorldContextObject, InSound, Location, VolumeMultiplier, PitchMultiplier);
 }
 
+DETOUR(UFortKismetLibrary, PickLootDrops, Anchor::Hook(((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("WorldContextObject"))) ? (void*)+[](UObject* WorldContextObject, TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier)
+    {
+        return UFortKismetLibrary::PickLootDrops(OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
+    } : (void*)&UFortKismetLibrary::PickLootDrops)
+    .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+    .Find("call 0x*; lea rcx, [rsp+0x20]")
+    .Or()
+    .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+    .Find("mov [*+0x20], *; call 0x*")
+    .Find("call 0x*")
+    .AtCall())
 bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier)
 {
     FName LootTierKey(NAME_None);
@@ -301,7 +271,12 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
 
 FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags)
 {
-    static auto ApplyGlobalEnvironmentGameplayEffectToActor = Scanner::Function<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, UClass*, int32, const FGameplayTagContainer&)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor")).Find("mov [rsp+0x20], rax; call 0x*").Find("call 0x*").Target(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor")));
+    static auto ApplyGlobalEnvironmentGameplayEffectToActor = Anchor::Function<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, UClass*, int32, const FGameplayTagContainer&)>(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Find("mov [rsp+0x20], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
     ApplyGlobalEnvironmentGameplayEffectToActor(&ActiveGameplayEffectHandle, EffectTargetActor, GameplayEffect, GameplayEffectLevel, AdditionalContextTags);
@@ -309,11 +284,25 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
     return ActiveGameplayEffectHandle;
 }
 
+DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorld, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
+    .Find("call 0x*; mov rbx, [rsp+*]")
+    .Or()
+    .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
+    .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
+    .Find("call 0x*")
+    .AtCall())
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
 {
     return K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, AFortPickupAthena::StaticClass(), NumberToSpawn, Position, Direction, OverrideMaxStackCount, bToss);
 }
 
+DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorldWithClass, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")))
+    .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
+    .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
+    .Find("call 0x*")
+    .AtCall())
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
 {
     static auto bHasToss = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")))->FindPropertyByName(FName(TEXT("bToss"))) != nullptr;
@@ -350,21 +339,27 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldCo
 
 void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
 {
-    static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Scanner::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation")).Get(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation")));
+    static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
+        .Get();
 
     CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(WorldContextObject, WeaponItemDefinition, SourceTags, Location, SourceTypeFlag, SpawnSource);
 }
 
 bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
 {
-    static auto AreAthenaVehiclesEnabled = Scanner::Function<bool (*)()>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled")).Get(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled")));
+    static auto AreAthenaVehiclesEnabled = Anchor::Function<bool (*)()>(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
+        .Get();
 
     return AreAthenaVehiclesEnabled();
 }
 
 void UFortKismetLibrary::GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio)
 {
-    static auto GetCalendarEventInformation = Scanner::Function<void (*)(UObject*, const FString&, bool&, FTimespan&, FTimespan&, float&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetCalendarEventInformation")).Get(TEXT("UFortKismetLibrary::GetCalendarEventInformation")));
+    static auto GetCalendarEventInformation = Anchor::Function<void (*)(UObject*, const FString&, bool&, FTimespan&, FTimespan&, float&)>(TEXT("UFortKismetLibrary::GetCalendarEventInformation"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetCalendarEventInformation"))
+        .Get();
 
     GetCalendarEventInformation(WorldContextObject, EventName, bIsEventActive, TimeSinceBegin, TimeUntilEnd, TimespanRatio);
 }
