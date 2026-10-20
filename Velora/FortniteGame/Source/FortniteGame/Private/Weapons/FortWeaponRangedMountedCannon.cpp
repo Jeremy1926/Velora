@@ -9,15 +9,14 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ServerFireActorInCannon = []
-{
-    auto ServerFireActorInCannon = Scanner::Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"));
-    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"));
-    auto Slot = ServerFireActorInCannon.Get() ? ServerFireActorInCannon.Find("call [*+0x*]", 2).Slot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation")) : 0;
-
-    return Slot && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Slot)).Is("ret*") ? DetourVTable(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"), *(void***)DefaultObject, Slot, &AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation) : nullptr;
-}();
-
+DETOUR(AFortWeaponRangedMountedCannon, ServerFireActorInCannon_Implementation, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"))
+    .Optional()
+    .Find("call [*+0x*]", 2)
+    .LogSlot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"))
+    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"), "ret*")
+    .Optional()
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon")))
 void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(const FVector& LaunchDir)
 {
     ShouldFireRiderInCannon(LaunchDir, true);
