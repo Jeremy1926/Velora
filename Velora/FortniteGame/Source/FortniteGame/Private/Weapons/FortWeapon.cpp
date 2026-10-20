@@ -10,18 +10,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto CheckPendingDestroyedDueToDurability = []
-{
-    auto bPendingDestroyDueToDurabilityOrStackCount = (UBoolProperty*)AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount")));
-
-    if (!bPendingDestroyDueToDurabilityOrStackCount)
-        return Detour(TEXT("AFortWeapon::CheckPendingDestroyedDueToDurability"), nullptr, &AFortWeapon::CheckPendingDestroyedDueToDurability);
-
-    auto Offset = bPendingDestroyDueToDurabilityOrStackCount->GetOffset_ForInternal() + bPendingDestroyDueToDurabilityOrStackCount->GetByteOffset();
-    auto Signature = std::format("F6 ? {:02X} {:02X} {:02X} {:02X} {:02X}", Offset & 0xFF, (Offset >> 8) & 0xFF, (Offset >> 16) & 0xFF, (Offset >> 24) & 0xFF, bPendingDestroyDueToDurabilityOrStackCount->GetFieldMask());
-
-    return Detour(TEXT("AFortWeapon::CheckPendingDestroyedDueToDurability"), Scanner::Pattern(Signature.c_str()).Start().Get(), &AFortWeapon::CheckPendingDestroyedDueToDurability);
-}();
 
 UClass* AFortWeapon::StaticClass()
 {
@@ -32,18 +20,21 @@ UClass* AFortWeapon::StaticClass()
 
 void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
 {
-    static auto PlayWeaponFireFX = []
-    {
-        auto OnPlayWeaponFireFX = Scanner::Reference(Scanner::String(TEXT("OnPlayWeaponFireFX")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get(TEXT("AFortWeapon::OnPlayWeaponFireFX"));
-        auto Function = Scanner::CallTo(OnPlayWeaponFireFX).Start().Get(TEXT("AFortWeapon::PlayWeaponFireFX"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeapon"));
-
-        return Scanner::Slot(TEXT("AFortWeapon::PlayWeaponFireFX"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
-    }();
+    static auto PlayWeaponFireFX = Anchor::Slot(TEXT("AFortWeapon::PlayWeaponFireFX"))
+        .Event(TEXT("OnPlayWeaponFireFX"))
+        .Log(TEXT("AFortWeapon::OnPlayWeaponFireFX"))
+        .Caller()
+        .Log(TEXT("AFortWeapon::PlayWeaponFireFX"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortWeapon"))
+        .Get();
 
     Scanner::Virtual<void (*)(AFortWeapon*, bool)>(this, PlayWeaponFireFX)(this, bPersistentFire);
 }
 
+DETOUR(AFortWeapon, CheckPendingDestroyedDueToDurability, Anchor::Hook()
+    .FieldPattern("F6 ? %b %m", (UBoolProperty*)AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount"))))
+    .Start()
+    .Inline())
 bool AFortWeapon::CheckPendingDestroyedDueToDurability()
 {
     auto Instigator = GetInstigator();
@@ -62,7 +53,7 @@ bool AFortWeapon::CheckPendingDestroyedDueToDurability()
         }
     }
 
-    return (this->*::CheckPendingDestroyedDueToDurability)();
+    return Original();
 }
 
 bool AFortWeapon::GetPendingDestroyDueToDurabilityOrStackCount() const
