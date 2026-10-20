@@ -67,6 +67,10 @@ public:
 
     void execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result);
 
+    void UpdateGameStateModifiedGravity(float GravityMultiplier);
+
+    void execUpdateGameStateModifiedGravity(FFrame& Stack, void* const Z_Param__Result);
+
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 
     void HandleZiplineStateChanged();

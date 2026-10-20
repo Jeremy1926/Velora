@@ -5,6 +5,7 @@
 #include "GameFramework/OnlineReplStructs.h"
 
 class AFortAthenaMapInfo;
+class AFortPawn;
 class AFortVolumeManager;
 class UScriptStruct;
 
@@ -58,4 +59,6 @@ public:
     void StreamAdditionalPlaylistLevels();
 
     static bool AmmoDroppedFromContainersForWeaponPickup();
+
+    bool AdjustedGravityMultiplier(AFortPawn* Pawn, float& NewGravityVal, float& NewVehicleGravityVal, float& NewJumpZ, float& NewJumpHorizontalAcceleration, float& NewJumpHorizontalVelocity);
 };

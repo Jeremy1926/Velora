@@ -211,3 +211,10 @@ TArray<FGameMemberInfo>& FGameMemberInfoArray::GetMembers()
 
     return *Members->ContainerPtrToValuePtr<TArray<FGameMemberInfo>>(this);
 }
+
+bool AFortGameStateAthena::AdjustedGravityMultiplier(AFortPawn* Pawn, float& NewGravityVal, float& NewVehicleGravityVal, float& NewJumpZ, float& NewJumpHorizontalAcceleration, float& NewJumpHorizontalVelocity)
+{
+    static auto AdjustedGravityMultiplier = Scanner::Function<bool (*)(AFortGameStateAthena*, AFortPawn*, float*, float*, float*, float*, float*)>(Scanner::CallTo(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityJumpMultipliers")).Get()).Last("call 0x*; test al, al; jz *").Call().Get(TEXT("AFortGameStateAthena::AdjustedGravityMultiplier")));
+
+    return AdjustedGravityMultiplier(this, Pawn, &NewGravityVal, &NewVehicleGravityVal, &NewJumpZ, &NewJumpHorizontalAcceleration, &NewJumpHorizontalVelocity);
+}

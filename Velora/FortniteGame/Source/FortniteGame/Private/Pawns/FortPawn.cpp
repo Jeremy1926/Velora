@@ -163,3 +163,10 @@ void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverr
 
     LaunchCharacterJump(this, LaunchVelocity, bXYOverride, bZOverride, bIgnoreFallDamage, bPlayFeedbackEvent);
 }
+
+void AFortPawn::SetGravityMultiplier(float NewGravityVal)
+{
+    static auto SetGravityMultiplier = Scanner::Function<void (*)(AFortPawn*, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier")).Get(TEXT("AFortPawn::SetGravityMultiplier")));
+
+    SetGravityMultiplier(this, NewGravityVal);
+}

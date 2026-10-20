@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Athena/FortGameStateAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Items/FortPickup.h"
 #include "Abilities/FortAbilitySystemComponent.h"
@@ -33,6 +34,20 @@ static auto execPlayGroupEmote = []
     UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerPawn::execPlayGroupEmote, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
 
     Function->SetNativeFunc((Native)&AFortPlayerPawn::execPlayGroupEmote);
+
+    return true;
+}();
+
+static auto execUpdateGameStateModifiedGravity = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerPawn::execUpdateGameStateModifiedGravity, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPlayerPawn::execUpdateGameStateModifiedGravity);
 
     return true;
 }();
@@ -276,6 +291,31 @@ void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Res
     Stack.Code += !!Stack.Code;
 
     PlayGroupEmote(EmoteAsset);
+}
+
+void AFortPlayerPawn::UpdateGameStateModifiedGravity(float GravityMultiplier)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    float NewGravityVal = 1.f;
+    float NewVehicleGravityVal = 1.f;
+    float NewJumpZ = 1.f;
+    float NewJumpHorizontalAcceleration = 1.f;
+    float NewJumpHorizontalVelocity = 1.f;
+
+    if (GameState && GameState->AdjustedGravityMultiplier(this, NewGravityVal, NewVehicleGravityVal, NewJumpZ, NewJumpHorizontalAcceleration, NewJumpHorizontalVelocity))
+        GravityMultiplier *= NewGravityVal;
+
+    SetGravityMultiplier(GravityMultiplier);
+}
+
+void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* const Z_Param__Result)
+{
+    float GravityMultiplier = 0.f;
+
+    Stack.StepCompiledIn(&GravityMultiplier);
+    Stack.Code += !!Stack.Code;
+
+    UpdateGameStateModifiedGravity(GravityMultiplier);
 }
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
