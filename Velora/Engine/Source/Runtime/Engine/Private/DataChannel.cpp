@@ -62,7 +62,13 @@ int32 UChannel::IsNetReady(bool Saturate)
 
 FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
 {
-    static auto SendBunch = Scanner::String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s")).Start().Find("mov r8b, 0x1").Find("call 0x*").Find("call [*]").Slot(TEXT("UChannel::SendBunch"));
+    static auto SendBunch = Anchor::Slot(TEXT("UChannel::SendBunch"))
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Find("call 0x*")
+        .Find("call [*]")
+        .Get();
 
     FPacketIdRange Result;
     Scanner::Virtual<FPacketIdRange* (*)(UChannel*, FPacketIdRange*, FOutBunch*, bool)>(this, SendBunch)(this, &Result, Bunch, Merge);
@@ -77,9 +83,6 @@ AActor* UActorChannel::GetActor() const
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
-static auto LastUpdateTimeStore = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*");
-
-static auto LastUpdateTime = LastUpdateTimeStore.Is("movsd [*+0x*], xmm*") ? LastUpdateTimeStore.Disp(TEXT("UActorChannel::LastUpdateTime")) : 0;
 
 static int32 GetRelevantTimeOffset(const UActorChannel* Channel)
 {
@@ -100,6 +103,9 @@ void UActorChannel::SetRelevantTime(double InRelevantTime)
 
 double UActorChannel::GetLastUpdateTime() const
 {
+    static auto LastUpdateTimeStore = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*");
+    static auto LastUpdateTime = LastUpdateTimeStore.Is("movsd [*+0x*], xmm*") ? LastUpdateTimeStore.Disp(TEXT("UActorChannel::LastUpdateTime")) : 0;
+
     if (LastUpdateTime)
         return *(double*)((uint8_t*)this + LastUpdateTime);
 
@@ -108,34 +114,43 @@ double UActorChannel::GetLastUpdateTime() const
 
 void UActorChannel::Close()
 {
-    static auto Close = Scanner::Function<void (*)(UActorChannel*)>(Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start().Get(TEXT("UActorChannel::Close")));
+    static auto Close = Anchor::Function<void (*)(UActorChannel*)>(TEXT("UActorChannel::Close"))
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s"))
+        .Start()
+        .Get();
 
     Close(this);
 }
 
 void UActorChannel::StartBecomingDormant()
 {
-    static auto StartBecomingDormant = Scanner::Function<void (*)(UActorChannel*)>(Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Get(TEXT("UActorChannel::StartBecomingDormant")));
+    static auto StartBecomingDormant = Anchor::Function<void (*)(UActorChannel*)>(TEXT("UActorChannel::StartBecomingDormant"))
+        .String(TEXT("StartBecomingDormant: %s"))
+        .Start()
+        .Get();
 
     StartBecomingDormant(this);
 }
 
 bool UActorChannel::ReplicateActor()
 {
-    static auto ReplicateActor = Scanner::Function<bool (*)(UActorChannel*)>(Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Get(TEXT("UActorChannel::ReplicateActor")));
+    static auto ReplicateActor = Anchor::Function<bool (*)(UActorChannel*)>(TEXT("UActorChannel::ReplicateActor"))
+        .String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d"))
+        .Start()
+        .Get();
 
     return ReplicateActor(this);
 }
 
 void UActorChannel::SetChannelActor(AActor* InActor)
 {
-    static auto SetChannelActor = Scanner::Function<void (*)(UActorChannel*, AActor*)>([]
-    {
-        auto CreateChannel = Scanner::String(TEXT("Created channel %i of type %i")).Start().Get();
-        auto ProcessRemoteFunction = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start();
-
-        return ProcessRemoteFunction.Find(std::format("call {:#x}", (uintptr_t)CreateChannel)).Find("call 0x*").Target(TEXT("UActorChannel::SetChannelActor"));
-    }());
+    static auto SetChannelActor = Anchor::Function<void (*)(UActorChannel*, AActor*)>(TEXT("UActorChannel::SetChannelActor"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .FindCall(Scanner::String(TEXT("Created channel %i of type %i")).Start().Get())
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     SetChannelActor(this, InActor);
 }
