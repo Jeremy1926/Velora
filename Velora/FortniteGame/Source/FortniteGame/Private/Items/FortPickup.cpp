@@ -39,7 +39,7 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
     static auto Address = (Arguments.Get() ? Arguments.Call() : SpawnMissionItemPickup.Find("lea r8d, [r9+0x1]").Call(2)).Get(TEXT("AFortPickup::CreateFromData"));
     static auto PickupSourceTypeFlags = StaticClass()->FindPropertyByName(FName(TEXT("PickupSourceTypeFlags")));
 
-    if (!Arguments.Get() && PickupSourceTypeFlags && PickupSourceTypeFlags->ElementSize == sizeof(EFortPickupSourceTypeFlag))
+    if (!Arguments.Get() && PickupSourceTypeFlags && PickupSourceTypeFlags->GetSize() == sizeof(EFortPickupSourceTypeFlag))
     {
         struct FortPickupCreationData
         {

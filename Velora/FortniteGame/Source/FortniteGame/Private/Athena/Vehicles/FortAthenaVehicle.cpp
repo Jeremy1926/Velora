@@ -97,8 +97,8 @@ void AFortAthenaVehicle::ServerUpdateInputParams_Implementation(const FReplicate
     static auto ReplicatedInputParams = GetClass()->FindPropertyByName(FName(TEXT("ReplicatedInputParams")));
     static auto LocalInputParams = GetClass()->FindPropertyByName(FName(TEXT("LocalInputParams")));
 
-    memcpy(ReplicatedInputParams->ContainerPtrToValuePtr<void>(this), &InState, ReplicatedInputParams->ElementSize);
-    memcpy(LocalInputParams->ContainerPtrToValuePtr<void>(this), &InState, LocalInputParams->ElementSize);
+    memcpy(ReplicatedInputParams->ContainerPtrToValuePtr<void>(this), &InState, ReplicatedInputParams->GetSize());
+    memcpy(LocalInputParams->ContainerPtrToValuePtr<void>(this), &InState, LocalInputParams->GetSize());
 
     WakeUp();
 }

@@ -2,37 +2,28 @@
 
 #include "HAL/Platform.h"
 #include "Containers/EnumAsByte.h"
+#include "Misc/EngineVersion.h"
 #include "UObject/Class.h"
+#include "UObject/Field.h"
 #include "UObject/CoreNetTypes.h"
 
 class UProperty : public UField
 {
 public:
-    int32 ArrayDim;
-    int32 ElementSize;
-    uint64 PropertyFlags;
-    uint16 RepIndex;
-
-private:
-    TEnumAsByte<ELifetimeCondition> BlueprintReplicationCondition;
-    int32 Offset_Internal;
-
-public:
-    FName RepNotifyFunc;
-    UProperty* PropertyLinkNext;
-    UProperty* NextRef;
-    UProperty* DestructorLinkNext;
-    UProperty* PostConstructLinkNext;
+    FORCEINLINE int32 GetSize() const
+    {
+        return GetProperty()->ArrayDim * GetProperty()->ElementSize;
+    }
 
     FORCEINLINE int32 GetOffset_ForInternal() const
     {
-        return Offset_Internal;
+        return GetProperty()->Offset_Internal;
     }
 
 private:
     FORCEINLINE void* ContainerVoidPtrToValuePtrInternal(void* ContainerPtr, int32 ArrayIndex) const
     {
-        return (uint8*)ContainerPtr + Offset_Internal + ElementSize * ArrayIndex;
+        return (uint8*)ContainerPtr + GetProperty()->Offset_Internal + GetProperty()->ElementSize * ArrayIndex;
     }
 
 public:
@@ -47,6 +38,27 @@ public:
     {
         return ContainerPtrToValuePtr<ValueType>((void*)ContainerPtr, ArrayIndex);
     }
+
+protected:
+    FORCEINLINE const UProperty* GetProperty() const
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? (const UProperty*)((const uint8*)this + sizeof(FField) - sizeof(UField)) : this;
+    }
+
+private:
+    int32 ArrayDim;
+    int32 ElementSize;
+    uint64 PropertyFlags;
+    uint16 RepIndex;
+    TEnumAsByte<ELifetimeCondition> BlueprintReplicationCondition;
+    int32 Offset_Internal;
+    FName RepNotifyFunc;
+    UProperty* PropertyLinkNext;
+    UProperty* NextRef;
+    UProperty* DestructorLinkNext;
+    UProperty* PostConstructLinkNext;
 };
 
 class UBoolProperty : public UProperty
@@ -54,9 +66,9 @@ class UBoolProperty : public UProperty
 public:
     FORCEINLINE bool GetPropertyValue(void const* A) const
     {
-        uint8* ByteValue = (uint8*)A + ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
 
-        return !!(*ByteValue & FieldMask);
+        return !!(*ByteValue & GetProperty()->FieldMask);
     }
 
     FORCEINLINE bool GetPropertyValue_InContainer(void const* A, int32 ArrayIndex = 0) const
@@ -66,9 +78,9 @@ public:
 
     FORCEINLINE void SetPropertyValue(void* A, bool Value) const
     {
-        uint8* ByteValue = (uint8*)A + ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
 
-        *ByteValue = ((*ByteValue) & ~FieldMask) | (Value ? ByteMask : 0);
+        *ByteValue = ((*ByteValue) & ~GetProperty()->FieldMask) | (Value ? GetProperty()->ByteMask : 0);
     }
 
     FORCEINLINE void SetPropertyValue_InContainer(void* A, bool Value, int32 ArrayIndex = 0) const
@@ -78,15 +90,20 @@ public:
 
     FORCEINLINE uint8 GetByteOffset() const
     {
-        return ByteOffset;
+        return GetProperty()->ByteOffset;
     }
 
     FORCEINLINE uint8 GetFieldMask() const
     {
-        return FieldMask;
+        return GetProperty()->FieldMask;
     }
 
 private:
+    FORCEINLINE const UBoolProperty* GetProperty() const
+    {
+        return (const UBoolProperty*)UProperty::GetProperty();
+    }
+
     uint8 FieldSize;
     uint8 ByteOffset;
     uint8 ByteMask;

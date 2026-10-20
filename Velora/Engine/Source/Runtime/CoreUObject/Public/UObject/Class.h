@@ -6,6 +6,7 @@
 #include "Containers/UnrealString.h"
 #include "Misc/EngineVersion.h"
 
+class FField;
 class UProperty;
 struct FFrame;
 
@@ -36,7 +37,9 @@ public:
 
     FORCEINLINE int32 GetPropertiesSize() const
     {
-        return GetStruct()->PropertiesSize;
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertiesSize : GetStruct()->PropertiesSize;
     }
 
     bool IsChildOf(const UStruct* SomeBase) const
