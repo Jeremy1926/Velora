@@ -43,35 +43,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ReadyToStartMatch = []
-{
-    auto ReadyToStartMatch = Scanner::Exec(TEXT("/Script/Engine.GameMode:ReadyToStartMatch")).Find("call [rax+*]");
-    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-
-    return ReadyToStartMatch.Get() && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ReadyToStartMatch.Disp())).Has("call 0x*; xor al, al") ? DetourVTable(TEXT("AFortGameModeAthena::ReadyToStartMatch_Implementation"), *(void***)DefaultObject, ReadyToStartMatch.Disp(), &AFortGameModeAthena::ReadyToStartMatch_Implementation) : nullptr;
-}();
-
-static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
-
-static auto PlacePlayerOnTeam = FGameMemberInfoArray::StaticStruct() ? Detour(TEXT("AFortGameModeAthena::PlacePlayerOnTeam"), Scanner::CallTo(Scanner::String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d")).Start().Get(TEXT("AFortGameMode::PlacePlayerOnTeam"))).Start().Get(), &AFortGameModeAthena::PlacePlayerOnTeam) : nullptr;
-
-static auto OnGivenMatchAssignment = []
-{
-    auto FortGameModeOnGivenMatchAssignment = Scanner::String(TEXT("Playtest-%s")).Start().Get(TEXT("AFortGameMode::OnGivenMatchAssignment"));
-    auto FortGameModeVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode"));
-    auto Slot = Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), FortGameModeVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortGameModeOnGivenMatchAssignment; });
-    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-
-    return DetourVTable(TEXT("AFortGameModeAthena::OnGivenMatchAssignment"), VTable, Slot, &AFortGameModeAthena::OnGivenMatchAssignment);
-}();
-
-static auto OnPlaylistDataLoaded = []
-{
-    auto PlaylistDataLoaded = Scanner::String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"));
-
-    return PlaylistDataLoaded.Get() ? Detour(TEXT("AFortGameModeAthena::OnPlaylistDataLoaded"), PlaylistDataLoaded.Start().Get(), &AFortGameModeAthena::OnPlaylistDataLoaded) : nullptr;
-}();
-
 UClass* AFortGameModeAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
@@ -79,6 +50,12 @@ UClass* AFortGameModeAthena::StaticClass()
     return Class;
 }
 
+DETOUR(AFortGameModeAthena, ReadyToStartMatch_Implementation, Anchor::Hook()
+    .Exec(TEXT("/Script/Engine.GameMode:ReadyToStartMatch"))
+    .Find("call [rax+*]")
+    .HasVirtual(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "call 0x*; xor al, al")
+    .Optional()
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")))
 bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
 {
     if (GetWorldIsReady() && GetMatchState() == MatchState::WaitingToStart)
@@ -99,17 +76,19 @@ bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
 
 int32 AFortGameModeAthena::CountReadyPlayers()
 {
-    static auto CountReadyPlayers = []
-    {
-        void* Original;
-        memcpy(&Original, &::ReadyToStartMatch, sizeof(Original));
-
-        return Scanner::Function<int32 (*)(AFortGameModeAthena*)>(Scanner::At(Original).Find("call 0x*").Target(TEXT("AFortGameModeAthena::CountReadyPlayers")));
-    }();
+    static auto CountReadyPlayers = Anchor::Function<int32 (*)(AFortGameModeAthena*)>(TEXT("AFortGameModeAthena::CountReadyPlayers"))
+        .At(DETOUR_ORIGINAL(AFortGameModeAthena, ReadyToStartMatch_Implementation))
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     return CountReadyPlayers(this);
 }
 
+DETOUR(AFortGameModeAthena, SpawnDefaultPawnFor_Implementation, Anchor::Hook()
+    .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
+    .Start()
+    .Inline())
 APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
     auto PlayerController = Cast<AFortPlayerControllerAthena>(NewPlayer);
@@ -207,9 +186,16 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     return Pawn;
 }
 
+DETOUR(AFortGameModeAthena, PlacePlayerOnTeam, Anchor::Hook()
+    .If(FGameMemberInfoArray::StaticStruct())
+    .String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d"))
+    .Start()
+    .Log(TEXT("AFortGameMode::PlacePlayerOnTeam"))
+    .Caller()
+    .Inline())
 void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
 {
-    (this->*::PlacePlayerOnTeam)(Player);
+    Original(Player);
 
     auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -229,11 +215,75 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
 
 void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController)
 {
-    static auto AddToAlivePlayers = Scanner::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*)>(Scanner::String(TEXT("FortGameModeAthena: Player [%s] added to alive players list (Team [%d]).  Player count is now [%d].  Team count is now [%d]. ")).Start().Get(TEXT("AFortGameModeAthena::AddToAlivePlayers")));
+    static auto AddToAlivePlayers = Anchor::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*)>(TEXT("AFortGameModeAthena::AddToAlivePlayers"))
+        .String(TEXT("FortGameModeAthena: Player [%s] added to alive players list (Team [%d]).  Player count is now [%d].  Team count is now [%d]. "))
+        .Start()
+        .Get();
 
     AddToAlivePlayers(this, PlayerController);
 }
 
+DETOUR(AFortGameModeAthena, OnPlaylistDataLoaded, Anchor::Hook()
+    .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
+    .Optional()
+    .Start()
+    .Inline())
+void AFortGameModeAthena::OnPlaylistDataLoaded()
+{
+    if (DETOUR_ORIGINAL(AFortGameModeAthena, OnPlaylistDataLoaded))
+        Original();
+
+    static auto bPlaylistGarbageCollection = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f")).Get() != nullptr;
+
+    if (bPlaylistGarbageCollection && GetDisableGCOnServerDuringMatch())
+        IConsoleManager::Get().FindConsoleVariable(TEXT("gc.TimeBetweenPurgingPendingKillObjects"))->Set(TEXT("0"), ECVF_SetByCode);
+
+    TArray<AActor*> BuildingContainers;
+    UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
+
+    for (auto Actor : BuildingContainers)
+    {
+        auto BuildingContainer = (ABuildingContainer*)Actor;
+
+        if (BuildingContainer->GetStartAlreadySearched_Athena())
+            BuildingContainer->SpawnLoot(nullptr);
+    }
+
+    if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))
+    {
+        if (auto MapInfo = GameState->GetMapInfo())
+            MapInfo->SpawnLlamas();
+    }
+
+    if (ABuildingItemCollectorActor::StaticClass())
+    {
+        TArray<AActor*> ItemCollectors;
+        UGameplayStatics::GetAllActorsOfClass(this, ABuildingItemCollectorActor::StaticClass(), ItemCollectors);
+
+        for (auto ItemCollector : ItemCollectors)
+            ((ABuildingItemCollectorActor*)ItemCollector)->AthenaPostApplyPlaylistDataTables();
+    }
+
+    if (ABGAConsumableSpawner::StaticClass())
+    {
+        TArray<AActor*> ConsumableSpawners;
+        UGameplayStatics::GetAllActorsOfClass(this, ABGAConsumableSpawner::StaticClass(), ConsumableSpawners);
+
+        for (auto ConsumableSpawner : ConsumableSpawners)
+            ((ABGAConsumableSpawner*)ConsumableSpawner)->SpawnConsumables();
+    }
+
+    if (AFortAthenaVehicle::StaticClass())
+        AFortAthenaVehicle::InitializeServerImplementations();
+}
+
+DETOUR(AFortGameModeAthena, OnGivenMatchAssignment, Anchor::Hook()
+    .String(TEXT("Playtest-%s"))
+    .Start()
+    .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
+    .LogSlot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")))
 void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)
 {
     static auto Restart = []
@@ -288,46 +338,40 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return AFortPickup::GameGivePickupTo = DetourVTable(TEXT("AFortPickup::GivePickupTo"), VTable, GivePickupTo, &AFortPickup::GivePickupTo);
     }();
 
-    static auto ServerHandlePickup = []
-    {
-        auto ServerHandlePickup = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickup")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickup_Implementation"));
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+    static auto ServerHandlePickup = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickup"))
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickup_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-        return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), VTable, ServerHandlePickup, &AFortPlayerPawnAthena::ServerHandlePickup_Implementation);
-    }();
+    static auto ServerHandlePickupWithSwap = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithSwap"))
+        .Optional()
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupWithSwap_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-    static auto ServerHandlePickupWithSwap = []
-    {
-        auto ServerHandlePickupWithSwap = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithSwap"));
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+    static auto ServerHandlePickupWithRequestedSwap = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithRequestedSwap"))
+        .Optional()
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupWithRequestedSwap_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-        return ServerHandlePickupWithSwap.Get() ? DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation"), VTable, ServerHandlePickupWithSwap.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickupWithSwap_Implementation")), &AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation) : nullptr;
-    }();
+    static auto ServerReviveFromDBNO = THook(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO"))
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-    static auto ServerHandlePickupWithRequestedSwap = []
-    {
-        auto ServerHandlePickupWithRequestedSwap = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithRequestedSwap"));
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
-
-        return ServerHandlePickupWithRequestedSwap.Get() ? DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation"), VTable, ServerHandlePickupWithRequestedSwap.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickupWithRequestedSwap_Implementation")), &AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation) : nullptr;
-    }();
-
-    static auto ServerReviveFromDBNO = []
-    {
-        auto ServerReviveFromDBNO = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"));
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
-
-        return DetourVTable(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), VTable, ServerReviveFromDBNO, &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation);
-    }();
-
-    static auto ServerSendZiplineState = []
-    {
-        auto ServerSendZiplineState = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerSendZiplineState"));
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
-        auto Slot = ServerSendZiplineState.Get() ? ServerSendZiplineState.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation")) : 0;
-
-        return Slot && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Slot)).Is("ret*") ? DetourVTable(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation"), *(void***)DefaultObject, Slot, &AFortPlayerPawn::ServerSendZiplineState_Implementation) : nullptr;
-    }();
+    static auto ServerSendZiplineState = THook(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation"), &AFortPlayerPawn::ServerSendZiplineState_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerSendZiplineState"))
+        .Optional()
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
     static auto AttemptSpawnResources = []
     {
@@ -394,23 +438,22 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return SetupCachedHostVehicleRepped;
     }();
 
-    static auto BeginPlay = []
-    {
-        auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
-        auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
-        auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
-        auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto BeginPlay = Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
+    static auto BeginPlay = THook(TEXT("ABuildingContainer::BeginPlay"), &ABuildingContainer::BeginPlay)
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+        .Reference("mov rdx, *")
+        .Start()
+        .Log(TEXT("AActor::ReceiveBeginPlay"))
+        .Caller()
+        .Log(TEXT("AActor::BeginPlay"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
-        return DetourVTable(TEXT("ABuildingContainer::BeginPlay"), VTable, BeginPlay, &ABuildingContainer::BeginPlay);
-    }();
-
-    void* Original;
-    memcpy(&Original, &::OnGivenMatchAssignment, sizeof(Original));
-
-    static auto bTakesSucceeded = Scanner::At(Original).Is("test dl, dl");
-    static auto bStripped = Scanner::At(Original).Is("ret*");
+    static auto bTakesSucceeded = Scanner::At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment)).Is("test dl, dl");
+    static auto bStripped = Scanner::At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment)).Is("ret*");
 
     if (bStripped)
     {
@@ -418,66 +461,19 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
             GameState->SetCurrentPlaylistName(GetCurrentPlaylistName());
     }
     else if (bTakesSucceeded)
-        ((void (*)(AFortGameModeAthena*, bool, const TMap<FString, FString>&))Original)(this, true, MatchOptions);
+        ((void (*)(AFortGameModeAthena*, bool, const TMap<FString, FString>&))DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment))(this, true, MatchOptions);
     else
-        (this->*::OnGivenMatchAssignment)(MatchOptions);
+        Original(MatchOptions);
 
-    if (!::OnPlaylistDataLoaded)
+    if (!DETOUR_ORIGINAL(AFortGameModeAthena, OnPlaylistDataLoaded))
         OnPlaylistDataLoaded();
-}
-
-void AFortGameModeAthena::OnPlaylistDataLoaded()
-{
-    if (::OnPlaylistDataLoaded)
-        (this->*::OnPlaylistDataLoaded)();
-
-    static auto bPlaylistGarbageCollection = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f")).Get() != nullptr;
-
-    if (bPlaylistGarbageCollection && GetDisableGCOnServerDuringMatch())
-        IConsoleManager::Get().FindConsoleVariable(TEXT("gc.TimeBetweenPurgingPendingKillObjects"))->Set(TEXT("0"), ECVF_SetByCode);
-
-    TArray<AActor*> BuildingContainers;
-    UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
-
-    for (auto Actor : BuildingContainers)
-    {
-        auto BuildingContainer = (ABuildingContainer*)Actor;
-
-        if (BuildingContainer->GetStartAlreadySearched_Athena())
-            BuildingContainer->SpawnLoot(nullptr);
-    }
-
-    if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))
-    {
-        if (auto MapInfo = GameState->GetMapInfo())
-            MapInfo->SpawnLlamas();
-    }
-
-    if (ABuildingItemCollectorActor::StaticClass())
-    {
-        TArray<AActor*> ItemCollectors;
-        UGameplayStatics::GetAllActorsOfClass(this, ABuildingItemCollectorActor::StaticClass(), ItemCollectors);
-
-        for (auto ItemCollector : ItemCollectors)
-            ((ABuildingItemCollectorActor*)ItemCollector)->AthenaPostApplyPlaylistDataTables();
-    }
-
-    if (ABGAConsumableSpawner::StaticClass())
-    {
-        TArray<AActor*> ConsumableSpawners;
-        UGameplayStatics::GetAllActorsOfClass(this, ABGAConsumableSpawner::StaticClass(), ConsumableSpawners);
-
-        for (auto ConsumableSpawner : ConsumableSpawners)
-            ((ABGAConsumableSpawner*)ConsumableSpawner)->SpawnConsumables();
-    }
-
-    if (AFortAthenaVehicle::StaticClass())
-        AFortAthenaVehicle::InitializeServerImplementations();
 }
 
 TSubclassOf<AActor> AFortGameModeAthena::GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const
 {
-    static auto GetVehicleClassOverride = Scanner::Function<TSubclassOf<AActor>* (*)(const AFortGameModeAthena*, TSubclassOf<AActor>*, TSubclassOf<AActor>)>(Scanner::Native(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride")).Get(TEXT("AFortGameModeAthena::GetVehicleClassOverride")));
+    static auto GetVehicleClassOverride = Anchor::Function<TSubclassOf<AActor>* (*)(const AFortGameModeAthena*, TSubclassOf<AActor>*, TSubclassOf<AActor>)>(TEXT("AFortGameModeAthena::GetVehicleClassOverride"))
+        .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
+        .Get();
 
     TSubclassOf<AActor> Result;
 
