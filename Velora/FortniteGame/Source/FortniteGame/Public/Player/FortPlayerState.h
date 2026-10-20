@@ -12,6 +12,8 @@ public:
 
     void ApplyCharacterCustomization(APawn* Pawn);
 
+    APawn* GetCurrentPawn() const;
+
     int32& GetWorldPlayerId();
 
     UFortAbilitySystemComponent*& GetAbilitySystemComponent();

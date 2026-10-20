@@ -30,6 +30,13 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
     ApplyCharacterCustomization(this, Pawn);
 }
 
+APawn* AFortPlayerState::GetCurrentPawn() const
+{
+    static auto GetCurrentPawn = Scanner::Function<APawn* (*)(const AFortPlayerState*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn")).Get(TEXT("AFortPlayerState::GetCurrentPawn")));
+
+    return GetCurrentPawn(this);
+}
+
 int32& AFortPlayerState::GetWorldPlayerId()
 {
     static auto WorldPlayerId = GetClass()->FindPropertyByName(FName(TEXT("WorldPlayerId")));

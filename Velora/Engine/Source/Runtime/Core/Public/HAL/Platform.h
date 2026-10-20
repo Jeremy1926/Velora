@@ -9,6 +9,7 @@ typedef signed short int int16;
 typedef signed int int32;
 typedef signed long long int64;
 typedef unsigned long long SIZE_T;
+typedef unsigned long long UPTRINT;
 typedef char ANSICHAR;
 typedef wchar_t WIDECHAR;
 typedef WIDECHAR TCHAR;

@@ -30,6 +30,7 @@
 #include "FortKismetLibrary.h"
 #include "FortniteGame.h"
 #include "AbilitySystemComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Logging/LogMacros.h"
@@ -71,6 +72,20 @@ static auto execDropAllItems = []
     UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerController::execDropAllItems, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
 
     Function->SetNativeFunc((Native)&AFortPlayerController::execDropAllItems);
+
+    return true;
+}();
+
+static auto execSpawnToyInstance = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")).Is("xor eax, eax; ret"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerController::execSpawnToyInstance, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPlayerController::execSpawnToyInstance);
 
     return true;
 }();
@@ -423,6 +438,96 @@ void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemD
         MyFortPawn->SetMovingEmote(DanceAsset->GetMovingEmote());
         MyFortPawn->SetMovingEmoteForwardOnly(DanceAsset->GetMoveForwardOnly());
     }
+}
+
+AActor* AFortPlayerController::SpawnToyInstance(UClass* ToyClass, const FTransform& SpawnPosition)
+{
+    if (!ToyClass || !HasAuthority())
+        return nullptr;
+
+    auto ToyInstance = GetWorld()->SpawnActor(ToyClass, &SpawnPosition);
+
+    if (!ToyInstance)
+        return nullptr;
+
+    auto& NumTimesSummoned = GetToySummonCounts().FindOrAdd(ToyClass);
+    NumTimesSummoned++;
+
+    GetActiveToyInstances().Add(ToyInstance);
+
+    auto PlayerState = Cast<AFortPlayerStateZone>(GetPlayerState());
+
+    if (auto OwningPawn = ToyClass->FindPropertyByName(FName(TEXT("OwningPawn"))))
+        *OwningPawn->ContainerPtrToValuePtr<APawn*>(ToyInstance) = PlayerState ? PlayerState->GetCurrentPawn() : nullptr;
+
+    if (auto InitialSpawnPosition = ToyClass->FindPropertyByName(FName(TEXT("InitialSpawnPosition"))))
+        *InitialSpawnPosition->ContainerPtrToValuePtr<FVector>(ToyInstance) = ToyInstance->GetActorLocation();
+
+    if (auto ProjectileMovement = ToyClass->FindPropertyByName(FName(TEXT("ProjectileMovement"))))
+    {
+        if (auto ProjectileMovementComponent = *ProjectileMovement->ContainerPtrToValuePtr<UObject*>(ToyInstance))
+        {
+            if (auto Velocity = ProjectileMovementComponent->GetClass()->FindPropertyByName(FName(TEXT("Velocity"))))
+                *Velocity->ContainerPtrToValuePtr<FVector>(ProjectileMovementComponent) = FVector(0.f, 0.f, 0.f);
+        }
+    }
+
+    if (auto HasFinishedSpawning = (UBoolProperty*)ToyClass->FindPropertyByName(FName(TEXT("HasFinishedSpawning"))))
+        HasFinishedSpawning->SetPropertyValue_InContainer(ToyInstance, true);
+
+    if (auto BallSerialNumber = ToyClass->FindPropertyByName(FName(TEXT("BallSerialNumber"))))
+        *BallSerialNumber->ContainerPtrToValuePtr<int32>(ToyInstance) = NumTimesSummoned;
+
+    if (auto StrokeCount = ToyClass->FindPropertyByName(FName(TEXT("StrokeCount"))))
+        *StrokeCount->ContainerPtrToValuePtr<int32>(ToyInstance) = 1;
+
+    if (auto StartedAtTeeBoxNumber = ToyClass->FindPropertyByName(FName(TEXT("StartedAtTeeBoxNumber"))))
+    {
+        static auto B_GolfMinigame_TeeBox_C = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Game/Abilities/Toys/Golf/Minigame/B_GolfMinigame_TeeBox.B_GolfMinigame_TeeBox_C"));
+        static auto HoleNumber = B_GolfMinigame_TeeBox_C ? B_GolfMinigame_TeeBox_C->FindPropertyByName(FName(TEXT("HoleNumber"))) : nullptr;
+        auto SphereCollision = ToyClass->FindPropertyByName(FName(TEXT("SphereCollision")));
+        auto SphereCollisionComponent = SphereCollision ? *SphereCollision->ContainerPtrToValuePtr<UPrimitiveComponent*>(ToyInstance) : nullptr;
+
+        if (HoleNumber && SphereCollisionComponent)
+        {
+            TArray<AActor*> OverlappingActors;
+            SphereCollisionComponent->GetOverlappingActors(OverlappingActors, B_GolfMinigame_TeeBox_C);
+
+            for (auto TeeBox : OverlappingActors)
+                *StartedAtTeeBoxNumber->ContainerPtrToValuePtr<int32>(ToyInstance) = *HoleNumber->ContainerPtrToValuePtr<int32>(TeeBox);
+        }
+    }
+
+    if (auto OwningPC = ToyClass->FindPropertyByName(FName(TEXT("OwningPC"))))
+        *OwningPC->ContainerPtrToValuePtr<AFortPlayerController*>(ToyInstance) = this;
+
+    return ToyInstance;
+}
+
+void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Param__Result)
+{
+    UClass* ToyClass = nullptr;
+    FTransform SpawnPosition;
+
+    Stack.StepCompiledIn(&ToyClass);
+    Stack.StepCompiledIn(&SpawnPosition);
+    Stack.Code += !!Stack.Code;
+
+    *(AActor**)Z_Param__Result = SpawnToyInstance(ToyClass, SpawnPosition);
+}
+
+TArray<AActor*>& AFortPlayerController::GetActiveToyInstances()
+{
+    static auto ActiveToyInstances = GetClass()->FindPropertyByName(FName(TEXT("ActiveToyInstances")));
+
+    return *ActiveToyInstances->ContainerPtrToValuePtr<TArray<AActor*>>(this);
+}
+
+TMap<UClass*, int32>& AFortPlayerController::GetToySummonCounts()
+{
+    static auto ToySummonCounts = GetClass()->FindPropertyByName(FName(TEXT("ToySummonCounts")));
+
+    return *ToySummonCounts->ContainerPtrToValuePtr<TMap<UClass*, int32>>(this);
 }
 
 void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems)

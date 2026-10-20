@@ -6,6 +6,7 @@
 #include "Internationalization/Text.h"
 #include "Misc/Guid.h"
 #include "UObject/AssetPtr.h"
+#include "Containers/Map.h"
 
 class ABuildingSMActor;
 class AFortInventory;
@@ -17,6 +18,7 @@ class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
 class UStatManager;
 struct FFrame;
+struct FTransform;
 enum class EFortQuickBars : uint8;
 enum class EFortResourceType : uint8;
 
@@ -135,6 +137,14 @@ public:
     void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, EFortItemEntryState::Type StateValueType);
 
     void ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset);
+
+    AActor* SpawnToyInstance(UClass* ToyClass, const FTransform& SpawnPosition);
+
+    void execSpawnToyInstance(FFrame& Stack, void* const Z_Param__Result);
+
+    TArray<AActor*>& GetActiveToyInstances();
+
+    TMap<UClass*, int32>& GetToySummonCounts();
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
 
