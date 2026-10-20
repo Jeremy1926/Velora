@@ -44,7 +44,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 ## To-do
 
 - XP and challenges
-- Season 5 to 7
+- Chapter 2
 
 ## Configuration
 
@@ -52,7 +52,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 
 | Option | Description |
 | --- | --- |
-| `Map` | Map to load |
+| `Map` | Map to load before 11.00 |
 | `Playlist` | Playlist asset path, e.g. `/Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo` |
 | `Port` | Listen port |
 | `WarmupRequiredPlayerCount` | Players needed to start warmup |
