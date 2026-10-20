@@ -20,7 +20,8 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
     static auto InternalServerTryActiveAbility = [this]
     {
         auto ServerTryActivateAbility_Implementation = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerTryActivateAbility")).Find("call [*]", 2).Slot(TEXT("UAbilitySystemComponent::ServerTryActivateAbility_Implementation"));
-        auto InternalServerTryActiveAbility = Scanner::At(Scanner::Virtual<const void*>(this, ServerTryActivateAbility_Implementation)).Find("call [*]").Slot(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"));
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"));
+        auto InternalServerTryActiveAbility = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerTryActivateAbility_Implementation)).Find("call [*]").Slot(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"));
 
         return DetourVTable(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), *(void***)this, InternalServerTryActiveAbility, &UAbilitySystemComponent::InternalServerTryActiveAbility);
     }();
