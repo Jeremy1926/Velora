@@ -2,6 +2,7 @@
 #include "Player/FortPlayerController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/Cosmetics/AthenaDanceItemDefinition.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortPlayerStateZone.h"
@@ -397,6 +398,14 @@ void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemD
         return;
 
     AbilitySystemComponent->GiveAbilityAndActivateOnce(FGameplayAbilitySpec(EmoteGameplayAbility->GetDefaultObject<UFortGameplayAbility>(), 1, INDEX_NONE, EmoteAsset));
+
+    static auto bHasMovingEmote = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))) != nullptr;
+
+    if (auto DanceAsset = bHasMovingEmote ? Cast<UAthenaDanceItemDefinition>(EmoteAsset) : nullptr)
+    {
+        MyFortPawn->SetMovingEmote(DanceAsset->GetMovingEmote());
+        MyFortPawn->SetMovingEmoteForwardOnly(DanceAsset->GetMoveForwardOnly());
+    }
 }
 
 void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems)

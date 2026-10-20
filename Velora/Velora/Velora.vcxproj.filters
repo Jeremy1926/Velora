@@ -949,6 +949,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaCosmeticItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaDanceItemDefinition.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaPickaxeItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
     </ClInclude>
@@ -1497,6 +1500,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRegisteredPlayerInfo.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaDanceItemDefinition.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaPickaxeItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
