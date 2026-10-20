@@ -6,6 +6,15 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
+
+static auto ServerRestartPlayer = []
+{
+    auto ServerRestartPlayer = Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer")).Find("jmp [rax+*]");
+    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
+    return ServerRestartPlayer.Get() && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerRestartPlayer.Disp())).Is("ret*") ? DetourVTable(TEXT("AFortPlayerControllerAthena::ServerRestartPlayer_Implementation"), *(void***)DefaultObject, ServerRestartPlayer.Disp(), &AFortPlayerControllerAthena::ServerRestartPlayer_Implementation) : nullptr;
+}();
 
 UAthenaPickaxeItemDefinition*& FFortAthenaLoadout::GetPickaxe()
 {
@@ -19,6 +28,11 @@ UClass* AFortPlayerControllerAthena::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerControllerAthena"));
 
     return Class;
+}
+
+void AFortPlayerControllerAthena::ServerRestartPlayer_Implementation()
+{
+    Super::ServerRestartPlayer_Implementation();
 }
 
 FFortAthenaLoadout* AFortPlayerControllerAthena::GetCustomizationLoadout()

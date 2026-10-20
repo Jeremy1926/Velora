@@ -36,6 +36,13 @@ void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn
     Super::ServerAcknowledgePossession_Implementation(P);
 }
 
+void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
+{
+    static auto ServerRestartPlayer = Scanner::Virtual<void (*)(AFortPlayerControllerZone*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone")), Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer")).Find("jmp [rax+*]").Slot(TEXT("AFortPlayerControllerZone::ServerRestartPlayer_Implementation")));
+
+    ServerRestartPlayer(this);
+}
+
 void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
 {
     Scanner::Virtual<void (*)(AFortPlayerControllerZone*, AController*)>(this, OnPawnRevivedSlot())(this, EventInstigator);

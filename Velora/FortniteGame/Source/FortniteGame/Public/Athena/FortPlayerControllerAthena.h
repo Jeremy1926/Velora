@@ -13,7 +13,11 @@ struct FFortAthenaLoadout
 class AFortPlayerControllerAthena : public AFortPlayerControllerPvP
 {
 public:
+    typedef AFortPlayerControllerPvP Super;
+
     static UClass* StaticClass();
+
+    void ServerRestartPlayer_Implementation();
 
     FFortAthenaLoadout* GetCustomizationLoadout();
 

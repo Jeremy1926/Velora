@@ -14,6 +14,8 @@ public:
 
     void ServerAcknowledgePossession_Implementation(APawn* P);
 
+    void ServerRestartPlayer_Implementation();
+
     void OnPawnRevived(AController* EventInstigator);
 
     void ApplyDeathDurabilityPenalty(float DurabilityPenalty);
