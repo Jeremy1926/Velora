@@ -5,6 +5,8 @@
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
+#include "Player/FortPlayerState.h"
+#include "Templates/Casts.h"
 #include "Engine/World.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -86,6 +88,22 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
         Items.Add({ 1, Pickaxe->GetWeaponDefinition() });
 
     GiveInventory(Items);
+}
+
+void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId)
+{
+    DETOUR(AFortAthenaAIBotController, ApplyCharacterCustomization, Anchor::Hook()
+        .FieldPattern("48 83 B9 %o 00 ? 0F B6 ?", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn"))) : nullptr)
+        .Optional()
+        .Start()
+        .Inline());
+
+    Original(InCustomizationLoadout, InBotNameSettings, bRequiresUniqueNetId);
+
+    auto PlayerState = Cast<AFortPlayerState>(GetPlayerState());
+
+    if (PlayerState && GetPawn())
+        PlayerState->ApplyCharacterCustomization(GetPawn());
 }
 
 AFortInventory*& AFortAthenaAIBotController::GetInventory()

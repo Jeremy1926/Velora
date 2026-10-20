@@ -6,6 +6,7 @@
 class AFortInventory;
 class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
+class UFortBotNameSettings;
 struct FFortAthenaLoadout;
 struct FItemAndCount;
 
@@ -19,6 +20,8 @@ public:
     void GiveInventory(const TArray<FItemAndCount>& Items);
 
     void InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory);
+
+    void ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId);
 
     AFortInventory*& GetInventory();
 
