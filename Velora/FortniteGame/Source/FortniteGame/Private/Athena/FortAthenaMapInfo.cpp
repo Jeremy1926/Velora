@@ -87,7 +87,10 @@ void AFortAthenaMapInfo::SpawnLlamas()
 
 FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const
 {
-    static auto PickSupplyDropLocation = Scanner::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float, bool, float, float)>(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation")));
+    static auto PickSupplyDropLocation = Anchor::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
+        .String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location."))
+        .Start()
+        .Get();
 
     FVector Location;
 
@@ -96,15 +99,15 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
-    static auto SpawnSupplyDropAtLocation = Scanner::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>([]
-    {
-        auto SupplyDropSpawn = Scanner::String(TEXT("SupplyDropSpawn"));
-
-        if (SupplyDropSpawn.Get())
-            return Scanner::CallTo(SupplyDropSpawn.Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
-
-        return Scanner::Reference(Scanner::String(TEXT("FortAthenaSupplyDrop")).Start().Get(), "call 0x*; test rax, rax; jz *; lea r8, [rax+0x30]").Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
-    }());
+    static auto SpawnSupplyDropAtLocation = Anchor::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"))
+        .String(TEXT("SupplyDropSpawn"))
+        .Caller()
+        .Or()
+        .String(TEXT("FortAthenaSupplyDrop"))
+        .Start()
+        .Reference("call 0x*; test rax, rax; jz *; lea r8, [rax+0x30]")
+        .Start()
+        .Get();
 
     return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
 }
