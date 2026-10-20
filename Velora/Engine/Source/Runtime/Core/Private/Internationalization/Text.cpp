@@ -64,7 +64,7 @@ bool FText::IsEmpty() const
 
 FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
 {
-    static auto Format = Scanner::Function<FText (*)(FTextFormat, FFormatOrderedArguments&&)>(UnableToAfford().Find("mov r8, rax; lea rdx, *; lea rcx, *; call 0x*").Call().Get(TEXT("FText::Format")));
+    static auto Format = Scanner::Function<FText (*)(FTextFormat, FFormatOrderedArguments&&)>(UnableToAfford().Find("* r8, *; lea rdx, *; lea rcx, *; call 0x*").Call().Get(TEXT("FText::Format")));
 
     return Format(Fmt, MoveTemp(InArguments));
 }
