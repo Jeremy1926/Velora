@@ -12,6 +12,10 @@ public:
 
     void SpawnMissingNavigationData();
 
+    static bool IsNavigationBeingBuilt(UObject* WorldContextObject);
+
+    ANavigationData* GetMainNavData() const;
+
     TArray<ANavigationData*>& GetNavDataSet();
 
     TArray<ANavigationData*>& GetNavDataRegistrationQueue();

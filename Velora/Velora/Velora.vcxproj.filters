@@ -1852,5 +1852,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\FortNavMesh.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\AI\Navigation</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -6,4 +6,6 @@ class UAthenaNavSystem : public UFortNavSystem
 {
 public:
     void ReleaseInitialBuildingLock();
+
+    static void TickNavGenerationTimers();
 };

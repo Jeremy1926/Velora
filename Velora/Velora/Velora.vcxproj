@@ -659,6 +659,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortBotCosmeticItemDataTable.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCosmeticLibraryData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\FortNavMesh.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

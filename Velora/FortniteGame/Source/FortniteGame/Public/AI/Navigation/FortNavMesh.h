@@ -4,4 +4,6 @@
 
 class AFortNavMesh : public ARecastNavMesh
 {
+public:
+    void SetUseGenerationBudgets(bool bUseGenerationBudgets);
 };

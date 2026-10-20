@@ -25,6 +25,22 @@ void UNavigationSystemV1::SpawnMissingNavigationData()
     SpawnMissingNavigationData(this);
 }
 
+bool UNavigationSystemV1::IsNavigationBeingBuilt(UObject* WorldContextObject)
+{
+    static auto IsNavigationBeingBuilt = Anchor::Function<bool (*)(UObject*)>(TEXT("UNavigationSystemV1::IsNavigationBeingBuilt"))
+        .Native(TEXT("/Script/NavigationSystem.NavigationSystemV1:IsNavigationBeingBuilt"))
+        .Get();
+
+    return IsNavigationBeingBuilt(WorldContextObject);
+}
+
+ANavigationData* UNavigationSystemV1::GetMainNavData() const
+{
+    static auto MainNavData = GetClass()->FindPropertyByName(FName(TEXT("MainNavData")));
+
+    return *MainNavData->ContainerPtrToValuePtr<ANavigationData*>(this);
+}
+
 TArray<ANavigationData*>& UNavigationSystemV1::GetNavDataSet()
 {
     static auto NavDataSet = GetClass()->FindPropertyByName(FName(TEXT("NavDataSet")));
