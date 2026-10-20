@@ -14,10 +14,11 @@ static int32_t OnPlayerCreatedBuildingSlot()
         auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
         auto Index = 0;
 
-        while (Scanner::IsCode(VTable[Index]) && !Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*"))
+        while (Scanner::IsCode(VTable[Index]) && !Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*") && !Scanner::At(VTable[Index]).Is("mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]"))
             Index++;
 
-        auto BuildingAction = std::format("call {:#x}", (uintptr_t)Scanner::At(Scanner::IsCode(VTable[Index]) ? VTable[Index] : nullptr).Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
+        auto Forwarder = Scanner::At(Scanner::IsCode(VTable[Index]) ? VTable[Index] : nullptr);
+        auto BuildingAction = Forwarder.Is("mov rax, [rcx]*") ? std::format("call [rax+{:#x}]", Forwarder.Find("jmp [rax+*]").Slot(TEXT("AFortGameMode::OnPlayerBuildingAction"))) : std::format("call {:#x}", (uintptr_t)Forwarder.Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
 
         return Scanner::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(BuildingAction); });
     }();
