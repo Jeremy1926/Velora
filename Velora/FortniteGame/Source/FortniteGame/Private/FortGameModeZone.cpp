@@ -106,18 +106,18 @@ void AFortGameModeZone::CreateAIDirector()
         return true;
     }();
 
-    auto& AIDirectors = UFortGameData::Get()->GetAIDirectors();
+    auto AIDirectors = UFortGameData::Get()->GetAIDirectors();
     auto AIDirectorIndex = GetOverrideAIDirectorIndex();
 
-    if (AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors.Num())
+    if (!AIDirectors || AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors->Num())
         return;
 
-    auto AIDirectorClass = AIDirectors[AIDirectorIndex].LoadSynchronous();
+    auto AIDirectorClass = (*AIDirectors)[AIDirectorIndex].LoadSynchronous();
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
 
-    if (!NewAIDirector || AIDirectorClass || AIDirectors[AIDirectorIndex].GetLongPackageName() != FString(TEXT("/Game/Athena/Deimos/AIDirector/Deimos_AIDirector")))
+    if (!NewAIDirector || AIDirectorClass || (*AIDirectors)[AIDirectorIndex].GetLongPackageName() != FString(TEXT("/Game/Athena/Deimos/AIDirector/Deimos_AIDirector")))
         return;
 
     NewAIDirector->GetBaseEncounterClass() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_BaseEncounterSettings.Deimos_BaseEncounterSettings_C"));
