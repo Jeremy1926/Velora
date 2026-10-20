@@ -5,6 +5,7 @@
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
 #include "AI/FortAIPerceptionSystem.h"
+#include "Player/FortPlayerController.h"
 #include "Player/FortPlayerControllerZone.h"
 #include "Player/StatManager.h"
 #include "FortFeedbackManager.h"
@@ -16,10 +17,25 @@
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
+
+static auto execPlayGroupEmote = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerPawn::execPlayGroupEmote, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPlayerPawn::execPlayGroupEmote);
+
+    return true;
+}();
 
 UClass* AFortPlayerPawn::StaticClass()
 {
@@ -244,6 +260,22 @@ FZiplinePawnState& AFortPlayerPawn::GetZiplineState()
     static auto ZiplineState = GetClass()->FindPropertyByName(FName(TEXT("ZiplineState")));
 
     return *ZiplineState->ContainerPtrToValuePtr<FZiplinePawnState>(this);
+}
+
+void AFortPlayerPawn::PlayGroupEmote(const UFortMontageItemDefinitionBase* EmoteAsset)
+{
+    if (auto PlayerController = Cast<AFortPlayerController>(GetController()))
+        PlayerController->ServerPlayEmoteItem_Implementation(const_cast<UFortMontageItemDefinitionBase*>(EmoteAsset));
+}
+
+void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result)
+{
+    UFortMontageItemDefinitionBase* EmoteAsset = nullptr;
+
+    Stack.StepCompiledIn(&EmoteAsset);
+    Stack.Code += !!Stack.Code;
+
+    PlayGroupEmote(EmoteAsset);
 }
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)

@@ -8,8 +8,10 @@ class AActor;
 class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
+class UFortMontageItemDefinitionBase;
 class UGameplayEffect;
 class UScriptStruct;
+struct FFrame;
 struct FGameplayTag;
 struct FScalableFloat;
 
@@ -60,6 +62,10 @@ public:
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
+
+    void PlayGroupEmote(const UFortMontageItemDefinitionBase* EmoteAsset);
+
+    void execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result);
 
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 
