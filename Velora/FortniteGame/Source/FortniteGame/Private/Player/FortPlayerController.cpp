@@ -897,7 +897,13 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
 int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData BuildingClassData)
 {
-    static auto PayBuildableClassPlacementCost = PlayerControllerSlot(TEXT("AFortPlayerController::PayBuildableClassPlacementCost"), Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Start().Get(TEXT("AFortPlayerController::PayBuildableClassPlacementCost")));
+    static auto PayBuildableClassPlacementCost = []
+    {
+        auto FailedToRemoveItem = std::format("lea *, [{:#x}]", (uintptr_t)Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Target());
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
+        return Scanner::Slot(TEXT("AFortPlayerController::PayBuildableClassPlacementCost"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(FailedToRemoveItem); });
+    }();
 
     return Scanner::Virtual<int32 (*)(AFortPlayerController*, FBuildingClassData)>(this, PayBuildableClassPlacementCost)(this, BuildingClassData);
 }
