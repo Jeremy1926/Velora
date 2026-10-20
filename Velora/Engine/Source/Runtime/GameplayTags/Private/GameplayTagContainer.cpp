@@ -56,3 +56,78 @@ void FGameplayTagContainer::AddTag(const FGameplayTag& TagToAdd)
 
     AddTag(this, TagToAdd);
 }
+
+FGameplayTagQuery::FGameplayTagQuery()
+    : TokenStreamVersion(EGameplayTagQueryStreamVersion::LatestVersion)
+{
+}
+
+void FGameplayTagQuery::Build(FGameplayTagQueryExpression& RootQueryExpr, FString InUserDescription)
+{
+    TokenStreamVersion = EGameplayTagQueryStreamVersion::LatestVersion;
+    UserDescription = InUserDescription;
+
+    QueryTokenStream.Reset(128);
+    TagDictionary.Reset();
+
+    QueryTokenStream.Add(EGameplayTagQueryStreamVersion::LatestVersion);
+
+    QueryTokenStream.Add(1);
+    RootQueryExpr.EmitTokens(QueryTokenStream, TagDictionary);
+}
+
+FGameplayTagQuery FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression& RootQueryExpr, FString InDescription)
+{
+    FGameplayTagQuery Q;
+    Q.Build(RootQueryExpr, InDescription);
+    return Q;
+}
+
+FGameplayTagQuery FGameplayTagQuery::MakeQuery_MatchTag(FGameplayTag const& InTag)
+{
+    return FGameplayTagQuery::BuildQuery
+    (
+        FGameplayTagQueryExpression()
+        .AllTagsMatch()
+        .AddTag(InTag)
+    );
+}
+
+void FGameplayTagQueryExpression::EmitTokens(TArray<uint8>& TokenStream, TArray<FGameplayTag>& TagDictionary) const
+{
+    TokenStream.Add(ExprType);
+
+    switch (ExprType)
+    {
+    case EGameplayTagQueryExprType::AnyTagsMatch:
+    case EGameplayTagQueryExprType::AllTagsMatch:
+    case EGameplayTagQueryExprType::NoTagsMatch:
+    {
+        uint8 NumTags = (uint8)TagSet.Num();
+        TokenStream.Add(NumTags);
+
+        for (auto Tag : TagSet)
+        {
+            int32 TagIdx = TagDictionary.AddUnique(Tag);
+            TokenStream.Add((uint8)TagIdx);
+        }
+    }
+    break;
+
+    case EGameplayTagQueryExprType::AnyExprMatch:
+    case EGameplayTagQueryExprType::AllExprMatch:
+    case EGameplayTagQueryExprType::NoExprMatch:
+    {
+        uint8 NumExprs = (uint8)ExprSet.Num();
+        TokenStream.Add(NumExprs);
+
+        for (auto& E : ExprSet)
+        {
+            E.EmitTokens(TokenStream, TagDictionary);
+        }
+    }
+    break;
+    default:
+        break;
+    }
+}

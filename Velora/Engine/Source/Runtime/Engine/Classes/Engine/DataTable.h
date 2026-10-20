@@ -15,6 +15,8 @@ struct FTableRowBase
 class UDataTable : public UObject
 {
 public:
+    static UClass* StaticClass();
+
     template <class T>
     T* FindRow(FName RowName, const TCHAR* ContextString, bool bWarnIfRowMissing = true) const
     {

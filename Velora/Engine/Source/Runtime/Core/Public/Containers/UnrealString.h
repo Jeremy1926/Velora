@@ -15,6 +15,8 @@ public:
     FString() = default;
     FString(FString&&) = default;
     FString(const FString&) = default;
+    FString& operator=(FString&&) = default;
+    FString& operator=(const FString&) = default;
 
     FORCEINLINE FString(const TCHAR* Src)
     {

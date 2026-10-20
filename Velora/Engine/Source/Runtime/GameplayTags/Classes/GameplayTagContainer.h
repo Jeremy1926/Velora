@@ -63,3 +63,67 @@ protected:
     TArray<FGameplayTag> GameplayTags;
     TArray<FGameplayTag> ParentTags;
 };
+
+namespace EGameplayTagQueryExprType
+{
+    enum Type
+    {
+        Undefined = 0,
+        AnyTagsMatch,
+        AllTagsMatch,
+        NoTagsMatch,
+        AnyExprMatch,
+        AllExprMatch,
+        NoExprMatch,
+    };
+}
+
+namespace EGameplayTagQueryStreamVersion
+{
+    enum Type
+    {
+        InitialVersion = 0,
+
+        VersionPlusOne,
+        LatestVersion = VersionPlusOne - 1
+    };
+}
+
+struct FGameplayTagQuery
+{
+    FGameplayTagQuery();
+
+    void Build(struct FGameplayTagQueryExpression& RootQueryExpr, FString InUserDescription = FString());
+
+    static FGameplayTagQuery BuildQuery(struct FGameplayTagQueryExpression& RootQueryExpr, FString InDescription = FString());
+
+    static FGameplayTagQuery MakeQuery_MatchTag(FGameplayTag const& InTag);
+
+private:
+    int32 TokenStreamVersion;
+    TArray<FGameplayTag> TagDictionary;
+    TArray<uint8> QueryTokenStream;
+    FString UserDescription;
+    FString AutoDescription;
+};
+
+struct FGameplayTagQueryExpression
+{
+    FGameplayTagQueryExpression& AllTagsMatch()
+    {
+        ExprType = EGameplayTagQueryExprType::AllTagsMatch;
+        return *this;
+    }
+
+    FGameplayTagQueryExpression& AddTag(FGameplayTag Tag)
+    {
+        TagSet.Add(Tag);
+        return *this;
+    }
+
+    void EmitTokens(TArray<uint8>& TokenStream, TArray<FGameplayTag>& TagDictionary) const;
+
+    EGameplayTagQueryExprType::Type ExprType;
+    TArray<struct FGameplayTagQueryExpression> ExprSet;
+    TArray<FGameplayTag> TagSet;
+};

@@ -4,6 +4,7 @@
 #include "Containers/ContainersFwd.h"
 #include "Containers/ContainerAllocationPolicies.h"
 #include "Templates/ChooseClass.h"
+#include "Misc/CoreMiscDefines.h"
 #include <new>
 
 template<typename InElementType, typename InAllocator>
@@ -27,6 +28,28 @@ public:
     FORCEINLINE TArray(TArray&& Other)
     {
         MoveOrCopy(*this, Other, 0);
+    }
+
+    TArray& operator=(const TArray& Other)
+    {
+        if (this != &Other)
+        {
+            DestructItems(GetData(), ArrayNum);
+            CopyToEmpty(Other.GetData(), Other.Num(), ArrayMax, 0);
+        }
+
+        return *this;
+    }
+
+    TArray& operator=(TArray&& Other)
+    {
+        if (this != &Other)
+        {
+            DestructItems(GetData(), ArrayNum);
+            MoveOrCopy(*this, Other, ArrayMax);
+        }
+
+        return *this;
     }
 
     FORCEINLINE ~TArray()
@@ -102,6 +125,31 @@ public:
         new(GetData() + Index) ElementType(Item);
 
         return Index;
+    }
+
+    FORCEINLINE bool Find(const ElementType& Item, int32& Index) const
+    {
+        for (const ElementType* Data = GetData(), *DataEnd = Data + ArrayNum; Data != DataEnd; ++Data)
+        {
+            if (*Data == Item)
+            {
+                Index = static_cast<int32>(Data - GetData());
+                return true;
+            }
+        }
+
+        Index = INDEX_NONE;
+        return false;
+    }
+
+    FORCEINLINE int32 AddUnique(const ElementType& Item)
+    {
+        int32 Index;
+
+        if (Find(Item, Index))
+            return Index;
+
+        return Add(Item);
     }
 
     FORCEINLINE void Reserve(int32 Number)

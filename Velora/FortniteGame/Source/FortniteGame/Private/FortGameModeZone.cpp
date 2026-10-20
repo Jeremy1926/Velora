@@ -5,6 +5,9 @@
 #include "Athena/AI/AthenaAIDirector.h"
 #include "Items/FortInventory.h"
 #include "Engine/World.h"
+#include "Engine/CurveTable.h"
+#include "Engine/DataTable.h"
+#include "GameplayTagContainer.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -48,11 +51,52 @@ void AFortGameModeZone::CreateAIDirector()
         return;
 
     auto AIDirectorClass = AIDirectors[AIDirectorIndex].LoadSynchronous();
+    auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
-    if (!AIDirectorClass)
-        AIDirectorClass = AAthenaAIDirector::StaticClass();
+    *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
 
-    *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass);
+    if (!NewAIDirector || AIDirectorClass || AIDirectors[AIDirectorIndex].GetLongPackageName() != FString(TEXT("/Game/Athena/Deimos/AIDirector/Deimos_AIDirector")))
+        return;
+
+    NewAIDirector->GetBaseEncounterClass() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_BaseEncounterSettings.Deimos_BaseEncounterSettings_C"));
+    NewAIDirector->GetDummyDebugEncounter() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_DummyDebugEncounter.Deimos_DummyDebugEncounter_C"));
+
+    if (auto BaseLootDrops = LoadObject<UDataTable>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/DataTables/Deimos_BaseLootDrops.Deimos_BaseLootDrops")))
+    {
+        for (auto& RowPair : BaseLootDrops->RowMap)
+            NewAIDirector->GetBaseLootDropData().Add(FDataTableRowHandle{ BaseLootDrops, RowPair.Key });
+    }
+
+    auto SpawnBudgetCurves = LoadObject<UCurveTable>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/DataTables/Deimos_AIDirectorSpawnBudgetCurves.Deimos_AIDirectorSpawnBudgetCurves"));
+    auto PopulationCategoryCaps = LoadObject<UCurveTable>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/DataTables/Deimos_AIDirectorPopulationCategoryCaps.Deimos_AIDirectorPopulationCategoryCaps"));
+
+    for (auto EncounterType : { TEXT("ActiveThreat"), TEXT("AmbientThreat") })
+    {
+        auto EncounterTypeTag = FGameplayTag::RequestGameplayTag(FName(std::format(TEXT("Encounter.Type.PvP.Deimos.{}"), EncounterType).c_str()));
+
+        auto SpawnPointsProfile = new(NewAIDirector->GetEncounterSpawnPointsSettings()) FFortAIEncounterSpawnPointsProfile();
+
+        SpawnPointsProfile->GetEncounterTypeTags().AddTag(EncounterTypeTag);
+        SpawnPointsProfile->GetMaxSpawnPointsPerPlayerCount().Add(FCurveTableRowHandle{ SpawnBudgetCurves, FName(std::format(TEXT("PvP_Deimos_{}_All_MaxSpawnPoints"), EncounterType).c_str()) });
+        SpawnPointsProfile->GetMinSpawnPointsPerPlayerCount().Add(FCurveTableRowHandle{ SpawnBudgetCurves, FName(std::format(TEXT("PvP_Deimos_{}_All_MinSpawnPoints"), EncounterType).c_str()) });
+
+        auto SpawnGroupCapsProfile = new(NewAIDirector->GetEncounterSpawnGroupCapSettings()) FFortAIEncounterSpawnGroupCapsProfile();
+
+        SpawnGroupCapsProfile->GetEncounterTypeTags().AddTag(EncounterTypeTag);
+
+        for (auto PopulationCategory : { TEXT("Basic"), TEXT("Common"), TEXT("Uncommon"), TEXT("Rare") })
+        {
+            auto SpawnGroupCapsCategory = new(SpawnGroupCapsProfile->GetPopulationCategories()) FFortAIEncounterSpawnGroupCapsCategory();
+            auto SpawnGroupCap = new(SpawnGroupCapsCategory->GetSpawnGroupCapsPerPlayerCount()) FFortAIEncounterSpawnGroupCap();
+
+            SpawnGroupCapsCategory->GetTagQuery() = FGameplayTagQuery::MakeQuery_MatchTag(FGameplayTag::RequestGameplayTag(FName(std::format(TEXT("Encounter.PopulationCategory.{}"), PopulationCategory).c_str())));
+            SpawnGroupCapsCategory->GetInitialSpawnGroupAvailabilityDelaySeconds() = FCurveTableRowHandle{ PopulationCategoryCaps, FName(std::format(TEXT("PvP_Deimos_{}_{}_AllPlayers_InitialDelay"), EncounterType, PopulationCategory).c_str()) };
+            SpawnGroupCapsCategory->GetSpawnGroupAvailabilityDelaySeconds() = FCurveTableRowHandle{ PopulationCategoryCaps, FName(std::format(TEXT("PvP_Deimos_{}_{}_AllPlayers_RespawnTime"), EncounterType, PopulationCategory).c_str()) };
+            SpawnGroupCapsCategory->GetInitialSpawnGroupAvailabilityTime() = -1.0f;
+            SpawnGroupCap->GetMinSpawnGroupNumberCap() = FCurveTableRowHandle{ PopulationCategoryCaps, FName(std::format(TEXT("PvP_Deimos_{}_{}_AllPlayers_Min"), EncounterType, PopulationCategory).c_str()) };
+            SpawnGroupCap->GetMaxSpawnGroupNumberCap() = FCurveTableRowHandle{ PopulationCategoryCaps, FName(std::format(TEXT("PvP_Deimos_{}_{}_AllPlayers_Max"), EncounterType, PopulationCategory).c_str()) };
+        }
+    }
 }
 
 AFortAIDirector* AFortGameModeZone::GetAIDirector()

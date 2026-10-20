@@ -398,6 +398,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -587,6 +588,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
