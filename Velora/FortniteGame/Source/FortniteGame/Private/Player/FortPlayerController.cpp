@@ -839,7 +839,9 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
     if (auto MyFortPawn = GetMyFortPawn())
         UFortAIFunctionLibrary::MakeNoiseEventAtLocation(MyFortPawn, 1000.0f, BuildingActorToRepair->GetActorLocation());
 
-    if (auto StartRepairSound = GetStartRepairSound().LoadSynchronous())
+    static auto bStartRepairSound = GetClass()->FindPropertyByName(FName(TEXT("StartRepairSound"))) != nullptr;
+
+    if (auto StartRepairSound = bStartRepairSound ? GetStartRepairSound().LoadSynchronous() : nullptr)
         UFortKismetLibrary::BroadcastSoundAtLocation(this, (USoundBase*)StartRepairSound, BuildingActorToRepair->GetActorLocation(), 1.0f, 1.0f);
 }
 
