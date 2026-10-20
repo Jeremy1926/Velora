@@ -1177,6 +1177,20 @@ void AFortPlayerController::ResetQuickBarToPrimary()
     ResetQuickBarToPrimary(this);
 }
 
+DETOUR(AFortPlayerController, ForceEquipValidWeapon, Anchor::Hook()
+    .Event(TEXT("ClientEndAbilityWeapon"))
+    .Caller()
+    .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+    .Find("call [rax+0x*]")
+    .Find("call *")
+    .Or()
+    .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+    .Start()
+    .Optional()
+    .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+    .Find("call [rax+0x*]")
+    .Find("call *")
+    .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")))
 bool AFortPlayerController::ForceEquipValidWeapon()
 {
     auto MyFortPawn = GetMyFortPawn();

@@ -12,60 +12,23 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static Scanner::FCode ClientEndAbilityWeaponCall()
-{
-    static auto ClientEndAbilityWeaponCall = Scanner::CallTo(Scanner::Event(TEXT("ClientEndAbilityWeapon")).Get());
-
-    return ClientEndAbilityWeaponCall;
-}
-
 static int32_t AbilityWeaponItemOffset()
 {
-    static auto AbilityWeaponItem = ClientEndAbilityWeaponCall().Last("mov dword ptr [*+0x*], 0xffffffff").Disp(TEXT("UFortGameplayAbility::AbilityWeaponItem"));
+    static auto AbilityWeaponItem = Scanner::CallTo(Scanner::Event(TEXT("ClientEndAbilityWeapon")).Get()).Last("mov dword ptr [*+0x*], 0xffffffff").Disp(TEXT("UFortGameplayAbility::AbilityWeaponItem"));
 
     return AbilityWeaponItem;
 }
 
 static int32_t AbilityWeaponOffset()
 {
-    static auto Lea = ClientEndAbilityWeaponCall().Find("lea *, [*+0x*]");
-    static auto Add = ClientEndAbilityWeaponCall().Find("add *, 0x*");
+    static auto ClientEndAbilityWeapon = Scanner::CallTo(Scanner::Event(TEXT("ClientEndAbilityWeapon")).Get());
+    static auto Lea = ClientEndAbilityWeapon.Find("lea *, [*+0x*]");
+    static auto Add = ClientEndAbilityWeapon.Find("add *, 0x*");
     static auto AbilityWeapon = Add.Get() && (!Lea.Get() || Add.Get() < Lea.Get()) ? (int32_t)Add.Imm(TEXT("UFortGameplayAbility::AbilityWeaponActor")) : Lea.Disp(TEXT("UFortGameplayAbility::AbilityWeaponActor"));
 
     return AbilityWeapon;
 }
 
-static auto execEquipAbilityWeapon = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon"));
-
-    if (!Function || !StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ClientEndAbilityWeapon")) || !Scanner::Native(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon")).Is("ret*") || AbilityWeaponItemOffset() <= 0 || AbilityWeaponOffset() <= 0)
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked UFortGameplayAbility::execEquipAbilityWeapon, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&UFortGameplayAbility::execEquipAbilityWeapon);
-
-    return true;
-}();
-
-static auto ForceEquipValidWeapon = []
-{
-    auto Caller = ClientEndAbilityWeaponCall().Get() ? ClientEndAbilityWeaponCall().Start() : Scanner::String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d")).Start();
-
-    if (!Caller.Get())
-        return false;
-
-    auto RemoveAbilityWeapon = Caller.Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]").Find("call [rax+0x*]");
-
-    if (RemoveAbilityWeapon.Is("call [rax+0x*]; mov rcx, *; call 0x*"))
-        return DetourCall(TEXT("AFortPlayerController::ForceEquipValidWeapon"), RemoveAbilityWeapon.Find("call 0x*").Get(), &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
-
-    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-    auto Slot = RemoveAbilityWeapon.Is("call [rax+0x*]; mov rax, [*]; mov rcx, *; call [rax+0x*]") || RemoveAbilityWeapon.Is("call [rax+0x*]; test *, *; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]") ? RemoveAbilityWeapon.Find("call [rax+0x*]").Disp() : 0;
-
-    return DetourVTable(TEXT("AFortPlayerController::ForceEquipValidWeapon"), VTable, Slot, &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
-}();
 
 UClass* UFortGameplayAbility::StaticClass()
 {
@@ -106,6 +69,13 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
     GetAbilityWeapon() = Pawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid);
 }
 
+DETOUR(UFortGameplayAbility, execEquipAbilityWeapon, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ClientEndAbilityWeapon")))
+    .Native(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon"))
+    .Is("ret*")
+    .Optional()
+    .If([] { return AbilityWeaponItemOffset() > 0 && AbilityWeaponOffset() > 0; })
+    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon")))
 void UFortGameplayAbility::execEquipAbilityWeapon(FFrame& Stack, void* const Z_Param__Result)
 {
     UFortWeaponItemDefinition* WeaponDefinition = nullptr;
