@@ -18,12 +18,13 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
     {
         auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerState"));
         auto ServerSetShowHeroBackpack_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerState::ServerSetShowHeroBackpack_Implementation"));
-        auto ApplyHeroPartDisplaySettings = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerSetShowHeroBackpack_Implementation)).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"));
-        auto ApplyCustomizationToCharacter = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ApplyHeroPartDisplaySettings)).Find("ret").Last("call 0x*").Call();
+        auto ApplyHeroPartDisplaySettings = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerSetShowHeroBackpack_Implementation)).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"))));
+        auto ApplyCustomizationToCharacter = ApplyHeroPartDisplaySettings.Find("ret").Last("call 0x*").Call();
 
         auto TailCall = ApplyCustomizationToCharacter.Find("pop *; jmp 0x*");
+        auto Call = ApplyCustomizationToCharacter.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*");
 
-        return (void (*)(AFortPlayerState*, APawn*))(TailCall.Get() ? TailCall.Find("jmp 0x*") : ApplyCustomizationToCharacter.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*").Find("call 0x*")).Target(TEXT("AFortPlayerState::ApplyCharacterCustomization"));
+        return Scanner::Function<void (*)(AFortPlayerState*, APawn*)>((TailCall.Get() ? TailCall.Find("jmp 0x*") : (Call.Get() ? Call : ApplyHeroPartDisplaySettings.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")).Find("call 0x*")).Target(TEXT("AFortPlayerState::ApplyCharacterCustomization")));
     }();
 
     ApplyCharacterCustomization(this, Pawn);
