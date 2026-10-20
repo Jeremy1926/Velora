@@ -13,7 +13,9 @@ UClass* UFortProjectileMovementComponent::StaticClass()
 
 void UFortProjectileMovementComponent::SetVelocity(const FVector& InReplicatedVelocity)
 {
-    static auto SetVelocity = Scanner::Function<void (*)(UFortProjectileMovementComponent*, const FVector&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity")).Get(TEXT("UFortProjectileMovementComponent::SetVelocity")));
+    static auto SetVelocity = Anchor::Function<void (*)(UFortProjectileMovementComponent*, const FVector&)>(TEXT("UFortProjectileMovementComponent::SetVelocity"))
+        .Native(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
+        .Get();
 
     SetVelocity(this, InReplicatedVelocity);
 }
