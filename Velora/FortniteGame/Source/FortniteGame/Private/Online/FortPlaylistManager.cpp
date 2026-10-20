@@ -18,7 +18,7 @@ bool UFortPlaylistManager::GetMaxTeamInfoForPlaylist(UFortPlaylistManager* Playl
 
 UObject* UFortPlaylistManager::GetAthenaPlaylist(FName PlaylistName)
 {
-    static auto GetAthenaPlaylist = Scanner::Function<UObject* (*)(UFortPlaylistManager*, FName)>(Scanner::String(TEXT("UFortPlaylistManager::GetAthenaPlaylist: Unable to find playlist %s")).Start().Get(TEXT("UFortPlaylistManager::GetAthenaPlaylist")));
+    static auto GetAthenaPlaylist = Scanner::Function<UObject* (*)(UFortPlaylistManager*, FName)>(Scanner::Smallest(TEXT("UFortPlaylistManager::GetAthenaPlaylist: Unable to find playlist %s")).Start().Get(TEXT("UFortPlaylistManager::GetAthenaPlaylist")));
 
     return GetAthenaPlaylist(this, PlaylistName);
 }

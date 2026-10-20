@@ -582,6 +582,55 @@ namespace Scanner
         return FCode(Reference);
     }
 
+    inline FCode Smallest(const wchar_t* String)
+    {
+        auto Size = (wcslen(String) + 1) * sizeof(wchar_t);
+        const uint8_t* Found = nullptr;
+        int64 FoundSize = 0;
+
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
+            {
+                if (*(wchar_t*)Address != *String || memcmp(Address, String, Size))
+                    continue;
+
+                for (auto& CodeSection : Sections())
+                {
+                    if (!(CodeSection.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                        continue;
+
+                    auto CodeBegin = Base() + CodeSection.VirtualAddress;
+                    auto CodeEnd = CodeBegin + CodeSection.Misc.VirtualSize;
+
+                    for (auto Reference = CodeBegin + 1; Reference + 6 <= CodeEnd; Reference++)
+                    {
+                        if (Reference[0] != 0x8D || (Reference[1] & 0xC7) != 0x05 || Reference + 6 + *(int32_t*)(Reference + 2) != Address)
+                            continue;
+
+                        auto Function = FindFunction(Reference);
+
+                        if (!Function)
+                            continue;
+
+                        auto FunctionSize = FindFunctionEnd(Function) - (Base() + Function->BeginAddress);
+
+                        if (!Found || FunctionSize < FoundSize)
+                        {
+                            Found = (Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference;
+                            FoundSize = FunctionSize;
+                        }
+                    }
+                }
+            }
+        }
+
+        return FCode(Found);
+    }
+
     inline FCode At(const void* Address)
     {
         return FCode((const uint8_t*)Address, true);
