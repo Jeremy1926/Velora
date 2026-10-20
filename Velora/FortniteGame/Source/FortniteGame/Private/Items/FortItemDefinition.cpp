@@ -75,11 +75,12 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
 {
     static auto GetMaxStackSize = []
     {
-        auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")))->GetOffset_ForInternal();
-        auto Compare = std::format("cmp dword ptr [*+{:#x}], 0x7ffffffe", MaxStackSize);
+        auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")));
+        auto bScalableFloat = MaxStackSize->GetSize() != sizeof(int32);
+        auto Compare = bScalableFloat ? std::format("add rcx, {:#x}", MaxStackSize->GetOffset_ForInternal()) : std::format("cmp dword ptr [*+{:#x}], 0x7ffffffe", MaxStackSize->GetOffset_ForInternal());
 
         return Anchor::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Start().Has(Compare); })
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Start().Has(Compare) && (!bScalableFloat || Entry.Start().Has("cmp eax, 0x7ffffffe")); })
             .Get();
     }();
 
