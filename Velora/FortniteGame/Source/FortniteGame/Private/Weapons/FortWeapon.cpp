@@ -78,3 +78,10 @@ FGuid& AFortWeapon::GetItemEntryGuid()
 
     return *ItemEntryGuid->ContainerPtrToValuePtr<FGuid>(this);
 }
+
+float& AFortWeapon::GetLastFireTimeVerified()
+{
+    static auto LastFireTimeVerified = StaticClass()->FindPropertyByName(FName(TEXT("LastFireTimeVerified")));
+
+    return *LastFireTimeVerified->ContainerPtrToValuePtr<float>(this);
+}

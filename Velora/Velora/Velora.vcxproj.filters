@@ -817,6 +817,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicleSpawner.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleSeatWeaponComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaMapInfo.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
@@ -1346,6 +1349,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicleSpawner.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleSeatWeaponComponent.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp">

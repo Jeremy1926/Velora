@@ -15,4 +15,6 @@ public:
     bool GetPendingDestroyDueToDurabilityOrStackCount() const;
 
     FGuid& GetItemEntryGuid();
+
+    float& GetLastFireTimeVerified();
 };
