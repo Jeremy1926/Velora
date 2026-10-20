@@ -30,6 +30,16 @@ struct FFortWorldMarkerData
     float CreationTime;
 };
 
+struct FFortClientMarkerRequest
+{
+    int32 InstanceId;
+    EFortWorldMarkerType MarkerType;
+    FVector WorldPosition;
+    FVector WorldPositionOffset;
+    FVector WorldNormal;
+    AActor* MarkedActor;
+};
+
 class UAthenaMarkerComponent : public UActorComponent
 {
 public:
@@ -38,6 +48,8 @@ public:
     void ClientCancelMarker(FMarkerID MarkerID);
 
     void ServerAddMapMarker_Implementation(FFortWorldMarkerData MarkerData);
+
+    void ServerAddMapMarker_Implementation(FFortClientMarkerRequest MarkerRequest);
 
     void ServerRemoveMapMarker_Implementation(FMarkerID MarkerID);
 };
