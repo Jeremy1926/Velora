@@ -22,7 +22,9 @@ static int32_t OnPlayerCreatedBuildingSlot()
         auto Forwarder = Scanner::At(Scanner::IsCode(VTable[Index]) ? VTable[Index] : nullptr);
         auto BuildingAction = Forwarder.Is("mov rax, [rcx]*") ? std::format("call [rax+{:#x}]", Forwarder.Find("jmp [rax+*]").Slot(TEXT("AFortGameMode::OnPlayerBuildingAction"))) : std::format("call {:#x}", (uintptr_t)Forwarder.Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
 
-        return Scanner::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(BuildingAction); });
+        return Anchor::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))
+            .Virtual(VTable, [&](const Anchor::FCode& Entry) { return Entry.Start().Has(BuildingAction); })
+            .Get();
     }();
 
     return OnPlayerCreatedBuilding;
@@ -80,27 +82,24 @@ void AFortGameMode::OnPlayerEditedBuilding(AFortPlayerController* PlayerControll
 
 void AFortGameMode::FinishWorldInitialization()
 {
-    static auto FinishWorldInitialization = []
-    {
-        auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get(TEXT("AFortGameModeAthena::FinishWorldInitialization"));
-        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto FinishWorldInitialization = Scanner::Slot(TEXT("AFortGameMode::FinishWorldInitialization"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaFinishWorldInitialization; });
+    static auto FinishWorldInitialization = Anchor::Slot(TEXT("AFortGameMode::FinishWorldInitialization"))
+        .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+        .Start()
+        .Log(TEXT("AFortGameModeAthena::FinishWorldInitialization"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get();
 
-        return Scanner::Virtual<void (*)(AFortGameMode*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode")), FinishWorldInitialization);
-    }();
-
-    FinishWorldInitialization(this);
+    Scanner::Virtual<void (*)(AFortGameMode*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode")), FinishWorldInitialization)(this);
 }
 
 void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)
 {
-    static auto OnGivenMatchAssignment = []
-    {
-        auto FortGameModeOnGivenMatchAssignment = Scanner::String(TEXT("Playtest-%s")).Start().Get(TEXT("AFortGameMode::OnGivenMatchAssignment"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode"));
-
-        return Scanner::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortGameModeOnGivenMatchAssignment; });
-    }();
+    static auto OnGivenMatchAssignment = Anchor::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+        .String(TEXT("Playtest-%s"))
+        .Start()
+        .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
+        .Get();
 
     Scanner::Virtual<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(this, OnGivenMatchAssignment)(this, MatchOptions);
 }
