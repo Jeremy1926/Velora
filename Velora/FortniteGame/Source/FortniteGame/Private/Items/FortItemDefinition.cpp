@@ -29,7 +29,12 @@ EFortItemType UFortItemDefinition::GetItemType() const
 
 EFortRarity UFortItemDefinition::GetRarity() const
 {
-    static auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]").Slot(TEXT("UFortItemDefinition::GetRarity"));
+    static auto GetRarity = []
+    {
+        auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]");
+
+        return (GetRarity.Get() ? GetRarity : Scanner::Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetRarity")).Find("call [*+0x*]")).Slot(TEXT("UFortItemDefinition::GetRarity"));
+    }();
 
     return Scanner::Virtual<EFortRarity (*)(const UFortItemDefinition*)>(this, GetRarity)(this);
 }
