@@ -72,6 +72,11 @@ void AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation(AFortPicku
         Pickup->SetSwapItemGuid(Swap);
 }
 
+void AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+{
+    ServerHandlePickupWithSwap_Implementation(Pickup, Swap, InFlyTime, InStartDirection, bPlayPickupSound);
+}
+
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
 {
     AFortPlayerPawn::ServerReviveFromDBNO_Implementation(EventInstigator);

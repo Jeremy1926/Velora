@@ -13,6 +13,8 @@ public:
 
     void ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
+    void ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
+
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
     float GetPickupSpeedMultiplier() const;

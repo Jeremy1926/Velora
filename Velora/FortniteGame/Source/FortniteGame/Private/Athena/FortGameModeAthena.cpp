@@ -219,6 +219,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         return ServerHandlePickupWithSwap.Get() ? DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation"), VTable, ServerHandlePickupWithSwap.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickupWithSwap_Implementation")), &AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation) : nullptr;
     }();
 
+    static auto ServerHandlePickupWithRequestedSwap = []
+    {
+        auto ServerHandlePickupWithRequestedSwap = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupWithRequestedSwap"));
+        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+
+        return ServerHandlePickupWithRequestedSwap.Get() ? DetourVTable(TEXT("AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation"), VTable, ServerHandlePickupWithRequestedSwap.Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerHandlePickupWithRequestedSwap_Implementation")), &AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation) : nullptr;
+    }();
+
     static auto ServerReviveFromDBNO = []
     {
         auto ServerReviveFromDBNO = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"));
