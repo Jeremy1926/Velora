@@ -313,6 +313,15 @@
     <Filter Include="ThirdParty\Zydis">
       <UniqueIdentifier>{201074FC-BA63-4829-8A3F-A07F7AFB3E58}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty\Anchor">
+      <UniqueIdentifier>{2788CC39-E0D5-48E8-9E34-966144B58E38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Anchor\include">
+      <UniqueIdentifier>{69178DDC-28B0-4D5F-9497-F63121877C92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Anchor\src">
+      <UniqueIdentifier>{DD7212DD-4D52-430C-9555-69646ADE0DF7}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\Internationalization">
       <UniqueIdentifier>{aeda20c3-d2b9-4432-a3d0-d76a44f6a6da}</UniqueIdentifier>
     </Filter>
@@ -375,6 +384,9 @@
     </ClInclude>
     <ClInclude Include="..\ThirdParty\MinHook\src\hde\table64.h">
       <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\Anchor\include\Anchor\Anchor.h">
+      <Filter>ThirdParty\Anchor\include</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\Platform.h">
       <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
@@ -1143,6 +1155,12 @@
     </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\hde\hde64.c">
       <Filter>ThirdParty\MinHook\src\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Anchor\src\Anchor.cpp">
+      <Filter>ThirdParty\Anchor\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\Anchor\src\Detour.cpp">
+      <Filter>ThirdParty\Anchor\src</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>

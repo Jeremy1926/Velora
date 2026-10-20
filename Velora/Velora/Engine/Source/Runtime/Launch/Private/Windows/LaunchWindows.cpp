@@ -38,6 +38,13 @@ static auto bOutputDevicesRegistered = []
 
 FLogCategoryBase LogVelora(TEXT("LogVelora"), ELogVerbosity::Log, ELogVerbosity::All);
 
+static auto bAnchorHostSet = []
+{
+    Anchor::SetHost({ .Log = &Scanner::Log, .FindVTable = &Scanner::FindVTable });
+
+    return true;
+}();
+
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 static auto bStartupLogged = []

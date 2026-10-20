@@ -3,6 +3,7 @@
 #include "Windows/WindowsConsoleOutputDevice.h"
 #include "Logging/LogCategory.h"
 #include "CoreGlobals.h"
+#include "Scanner.h"
 #include "MinHook.h"
 
 #pragma warning(disable: 4073)
@@ -18,6 +19,13 @@ static auto bOutputDevicesRegistered = []
 }();
 
 FLogCategoryBase LogVelora(TEXT("LogVelora"), ELogVerbosity::Log, ELogVerbosity::All);
+
+static auto bAnchorHostSet = []
+{
+    Anchor::SetHost({ .Log = &Scanner::Log, .FindVTable = &Scanner::FindVTable });
+
+    return true;
+}();
 
 void Main()
 {
