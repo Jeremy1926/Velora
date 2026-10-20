@@ -378,11 +378,21 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         auto VTable = *(const uint8_t***)this;
         auto Image = Scanner::Base();
         auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
+        auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));
+        auto RedirectMap = RedirectAthenaLootTierGroups ? std::format("add rcx, {:#x}", RedirectAthenaLootTierGroups->GetOffset_ForInternal()) : std::string();
 
         for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
         {
             if (VTable[Index] < Image || VTable[Index] >= ImageEnd)
                 continue;
+
+            if (RedirectAthenaLootTierGroups)
+            {
+                if (Scanner::At(VTable[Index]).Has(RedirectMap))
+                    return Scanner::At(VTable[Index]).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
+
+                continue;
+            }
 
             for (auto Name = Scanner::At(VTable[Index]).Find("lea rdx, [0x*]"); Name.Get(); Name = Name.Find("lea rdx, [0x*]"))
             {
