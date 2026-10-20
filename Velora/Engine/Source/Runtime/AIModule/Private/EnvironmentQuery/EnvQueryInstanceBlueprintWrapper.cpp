@@ -4,7 +4,9 @@
 
 TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
 {
-    static auto GetResultsAsLocations = Scanner::Function<TArray<FVector>* (*)(UEnvQueryInstanceBlueprintWrapper*, TArray<FVector>*)>(Scanner::Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:GetResultsAsLocations")).Get(TEXT("UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations")));
+    static auto GetResultsAsLocations = Anchor::Function<TArray<FVector>* (*)(UEnvQueryInstanceBlueprintWrapper*, TArray<FVector>*)>(TEXT("UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations"))
+        .Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:GetResultsAsLocations"))
+        .Get();
 
     TArray<FVector> Locations;
     GetResultsAsLocations(this, &Locations);
@@ -14,7 +16,9 @@ TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
 
 void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Value)
 {
-    static auto SetNamedParam = Scanner::Function<void (*)(UEnvQueryInstanceBlueprintWrapper*, FName, float)>(Scanner::Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam")).Get(TEXT("UEnvQueryInstanceBlueprintWrapper::SetNamedParam")));
+    static auto SetNamedParam = Anchor::Function<void (*)(UEnvQueryInstanceBlueprintWrapper*, FName, float)>(TEXT("UEnvQueryInstanceBlueprintWrapper::SetNamedParam"))
+        .Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Get();
 
     SetNamedParam(this, ParamName, Value);
 }
