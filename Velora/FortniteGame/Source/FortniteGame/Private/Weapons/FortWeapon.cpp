@@ -5,6 +5,7 @@
 #include "GameFramework/Pawn.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -55,6 +56,35 @@ bool AFortWeapon::CheckPendingDestroyedDueToDurability()
     }
 
     return Original();
+}
+
+bool AFortWeapon::TryReloadAmmo()
+{
+    static auto TryReloadAmmo = Anchor::Slot(TEXT("AFortWeapon::TryReloadAmmo"))
+        .String(TEXT("Maximum reload count at respawn reached on %s"))
+        .Start()
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return Scanner::Virtual<bool (*)(AFortWeapon*)>(this, TryReloadAmmo)(this);
+}
+
+bool AFortWeapon::TryReloadAmmoFromAbility()
+{
+    return TryReloadAmmo();
+}
+
+void AFortWeapon::execTryReloadAmmoFromAbility(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortWeapon, execTryReloadAmmoFromAbility, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortWeapon:TryReloadAmmoFromAbility"))
+        .Is("xor al, al; ret")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortWeapon:TryReloadAmmoFromAbility")));
+
+    Stack.Code += !!Stack.Code;
+
+    *(bool*)Z_Param__Result = TryReloadAmmoFromAbility();
 }
 
 bool AFortWeapon::GetPendingDestroyDueToDurabilityOrStackCount() const
