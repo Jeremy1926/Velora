@@ -29,19 +29,27 @@ EFortItemType UFortItemDefinition::GetItemType() const
 
 EFortRarity UFortItemDefinition::GetRarity() const
 {
-    static auto GetRarity = []
-    {
-        auto GetRarity = Scanner::Native(TEXT("/Script/FortniteGame.FortItem:GetRarity")).Find("jmp [*]");
-
-        return (GetRarity.Get() ? GetRarity : Scanner::Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetRarity")).Find("call [*+0x*]")).Slot(TEXT("UFortItemDefinition::GetRarity"));
-    }();
+    static auto GetRarity = Anchor::Slot(TEXT("UFortItemDefinition::GetRarity"))
+        .Native(TEXT("/Script/FortniteGame.FortItem:GetRarity"))
+        .Find("jmp [*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetRarity"))
+        .Find("call [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<EFortRarity (*)(const UFortItemDefinition*)>(this, GetRarity)(this);
 }
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
-    static auto ClampItemLevel = Scanner::String(TEXT("%s HostUpgradeLevel: %i")).Start().Find("mov rdx, rax; call 0x*").Find("call 0x*").Call().Find("call [*]").Slot(TEXT("UFortItemDefinition::ClampItemLevel"));
+    static auto ClampItemLevel = Anchor::Slot(TEXT("UFortItemDefinition::ClampItemLevel"))
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; call 0x*")
+        .Find("call 0x*")
+        .Call()
+        .Find("call [*]")
+        .Get();
 
     return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, int32)>(this, ClampItemLevel)(this, ItemLevel);
 }
@@ -53,10 +61,11 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
         auto bAllowMultipleStacks = (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")));
         auto Offset = bAllowMultipleStacks->GetOffset_ForInternal() + bAllowMultipleStacks->GetByteOffset();
         auto Bit = std::countr_zero(bAllowMultipleStacks->GetFieldMask());
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
         auto Getter = Bit ? std::format("mov* *, *[rcx+{:#x}]; shr al, {:#x}; and *", Offset, Bit) : std::format("mov* *, *[rcx+{:#x}]; and *", Offset);
 
-        return Scanner::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
+        return Anchor::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Is(Getter); })
+            .Get();
     }();
 
     return Scanner::Virtual<bool (*)(const UFortItemDefinition*)>(this, DoesAllowMultipleStacks)(this);
@@ -67,10 +76,11 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
     static auto GetMaxStackSize = []
     {
         auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")))->GetOffset_ForInternal();
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortItemDefinition"));
         auto Compare = std::format("cmp dword ptr [*+{:#x}], 0x7ffffffe", MaxStackSize);
 
-        return Scanner::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Start().Has(Compare); });
+        return Anchor::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Start().Has(Compare); })
+            .Get();
     }();
 
     return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, const UAbilitySystemComponent*)>(this, GetMaxStackSize)(this, AbilitySystemComponent);
