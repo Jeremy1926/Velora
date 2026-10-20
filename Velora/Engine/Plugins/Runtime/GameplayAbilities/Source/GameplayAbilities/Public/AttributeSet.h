@@ -2,7 +2,9 @@
 
 #include "Containers/UnrealString.h"
 #include "UObject/Object.h"
+#include "UObject/FieldPath.h"
 
+class FProperty;
 class UProperty;
 class UStruct;
 
@@ -26,7 +28,7 @@ struct FGameplayAttribute
     FString AttributeName;
 
 private:
-    UProperty* Attribute;
+    TFieldPath<FProperty> Attribute;
     UStruct* AttributeOwner;
 };
 

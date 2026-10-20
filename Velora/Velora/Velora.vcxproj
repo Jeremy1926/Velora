@@ -181,6 +181,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Class.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNetTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\Field.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\FieldPath.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UnrealType.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\UObjectGlobals.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Engine.h" />
