@@ -31,6 +31,15 @@ enum class EFortPickupSourceTypeFlag : uint8
     FloorLoot = 32,
 };
 
+enum class EFortPickupSpawnSource : uint8
+{
+    Unset = 0,
+    PlayerElimination = 1,
+    Chest = 2,
+    SupplyDrop = 3,
+    AmmoBox = 4,
+};
+
 struct FFortPickupLocationData
 {
     AFortPawn* PickupTarget;
@@ -56,6 +65,7 @@ struct FortPickupCreationData
     AActor* Owner;
     bool bRandomRotation;
     uint32 SourceTypeFlags;
+    EFortPickupSpawnSource PickupSpawnSource;
 };
 
 class AFortPickup : public AActor
@@ -65,7 +75,7 @@ public:
 
     static AFortPickup* CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC = nullptr, UClass* OverrideClass = nullptr, AActor* Owner = nullptr, EFortPickupSourceTypeFlag SourceTypeFlags = EFortPickupSourceTypeFlag::Other, bool bRandomRotation = true, bool bPickupOnlyRelevantToOwner = false);
 
-    void TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss);
+    void TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag InPickupSourceTypeFlags = EFortPickupSourceTypeFlag::Other, EFortPickupSpawnSource InPickupSpawnSource = EFortPickupSpawnSource::Unset);
 
     void GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner);
 

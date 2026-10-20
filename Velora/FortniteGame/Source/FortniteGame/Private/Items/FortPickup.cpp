@@ -50,11 +50,11 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
     return CreateFromData(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, bPickupOnlyRelevantToOwner);
 }
 
-void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss)
+void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag InPickupSourceTypeFlags, EFortPickupSpawnSource InPickupSpawnSource)
 {
-    static auto TossPickup = Scanner::Function<void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup")).Get(TEXT("AFortPickup::TossPickup")));
+    static auto TossPickup = Scanner::Function<void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup")).Get(TEXT("AFortPickup::TossPickup")));
 
-    TossPickup(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss);
+    TossPickup(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss, InPickupSourceTypeFlags, InPickupSpawnSource);
 }
 
 decltype(AFortPickup::GameGivePickupTo) AFortPickup::GameGivePickupTo = nullptr;
@@ -328,14 +328,14 @@ bool& AFortPickup::GetTossedFromContainer()
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
-    static auto SetPickupTarget = Scanner::Function<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Get(TEXT("AFortPickup::SetPickupTarget")));
+    static auto SetPickupTarget = Scanner::Function<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Call().Get(TEXT("AFortPickup::SetPickupTarget")));
 
     SetPickupTarget(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
 float AFortPickup::GetFlyTime() const
 {
-    static auto GetFlyTime = Scanner::Function<float (*)(const AFortPickup*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("call 0x*").Call().Find("comiss *").Call().Get(TEXT("AFortPickup::GetFlyTime")));
+    static auto GetFlyTime = Scanner::Function<float (*)(const AFortPickup*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Call().Find("comiss *").Call().Get(TEXT("AFortPickup::GetFlyTime")));
 
     return GetFlyTime(this);
 }

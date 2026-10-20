@@ -41,6 +41,8 @@ public:
 
     APawn* GetInstigator() const;
 
+    AActor* GetOwner() const;
+
     FORCEINLINE FVector GetActorLocation() const
     {
         auto RootComponent = GetRootComponent();

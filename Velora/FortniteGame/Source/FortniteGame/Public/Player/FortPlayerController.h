@@ -98,6 +98,8 @@ public:
 
     void ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot);
 
+    void ClientActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot, bool bForceExecution);
+
     void ResetQuickBarToPrimary();
 
     UFortItem* K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const;
@@ -118,7 +120,9 @@ public:
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
 
-    AFortQuickBars*& GetQuickBars();
+    AFortQuickBars* GetQuickBars();
+
+    void SetQuickBars(AFortQuickBars* InQuickBars);
 
     AFortInventory*& GetWorldInventory();
 

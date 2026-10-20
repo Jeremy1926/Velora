@@ -44,10 +44,17 @@ static auto RemoveAllInventoryItems = []
     auto StartAircraftPhase = Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*");
     auto Call = StartAircraftPhase.Find("call 0x*", 3);
 
-    return Call.Target() == StartAircraftPhase.Find("call 0x*").Target() ? DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Call.Get(), &AFortPlayerController::RemoveAllInventoryItems) : nullptr;
+    return Call.Get() && Call.Target() == StartAircraftPhase.Find("call 0x*").Target() ? DetourCall(TEXT("AFortPlayerController::RemoveAllInventoryItems"), Call.Get(), &AFortPlayerController::RemoveAllInventoryItems) : nullptr;
 }();
 
-static auto ActivateSlot = DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
+static auto ClientActivateSlot = []
+{
+    auto Call = Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov byte ptr [rsp+0x20], 0x1; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*");
+
+    return Call.Get() ? DetourCall(TEXT("AFortPlayerController::ClientActivateSlot"), Call.Get(), &AFortPlayerController::ClientActivateSlot) : nullptr;
+}();
+
+static auto ActivateSlot = ClientActivateSlot ? nullptr : DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
 
 static auto DropItemsOnPawnDestruction = []
 {
@@ -210,12 +217,14 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
 
     auto bInitialized = (this->*::InitializeMcpProfile)(OnMcpProfilesInitialized, bForceSync);
 
-    if (HasAuthority() && !GetQuickBars())
+    static auto bServerQuickBars = GetClass()->FindPropertyByName(FName(TEXT("QuickBars"))) != nullptr;
+
+    if (HasAuthority() && bServerQuickBars && !GetQuickBars())
     {
         FActorSpawnParameters SpawnInfo;
         SpawnInfo.Owner = this;
 
-        GetQuickBars() = (AFortQuickBars*)GetWorld()->SpawnActor(AFortQuickBars::StaticClass(), nullptr, SpawnInfo);
+        SetQuickBars((AFortQuickBars*)GetWorld()->SpawnActor(AFortQuickBars::StaticClass(), nullptr, SpawnInfo));
     }
 
     return bInitialized;
@@ -240,7 +249,7 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
 
 bool AFortPlayerController::CanServerTryAddToQuickBar() const
 {
-    static auto bCanServerTryAddToQuickBar = !TryAddToQuickBarFunction().Has("cmp byte ptr [rcx+0x*], 0x3; mov rdi, rdx");
+    static auto bCanServerTryAddToQuickBar = !TryAddToQuickBarFunction().Has("cmp byte ptr [rcx+0x*], 0x3; mov rdi, rdx") && !TryAddToQuickBarFunction().Has("call 0x*; cmp eax, 0x1; jz 0x*");
 
     return bCanServerTryAddToQuickBar;
 }
@@ -254,9 +263,24 @@ void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, 
         RemoveAllInventoryItems();
 }
 
+void AFortPlayerController::ClientActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot, bool bForceExecution)
+{
+    static auto ClientActivateSlot = Scanner::Function<void (*)(AFortPlayerController*, EFortQuickBars, int32, float, bool, bool)>(Scanner::Event(TEXT("ClientActivateSlot")).Get(TEXT("AFortPlayerController::ClientActivateSlot")));
+
+    ClientActivateSlot(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot, bForceExecution);
+
+    if (!::RemoveAllInventoryItems)
+        RemoveAllInventoryItems();
+}
+
 UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const
 {
-    static auto K2_FindExistingItemForDefinition = Scanner::Function<UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition")).Get(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition")));
+    static auto K2_FindExistingItemForDefinition = []
+    {
+        auto Native = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition"));
+
+        return Scanner::Function<UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool)>((Native.Get() ? Native : Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))).Get(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition")));
+    }();
 
     return K2_FindExistingItemForDefinition(this, ItemDefinition, bInStorageVault);
 }
@@ -494,11 +518,18 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
     RemoveItemFromQuickBars(this, ItemDefinition);
 }
 
-AFortQuickBars*& AFortPlayerController::GetQuickBars()
+AFortQuickBars* AFortPlayerController::GetQuickBars()
 {
     static auto QuickBars = GetClass()->FindPropertyByName(FName(TEXT("QuickBars")));
 
-    return *QuickBars->ContainerPtrToValuePtr<AFortQuickBars*>(this);
+    return QuickBars ? *QuickBars->ContainerPtrToValuePtr<AFortQuickBars*>(this) : nullptr;
+}
+
+void AFortPlayerController::SetQuickBars(AFortQuickBars* InQuickBars)
+{
+    static auto QuickBars = GetClass()->FindPropertyByName(FName(TEXT("QuickBars")));
+
+    *QuickBars->ContainerPtrToValuePtr<AFortQuickBars*>(this) = InQuickBars;
 }
 
 AFortInventory*& AFortPlayerController::GetWorldInventory()

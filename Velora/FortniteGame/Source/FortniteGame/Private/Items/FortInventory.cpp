@@ -21,9 +21,22 @@ void AFortInventory::HandleInventoryLocalUpdate()
 
 int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const
 {
-    static auto GetOverflowFromAddingItem = Scanner::Function<int32 (*)(const AFortInventory*, const FFortItemEntry&)>(Scanner::String(TEXT("SwapEquippedText")).Find("mov rcx, rax; call 0x*").Call().Get(TEXT("AFortInventory::GetOverflowFromAddingItem")));
+    static auto SwapEquippedText = Scanner::String(TEXT("SwapEquippedText"));
+    static auto InventoryGetOverflow = SwapEquippedText.Find("mov rcx, rax; call 0x*");
 
-    return GetOverflowFromAddingItem(this, ItemEntry);
+    if (InventoryGetOverflow.Get())
+    {
+        static auto GetOverflowFromAddingItem = Scanner::Function<int32 (*)(const AFortInventory*, const FFortItemEntry&)>(InventoryGetOverflow.Call().Get(TEXT("AFortInventory::GetOverflowFromAddingItem")));
+
+        return GetOverflowFromAddingItem(this, ItemEntry);
+    }
+
+    static auto GetOverflowFromAddingItem = Scanner::Function<int32 (*)(const FFortItemEntry&, void*, uint8, bool)>(SwapEquippedText.Find("xor r9d, r9d; mov r8d, *; mov rdx, rax; call 0x*").Call().Get(TEXT("AFortInventory::GetOverflowFromAddingItem")));
+    static auto FortInventoryOwnerInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryOwnerInterface"));
+    static auto InventoryType = GetClass()->FindPropertyByName(FName(TEXT("InventoryType")));
+    auto Owner = GetOwner();
+
+    return GetOverflowFromAddingItem(ItemEntry, Owner ? Owner->GetInterfaceAddress(FortInventoryOwnerInterface) : nullptr, *InventoryType->ContainerPtrToValuePtr<uint8>(this), false);
 }
 
 void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)

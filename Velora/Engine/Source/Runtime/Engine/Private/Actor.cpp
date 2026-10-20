@@ -122,6 +122,13 @@ bool AActor::IsActorInitialized() const
     return *((uint8_t*)this + Offset) & Mask;
 }
 
+AActor* AActor::GetOwner() const
+{
+    static auto Owner = GetClass()->FindPropertyByName(FName(TEXT("Owner")));
+
+    return *Owner->ContainerPtrToValuePtr<AActor*>(this);
+}
+
 ULevel* AActor::GetLevel() const
 {
     return (ULevel*)GetOuter();
