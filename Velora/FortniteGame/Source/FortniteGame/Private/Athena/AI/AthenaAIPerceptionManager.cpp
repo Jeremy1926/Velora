@@ -7,14 +7,18 @@
 
 void UAthenaAIPerceptionManager::OnAISettingsUpdated(UAthenaAISettings* AISettings)
 {
-    static auto OnAISettingsUpdated = Scanner::Function<void (*)(UAthenaAIPerceptionManager*, UAthenaAISettings*)>([]
+    static auto OnAISettingsUpdated = []
     {
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__AthenaAISystem"));
         auto ReadAISettings = std::format("mov rdx, [*+{:#x}]", AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("AISettings")))->GetOffset_ForInternal());
-        auto StartPlay = Scanner::Slot(TEXT("UAthenaAISystem::StartPlay"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(ReadAISettings); });
 
-        return Scanner::At(Scanner::IsSlot(StartPlay) ? VTable[StartPlay / sizeof(void*)] : nullptr).Find(ReadAISettings).Find("call 0x*").Target(TEXT("UAthenaAIPerceptionManager::OnAISettingsUpdated"));
-    }());
+        return Anchor::Function<void (*)(UAthenaAIPerceptionManager*, UAthenaAISettings*)>(TEXT("UAthenaAIPerceptionManager::OnAISettingsUpdated"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__AthenaAISystem"), [&](const Anchor::FCode& Entry) { return Entry.Has(ReadAISettings); })
+            .LogSlot(TEXT("UAthenaAISystem::StartPlay"))
+            .Find(ReadAISettings)
+            .Find("call 0x*")
+            .Target()
+            .Get();
+    }();
 
     OnAISettingsUpdated(this, AISettings);
 }
