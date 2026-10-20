@@ -5,6 +5,20 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
+UClass* AFortInventory::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventory"));
+
+    return Class;
+}
+
+EFortInventoryType& AFortInventory::GetInventoryType()
+{
+    static auto InventoryType = GetClass()->FindPropertyByName(FName(TEXT("InventoryType")));
+
+    return *InventoryType->ContainerPtrToValuePtr<EFortInventoryType>(this);
+}
+
 FFortItemList& AFortInventory::GetInventory()
 {
     static auto Inventory = GetClass()->FindPropertyByName(FName(TEXT("Inventory")));

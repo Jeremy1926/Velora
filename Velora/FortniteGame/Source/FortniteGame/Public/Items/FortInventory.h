@@ -122,9 +122,21 @@ struct FFortItemList : public FFastArraySerializer
     TArray<UFortWorldItem*>& GetItemInstances();
 };
 
+enum class EFortInventoryType : uint8
+{
+    World,
+    Account,
+    Outpost,
+    MAX
+};
+
 class AFortInventory : public AActor
 {
 public:
+    static UClass* StaticClass();
+
+    EFortInventoryType& GetInventoryType();
+
     FFortItemList& GetInventory();
 
     void HandleInventoryLocalUpdate();
