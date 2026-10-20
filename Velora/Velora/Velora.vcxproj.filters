@@ -619,6 +619,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\DataBunch.h">
       <Filter>Engine\Source\Runtime\Engine\Public\Net</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\GuidReferences.h">
+      <Filter>Engine\Source\Runtime\Engine\Public\Net</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\AnalyticsEventAttribute.h">
       <Filter>Engine\Source\Runtime\Analytics\Analytics\Public</Filter>
     </ClInclude>

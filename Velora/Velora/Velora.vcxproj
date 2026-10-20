@@ -240,6 +240,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ActorChannel.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PackageMapClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\DataBunch.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\GuidReferences.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\AnalyticsEventAttribute.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameModeBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameMode.h" />

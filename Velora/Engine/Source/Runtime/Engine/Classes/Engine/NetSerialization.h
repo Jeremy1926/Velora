@@ -5,7 +5,9 @@
 #include "Containers/Map.h"
 #include "Containers/Set.h"
 #include "Misc/NetworkGuid.h"
+#include "Misc/EngineVersion.h"
 #include "Math/Vector.h"
+#include "Net/GuidReferences.h"
 
 struct FFastArraySerializerItem
 {
@@ -56,8 +58,11 @@ struct FFastArraySerializer
         ItemMap.Reset();
         IncrementArrayReplicationKey();
 
-        CachedNumItems = -1;
-        CachedNumItemsToConsiderForWriting = -1;
+        auto& Version = FEngineVersion::Current();
+        auto& ArraySerializer = Version.GetMajor() > 4 || Version.GetMinor() >= 23 ? *(FFastArraySerializer*)((uint8*)this + sizeof(TMap<int32, FGuidReferencesMap>)) : *this;
+
+        ArraySerializer.CachedNumItems = -1;
+        ArraySerializer.CachedNumItemsToConsiderForWriting = -1;
     }
 
     void IncrementArrayReplicationKey()
