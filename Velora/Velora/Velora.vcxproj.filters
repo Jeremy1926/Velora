@@ -1183,6 +1183,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Abilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortServerBotManagerAthena.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1749,6 +1752,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortServerBotManagerAthena.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -9,6 +9,7 @@
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/AI/AthenaAISystem.h"
 #include "Athena/AI/AthenaAIPerceptionManager.h"
+#include "Athena/FortServerBotManagerAthena.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
@@ -48,6 +49,27 @@ UClass* AFortGameModeAthena::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
 
     return Class;
+}
+
+void AFortGameModeAthena::InitGameState()
+{
+    DETOUR(AFortGameModeAthena, InitGameState, Anchor::Hook()
+        .If(AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("ServerBotManagerClass"))) != nullptr)
+        .String(TEXT("&AFortGameModeAthena::OnGamePhaseStepChanged"))
+        .Start()
+        .Inline());
+
+    Original();
+
+    UClass* ServerBotManagerClass = GetServerBotManagerClass();
+    auto ServerBotManager = NewObject<UFortServerBotManagerAthena>(this, ServerBotManagerClass ? ServerBotManagerClass : UFortServerBotManagerAthena::StaticClass());
+
+    ServerBotManager->GetCachedGameMode() = this;
+    ServerBotManager->GetCachedGameState() = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    GetServerBotManager() = ServerBotManager;
+
+    if (auto PhoebeEnable = IConsoleManager::Get().FindConsoleVariable(TEXT("Phoebe.Enable")))
+        PhoebeEnable->Set(TEXT("0"), ECVF_SetByCode);
 }
 
 bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
@@ -543,6 +565,20 @@ UAthenaAISettings*& AFortGameModeAthena::GetAISettings()
     static auto AISettings = GetClass()->FindPropertyByName(FName(TEXT("AISettings")));
 
     return *AISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(this);
+}
+
+UFortServerBotManagerAthena*& AFortGameModeAthena::GetServerBotManager()
+{
+    static auto ServerBotManager = GetClass()->FindPropertyByName(FName(TEXT("ServerBotManager")));
+
+    return *ServerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this);
+}
+
+TSubclassOf<UFortServerBotManagerAthena> AFortGameModeAthena::GetServerBotManagerClass() const
+{
+    static auto ServerBotManagerClass = GetClass()->FindPropertyByName(FName(TEXT("ServerBotManagerClass")));
+
+    return *ServerBotManagerClass->ContainerPtrToValuePtr<TSubclassOf<UFortServerBotManagerAthena>>(this);
 }
 
 bool AFortGameModeAthena::GetDisableGCOnServerDuringMatch() const

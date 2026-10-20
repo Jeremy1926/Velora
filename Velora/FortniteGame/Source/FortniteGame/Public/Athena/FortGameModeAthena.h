@@ -5,6 +5,7 @@
 
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
+class UFortServerBotManagerAthena;
 
 class UAthenaAISettings;
 
@@ -12,6 +13,8 @@ class AFortGameModeAthena : public AFortGamePvPBase
 {
 public:
     static UClass* StaticClass();
+
+    void InitGameState();
 
     bool ReadyToStartMatch_Implementation();
 
@@ -30,6 +33,10 @@ public:
     void OverrideAISettings(UAthenaAISettings* InAISettings);
 
     UAthenaAISettings*& GetAISettings();
+
+    UFortServerBotManagerAthena*& GetServerBotManager();
+
+    TSubclassOf<UFortServerBotManagerAthena> GetServerBotManagerClass() const;
 
     int32& GetWarmupRequiredPlayerCount();
 
