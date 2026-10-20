@@ -351,14 +351,22 @@ bool& AFortPickup::GetTossedFromContainer()
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
-    static auto SetPickupTarget = Scanner::Function<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Call().Get(TEXT("AFortPickup::SetPickupTarget")));
+    static auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call *");
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("AFortPickup::SetPickupTarget")) : 0;
+    static auto SetPickupTarget = Scanner::Function<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(Slot ? nullptr : Call.Target(TEXT("AFortPickup::SetPickupTarget")));
 
-    SetPickupTarget(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
+    (Slot ? Scanner::Virtual<decltype(SetPickupTarget)>(this, Slot) : SetPickupTarget)(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
 float AFortPickup::GetFlyTime() const
 {
-    static auto GetFlyTime = Scanner::Function<float (*)(const AFortPickup*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call 0x*").Call().Find("comiss *").Call().Get(TEXT("AFortPickup::GetFlyTime")));
+    static auto GetFlyTime = []
+    {
+        auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup")).Find("ret").Last("mov byte ptr [rsp+0x20], 0x1").Find("call *");
+        auto SetPickupTarget = Call.Is("call [*]") ? Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup")), Call.Disp()) : Call.Target();
+
+        return Scanner::Function<float (*)(const AFortPickup*)>(Scanner::At(SetPickupTarget).Find("comiss *").Call().Get(TEXT("AFortPickup::GetFlyTime")));
+    }();
 
     return GetFlyTime(this);
 }
