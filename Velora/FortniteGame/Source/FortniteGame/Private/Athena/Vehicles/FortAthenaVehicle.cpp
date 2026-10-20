@@ -59,17 +59,25 @@ void AFortAthenaVehicle::InitializeServerImplementations()
 
 const TCHAR* AFortAthenaVehicle::GetServerFunctionPath(const TCHAR* FunctionName)
 {
-    static auto bSMVehicle = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSMVehicle:ServerUpdatePhysicsParams")) != nullptr;
+    static auto Owner = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerUpdatePhysicsParams")) ? TEXT("FortPhysicsPawn") : StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSMVehicle:ServerUpdatePhysicsParams")) ? TEXT("FortAthenaSMVehicle") : TEXT("FortAthenaVehicle");
     static TCHAR Path[256];
 
-    swprintf_s(Path, TEXT("/Script/FortniteGame.%s:%s"), bSMVehicle ? TEXT("FortAthenaSMVehicle") : TEXT("FortAthenaVehicle"), FunctionName);
+    swprintf_s(Path, TEXT("/Script/FortniteGame.%s:%s"), Owner, FunctionName);
 
     return Path;
 }
 
 void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState)
 {
-    static auto bEncodedRotation = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaVehiclePhysicsState")))->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
+    static auto bEncodedRotation = []
+    {
+        auto PhysicsState = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedPhysicsPawnState"));
+
+        if (!PhysicsState)
+            PhysicsState = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaVehiclePhysicsState"));
+
+        return PhysicsState->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
+    }();
 
     auto PrimitiveComponent = Cast<UPrimitiveComponent>(GetRootComponent());
 
