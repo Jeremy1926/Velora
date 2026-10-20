@@ -6,7 +6,9 @@
 
 FVector FRotator::Vector() const
 {
-    static auto Vector = Scanner::Function<FVector* (*)(const FRotator*, FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector")).Get(TEXT("FRotator::Vector")));
+    static auto Vector = Anchor::Function<FVector* (*)(const FRotator*, FVector*)>(TEXT("FRotator::Vector"))
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector"))
+        .Get();
 
     FVector Result;
 
@@ -33,7 +35,10 @@ FQuat FRotator::Quaternion() const
 
 FRotator FQuat::Rotator() const
 {
-    static auto Rotator = Scanner::Function<FRotator* (*)(const FQuat*, FRotator*)>(Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Call().Get(TEXT("FQuat::Rotator")));
+    static auto Rotator = Anchor::Function<FRotator* (*)(const FQuat*, FRotator*)>(TEXT("FQuat::Rotator"))
+        .Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
+        .Call()
+        .Get();
 
     FRotator Result;
 
@@ -46,7 +51,9 @@ const FQuat FQuat::Identity(0, 0, 0, 1);
 
 FVector FMath::VRand()
 {
-    static auto VRand = Scanner::Function<FVector* (*)(FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Get(TEXT("UKismetMathLibrary::RandomUnitVector")));
+    static auto VRand = Anchor::Function<FVector* (*)(FVector*)>(TEXT("UKismetMathLibrary::RandomUnitVector"))
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector"))
+        .Get();
 
     FVector Result;
 
@@ -55,12 +62,11 @@ FVector FMath::VRand()
 
 FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
 {
-    static auto VRandCone = []
-    {
-        auto RandomUnitVectorInCone = Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone"));
-
-        return Scanner::Function<FVector* (*)(FVector*, FVector const&, float)>((RandomUnitVectorInCone.Get() ? RandomUnitVectorInCone : Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))).Get(TEXT("FMath::VRandCone")));
-    }();
+    static auto VRandCone = Anchor::Function<FVector* (*)(FVector*, FVector const&, float)>(TEXT("FMath::VRandCone"))
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone"))
+        .Or()
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))
+        .Get();
 
     FVector Result;
 
