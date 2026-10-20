@@ -16,6 +16,7 @@ class UFortItemDefinition;
 class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
 class UStatManager;
+struct FFrame;
 enum class EFortQuickBars : uint8;
 enum class EFortResourceType : uint8;
 
@@ -107,6 +108,10 @@ public:
     bool RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars);
 
     void RemoveAllInventoryItems();
+
+    void DropAllItems(const UFortItemDefinition* IgnoreItemDef, bool bIgnoreBuildingMaterials);
+
+    void execDropAllItems(FFrame& Stack, void* const Z_Param__Result);
 
     void RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition);
 

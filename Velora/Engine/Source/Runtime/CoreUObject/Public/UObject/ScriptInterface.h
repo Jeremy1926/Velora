@@ -7,6 +7,12 @@ class UObject;
 class FScriptInterface
 {
 public:
+    FORCEINLINE FScriptInterface()
+        : ObjectPointer(nullptr)
+        , InterfacePointer(nullptr)
+    {
+    }
+
     FORCEINLINE UObject* GetObject() const
     {
         return ObjectPointer;

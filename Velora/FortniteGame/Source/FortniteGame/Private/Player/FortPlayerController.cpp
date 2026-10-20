@@ -32,6 +32,7 @@
 #include "Math/TransformVectorized.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -55,6 +56,20 @@ static auto ClientActivateSlot = []
 }();
 
 static auto ActivateSlot = ClientActivateSlot ? nullptr : DetourCall(TEXT("AFortPlayerController::ActivateSlot"), Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Get(), &AFortPlayerController::ActivateSlot);
+
+static auto execDropAllItems = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerController::execDropAllItems, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPlayerController::execDropAllItems);
+
+    return true;
+}();
 
 static auto DropItemsOnPawnDestruction = []
 {
@@ -410,6 +425,40 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
 
         bDroppedItems = true;
     }
+}
+
+void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDef, bool bIgnoreBuildingMaterials)
+{
+    static auto WorldResource = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WorldResource")));
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory)
+        return;
+
+    TArray<TPair<FGuid, int32>> ItemsToDrop;
+
+    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    {
+        auto ItemDefinition = ItemEntry.GetItemDefinition();
+
+        if (ItemDefinition && ItemDefinition != IgnoreItemDef && (!bIgnoreBuildingMaterials || ItemDefinition->GetItemType() != WorldResource))
+            ItemsToDrop.Add({ ItemEntry.GetItemGuid(), ItemEntry.GetCount() });
+    }
+
+    for (auto& ItemToDrop : ItemsToDrop)
+        ServerSpawnInventoryDrop_Implementation(ItemToDrop.Key, ItemToDrop.Value);
+}
+
+void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
+{
+    UFortItemDefinition* IgnoreItemDef = nullptr;
+    uint32 bIgnoreBuildingMaterials = 0;
+
+    Stack.StepCompiledIn(&IgnoreItemDef);
+    Stack.StepCompiledIn(&bIgnoreBuildingMaterials);
+    Stack.Code += !!Stack.Code;
+
+    DropAllItems(IgnoreItemDef, !!bIgnoreBuildingMaterials);
 }
 
 UClass* AFortPlayerController::StaticClass()

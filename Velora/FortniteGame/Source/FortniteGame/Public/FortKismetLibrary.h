@@ -10,6 +10,7 @@ class AFortPickup;
 class AFortPlayerController;
 struct FFortAbilitySetHandle;
 struct FFortItemEntry;
+struct FFrame;
 struct FGuid;
 class IAbilitySystemInterface;
 class IFortInventoryOwnerInterface;
@@ -23,6 +24,8 @@ public:
     static FFortAbilitySetHandle EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject);
 
     static void GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer);
+
+    void execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result);
 
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);
 

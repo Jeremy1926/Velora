@@ -15,6 +15,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -65,10 +66,40 @@ FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<I
     return Handle;
 }
 
+static auto execGiveItemToInventoryOwner = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execGiveItemToInventoryOwner, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&UFortKismetLibrary::execGiveItemToInventoryOwner);
+
+    return true;
+}();
+
 void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer)
 {
     if (auto PlayerController = Cast<AFortPlayerController>(InventoryOwner.GetObject()))
         K2_GiveItemToPlayer(PlayerController, ItemDefinition, NumberToGive);
+}
+
+void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result)
+{
+    TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner;
+    UFortWorldItemDefinition* ItemDefinition = nullptr;
+    int32 NumberToGive = 0;
+    uint32 bNotifyPlayer = 0;
+
+    Stack.StepCompiledIn(&InventoryOwner);
+    Stack.StepCompiledIn(&ItemDefinition);
+    Stack.StepCompiledIn(&NumberToGive);
+    Stack.StepCompiledIn(&bNotifyPlayer);
+    Stack.Code += !!Stack.Code;
+
+    GiveItemToInventoryOwner(InventoryOwner, ItemDefinition, NumberToGive, !!bNotifyPlayer);
 }
 
 void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive)
