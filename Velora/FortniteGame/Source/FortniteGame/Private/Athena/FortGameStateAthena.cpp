@@ -175,6 +175,7 @@ void AFortGameStateAthena::StreamAdditionalPlaylistLevels()
     static auto BasePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("BasePlaylist"))) : nullptr;
     static auto OverridePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("OverridePlaylist"))) : nullptr;
     static auto AdditionalLevels = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("AdditionalLevels")));
+    static auto AdditionalLevelsServerOnly = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("AdditionalLevelsServerOnly")));
 
     auto PlaylistInfo = CurrentPlaylistInfo ? CurrentPlaylistInfo->ContainerPtrToValuePtr<void>(this) : nullptr;
     auto Playlist = PlaylistInfo ? *OverridePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo) : *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
@@ -188,7 +189,16 @@ void AFortGameStateAthena::StreamAdditionalPlaylistLevels()
     for (auto& Level : *AdditionalLevels->ContainerPtrToValuePtr<TArray<TAssetPtr<UWorld>>>(Playlist))
     {
         if (!Level.IsNull())
-            StartStreamingAdditionalPlaylistLevel(FName(*Level.GetLongPackageName()));
+            StartStreamingAdditionalPlaylistLevel(FName(*Level.GetLongPackageName()), false);
+    }
+
+    if (!AdditionalLevelsServerOnly)
+        return;
+
+    for (auto& Level : *AdditionalLevelsServerOnly->ContainerPtrToValuePtr<TArray<TAssetPtr<UWorld>>>(Playlist))
+    {
+        if (!Level.IsNull())
+            StartStreamingAdditionalPlaylistLevel(FName(*Level.GetLongPackageName()), true);
     }
 }
 

@@ -37,5 +37,5 @@ public:
 
     AFortWorldManager* GetWorldManager() const;
 
-    void StartStreamingAdditionalPlaylistLevel(FName LevelName);
+    void StartStreamingAdditionalPlaylistLevel(FName LevelName, bool bIsServerOnly);
 };

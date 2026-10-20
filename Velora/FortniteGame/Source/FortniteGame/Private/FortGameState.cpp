@@ -54,12 +54,12 @@ AFortWorldManager* AFortGameState::GetWorldManager() const
     return *WorldManager->ContainerPtrToValuePtr<AFortWorldManager*>(this);
 }
 
-void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName)
+void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName, bool bIsServerOnly)
 {
-    static auto StartStreamingAdditionalPlaylistLevel = Anchor::Function<void (*)(AFortGameState*, FName)>(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel"))
+    static auto StartStreamingAdditionalPlaylistLevel = Anchor::Function<void (*)(AFortGameState*, FName, bool)>(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel"))
         .String(TEXT("PLAYLIST: Failed to locate valid level to be streamed %s"))
         .Start()
         .Get();
 
-    StartStreamingAdditionalPlaylistLevel(this, LevelName);
+    StartStreamingAdditionalPlaylistLevel(this, LevelName, bIsServerOnly);
 }
