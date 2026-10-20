@@ -164,10 +164,19 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
     static auto Restart = []
     {
         auto ReturnPlayersToLobby = Scanner::String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame].")).Start().Find("lea rax, [0x*]").Target(TEXT("AFortGameModeAthena::ReturnPlayersToLobby"));
-        auto Restart = Scanner::At(ReturnPlayersToLobby).Find("ret").Last("call [rax+0x*]").Slot(TEXT("AFortGameSession::Restart"));
+        auto Call = Scanner::At(ReturnPlayersToLobby).Find("ret").Last("call *");
+
+        if (Call.Is("call 0x*"))
+        {
+            auto Ticker = (const void* const*)Scanner::At(Call.Call().Get(TEXT("AFortGameModeAthena::RestartGameSession"))).Find("lea rax, [0x*]").Target();
+            auto Execute = Ticker ? Scanner::Slot(TEXT("TWeakBaseFunctorDelegateInstance::Execute"), Ticker, [](const Scanner::FCode& Entry) { return Entry.Is("sub rsp, *; mov rax, [rcx+0x*]; mov rcx, [rax+0x*]; test rcx, rcx; jz *; mov rax, [rcx]; call [rax+0x*]"); }) : 0;
+
+            Call = Scanner::At(Scanner::IsSlot(Execute) ? Ticker[Execute / sizeof(void*)] : nullptr).Find("call [rax+0x*]");
+        }
+
         auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameSession"));
 
-        return DetourVTable(TEXT("AFortGameSession::Restart"), VTable, Restart, &AFortGameSession::Restart);
+        return DetourVTable(TEXT("AFortGameSession::Restart"), VTable, Call.Slot(TEXT("AFortGameSession::Restart")), &AFortGameSession::Restart);
     }();
 
     static auto SpawnLoot = []
