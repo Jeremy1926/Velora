@@ -376,6 +376,9 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\AI\Navigation">
       <UniqueIdentifier>{697DE69D-B1EE-4114-BE62-44A389ABC488}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\NavigationSystem\Public\NavMesh">
+      <UniqueIdentifier>{640C7C73-082E-42C5-ADD3-1DD6235EA6AE}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1225,6 +1228,18 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavSystem.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\NavigationSystem\Public\NavigationData.h">
+      <Filter>Engine\Source\Runtime\NavigationSystem\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\NavigationSystem\Public\NavMesh\RecastNavMesh.h">
+      <Filter>Engine\Source\Runtime\NavigationSystem\Public\NavMesh</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\FortNavMesh.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavMesh.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1811,6 +1826,9 @@
       <Filter>Engine\Source\Runtime\NavigationSystem\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavSystem.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\AI\Navigation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavMesh.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\AI\Navigation</Filter>
     </ClCompile>
   </ItemGroup>
