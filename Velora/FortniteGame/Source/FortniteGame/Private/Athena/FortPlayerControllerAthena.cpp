@@ -23,7 +23,8 @@ UClass* AFortPlayerControllerAthena::StaticClass()
 
 FFortAthenaLoadout* AFortPlayerControllerAthena::GetCustomizationLoadout()
 {
-    static auto CustomizationLoadout = GetClass()->FindPropertyByName(FName(TEXT("CustomizationLoadout")));
+    static auto Property = GetClass()->FindPropertyByName(FName(TEXT("CustomizationLoadout")));
+    static auto CustomizationLoadout = Property ? Property : GetClass()->FindPropertyByName(FName(TEXT("CosmeticLoadoutPC")));
 
     return CustomizationLoadout ? CustomizationLoadout->ContainerPtrToValuePtr<FFortAthenaLoadout>(this) : nullptr;
 }
