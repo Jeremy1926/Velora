@@ -92,15 +92,28 @@ void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventor
 
 void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result)
 {
+    static auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"));
+    static auto bHasItemLevel = Function->FindPropertyByName(FName(TEXT("ItemLevel"))) != nullptr;
+    static auto bHasPickupInstigatorHandle = Function->FindPropertyByName(FName(TEXT("PickupInstigatorHandle"))) != nullptr;
+
     TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner;
     UFortWorldItemDefinition* ItemDefinition = nullptr;
     int32 NumberToGive = 0;
     uint32 bNotifyPlayer = 0;
+    int32 ItemLevel = 0;
+    int32 PickupInstigatorHandle = 0;
 
     Stack.StepCompiledIn(&InventoryOwner);
     Stack.StepCompiledIn(&ItemDefinition);
     Stack.StepCompiledIn(&NumberToGive);
     Stack.StepCompiledIn(&bNotifyPlayer);
+
+    if (bHasItemLevel)
+        Stack.StepCompiledIn(&ItemLevel);
+
+    if (bHasPickupInstigatorHandle)
+        Stack.StepCompiledIn(&PickupInstigatorHandle);
+
     Stack.Code += !!Stack.Code;
 
     GiveItemToInventoryOwner(InventoryOwner, ItemDefinition, NumberToGive, !!bNotifyPlayer);
