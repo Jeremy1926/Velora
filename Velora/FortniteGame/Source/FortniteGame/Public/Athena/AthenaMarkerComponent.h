@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "Containers/ScriptArray.h"
+#include "Engine/NetSerialization.h"
 #include "Math/Vector.h"
 #include "UObject/SoftObjectPtr.h"
 #include "UObject/WeakObjectPtrTemplates.h"
@@ -8,6 +10,7 @@
 class AActor;
 class AFortPlayerState;
 class UFortItemDefinition;
+class UScriptStruct;
 
 enum class EFortWorldMarkerType : uint8;
 
@@ -28,6 +31,17 @@ struct FFortWorldMarkerData
     TSoftObjectPtr<AActor> MarkedActor;
     TWeakObjectPtr<AFortPlayerState> Owner;
     float CreationTime;
+};
+
+struct FFortWorldMarkerContainer : public FFastArraySerializer
+{
+    static UScriptStruct* StaticStruct();
+
+    FFortWorldMarkerData& AddOrGetMarker(const FFortWorldMarkerData& MarkerData);
+
+    bool RemoveMarker(const FMarkerID& MarkerID);
+
+    FScriptArray& GetMarkers();
 };
 
 struct FFortClientMarkerRequest
@@ -52,4 +66,6 @@ public:
     void ServerAddMapMarker_Implementation(FFortClientMarkerRequest MarkerRequest);
 
     void ServerRemoveMapMarker_Implementation(FMarkerID MarkerID);
+
+    FFortWorldMarkerContainer& GetMarkerStream();
 };

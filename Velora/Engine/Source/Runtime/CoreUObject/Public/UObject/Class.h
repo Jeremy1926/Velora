@@ -30,6 +30,10 @@ class UStruct : public UField
 public:
     UProperty* FindPropertyByName(FName InName) const;
 
+    void InitializeStruct(void* Dest, int32 ArrayDim = 1) const;
+
+    void DestroyStruct(void* Dest, int32 ArrayDim = 1) const;
+
     FORCEINLINE UStruct* GetSuperStruct() const
     {
         return GetStruct()->SuperStruct;
@@ -69,6 +73,8 @@ private:
 
 class UScriptStruct : public UStruct
 {
+public:
+    void CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim = 1) const;
 };
 
 class UClass : public UStruct

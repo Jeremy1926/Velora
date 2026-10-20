@@ -16,6 +16,27 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
     return FindPropertyByName(this, InName);
 }
 
+void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
+{
+    static auto InitializeStruct = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r8d, 0x1").Find("call [*+0x*]").Slot(TEXT("UStruct::InitializeStruct"));
+
+    Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, InitializeStruct)(this, Dest, ArrayDim);
+}
+
+void UStruct::DestroyStruct(void* Dest, int32 ArrayDim) const
+{
+    static auto DestroyStruct = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r8d, 0x1").Find("call [*+0x*]").Slot(TEXT("UStruct::InitializeStruct")) + (int32)sizeof(void*);
+
+    Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, DestroyStruct)(this, Dest, ArrayDim);
+}
+
+void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim) const
+{
+    static auto CopyScriptStruct = Scanner::Function<void (*)(const UScriptStruct*, void*, void const*, int32)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r9d, 0x1").Find("call 0x*").Target(TEXT("UScriptStruct::CopyScriptStruct")));
+
+    CopyScriptStruct(this, Dest, Src, ArrayDim);
+}
+
 static int32 FuncOffset()
 {
     static auto Func = Scanner::String(TEXT("Failed to bind native function %s.%s")).Start().Find("mov [*+0x*], rax").Disp(TEXT("UFunction::Func"));

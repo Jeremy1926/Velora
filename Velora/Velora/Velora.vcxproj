@@ -163,6 +163,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainersFwd.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainerAllocationPolicies.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\Array.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ScriptArray.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\UnrealString.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\EnumAsByte.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Templates\ChooseClass.h" />
