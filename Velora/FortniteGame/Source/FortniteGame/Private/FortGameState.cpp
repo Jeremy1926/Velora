@@ -39,7 +39,10 @@ bool AFortGameState::AreAllAdditionalPlaylistLevelsLoaded() const
 
 bool AFortGameState::AreAllAdditionalPlaylistLevelsVisible() const
 {
-    static auto AreAllAdditionalPlaylistLevelsVisible = Scanner::Function<bool (*)(const AFortGameState*)>(Scanner::String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f")).Call(3).Get(TEXT("AFortGameState::AreAllAdditionalPlaylistLevelsVisible")));
+    static auto AreAllAdditionalPlaylistLevelsVisible = Anchor::Function<bool (*)(const AFortGameState*)>(TEXT("AFortGameState::AreAllAdditionalPlaylistLevelsVisible"))
+        .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
+        .Call(3)
+        .Get();
 
     return AreAllAdditionalPlaylistLevelsVisible(this);
 }
@@ -53,7 +56,10 @@ AFortWorldManager* AFortGameState::GetWorldManager() const
 
 void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName)
 {
-    static auto StartStreamingAdditionalPlaylistLevel = Scanner::Function<void (*)(AFortGameState*, FName)>(Scanner::String(TEXT("PLAYLIST: Failed to locate valid level to be streamed %s")).Start().Get(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel")));
+    static auto StartStreamingAdditionalPlaylistLevel = Anchor::Function<void (*)(AFortGameState*, FName)>(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel"))
+        .String(TEXT("PLAYLIST: Failed to locate valid level to be streamed %s"))
+        .Start()
+        .Get();
 
     StartStreamingAdditionalPlaylistLevel(this, LevelName);
 }
