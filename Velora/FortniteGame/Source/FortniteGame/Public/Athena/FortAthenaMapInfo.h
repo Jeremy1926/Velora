@@ -12,7 +12,7 @@ public:
 
     void SpawnLlamas();
 
-    FVector PickSupplyDropLocation(const FVector& Center, float Radius) const;
+    FVector PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const;
 
     AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
 

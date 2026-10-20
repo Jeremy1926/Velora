@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortAthenaMapInfo.h"
 #include "GameplayEffectTypes.h"
+#include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -20,6 +21,7 @@ void AFortAthenaMapInfo::SpawnLlamas()
     auto SafeZoneRadius = GetSafeZoneRadius();
     auto SupplyDropMinPlacementHeight = GetSupplyDropMinPlacementHeight();
     auto SupplyDropMaxPlacementHeight = GetSupplyDropMaxPlacementHeight();
+    auto DisableSupplyDropsSpawningOverWater = IConsoleManager::Get().FindConsoleVariable(TEXT("Athena.DisableSupplyDropsSpawningOverWater"));
 
     if (!LlamaClass || !SafeZoneRadius)
         return;
@@ -34,20 +36,20 @@ void AFortAthenaMapInfo::SpawnLlamas()
 
     for (int32 Index = 0; Index < LlamaQuantity; Index++)
     {
-        const FVector SpawnLocation = PickSupplyDropLocation(MapCenter, Radius);
+        const FVector SpawnLocation = PickSupplyDropLocation(MapCenter, Radius, DisableSupplyDropsSpawningOverWater && DisableSupplyDropsSpawningOverWater->GetInt() == 1, TraceStartZ, TraceEndZ);
         const FRotator SpawnRotation{ 0.0f, FMath::FRand() * 360.0f, 0.0f };
 
         SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, LlamaClass, TraceStartZ, TraceEndZ);
     }
 }
 
-FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius) const
+FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const
 {
-    static auto PickSupplyDropLocation = Scanner::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float)>(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation")));
+    static auto PickSupplyDropLocation = Scanner::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float, bool, float, float)>(Scanner::String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location.")).Start().Get(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation")));
 
     FVector Location;
 
-    return *PickSupplyDropLocation(this, &Location, Center, Radius);
+    return *PickSupplyDropLocation(this, &Location, Center, Radius, bDisableSupplyDropsSpawningOverWater, TraceStartZ, TraceEndZ);
 }
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
