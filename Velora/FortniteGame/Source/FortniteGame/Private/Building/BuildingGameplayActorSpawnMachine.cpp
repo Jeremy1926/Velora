@@ -280,7 +280,7 @@ void ABuildingGameplayActorSpawnMachine::SkydiveIfAirborne(AFortPlayerPawn* Play
     FHitResult OutHit;
     const bool bHit = UKismetSystemLibrary::LineTraceSingle(this, Start, Start + FVector(0.0f, 0.0f, GetHeightCheckForSkydive()), ETraceTypeQuery::TraceTypeQuery7, false, ActorsToIgnore, EDrawDebugTrace::None, OutHit, true, FLinearColor(1.0f, 0.0f, 0.0f, 1.0f), FLinearColor(0.0f, 1.0f, 0.0f, 1.0f), 5.0f);
 
-    if (!bHit || OutHit.Actor.Get() != this)
+    if (!bHit || OutHit.GetActor().Get() != this)
         Player->BeginSkydiving(false);
 }
 

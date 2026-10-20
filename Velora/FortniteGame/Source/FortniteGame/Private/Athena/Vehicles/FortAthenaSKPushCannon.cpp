@@ -119,7 +119,7 @@ void AFortAthenaSKPushCannon::PrelaunchDestroyBuildings(const TArray<FHitResult>
 
     for (auto& HitResult : HitActors)
     {
-        auto HitActor = HitResult.Actor.Get();
+        auto HitActor = HitResult.GetActor().Get();
 
         if (!HitActor || !HitActor->CanBeDamaged() || HitActor->IsA(BP_DeimosRift_C) || !HitActor->IsA(ABuildingActor::StaticClass()))
             continue;

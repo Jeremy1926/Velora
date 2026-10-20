@@ -620,6 +620,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\Collision.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\WorldCollision.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp" />

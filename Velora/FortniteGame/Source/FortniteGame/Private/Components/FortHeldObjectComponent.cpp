@@ -144,7 +144,7 @@ void UFortHeldObjectComponent::PlaceHeldObject()
 
     DetachFromOwningPawn();
 
-    RootComponent->K2_SetWorldLocationAndRotation(Hit.Location, FRotator{ 0.f, GetObjectPickupRotation().Yaw + (float)(int32)PlayerPawn->GetActorRotation().Yaw, 0.f }, false, true);
+    RootComponent->K2_SetWorldLocationAndRotation(Hit.GetLocation(), FRotator{ 0.f, GetObjectPickupRotation().Yaw + (float)(int32)PlayerPawn->GetActorRotation().Yaw, 0.f }, false, true);
 
     GetHeldObjectState() = EHeldObjectState::Placed;
 

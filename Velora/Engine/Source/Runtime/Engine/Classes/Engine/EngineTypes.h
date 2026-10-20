@@ -7,8 +7,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
-class UPhysicalMaterial;
-class UPrimitiveComponent;
+class UScriptStruct;
 
 enum class ELevelCollectionType
 {
@@ -170,32 +169,25 @@ enum EObjectTypeQuery
     ObjectTypeQuery_MAX,
 };
 
-struct FHitResult
+struct alignas(8) FHitResult
 {
-    FHitResult()
-        : BoneName(NAME_None)
-        , MyBoneName(NAME_None)
-    {
-        FMemory::Memzero(this, sizeof(FHitResult));
-        Time = 1.f;
-    }
+    FHitResult();
 
-    uint8 bBlockingHit : 1;
-    uint8 bStartPenetrating : 1;
-    int32 FaceIndex;
-    float Time;
-    float Distance;
-    FVector_NetQuantize Location;
-    FVector_NetQuantize ImpactPoint;
-    FVector_NetQuantizeNormal Normal;
-    FVector_NetQuantizeNormal ImpactNormal;
-    FVector_NetQuantize TraceStart;
-    FVector_NetQuantize TraceEnd;
-    float PenetrationDepth;
-    int32 Item;
-    TWeakObjectPtr<UPhysicalMaterial> PhysMaterial;
-    TWeakObjectPtr<AActor> Actor;
-    TWeakObjectPtr<UPrimitiveComponent> Component;
-    FName BoneName;
-    FName MyBoneName;
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    float& GetTime();
+
+    FVector_NetQuantize& GetLocation();
+
+    TWeakObjectPtr<AActor>& GetActor();
+
+private:
+    uint8 Data[0x100];
+};
+
+template<>
+class TArray<FHitResult, FDefaultAllocator> : public TRuntimeSizedArray<FHitResult>
+{
 };
