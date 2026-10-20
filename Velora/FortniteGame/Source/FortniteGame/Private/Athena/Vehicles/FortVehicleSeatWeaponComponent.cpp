@@ -150,8 +150,6 @@ void UFortVehicleSeatWeaponComponent::EquipVehicleWeapon(AFortPawn* FortPawn, FW
 
     if (Weapon && bRestoreWeaponData)
         Weapon->GetLastFireTimeVerified() = CachedWeaponState->LastFireTime;
-
-    PlayerController->ClientEquipItem(ItemGuid, true);
 }
 
 TArray<FWeaponSeatDefinition>& UFortVehicleSeatWeaponComponent::GetWeaponSeatDefinitions()
