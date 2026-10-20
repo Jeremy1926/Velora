@@ -20,35 +20,35 @@ APlayerState* AController::GetPlayerState() const
 
 AActor* AController::GetViewTarget() const
 {
-    static auto GetViewTarget = Anchor::Slot(TEXT("AController::GetViewTarget"))
+    static auto GetViewTarget = Anchor::VirtualFunction<AActor* (*)(const AController*)>(TEXT("AController::GetViewTarget"))
         .Exec(TEXT("/Script/Engine.Controller:GetViewTarget"))
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<AActor* (*)(const AController*)>(this, GetViewTarget)(this);
+    return GetViewTarget(this);
 }
 
 FRotator AController::GetControlRotation() const
 {
-    static auto GetControlRotation = Anchor::Slot(TEXT("AController::GetControlRotation"))
+    static auto GetControlRotation = Anchor::VirtualFunction<FRotator* (*)(const AController*, FRotator*)>(TEXT("AController::GetControlRotation"))
         .Exec(TEXT("/Script/Engine.Controller:GetControlRotation"))
         .Find("call [*+0x*]")
         .Get();
 
     FRotator Result{};
-    Scanner::Virtual<FRotator* (*)(const AController*, FRotator*)>(this, GetControlRotation)(this, &Result);
+    GetControlRotation(this, &Result);
 
     return Result;
 }
 
 void AController::SetControlRotation(const FRotator& NewRotation)
 {
-    static auto SetControlRotation = Anchor::Slot(TEXT("AController::SetControlRotation"))
+    static auto SetControlRotation = Anchor::VirtualFunction<void (*)(AController*, const FRotator&)>(TEXT("AController::SetControlRotation"))
         .Exec(TEXT("/Script/Engine.Controller:SetControlRotation"))
         .Find("call [*+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(AController*, const FRotator&)>(this, SetControlRotation)(this, NewRotation);
+    SetControlRotation(this, NewRotation);
 }
 
 FName& AController::GetStateName()
@@ -60,18 +60,12 @@ FName& AController::GetStateName()
 
 void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
-    static auto GetPlayerViewPoint = []
-    {
-        auto GetActorEyesViewPoint = Anchor::Slot(TEXT("AActor::GetActorEyesViewPoint"))
-            .Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint"))
-            .Find("call [*+0x*]")
-            .Get();
-        auto Forward = std::format("mov rax, [rcx]; jmp [rax+0x{:x}]", GetActorEyesViewPoint);
+    static auto GetPlayerViewPoint = Anchor::VirtualFunction<void (*)(const AController*, FVector&, FRotator&)>(TEXT("AController::GetPlayerViewPoint"))
+        .Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint"))
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("AActor::GetActorEyesViewPoint"))
+        .ForwarderIn(TEXT("/Script/Engine.Default__Controller"))
+        .Get();
 
-        return Anchor::Slot(TEXT("AController::GetPlayerViewPoint"))
-            .Virtual(TEXT("/Script/Engine.Default__Controller"), [&](const Anchor::FCode& Entry) { return Entry.Is(Forward); })
-            .Get();
-    }();
-
-    Scanner::Virtual<void (*)(const AController*, FVector&, FRotator&)>(this, GetPlayerViewPoint)(this, Location, Rotation);
+    GetPlayerViewPoint(this, Location, Rotation);
 }

@@ -186,7 +186,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             }
         }
 
-        static auto bPersistentGameplayEffects = Scanner::String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects")).Get() != nullptr;
+        static auto bPersistentGameplayEffects = Anchor::Exists()
+            .String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects"))
+            .Get();
 
         if (bInitializeGameplay && bPersistentGameplayEffects)
         {
@@ -261,7 +263,9 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
     if (DETOUR_ORIGINAL(AFortGameModeAthena, OnPlaylistDataLoaded))
         Original();
 
-    static auto bPlaylistGarbageCollection = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f")).Get() != nullptr;
+    static auto bPlaylistGarbageCollection = Anchor::Exists()
+        .String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f"))
+        .Get();
 
     if (bPlaylistGarbageCollection && GetDisableGCOnServerDuringMatch())
         IConsoleManager::Get().FindConsoleVariable(TEXT("gc.TimeBetweenPurgingPendingKillObjects"))->Set(TEXT("0"), ECVF_SetByCode);
@@ -315,57 +319,58 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .LogSlot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")));
 
-    static auto Restart = []
-    {
-        auto ReturnPlayersToLobby = Scanner::String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame].")).Start().Find("lea rax, [0x*]").Target(TEXT("AFortGameModeAthena::ReturnPlayersToLobby"));
-        auto Call = Scanner::At(ReturnPlayersToLobby).Find("ret").Last("call *");
+    static auto Restart = THook(TEXT("AFortGameSession::Restart"), &AFortGameSession::Restart)
+        .String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame]."))
+        .Start()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Log(TEXT("AFortGameModeAthena::ReturnPlayersToLobby"))
+        .Find("ret")
+        .Last("call *")
+        .Is("call 0x*")
+        .Call()
+        .Log(TEXT("AFortGameModeAthena::RestartGameSession"))
+        .Find("lea rax, [0x*]")
+        .Target()
+        .SlotHere("sub rsp, *; mov rax, [rcx+0x*]; mov rcx, [rax+0x*]; test rcx, rcx; jz *; mov rax, [rcx]; call [rax+0x*]")
+        .LogSlot(TEXT("TWeakBaseFunctorDelegateInstance::Execute"))
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortGameSession::Restart"))
+        .Or()
+        .String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame]."))
+        .Start()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Find("ret")
+        .Last("call *")
+        .LogSlot(TEXT("AFortGameSession::Restart"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortGameSession"));
 
-        if (Call.Is("call 0x*"))
-        {
-            auto Ticker = (const void* const*)Scanner::At(Call.Call().Get(TEXT("AFortGameModeAthena::RestartGameSession"))).Find("lea rax, [0x*]").Target();
-            auto Execute = Ticker ? Scanner::Slot(TEXT("TWeakBaseFunctorDelegateInstance::Execute"), Ticker, [](const Scanner::FCode& Entry) { return Entry.Is("sub rsp, *; mov rax, [rcx+0x*]; mov rcx, [rax+0x*]; test rcx, rcx; jz *; mov rax, [rcx]; call [rax+0x*]"); }) : 0;
+    static auto SpawnLoot = THook(TEXT("ABuildingContainer::SpawnLoot"), &ABuildingContainer::SpawnLoot)
+        .Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer"))
+        .Find("jmp [*]")
+        .LogSlot(TEXT("ABuildingContainer::BounceContainer"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__BuildingContainer"), sizeof(void*))
+        .InVTable(TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
-            Call = Scanner::At(Scanner::IsSlot(Execute) ? Ticker[Execute / sizeof(void*)] : nullptr).Find("call [rax+0x*]");
-        }
+    static auto GivePickupToSlot = Anchor::Slot(TEXT("AFortPickup::GivePickupTo"))
+        .String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d"))
+        .Start()
+        .Find("jmp [*+0x*]")
+        .Or()
+        .FieldVirtualAny(TEXT("/Script/FortniteGame.Default__FortPickup"), ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role"))),
+            "cmp byte ptr [rcx+%x], 0x3; jnz *; test rdx, rdx; jz *",
+            "push rbx; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; mov rbx, rcx; jnz *; test rdx, rdx; jz *",
+            "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; movzx edi, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *")
+        .Get();
 
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameSession"));
+    static auto PickupAthenaGivePickupTo = THook(TEXT("AFortPickupAthena::GivePickupTo"), &AFortPickup::GivePickupTo)
+        .UseSlot(TEXT("/Script/FortniteGame.Default__FortPickupAthena"), GivePickupToSlot)
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
 
-        return DetourVTable(TEXT("AFortGameSession::Restart"), VTable, Call.Slot(TEXT("AFortGameSession::Restart")), &AFortGameSession::Restart);
-    }();
-
-    static auto SpawnLoot = []
-    {
-        auto BounceContainer = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingContainer:BounceContainer")).Find("jmp [*]").Slot(TEXT("ABuildingContainer::BounceContainer"));
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingContainer"));
-
-        return DetourVTable(TEXT("ABuildingContainer::SpawnLoot"), VTable, Scanner::IsSlot(BounceContainer) ? BounceContainer + (int32)sizeof(void*) : 0, &ABuildingContainer::SpawnLoot);
-    }();
-
-    static auto GivePickupTo = []
-    {
-        auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickup"));
-        auto GivePickupTo = Scanner::String(TEXT("%s did not have PickupTargetInventoryOwnerInterface to pickup %s, already dead: %d")).Start().Find("jmp [*+0x*]").Disp();
-
-        if (!GivePickupTo)
-        {
-            auto Role = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role")))->GetOffset_ForInternal();
-            auto Body = std::format("cmp byte ptr [rcx+{:#x}], 0x3; jnz *; test rdx, rdx; jz *", Role);
-            auto FrameBody = std::format("push rbx; sub rsp, 0x20; cmp byte ptr [rcx+{:#x}], 0x3; mov rbx, rcx; jnz *; test rdx, rdx; jz *", Role);
-            auto DestoryAfterPickupBody = std::format("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+{:#x}], 0x3; movzx edi, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *", Role);
-
-            GivePickupTo = Scanner::Slot(TEXT("AFortPickup::GivePickupTo"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Body) || Entry.Is(FrameBody) || Entry.Is(DestoryAfterPickupBody); });
-        }
-        else
-        {
-            GivePickupTo = Scanner::Slot(TEXT("AFortPickup::GivePickupTo"), GivePickupTo);
-        }
-
-        auto AthenaVTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPickupAthena"));
-
-        DetourVTable(TEXT("AFortPickupAthena::GivePickupTo"), AthenaVTable, GivePickupTo, &AFortPickup::GivePickupTo);
-
-        return AFortPickup::GameGivePickupTo = DetourVTable(TEXT("AFortPickup::GivePickupTo"), VTable, GivePickupTo, &AFortPickup::GivePickupTo);
-    }();
+    static auto GivePickupTo = AFortPickup::GameGivePickupTo = THook(TEXT("AFortPickup::GivePickupTo"), &AFortPickup::GivePickupTo)
+        .UseSlot(TEXT("/Script/FortniteGame.Default__FortPickup"), GivePickupToSlot)
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPickup"));
 
     static auto ServerHandlePickup = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickup"))
@@ -402,70 +407,20 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-    static auto AttemptSpawnResources = []
-    {
-        auto AttemptSpawnResources = Scanner::String("OwnedBuildingDamaged").Find("call [*+0x*]", 2).Slot(TEXT("ABuildingSMActor::AttemptSpawnResources"));
-        auto BuildingSMActorClass = ABuildingSMActor::StaticClass();
-        auto Stub = Scanner::Virtual<const void*>(BuildingSMActorClass->GetDefaultObject(false), AttemptSpawnResources);
+    static auto AttemptSpawnResources = THook(TEXT("ABuildingSMActor::AttemptSpawnResources"), &ABuildingSMActor::AttemptSpawnResources)
+        .String("OwnedBuildingDamaged")
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("ABuildingSMActor::AttemptSpawnResources"))
+        .InChildVTablesCounted(ABuildingSMActor::StaticClass());
 
-        auto Classes = 0;
-
-        for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
-        {
-            auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
-
-            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(BuildingSMActorClass))
-                continue;
-
-            if (auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false))
-            {
-                if (Stub && Scanner::Virtual<const void*>(DefaultObject, AttemptSpawnResources) == Stub)
-                {
-                    DetourVTable(nullptr, *(void***)DefaultObject, AttemptSpawnResources, &ABuildingSMActor::AttemptSpawnResources);
-                    Classes++;
-                }
-            }
-        }
-
-        UE_LOG(LogVelora, Log, TEXT("Hooked ABuildingSMActor::AttemptSpawnResources in %d classes"), Classes);
-
-        return AttemptSpawnResources;
-    }();
-
-    static auto SetupCachedHostVehicleRepped = []
-    {
-        auto AttachWeaponTo = Scanner::String(TEXT("DebugVehicleWeaponAttachment: AFortWeaponRangedForVehicle::AttachWeaponTo(Actor:%s(Role: %s))  Failed to set up MountedWeaponInfoRepped.GetHostVehicleCached()!")).Start();
-
-        if (!AttachWeaponTo.Get())
-            return 0;
-
-        auto SetupCachedHostVehicleRepped = AttachWeaponTo.Find("lea rcx, [*+0x*]; mov rdx, *; mov rax, [rcx]; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("IFortMountedWeaponInterface::SetupCachedHostVehicleRepped"));
-        auto FortMountedWeaponInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMountedWeaponInterface"));
-        auto Classes = 0;
-
-        for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
-        {
-            auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
-
-            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(AFortWeapon::StaticClass()))
-                continue;
-
-            auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false);
-            auto MountedWeaponInterface = DefaultObject ? DefaultObject->GetInterfaceAddress(FortMountedWeaponInterface) : nullptr;
-
-            if (MountedWeaponInterface && Scanner::At(Scanner::Virtual<const void*>(MountedWeaponInterface, SetupCachedHostVehicleRepped)).Is("ret*"))
-            {
-                DetourVTable(nullptr, *(void***)MountedWeaponInterface, SetupCachedHostVehicleRepped, &IFortMountedWeaponInterface::SetupCachedHostVehicleRepped);
-                Classes++;
-            }
-        }
-
-        UE_LOG(LogVelora, Log, TEXT("Hooked IFortMountedWeaponInterface::SetupCachedHostVehicleRepped in %d classes"), Classes);
-
-        return SetupCachedHostVehicleRepped;
-    }();
+    static auto SetupCachedHostVehicleRepped = THook(TEXT("IFortMountedWeaponInterface::SetupCachedHostVehicleRepped"), &IFortMountedWeaponInterface::SetupCachedHostVehicleRepped)
+        .String(TEXT("DebugVehicleWeaponAttachment: AFortWeaponRangedForVehicle::AttachWeaponTo(Actor:%s(Role: %s))  Failed to set up MountedWeaponInfoRepped.GetHostVehicleCached()!"))
+        .Optional()
+        .Start()
+        .Find("lea rcx, [*+0x*]; mov rdx, *; mov rax, [rcx]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("IFortMountedWeaponInterface::SetupCachedHostVehicleRepped"))
+        .InInterfaceVTables(AFortWeapon::StaticClass(), (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMountedWeaponInterface")), "ret*");
 
     static auto BeginPlay = THook(TEXT("ABuildingContainer::BeginPlay"), &ABuildingContainer::BeginPlay)
         .String(TEXT("ReceiveBeginPlay"))
@@ -481,8 +436,15 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .LogSlot(TEXT("AActor::BeginPlay"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
-    static auto bTakesSucceeded = Scanner::At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment)).Is("test dl, dl");
-    static auto bStripped = Scanner::At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment)).Is("ret*");
+    static auto bTakesSucceeded = Anchor::Exists()
+        .At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment))
+        .Is("test dl, dl")
+        .Get();
+
+    static auto bStripped = Anchor::Exists()
+        .At(DETOUR_ORIGINAL(AFortGameModeAthena, OnGivenMatchAssignment))
+        .Is("ret*")
+        .Get();
 
     if (bStripped)
     {
@@ -599,38 +561,13 @@ int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()
 
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
-    static auto RedirectLootTierGroup = Scanner::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>([this]
-    {
-        auto VTable = *(const uint8_t***)this;
-        auto Image = Scanner::Base();
-        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
-        auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));
-        auto RedirectMap = RedirectAthenaLootTierGroups ? std::format("mov *, [*+{:#x}]", RedirectAthenaLootTierGroups->GetOffset_ForInternal()) : std::string();
-
-        for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
-        {
-            if (VTable[Index] < Image || VTable[Index] >= ImageEnd)
-                continue;
-
-            if (RedirectAthenaLootTierGroups)
-            {
-                if (Scanner::At(VTable[Index]).Has(RedirectMap))
-                    return Scanner::At(VTable[Index]).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
-
-                continue;
-            }
-
-            for (auto Name = Scanner::At(VTable[Index]).Find("lea rdx, [0x*]"); Name.Get(); Name = Name.Find("lea rdx, [0x*]"))
-            {
-                auto Target = Name.Target();
-
-                if (Target >= Image && Target + sizeof("Loot_AthenaSupplyDrop") <= ImageEnd && !memcmp(Target, "Loot_AthenaSupplyDrop", sizeof("Loot_AthenaSupplyDrop")))
-                    return Scanner::At(VTable[Index]).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
-            }
-        }
-
-        return Scanner::At(nullptr).Get(TEXT("AFortGameModeAthena::RedirectLootTierGroup"));
-    }());
+    static auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));
+    static auto RedirectLootTierGroup = Anchor::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>(TEXT("AFortGameModeAthena::RedirectLootTierGroup"))
+        .FieldUserOf(this, "mov *, [*+%x]", RedirectAthenaLootTierGroups)
+        .Or()
+        .If(!RedirectAthenaLootTierGroups)
+        .NameUserOf(this, "Loot_AthenaSupplyDrop")
+        .Get();
 
     FName Result(LootTierGroup);
 

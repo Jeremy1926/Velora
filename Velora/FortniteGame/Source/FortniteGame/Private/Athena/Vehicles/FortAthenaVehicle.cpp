@@ -19,46 +19,27 @@ UClass* AFortAthenaVehicle::StaticClass()
 
 void AFortAthenaVehicle::InitializeServerImplementations()
 {
-    static auto ServerImplementations = []
-    {
-        auto PhysicsFunctionName = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerMove")) ? TEXT("ServerMove") : TEXT("ServerUpdatePhysicsParams");
-        auto ServerUpdatePhysicsParams = (UFunction*)StaticFindObject(nullptr, nullptr, GetServerFunctionPath(PhysicsFunctionName));
+    static auto ServerUpdatePhysicsParams = (UFunction*)StaticFindObject(nullptr, nullptr, GetServerFunctionPath(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerMove")) ? TEXT("ServerMove") : TEXT("ServerUpdatePhysicsParams")));
 
-        if (!ServerUpdatePhysicsParams)
-            return false;
+    if (!ServerUpdatePhysicsParams)
+        return;
 
-        auto ServerUpdatePhysicsParamsExec = Scanner::Exec(GetServerFunctionPath(PhysicsFunctionName));
-        auto Implementation = ServerUpdatePhysicsParamsExec.Find("call [rax+*]", 2);
-        auto ServerUpdatePhysicsParams_Implementation = (Implementation.Get() ? Implementation : ServerUpdatePhysicsParamsExec.Find("call [rax+*]")).Slot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"));
-        auto ServerUpdateInputParams = Scanner::Exec(GetServerFunctionPath(TEXT("ServerUpdateInputParams")));
-        auto ServerUpdateInputParams_Implementation = ServerUpdateInputParams.Get() ? ServerUpdateInputParams.Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation")) : 0;
-        auto OwnerClass = (UClass*)ServerUpdatePhysicsParams->GetOuter();
-        auto OwnerDefaultObject = OwnerClass->GetDefaultObject(false);
-        auto PhysicsStub = Scanner::Virtual<const void*>(OwnerDefaultObject, ServerUpdatePhysicsParams_Implementation);
-        auto InputStub = Scanner::Virtual<const void*>(OwnerDefaultObject, ServerUpdateInputParams_Implementation);
+    static auto ServerUpdatePhysicsParams_Implementation = THook(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"), &AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation)
+        .Exec(ServerUpdatePhysicsParams)
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"))
+        .Or()
+        .Exec(ServerUpdatePhysicsParams)
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"))
+        .InChildVTables((UClass*)ServerUpdatePhysicsParams->GetOuter());
 
-        for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
-        {
-            auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
-
-            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(OwnerClass))
-                continue;
-
-            if (auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false))
-            {
-                auto VTable = *(void***)DefaultObject;
-
-                if (PhysicsStub && Scanner::Virtual<const void*>(DefaultObject, ServerUpdatePhysicsParams_Implementation) == PhysicsStub)
-                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"), VTable, ServerUpdatePhysicsParams_Implementation, &AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation);
-
-                if (InputStub && Scanner::Virtual<const void*>(DefaultObject, ServerUpdateInputParams_Implementation) == InputStub)
-                    DetourVTable(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation"), VTable, ServerUpdateInputParams_Implementation, &AFortAthenaVehicle::ServerUpdateInputParams_Implementation);
-            }
-        }
-
-        return true;
-    }();
+    static auto ServerUpdateInputParams_Implementation = THook(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation"), &AFortAthenaVehicle::ServerUpdateInputParams_Implementation)
+        .Exec(GetServerFunctionPath(TEXT("ServerUpdateInputParams")))
+        .Optional()
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation"))
+        .InChildVTables((UClass*)ServerUpdatePhysicsParams->GetOuter());
 }
 
 const TCHAR* AFortAthenaVehicle::GetServerFunctionPath(const TCHAR* FunctionName)
@@ -109,7 +90,7 @@ void AFortAthenaVehicle::ServerUpdateInputParams_Implementation(const FReplicate
 
 void AFortAthenaVehicle::WakeUp()
 {
-    static auto WakeUp = Anchor::Slot(TEXT("AFortAthenaVehicle::WakeUp"))
+    static auto WakeUp = Anchor::VirtualFunction<void (*)(AFortAthenaVehicle*)>(TEXT("AFortAthenaVehicle::WakeUp"))
         .Exec(GetServerFunctionPath(TEXT("OnRep_InputParams")))
         .Find("jmp *")
         .Is("jmp [rax+*]")
@@ -120,14 +101,31 @@ void AFortAthenaVehicle::WakeUp()
         .Find("jmp [rax+*]")
         .Get();
 
-    Scanner::Virtual<void (*)(AFortAthenaVehicle*)>(this, WakeUp)(this);
+    WakeUp(this);
 }
 
 AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
 {
-    static auto Call = Scanner::Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
-    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("AFortAthenaVehicle::GetPawnAtSeat")) : 0;
-    static auto GetPawnAtSeat = Scanner::Function<AFortPlayerPawn* (*)(const AFortAthenaVehicle*, int32)>(Slot ? nullptr : Call.Target(TEXT("AFortAthenaVehicle::GetPawnAtSeat")));
+    static auto VirtualGetPawnAtSeat = Anchor::VirtualFunction<AFortPlayerPawn* (*)(const AFortAthenaVehicle*, int32)>(TEXT("AFortAthenaVehicle::GetPawnAtSeat"))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call [*]")
+        .Optional()
+        .Get();
 
-    return (Slot ? Scanner::Virtual<decltype(GetPawnAtSeat)>(this, Slot) : GetPawnAtSeat)(this, SeatIdx);
+    if (VirtualGetPawnAtSeat)
+        return VirtualGetPawnAtSeat(this, SeatIdx);
+
+    static auto GetPawnAtSeat = Anchor::Function<AFortPlayerPawn* (*)(const AFortAthenaVehicle*, int32)>(TEXT("AFortAthenaVehicle::GetPawnAtSeat"))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
+
+    return GetPawnAtSeat(this, SeatIdx);
 }

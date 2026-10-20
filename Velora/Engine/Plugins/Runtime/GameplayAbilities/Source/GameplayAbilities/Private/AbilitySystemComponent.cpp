@@ -8,36 +8,98 @@
 
 FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
 {
-    static auto Call = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
-    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeEffectContext")) : 0;
-    static auto MakeEffectContext = Scanner::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeEffectContext")));
+    static auto VirtualMakeEffectContext = Anchor::VirtualFunction<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(TEXT("UAbilitySystemComponent::MakeEffectContext"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call [*]")
+        .Optional()
+        .Get();
 
     FGameplayEffectContextHandle Context;
-    (Slot ? Scanner::Virtual<decltype(MakeEffectContext)>(this, Slot) : MakeEffectContext)(this, &Context);
+
+    if (VirtualMakeEffectContext)
+    {
+        VirtualMakeEffectContext(this, &Context);
+
+        return Context;
+    }
+
+    static auto MakeEffectContext = Anchor::Function<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(TEXT("UAbilitySystemComponent::MakeEffectContext"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
+
+    MakeEffectContext(this, &Context);
 
     return Context;
 }
 
 FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const
 {
-    static auto Call = Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
-    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")) : 0;
-    static auto MakeOutgoingSpec = Scanner::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::MakeOutgoingSpec")));
+    static auto VirtualMakeOutgoingSpec = Anchor::VirtualFunction<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::MakeOutgoingSpec"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call [*]")
+        .Optional()
+        .Get();
 
     FGameplayEffectSpecHandle SpecHandle;
-    (Slot ? Scanner::Virtual<decltype(MakeOutgoingSpec)>(this, Slot) : MakeOutgoingSpec)(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
+
+    if (VirtualMakeOutgoingSpec)
+    {
+        VirtualMakeOutgoingSpec(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
+
+        return SpecHandle;
+    }
+
+    static auto MakeOutgoingSpec = Anchor::Function<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::MakeOutgoingSpec"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
+
+    MakeOutgoingSpec(this, &SpecHandle, GameplayEffectClass, Level, MoveTemp(Context));
 
     return SpecHandle;
 }
 
 FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey)
 {
-    static auto Call = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf")).Find("call *");
-    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")) : 0;
-    static auto ApplyGameplayEffectSpecToSelf = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf")));
+    static auto VirtualApplyGameplayEffectSpecToSelf = Anchor::VirtualFunction<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf"))
+        .Find("call *")
+        .Is("call [*]")
+        .Optional()
+        .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
-    (Slot ? Scanner::Virtual<decltype(ApplyGameplayEffectSpecToSelf)>(this, Slot) : ApplyGameplayEffectSpecToSelf)(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
+
+    if (VirtualApplyGameplayEffectSpecToSelf)
+    {
+        VirtualApplyGameplayEffectSpecToSelf(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
+
+        return ActiveGameplayEffectHandle;
+    }
+
+    static auto ApplyGameplayEffectSpecToSelf = Anchor::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const FGameplayEffectSpec&, FPredictionKey)>(TEXT("UAbilitySystemComponent::ApplyGameplayEffectSpecToSelf"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf"))
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
+
+    ApplyGameplayEffectSpecToSelf(this, &ActiveGameplayEffectHandle, Spec, PredictionKey);
 
     return ActiveGameplayEffectHandle;
 }
@@ -56,14 +118,14 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
 
 void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
-    static auto OnTagUpdated = Anchor::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"))
+    static auto OnTagUpdated = Anchor::VirtualFunction<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(TEXT("UAbilitySystemComponent::OnTagUpdated"))
         .String(TEXT("UFortAbilitySystemComponent::OnTagUpdated is updating the HealthRegenDelay tag. bTagExists: %s"))
         .Start()
         .Log(TEXT("UFortAbilitySystemComponent::OnTagUpdated"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortAbilitySystemComponent"))
         .Get();
 
-    Scanner::Virtual<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(this, OnTagUpdated)(this, Tag, TagExists);
+    OnTagUpdated(this, Tag, TagExists);
 }
 
 void UAbilitySystemComponent::RemoveGameplayCue(const FGameplayTag GameplayCueTag)
@@ -73,20 +135,31 @@ void UAbilitySystemComponent::RemoveGameplayCue(const FGameplayTag GameplayCueTa
 
 void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag GameplayCueTag, FActiveGameplayCueContainer& GameplayCueContainer)
 {
-    static auto Call = []
-    {
-        auto K2_RemoveGameplayCue = Scanner::Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue")).Find("call [*+0x*]").Slot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"));
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.Default__GameplayAbility"));
+    static auto VirtualRemoveGameplayCue_Internal = Anchor::VirtualFunction<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal"))
+        .Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue"))
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"))
+        .Entry(TEXT("/Script/GameplayAbilities.Default__GameplayAbility"))
+        .FindEither("lea r8, [*+0x*]; call *", "lea r8, [*+0x*]; mov rdx, *; call *")
+        .Find("call *")
+        .Is("call [*]")
+        .Optional()
+        .Get();
 
-        auto Body = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_RemoveGameplayCue));
-        auto Call = Body.Find("lea r8, [*+0x*]; call *");
+    if (VirtualRemoveGameplayCue_Internal)
+        return VirtualRemoveGameplayCue_Internal(this, GameplayCueTag, GameplayCueContainer);
 
-        return (Call.Get() ? Call : Body.Find("lea r8, [*+0x*]; mov rdx, *; call *")).Find("call *");
-    }();
-    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")) : 0;
-    static auto RemoveGameplayCue_Internal = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(Slot ? nullptr : Call.Target(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal")));
+    static auto RemoveGameplayCue_Internal = Anchor::Function<void (*)(UAbilitySystemComponent*, FGameplayTag, FActiveGameplayCueContainer&)>(TEXT("UAbilitySystemComponent::RemoveGameplayCue_Internal"))
+        .Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue"))
+        .Find("call [*+0x*]")
+        .Entry(TEXT("/Script/GameplayAbilities.Default__GameplayAbility"))
+        .FindEither("lea r8, [*+0x*]; call *", "lea r8, [*+0x*]; mov rdx, *; call *")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
 
-    (Slot ? Scanner::Virtual<decltype(RemoveGameplayCue_Internal)>(this, Slot) : RemoveGameplayCue_Internal)(this, GameplayCueTag, GameplayCueContainer);
+    RemoveGameplayCue_Internal(this, GameplayCueTag, GameplayCueContainer);
 }
 
 FActiveGameplayCueContainer& UAbilitySystemComponent::GetActiveGameplayCues()
@@ -98,13 +171,11 @@ FActiveGameplayCueContainer& UAbilitySystemComponent::GetActiveGameplayCues()
 
 FGameplayTagCountContainer& UAbilitySystemComponent::GetGameplayTagCountContainer()
 {
-    static auto GameplayTagCountContainer = []
-    {
-        auto RecoverSprint = Scanner::String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)")).Start();
-        auto UpdateTagMap = RecoverSprint.Find("lea rcx, [*+0x*]; * r8d, 0xffffffff");
-
-        return (UpdateTagMap.Get() ? UpdateTagMap : RecoverSprint.Find("lea rcx, [*+0x*]; mov *, *; lea rdx, [*+0x*]; lea r8d, [r9-0x1]")).Disp(TEXT("UAbilitySystemComponent::GameplayTagCountContainer"));
-    }();
+    static auto GameplayTagCountContainer = Anchor::Offset(TEXT("UAbilitySystemComponent::GameplayTagCountContainer"))
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Start()
+        .FindEither("lea rcx, [*+0x*]; * r8d, 0xffffffff", "lea rcx, [*+0x*]; mov *, *; lea rdx, [*+0x*]; lea r8d, [r9-0x1]")
+        .Disp();
 
     return *(FGameplayTagCountContainer*)((uint8_t*)this + GameplayTagCountContainer);
 }

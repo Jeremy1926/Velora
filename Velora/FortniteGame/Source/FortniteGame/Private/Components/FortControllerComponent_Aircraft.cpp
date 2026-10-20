@@ -19,14 +19,21 @@ UClass* UFortControllerComponent_Aircraft::StaticClass()
 
 bool UFortControllerComponent_Aircraft::IsInAircraft() const
 {
-    static auto InAircraft = Scanner::Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:IsInAircraft")).Find("movzx eax, byte ptr [rcx+0x*]").Disp(TEXT("UFortControllerComponent_Aircraft::IsInAircraft"));
+    static auto InAircraft = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::IsInAircraft"))
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:IsInAircraft"))
+        .Find("movzx eax, byte ptr [rcx+0x*]")
+        .Disp();
 
     return *((uint8_t*)this + InAircraft);
 }
 
 bool& UFortControllerComponent_Aircraft::GetIsAttemptingAircraftJump()
 {
-    static auto bIsAttemptingAircraftJump = Scanner::String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying.")).Start().Find("cmp [rax+0x*], r*").Disp(TEXT("UFortControllerComponent_Aircraft::bIsAttemptingAircraftJump"));
+    static auto bIsAttemptingAircraftJump = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::bIsAttemptingAircraftJump"))
+        .String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying."))
+        .Start()
+        .Find("cmp [rax+0x*], r*")
+        .Disp();
 
     return *(bool*)((uint8_t*)this + bIsAttemptingAircraftJump);
 }

@@ -4,7 +4,6 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-
 TArray<UChildConnection*>& UNetConnection::GetChildren()
 {
     static auto Children = GetClass()->FindPropertyByName(FName(TEXT("Children")));
@@ -63,7 +62,11 @@ bool UNetConnection::GetInternalAck() const
 
 EConnectionState UNetConnection::GetState() const
 {
-    static auto State = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("cmp dword ptr [*], 0x1").Disp(TEXT("UNetConnection::State"));
+    static auto State = Anchor::Offset(TEXT("UNetConnection::State"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("cmp dword ptr [*], 0x1")
+        .Disp();
 
     return *(EConnectionState*)((uint8_t*)this + State);
 }
@@ -75,95 +78,117 @@ double UNetConnection::GetLastReceiveTime() const
     return *LastReceiveTime->ContainerPtrToValuePtr<double>(this);
 }
 
-static int32_t TickCountOffset()
-{
-    static auto TickCount = []
-    {
-        auto IsNetReady = Anchor::Slot(TEXT("UNetConnection::IsNetReady"))
-            .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
-            .Start()
-            .Find("xor edx, edx")
-            .Find("call [*]")
-            .Get();
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
-
-        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, IsNetReady)).Find("mov [*], e*").Disp(TEXT("UNetConnection::QueuedBits")) + (int32_t)sizeof(int32);
-    }();
-
-    return TickCount;
-}
-
 int32 UNetConnection::GetTickCount() const
 {
-    return *(int32*)((uint8_t*)this + TickCountOffset());
+    static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("xor edx, edx")
+        .Find("call [*]")
+        .LogSlot(TEXT("UNetConnection::IsNetReady"))
+        .Entry(TEXT("/Script/Engine.Default__NetConnection"))
+        .Find("mov [*], e*")
+        .Disp();
+
+    return *(int32*)((uint8_t*)this + QueuedBits + sizeof(int32));
 }
 
 void UNetConnection::SetTickCount(int32 InTickCount)
 {
-    *(int32*)((uint8_t*)this + TickCountOffset()) = InTickCount;
+    static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("xor edx, edx")
+        .Find("call [*]")
+        .LogSlot(TEXT("UNetConnection::IsNetReady"))
+        .Entry(TEXT("/Script/Engine.Default__NetConnection"))
+        .Find("mov [*], e*")
+        .Disp();
+
+    *(int32*)((uint8_t*)this + QueuedBits + sizeof(int32)) = InTickCount;
 }
 
 void UNetConnection::SetTimeSensitive(bool bInTimeSensitive)
 {
-    static auto TimeSensitive = Scanner::String(TEXT("UNetConnection::Tick: Connection TIMED OUT. Closing connection.")).Start().Find("cmp byte ptr [*+0x???], 0x0").Disp(TEXT("UNetConnection::TimeSensitive"));
+    static auto TimeSensitive = Anchor::Offset(TEXT("UNetConnection::TimeSensitive"))
+        .String(TEXT("UNetConnection::Tick: Connection TIMED OUT. Closing connection."))
+        .Start()
+        .Find("cmp byte ptr [*+0x???], 0x0")
+        .Disp();
 
     *(bool*)((uint8_t*)this + TimeSensitive) = bInTimeSensitive;
 }
 
 TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>& UNetConnection::GetActorChannels()
 {
-    static auto ActorChannels = []
-    {
-        auto Close = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s")).Start();
-        auto Add = Close.Find("add rcx, 0x*");
-        auto Remove = Close.Find("mov rcx, [*+0x28]; call 0x*");
-
-        if (!Remove.Get())
-            Remove = Close.Find("mov rdx, [*+0x68]; call 0x*");
-
-        return Add.Get() ? (int32)Add.Imm(TEXT("UNetConnection::ActorChannels")) : Remove.Call().Find("lea rcx, [rbx+0x*]").Disp(TEXT("UNetConnection::ActorChannels"));
-    }();
+    static auto ActorChannels = Anchor::Offset(TEXT("UNetConnection::ActorChannels"))
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s"))
+        .Start()
+        .Find("add rcx, 0x*")
+        .Or()
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s"))
+        .Start()
+        .Find("mov rcx, [*+0x28]; call 0x*")
+        .Call()
+        .Find("lea rcx, [rbx+0x*]")
+        .Or()
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s"))
+        .Start()
+        .Find("mov rdx, [*+0x68]; call 0x*")
+        .Call()
+        .Find("lea rcx, [rbx+0x*]")
+        .Get();
 
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
 }
 
 TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, double>>& UNetConnection::GetLastUpdateTimes()
 {
-    static auto LastUpdateTimes = Scanner::String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d")).Start().Find("cvtps2pd *").Find("movsd [*], xmm*").Last("lea rcx, [*+0x*]; call 0x*; movsxd rax, *; cmp eax, *").Disp(TEXT("UNetConnection::LastUpdateTimes"));
+    static auto LastUpdateTimes = Anchor::Offset(TEXT("UNetConnection::LastUpdateTimes"))
+        .String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d"))
+        .Start()
+        .Find("cvtps2pd *")
+        .Find("movsd [*], xmm*")
+        .Last("lea rcx, [*+0x*]; call 0x*; movsxd rax, *; cmp eax, *")
+        .Disp();
 
     return *(TMap<TWeakObjectPtr<AActor>, double, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, double>>*)((uint8_t*)this + LastUpdateTimes);
 }
 
 TSet<FNetworkGUID>& UNetConnection::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = []
-    {
-        auto Destroy = Scanner::String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list"));
-        auto Add = Destroy.Find("lea rcx, [*+0x*]; add r8, *");
-
-        return (Add.Get() ? Add : Destroy.Find("add r8, *; lea rcx, [*+0x*]").Find("lea rcx, [*+0x*]")).Disp(TEXT("UNetConnection::DestroyedStartupOrDormantActors"));
-    }();
+    static auto DestroyedStartupOrDormantActors = Anchor::Offset(TEXT("UNetConnection::DestroyedStartupOrDormantActors"))
+        .String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list"))
+        .Find("lea rcx, [*+0x*]; add r8, *")
+        .Or()
+        .String(TEXT("Adding actor NetGUID <%s> to new connection's destroy list"))
+        .Find("add r8, *; lea rcx, [*+0x*]")
+        .Find("lea rcx, [*+0x*]")
+        .Disp();
 
     return *(TSet<FNetworkGUID>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
 TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
 {
-    static auto ClientVisibleLevelNames = Scanner::String(TEXT("ServerUpdateLevelVisibility() Added '%s'")).Last("lea rcx, [*+0x*]; xor r9d, r9d").Disp(TEXT("UNetConnection::ClientVisibleLevelNames"));
+    static auto ClientVisibleLevelNames = Anchor::Offset(TEXT("UNetConnection::ClientVisibleLevelNames"))
+        .String(TEXT("ServerUpdateLevelVisibility() Added '%s'"))
+        .Last("lea rcx, [*+0x*]; xor r9d, r9d")
+        .Disp();
 
     return *(TSet<FName>*)((uint8_t*)this + ClientVisibleLevelNames);
 }
 
 int32 UNetConnection::IsNetReady(bool Saturate)
 {
-    static auto IsNetReady = Anchor::Slot(TEXT("UNetConnection::IsNetReady"))
+    static auto IsNetReady = Anchor::VirtualFunction<int32 (*)(UNetConnection*, bool)>(TEXT("UNetConnection::IsNetReady"))
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("xor edx, edx")
         .Find("call [*]")
         .Get();
 
-    return Scanner::Virtual<int32 (*)(UNetConnection*, bool)>(this, IsNetReady)(this, Saturate);
+    return IsNetReady(this, Saturate);
 }
 
 UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex)
@@ -178,12 +203,12 @@ UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, 
 
 void UNetConnection::FlushDormancy(AActor* Actor)
 {
-    static auto FlushDormancy = Anchor::Slot(TEXT("UNetConnection::FlushDormancy"))
+    static auto FlushDormancy = Anchor::VirtualFunction<void (*)(UNetConnection*, AActor*)>(TEXT("UNetConnection::FlushDormancy"))
         .String(TEXT("FlushDormancy: %s. Connection: %s"))
         .Start()
         .Log(TEXT("UNetConnection::FlushDormancy"))
         .SlotIn(TEXT("/Script/Engine.Default__NetConnection"))
         .Get();
 
-    Scanner::Virtual<void (*)(UNetConnection*, AActor*)>(this, FlushDormancy)(this, Actor);
+    FlushDormancy(this, Actor);
 }

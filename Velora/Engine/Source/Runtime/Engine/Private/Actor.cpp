@@ -60,12 +60,12 @@ FVector AActor::GetActorForwardVector() const
 
 void AActor::SetLifeSpan(float InLifespan)
 {
-    static auto SetLifeSpan = Anchor::Slot(TEXT("AActor::SetLifeSpan"))
+    static auto SetLifeSpan = Anchor::VirtualFunction<void (*)(AActor*, float)>(TEXT("AActor::SetLifeSpan"))
         .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
         .Find("call [*+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(AActor*, float)>(this, SetLifeSpan)(this, InLifespan);
+    SetLifeSpan(this, InLifespan);
 }
 
 void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
@@ -151,20 +151,36 @@ APawn* AActor::GetInstigator() const
 
 bool AActor::IsPendingKillPending() const
 {
-    static auto Destroying = Scanner::String(TEXT("Destroying %s, which doesn't have a valid world pointer"));
-    static auto bActorIsBeingDestroyed = Destroying.Find("test byte ptr [*], 0x*");
-    static auto bActorIsBeingDestroyedSign = Destroying.Find("cmp byte ptr [*], 0x80");
-    static auto Offset = bActorIsBeingDestroyed.Get() ? bActorIsBeingDestroyed.Disp(TEXT("AActor::bActorIsBeingDestroyed")) : bActorIsBeingDestroyedSign.Disp(TEXT("AActor::bActorIsBeingDestroyed"));
-    static auto Mask = bActorIsBeingDestroyed.Get() ? bActorIsBeingDestroyed.Imm() : 0x80;
+    static auto Offset = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Find("test byte ptr [*], 0x*")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Find("cmp byte ptr [*], 0x80")
+        .Disp();
+
+    static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Find("test byte ptr [*], 0x*")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Find("cmp byte ptr [*], 0x80")
+        .Value();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
 }
 
 bool AActor::IsActorInitialized() const
 {
-    static auto bActorInitialized = Scanner::String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. ")).Last("test byte ptr [*], 0x*");
-    static auto Offset = bActorInitialized.Disp(TEXT("AActor::bActorInitialized"));
-    static auto Mask = bActorInitialized.Imm();
+    static auto Offset = Anchor::Offset(TEXT("AActor::bActorInitialized"))
+        .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
+        .Last("test byte ptr [*], 0x*")
+        .Disp();
+
+    static auto Mask = Anchor::Offset(TEXT("AActor::bActorInitialized"))
+        .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
+        .Last("test byte ptr [*], 0x*")
+        .Value();
 
     return *((uint8_t*)this + Offset) & Mask;
 }
@@ -178,12 +194,12 @@ AActor* AActor::GetOwner() const
 
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
 {
-    static auto FindComponentByClass = Anchor::Slot(TEXT("AActor::FindComponentByClass"))
+    static auto FindComponentByClass = Anchor::VirtualFunction<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(TEXT("AActor::FindComponentByClass"))
         .Native(TEXT("/Script/Engine.Actor:GetComponentByClass"))
         .Find("jmp [rax+0x*]")
         .Get();
 
-    return Scanner::Virtual<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(this, FindComponentByClass)(this, ComponentClass);
+    return FindComponentByClass(this, ComponentClass);
 }
 
 ULevel* AActor::GetLevel() const
@@ -193,36 +209,30 @@ ULevel* AActor::GetLevel() const
 
 const AActor* AActor::GetNetOwner() const
 {
-    static auto GetNetOwner = [this]
-    {
-        auto Owner = GetClass()->FindPropertyByName(FName(TEXT("Owner")))->GetOffset_ForInternal();
-        auto Getter = std::format("mov rax, [rcx+0x{:x}]; ret", Owner);
+    static auto GetNetOwner = Anchor::VirtualFunction<const AActor* (*)(const AActor*)>(TEXT("AActor::GetNetOwner"))
+        .FieldVirtual(TEXT("/Script/Engine.Default__Actor"), "mov rax, [rcx+%x]; ret", GetClass()->FindPropertyByName(FName(TEXT("Owner"))))
+        .Get();
 
-        return Anchor::Slot(TEXT("AActor::GetNetOwner"))
-            .Virtual(TEXT("/Script/Engine.Default__Actor"), [&](const Anchor::FCode& Entry) { return Entry.Is(Getter); })
-            .Get();
-    }();
-
-    return Scanner::Virtual<const AActor* (*)(const AActor*)>(this, GetNetOwner)(this);
+    return GetNetOwner(this);
 }
 
 bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* ActorOwner, const AActor* ConnectionActor) const
 {
-    static auto IsRelevancyOwnerFor = Anchor::Slot(TEXT("AActor::IsRelevancyOwnerFor"))
-        .Virtual(TEXT("/Script/Engine.Default__Actor"), [](const Anchor::FCode& Entry) { return Entry.Is("cmp r8, rcx; setz al; ret"); })
+    static auto IsRelevancyOwnerFor = Anchor::VirtualFunction<bool (*)(const AActor*, const AActor*, const AActor*, const AActor*)>(TEXT("AActor::IsRelevancyOwnerFor"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__Actor"), "cmp r8, rcx; setz al; ret")
         .Get();
 
-    return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const AActor*)>(this, IsRelevancyOwnerFor)(this, ReplicatedActor, ActorOwner, ConnectionActor);
+    return IsRelevancyOwnerFor(this, ReplicatedActor, ActorOwner, ConnectionActor);
 }
 
 void AActor::ForceNetUpdate()
 {
-    static auto ForceNetUpdate = Anchor::Slot(TEXT("AActor::ForceNetUpdate"))
+    static auto ForceNetUpdate = Anchor::VirtualFunction<void (*)(AActor*)>(TEXT("AActor::ForceNetUpdate"))
         .Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate"))
         .Find("jmp [*+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(AActor*)>(this, ForceNetUpdate)(this);
+    ForceNetUpdate(this);
 }
 
 void AActor::FlushNetDormancy()

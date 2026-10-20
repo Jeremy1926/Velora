@@ -10,8 +10,8 @@
 
 PATCH(AFortGameSession, ValidatePlayer, Anchor::Patch()
     .String(TEXT("No reservation in game."))
-    .Start()
-    .FindTo("jnz", Scanner::String(TEXT("No reservation in game.")).Last("jnz 0x*").Target())
+    .Last("jnz 0x*")
+    .FirstTo("jnz")
     .Jump(), Anchor::Patch()
     .String(TEXT("No reservation in game."))
     .Last("jnz 0x*")

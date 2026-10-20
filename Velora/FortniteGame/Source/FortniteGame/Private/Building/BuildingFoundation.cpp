@@ -11,28 +11,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static Scanner::FCode PostUpdateCall()
-{
-    static auto SelectAndStreamInLevel = Scanner::String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!")).Start().Get(TEXT("ABuildingFoundation::SelectAndStreamInLevel"));
-    static auto PostUpdateCall = Scanner::Reference(SelectAndStreamInLevel, "call 0x*; or byte ptr [*+0x*], 0x*");
-
-    return PostUpdateCall;
-}
-
-static Scanner::FCode TransformIsSetFlag()
-{
-    static auto TransformIsSetFlag = PostUpdateCall().Last("test byte ptr [*+0x*], 0x*");
-
-    return TransformIsSetFlag;
-}
-
-static Scanner::FCode PostUpdateCalledFlag()
-{
-    static auto PostUpdateCalledFlag = PostUpdateCall().Find("or byte ptr [*+0x*], 0x*");
-
-    return PostUpdateCalledFlag;
-}
-
 void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
 {
     DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
@@ -43,8 +21,21 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
         .Optional()
         .AtCall());
 
-    static auto Offset = TransformIsSetFlag().Disp();
-    static auto Mask = (uint8_t)TransformIsSetFlag().Imm();
+    static auto Offset = Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .DispValue();
+
+    static auto Mask = (uint8_t)Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .Value();
+
     static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
 
     FlushNetDormancy();
@@ -69,7 +60,10 @@ void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentStat
 {
     DETOUR(ABuildingFoundation, PostUpdate, Anchor::Hook()
         .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform))
-        .At(PostUpdateCall())
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Start()
         .Inline());
 
@@ -90,8 +84,20 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
     static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
     static auto bFoundationEnabled = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bFoundationEnabled")));
     static auto bConditionalFoundation = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bConditionalFoundation")));
-    static auto Offset = PostUpdateCalledFlag().Disp(TEXT("ABuildingFoundation::bPostUpdateCalled"));
-    static auto Mask = (uint8_t)PostUpdateCalledFlag().Imm();
+    static auto Offset = Anchor::Offset(TEXT("ABuildingFoundation::bPostUpdateCalled"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
+        .Disp();
+
+    static auto Mask = (uint8_t)Anchor::Offset(TEXT("ABuildingFoundation::bPostUpdateCalled"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
+        .Value();
 
     FlushNetDormancy();
 
@@ -151,7 +157,12 @@ void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* c
 
 void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* ReservedRandomValues)
 {
-    static auto SelectAndStreamInLevel = Scanner::Function<void (*)(ABuildingFoundation*, const FReservedRandomValues*)>(PostUpdateCall().Target());
+    static auto SelectAndStreamInLevel = Anchor::Function<void (*)(ABuildingFoundation*, const FReservedRandomValues*)>(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Target()
+        .Get();
 
     SelectAndStreamInLevel(this, ReservedRandomValues);
 }
@@ -159,8 +170,14 @@ void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* Re
 bool ABuildingFoundation::StreamOutMyBuilding()
 {
     static auto bNeverStreamOut = GetClass()->FindPropertyByName(FName(TEXT("bNeverStreamOut")));
-    static auto Offset = bNeverStreamOut ? bNeverStreamOut->GetOffset_ForInternal() : 0;
-    static auto StreamOutMyBuilding = Scanner::Function<bool (*)(ABuildingFoundation*)>(Offset ? Scanner::Pattern(std::format("80 B9 {:02X} {:02X} {:02X} {:02X} 00 48 8B D9", Offset & 0xFF, (Offset >> 8) & 0xFF, (Offset >> 16) & 0xFF, (Offset >> 24) & 0xFF).c_str()).Start().Get(TEXT("ABuildingFoundation::StreamOutMyBuilding")) : nullptr);
+
+    if (!bNeverStreamOut || !bNeverStreamOut->GetOffset_ForInternal())
+        return false;
+
+    static auto StreamOutMyBuilding = Anchor::Function<bool (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::StreamOutMyBuilding"))
+        .FieldPattern("80 B9 %o 00 48 8B D9", bNeverStreamOut)
+        .Start()
+        .Get();
 
     return StreamOutMyBuilding(this);
 }
@@ -200,13 +217,15 @@ void ABuildingFoundation::OnRep_FoundationEnabledState()
 
 void ABuildingFoundation::OnRep_FoundationEnabled(bool bOldEnabled)
 {
-    static auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabled"));
-    static auto bTakesOldEnabled = Exec.Has("setnz dl; call 0x*");
+    static auto bTakesOldEnabled = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabled"))
+        .Has("setnz dl; call 0x*")
+        .Get();
 
     if (bTakesOldEnabled)
     {
         static auto OnRep_FoundationEnabled = Anchor::Function<void (*)(ABuildingFoundation*, bool)>(TEXT("ABuildingFoundation::OnRep_FoundationEnabled"))
-            .At(Exec)
+            .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabled"))
             .Find("setnz dl; call 0x*")
             .Find("call 0x*")
             .Target()
@@ -217,7 +236,7 @@ void ABuildingFoundation::OnRep_FoundationEnabled(bool bOldEnabled)
     }
 
     static auto OnRep_FoundationEnabled = Anchor::Function<void (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::OnRep_FoundationEnabled"))
-        .At(Exec)
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabled"))
         .Find("jmp 0x*")
         .Target()
         .Get();
@@ -227,8 +246,21 @@ void ABuildingFoundation::OnRep_FoundationEnabled(bool bOldEnabled)
 
 bool ABuildingFoundation::TransformIsSet() const
 {
-    static auto Offset = TransformIsSetFlag().Disp(TEXT("ABuildingFoundation::TransformIsSet"));
-    static auto Mask = TransformIsSetFlag().Imm();
+    static auto Offset = Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .Disp();
+
+    static auto Mask = Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .Value();
+
     static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
 
     if (!FoundationEnabledState)

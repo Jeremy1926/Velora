@@ -35,7 +35,12 @@ TRuntimeSizedArray<FGameplayAbilitySpec>& FGameplayAbilitySpecContainer::GetItem
 
 void FGameplayAbilitySpecHandle::GenerateNewHandle()
 {
-    static auto& GHandle = *(int32*)Scanner::String(TEXT("FGameplayAbilitySpec::FGameplayAbilitySpec for %s from %s")).Start().Find("mov eax, [0x*]").Target(TEXT("FGameplayAbilitySpecHandle::GenerateNewHandle::GHandle"));
+    static auto& GHandle = *Anchor::Data<int32*>(TEXT("FGameplayAbilitySpecHandle::GenerateNewHandle::GHandle"))
+        .String(TEXT("FGameplayAbilitySpec::FGameplayAbilitySpec for %s from %s"))
+        .Start()
+        .Find("mov eax, [0x*]")
+        .Target()
+        .Get();
 
     Handle = GHandle++;
 }

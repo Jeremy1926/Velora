@@ -6,39 +6,29 @@
 
 void APlayerController::SendClientAdjustment()
 {
-    static auto SendClientAdjustment = [this]
-    {
-        auto Pawn = GetClass()->FindPropertyByName(FName(TEXT("Pawn")))->GetOffset_ForInternal();
-        auto AcknowledgedPawn = GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn")))->GetOffset_ForInternal();
-        auto SpectatorPawn = GetClass()->FindPropertyByName(FName(TEXT("SpectatorPawn")))->GetOffset_ForInternal();
-        auto Body = std::format("push *; sub rsp, *; mov *, [rcx+0x{:x}]; cmp [rcx+0x{:x}], *; jz *; cmp qword ptr [rcx+0x{:x}], 0x0", Pawn, AcknowledgedPawn, SpectatorPawn);
+    static auto SendClientAdjustment = Anchor::VirtualFunction<void (*)(APlayerController*)>(TEXT("APlayerController::SendClientAdjustment"))
+        .FieldVirtual(TEXT("/Script/Engine.Default__PlayerController"), "push *; sub rsp, *; mov *, [rcx+%x]; cmp [rcx+%x], *; jz *; cmp qword ptr [rcx+%x], 0x0", GetClass()->FindPropertyByName(FName(TEXT("Pawn"))), GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn"))), GetClass()->FindPropertyByName(FName(TEXT("SpectatorPawn"))))
+        .Get();
 
-        return Anchor::Slot(TEXT("APlayerController::SendClientAdjustment"))
-            .Virtual(TEXT("/Script/Engine.Default__PlayerController"), [&](const Anchor::FCode& Entry) { return Entry.Is(Body); })
-            .Get();
-    }();
-
-    Scanner::Virtual<void (*)(APlayerController*)>(this, SendClientAdjustment)(this);
+    SendClientAdjustment(this);
 }
 
 void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
 {
-    static auto ServerAcknowledgePossessionSlot = Anchor::Slot(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"))
+    static auto ServerAcknowledgePossession = Anchor::VirtualFunction<void (*)(APlayerController*, APawn*)>(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"))
         .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
         .Find("call [rax+*]", 2)
-        .Get();
-
-    static auto ServerAcknowledgePossession = Scanner::Virtual<void (*)(APlayerController*, APawn*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__PlayerController")), ServerAcknowledgePossessionSlot);
+        .Get(TEXT("/Script/Engine.Default__PlayerController"));
 
     ServerAcknowledgePossession(this, P);
 }
 
 void APlayerController::ServerRestartPlayer_Implementation()
 {
-    static auto ServerRestartPlayer = Anchor::Slot(TEXT("APlayerController::ServerRestartPlayer_Implementation"))
+    static auto ServerRestartPlayer = Anchor::VirtualFunction<void (*)(APlayerController*)>(TEXT("APlayerController::ServerRestartPlayer_Implementation"))
         .Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer"))
         .Find("jmp [rax+*]")
         .Get();
 
-    Scanner::Virtual<void (*)(APlayerController*)>(this, ServerRestartPlayer)(this);
+    ServerRestartPlayer(this);
 }

@@ -82,10 +82,25 @@ void UFortHeldObjectComponent::DropHeldObject()
 
 void UFortHeldObjectComponent::PlaceHeldObject()
 {
-    static auto UpdatePlacementPreview = Scanner::String(TEXT("HeldObject.Placement.Mesh")).Start();
-    static auto PlacementForwardDistance = (const float*)UpdatePlacementPreview.Find("movss xmm1, dword ptr [0x*]; movaps xmm6, xmm0").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement forward distance"));
-    static auto PlacementDownDistance = (const float*)UpdatePlacementPreview.Find("subss xmm7, [0x*]").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement down distance"));
-    static auto PlacementTraceChannel = (ECollisionChannel)UpdatePlacementPreview.Find("mov dword ptr [rsp+0x28], 0x*").Imm(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement trace channel"));
+    static auto PlacementForwardDistance = Anchor::Data<const float*>(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement forward distance"))
+        .String(TEXT("HeldObject.Placement.Mesh"))
+        .Start()
+        .Find("movss xmm1, dword ptr [0x*]; movaps xmm6, xmm0")
+        .Target()
+        .Get();
+
+    static auto PlacementDownDistance = Anchor::Data<const float*>(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement down distance"))
+        .String(TEXT("HeldObject.Placement.Mesh"))
+        .Start()
+        .Find("subss xmm7, [0x*]")
+        .Target()
+        .Get();
+
+    static auto PlacementTraceChannel = (ECollisionChannel)Anchor::Offset(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement trace channel"))
+        .String(TEXT("HeldObject.Placement.Mesh"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x28], 0x*")
+        .Imm();
 
     auto Owner = GetOwner();
     auto RootComponent = Owner ? Owner->GetRootComponent() : nullptr;

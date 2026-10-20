@@ -29,7 +29,7 @@ EFortItemType UFortItemDefinition::GetItemType() const
 
 EFortRarity UFortItemDefinition::GetRarity() const
 {
-    static auto GetRarity = Anchor::Slot(TEXT("UFortItemDefinition::GetRarity"))
+    static auto GetRarity = Anchor::VirtualFunction<EFortRarity (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::GetRarity"))
         .Native(TEXT("/Script/FortniteGame.FortItem:GetRarity"))
         .Find("jmp [*]")
         .Or()
@@ -37,12 +37,12 @@ EFortRarity UFortItemDefinition::GetRarity() const
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<EFortRarity (*)(const UFortItemDefinition*)>(this, GetRarity)(this);
+    return GetRarity(this);
 }
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
-    static auto ClampItemLevel = Anchor::Slot(TEXT("UFortItemDefinition::ClampItemLevel"))
+    static auto ClampItemLevel = Anchor::VirtualFunction<int32 (*)(const UFortItemDefinition*, int32)>(TEXT("UFortItemDefinition::ClampItemLevel"))
         .String(TEXT("%s HostUpgradeLevel: %i"))
         .Start()
         .Find("mov rdx, rax; call 0x*")
@@ -51,40 +51,30 @@ int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
         .Find("call [*]")
         .Get();
 
-    return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, int32)>(this, ClampItemLevel)(this, ItemLevel);
+    return ClampItemLevel(this, ItemLevel);
 }
 
 bool UFortItemDefinition::DoesAllowMultipleStacks() const
 {
-    static auto DoesAllowMultipleStacks = []
-    {
-        auto bAllowMultipleStacks = (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")));
-        auto Offset = bAllowMultipleStacks->GetOffset_ForInternal() + bAllowMultipleStacks->GetByteOffset();
-        auto Bit = std::countr_zero(bAllowMultipleStacks->GetFieldMask());
-        auto Getter = Bit ? std::format("mov* *, *[rcx+{:#x}]; shr al, {:#x}; and *", Offset, Bit) : std::format("mov* *, *[rcx+{:#x}]; and *", Offset);
+    static auto DoesAllowMultipleStacks = Anchor::VirtualFunction<bool (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"))
+        .BoolGetter(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks"))))
+        .Get();
 
-        return Anchor::Slot(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Is(Getter); })
-            .Get();
-    }();
-
-    return Scanner::Virtual<bool (*)(const UFortItemDefinition*)>(this, DoesAllowMultipleStacks)(this);
+    return DoesAllowMultipleStacks(this);
 }
 
 int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* AbilitySystemComponent) const
 {
-    static auto GetMaxStackSize = []
-    {
-        auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")));
-        auto bScalableFloat = MaxStackSize->GetSize() != sizeof(int32);
-        auto Compare = bScalableFloat ? std::format("add rcx, {:#x}", MaxStackSize->GetOffset_ForInternal()) : std::format("cmp dword ptr [*+{:#x}], 0x7ffffffe", MaxStackSize->GetOffset_ForInternal());
+    static auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")));
+    static auto GetMaxStackSize = Anchor::VirtualFunction<int32 (*)(const UFortItemDefinition*, const UAbilitySystemComponent*)>(TEXT("UFortItemDefinition::GetMaxStackSize"))
+        .If(MaxStackSize->GetSize() != sizeof(int32))
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "add rcx, %x", MaxStackSize, "cmp eax, 0x7ffffffe")
+        .Or()
+        .If(MaxStackSize->GetSize() == sizeof(int32))
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "cmp dword ptr [*+%x], 0x7ffffffe", MaxStackSize)
+        .Get();
 
-        return Anchor::Slot(TEXT("UFortItemDefinition::GetMaxStackSize"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Start().Has(Compare) && (!bScalableFloat || Entry.Start().Has("cmp eax, 0x7ffffffe")); })
-            .Get();
-    }();
-
-    return Scanner::Virtual<int32 (*)(const UFortItemDefinition*, const UAbilitySystemComponent*)>(this, GetMaxStackSize)(this, AbilitySystemComponent);
+    return GetMaxStackSize(this, AbilitySystemComponent);
 }
 
 void UFortItemDefinition::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const

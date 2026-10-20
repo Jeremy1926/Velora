@@ -13,11 +13,14 @@ UClass* UPrimitiveComponent::StaticClass()
 
 void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCurrent, FName BoneName)
 {
-    static auto VirtualCall = Scanner::Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity")).Find("call [rax+0x*]");
-    static auto Slot = VirtualCall.Get() ? VirtualCall.Slot(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity")) : 0;
+    static auto VirtualSetPhysicsLinearVelocity = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
+        .Find("call [rax+0x*]")
+        .Optional()
+        .Get();
 
-    if (Scanner::IsSlot(Slot))
-        return Scanner::Virtual<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(this, Slot)(this, NewVel, bAddToCurrent, BoneName);
+    if (VirtualSetPhysicsLinearVelocity)
+        return VirtualSetPhysicsLinearVelocity(this, NewVel, bAddToCurrent, BoneName);
 
     static auto SetPhysicsLinearVelocity = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
         .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
@@ -28,11 +31,14 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
 
 void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, bool bAddToCurrent, FName BoneName)
 {
-    static auto VirtualCall = Scanner::Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians")).Find("call [rax+0x*]");
-    static auto Slot = VirtualCall.Get() ? VirtualCall.Slot(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians")) : 0;
+    static auto VirtualSetPhysicsAngularVelocityInRadians = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
+        .Find("call [rax+0x*]")
+        .Optional()
+        .Get();
 
-    if (Scanner::IsSlot(Slot))
-        return Scanner::Virtual<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(this, Slot)(this, NewAngVel, bAddToCurrent, BoneName);
+    if (VirtualSetPhysicsAngularVelocityInRadians)
+        return VirtualSetPhysicsAngularVelocityInRadians(this, NewAngVel, bAddToCurrent, BoneName);
 
     static auto SetPhysicsAngularVelocityInRadians = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
         .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))

@@ -5,21 +5,22 @@
 
 uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
 {
-    static auto Strihash_DEPRECATED = []
-    {
-        auto Option = Scanner::String(TEXT("match.option.warmupRequiredPlayerCount"));
-        auto Strihash = (Option.Get() ? Option : Scanner::String(TEXT("match.option.customKey"))).Call(2).Call();
-
-        while (Strihash.Get() && !Strihash.Has("shr *, 0x8"))
-            Strihash = Strihash.Call();
-
-        return Strihash.Get(TEXT("FCrc::Strihash_DEPRECATED"));
-    }();
+    static auto Strihash_DEPRECATED = Anchor::Function<const void*>(TEXT("FCrc::Strihash_DEPRECATED"))
+        .String(TEXT("match.option.warmupRequiredPlayerCount"))
+        .Call(2)
+        .Call()
+        .CallUntil("shr *, 0x8")
+        .Or()
+        .String(TEXT("match.option.customKey"))
+        .Call(2)
+        .Call()
+        .CallUntil("shr *, 0x8")
+        .Get();
 
     auto& Version = FEngineVersion::Current();
 
     if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
-        return Scanner::Function<uint32 (*)(const int32, const TCHAR*)>(Strihash_DEPRECATED)((int32)wcslen(Data), Data);
+        return ((uint32 (*)(const int32, const TCHAR*))Strihash_DEPRECATED)((int32)wcslen(Data), Data);
 
-    return Scanner::Function<uint32 (*)(const TCHAR*)>(Strihash_DEPRECATED)(Data);
+    return ((uint32 (*)(const TCHAR*))Strihash_DEPRECATED)(Data);
 }

@@ -30,17 +30,17 @@ int32& FMountedWeaponInfoRepped::GetHostVehicleSeatIndexCached()
 
 AActor* IFortMountedWeaponInterface::GetHostVehicleCached()
 {
-    static auto GetHostVehicleCached = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetHostVehicleCached"))
+    static auto GetHostVehicleCached = Anchor::VirtualFunction<AActor* (*)(IFortMountedWeaponInterface*)>(TEXT("IFortMountedWeaponInterface::GetHostVehicleCached"))
         .Exec(TEXT("/Script/FortniteGame.FortMountedWeaponInterface:GetHostVehicleCached"))
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<AActor* (*)(IFortMountedWeaponInterface*)>(this, GetHostVehicleCached)(this);
+    return GetHostVehicleCached(this);
 }
 
 FMountedWeaponInfoRepped& IFortMountedWeaponInterface::GetMountedWeaponInfoRepped()
 {
-    static auto GetMountedWeaponInfoRepped = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetMountedWeaponInfoRepped"))
+    static auto GetMountedWeaponInfoRepped = Anchor::VirtualFunction<FMountedWeaponInfoRepped* (*)(IFortMountedWeaponInterface*)>(TEXT("IFortMountedWeaponInterface::GetMountedWeaponInfoRepped"))
         .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
         .Find("jmp 0x*")
         .Target()
@@ -48,12 +48,12 @@ FMountedWeaponInfoRepped& IFortMountedWeaponInterface::GetMountedWeaponInfoReppe
         .Find("call [rax+0x*]")
         .Get();
 
-    return *Scanner::Virtual<FMountedWeaponInfoRepped* (*)(IFortMountedWeaponInterface*)>(this, GetMountedWeaponInfoRepped)(this);
+    return *GetMountedWeaponInfoRepped(this);
 }
 
 AFortPlayerPawn* IFortMountedWeaponInterface::GetInstigatorPawn()
 {
-    static auto GetInstigatorPawn = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetInstigatorPawn"))
+    static auto GetInstigatorPawn = Anchor::VirtualFunction<AFortPlayerPawn* (*)(IFortMountedWeaponInterface*)>(TEXT("IFortMountedWeaponInterface::GetInstigatorPawn"))
         .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
         .Find("jmp 0x*")
         .Target()
@@ -62,7 +62,7 @@ AFortPlayerPawn* IFortMountedWeaponInterface::GetInstigatorPawn()
         .Find("call [rax+0x*]", 2)
         .Get();
 
-    return Scanner::Virtual<AFortPlayerPawn* (*)(IFortMountedWeaponInterface*)>(this, GetInstigatorPawn)(this);
+    return GetInstigatorPawn(this);
 }
 
 void IFortMountedWeaponInterface::SetupCachedHostVehicleRepped(AFortWeaponRanged* Weapon)

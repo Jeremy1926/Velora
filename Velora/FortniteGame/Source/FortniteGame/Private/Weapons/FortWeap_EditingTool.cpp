@@ -14,16 +14,11 @@ UClass* AFortWeap_EditingTool::StaticClass()
 
 void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
 {
-    static auto SetEditActor = []
-    {
-        auto EditActor = StaticClass()->FindPropertyByName(FName(TEXT("EditActor")))->GetOffset_ForInternal();
-        auto Store = std::format("cmp byte ptr [rcx+0x*], 0x3; jnz *; mov [rcx+{:#x}], rdx; jmp 0x*", EditActor);
-        auto StoreAndForceNetUpdate = std::format("push rbx; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; mov rax, [rcx]; mov [rcx+{:#x}], rdx; call [rax+0x*]", EditActor);
+    static auto SetEditActor = Anchor::VirtualFunction<void (*)(AFortWeap_EditingTool*, ABuildingSMActor*)>(TEXT("AFortWeap_EditingTool::SetEditActor"))
+        .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "cmp byte ptr [rcx+0x*], 0x3; jnz *; mov [rcx+%x], rdx; jmp 0x*", StaticClass()->FindPropertyByName(FName(TEXT("EditActor"))))
+        .Or()
+        .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; mov rax, [rcx]; mov [rcx+%x], rdx; call [rax+0x*]", StaticClass()->FindPropertyByName(FName(TEXT("EditActor"))))
+        .Get();
 
-        return Anchor::Slot(TEXT("AFortWeap_EditingTool::SetEditActor"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), [&](const Anchor::FCode& Entry) { return Entry.Is(Store) || Entry.Is(StoreAndForceNetUpdate); })
-            .Get();
-    }();
-
-    Scanner::Virtual<void (*)(AFortWeap_EditingTool*, ABuildingSMActor*)>(this, SetEditActor)(this, InEditActor);
+    SetEditActor(this, InEditActor);
 }

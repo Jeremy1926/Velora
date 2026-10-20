@@ -39,18 +39,16 @@ void AFortInventory::HandleInventoryLocalUpdate()
 
 int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const
 {
-    static auto SwapEquippedText = Scanner::String(TEXT("SwapEquippedText"));
-    static auto InventoryGetOverflow = []
-    {
-        auto Call = SwapEquippedText.Find("mov rcx, rax; call 0x*");
+    static auto bInventoryGetOverflow = Anchor::Exists()
+        .String(TEXT("SwapEquippedText"))
+        .FindEither("mov rcx, rax; call 0x*", "mov rcx, *; call 0x*; test eax, eax")
+        .Get();
 
-        return Call.Get() ? Call : SwapEquippedText.Find("mov rcx, *; call 0x*; test eax, eax");
-    }();
-
-    if (InventoryGetOverflow.Get())
+    if (bInventoryGetOverflow)
     {
         static auto GetOverflowFromAddingItem = Anchor::Function<int32 (*)(const AFortInventory*, const FFortItemEntry&)>(TEXT("AFortInventory::GetOverflowFromAddingItem"))
-            .At(InventoryGetOverflow)
+            .String(TEXT("SwapEquippedText"))
+            .FindEither("mov rcx, rax; call 0x*", "mov rcx, *; call 0x*; test eax, eax")
             .Call()
             .Get();
 
@@ -58,7 +56,7 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
     }
 
     static auto GetOverflowFromAddingItem = Anchor::Function<int32 (*)(const FFortItemEntry&, void*, uint8, bool)>(TEXT("AFortInventory::GetOverflowFromAddingItem"))
-        .At(SwapEquippedText)
+        .String(TEXT("SwapEquippedText"))
         .Find("mov rdx, rax; call 0x*; test eax, eax")
         .Call()
         .Get();

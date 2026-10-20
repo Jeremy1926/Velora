@@ -75,12 +75,14 @@ void AFortPlayerPawn::SetHeldObject(AActor* InHeldObject)
 AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior)
 {
     static auto bExitForceBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:ServerOnExitVehicle")))->FindPropertyByName(FName(TEXT("ExitForceBehavior"))) != nullptr;
-    static auto ServerOnExitVehicle = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerOnExitVehicle")).Get(TEXT("AFortPlayerPawn::ServerOnExitVehicle"));
+    static auto ServerOnExitVehicle = Anchor::Function<const void*>(TEXT("AFortPlayerPawn::ServerOnExitVehicle"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerOnExitVehicle"))
+        .Get();
 
     if (bExitForceBehavior)
-        return Scanner::Function<AFortAthenaVehicle* (*)(AFortPlayerPawn*, ETryExitVehicleBehavior)>(ServerOnExitVehicle)(this, ExitForceBehavior);
+        return ((AFortAthenaVehicle* (*)(AFortPlayerPawn*, ETryExitVehicleBehavior))ServerOnExitVehicle)(this, ExitForceBehavior);
 
-    return Scanner::Function<AFortAthenaVehicle* (*)(AFortPlayerPawn*)>(ServerOnExitVehicle)(this);
+    return ((AFortAthenaVehicle* (*)(AFortPlayerPawn*))ServerOnExitVehicle)(this);
 }
 
 void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)
@@ -110,13 +112,13 @@ void AFortPlayerPawn::BeginSkydiving(bool bFromBus)
 
 void AFortPlayerPawn::OnBlueprintPlace()
 {
-    static auto OnBlueprintPlace = []
-    {
-        auto ClientBuild = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerCreateBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
-        auto CheckAutoChangeMaterial = ClientBuild.Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
-
-        return (void (*)(AFortPlayerPawn*))(CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild).Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*").Call().Get(TEXT("AFortPlayerPawn::OnBlueprintPlace"));
-    }();
+    static auto OnBlueprintPlace = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::OnBlueprintPlace"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .TryCall("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*")
+        .Call()
+        .Get();
 
     OnBlueprintPlace(this);
 }
@@ -268,7 +270,8 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
 void AFortPlayerPawn::HandleZiplineStateChanged()
 {
     static auto HandleZiplineStateChanged = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::HandleZiplineStateChanged"))
-        .At(Scanner::CallTo(Scanner::Event(TEXT("ServerSendZiplineState")).Get()))
+        .Event(TEXT("ServerSendZiplineState"))
+        .CallSite()
         .Last("call 0x*")
         .Target()
         .Get();
@@ -359,30 +362,18 @@ void AFortPlayerPawn::execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, v
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 {
-    static auto CanReviveFromDBNO = [this]
-    {
-        auto ResurrectHere = Scanner::String("ResurrectHere").Last("lea rax, [0x*]");
+    static auto CanReviveFromDBNO = Anchor::VirtualFunction<bool (*)(AFortPlayerPawn*, AController*)>(TEXT("AFortPlayerPawn::CanReviveFromDBNO"))
+        .String("ResurrectHere")
+        .Last("lea rax, [0x*]")
+        .Target()
+        .IsCode()
+        .Log(TEXT("AFortPlayerControllerZone::ResurrectHere"))
+        .Find("call [*+0x*]")
+        .Or()
+        .BoolTestIn(this, (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO"))), "; mov r*, rdx; mov r*, rcx")
+        .Get();
 
-        if (Scanner::IsCode(ResurrectHere.Target()))
-            return Scanner::At(ResurrectHere.Target(TEXT("AFortPlayerControllerZone::ResurrectHere"))).Find("call [*+0x*]").Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"));
-
-        auto VTable = *(const uint8_t***)this;
-        auto Image = Scanner::Base();
-        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
-        auto bIsDBNO = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
-        auto Offset = bIsDBNO->GetOffset_ForInternal() + bIsDBNO->GetByteOffset();
-        auto Check = bIsDBNO->GetFieldMask() == 0xFF ? std::format("cmp byte ptr [rcx+{:#x}], 0x0; mov r*, rdx; mov r*, rcx", Offset) : std::format("test byte ptr [rcx+{:#x}], {:#x}; mov r*, rdx; mov r*, rcx", Offset, bIsDBNO->GetFieldMask());
-
-        for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
-        {
-            if (VTable[Index] >= Image && VTable[Index] < ImageEnd && Scanner::At(VTable[Index]).Has(Check))
-                return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), Index * (int32)sizeof(void*));
-        }
-
-        return Scanner::Slot(TEXT("AFortPlayerPawn::CanReviveFromDBNO"), 0);
-    }();
-
-    return Scanner::Virtual<bool (*)(AFortPlayerPawn*, AController*)>(this, CanReviveFromDBNO)(this, EventInstigator);
+    return CanReviveFromDBNO(this, EventInstigator);
 }
 
 void AFortPlayerPawn::UpdateDBNOInteractCollision()

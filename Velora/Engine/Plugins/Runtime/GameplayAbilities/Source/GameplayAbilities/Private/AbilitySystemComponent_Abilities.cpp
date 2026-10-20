@@ -103,12 +103,26 @@ bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHan
 
 FGameplayTagContainer& UAbilitySystemComponent::GetInternalTryActivateAbilityFailureTags()
 {
-    static auto Clear = Scanner::String(TEXT("InternalTryActivateAbility called with invalid Ability")).Start().Find("xor edx, edx");
-    static auto Reset = Clear.Is("xor edx, edx; lea rcx, [*]") ? Clear.Find("lea rcx, [*]") : Clear.Last("lea *, [*]");
-    static auto Global = Reset.Is("lea *, [0x*]") ? (FGameplayTagContainer*)Reset.Target(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags")) : nullptr;
-    static auto Offset = Global ? 0 : Reset.Disp(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"));
+    static auto InternalTryActivateAbilityFailureTags = Anchor::Optional<FGameplayTagContainer*>(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"))
+        .String(TEXT("InternalTryActivateAbility called with invalid Ability"))
+        .Start()
+        .Find("xor edx, edx")
+        .AdjacentOrLast("lea rcx, [*]", "lea *, [*]")
+        .Is("lea *, [0x*]")
+        .Target()
+        .Get();
 
-    return Global ? *Global : *(FGameplayTagContainer*)((uint8_t*)this + Offset);
+    if (InternalTryActivateAbilityFailureTags)
+        return *InternalTryActivateAbilityFailureTags;
+
+    static auto Offset = Anchor::Offset(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"))
+        .String(TEXT("InternalTryActivateAbility called with invalid Ability"))
+        .Start()
+        .Find("xor edx, edx")
+        .AdjacentOrLast("lea rcx, [*]", "lea *, [*]")
+        .Disp();
+
+    return *(FGameplayTagContainer*)((uint8_t*)this + Offset);
 }
 
 void UAbilitySystemComponent::ClientActivateAbilityFailed(FGameplayAbilitySpecHandle AbilityToActivate, int16 PredictionKey)
@@ -150,7 +164,11 @@ void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpe
 
 void UAbilitySystemComponent::ConsumeAllReplicatedData(FGameplayAbilitySpecHandle AbilityHandle, FPredictionKey AbilityOriginalPredictionKey)
 {
-    static auto bReplicatedDataContainer = !Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("imul *, *, 0x*").Get();
+    static auto bReplicatedDataContainer = !Anchor::Exists()
+        .String(TEXT("Ability %s is overriding pending replicated target data."))
+        .Start()
+        .Find("imul *, *, 0x*")
+        .Get();
 
     auto& AbilityTargetDataMap = GetAbilityTargetDataMap();
     FAbilityReplicatedDataCache* CachedData = bReplicatedDataContainer ? ((FGameplayAbilityReplicatedDataContainer&)AbilityTargetDataMap).Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, AbilityOriginalPredictionKey)) : AbilityTargetDataMap.Find(FGameplayAbilitySpecHandleAndPredictionKey(AbilityHandle, AbilityOriginalPredictionKey));
@@ -181,28 +199,41 @@ void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithT
 
 int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const FGameplayEventData* Payload)
 {
-    static auto HandleGameplayEvent = Anchor::Slot(TEXT("UAbilitySystemComponent::HandleGameplayEvent"))
+    static auto HandleGameplayEvent = Anchor::VirtualFunction<int32 (*)(UAbilitySystemComponent*, FGameplayTag, const FGameplayEventData*)>(TEXT("UAbilitySystemComponent::HandleGameplayEvent"))
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor"))
         .Find("mov rcx, [rsp+0x*]; call 0x*")
         .Call()
         .Find("call [*+0x*]", 2)
         .Get();
 
-    return Scanner::Virtual<int32 (*)(UAbilitySystemComponent*, FGameplayTag, const FGameplayEventData*)>(this, HandleGameplayEvent)(this, EventTag, Payload);
+    return HandleGameplayEvent(this, EventTag, Payload);
 }
 
 TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>& UAbilitySystemComponent::GetAbilityTargetDataMap()
 {
-    static auto AbilityTargetDataMap = Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("lea *, [*+0x???]").Disp(TEXT("UAbilitySystemComponent::AbilityTargetDataMap"));
+    static auto AbilityTargetDataMap = Anchor::Offset(TEXT("UAbilitySystemComponent::AbilityTargetDataMap"))
+        .String(TEXT("Ability %s is overriding pending replicated target data."))
+        .Start()
+        .Find("lea *, [*+0x???]")
+        .Disp();
 
     return *(TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>*)((uint8_t*)this + AbilityTargetDataMap);
 }
 
 FAbilityReplicatedDataCache* TMap<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>::Find(const FGameplayAbilitySpecHandleAndPredictionKey& Key)
 {
-    static auto Lookup = Scanner::String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("imul *, *, 0x*");
-    static auto ElementSize = (int32)Lookup.Imm(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>"));
-    static auto HashNextId = Lookup.Find("mov *, [*+0x*]; cmp *, 0xffffffff").Disp(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>::HashNextId"));
+    static auto ElementSize = (int32)Anchor::Offset(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>"))
+        .String(TEXT("Ability %s is overriding pending replicated target data."))
+        .Start()
+        .Find("imul *, *, 0x*")
+        .Imm();
+
+    static auto HashNextId = Anchor::Offset(TEXT("TSetElement<TPair<FGameplayAbilitySpecHandleAndPredictionKey, FAbilityReplicatedDataCache>>::HashNextId"))
+        .String(TEXT("Ability %s is overriding pending replicated target data."))
+        .Start()
+        .Find("imul *, *, 0x*")
+        .Find("mov *, [*+0x*]; cmp *, 0xffffffff")
+        .Disp();
 
     if (Elements.Num() == NumFreeIndices)
         return nullptr;

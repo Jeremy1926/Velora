@@ -6,7 +6,10 @@
 
 ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
 {
-    static auto CurrentState = Scanner::String(TEXT("Failed to load package '%s'")).Find("mov byte ptr [*+0x*], 0x2").Disp(TEXT("ULevelStreaming::CurrentState"));
+    static auto CurrentState = Anchor::Offset(TEXT("ULevelStreaming::CurrentState"))
+        .String(TEXT("Failed to load package '%s'"))
+        .Find("mov byte ptr [*+0x*], 0x2")
+        .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
 }
@@ -34,20 +37,20 @@ bool ULevelStreaming::IsLevelVisible() const
 
 bool ULevelStreaming::ShouldBeLoaded() const
 {
-    static auto ShouldBeLoaded = Anchor::Slot(TEXT("ULevelStreaming::ShouldBeLoaded"))
+    static auto ShouldBeLoaded = Anchor::VirtualFunction<bool (*)(const ULevelStreaming*)>(TEXT("ULevelStreaming::ShouldBeLoaded"))
         .Exec(TEXT("/Script/Engine.LevelStreaming:ShouldBeLoaded"))
         .Find("call [rax+0x*]")
         .Get();
 
-    return Scanner::Virtual<bool (*)(const ULevelStreaming*)>(this, ShouldBeLoaded)(this);
+    return ShouldBeLoaded(this);
 }
 
 bool ULevelStreaming::ShouldBeVisible() const
 {
-    static auto ShouldBeLoaded = Anchor::Slot(TEXT("ULevelStreaming::ShouldBeLoaded"))
+    static auto ShouldBeVisible = Anchor::VirtualFunction<bool (*)(const ULevelStreaming*)>(TEXT("ULevelStreaming::ShouldBeLoaded"))
         .Exec(TEXT("/Script/Engine.LevelStreaming:ShouldBeLoaded"))
         .Find("call [rax+0x*]")
-        .Get();
+        .Get(sizeof(void*));
 
-    return Scanner::Virtual<bool (*)(const ULevelStreaming*)>(this, ShouldBeLoaded, sizeof(void*))(this);
+    return ShouldBeVisible(this);
 }

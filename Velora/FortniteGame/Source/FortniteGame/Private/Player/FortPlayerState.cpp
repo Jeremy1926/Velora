@@ -14,30 +14,42 @@ UClass* AFortPlayerState::StaticClass()
 
 void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 {
-    static auto ApplyCharacterCustomization = []
-    {
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerState"));
-        auto ServerSetShowHeroBackpack_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack")).Find("call [rax+*]", 2).Slot(TEXT("AFortPlayerState::ServerSetShowHeroBackpack_Implementation"));
-        auto ApplyHeroPartDisplaySettings = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerSetShowHeroBackpack_Implementation)).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"))));
-        auto ApplyCustomizationToCharacter = ApplyHeroPartDisplaySettings.Find("ret").Last("call 0x*").Call();
-
-        return Anchor::Function<void (*)(AFortPlayerState*, APawn*)>(TEXT("AFortPlayerState::ApplyCharacterCustomization"))
-            .At(ApplyCustomizationToCharacter)
-            .Find("pop *; jmp 0x*")
-            .Find("jmp 0x*")
-            .Target()
-            .Or()
-            .At(ApplyCustomizationToCharacter)
-            .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
-            .Find("call 0x*")
-            .Target()
-            .Or()
-            .At(ApplyHeroPartDisplaySettings)
-            .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
-            .Find("call 0x*")
-            .Target()
-            .Get();
-    }();
+    static auto ApplyCharacterCustomization = Anchor::Function<void (*)(AFortPlayerState*, APawn*)>(TEXT("AFortPlayerState::ApplyCharacterCustomization"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack"))
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerState::ServerSetShowHeroBackpack_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("jmp [*+0x*]")
+        .LogSlot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("ret")
+        .Last("call 0x*")
+        .Call()
+        .Find("pop *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack"))
+        .Find("call [rax+*]", 2)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("jmp [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("ret")
+        .Last("call 0x*")
+        .Call()
+        .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack"))
+        .Find("call [rax+*]", 2)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("jmp [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerState"))
+        .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     ApplyCharacterCustomization(this, Pawn);
 }

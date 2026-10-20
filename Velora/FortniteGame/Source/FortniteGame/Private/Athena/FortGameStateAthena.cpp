@@ -16,7 +16,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-
 UClass* AFortGameStateAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameStateAthena"));
@@ -226,7 +225,8 @@ TArray<FGameMemberInfo>& FGameMemberInfoArray::GetMembers()
 bool AFortGameStateAthena::AdjustedGravityMultiplier(AFortPawn* Pawn, float& NewGravityVal, float& NewVehicleGravityVal, float& NewJumpZ, float& NewJumpHorizontalAcceleration, float& NewJumpHorizontalVelocity)
 {
     static auto AdjustedGravityMultiplier = Anchor::Function<bool (*)(AFortGameStateAthena*, AFortPawn*, float*, float*, float*, float*, float*)>(TEXT("AFortGameStateAthena::AdjustedGravityMultiplier"))
-        .At(Scanner::CallTo(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityJumpMultipliers")).Get()))
+        .Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityJumpMultipliers"))
+        .CallSite()
         .Last("call 0x*; test al, al; jz *")
         .Call()
         .Get();

@@ -17,7 +17,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-
 UClass* ABuildingItemWeaponUpgradeActor::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingItemWeaponUpgradeActor"));
@@ -78,7 +77,11 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
         .If(ABuildingItemWeaponUpgradeActor::StaticClass())
         .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
         .Start()
-        .LastCall(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Find("jnz 0x*").Target())
+        .LastCall(Anchor::Address()
+            .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+            .Find("jnz 0x*")
+            .Target()
+            .Get())
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")));

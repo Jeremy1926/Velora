@@ -33,12 +33,12 @@ AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* W
 
 bool AFortPawn::EquipBestWeapon()
 {
-    static auto EquipBestWeapon = Anchor::Slot(TEXT("AFortPawn::EquipBestWeapon"))
+    static auto EquipBestWeapon = Anchor::VirtualFunction<bool (*)(AFortPawn*)>(TEXT("AFortPawn::EquipBestWeapon"))
         .Exec(TEXT("/Script/FortniteGame.FortPawn:EquipBestWeapon"))
         .Find("call [rax+0x*]")
         .Get();
 
-    return Scanner::Virtual<bool (*)(AFortPawn*)>(this, EquipBestWeapon)(this);
+    return EquipBestWeapon(this);
 }
 
 UAbilitySystemComponent* AFortPawn::GetAbilitySystemComponent() const
@@ -50,17 +50,14 @@ UAbilitySystemComponent* AFortPawn::GetAbilitySystemComponent() const
 
 void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
 {
-    static auto StopPerformingNativeAction = []
-    {
-        auto NotActive = Scanner::String(TEXT("Can't stop native action %s, not active!"));
-        auto StopNativeAction = std::format("mov rcx, [rcx+0x*]; test rcx, rcx; jnz {:#x}", (uintptr_t)(NotActive.Get() ? NotActive : Scanner::String(TEXT("Native Action Role(%s) Can't stop %s, not active!"))).Start().Get(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction")));
+    static auto StopPerformingNativeAction = Anchor::VirtualFunction<void (*)(AFortPawn*, const FGameplayTag&)>(TEXT("AFortPawn::StopPerformingNativeAction"))
+        .Strings(TEXT("Can't stop native action %s, not active!"), TEXT("Native Action Role(%s) Can't stop %s, not active!"))
+        .Start()
+        .Log(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction"))
+        .VirtualIs(TEXT("/Script/FortniteGame.Default__FortPawn"), "mov rcx, [rcx+0x*]; test rcx, rcx; jnz %t")
+        .Get();
 
-        return Anchor::Slot(TEXT("AFortPawn::StopPerformingNativeAction"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortPawn"), [&](const Anchor::FCode& Entry) { return Entry.Is(StopNativeAction); })
-            .Get();
-    }();
-
-    Scanner::Virtual<void (*)(AFortPawn*, const FGameplayTag&)>(this, StopPerformingNativeAction)(this, ActionTag);
+    StopPerformingNativeAction(this, ActionTag);
 }
 
 bool AFortPawn::GetIsDBNO() const
@@ -138,14 +135,26 @@ void AFortPawn::SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplic
 
 void AFortPawn::OnRep_LastReplicatedEmoteExecuted()
 {
-    static auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted")).Find("mov [*+0x20], *");
-    static auto OnRep_LastReplicatedEmoteExecuted = Finish.Is("mov [*+0x20], *; jmp 0x*") ? Finish.Find("jmp 0x*").Target(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted")) : nullptr;
-    static auto OnRep_LastReplicatedEmoteExecutedSlot = Finish.Is("mov [*+0x20], *; mov rax, [rcx]; jmp [rax+0x*]") ? Finish.Find("jmp [rax+0x*]").Slot(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted")) : 0;
+    static auto OnRep_LastReplicatedEmoteExecuted = Anchor::Optional<void (*)(AFortPawn*)>(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"))
+        .Find("mov [*+0x20], *")
+        .Is("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     if (OnRep_LastReplicatedEmoteExecuted)
-        Scanner::Function<void (*)(AFortPawn*)>(OnRep_LastReplicatedEmoteExecuted)(this);
-    else
-        Scanner::Virtual<void (*)(AFortPawn*)>(this, OnRep_LastReplicatedEmoteExecutedSlot)(this);
+        return OnRep_LastReplicatedEmoteExecuted(this);
+
+    static auto VirtualOnRep_LastReplicatedEmoteExecuted = Anchor::VirtualFunction<void (*)(AFortPawn*)>(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"))
+        .Find("mov [*+0x20], *")
+        .Is("mov [*+0x20], *; mov rax, [rcx]; jmp [rax+0x*]")
+        .Optional()
+        .Find("jmp [rax+0x*]")
+        .Get();
+
+    VirtualOnRep_LastReplicatedEmoteExecuted(this);
 }
 
 UFortHealthSet* AFortPawn::GetHealthSet() const

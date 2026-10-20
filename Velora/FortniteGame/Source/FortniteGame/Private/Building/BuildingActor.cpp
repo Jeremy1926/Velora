@@ -5,9 +5,80 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-static int32_t InitializeBuildingActorSlot()
+UClass* ABuildingActor::StaticClass()
 {
-    static auto InitializeBuildingActor = Anchor::Slot(TEXT("ABuildingActor::InitializeBuildingActor"))
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
+
+    return Class;
+}
+
+void ABuildingActor::BeginPlay()
+{
+    static auto BeginPlay = Anchor::VirtualFunction<void (*)(ABuildingActor*)>(TEXT("AActor::BeginPlay"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+        .Reference("mov rdx, *")
+        .Start()
+        .Log(TEXT("AActor::ReceiveBeginPlay"))
+        .Caller()
+        .Log(TEXT("AActor::BeginPlay"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Get(TEXT("/Script/FortniteGame.Default__BuildingActor"));
+
+    BeginPlay(this);
+}
+
+void ABuildingActor::SilentDie(bool bPropagateSilentDeath)
+{
+    static auto SilentDie = Anchor::VirtualFunction<void (*)(ABuildingActor*, bool)>(TEXT("ABuildingActor::SilentDie"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("jmp [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("call [*+0x*]")
+        .Get();
+    static auto bHasPropagateSilentDeath = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor:SilentDie")))->FindPropertyByName(FName(TEXT("bPropagateSilentDeath"))) != nullptr;
+
+    if (bHasPropagateSilentDeath)
+    {
+        SilentDie(this, bPropagateSilentDeath);
+        return;
+    }
+
+    SilentDie.As<void (*)(ABuildingActor*)>()(this);
+}
+
+void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext)
+{
+    static auto Die = Anchor::VirtualFunction<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*, const FGameplayEffectContextHandle*)>(TEXT("ABuildingActor::SilentDie"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("jmp [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("call [*+0x*]")
+        .Get(-(int64_t)sizeof(void*));
+
+    static auto bEffectContext = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .FindEither("jmp [*+0x*]", "call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Has("mov qword ptr [rsp+0x20], 0x0")
+        .Get();
+
+    if (bEffectContext)
+    {
+        Die(this, DamageTag, EventInstigator, DamageCauser, EffectContext);
+        return;
+    }
+
+    Die.As<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*)>()(this, DamageTag, EventInstigator, DamageCauser);
+}
+
+void ABuildingActor::InitializeBuildingActor(EFortBuildingInitializationReason InitializationReason, int32 InOwnerPersistentID, ABuildingActor* BuildingOwner, ABuildingActor* ReplacedBuilding, bool bFlag)
+{
+    static auto InitializeBuildingActor = Anchor::VirtualFunction<void (*)(ABuildingActor*, EFortBuildingInitializationReason, int32, ABuildingActor*, ABuildingActor*, bool)>(TEXT("ABuildingActor::InitializeBuildingActor"))
         .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
@@ -20,102 +91,45 @@ static int32_t InitializeBuildingActorSlot()
         .Find("mov r10, [r8+0x*]")
         .Get();
 
-    return InitializeBuildingActor;
-}
-
-static int32_t GetCurrentBuildingLevelSlot()
-{
-    static auto GetCurrentBuildingLevel = Anchor::Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel"))
-        .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel"))
-        .Find("call [*+0x*]")
-        .Get();
-
-    return GetCurrentBuildingLevel;
-}
-
-UClass* ABuildingActor::StaticClass()
-{
-    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
-
-    return Class;
-}
-
-void ABuildingActor::BeginPlay()
-{
-    static auto BeginPlay = Anchor::Slot(TEXT("AActor::BeginPlay"))
-        .String(TEXT("ReceiveBeginPlay"))
-        .Find("lea *, [0x*]")
-        .Target()
-        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
-        .Reference("mov rdx, *")
-        .Start()
-        .Log(TEXT("AActor::ReceiveBeginPlay"))
-        .Caller()
-        .Log(TEXT("AActor::BeginPlay"))
-        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
-        .Get();
-
-    Scanner::Virtual<void (*)(ABuildingActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingActor")), BeginPlay)(this);
-}
-
-void ABuildingActor::SilentDie(bool bPropagateSilentDeath)
-{
-    static auto SilentDie = Anchor::Slot(TEXT("ABuildingActor::SilentDie"))
-        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
-        .Find("jmp [*+0x*]")
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
-        .Find("call [*+0x*]")
-        .Get();
-    static auto bHasPropagateSilentDeath = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor:SilentDie")))->FindPropertyByName(FName(TEXT("bPropagateSilentDeath"))) != nullptr;
-
-    if (bHasPropagateSilentDeath)
-    {
-        Scanner::Virtual<void (*)(ABuildingActor*, bool)>(this, SilentDie)(this, bPropagateSilentDeath);
-        return;
-    }
-
-    Scanner::Virtual<void (*)(ABuildingActor*)>(this, SilentDie)(this);
-}
-
-void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext)
-{
-    static auto Die = Anchor::Slot(TEXT("ABuildingActor::SilentDie"))
-        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
-        .Find("jmp [*+0x*]")
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
-        .Find("call [*+0x*]")
-        .Get() - (int32_t)sizeof(void*);
-    static auto bEffectContext = Scanner::At(Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor")), Die, sizeof(void*))).Has("mov qword ptr [rsp+0x20], 0x0");
-
-    if (bEffectContext)
-    {
-        Scanner::Virtual<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*, const FGameplayEffectContextHandle*)>(this, Die)(this, DamageTag, EventInstigator, DamageCauser, EffectContext);
-        return;
-    }
-
-    Scanner::Virtual<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*)>(this, Die)(this, DamageTag, EventInstigator, DamageCauser);
-}
-
-void ABuildingActor::InitializeBuildingActor(EFortBuildingInitializationReason InitializationReason, int32 InOwnerPersistentID, ABuildingActor* BuildingOwner, ABuildingActor* ReplacedBuilding, bool bFlag)
-{
-    Scanner::Virtual<void (*)(ABuildingActor*, EFortBuildingInitializationReason, int32, ABuildingActor*, ABuildingActor*, bool)>(this, InitializeBuildingActorSlot())(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
+    InitializeBuildingActor(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
 }
 
 void ABuildingActor::PostInitializeSpawnedBuildingActor(EFortBuildingInitializationReason InitializationReason)
 {
-    Scanner::Virtual<void (*)(ABuildingActor*, EFortBuildingInitializationReason)>(this, InitializeBuildingActorSlot(), sizeof(void*))(this, InitializationReason);
+    static auto PostInitializeSpawnedBuildingActor = Anchor::VirtualFunction<void (*)(ABuildingActor*, EFortBuildingInitializationReason)>(TEXT("ABuildingActor::InitializeBuildingActor"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("mov r10, [r8+0x*]")
+        .Get(sizeof(void*));
+
+    PostInitializeSpawnedBuildingActor(this, InitializationReason);
 }
 
 int32 ABuildingActor::GetCurrentBuildingLevel() const
 {
-    return Scanner::Virtual<int32 (*)(const ABuildingActor*)>(this, GetCurrentBuildingLevelSlot())(this);
+    static auto GetCurrentBuildingLevel = Anchor::VirtualFunction<int32 (*)(const ABuildingActor*)>(TEXT("ABuildingActor::GetCurrentBuildingLevel"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel"))
+        .Find("call [*+0x*]")
+        .Get();
+
+    return GetCurrentBuildingLevel(this);
 }
 
 void ABuildingActor::SetCurrentBuildingLevel(int32 NewLevel)
 {
-    Scanner::Virtual<void (*)(ABuildingActor*, int32)>(this, GetCurrentBuildingLevelSlot(), sizeof(void*))(this, NewLevel);
+    static auto SetCurrentBuildingLevel = Anchor::VirtualFunction<void (*)(ABuildingActor*, int32)>(TEXT("ABuildingActor::GetCurrentBuildingLevel"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel"))
+        .Find("call [*+0x*]")
+        .Get(sizeof(void*));
+
+    SetCurrentBuildingLevel(this, NewLevel);
 }
 
 bool ABuildingActor::GetDestroyOnPlayerBuildingPlacement() const
@@ -134,12 +148,12 @@ EFortBuildingType ABuildingActor::GetBuildingType() const
 
 float ABuildingActor::GetMaxHealth() const
 {
-    static auto GetMaxHealth = Anchor::Slot(TEXT("ABuildingActor::GetMaxHealth"))
+    static auto GetMaxHealth = Anchor::VirtualFunction<float (*)(const ABuildingActor*)>(TEXT("ABuildingActor::GetMaxHealth"))
         .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetMaxHealth"))
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<float (*)(const ABuildingActor*)>(this, GetMaxHealth)(this);
+    return GetMaxHealth(this);
 }
 
 bool ABuildingActor::HasHealthLeft() const

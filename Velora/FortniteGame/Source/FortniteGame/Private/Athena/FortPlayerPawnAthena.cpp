@@ -44,30 +44,36 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
         .Inline());
 
     static auto bIsPlayerPawnReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsPlayerPawnReady")));
-    static auto bChecksPlayerPawnReady = []
-    {
-        auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
-        auto PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax").Start();
+    static auto PlayerPawnReady = Anchor::Address()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax")
+        .Start()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *")
+        .Start()
+        .Or()
+        .String(TEXT("ExitAircraft: %s (Pawn %s)"))
+        .Caller()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
+        .Start()
+        .Get();
 
-        if (!PlayerPawnReady.Get())
-            PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *").Start();
+    static auto bChecksPlayerPawnReady = Anchor::Exists()
+        .At(PlayerPawnReady)
+        .FieldHas("cmp byte ptr [rcx+%x], *", bIsPlayerPawnReady)
+        .Get();
 
-        if (!PlayerPawnReady.Get())
-            PlayerPawnReady = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
-
-        if (!PlayerPawnReady.Get())
-            PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
-
-        if (!PlayerPawnReady.Has(std::format("cmp byte ptr [rcx+{:#x}], *", bIsPlayerPawnReady->GetOffset_ForInternal())))
-            return false;
-
-        THook(TEXT("UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor"), &UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor)
-            .At(PlayerPawnReady)
-            .FindCall(UpdateAbilitySystemActor)
-            .AtCall();
-
-        return true;
-    }();
+    static auto PlayerPawnReadyUpdateAbilitySystemActor = THook(TEXT("UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor"), &UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor)
+        .If(bChecksPlayerPawnReady)
+        .At(PlayerPawnReady)
+        .FindCallToString(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .AtCall();
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(GetController());
     auto bWasPlayerPawnReady = bIsPlayerPawnReady->GetPropertyValue_InContainer(this);

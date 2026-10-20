@@ -95,15 +95,15 @@ void UFortServerBotManagerAthena::TickBotBrainActivationTimers()
 
 void UFortServerBotManagerAthena::CheckForBotBrainActivation()
 {
-    static auto bCanStartBrain = []
-    {
-        auto CachedBotManager = AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr;
-        auto RunBehaviorTree = Scanner::Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree")).Find("call [rax+0x*]").Slot(TEXT("AAIController::RunBehaviorTree"));
-        auto VTable = Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"));
-        auto Gate = Scanner::At(CachedBotManager && VTable && Scanner::IsSlot(RunBehaviorTree) ? VTable[RunBehaviorTree / sizeof(void*)] : nullptr).Find(std::format("mov *, [rcx+{:#x}]; test *, *; jz *; cmp byte ptr [*+0x*], 0x0", CachedBotManager ? CachedBotManager->GetOffset_ForInternal() : 0));
-
-        return Gate.Get() ? Gate.Find("cmp byte ptr [*+0x*], 0x0").Disp(TEXT("UFortServerBotManagerAthena::CanStartBrain")) : 0;
-    }();
+    static auto bCanStartBrain = Anchor::Offset(TEXT("UFortServerBotManagerAthena::CanStartBrain"))
+        .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AAIController::RunBehaviorTree"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"))
+        .FieldFind("mov *, [rcx+%x]; test *, *; jz *; cmp byte ptr [*+0x*], 0x0", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .Optional()
+        .Find("cmp byte ptr [*+0x*], 0x0")
+        .Disp();
 
     auto World = GetWorld();
 

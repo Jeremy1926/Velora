@@ -12,18 +12,26 @@ UClass* AFortQuickBars::StaticClass()
     return Class;
 }
 
-static const uint8_t* GetActivateSlot(const AFortQuickBars* QuickBars)
-{
-    static auto Call = Scanner::String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d.")).Find("mov byte ptr [rsp+0x20], 0x1").Find("call *");
-    static auto ActivateSlot = Call.Is("call 0x*") ? Call.Target(TEXT("AFortQuickBars::ActivateSlot")) : nullptr;
-    static auto ActivateSlotSlot = ActivateSlot ? 0 : Call.Slot(TEXT("AFortQuickBars::ActivateSlot"));
-
-    return ActivateSlot ? ActivateSlot : (*(const uint8_t***)QuickBars)[ActivateSlotSlot / sizeof(void*)];
-}
-
 void AFortQuickBars::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot)
 {
-    Scanner::Function<void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool, bool, bool)>(GetActivateSlot(this))(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot, false, false);
+    static auto ActivateSlot = Anchor::Optional<void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool, bool, bool)>(TEXT("AFortQuickBars::ActivateSlot"))
+        .String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d."))
+        .Find("mov byte ptr [rsp+0x20], 0x1")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Get();
+
+    if (ActivateSlot)
+        return ActivateSlot(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot, false, false);
+
+    static auto VirtualActivateSlot = Anchor::VirtualFunction<void (*)(AFortQuickBars*, EFortQuickBars, int32, float, bool, bool, bool)>(TEXT("AFortQuickBars::ActivateSlot"))
+        .String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d."))
+        .Find("mov byte ptr [rsp+0x20], 0x1")
+        .Find("call *")
+        .Get();
+
+    VirtualActivateSlot(this, InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot, false, false);
 }
 
 FQuickBar& AFortQuickBars::GetQuickBar(EFortQuickBars InQuickBar)
@@ -53,7 +61,24 @@ void AFortQuickBars::OnQuickBarChanged(EFortQuickBars InQuickBar)
 
 int32 AFortQuickBars::TrySetFocused(EFortQuickBars InQuickBar, int32 Slot, bool bUpdatePreviousFocusedSlot)
 {
-    static auto TrySetFocused = Scanner::Function<int32 (*)(AFortQuickBars*, EFortQuickBars, int32, bool)>(Scanner::At(GetActivateSlot(this)).Find("call 0x*").Target(TEXT("AFortQuickBars::TrySetFocused")));
+    static auto TrySetFocused = Anchor::Function<int32 (*)(AFortQuickBars*, EFortQuickBars, int32, bool)>(TEXT("AFortQuickBars::TrySetFocused"))
+        .String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d."))
+        .Find("mov byte ptr [rsp+0x20], 0x1")
+        .Find("call *")
+        .Is("call 0x*")
+        .Target()
+        .Log(TEXT("AFortQuickBars::ActivateSlot"))
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Attempting to add harvesting tool %s to quickbar %d in slot %d."))
+        .Find("mov byte ptr [rsp+0x20], 0x1")
+        .Find("call *")
+        .LogSlot(TEXT("AFortQuickBars::ActivateSlot"))
+        .Entry(this)
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     return TrySetFocused(this, InQuickBar, Slot, bUpdatePreviousFocusedSlot);
 }

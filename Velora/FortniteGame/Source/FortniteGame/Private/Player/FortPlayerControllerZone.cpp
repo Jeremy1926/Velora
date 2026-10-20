@@ -11,28 +11,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static int32_t OnPawnRevivedSlot()
-{
-    static auto OnPawnRevived = []
-    {
-        auto ClientOnPawnRevived = Scanner::Event(TEXT("ClientOnPawnRevived")).Get(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"));
-
-        return Anchor::Slot(TEXT("AFortPlayerControllerZone::OnPawnRevived"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), [&](const Anchor::FCode& Entry)
-            {
-                auto Call = Entry.Find("call 0x*");
-
-                for (int32 Index = 2; Call.Get() && Call.Target() != ClientOnPawnRevived; Index++)
-                    Call = Entry.Find("call 0x*", Index);
-
-                return Call.Get() != nullptr;
-            })
-            .Get();
-    }();
-
-    return OnPawnRevived;
-}
-
 UClass* AFortPlayerControllerZone::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerControllerZone"));
@@ -47,7 +25,10 @@ void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn
 
 void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
 {
-    static auto ServerRestartPlayer = Scanner::Virtual<void (*)(AFortPlayerControllerZone*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone")), Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer")).Find("jmp [rax+*]").Slot(TEXT("AFortPlayerControllerZone::ServerRestartPlayer_Implementation")));
+    static auto ServerRestartPlayer = Anchor::VirtualFunction<void (*)(AFortPlayerControllerZone*)>(TEXT("AFortPlayerControllerZone::ServerRestartPlayer_Implementation"))
+        .Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer"))
+        .Find("jmp [rax+*]")
+        .Get(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
     ServerRestartPlayer(this);
 }
@@ -76,7 +57,12 @@ void AFortPlayerControllerZone::OnPawnDied(AFortPlayerPawn* KilledPawn, float Da
         .Optional()
         .Inline());
 
-    static auto bKilledPawn = Scanner::String(TEXT("Deaths")).Start().Find("movaps xmm6, xmm*").Is("movaps xmm6, xmm2");
+    static auto bKilledPawn = Anchor::Exists()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("movaps xmm6, xmm*")
+        .Is("movaps xmm6, xmm2")
+        .Get();
 
     if (bKilledPawn)
         ((void (*)(AFortPlayerControllerZone*, AFortPlayerPawn*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*, AController*))DETOUR_ORIGINAL(AFortPlayerControllerZone, OnPawnDied))(this, KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
@@ -102,13 +88,30 @@ void AFortPlayerControllerZone::OnPawnDied(AFortPlayerPawn* KilledPawn, float Da
 
 void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
 {
-    Scanner::Virtual<void (*)(AFortPlayerControllerZone*, AController*)>(this, OnPawnRevivedSlot())(this, EventInstigator);
+    static auto OnPawnRevived = Anchor::VirtualFunction<void (*)(AFortPlayerControllerZone*, AController*)>(TEXT("AFortPlayerControllerZone::OnPawnRevived"))
+        .Event(TEXT("ClientOnPawnRevived"))
+        .Log(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Get();
+
+    OnPawnRevived(this, EventInstigator);
 }
 
 void AFortPlayerControllerZone::ApplyDeathDurabilityPenalty(float DurabilityPenalty)
 {
-    static auto bApplyDeathDurabilityPenalty = Scanner::At(Scanner::Virtual<const void*>(this, OnPawnRevivedSlot(), sizeof(void*))).Is("mov r11, rsp; push r13; sub rsp, *; mov r13, rcx; movaps [rsp+*], xmm7; mov rcx, [rcx+*]; movaps xmm7, xmm1");
+    static auto bApplyDeathDurabilityPenalty = Anchor::Exists()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .SlotShift(this, sizeof(void*))
+        .Is("mov r11, rsp; push r13; sub rsp, *; mov r13, rcx; movaps [rsp+*], xmm7; mov rcx, [rcx+*]; movaps xmm7, xmm1")
+        .Get();
+
+    static auto ApplyDeathDurabilityPenalty = Anchor::VirtualFunction<void (*)(AFortPlayerControllerZone*, float)>(TEXT("AFortPlayerControllerZone::OnPawnRevived"))
+        .Event(TEXT("ClientOnPawnRevived"))
+        .Log(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Get(sizeof(void*));
 
     if (bApplyDeathDurabilityPenalty)
-        Scanner::Virtual<void (*)(AFortPlayerControllerZone*, float)>(this, OnPawnRevivedSlot(), sizeof(void*))(this, DurabilityPenalty);
+        ApplyDeathDurabilityPenalty(this, DurabilityPenalty);
 }

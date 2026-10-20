@@ -14,16 +14,13 @@ UClass* UFortWorldItemDefinition::StaticClass()
 
 bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerController* PlayerController) const
 {
-    static auto ServerExecute = []
-    {
-        auto EquipWeaponDefinition = std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get(TEXT("AFortPawn::EquipWeaponDefinition")));
+    static auto ServerExecute = Anchor::VirtualFunction<bool (*)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*)>(TEXT("UFortWorldItemDefinition::ServerExecute"))
+        .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
+        .Log(TEXT("AFortPawn::EquipWeaponDefinition"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"))
+        .Get();
 
-        return Anchor::Slot(TEXT("UFortWorldItemDefinition::ServerExecute"))
-            .Virtual(TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"), [&](const Anchor::FCode& Entry) { return Entry.Start().Has(EquipWeaponDefinition); })
-            .Get();
-    }();
-
-    return Scanner::Virtual<bool (*)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*)>(this, ServerExecute)(this, Item, PlayerController);
+    return ServerExecute(this, Item, PlayerController);
 }
 
 bool UFortWorldItemDefinition::SupportsQuickbarFocus() const
@@ -49,12 +46,12 @@ bool UFortWorldItemDefinition::ShouldDropOnDeath() const
 
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
-    static auto GetMaxDurability = Anchor::Slot(TEXT("UFortWorldItemDefinition::GetMaxDurability"))
+    static auto GetMaxDurability = Anchor::VirtualFunction<float (*)(const UFortWorldItemDefinition*, int32)>(TEXT("UFortWorldItemDefinition::GetMaxDurability"))
         .Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability"))
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<float (*)(const UFortWorldItemDefinition*, int32)>(this, GetMaxDurability)(this, ItemLevel);
+    return GetMaxDurability(this, ItemLevel);
 }
 
 const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() const

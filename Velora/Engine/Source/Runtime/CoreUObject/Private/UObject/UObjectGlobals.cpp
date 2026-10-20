@@ -4,17 +4,15 @@
 
 void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* ErrorMessage)
 {
-    static auto AssertIfInConstructor = Scanner::Function<void (*)(UObject*, const TCHAR*)>([]
-    {
-        auto EmptyName = Scanner::String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."));
-        auto Jump = EmptyName.Find("jmp 0x*").Get();
-        auto Call = EmptyName.Find("call 0x*").Get();
-
-        if (Jump && (!Call || Jump < Call))
-            EmptyName = Scanner::String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*");
-
-        return EmptyName.Call().Get(TEXT("FObjectInitializer::AssertIfInConstructor"));
-    }());
+    static auto AssertIfInConstructor = Anchor::Function<void (*)(UObject*, const TCHAR*)>(TEXT("FObjectInitializer::AssertIfInConstructor"))
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."))
+        .FirstOf("call 0x*", "jmp 0x*")
+        .Is("call 0x*")
+        .Call()
+        .Or()
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*")
+        .Call()
+        .Get();
 
     AssertIfInConstructor(Outer, ErrorMessage);
 }
@@ -47,17 +45,15 @@ UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, co
 
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
 {
-    static auto StaticConstructObject_Internal = Scanner::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool)>([]
-    {
-        auto EmptyName = Scanner::String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."));
-        auto Jump = EmptyName.Find("jmp 0x*").Get();
-        auto Call = EmptyName.Find("call 0x*").Get();
-
-        if (Jump && (!Call || Jump < Call))
-            EmptyName = Scanner::String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*");
-
-        return EmptyName.Call(2).Get(TEXT("StaticConstructObject_Internal"));
-    }());
+    static auto StaticConstructObject_Internal = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool)>(TEXT("StaticConstructObject_Internal"))
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."))
+        .FirstOf("call 0x*", "jmp 0x*")
+        .Is("call 0x*")
+        .Call(2)
+        .Or()
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*")
+        .Call(2)
+        .Get();
 
     return StaticConstructObject_Internal(Class, InOuter, Name, SetFlags, InternalSetFlags, Template, bCopyTransientsFromClassDefaults, InstanceGraph, bAssumeTemplateIsArchetype);
 }

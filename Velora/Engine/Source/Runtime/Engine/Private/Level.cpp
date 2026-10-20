@@ -13,11 +13,26 @@ UWorld* ULevel::GetOwningWorld() const
 
 bool ULevel::IsAssociatingLevel() const
 {
-    static auto AddToWorld = Scanner::String(TEXT("sorting actor list")).Start();
-    static auto bIsAssociatingLevel = AddToWorld.Find("lea *, [rdx+0x*]");
-    static auto SetAssociating = bIsAssociatingLevel.Get() ? bIsAssociatingLevel.Find("or byte ptr [*], 0x*") : AddToWorld.Find("or byte ptr [rdx+0x*], 0x*");
-    static auto Offset = (bIsAssociatingLevel.Get() ? bIsAssociatingLevel : SetAssociating).Disp(TEXT("ULevel::bIsAssociatingLevel"));
-    static auto Mask = SetAssociating.Imm();
+    static auto Offset = Anchor::Offset(TEXT("ULevel::bIsAssociatingLevel"))
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("lea *, [rdx+0x*]")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("or byte ptr [rdx+0x*], 0x*")
+        .Disp();
+
+    static auto Mask = Anchor::Offset(TEXT("ULevel::bIsAssociatingLevel"))
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("lea *, [rdx+0x*]")
+        .Find("or byte ptr [*], 0x*")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("or byte ptr [rdx+0x*], 0x*")
+        .Value();
 
     return *((uint8_t*)this + Offset) & Mask;
 }

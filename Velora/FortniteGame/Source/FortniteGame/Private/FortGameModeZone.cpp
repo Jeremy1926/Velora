@@ -37,7 +37,10 @@ void AFortGameModeZone::FinishWorldInitialization()
         .Start()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
-        .CallIn(Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start())
+        .CallIn(Anchor::Address()
+            .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+            .Start()
+            .Get())
         .AtCall());
 
     Super::FinishWorldInitialization();
@@ -58,59 +61,82 @@ void AFortGameModeZone::CreateAIDirector()
     if (!AIDirectors)
         return;
 
-    static auto GetAIDirector = []
+    static auto GameGetAIDirector = Anchor::Data<const uint8_t*>(TEXT("UFortKismetLibrary::GetAIDirector"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
+        .Get();
+
+    static auto execGetAIDirector = THook(TEXT("UFortKismetLibrary::execGetAIDirector"), &UFortKismetLibrary::execGetAIDirector)
+        .At(GameGetAIDirector)
+        .Is("xor eax, eax; ret")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
+
+    if (execGetAIDirector)
     {
-        auto GameGetAIDirector = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector")).Get(TEXT("UFortKismetLibrary::GetAIDirector"));
-        auto CallGetAIDirector = std::format("call 0x{:x}", (uintptr_t)GameGetAIDirector);
-        auto execGetAIDirector = THook(TEXT("UFortKismetLibrary::execGetAIDirector"), &UFortKismetLibrary::execGetAIDirector)
-            .At(GameGetAIDirector)
-            .Is("xor eax, eax; ret")
+        static auto StartMissionAIEncounter = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounter"))
+            .FirstCalleeCalling(GameGetAIDirector)
             .Optional()
-            .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
+            .AtCallsTo(GameGetAIDirector);
 
-        if (!execGetAIDirector)
-            return false;
+        static auto StartMissionAIEncounterFromGeneratedProfile = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounterFromGeneratedProfile"))
+            .FirstCalleeCalling(GameGetAIDirector)
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        auto RedirectGetAIDirector = [&](const uint8_t* Caller)
-        {
-            THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
-                .At(GameGetAIDirector)
-                .AtCallsIn(Scanner::At(Caller));
-        };
+        static auto StopMissionAIEncounter = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:StopMissionAIEncounter"))
+            .FirstCalleeCalling(GameGetAIDirector)
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        for (auto FunctionPath : { TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounterFromGeneratedProfile"), TEXT("/Script/FortniteGame.FortMission:StopMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequence"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequenceByIndex"), TEXT("/Script/FortniteGame.FortMission:StopEncounterSequence") })
-        {
-            for (auto Call = Scanner::Exec(FunctionPath).Find("call 0x*"); Call.Get(); Call = Call.Find("call 0x*"))
-            {
-                if (Call.Target() != GameGetAIDirector && Scanner::At(Call.Target()).Has(CallGetAIDirector))
-                {
-                    RedirectGetAIDirector(Call.Target());
-                    break;
-                }
-            }
-        }
+        static auto CreateEncounterSequence = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequence"))
+            .FirstCalleeCalling(GameGetAIDirector)
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        auto HandleAthenaSafeZonePhaseChanged = Scanner::Exec(TEXT("/Script/FortniteGame.FortMission_RiftSpawners:HandleAthenaSafeZonePhaseChanged")).Find("jmp 0x*").Target(TEXT("AFortMission_RiftSpawners::HandleAthenaSafeZonePhaseChanged"));
+        static auto CreateEncounterSequenceByIndex = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequenceByIndex"))
+            .FirstCalleeCalling(GameGetAIDirector)
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        for (auto Call = Scanner::At(HandleAthenaSafeZonePhaseChanged).Find("call 0x*"); Call.Get(); Call = Call.Find("call 0x*"))
-        {
-            if (Call.Target() != GameGetAIDirector && Scanner::At(Call.Target()).Has(CallGetAIDirector))
-                RedirectGetAIDirector(Call.Target());
-        }
+        static auto StopEncounterSequence = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission:StopEncounterSequence"))
+            .FirstCalleeCalling(GameGetAIDirector)
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        for (auto [DefaultObjectPath, FunctionName] : { std::pair{ TEXT("/Script/FortniteGame.Default__FortAIDataProvider_AIDirector"), TEXT("UFortAIDataProvider_AIDirector::BindData") }, std::pair{ TEXT("/Script/FortniteGame.Default__AthenaAISense_Hearing"), TEXT("UAthenaAISense_Hearing::Update") } })
-        {
-            auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, DefaultObjectPath);
-            auto Slot = Scanner::Slot(FunctionName, VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(CallGetAIDirector); });
+        static auto HandleAthenaSafeZonePhaseChanged = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .Exec(TEXT("/Script/FortniteGame.FortMission_RiftSpawners:HandleAthenaSafeZonePhaseChanged"))
+            .Find("jmp 0x*")
+            .Target()
+            .Log(TEXT("AFortMission_RiftSpawners::HandleAthenaSafeZonePhaseChanged"))
+            .Optional()
+            .AtCallsToInCallees(GameGetAIDirector);
 
-            if (Scanner::IsSlot(Slot))
-                RedirectGetAIDirector((const uint8_t*)VTable[Slot / sizeof(void*)]);
-        }
+        static auto BindData = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .At(GameGetAIDirector)
+            .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortAIDataProvider_AIDirector"))
+            .LogSlot(TEXT("UFortAIDataProvider_AIDirector::BindData"))
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        RedirectGetAIDirector(Scanner::CallTo(Scanner::String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i.")).Start().Get()).Start().Get());
+        static auto Update = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .At(GameGetAIDirector)
+            .VirtualCaller(TEXT("/Script/FortniteGame.Default__AthenaAISense_Hearing"))
+            .LogSlot(TEXT("UAthenaAISense_Hearing::Update"))
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
 
-        return true;
-    }();
+        static auto HandleDeathNotifications = THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+            .String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i."))
+            .Caller()
+            .Optional()
+            .AtCallsTo(GameGetAIDirector);
+    }
 
     auto AIDirectorIndex = GetOverrideAIDirectorIndex();
 
@@ -174,16 +200,14 @@ void AFortGameModeZone::CreateAIDirector()
 AFortAIDirector* AFortGameModeZone::GetAIDirector()
 {
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
-    static auto CreateAIDirector = []
-    {
-        auto AthenaCreateAIDirector = Scanner::String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i")).Start().Get();
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-
-        return Scanner::Slot(TEXT("AFortGameModeZone::CreateAIDirector"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaCreateAIDirector; });
-    }();
+    static auto CreateAIDirector = Anchor::VirtualFunction<void (*)(AFortGameModeZone*)>(TEXT("AFortGameModeZone::CreateAIDirector"))
+        .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get();
 
     if (!*AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this))
-        Scanner::Virtual<void (*)(AFortGameModeZone*)>(this, CreateAIDirector)(this);
+        CreateAIDirector(this);
 
     return *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this);
 }

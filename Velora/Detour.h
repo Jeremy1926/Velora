@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "MinHook.h"
 #include "Scanner.h"
+#include "UObject/UObjectArray.h"
 
 extern "C"
 {
@@ -67,9 +68,60 @@ public:
         return bSkipped ? FunctionType() : Anchor::DetourCall(this->Name, this->Code.Get(), Detour);
     }
 
+    FunctionType AtCallPair() const
+    {
+        if (bSkipped)
+            return FunctionType();
+
+        Anchor::DetourCall(this->Name, this->Code.Last("call 0x*").Get(), Detour);
+
+        return Anchor::DetourCall(this->Name, this->Code.Get(), Detour);
+    }
+
     FunctionType AtCall(const wchar_t* VTableName) const
     {
         return !bSkipped && this->Code.Is("call 0x*") ? AtCall() : InVTable(VTableName);
+    }
+
+    FunctionType AtCallsTo(const void* Function) const
+    {
+        FunctionType Original = {};
+        auto Caller = bSkipped ? Anchor::FCode() : this->Code;
+
+        for (auto Call = Caller.Find("call 0x*"); Function && Call.Get(); Call = Call.Find("call 0x*"))
+        {
+            if (Call.Target() == Function)
+                Original = Anchor::DetourCall(this->Name, Call.Get(), Detour);
+        }
+
+        return Original;
+    }
+
+    FunctionType AtCallsToInCallees(const void* Function) const
+    {
+        FunctionType Original = {};
+        auto Caller = bSkipped ? Anchor::FCode() : this->Code;
+        char Text[48];
+        snprintf(Text, sizeof(Text), "call 0x%llx", (unsigned long long)Function);
+
+        for (auto Call = Caller.Find("call 0x*"); Function && Call.Get(); Call = Call.Find("call 0x*"))
+        {
+            if (Call.Target() == Function || !Anchor::At(Call.Target()).Has(Text))
+                continue;
+
+            for (auto Inner = Anchor::At(Call.Target()).Find("call 0x*"); Inner.Get(); Inner = Inner.Find("call 0x*"))
+            {
+                if (Inner.Target() == Function)
+                    Original = Anchor::DetourCall(this->Name, Inner.Get(), Detour);
+            }
+        }
+
+        return Original;
+    }
+
+    FunctionType AtCallsIn(const uint8_t* Caller) const
+    {
+        return AtCallsIn(Anchor::At(Caller));
     }
 
     FunctionType AtCallsIn(const Anchor::FCode& Caller) const
@@ -124,6 +176,94 @@ public:
         return bSkipped ? FunctionType() : Anchor::DetourVTable(this->Name, Scanner::FindVTable(VTableName), Slot(), Detour);
     }
 
+    FunctionType InInterfaceVTable(const wchar_t* DefaultObjectPath, const wchar_t* InterfacePath) const
+    {
+        return InVTable(Scanner::FindVTable(DefaultObjectPath, InterfacePath));
+    }
+
+    FunctionType InChildVTables(UClass* OwnerClass) const
+    {
+        auto Slot = this->SlotValue();
+        auto Stub = bSkipped || !OwnerClass ? nullptr : Scanner::Virtual<const void*>(OwnerClass->GetDefaultObject(false), Slot);
+        FunctionType Original = {};
+
+        for (int32 Index = 0; Stub && Index < GUObjectArray.GetObjectArrayNum(); Index++)
+        {
+            auto ObjectItem = GUObjectArray.IndexToObject(Index);
+            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(OwnerClass))
+                continue;
+
+            auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false);
+
+            if (DefaultObject && Scanner::Virtual<const void*>(DefaultObject, Slot) == Stub)
+                Original = Anchor::DetourVTable(this->Name, *(void***)DefaultObject, Slot, Detour);
+        }
+
+        return Original;
+    }
+
+    FunctionType InChildVTablesCounted(UClass* OwnerClass) const
+    {
+        auto Slot = this->SlotValue();
+        auto Stub = bSkipped || !OwnerClass ? nullptr : Scanner::Virtual<const void*>(OwnerClass->GetDefaultObject(false), Slot);
+        FunctionType Original = {};
+        auto Classes = 0;
+
+        for (int32 Index = 0; !bSkipped && Index < GUObjectArray.GetObjectArrayNum(); Index++)
+        {
+            auto ObjectItem = GUObjectArray.IndexToObject(Index);
+            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(OwnerClass))
+                continue;
+
+            auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false);
+
+            if (DefaultObject && Stub && Scanner::Virtual<const void*>(DefaultObject, Slot) == Stub)
+            {
+                Original = Anchor::DetourVTable(nullptr, *(void***)DefaultObject, Slot, Detour);
+                Classes++;
+            }
+        }
+
+        if (!bSkipped)
+            UE_LOG(LogVelora, Log, TEXT("Hooked %s in %d classes"), this->Name, Classes);
+
+        return Original;
+    }
+
+    FunctionType InInterfaceVTables(UClass* BaseClass, UClass* Interface, std::string_view Instructions) const
+    {
+        auto Slot = this->SlotValue();
+        FunctionType Original = {};
+        auto Classes = 0;
+
+        for (int32 Index = 0; !bSkipped && Index < GUObjectArray.GetObjectArrayNum(); Index++)
+        {
+            auto ObjectItem = GUObjectArray.IndexToObject(Index);
+            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(BaseClass))
+                continue;
+
+            auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false);
+            auto InterfaceObject = DefaultObject ? DefaultObject->GetInterfaceAddress(Interface) : nullptr;
+
+            if (InterfaceObject && Anchor::At(Scanner::Virtual<const void*>(InterfaceObject, Slot)).Is(Instructions))
+            {
+                Original = Anchor::DetourVTable(nullptr, *(void***)InterfaceObject, Slot, Detour);
+                Classes++;
+            }
+        }
+
+        if (!bSkipped)
+            UE_LOG(LogVelora, Log, TEXT("Hooked %s in %d classes"), this->Name, Classes);
+
+        return Original;
+    }
+
     FunctionType InExec(const wchar_t* FunctionPath) const
     {
         auto Function = bSkipped ? nullptr : (UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath);
@@ -173,6 +313,11 @@ public:
     const uint8_t* BranchTo(const void* Target) const
     {
         return Anchor::PatchBranch(Name, Code.Get(), (const uint8_t*)Target);
+    }
+
+    const uint8_t* BranchToLast(std::string_view Instructions) const
+    {
+        return Anchor::PatchBranch(Name, Code.Get(), Code.Last(Instructions).Target());
     }
 };
 
@@ -260,6 +405,9 @@ const void* DetourOriginalOf()
 template<typename ClassType, auto Name, auto Function>
 struct TDetourAnchor
 {
+    using Address = ::Anchor::Address;
+    using Offset = ::Anchor::Offset;
+
     static auto Hook()
     {
         return THook(Name(), Function(std::type_identity<ClassType>()));

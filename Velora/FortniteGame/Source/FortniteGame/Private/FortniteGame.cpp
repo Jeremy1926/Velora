@@ -2,8 +2,21 @@
 #include "FortniteGame.h"
 #include "Scanner.h"
 
-FLogCategoryBase& LogFort = *(FLogCategoryBase*)Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Find("cmp byte ptr [0x*], *").Target(TEXT("LogFort"));
+FLogCategoryBase& LogFort = *Anchor::Data<FLogCategoryBase*>(TEXT("LogFort"))
+    .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
+    .Start()
+    .Find("cmp byte ptr [0x*], *")
+    .Target()
+    .Get();
 
-FLogCategoryBase& LogFortBuilding = *(FLogCategoryBase*)Scanner::String(TEXT("LogFortBuilding")).Find("lea rcx, [0x*]").Target(TEXT("LogFortBuilding"));
+FLogCategoryBase& LogFortBuilding = *Anchor::Data<FLogCategoryBase*>(TEXT("LogFortBuilding"))
+    .String(TEXT("LogFortBuilding"))
+    .Find("lea rcx, [0x*]")
+    .Target()
+    .Get();
 
-FLogCategoryBase& LogFortLoot = *(FLogCategoryBase*)Scanner::String(TEXT("LogFortLoot")).Find("lea rcx, [0x*]").Target(TEXT("LogFortLoot"));
+FLogCategoryBase& LogFortLoot = *Anchor::Data<FLogCategoryBase*>(TEXT("LogFortLoot"))
+    .String(TEXT("LogFortLoot"))
+    .Find("lea rcx, [0x*]")
+    .Target()
+    .Get();

@@ -24,13 +24,18 @@ void FNetworkObjectList::Remove(AActor* const Actor)
 
 int32 FNetworkObjectInfo::GetFlagsOffset()
 {
-    static auto FlagsOffset = []
-    {
-        auto Allocation = Scanner::String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s")).Start().Find("mov ecx, 0x*");
-        auto Flags = Allocation.Find("and dword ptr [*], 0xfffffffc");
-
-        return (Flags.Get() ? Flags : Allocation.Call(2).Find("and dword ptr [*], 0xfffffffc")).Disp(TEXT("FNetworkObjectInfo::bPendingNetUpdate"));
-    }();
+    static auto FlagsOffset = Anchor::Offset(TEXT("FNetworkObjectInfo::bPendingNetUpdate"))
+        .String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s"))
+        .Start()
+        .Find("mov ecx, 0x*")
+        .Find("and dword ptr [*], 0xfffffffc")
+        .Or()
+        .String(TEXT("FNetworkObjectList::Add: Adding actor. Actor: %s, Total: %i, Active: %i, NetDriverName: %s"))
+        .Start()
+        .Find("mov ecx, 0x*")
+        .Call(2)
+        .Find("and dword ptr [*], 0xfffffffc")
+        .Disp();
 
     return FlagsOffset;
 }

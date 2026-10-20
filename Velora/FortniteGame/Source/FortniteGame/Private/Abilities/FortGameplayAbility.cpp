@@ -12,24 +12,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static int32_t AbilityWeaponItemOffset()
-{
-    static auto AbilityWeaponItem = Scanner::CallTo(Scanner::Event(TEXT("ClientEndAbilityWeapon")).Get()).Last("mov dword ptr [*+0x*], 0xffffffff").Disp(TEXT("UFortGameplayAbility::AbilityWeaponItem"));
-
-    return AbilityWeaponItem;
-}
-
-static int32_t AbilityWeaponOffset()
-{
-    static auto ClientEndAbilityWeapon = Scanner::CallTo(Scanner::Event(TEXT("ClientEndAbilityWeapon")).Get());
-    static auto Lea = ClientEndAbilityWeapon.Find("lea *, [*+0x*]");
-    static auto Add = ClientEndAbilityWeapon.Find("add *, 0x*");
-    static auto AbilityWeapon = Add.Get() && (!Lea.Get() || Add.Get() < Lea.Get()) ? (int32_t)Add.Imm(TEXT("UFortGameplayAbility::AbilityWeaponActor")) : Lea.Disp(TEXT("UFortGameplayAbility::AbilityWeaponActor"));
-
-    return AbilityWeapon;
-}
-
-
 UClass* UFortGameplayAbility::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayAbility"));
@@ -76,7 +58,20 @@ void UFortGameplayAbility::execEquipAbilityWeapon(FFrame& Stack, void* const Z_P
         .Native(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon"))
         .Is("ret*")
         .Optional()
-        .If([] { return AbilityWeaponItemOffset() > 0 && AbilityWeaponOffset() > 0; })
+        .If([]
+        {
+            auto AbilityWeaponItem = Anchor::Offset(TEXT("UFortGameplayAbility::AbilityWeaponItem"))
+                .Event(TEXT("ClientEndAbilityWeapon"))
+                .CallSite()
+                .Last("mov dword ptr [*+0x*], 0xffffffff")
+                .Disp();
+
+            return AbilityWeaponItem > 0 && Anchor::Offset(TEXT("UFortGameplayAbility::AbilityWeaponActor"))
+                .Event(TEXT("ClientEndAbilityWeapon"))
+                .CallSite()
+                .FirstOf("add *, 0x*", "lea *, [*+0x*]")
+                .Get() > 0;
+        })
         .InExec(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon")));
 
     UFortWeaponItemDefinition* WeaponDefinition = nullptr;
@@ -91,10 +86,22 @@ void UFortGameplayAbility::execEquipAbilityWeapon(FFrame& Stack, void* const Z_P
 
 TWeakObjectPtr<UFortWorldItem>& UFortGameplayAbility::GetAbilityWeaponItem()
 {
-    return *(TWeakObjectPtr<UFortWorldItem>*)((uint8_t*)this + AbilityWeaponItemOffset());
+    static auto AbilityWeaponItem = Anchor::Offset(TEXT("UFortGameplayAbility::AbilityWeaponItem"))
+        .Event(TEXT("ClientEndAbilityWeapon"))
+        .CallSite()
+        .Last("mov dword ptr [*+0x*], 0xffffffff")
+        .Disp();
+
+    return *(TWeakObjectPtr<UFortWorldItem>*)((uint8_t*)this + AbilityWeaponItem);
 }
 
 TWeakObjectPtr<AFortWeapon>& UFortGameplayAbility::GetAbilityWeapon()
 {
-    return *(TWeakObjectPtr<AFortWeapon>*)((uint8_t*)this + AbilityWeaponOffset());
+    static auto AbilityWeapon = Anchor::Offset(TEXT("UFortGameplayAbility::AbilityWeaponActor"))
+        .Event(TEXT("ClientEndAbilityWeapon"))
+        .CallSite()
+        .FirstOf("add *, 0x*", "lea *, [*+0x*]")
+        .Get();
+
+    return *(TWeakObjectPtr<AFortWeapon>*)((uint8_t*)this + AbilityWeapon);
 }

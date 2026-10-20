@@ -5,12 +5,12 @@
 
 bool UPackageMap::WriteObject(FArchive& Ar, UObject* InOuter, FNetworkGUID NetGUID, FString ObjName)
 {
-    static auto WriteObject = Anchor::Slot(TEXT("UPackageMapClient::WriteObject"))
+    static auto WriteObject = Anchor::VirtualFunction<bool (*)(UPackageMap*, FArchive&, UObject*, FNetworkGUID, FString)>(TEXT("UPackageMapClient::WriteObject"))
         .String(TEXT("WroteObject %s NetGUID <%s>"))
         .Start()
         .Log(TEXT("UPackageMapClient::WriteObject"))
         .SlotIn(this)
         .Get();
 
-    return Scanner::Virtual<bool (*)(UPackageMap*, FArchive&, UObject*, FNetworkGUID, FString)>(this, WriteObject)(this, Ar, InOuter, NetGUID, MoveTemp(ObjName));
+    return WriteObject(this, Ar, InOuter, NetGUID, MoveTemp(ObjName));
 }

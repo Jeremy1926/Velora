@@ -4,10 +4,10 @@
 
 bool AAIController::RunBehaviorTree(UBehaviorTree* BTAsset)
 {
-    static auto RunBehaviorTree = Anchor::Slot(TEXT("AAIController::RunBehaviorTree"))
+    static auto RunBehaviorTree = Anchor::VirtualFunction<bool (*)(AAIController*, UBehaviorTree*)>(TEXT("AAIController::RunBehaviorTree"))
         .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
         .Find("call [rax+0x*]")
         .Get();
 
-    return Scanner::Virtual<bool (*)(AAIController*, UBehaviorTree*)>(this, RunBehaviorTree)(this, BTAsset);
+    return RunBehaviorTree(this, BTAsset);
 }

@@ -3,11 +3,18 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
-UEngine*& GEngine = *(UEngine**)Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov rcx, [0x*]").Target(TEXT("GEngine"));
+UEngine*& GEngine = *Anchor::Data<UEngine**>(TEXT("GEngine"))
+    .String(TEXT("RecordReplay: failed to create demo net driver!"))
+    .Last("mov rcx, [0x*]")
+    .Target()
+    .Get();
 
 void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
 {
-    static auto RunAsDedicated = Scanner::Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3").Find("movzx *, byte ptr [*+0x*]").Disp(TEXT("FWorldContext::RunAsDedicated"));
+    static auto RunAsDedicated = Anchor::Offset(TEXT("FWorldContext::RunAsDedicated"))
+        .Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3")
+        .Find("movzx *, byte ptr [*+0x*]")
+        .Disp();
 
     *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
 }
@@ -21,12 +28,12 @@ float UEngine::GetNetClientTicksPerSecond() const
 
 float UEngine::GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing) const
 {
-    static auto GetMaxTickRate = Anchor::Slot(TEXT("UEngine::GetMaxTickRate"))
+    static auto GetMaxTickRate = Anchor::VirtualFunction<float (*)(const UEngine*, float, bool)>(TEXT("UEngine::GetMaxTickRate"))
         .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
         .Last("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<float (*)(const UEngine*, float, bool)>(this, GetMaxTickRate)(this, DeltaTime, bAllowFrameRateSmoothing);
+    return GetMaxTickRate(this, DeltaTime, bAllowFrameRateSmoothing);
 }
 
 UGameViewportClient* UEngine::GetGameViewport() const
@@ -52,15 +59,14 @@ UObject* UEngine::GetGameSingleton() const
 
 void UEngine::BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
-    static auto Call = Scanner::String(TEXT("Beacon close from unexpected control message")).Start().Find("mov r9d, 0x6").Find("call 0x*");
-
-    static auto NetworkFailureEvent = []
-    {
-        auto Engine = Call.Last("mov rcx, [0x*]");
-        auto Event = Call.Last("add rcx, 0x*");
-
-        return Event.Get() > Engine.Get() ? (int32)Event.Imm(TEXT("UEngine::NetworkFailureEvent")) : 0;
-    }();
+    static auto NetworkFailureEvent = (int32)Anchor::Offset(TEXT("UEngine::NetworkFailureEvent"))
+        .String(TEXT("Beacon close from unexpected control message"))
+        .Start()
+        .Find("mov r9d, 0x6")
+        .Find("call 0x*")
+        .LastSince("add rcx, 0x*", "mov rcx, [0x*]")
+        .Optional()
+        .Imm();
 
     static auto Broadcast = Anchor::Function<void (*)(void*, UWorld*, UNetDriver*, ENetworkFailure::Type, const FString&)>(TEXT("UEngine::BroadcastNetworkFailure"))
         .String(TEXT("Beacon close from unexpected control message"))

@@ -17,16 +17,14 @@ UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InControlle
 
 APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
-    static auto SpawnDefaultPawnFor = Anchor::Slot(TEXT("AGameModeBase::SpawnDefaultPawnFor_Implementation"))
+    static auto SpawnDefaultPawnFor = Anchor::VirtualFunction<APawn* (*)(AGameModeBase*, AController*, AActor*)>(TEXT("AGameModeBase::SpawnDefaultPawnFor_Implementation"))
         .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
         .Start()
         .Log(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
-        .Get();
+        .Get(TEXT("/Script/Engine.Default__GameModeBase"));
 
-    static auto GameModeBaseSpawnDefaultPawnFor = Scanner::Virtual<APawn* (*)(AGameModeBase*, AController*, AActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameModeBase")), SpawnDefaultPawnFor);
-
-    return GameModeBaseSpawnDefaultPawnFor(this, NewPlayer, StartSpot);
+    return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);
 }
 
 FString& AGameModeBase::GetOptionsString()

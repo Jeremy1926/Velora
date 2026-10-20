@@ -21,7 +21,9 @@ ULocalPlayer* UGameInstance::GetFirstGamePlayer() const
 
 FWorldContext* UGameInstance::GetWorldContext() const
 {
-    static auto WorldContext = Scanner::Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3").Disp(TEXT("UGameInstance::WorldContext"));
+    static auto WorldContext = Anchor::Offset(TEXT("UGameInstance::WorldContext"))
+        .Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3")
+        .Disp();
 
     return *(FWorldContext**)((uint8_t*)this + WorldContext);
 }

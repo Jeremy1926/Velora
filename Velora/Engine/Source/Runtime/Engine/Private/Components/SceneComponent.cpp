@@ -6,9 +6,12 @@
 
 const FTransform& USceneComponent::GetComponentTransform() const
 {
-    static auto ComponentToWorld = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_GetActorLocation")).Find("mov?ps xmm*, [*+0x*]").Disp(TEXT("USceneComponent::ComponentToWorld.Translation")) - (int32_t)sizeof(VectorRegister);
+    static auto ComponentToWorld = Anchor::Offset(TEXT("USceneComponent::ComponentToWorld.Translation"))
+        .Exec(TEXT("/Script/Engine.Actor:K2_GetActorLocation"))
+        .Find("mov?ps xmm*, [*+0x*]")
+        .Disp();
 
-    return *(FTransform*)((uint8_t*)this + ComponentToWorld);
+    return *(FTransform*)((uint8_t*)this + ComponentToWorld - (int32_t)sizeof(VectorRegister));
 }
 
 FRotator USceneComponent::GetComponentRotation() const
@@ -33,14 +36,17 @@ FRotator USceneComponent::GetComponentRotation() const
 
 const FBoxSphereBounds& USceneComponent::GetBounds() const
 {
-    static auto Bounds = Scanner::Native(TEXT("/Script/Engine.KismetSystemLibrary:GetComponentBounds")).Find("movsd xmm0, qword ptr [*]").Disp(TEXT("USceneComponent::Bounds"));
+    static auto Bounds = Anchor::Offset(TEXT("USceneComponent::Bounds"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetComponentBounds"))
+        .Find("movsd xmm0, qword ptr [*]")
+        .Disp();
 
     return *(FBoxSphereBounds*)((uint8_t*)this + Bounds);
 }
 
 FBoxSphereBounds USceneComponent::CalcLocalBounds() const
 {
-    static auto CalcLocalBounds = Anchor::Slot(TEXT("USceneComponent::CalcLocalBounds"))
+    static auto CalcLocalBounds = Anchor::VirtualFunction<FBoxSphereBounds* (*)(const USceneComponent*, FBoxSphereBounds*)>(TEXT("USceneComponent::CalcLocalBounds"))
         .String(TEXT("HeldObject.Placement.Mesh"))
         .Start()
         .Find("mov rax, [rcx]; call [rax+0x*]; lea rcx, [*+0x*]; call 0x*; mov rcx, [rax+0x*]")
@@ -49,7 +55,7 @@ FBoxSphereBounds USceneComponent::CalcLocalBounds() const
 
     FBoxSphereBounds Result;
 
-    return *Scanner::Virtual<FBoxSphereBounds* (*)(const USceneComponent*, FBoxSphereBounds*)>(this, CalcLocalBounds)(this, &Result);
+    return *CalcLocalBounds(this, &Result);
 }
 
 void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport)
@@ -63,12 +69,12 @@ void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotat
 
 FVector USceneComponent::GetSocketLocation(FName InSocketName) const
 {
-    static auto GetSocketLocation = Anchor::Slot(TEXT("USceneComponent::GetSocketLocation"))
+    static auto GetSocketLocation = Anchor::VirtualFunction<FVector* (*)(const USceneComponent*, FVector*, FName)>(TEXT("USceneComponent::GetSocketLocation"))
         .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
         .Find("call [*+0x*]")
         .Get();
 
     FVector Result;
 
-    return *Scanner::Virtual<FVector* (*)(const USceneComponent*, FVector*, FName)>(this, GetSocketLocation)(this, &Result, InSocketName);
+    return *GetSocketLocation(this, &Result, InSocketName);
 }

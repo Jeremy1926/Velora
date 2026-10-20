@@ -9,55 +9,6 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
-static int32_t OnPlayerCreatedBuildingSlot()
-{
-    static auto OnPlayerCreatedBuilding = []
-    {
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto Index = 0;
-
-        while (Scanner::IsCode(VTable[Index]) && !Scanner::At(VTable[Index]).Is("mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*") && !Scanner::At(VTable[Index]).Is("mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]"))
-            Index++;
-
-        auto Forwarder = Scanner::At(Scanner::IsCode(VTable[Index]) ? VTable[Index] : nullptr);
-        auto BuildingAction = Forwarder.Is("mov rax, [rcx]*") ? std::format("call [rax+{:#x}]", Forwarder.Find("jmp [rax+*]").Slot(TEXT("AFortGameMode::OnPlayerBuildingAction"))) : std::format("call {:#x}", (uintptr_t)Forwarder.Find("jmp 0x*").Target(TEXT("AFortGameMode::OnPlayerBuildingAction")));
-
-        return Anchor::Slot(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))
-            .Virtual(VTable, [&](const Anchor::FCode& Entry) { return Entry.Start().Has(BuildingAction); })
-            .Get();
-    }();
-
-    return OnPlayerCreatedBuilding;
-}
-
-static int32_t GetLootTierDataTablesSlot()
-{
-    static auto GetLootTierDataTables = []
-    {
-        auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
-        auto LootTierData = Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr;
-        auto LootPackages = Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr;
-        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto Image = Scanner::Base();
-        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
-
-        auto Reads = [&](int32 Index, UProperty* Property)
-        {
-            return VTable[Index] >= Image && VTable[Index] < ImageEnd && (Scanner::At(VTable[Index]).Has(std::format("add rcx, {:#x}", Property->GetOffset_ForInternal())) || Scanner::At(VTable[Index]).Has(std::format("lea rcx, [*+{:#x}]", Property->GetOffset_ForInternal())));
-        };
-
-        for (int32 Index = 0; LootTierData && LootPackages && Scanner::IsCode(VTable[Index + 1]); Index++)
-        {
-            if (Reads(Index, LootTierData) && !Reads(Index, LootPackages) && Reads(Index + 1, LootPackages) && !Reads(Index + 1, LootTierData))
-                return Scanner::Slot(TEXT("AFortGameModeAthena::GetLootTierDataTables"), Index * (int32)sizeof(void*));
-        }
-
-        return 0;
-    }();
-
-    return GetLootTierDataTables;
-}
-
 UClass* AFortGameMode::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameMode"));
@@ -67,41 +18,83 @@ UClass* AFortGameMode::StaticClass()
 
 void AFortGameMode::OnPlayerCreatedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot())(this, PlayerController, BuildingActor);
+    static auto OnPlayerCreatedBuilding = Anchor::VirtualFunction<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Is("mov rax, [rcx]*")
+        .Find("jmp [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Find("jmp 0x*")
+        .Target()
+        .Log(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get();
+
+    OnPlayerCreatedBuilding(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::OnPlayerRepairedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot(), 3 * sizeof(void*))(this, PlayerController, BuildingActor);
+    static auto OnPlayerRepairedBuilding = Anchor::VirtualFunction<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Is("mov rax, [rcx]*")
+        .Find("jmp [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Find("jmp 0x*")
+        .Target()
+        .Log(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get(3 * sizeof(void*));
+
+    OnPlayerRepairedBuilding(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::OnPlayerEditedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
-    Scanner::Virtual<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(this, OnPlayerCreatedBuildingSlot(), 4 * sizeof(void*))(this, PlayerController, BuildingActor);
+    static auto OnPlayerEditedBuilding = Anchor::VirtualFunction<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Is("mov rax, [rcx]*")
+        .Find("jmp [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r9, r8; mov r8, rdx; mov dl, *; jmp 0x*", "mov rax, [rcx]; mov r9, r8; mov r8, rdx; mov dl, *; jmp [rax+*]")
+        .Find("jmp 0x*")
+        .Target()
+        .Log(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get(4 * sizeof(void*));
+
+    OnPlayerEditedBuilding(this, PlayerController, BuildingActor);
 }
 
 void AFortGameMode::FinishWorldInitialization()
 {
-    static auto FinishWorldInitialization = Anchor::Slot(TEXT("AFortGameMode::FinishWorldInitialization"))
+    static auto FinishWorldInitialization = Anchor::VirtualFunction<void (*)(AFortGameMode*)>(TEXT("AFortGameMode::FinishWorldInitialization"))
         .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
         .Start()
         .Log(TEXT("AFortGameModeAthena::FinishWorldInitialization"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
-        .Get();
+        .Get(TEXT("/Script/FortniteGame.Default__FortGameMode"));
 
-    Scanner::Virtual<void (*)(AFortGameMode*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameMode")), FinishWorldInitialization)(this);
+    FinishWorldInitialization(this);
 }
 
 void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)
 {
-    static auto OnGivenMatchAssignment = Anchor::Slot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+    static auto OnGivenMatchAssignment = Anchor::VirtualFunction<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(TEXT("AFortGameMode::OnGivenMatchAssignment"))
         .String(TEXT("Playtest-%s"))
         .Start()
         .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
         .Get();
 
-    Scanner::Virtual<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(this, OnGivenMatchAssignment)(this, MatchOptions);
+    OnGivenMatchAssignment(this, MatchOptions);
 }
 
 bool AFortGameMode::GetWorldIsReady() const
@@ -144,9 +137,15 @@ FName AFortGameMode::GetCurrentPlaylistName() const
 
 void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const
 {
-    if (Scanner::IsSlot(GetLootTierDataTablesSlot()))
+    static auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
+    static auto GetLootTierDataTables = Anchor::VirtualFunction<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(TEXT("AFortGameModeAthena::GetLootTierDataTables"))
+        .FieldReaderPair(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr, Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr)
+        .Optional()
+        .Get();
+
+    if (GetLootTierDataTables)
     {
-        Scanner::Virtual<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(this, GetLootTierDataTablesSlot())(this, OutLootTierDataTables);
+        GetLootTierDataTables(this, OutLootTierDataTables);
         return;
     }
 
@@ -159,9 +158,15 @@ void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTa
 
 void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const
 {
-    if (Scanner::IsSlot(GetLootTierDataTablesSlot()))
+    static auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
+    static auto GetLootPackageDataTables = Anchor::VirtualFunction<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(TEXT("AFortGameModeAthena::GetLootTierDataTables"))
+        .FieldReaderPair(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr, Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr)
+        .Optional()
+        .Get(sizeof(void*));
+
+    if (GetLootPackageDataTables)
     {
-        Scanner::Virtual<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(this, GetLootTierDataTablesSlot(), sizeof(void*))(this, OutLootPackageDataTables);
+        GetLootPackageDataTables(this, OutLootPackageDataTables);
         return;
     }
 

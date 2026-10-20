@@ -56,7 +56,7 @@ static auto bStartupLogged = []
 
     auto& Version = FEngineVersion::Current();
 
-    UE_LOG(LogVelora, Display, TEXT("Velora built %04d-%02d-%02d %02d:%02d:%02d, CL %u, UE %hu.%hu, base 0x%llX"), Built.tm_year + 1900, Built.tm_mon + 1, Built.tm_mday, Built.tm_hour, Built.tm_min, Built.tm_sec, Version.GetChangelist(), Version.GetMajor(), Version.GetMinor(), (uintptr_t)Scanner::Base());
+    UE_LOG(LogVelora, Display, TEXT("Velora built %04d-%02d-%02d %02d:%02d:%02d, CL %u, UE %hu.%hu, base 0x%llX"), Built.tm_year + 1900, Built.tm_mon + 1, Built.tm_mday, Built.tm_hour, Built.tm_min, Built.tm_sec, Version.GetChangelist(), Version.GetMajor(), Version.GetMinor(), (uintptr_t)Anchor::Base());
 
     return true;
 }();

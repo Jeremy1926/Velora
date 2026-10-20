@@ -11,9 +11,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target(TEXT("LogWorld"));
-
-
 AGameModeBase* UWorld::GetAuthGameMode() const
 {
     static auto AuthorityGameMode = GetClass()->FindPropertyByName(FName(TEXT("AuthorityGameMode")));
@@ -72,7 +69,10 @@ ULevel* UWorld::GetCurrentLevelPendingInvisibility() const
 
 float UWorld::GetTimeSeconds() const
 {
-    static auto TimeSeconds = Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds")).Find("movss xmm0, dword ptr [rax+*]").Disp(TEXT("UWorld::TimeSeconds"));
+    static auto TimeSeconds = Anchor::Offset(TEXT("UWorld::TimeSeconds"))
+        .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("movss xmm0, dword ptr [rax+*]")
+        .Disp();
 
     return *(float*)((uint8_t*)this + TimeSeconds);
 }
@@ -120,7 +120,12 @@ void UWorld::SetNetDriver(UNetDriver* NewDriver)
 
 void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 {
-    static auto NextSwitchCountdown = Scanner::String(TEXT("Server switch level: %s")).Start().Find("subss *").Find("movss [*], xmm*").Disp(TEXT("UWorld::NextSwitchCountdown"));
+    static auto NextSwitchCountdown = Anchor::Offset(TEXT("UWorld::NextSwitchCountdown"))
+        .String(TEXT("Server switch level: %s"))
+        .Start()
+        .Find("subss *")
+        .Find("movss [*], xmm*")
+        .Disp();
 
     *(float*)((uint8_t*)this + NextSwitchCountdown) = InNextSwitchCountdown;
 }
@@ -179,6 +184,12 @@ bool UWorld::Listen(FURL& InURL)
     if (!GetNetDriver()->InitListen(this, InURL, false, Error))
     {
         GEngine->BroadcastNetworkFailure(this, GetNetDriver(), ENetworkFailure::NetDriverListenFailure, Error);
+        static auto& LogWorld = *Anchor::Data<FLogCategoryBase*>(TEXT("LogWorld"))
+            .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
+            .Last("movzx *, byte ptr [0x*]")
+            .Target()
+            .Get();
+
         UE_LOG(LogWorld, Log, TEXT("Failed to listen: %s"), *Error);
         GetNetDriver()->SetWorld(nullptr);
         SetNetDriver(nullptr);

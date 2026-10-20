@@ -105,12 +105,12 @@ void AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer()
 
 void AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation()
 {
-    static auto MultiCastPushCannonLaunchedPlayer_Implementation = Anchor::Slot(TEXT("AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation"))
+    static auto MultiCastPushCannonLaunchedPlayer_Implementation = Anchor::VirtualFunction<void (*)(AFortAthenaSKPushCannon*)>(TEXT("AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation"))
         .Exec(TEXT("/Script/FortniteGame.FortAthenaSKPushCannon:MultiCastPushCannonLaunchedPlayer"))
         .Find("jmp [*+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(AFortAthenaSKPushCannon*)>(this, MultiCastPushCannonLaunchedPlayer_Implementation)(this);
+    MultiCastPushCannonLaunchedPlayer_Implementation(this);
 }
 
 void AFortAthenaSKPushCannon::PrelaunchDestroyBuildings(const TArray<FHitResult>& HitActors, AFortPlayerPawn* LaunchedPawn)

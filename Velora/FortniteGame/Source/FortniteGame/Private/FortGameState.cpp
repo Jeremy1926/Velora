@@ -21,7 +21,11 @@ EFortGameplayState AFortGameState::GetGameplayState() const
 
 const TArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditonalPlaylistLevels() const
 {
-    static auto AdditonalPlaylistLevels = Scanner::String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f")).Call(3).Find("mov *, [rcx+0x*]").Disp(TEXT("AFortGameState::AdditonalPlaylistLevels"));
+    static auto AdditonalPlaylistLevels = Anchor::Offset(TEXT("AFortGameState::AdditonalPlaylistLevels"))
+        .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
+        .Call(3)
+        .Find("mov *, [rcx+0x*]")
+        .Disp();
 
     return *(const TArray<FPlaylistStreamedLevelData>*)((const uint8*)this + AdditonalPlaylistLevels);
 }

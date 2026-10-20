@@ -4,8 +4,13 @@
 
 FReservedRandomValues& AFortWorldManager::GetFoundationBuildingActorsRRV()
 {
-    static auto ConditionalStreamIn = Scanner::CallTo(Scanner::String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!")).Start().Get()).Start();
-    static auto FoundationBuildingActorsRRV = Scanner::CallTo(ConditionalStreamIn.Get()).Last("lea rdx, [*+0x*]").Disp(TEXT("AFortWorldManager::FoundationBuildingActorsRRV"));
+    static auto FoundationBuildingActorsRRV = Anchor::Offset(TEXT("AFortWorldManager::FoundationBuildingActorsRRV"))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
+        .CallSite()
+        .Last("lea rdx, [*+0x*]")
+        .Disp();
 
     return *(FReservedRandomValues*)((uint8_t*)this + FoundationBuildingActorsRRV);
 }

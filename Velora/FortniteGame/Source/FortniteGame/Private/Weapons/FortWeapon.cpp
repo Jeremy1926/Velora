@@ -11,7 +11,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-
 UClass* AFortWeapon::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWeapon"));
@@ -21,7 +20,7 @@ UClass* AFortWeapon::StaticClass()
 
 void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
 {
-    static auto PlayWeaponFireFX = Anchor::Slot(TEXT("AFortWeapon::PlayWeaponFireFX"))
+    static auto PlayWeaponFireFX = Anchor::VirtualFunction<void (*)(AFortWeapon*, bool)>(TEXT("AFortWeapon::PlayWeaponFireFX"))
         .Event(TEXT("OnPlayWeaponFireFX"))
         .Log(TEXT("AFortWeapon::OnPlayWeaponFireFX"))
         .Caller()
@@ -29,7 +28,7 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortWeapon"))
         .Get();
 
-    Scanner::Virtual<void (*)(AFortWeapon*, bool)>(this, PlayWeaponFireFX)(this, bPersistentFire);
+    PlayWeaponFireFX(this, bPersistentFire);
 }
 
 bool AFortWeapon::CheckPendingDestroyedDueToDurability()
@@ -60,13 +59,13 @@ bool AFortWeapon::CheckPendingDestroyedDueToDurability()
 
 bool AFortWeapon::TryReloadAmmo()
 {
-    static auto TryReloadAmmo = Anchor::Slot(TEXT("AFortWeapon::TryReloadAmmo"))
+    static auto TryReloadAmmo = Anchor::VirtualFunction<bool (*)(AFortWeapon*)>(TEXT("AFortWeapon::TryReloadAmmo"))
         .String(TEXT("Maximum reload count at respawn reached on %s"))
         .Start()
         .Find("call [rax+0x*]")
         .Get();
 
-    return Scanner::Virtual<bool (*)(AFortWeapon*)>(this, TryReloadAmmo)(this);
+    return TryReloadAmmo(this);
 }
 
 bool AFortWeapon::TryReloadAmmoFromAbility()

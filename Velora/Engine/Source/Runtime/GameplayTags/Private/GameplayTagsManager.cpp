@@ -4,8 +4,17 @@
 
 UGameplayTagsManager& UGameplayTagsManager::Get()
 {
-    static auto InstantDeathSilent = Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent"));
-    static auto SingletonManager = (UGameplayTagsManager**)(InstantDeathSilent.Get() ? InstantDeathSilent : Scanner::String("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Target(TEXT("UGameplayTagsManager::SingletonManager"));
+    static auto SingletonManager = Anchor::Data<UGameplayTagsManager**>(TEXT("UGameplayTagsManager::SingletonManager"))
+        .String(TEXT("Gameplay.Effect.InstantDeath.Silent"))
+        .Start()
+        .Find("mov *, [0x*]; test *")
+        .Target()
+        .Or()
+        .String("Gameplay.Effect.InstantDeath.Silent")
+        .Start()
+        .Find("mov *, [0x*]; test *")
+        .Target()
+        .Get();
 
     if (*SingletonManager == nullptr)
     {

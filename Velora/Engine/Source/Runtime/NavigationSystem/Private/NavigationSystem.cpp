@@ -6,23 +6,23 @@
 
 void UNavigationSystemV1::ProcessRegistrationCandidates()
 {
-    static auto ProcessRegistrationCandidates = Anchor::Slot(TEXT("UNavigationSystemV1::ProcessRegistrationCandidates"))
+    static auto ProcessRegistrationCandidates = Anchor::VirtualFunction<void (*)(UNavigationSystemV1*)>(TEXT("UNavigationSystemV1::ProcessRegistrationCandidates"))
         .String(TEXT("Auto generating navigation bounds: %s"))
         .Find("call [rax+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(UNavigationSystemV1*)>(this, ProcessRegistrationCandidates)(this);
+    ProcessRegistrationCandidates(this);
 }
 
 void UNavigationSystemV1::SpawnMissingNavigationData()
 {
-    static auto SpawnMissingNavigationData = Anchor::Slot(TEXT("UNavigationSystemV1::SpawnMissingNavigationData"))
+    static auto SpawnMissingNavigationData = Anchor::VirtualFunction<void (*)(UNavigationSystemV1*)>(TEXT("UNavigationSystemV1::SpawnMissingNavigationData"))
         .String(TEXT("Auto generating navigation bounds: %s"))
         .Find("mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(UNavigationSystemV1*)>(this, SpawnMissingNavigationData)(this);
+    SpawnMissingNavigationData(this);
 }
 
 TArray<ANavigationData*>& UNavigationSystemV1::GetNavDataSet()

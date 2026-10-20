@@ -22,7 +22,6 @@ struct AthenaMarkerComponent_eventClientCancelMarker_Parms
     FMarkerID MarkerID;
 };
 
-
 void UAthenaMarkerComponent::ClientAddMarker(AFortPlayerState* MarkerOwner, const FFortWorldMarkerData& MarkerData)
 {
     static auto ClientAddMarker = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker"));
@@ -97,14 +96,7 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
     static auto ClientAddMarker = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker"));
     static auto MarkerDataStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWorldMarkerData"));
     static auto MarkerRequestStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortClientMarkerRequest"));
-    static auto Constructor = ClientAddMarker ? Scanner::Function<void (*)(FFortWorldMarkerData*)>(Scanner::Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker")).Call().Get(TEXT("FFortWorldMarkerData::FFortWorldMarkerData"))) : nullptr;
-    static auto Destructor = ClientAddMarker ? Scanner::Function<void (*)(FFortWorldMarkerData*)>([]
-    {
-        auto ClientAddMarker_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker")).Find("call [*+0x*]").Slot(TEXT("UAthenaMarkerComponent::ClientAddMarker_Implementation"));
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__AthenaMarkerComponent"));
 
-        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ClientAddMarker_Implementation)).Find("jmp 0x*").Target(TEXT("FFortWorldMarkerData::~FFortWorldMarkerData"));
-    }()) : nullptr;
     static auto BuildMarkerDataForActor = Anchor::Function<bool (*)(UAthenaMarkerComponent*, AActor*, FFortWorldMarkerData*)>(TEXT("UAthenaMarkerComponent::BuildMarkerDataForActor"))
         .String(TEXT("FortMarkableActorInterface"))
         .Start()
@@ -145,7 +137,14 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
     auto MarkerData = (FFortWorldMarkerData*)Buffer.GetData();
 
     if (ClientAddMarker)
+    {
+        static auto Constructor = Anchor::Function<void (*)(FFortWorldMarkerData*)>(TEXT("FFortWorldMarkerData::FFortWorldMarkerData"))
+            .Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker"))
+            .Call()
+            .Get();
+
         Constructor(MarkerData);
+    }
     else
         MarkerDataStruct->InitializeStruct(MarkerData);
 
@@ -187,7 +186,18 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
     }
 
     if (ClientAddMarker)
+    {
+        static auto Destructor = Anchor::Function<void (*)(FFortWorldMarkerData*)>(TEXT("FFortWorldMarkerData::~FFortWorldMarkerData"))
+            .Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker"))
+            .Find("call [*+0x*]")
+            .LogSlot(TEXT("UAthenaMarkerComponent::ClientAddMarker_Implementation"))
+            .Entry(TEXT("/Script/FortniteGame.Default__AthenaMarkerComponent"))
+            .Find("jmp 0x*")
+            .Target()
+            .Get();
+
         Destructor(MarkerData);
+    }
     else
         MarkerDataStruct->DestroyStruct(MarkerData);
 }

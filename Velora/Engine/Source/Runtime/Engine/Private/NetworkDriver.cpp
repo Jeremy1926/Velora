@@ -23,7 +23,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-
 int32 UNetDriver::GetMaxInternetClientRate() const
 {
     static auto MaxInternetClientRate = GetClass()->FindPropertyByName(FName(TEXT("MaxInternetClientRate")));
@@ -96,26 +95,32 @@ float UNetDriver::GetRelevantTimeout() const
 
 TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
 {
-    static auto GuidCache = Scanner::String(TEXT("ReadContentBlockHeader: Stably named sub-object not found.*")).Last("mov rcx, [rcx+0x*]").Disp(TEXT("UNetDriver::GuidCache"));
+    static auto GuidCache = Anchor::Offset(TEXT("UNetDriver::GuidCache"))
+        .String(TEXT("ReadContentBlockHeader: Stably named sub-object not found.*"))
+        .Last("mov rcx, [rcx+0x*]")
+        .Disp();
 
     return *(TSharedPtr<FNetGUIDCache>*)((uint8_t*)this + GuidCache);
 }
 
-static int32_t NetTagOffset()
-{
-    static auto NetTag = Scanner::Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00").Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*").Disp(TEXT("UNetDriver::NetTag"));
-
-    return NetTag;
-}
-
 int32 UNetDriver::GetNetTag() const
 {
-    return *(int32*)((uint8_t*)this + NetTagOffset());
+    static auto NetTag = Anchor::Offset(TEXT("UNetDriver::NetTag"))
+        .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
+        .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
+        .Disp();
+
+    return *(int32*)((uint8_t*)this + NetTag);
 }
 
 void UNetDriver::SetNetTag(int32 InNetTag)
 {
-    *(int32*)((uint8_t*)this + NetTagOffset()) = InNetTag;
+    static auto NetTag = Anchor::Offset(TEXT("UNetDriver::NetTag"))
+        .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
+        .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
+        .Disp();
+
+    *(int32*)((uint8_t*)this + NetTag) = InNetTag;
 }
 
 int32 FActorDestructionInfo::GetLevelSize()
@@ -162,60 +167,80 @@ FName& FActorDestructionInfo::GetStreamingLevelName()
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
 {
-    static auto DestroyedStartupOrDormantActors = []
-    {
-        auto AddClientConnection = Scanner::String(TEXT("AddClientConnection: Added client connection: %s"));
-        auto Map = AddClientConnection.Find("lea r*, [*+0x???]");
-
-        return Map.Get() ? Map.Disp(TEXT("UNetDriver::DestroyedStartupOrDormantActors")) : (int32)AddClientConnection.Find("add r*, 0x???").Imm(TEXT("UNetDriver::DestroyedStartupOrDormantActors"));
-    }();
+    static auto DestroyedStartupOrDormantActors = Anchor::Offset(TEXT("UNetDriver::DestroyedStartupOrDormantActors"))
+        .String(TEXT("AddClientConnection: Added client connection: %s"))
+        .Find("lea r*, [*+0x???]")
+        .Or()
+        .String(TEXT("AddClientConnection: Added client connection: %s"))
+        .Find("add r*, 0x???")
+        .Get();
 
     return *(TMap<FNetworkGUID, FActorDestructionInfo>*)((uint8_t*)this + DestroyedStartupOrDormantActors);
 }
 
-static int32_t ReplicationFrameOffset()
-{
-    static auto ReplicationFrame = []
-    {
-        auto Frames = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms.")).Start().Find("inc [*]; inc [*]");
-
-        if (!Frames.Get())
-            Frames = Scanner::String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*")).Start().Find("inc [*]; inc [*]");
-
-        if (!Frames.Get())
-            Frames = Scanner::String(TEXT("STAT_ReplayPrioritizeTime")).Last("inc [*]; inc [*]");
-
-        return Frames.Find("inc [*]").Disp(TEXT("UNetDriver::ReplicationFrame"));
-    }();
-
-    return ReplicationFrame;
-}
-
 uint32 UNetDriver::GetReplicationFrame() const
 {
-    return *(uint32*)((uint8_t*)this + ReplicationFrameOffset());
+    static auto ReplicationFrame = Anchor::Offset(TEXT("UNetDriver::ReplicationFrame"))
+        .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
+        .Start()
+        .Find("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Or()
+        .String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*"))
+        .Start()
+        .Find("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Or()
+        .String(TEXT("STAT_ReplayPrioritizeTime"))
+        .Last("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Disp();
+
+    return *(uint32*)((uint8_t*)this + ReplicationFrame);
 }
 
 void UNetDriver::SetReplicationFrame(uint32 InReplicationFrame)
 {
-    *(uint32*)((uint8_t*)this + ReplicationFrameOffset()) = InReplicationFrame;
+    static auto ReplicationFrame = Anchor::Offset(TEXT("UNetDriver::ReplicationFrame"))
+        .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
+        .Start()
+        .Find("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Or()
+        .String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*"))
+        .Start()
+        .Find("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Or()
+        .String(TEXT("STAT_ReplayPrioritizeTime"))
+        .Last("inc [*]; inc [*]")
+        .Find("inc [*]")
+        .Disp();
+
+    *(uint32*)((uint8_t*)this + ReplicationFrame) = InReplicationFrame;
 }
 
 FNetworkObjectList& UNetDriver::GetNetworkObjectList()
 {
-    static auto NetworkObjects = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx; mov rcx, *").Last("call 0x*").Call().Find("mov rcx, [*]; call 0x*").Disp(TEXT("UNetDriver::NetworkObjects"));
+    static auto NetworkObjects = Anchor::Offset(TEXT("UNetDriver::NetworkObjects"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor edx, edx; mov rcx, *")
+        .Last("call 0x*")
+        .Call()
+        .Find("mov rcx, [*]; call 0x*")
+        .Disp();
 
     return **(TSharedPtr<FNetworkObjectList>*)((uint8_t*)this + NetworkObjects);
 }
 
 bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReuseAddressAndPort, FString& Error)
 {
-    static auto InitListen = Anchor::Slot(TEXT("UNetDriver::InitListen"))
+    static auto InitListen = Anchor::VirtualFunction<bool (*)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&)>(TEXT("UNetDriver::InitListen"))
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("call [*]")
         .Get();
 
-    return Scanner::Virtual<bool (*)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&)>(this, InitListen)(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
+    return InitListen(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
 }
 
 void UNetDriver::SetWorld(UWorld* InWorld)
@@ -239,26 +264,40 @@ void UNetDriver::TickFlush(float DeltaSeconds)
         .Log(TEXT("UNetDriver::TickFlush"))
         .Inline());
 
-    static auto FlushActorDormancy = []
-    {
-        for (auto ActorFunction : { Scanner::At(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target(TEXT("AActor::FlushNetDormancy"))), Scanner::Native(TEXT("/Script/Engine.Actor:SetNetDormancy")) })
-        {
-            auto DemoNetDriverCall = ActorFunction.Find("ret").Last("call 0x*");
+    static auto FlushNetDormancy = THook(TEXT("UNetDriver::FlushActorDormancy"), &UNetDriver::FlushActorDormancy)
+        .Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy"))
+        .Find("jmp 0x*")
+        .Target()
+        .Log(TEXT("AActor::FlushNetDormancy"))
+        .Find("ret")
+        .Last("call 0x*")
+        .LastRepeatedCall()
+        .IsTarget("ret*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("ret")
+        .Last("call 0x*")
+        .LastRepeatedCall()
+        .IsTarget("jmp 0x*")
+        .Optional()
+        .AtCallPair();
 
-            while (DemoNetDriverCall.Get() && DemoNetDriverCall.Last("call 0x*").Target() != DemoNetDriverCall.Target())
-                DemoNetDriverCall = DemoNetDriverCall.Last("call 0x*");
-
-            auto GameFlushActorDormancy = Scanner::At(DemoNetDriverCall.Target());
-
-            if (!GameFlushActorDormancy.Is("ret*") && !GameFlushActorDormancy.Is("jmp 0x*"))
-                continue;
-
-            DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Last("call 0x*").Get(), &UNetDriver::FlushActorDormancy);
-            DetourCall(TEXT("UNetDriver::FlushActorDormancy"), DemoNetDriverCall.Get(), &UNetDriver::FlushActorDormancy);
-        }
-
-        return true;
-    }();
+    static auto SetNetDormancy = THook(TEXT("UNetDriver::FlushActorDormancy"), &UNetDriver::FlushActorDormancy)
+        .Native(TEXT("/Script/Engine.Actor:SetNetDormancy"))
+        .Find("ret")
+        .Last("call 0x*")
+        .LastRepeatedCall()
+        .IsTarget("ret*")
+        .Or()
+        .Native(TEXT("/Script/Engine.Actor:SetNetDormancy"))
+        .Find("ret")
+        .Last("call 0x*")
+        .LastRepeatedCall()
+        .IsTarget("jmp 0x*")
+        .Optional()
+        .AtCallPair();
 
     if (IsServer() && GetClientConnections().Num() > 0 && GetClientConnections()[0]->GetInternalAck() == false)
     {
@@ -292,16 +331,16 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
     }
 }
 
-static auto IsServerSlot = Anchor::Slot(TEXT("UNetDriver::IsServer"))
-    .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
-    .Last("call 0x*")
-    .Target()
-    .Find("call [rax+0x*]")
-    .Get();
-
 bool UNetDriver::IsServer() const
 {
-    return Scanner::Virtual<bool (*)(const UNetDriver*)>(this, IsServerSlot)(this);
+    static auto IsServer = Anchor::VirtualFunction<bool (*)(const UNetDriver*)>(TEXT("UNetDriver::IsServer"))
+        .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
+        .Last("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return IsServer(this);
 }
 
 ENetMode UNetDriver::GetNetMode() const
@@ -311,13 +350,13 @@ ENetMode UNetDriver::GetNetMode() const
 
 bool UNetDriver::IsLevelInitializedForActor(const AActor* InActor, const UNetConnection* InConnection) const
 {
-    static auto IsLevelInitializedForActor = Anchor::Slot(TEXT("UNetDriver::IsLevelInitializedForActor"))
+    static auto IsLevelInitializedForActor = Anchor::VirtualFunction<bool (*)(const UNetDriver*, const AActor*, const UNetConnection*)>(TEXT("UNetDriver::IsLevelInitializedForActor"))
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("call [*]; test al, al")
         .Get();
 
-    return Scanner::Virtual<bool (*)(const UNetDriver*, const AActor*, const UNetConnection*)>(this, IsLevelInitializedForActor)(this, InActor, InConnection);
+    return IsLevelInitializedForActor(this, InActor, InConnection);
 }
 
 bool UNetDriver::IsAdaptiveNetUpdateFrequencyEnabled()

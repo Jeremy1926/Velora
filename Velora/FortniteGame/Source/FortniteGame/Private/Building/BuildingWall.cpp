@@ -23,7 +23,7 @@ void ABuildingWall::Open_Implementation(AController* ControllerInstigator)
         .Call(3)
         .Find("call [r8+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
-        .InVTable(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface"))));
+        .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress((UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.OpenableInterface"))) - (uint8*)DefaultObject;
@@ -41,7 +41,7 @@ void ABuildingWall::Close_Implementation(AController* ControllerInstigator)
         .Call(3)
         .Find("call [r8+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
-        .InVTable(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface"))));
+        .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress((UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.OpenableInterface"))) - (uint8*)DefaultObject;

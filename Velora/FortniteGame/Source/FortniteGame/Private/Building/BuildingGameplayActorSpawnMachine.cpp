@@ -58,7 +58,6 @@ static TArray<FPendingNextPlayer> PendingNextPlayers;
 
 static TArray<FPendingSkydiveCheck> PendingSkydiveChecks;
 
-
 UClass* ABuildingGameplayActorSpawnMachine::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine"));
@@ -120,14 +119,26 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         return;
     }
 
-    static auto HandleOnTeamWipedOut = Scanner::At(Scanner::String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting")).Start().Find("lea rcx, [0x*]; mov [rsp+0x*], rcx").Target(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))).Find("lea rcx, [rdi+0x*]");
     static auto RemoveAll = Anchor::Function<void (*)(FMulticastDelegateBase<FWeakObjectPtr>*, const void*)>(TEXT("FMulticastDelegateBase::RemoveAll"))
-        .At(HandleOnTeamWipedOut)
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rcx, [0x*]; mov [rsp+0x*], rcx")
+        .Target()
+        .Log(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))
+        .Find("lea rcx, [rdi+0x*]")
         .Call()
         .Get();
 
+    static auto OnTeamWipedOut = Anchor::Offset(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rcx, [0x*]; mov [rsp+0x*], rcx")
+        .Target()
+        .Find("lea rcx, [rdi+0x*]")
+        .DispValue();
+
     if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
-        RemoveAll((FMulticastDelegateBase<FWeakObjectPtr>*)((uint8_t*)GameMode + HandleOnTeamWipedOut.Disp()), this);
+        RemoveAll((FMulticastDelegateBase<FWeakObjectPtr>*)((uint8_t*)GameMode + OnTeamWipedOut), this);
 
     OnResurrectionCompleted();
 }

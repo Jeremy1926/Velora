@@ -5,17 +5,13 @@
 
 bool AGameNetworkManager::IsInLowBandwidthMode()
 {
-    static auto IsInLowBandwidthMode = []
-    {
-        auto UpdateNetSpeeds = Anchor::Slot(TEXT("AGameNetworkManager::UpdateNetSpeeds"))
-            .String(TEXT("New Dynamic NetSpeed %i vs old %i"))
-            .Start()
-            .Log(TEXT("AGameNetworkManager::UpdateNetSpeeds"))
-            .SlotIn(TEXT("/Script/Engine.Default__GameNetworkManager"))
-            .Get();
+    static auto IsInLowBandwidthMode = Anchor::VirtualFunction<bool (*)(AGameNetworkManager*)>(TEXT("AGameNetworkManager::UpdateNetSpeeds"))
+        .String(TEXT("New Dynamic NetSpeed %i vs old %i"))
+        .Start()
+        .Log(TEXT("AGameNetworkManager::UpdateNetSpeeds"))
+        .SlotIn(TEXT("/Script/Engine.Default__GameNetworkManager"))
+        .LogSlot(TEXT("AGameNetworkManager::IsInLowBandwidthMode"), 2 * sizeof(void*))
+        .Get(2 * sizeof(void*));
 
-        return Scanner::Slot(TEXT("AGameNetworkManager::IsInLowBandwidthMode"), UpdateNetSpeeds ? UpdateNetSpeeds + 2 * (int32)sizeof(void*) : 0);
-    }();
-
-    return Scanner::Virtual<bool (*)(AGameNetworkManager*)>(this, IsInLowBandwidthMode)(this);
+    return IsInLowBandwidthMode(this);
 }

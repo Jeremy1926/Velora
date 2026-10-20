@@ -12,25 +12,25 @@ UClass* UObject::StaticClass()
 
 UWorld* UObject::GetWorld() const
 {
-    static auto GetWorld = Anchor::Slot(TEXT("UObject::GetWorld"))
+    static auto GetWorld = Anchor::VirtualFunction<UWorld* (*)(const UObject*)>(TEXT("UObject::GetWorld"))
         .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
         .Start()
         .Find("call [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<UWorld* (*)(const UObject*)>(this, GetWorld)(this);
+    return GetWorld(this);
 }
 
 bool UObject::NeedsLoadForServer() const
 {
-    static auto NeedsLoadForClient = Anchor::Slot(TEXT("UObject::NeedsLoadForClient"))
+    static auto NeedsLoadForClient = Anchor::VirtualFunction<bool (*)(const UObject*)>(TEXT("UObject::NeedsLoadForClient"))
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Last("call 0x*; test al, al")
         .Call()
         .Find("jmp [rax+0x*]")
-        .Get();
+        .Get(sizeof(void*));
 
-    return Scanner::Virtual<bool (*)(const UObject*)>(this, NeedsLoadForClient, sizeof(void*))(this);
+    return NeedsLoadForClient(this);
 }
 
 bool UObject::CanCreateInCurrentContext(UObject* Template)
@@ -60,7 +60,7 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
 
 bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack)
 {
-    static auto CallRemoteFunction = Anchor::Slot(TEXT("UObject::CallRemoteFunction"))
+    static auto CallRemoteFunction = Anchor::VirtualFunction<bool (*)(UObject*, UFunction*, void*, FOutParmRec*, FFrame*)>(TEXT("UObject::CallRemoteFunction"))
         .String(TEXT("NotifyEventTriggered: Unable to find function '%s'"))
         .Start()
         .Find("call [*+0x*]")
@@ -69,5 +69,5 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
         .Find("call [*+0x*]", 2)
         .Get();
 
-    return Scanner::Virtual<bool (*)(UObject*, UFunction*, void*, FOutParmRec*, FFrame*)>(this, CallRemoteFunction)(this, Function, Parms, OutParms, Stack);
+    return CallRemoteFunction(this, Function, Parms, OutParms, Stack);
 }

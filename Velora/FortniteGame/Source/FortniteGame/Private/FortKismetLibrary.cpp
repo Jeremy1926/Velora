@@ -45,7 +45,9 @@ void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventor
 {
     DETOUR(UFortKismetLibrary, GiveItemToInventoryOwner, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode"))
-        .FindCall(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get())
+        .FindCall(Anchor::Address()
+            .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+            .Get())
         .Optional()
         .AtCall());
 
@@ -135,7 +137,10 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerC
         .Find("jnz 0x*")
         .Target()
         .Log(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayer"))
-        .AtCallsIn(Scanner::String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory.")).Start()));
+        .AtCallsIn(Anchor::Address()
+            .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+            .Start()
+            .Get()));
 
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
 
@@ -210,7 +215,7 @@ int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* Pla
 void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UFortKismetLibrary, execK2_RemoveFortItemFromPlayer, Anchor::Hook()
-        .If(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
+        .If(Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")));
 
     AFortPlayerController* PlayerController = nullptr;

@@ -33,12 +33,9 @@ FText& FText::operator=(const FText& Source)
 
 FText& FText::operator=(FText&& Source)
 {
-    static auto MoveAssign = []
-    {
-        auto MoveAssign = Scanner::Pattern("48 8B 02 4C 8B 01 48 89 01 4C 89 02 48 8B 42 08 4C 8B 41 08 48 89 41 08 4C 89 42 08 8B 42 10 89 41 10 48 8B C1 C3");
-
-        return MoveAssign.Get() ? (FText& (*)(FText*, FText&))MoveAssign.Get(TEXT("FText::operator=(FText&&)")) : nullptr;
-    }();
+    static auto MoveAssign = Anchor::Optional<FText& (*)(FText*, FText&)>(TEXT("FText::operator=(FText&&)"))
+        .Pattern("48 8B 02 4C 8B 01 48 89 01 4C 89 02 48 8B 42 08 4C 8B 41 08 48 89 41 08 4C 89 42 08 8B 42 10 89 41 10 48 8B C1 C3")
+        .Get();
 
     if (MoveAssign)
         return MoveAssign(this, Source);
@@ -146,14 +143,16 @@ FTextFormat::FTextFormat(const FText& InText)
 
 FFormatArgumentValue::FFormatArgumentValue(const FText& Value)
 {
-    static auto Constructor = []
-    {
-        auto ClientBuild = Scanner::CallTo(Scanner::Event(TEXT("ServerCreateBuildingActor")).Get()).Start();
-        auto CheckAutoChangeMaterial = ClientBuild.Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
-        auto Call = (CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild).Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]").Last("call 0x*");
-
-        return Scanner::At(Call.Target()).Has("mov dword ptr [rcx], 0x4") ? (void (*)(FFormatArgumentValue*, const FText&))Call.Target(TEXT("FFormatArgumentValue::FFormatArgumentValue")) : nullptr;
-    }();
+    static auto Constructor = Anchor::Optional<void (*)(FFormatArgumentValue*, const FText&)>(TEXT("FFormatArgumentValue::FFormatArgumentValue"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .TryCall("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
+        .Find("lea rdx, [0x*]")
+        .Last("call 0x*")
+        .Target()
+        .Has("mov dword ptr [rcx], 0x4")
+        .Get();
 
     if (Constructor)
     {

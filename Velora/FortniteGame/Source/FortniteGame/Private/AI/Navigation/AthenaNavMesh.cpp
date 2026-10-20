@@ -14,11 +14,11 @@ void AAthenaNavMesh::RebuildAll()
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__AthenaNavMesh")));
 
-    static auto RebuildAll = Anchor::Slot(TEXT("ANavigationData::RebuildAll"))
+    static auto RebuildAll = Anchor::VirtualFunction<void (*)(AAthenaNavMesh*)>(TEXT("ANavigationData::RebuildAll"))
         .String(TEXT("   Building NavData:  %s."))
         .Find("ret")
         .Last("call [rax+0x*]")
-        .Get();
+        .Get(TEXT("/Script/FortniteGame.Default__FortNavMesh"));
 
-    Scanner::Virtual<void (*)(AAthenaNavMesh*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortNavMesh")), RebuildAll)(this);
+    RebuildAll(this);
 }

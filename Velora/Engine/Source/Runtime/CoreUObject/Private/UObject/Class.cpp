@@ -23,24 +23,24 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
 
 void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
 {
-    static auto InitializeStruct = Anchor::Slot(TEXT("UStruct::InitializeStruct"))
+    static auto InitializeStruct = Anchor::VirtualFunction<void (*)(const UStruct*, void*, int32)>(TEXT("UStruct::InitializeStruct"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
         .Get();
 
-    Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, InitializeStruct)(this, Dest, ArrayDim);
+    InitializeStruct(this, Dest, ArrayDim);
 }
 
 void UStruct::DestroyStruct(void* Dest, int32 ArrayDim) const
 {
-    static auto DestroyStruct = Anchor::Slot(TEXT("UStruct::InitializeStruct"))
+    static auto DestroyStruct = Anchor::VirtualFunction<void (*)(const UStruct*, void*, int32)>(TEXT("UStruct::InitializeStruct"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
-        .Get() + (int32)sizeof(void*);
+        .Get(sizeof(void*));
 
-    Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, DestroyStruct)(this, Dest, ArrayDim);
+    DestroyStruct(this, Dest, ArrayDim);
 }
 
 void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim) const
@@ -55,21 +55,26 @@ void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim
     CopyScriptStruct(this, Dest, Src, ArrayDim);
 }
 
-static int32 FuncOffset()
-{
-    static auto Func = Scanner::String(TEXT("Failed to bind native function %s.%s")).Start().Find("mov [*+0x*], rax").Disp(TEXT("UFunction::Func"));
-
-    return Func;
-}
-
 Native UFunction::GetNativeFunc() const
 {
-    return *(Native*)((uint8_t*)this + FuncOffset());
+    static auto Func = Anchor::Offset(TEXT("UFunction::Func"))
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Find("mov [*+0x*], rax")
+        .Disp();
+
+    return *(Native*)((uint8_t*)this + Func);
 }
 
 void UFunction::SetNativeFunc(Native InFunc)
 {
-    *(Native*)((uint8_t*)this + FuncOffset()) = InFunc;
+    static auto Func = Anchor::Offset(TEXT("UFunction::Func"))
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Find("mov [*+0x*], rax")
+        .Disp();
+
+    *(Native*)((uint8_t*)this + Func) = InFunc;
 }
 
 int64 UEnum::GetValueByName(FName InName) const
@@ -85,7 +90,12 @@ int64 UEnum::GetValueByName(FName InName) const
 
 UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 {
-    static auto ClassDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Find("mov *, [*+0x*]").Disp(TEXT("UClass::ClassDefaultObject"));
+    static auto ClassDefaultObject = Anchor::Offset(TEXT("UClass::ClassDefaultObject"))
+        .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
+        .Start()
+        .Find("call [rax+0x*]; mov *, [*+0x*]")
+        .Find("mov *, [*+0x*]")
+        .Disp();
 
     if (*(UObject**)((uint8_t*)this + ClassDefaultObject) == nullptr && bCreateIfNeeded)
     {
@@ -97,13 +107,13 @@ UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 
 UObject* UClass::InternalCreateDefaultObjectWrapper() const
 {
-    static auto CreateDefaultObject = Anchor::Slot(TEXT("UClass::CreateDefaultObject"))
+    static auto CreateDefaultObject = Anchor::VirtualFunction<UObject* (*)(const UClass*)>(TEXT("UClass::CreateDefaultObject"))
         .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
         .Start()
         .Find("call [rax+0x*]; mov *, [*+0x*]")
         .Get();
 
-    return Scanner::Virtual<UObject* (*)(const UClass*)>(this, CreateDefaultObject)(this);
+    return CreateDefaultObject(this);
 }
 
 UClass* UClass::StaticClass()
