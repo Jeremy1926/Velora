@@ -36,7 +36,30 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
 {
     static auto SpawnMissionItemPickup = Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"));
     static auto Arguments = SpawnMissionItemPickup.Find("mov qword ptr [rsp+0x28], *");
-    static auto Address = (Arguments.Get() ? Arguments : SpawnMissionItemPickup.Find("mov byte ptr [rsp+0x*], 0x1")).Call().Get(TEXT("AFortPickup::CreateFromData"));
+    static auto Address = (Arguments.Get() ? Arguments.Call() : SpawnMissionItemPickup.Find("lea r8d, [r9+0x1]").Call(2)).Get(TEXT("AFortPickup::CreateFromData"));
+    static auto PickupSourceTypeFlags = StaticClass()->FindPropertyByName(FName(TEXT("PickupSourceTypeFlags")));
+
+    if (!Arguments.Get() && PickupSourceTypeFlags && PickupSourceTypeFlags->ElementSize == sizeof(EFortPickupSourceTypeFlag))
+    {
+        struct FortPickupCreationData
+        {
+            UWorld* World;
+            const FFortItemEntry* ItemEntry;
+            const FVector* SpawnLocation;
+            const FRotator* SpawnRotation;
+            AFortPlayerController* OptionalOwnerPC;
+            UClass* OverrideClass;
+            AActor* Owner;
+            EFortPickupSourceTypeFlag SourceTypeFlags;
+            EFortPickupSpawnSource PickupSpawnSource;
+            uint8 bRandomRotation : 1;
+            uint8 bPickupOnlyRelevantToOwner : 1;
+        };
+
+        static auto CreateFromData = Scanner::Function<AFortPickup* (*)(const FortPickupCreationData&)>(Address);
+
+        return CreateFromData({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, EFortPickupSpawnSource::Unset, bRandomRotation, bPickupOnlyRelevantToOwner });
+    }
 
     if (!Arguments.Get())
     {
