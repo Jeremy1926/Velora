@@ -312,6 +312,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingAutoNav.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingContainer.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingFoundation.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\FortVolumeManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPlayerPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerPawnAthena.h" />
@@ -479,6 +480,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\BGAConsumableWrapperItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortMontageItemDefinitionBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\FortVolumeManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootTier.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootPackage.cpp" />

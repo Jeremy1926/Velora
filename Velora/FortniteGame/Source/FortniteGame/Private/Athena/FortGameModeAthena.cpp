@@ -13,6 +13,7 @@
 #include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingSMActor.h"
+#include "Building/FortVolumeManager.h"
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
 #include "Player/FortPlayerState.h"
@@ -36,6 +37,14 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+static auto ReadyToStartMatch = []
+{
+    auto ReadyToStartMatch = Scanner::Exec(TEXT("/Script/Engine.GameMode:ReadyToStartMatch")).Find("call [rax+*]");
+    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+
+    return ReadyToStartMatch.Get() && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ReadyToStartMatch.Disp())).Has("call 0x*; xor al, al") ? DetourVTable(TEXT("AFortGameModeAthena::ReadyToStartMatch_Implementation"), *(void***)DefaultObject, ReadyToStartMatch.Disp(), &AFortGameModeAthena::ReadyToStartMatch_Implementation) : nullptr;
+}();
 
 static auto SpawnDefaultPawnFor = Detour(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"), Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(), &AFortGameModeAthena::SpawnDefaultPawnFor_Implementation);
 
@@ -63,6 +72,37 @@ UClass* AFortGameModeAthena::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
 
     return Class;
+}
+
+bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
+{
+    if (GetWorldIsReady() && GetMatchState() == MatchState::WaitingToStart)
+    {
+        auto GameStateAthena = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+        if (GameStateAthena && GameStateAthena->GetPlaylistDataIsLoaded())
+        {
+            auto VolumeManager = GameStateAthena->GetVolumeManager();
+
+            if (GameStateAthena->AreAllAdditionalPlaylistLevelsLoaded() && GameStateAthena->AreAllAdditionalPlaylistLevelsVisible() && (!VolumeManager || !VolumeManager->IsInSpawningStartup()))
+                return CountReadyPlayers() >= GetWarmupRequiredPlayerCount();
+        }
+    }
+
+    return false;
+}
+
+int32 AFortGameModeAthena::CountReadyPlayers()
+{
+    static auto CountReadyPlayers = []
+    {
+        void* Original;
+        memcpy(&Original, &::ReadyToStartMatch, sizeof(Original));
+
+        return Scanner::Function<int32 (*)(AFortGameModeAthena*)>(Scanner::At(Original).Find("call 0x*").Target(TEXT("AFortGameModeAthena::CountReadyPlayers")));
+    }();
+
+    return CountReadyPlayers(this);
 }
 
 APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)

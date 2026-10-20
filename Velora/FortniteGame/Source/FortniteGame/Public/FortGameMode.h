@@ -27,6 +27,8 @@ public:
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
+    bool GetWorldIsReady() const;
+
     AFortGameSession* GetFortGameSession();
 
     TAssetPtr<UFortGameDeathPenalty>& GetDeathPenaltyData();

@@ -39,6 +39,20 @@ FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()
     return *GameMemberInfoArray->ContainerPtrToValuePtr<FGameMemberInfoArray>(this);
 }
 
+bool AFortGameStateAthena::GetPlaylistDataIsLoaded() const
+{
+    static auto bPlaylistDataIsLoaded = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
+
+    return *bPlaylistDataIsLoaded->ContainerPtrToValuePtr<bool>(this);
+}
+
+AFortVolumeManager* AFortGameStateAthena::GetVolumeManager() const
+{
+    static auto VolumeManager = GetClass()->FindPropertyByName(FName(TEXT("VolumeManager")));
+
+    return *VolumeManager->ContainerPtrToValuePtr<AFortVolumeManager*>(this);
+}
+
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));

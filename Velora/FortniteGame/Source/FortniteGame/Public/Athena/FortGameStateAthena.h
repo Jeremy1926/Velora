@@ -5,6 +5,7 @@
 #include "GameFramework/OnlineReplStructs.h"
 
 class AFortAthenaMapInfo;
+class AFortVolumeManager;
 class UScriptStruct;
 
 enum class EAthenaGamePhase : uint8
@@ -41,6 +42,10 @@ public:
     AFortAthenaMapInfo* GetMapInfo() const;
 
     FGameMemberInfoArray& GetGameMemberInfoArray();
+
+    bool GetPlaylistDataIsLoaded() const;
+
+    AFortVolumeManager* GetVolumeManager() const;
 
     void SetCurrentPlaylistName(FName PlaylistName);
 

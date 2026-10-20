@@ -7,6 +7,10 @@ class AFortGameModeAthena : public AFortGamePvPBase
 public:
     static UClass* StaticClass();
 
+    bool ReadyToStartMatch_Implementation();
+
+    int32 CountReadyPlayers();
+
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
 
     void PlacePlayerOnTeam(AController* Player);

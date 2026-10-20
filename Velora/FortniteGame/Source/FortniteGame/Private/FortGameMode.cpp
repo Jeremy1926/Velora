@@ -105,6 +105,13 @@ void AFortGameMode::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOp
     Scanner::Virtual<void (*)(AFortGameMode*, const TMap<FString, FString>&)>(this, OnGivenMatchAssignment)(this, MatchOptions);
 }
 
+bool AFortGameMode::GetWorldIsReady() const
+{
+    static auto bWorldIsReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bWorldIsReady")));
+
+    return bWorldIsReady->GetPropertyValue_InContainer(this);
+}
+
 AFortGameSession* AFortGameMode::GetFortGameSession()
 {
     static auto FortGameSession = GetClass()->FindPropertyByName(FName(TEXT("FortGameSession")));
