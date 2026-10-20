@@ -76,7 +76,7 @@ public:
 
     FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
 
-    void MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec);
+    void MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, bool WasAddOrRemove = false);
 
     bool InternalTryActivateAbility(FGameplayAbilitySpecHandle AbilityToActivate, FPredictionKey InPredictionKey = FPredictionKey(), UGameplayAbility** OutInstancedAbility = nullptr, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate = nullptr, const FGameplayEventData* TriggerEventData = nullptr);
 

@@ -70,11 +70,11 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclas
     return nullptr;
 }
 
-void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec)
+void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, bool WasAddOrRemove)
 {
-    static auto MarkAbilitySpecDirty = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Find("lea rdx, [rbp+0x*]").Call().Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty")));
+    static auto MarkAbilitySpecDirty = Scanner::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&, bool)>(Scanner::String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!")).Find("lea rdx, [rbp+0x*]").Call().Find("ret").Last("call 0x*").Call().Get(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty")));
 
-    MarkAbilitySpecDirty(this, Spec);
+    MarkAbilitySpecDirty(this, Spec, WasAddOrRemove);
 }
 
 bool UAbilitySystemComponent::InternalTryActivateAbility(FGameplayAbilitySpecHandle Handle, FPredictionKey InPredictionKey, UGameplayAbility** OutInstancedAbility, FOnGameplayAbilityEnded::FDelegate* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData)
