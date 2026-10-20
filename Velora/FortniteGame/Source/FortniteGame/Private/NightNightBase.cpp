@@ -7,34 +7,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-
-static auto execMakePreparationsForNightNight = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight"));
-
-    if (!Function || !Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight")).Find("jmp 0x*").Target()).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked ANightNightBase::execMakePreparationsForNightNight, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&ANightNightBase::execMakePreparationsForNightNight);
-
-    return true;
-}();
-
-static auto execReturnToNight = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight"));
-
-    if (!Function || !Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight")).Find("jmp 0x*").Target()).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked ANightNightBase::execReturnToNight, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&ANightNightBase::execReturnToNight);
-
-    return true;
-}();
+#include "Detour.h"
 
 void ANightNightBase::MakePreparationsForNightNight()
 {
@@ -52,6 +25,13 @@ void ANightNightBase::ReturnToNight()
         ((AFortPlayerControllerAthena*)PlayerController)->ClientReportPhaseFound(TEXT("NoBernieNo"));
 }
 
+DETOUR(ANightNightBase, execMakePreparationsForNightNight, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight"))
+    .Find("jmp 0x*")
+    .Target()
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight")))
 void ANightNightBase::execMakePreparationsForNightNight(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -59,6 +39,13 @@ void ANightNightBase::execMakePreparationsForNightNight(FFrame& Stack, void* con
     MakePreparationsForNightNight();
 }
 
+DETOUR(ANightNightBase, execReturnToNight, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight"))
+    .Find("jmp 0x*")
+    .Target()
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight")))
 void ANightNightBase::execReturnToNight(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
