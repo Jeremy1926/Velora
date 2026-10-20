@@ -46,7 +46,7 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(c
 
 FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromHandle(FGameplayAbilitySpecHandle Handle)
 {
-    for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().Items)
+    for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().GetItems())
     {
         if (Spec.Handle == Handle)
         {
@@ -59,7 +59,7 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromHandle(FGamepl
 
 FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
 {
-    for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().Items)
+    for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().GetItems())
     {
         if (Spec.Ability->GetClass() == InAbilityClass)
         {

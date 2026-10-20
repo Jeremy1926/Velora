@@ -2,6 +2,7 @@
 #include "GameplayAbilitySpec.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 UScriptStruct* FGameplayAbilitySpec::StaticStruct()
@@ -16,6 +17,20 @@ int32 FGameplayAbilitySpec::GetTypeSize()
     static auto TypeSize = StaticStruct()->GetPropertiesSize();
 
     return TypeSize;
+}
+
+UScriptStruct* FGameplayAbilitySpecContainer::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.GameplayAbilitySpecContainer"));
+
+    return Struct;
+}
+
+TRuntimeSizedArray<FGameplayAbilitySpec>& FGameplayAbilitySpecContainer::GetItems()
+{
+    static auto Items = StaticStruct()->FindPropertyByName(FName(TEXT("Items")));
+
+    return *Items->ContainerPtrToValuePtr<TRuntimeSizedArray<FGameplayAbilitySpec>>(this);
 }
 
 void FGameplayAbilitySpecHandle::GenerateNewHandle()

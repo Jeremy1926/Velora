@@ -124,7 +124,7 @@ struct FGameplayAbilitySpec : public FFastArraySerializerItem
 
 struct FGameplayAbilitySpecContainer : public FFastArraySerializer
 {
-    TRuntimeSizedArray<FGameplayAbilitySpec> Items;
+    static UScriptStruct* StaticStruct();
 
-    UAbilitySystemComponent* Owner;
+    TRuntimeSizedArray<FGameplayAbilitySpec>& GetItems();
 };
