@@ -16,7 +16,12 @@ FName::FName(EName N)
 
     if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
     {
-        static auto FromValidEName = Scanner::Function<void (*)(NAME_INDEX*, EName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov edx, 0x11e").Find("call 0x*").Target(TEXT("FNameEntryId::FromValidEName")));
+        static auto FromValidEName = Anchor::Function<void (*)(NAME_INDEX*, EName)>(TEXT("FNameEntryId::FromValidEName"))
+            .String(TEXT("RecordReplay: failed to create demo net driver!"))
+            .Last("mov edx, 0x11e")
+            .Find("call 0x*")
+            .Target()
+            .Get();
 
         ComparisonIndex = NAME_None;
         Number = 0;
@@ -27,14 +32,24 @@ FName::FName(EName N)
         return;
     }
 
-    static auto Constructor = Scanner::Function<void (*)(FName*, EName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov edx, 0x11e").Find("call 0x*").Target(TEXT("FName::FName(EName)")));
+    static auto Constructor = Anchor::Function<void (*)(FName*, EName)>(TEXT("FName::FName(EName)"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Last("mov edx, 0x11e")
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     Constructor(this, N);
 }
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
-    static auto Constructor = Scanner::Function<void (*)(FName*, const WIDECHAR*, EFindName)>(Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!")).Start().Find("mov r8d, 0x1").Call().Get(TEXT("FName::FName")));
+    static auto Constructor = Anchor::Function<void (*)(FName*, const WIDECHAR*, EFindName)>(TEXT("FName::FName"))
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
+        .Start()
+        .Find("mov r8d, 0x1")
+        .Call()
+        .Get();
 
     Constructor(this, Name, FindType);
 }
@@ -54,7 +69,11 @@ uint32 GetTypeHash(const FName N)
 
 FString FName::ToString() const
 {
-    static auto ToString = Scanner::Function<void (*)(const FName*, FString&)>(Scanner::String(TEXT("Failed to find function %s in %s")).Start().Call(3).Get(TEXT("FName::ToString")));
+    static auto ToString = Anchor::Function<void (*)(const FName*, FString&)>(TEXT("FName::ToString"))
+        .String(TEXT("Failed to find function %s in %s"))
+        .Start()
+        .Call(3)
+        .Get();
 
     FString Out;
 
