@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "FortKismetLibrary.h"
 #include "FortGameModeZone.h"
+#include "Building/BuildingItemCollectorActor.h"
+#include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortInventory.h"
@@ -158,6 +160,16 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
     }
 }
 
+DETOUR(UFortKismetLibrary, K2_RemoveItemFromPlayer, Anchor::Hook()
+    .If(FColletorUnitInfo::StaticStruct())
+    .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+    .Inline(), Anchor::Hook()
+    .If(ABuildingItemWeaponUpgradeActor::StaticClass())
+    .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+    .Find("jnz 0x*")
+    .Target()
+    .Log(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayer"))
+    .AtCallsIn(Scanner::String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory.")).Start()))
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
 {
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
