@@ -44,6 +44,15 @@ namespace Scanner
         return DefaultObject ? *(void***)DefaultObject : nullptr;
     }
 
+    inline void** FindVTable(const TCHAR* DefaultObjectPath, const TCHAR* InterfacePath)
+    {
+        auto DefaultObject = StaticFindObject(nullptr, nullptr, DefaultObjectPath);
+        auto InterfaceClass = (UClass*)StaticFindObject(nullptr, nullptr, InterfacePath);
+        auto Interface = DefaultObject && InterfaceClass ? DefaultObject->GetInterfaceAddress(InterfaceClass) : nullptr;
+
+        return Interface ? *(void***)Interface : nullptr;
+    }
+
     template<typename ValueType>
     inline ValueType Offset(const TCHAR* Name, ValueType Value)
     {
