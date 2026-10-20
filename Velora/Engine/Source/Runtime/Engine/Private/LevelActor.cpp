@@ -9,13 +9,9 @@ FActorSpawnParameters::FActorSpawnParameters()
     , Owner(nullptr)
     , Instigator(nullptr)
     , OverrideLevel(nullptr)
-    , SpawnCollisionHandlingOverride(ESpawnActorCollisionHandlingMethod::Undefined)
-    , bRemoteOwned(false)
-    , bNoFail(false)
-    , bDeferConstruction(false)
-    , bAllowDuringConstructionScript(false)
     , ObjectFlags(RF_Transactional)
 {
+    memset(&SpawnCollisionHandlingOverride, 0, (uint8*)&ObjectFlags - (uint8*)&SpawnCollisionHandlingOverride);
 }
 
 AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters)
