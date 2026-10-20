@@ -28,6 +28,7 @@
 #include "FortniteGame.h"
 #include "AbilitySystemComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Logging/LogMacros.h"
 #include "Math/TransformVectorized.h"
 #include "Templates/Casts.h"
@@ -645,10 +646,27 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
                     ExistingBuilding->Die(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Effect.InstantDeath.StructuralSupport"))), nullptr, nullptr, nullptr);
             }
 
-            FActorSpawnParameters SpawnParameters;
-            SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            static auto bDeferConstruction = []
+            {
+                auto TryBuildConstructionInternal = Scanner::CallTo(Scanner::String(TEXT("Failed to remove item %s during pay building costs, item duplicated!")).Start().Get()).Start();
 
-            auto BuildingActor = (ABuildingSMActor*)GetWorld()->SpawnActor(BuildingClass->IsChildOf(ABuildingActor::StaticClass()) ? BuildingClass : nullptr, &BuildLoc, &BuildRot, SpawnParameters);
+                return TryBuildConstructionInternal.Has(std::format("call {:#x}", (uintptr_t)Scanner::Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor")).Get()));
+            }();
+
+            const FTransform SpawnTransform(BuildRot, BuildLoc, FVector(1.0f, 1.0f, 1.0f));
+            ABuildingSMActor* BuildingActor = nullptr;
+
+            if (bDeferConstruction)
+            {
+                BuildingActor = (ABuildingSMActor*)UGameplayStatics::BeginDeferredActorSpawnFromClass(this, BuildingClass->IsChildOf(ABuildingActor::StaticClass()) ? BuildingClass : nullptr, SpawnTransform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, nullptr);
+            }
+            else
+            {
+                FActorSpawnParameters SpawnParameters;
+                SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+                BuildingActor = (ABuildingSMActor*)GetWorld()->SpawnActor(BuildingClass->IsChildOf(ABuildingActor::StaticClass()) ? BuildingClass : nullptr, &BuildLoc, &BuildRot, SpawnParameters);
+            }
 
             if (!BuildingActor)
                 return;
@@ -657,6 +675,9 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
             BuildingActor->SetMirrored(bMirrored);
             BuildingActor->InitializeBuildingActor(EFortBuildingInitializationReason::Spawned, GetWorldPlayerId(), nullptr, nullptr, false);
             BuildingActor->PostInitializeSpawnedBuildingActor(EFortBuildingInitializationReason::Spawned);
+
+            if (bDeferConstruction)
+                UGameplayStatics::FinishSpawningActor(BuildingActor, SpawnTransform);
 
             UFortAnalytics::FireEvent_BuildingAction(this, TEXT("Create"), BuildingActor, PayBuildableClassPlacementCost(BuildingClassData));
 
