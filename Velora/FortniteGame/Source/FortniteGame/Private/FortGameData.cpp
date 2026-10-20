@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortGameData.h"
 #include "FortAssetManager.h"
+#include "GameDataBR.h"
 #include "Abilities/FortAbilitySet.h"
 #include "UObject/AssetPtr.h"
 #include "UObject/UnrealType.h"
@@ -23,7 +24,7 @@ UFortAbilitySet* UFortGameData::GetGenericPlayerAbilitySet() const
 {
     static auto GenericPlayerAbilitySet = GetClass()->FindPropertyByName(FName(TEXT("GenericPlayerAbilitySet")));
 
-    return GenericPlayerAbilitySet->ContainerPtrToValuePtr<TAssetPtr<UFortAbilitySet>>(this)->LoadSynchronous();
+    return GenericPlayerAbilitySet ? GenericPlayerAbilitySet->ContainerPtrToValuePtr<TAssetPtr<UFortAbilitySet>>(this)->LoadSynchronous() : UGameDataBR::Get()->GetPlayerAbilitySetBR();
 }
 
 FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) const
@@ -60,14 +61,14 @@ const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootTierDataTables() cons
 {
     static auto LootTierDataTables = GetClass()->FindPropertyByName(FName(TEXT("LootTierDataTables")));
 
-    return *LootTierDataTables->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this);
+    return LootTierDataTables ? *LootTierDataTables->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this) : UGameDataBR::Get()->GetLootTierDataTablesBR();
 }
 
 const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootPackageDataTables() const
 {
     static auto LootPackageDataTables = GetClass()->FindPropertyByName(FName(TEXT("LootPackageDataTables")));
 
-    return *LootPackageDataTables->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this);
+    return LootPackageDataTables ? *LootPackageDataTables->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this) : UGameDataBR::Get()->GetLootPackageDataTablesBR();
 }
 
 FFortLootTierData* UFortGameData::FindLootTierDataRow(FName TierGroupName, const FString& ContextString) const
