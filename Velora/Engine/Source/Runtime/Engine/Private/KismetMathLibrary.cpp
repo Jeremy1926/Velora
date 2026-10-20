@@ -5,7 +5,9 @@
 
 FTransform UKismetMathLibrary::ComposeTransforms(const FTransform& A, const FTransform& B)
 {
-    static auto ComposeTransforms = Scanner::Function<FTransform* (*)(FTransform*, const FTransform&, const FTransform&)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:ComposeTransforms")).Get(TEXT("UKismetMathLibrary::ComposeTransforms")));
+    static auto ComposeTransforms = Anchor::Function<FTransform* (*)(FTransform*, const FTransform&, const FTransform&)>(TEXT("UKismetMathLibrary::ComposeTransforms"))
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:ComposeTransforms"))
+        .Get();
 
     FTransform Result;
 
