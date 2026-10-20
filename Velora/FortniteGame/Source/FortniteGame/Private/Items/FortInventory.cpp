@@ -295,3 +295,24 @@ void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
         }
     }
 }
+
+UScriptStruct* FFortItemList::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemList"));
+
+    return Struct;
+}
+
+TArray<FFortItemEntry>& FFortItemList::GetReplicatedEntries()
+{
+    static auto ReplicatedEntries = StaticStruct()->FindPropertyByName(FName(TEXT("ReplicatedEntries")));
+
+    return *ReplicatedEntries->ContainerPtrToValuePtr<TArray<FFortItemEntry>>(this);
+}
+
+TArray<UFortWorldItem*>& FFortItemList::GetItemInstances()
+{
+    static auto ItemInstances = StaticStruct()->FindPropertyByName(FName(TEXT("ItemInstances")));
+
+    return *ItemInstances->ContainerPtrToValuePtr<TArray<UFortWorldItem*>>(this);
+}

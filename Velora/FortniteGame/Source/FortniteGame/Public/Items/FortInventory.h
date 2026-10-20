@@ -115,10 +115,11 @@ class TArray<FFortItemEntry, FDefaultAllocator> : public TRuntimeSizedArray<FFor
 
 struct FFortItemList : public FFastArraySerializer
 {
-    TArray<FFortItemEntry> ReplicatedEntries;
-    TMap<FGuid, FFortItemEntry*> ItemEntryMap;
-    TArray<UFortWorldItem*> ItemInstances;
-    TMap<FGuid, UFortWorldItem*> ItemInstanceMap;
+    static UScriptStruct* StaticStruct();
+
+    TArray<FFortItemEntry>& GetReplicatedEntries();
+
+    TArray<UFortWorldItem*>& GetItemInstances();
 };
 
 class AFortInventory : public AActor

@@ -307,7 +307,7 @@ void AFortPlayerController::ServerExecuteInventoryItem_Implementation(FGuid Item
     if (!WorldInventory)
         return;
 
-    for (auto Item : WorldInventory->GetInventory().ItemInstances)
+    for (auto Item : WorldInventory->GetInventory().GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
         {
@@ -327,7 +327,7 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
     if (!WorldInventory || !Pawn || Count <= 0)
         return;
 
-    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
     {
         if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
@@ -361,7 +361,7 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 
     auto& Inventory = WorldInventory->GetInventory();
 
-    for (auto& ItemEntry : Inventory.ReplicatedEntries)
+    for (auto& ItemEntry : Inventory.GetReplicatedEntries())
     {
         if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
@@ -402,7 +402,7 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
     if (!WorldInventory || !DestroyedPawn)
         return;
 
-    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+    auto& ReplicatedEntries = WorldInventory->GetInventory().GetReplicatedEntries();
     const FVector Location = DestroyedPawn->GetActorLocation();
 
     for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
@@ -437,7 +437,7 @@ void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDe
 
     TArray<TPair<FGuid, int32>> ItemsToDrop;
 
-    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
     {
         auto ItemDefinition = ItemEntry.GetItemDefinition();
 
@@ -493,9 +493,9 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
 
     auto& Inventory = WorldInventory->GetInventory();
 
-    for (int32 Index = 0; Index < Inventory.ReplicatedEntries.Num(); Index++)
+    for (int32 Index = 0; Index < Inventory.GetReplicatedEntries().Num(); Index++)
     {
-        auto& ItemEntry = Inventory.ReplicatedEntries[Index];
+        auto& ItemEntry = Inventory.GetReplicatedEntries()[Index];
 
         if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
@@ -514,7 +514,7 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
         {
             RemoveItemFromQuickBars(ItemDefinition);
 
-            Inventory.ReplicatedEntries.RemoveAt(Index);
+            Inventory.GetReplicatedEntries().RemoveAt(Index);
             Inventory.MarkArrayDirty();
             WorldInventory->ForceNetUpdate();
         }
@@ -538,7 +538,7 @@ void AFortPlayerController::RemoveAllInventoryItems()
     auto PlayerController = Cast<AFortPlayerControllerAthena>(this);
     auto CustomizationLoadout = PlayerController ? PlayerController->GetCustomizationLoadout() : nullptr;
     auto Pickaxe = CustomizationLoadout ? CustomizationLoadout->GetPickaxe() : nullptr;
-    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+    auto& ReplicatedEntries = WorldInventory->GetInventory().GetReplicatedEntries();
 
     for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0; Index--)
     {

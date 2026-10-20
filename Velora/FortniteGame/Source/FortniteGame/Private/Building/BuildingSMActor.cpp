@@ -210,7 +210,7 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
             const int32 MaxStackSize = ResourceItemDefinition->GetMaxStackSize(InstigatorPawn->GetAbilitySystemComponent());
             FFortItemEntry* ResourceItemEntry = nullptr;
 
-            for (auto& ItemEntry : Inventory.ReplicatedEntries)
+            for (auto& ItemEntry : Inventory.GetReplicatedEntries())
             {
                 if (ItemEntry.GetItemDefinition() == ResourceItemDefinition)
                 {
@@ -231,7 +231,7 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
             }
             else
             {
-                auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ResourceItemDefinition, FMath::Min(ResourceCount, MaxStackSize), 0);
+                auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(ResourceItemDefinition, FMath::Min(ResourceCount, MaxStackSize), 0);
 
                 ItemEntry->GetParentInventory() = WorldInventory;
                 ItemEntry->GetIsReplicatedCopy() = true;

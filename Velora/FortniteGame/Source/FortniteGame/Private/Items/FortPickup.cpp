@@ -143,7 +143,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
         auto bSwapEquipped = bNeedsPrimarySlot && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
 
-        for (auto& ItemEntry : Inventory.ReplicatedEntries)
+        for (auto& ItemEntry : Inventory.GetReplicatedEntries())
         {
             if (ItemEntry.GetItemDefinition() != ItemDefinition)
                 continue;
@@ -177,7 +177,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         auto FindItem = [&](const FGuid& ItemGuid) -> UFortItem*
         {
-            for (auto Item : Inventory.ItemInstances)
+            for (auto Item : Inventory.GetItemInstances())
             {
                 if (Item->GetItemGuid() == ItemGuid)
                     return Item;
@@ -209,7 +209,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         {
             int32 SwapCount = 0;
 
-            for (auto& Entry : Inventory.ReplicatedEntries)
+            for (auto& Entry : Inventory.GetReplicatedEntries())
             {
                 if (Entry.GetItemGuid() == SwapItemGuid)
                     SwapCount = Entry.GetCount();
@@ -226,7 +226,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         while (bCanAddStack && NumberToGive > 0)
         {
-            auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.GetLevel());
+            auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(ItemDefinition, FMath::Min(NumberToGive, MaxStackSize), PickupItemEntry.GetLevel());
             ItemEntry->GetLoadedAmmo() = PickupItemEntry.GetLoadedAmmo();
             ItemEntry->GetDurability() = PickupItemEntry.GetDurability();
 
@@ -274,7 +274,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
                 const FGuid SwapItemGuid = QuickBar.Slots[FocusedSlot].Items[0];
                 int32 SwapCount = 0;
 
-                for (auto& Entry : Inventory.ReplicatedEntries)
+                for (auto& Entry : Inventory.GetReplicatedEntries())
                 {
                     if (Entry.GetItemGuid() == SwapItemGuid)
                         SwapCount = Entry.GetCount();

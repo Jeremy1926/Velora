@@ -65,7 +65,7 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
         return;
 
     auto& Inventory = WorldInventory->GetInventory();
-    auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(WeaponDefinition, 1, ItemLevel);
+    auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(WeaponDefinition, 1, ItemLevel);
     const FGuid ItemGuid = ItemEntry->GetItemGuid();
 
     ItemEntry->GetParentInventory() = WorldInventory;
@@ -75,7 +75,7 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
 
     WorldInventory->HandleInventoryLocalUpdate();
 
-    for (auto Item : Inventory.ItemInstances)
+    for (auto Item : Inventory.GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
             GetAbilityWeaponItem() = Item;

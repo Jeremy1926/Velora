@@ -130,7 +130,7 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
         return;
 
     auto& Inventory = WorldInventory->GetInventory();
-    auto ItemEntry = new(Inventory.ReplicatedEntries) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
+    auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
     const FGuid ItemGuid = ItemEntry->GetItemGuid();
 
     ItemEntry->GetParentInventory() = WorldInventory;
@@ -146,7 +146,7 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
     if (!PlayerController->CanServerTryAddToQuickBar())
         return;
 
-    for (auto Item : Inventory.ItemInstances)
+    for (auto Item : Inventory.GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
             PlayerController->TryAddToQuickBar(Item);
@@ -160,7 +160,7 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerC
     if (!WorldInventory || !ItemDefinition)
         return 0;
 
-    auto& ReplicatedEntries = WorldInventory->GetInventory().ReplicatedEntries;
+    auto& ReplicatedEntries = WorldInventory->GetInventory().GetReplicatedEntries();
     int32 AmountRemoved = 0;
 
     for (int32 Index = ReplicatedEntries.Num() - 1; Index >= 0 && (AmountToRemove < 0 || AmountRemoved < AmountToRemove); Index--)
@@ -185,7 +185,7 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(AFortPlayerController* P
     if (!WorldInventory)
         return 0;
 
-    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
     {
         if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
@@ -221,7 +221,7 @@ int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* Pla
 
     const FGuid ItemGuid = Item->GetItemGuid();
 
-    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
     {
         if (ItemEntry.GetItemGuid() != ItemGuid)
             continue;
