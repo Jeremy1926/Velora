@@ -109,12 +109,16 @@ void AFortAthenaVehicle::ServerUpdateInputParams_Implementation(const FReplicate
 
 void AFortAthenaVehicle::WakeUp()
 {
-    static auto WakeUp = []
-    {
-        auto OnRep_InputParams = Scanner::Exec(GetServerFunctionPath(TEXT("OnRep_InputParams"))).Find("jmp *");
-
-        return (OnRep_InputParams.Is("jmp [rax+*]") ? OnRep_InputParams : Scanner::At(OnRep_InputParams.Target()).Find("jmp [rax+*]")).Slot(TEXT("AFortAthenaVehicle::WakeUp"));
-    }();
+    static auto WakeUp = Anchor::Slot(TEXT("AFortAthenaVehicle::WakeUp"))
+        .Exec(GetServerFunctionPath(TEXT("OnRep_InputParams")))
+        .Find("jmp *")
+        .Is("jmp [rax+*]")
+        .Or()
+        .Exec(GetServerFunctionPath(TEXT("OnRep_InputParams")))
+        .Find("jmp *")
+        .Target()
+        .Find("jmp [rax+*]")
+        .Get();
 
     Scanner::Virtual<void (*)(AFortAthenaVehicle*)>(this, WakeUp)(this);
 }
