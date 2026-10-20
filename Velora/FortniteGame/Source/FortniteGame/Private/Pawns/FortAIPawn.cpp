@@ -13,12 +13,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
-
-static auto HandleDeathNotifications = Anchor::Hook(TEXT("AFortAIPawn::HandleDeathNotifications"), &AFortAIPawn::HandleDeathNotifications)
-    .String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i."))
-    .Caller()
-    .InVirtual(TEXT("/Script/FortniteGame.Default__FortAIPawn"), TEXT("AFortAIPawn::Destroyed"), TEXT("AFortAIPawn::HandleOutOfHealth"))
-    .AtCall();
+#include "Detour.h"
 
 static std::unordered_map<AFortAIPawn*, std::tuple<FWeakObjectPtr, float, FName>> LootDropData;
 
@@ -29,11 +24,16 @@ UClass* AFortAIPawn::StaticClass()
     return Class;
 }
 
+DETOUR(AFortAIPawn, HandleDeathNotifications, Anchor::Hook()
+    .String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i."))
+    .Caller()
+    .InVirtual(TEXT("/Script/FortniteGame.Default__FortAIPawn"), TEXT("AFortAIPawn::Destroyed"), TEXT("AFortAIPawn::HandleOutOfHealth"))
+    .AtCall())
 void AFortAIPawn::HandleDeathNotifications()
 {
     DropLoot();
 
-    (this->*::HandleDeathNotifications)();
+    Original();
 }
 
 void AFortAIPawn::SetLootDropData(float LootDropChance, FName WorldItemTierGroup)
