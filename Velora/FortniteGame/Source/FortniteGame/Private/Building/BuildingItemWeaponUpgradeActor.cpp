@@ -17,45 +17,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ConsumeItems = ABuildingItemWeaponUpgradeActor::StaticClass() ? []
-{
-    auto ConsumeItems = Scanner::String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory.")).Start();
-    auto K2_RemoveItemFromPlayer = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Find("jnz 0x*").Target(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayer"));
-    Scanner::FCode LastRemoveItem;
-
-    for (auto Call = ConsumeItems.Find("call 0x*"); K2_RemoveItemFromPlayer && Call.Get(); Call = Call.Find("call 0x*"))
-    {
-        if (Call.Target() != K2_RemoveItemFromPlayer)
-            continue;
-
-        DetourCall(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayer"), Call.Get(), &UFortKismetLibrary::K2_RemoveItemFromPlayer);
-        LastRemoveItem = Call;
-    }
-
-    return LastRemoveItem;
-}() : Scanner::FCode();
-
-static auto GrantOutput = ABuildingItemWeaponUpgradeActor::StaticClass() ? []
-{
-    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor"));
-
-    return DetourVTable(TEXT("ABuildingItemWeaponUpgradeActor::GrantOutput"), VTable, ::ConsumeItems.Find("call [*+0x*]").Slot(TEXT("ABuildingItemCollectorActor::GrantOutput")), &ABuildingItemWeaponUpgradeActor::GrantOutput);
-}() : nullptr;
-
-static auto AthenaPostApplyPlaylistDataTables = ABuildingItemWeaponUpgradeActor::StaticClass() ? []
-{
-    auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
-    auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
-    auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
-    auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-    auto BeginPlay = Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
-    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor"));
-    auto PlaylistDataIsLoaded = std::format("cmp *[*+{:#x}], *", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal());
-    auto UpgradeBeginPlay = Scanner::At(Scanner::IsSlot(BeginPlay) ? VTable[BeginPlay / sizeof(void*)] : nullptr);
-    auto CollectorBeginPlay = UpgradeBeginPlay.Is("jmp 0x*") ? Scanner::At(UpgradeBeginPlay.Target()) : UpgradeBeginPlay.Call();
-
-    return DetourVTable(TEXT("ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables"), VTable, CollectorBeginPlay.Find(PlaylistDataIsLoaded).Find("call [rax+0x*]").Slot(TEXT("ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables")), &ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables);
-}() : nullptr;
 
 UClass* ABuildingItemWeaponUpgradeActor::StaticClass()
 {
@@ -64,6 +25,39 @@ UClass* ABuildingItemWeaponUpgradeActor::StaticClass()
     return Class;
 }
 
+DETOUR(ABuildingItemWeaponUpgradeActor, AthenaPostApplyPlaylistDataTables, Anchor::Hook()
+    .If(ABuildingItemWeaponUpgradeActor::StaticClass())
+    .String(TEXT("ReceiveBeginPlay"))
+    .Find("lea *, [0x*]")
+    .Target()
+    .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+    .Reference("mov rdx, *")
+    .Start()
+    .Log(TEXT("AActor::ReceiveBeginPlay"))
+    .Caller()
+    .Log(TEXT("AActor::BeginPlay"))
+    .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+    .LogSlot(TEXT("AActor::BeginPlay"))
+    .Entry(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor"))
+    .Is("jmp 0x*")
+    .Target()
+    .FieldFind("cmp *[*+%x], *", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+    .Find("call [rax+0x*]")
+    .LogSlot(TEXT("ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables"))
+    .Or()
+    .String(TEXT("ReceiveBeginPlay"))
+    .Find("lea *, [0x*]")
+    .Target()
+    .Reference("mov rdx, *")
+    .Start()
+    .Caller()
+    .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+    .Entry(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor"))
+    .Call()
+    .FieldFind("cmp *[*+%x], *", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+    .Find("call [rax+0x*]")
+    .LogSlot(TEXT("ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables"))
+    .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")))
 void ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables()
 {
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -77,6 +71,14 @@ void ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables()
         Destroy();
 }
 
+DETOUR(ABuildingItemWeaponUpgradeActor, GrantOutput, Anchor::Hook()
+    .If(ABuildingItemWeaponUpgradeActor::StaticClass())
+    .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+    .Start()
+    .LastCall(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Find("jnz 0x*").Target())
+    .Find("call [*+0x*]")
+    .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+    .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")))
 void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player, UFortWorldItemDefinition* Item)
 {
     auto PlayerController = Cast<AFortPlayerControllerAthena>(Player);
