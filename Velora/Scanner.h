@@ -196,6 +196,14 @@ namespace Anchor
             return FindTo("call", Function, Index);
         }
 
+        ChainType& CallIn(const FCode& Caller)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+            auto Function = (Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Get();
+
+            return Chain.IsActive() ? Chain.At(Caller).FindCall(Function) : Chain;
+        }
+
         ChainType& FindTo(const char* Mnemonic, const void* Target, int32_t Index = 1)
         {
             char Branch[48];
