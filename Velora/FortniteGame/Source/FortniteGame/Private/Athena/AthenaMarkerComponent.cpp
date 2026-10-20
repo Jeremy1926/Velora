@@ -30,7 +30,8 @@ static auto ServerAddMapMarker = []
     if (!ServerAddMapMarker.Get())
         return false;
 
-    auto Slot = ServerAddMapMarker.Find("call [*+0x*]", 2).Slot(TEXT("UAthenaMarkerComponent::ServerAddMapMarker_Implementation"));
+    auto Implementation = ServerAddMapMarker.Find("call [*+0x*]", 2);
+    auto Slot = (Implementation.Get() ? Implementation : ServerAddMapMarker.Find("call [*+0x*]")).Slot(TEXT("UAthenaMarkerComponent::ServerAddMapMarker_Implementation"));
 
     if (((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaMarkerComponent:ServerAddMapMarker")))->FindPropertyByName(FName(TEXT("MarkerRequest"))))
         DetourVTable(TEXT("UAthenaMarkerComponent::ServerAddMapMarker_Implementation"), *(void***)DefaultObject, Slot, static_cast<void (UAthenaMarkerComponent::*)(FFortClientMarkerRequest)>(&UAthenaMarkerComponent::ServerAddMapMarker_Implementation));
@@ -45,7 +46,9 @@ static auto ServerRemoveMapMarker = []
     auto ServerRemoveMapMarker = Scanner::Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ServerRemoveMapMarker"));
     auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__AthenaMarkerComponent"));
 
-    return ServerRemoveMapMarker.Get() ? DetourVTable(TEXT("UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation"), *(void***)DefaultObject, ServerRemoveMapMarker.Find("call [*+0x*]", 2).Slot(TEXT("UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation")), &UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation) : nullptr;
+    auto Implementation = ServerRemoveMapMarker.Find("call [*+0x*]", 2);
+
+    return ServerRemoveMapMarker.Get() ? DetourVTable(TEXT("UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation"), *(void***)DefaultObject, (Implementation.Get() ? Implementation : ServerRemoveMapMarker.Find("call [*+0x*]")).Slot(TEXT("UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation")), &UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation) : nullptr;
 }();
 
 void UAthenaMarkerComponent::ClientAddMarker(AFortPlayerState* MarkerOwner, const FFortWorldMarkerData& MarkerData)
