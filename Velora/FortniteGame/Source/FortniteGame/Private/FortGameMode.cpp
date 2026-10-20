@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "FortGameMode.h"
 #include "FortGameInstance.h"
+#include "FortGameData.h"
+#include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
@@ -24,6 +26,34 @@ static int32_t OnPlayerCreatedBuildingSlot()
     }();
 
     return OnPlayerCreatedBuilding;
+}
+
+static int32_t GetLootTierDataTablesSlot()
+{
+    static auto GetLootTierDataTables = []
+    {
+        auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
+        auto LootTierData = Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr;
+        auto LootPackages = Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr;
+        auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+        auto Image = Scanner::Base();
+        auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
+
+        auto Reads = [&](int32 Index, UProperty* Property)
+        {
+            return VTable[Index] >= Image && VTable[Index] < ImageEnd && (Scanner::At(VTable[Index]).Has(std::format("add rcx, {:#x}", Property->GetOffset_ForInternal())) || Scanner::At(VTable[Index]).Has(std::format("lea rcx, [*+{:#x}]", Property->GetOffset_ForInternal())));
+        };
+
+        for (int32 Index = 0; LootTierData && LootPackages && Scanner::IsCode(VTable[Index + 1]); Index++)
+        {
+            if (Reads(Index, LootTierData) && !Reads(Index, LootPackages) && Reads(Index + 1, LootPackages) && !Reads(Index + 1, LootTierData))
+                return Scanner::Slot(TEXT("AFortGameModeAthena::GetLootTierDataTables"), Index * (int32)sizeof(void*));
+        }
+
+        return 0;
+    }();
+
+    return GetLootTierDataTables;
 }
 
 UClass* AFortGameMode::StaticClass()
@@ -104,4 +134,34 @@ FName AFortGameMode::GetCurrentPlaylistName() const
     static auto CurrentPlaylistName = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistName")));
 
     return *CurrentPlaylistName->ContainerPtrToValuePtr<FName>(this);
+}
+
+void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const
+{
+    if (Scanner::IsSlot(GetLootTierDataTablesSlot()))
+    {
+        Scanner::Virtual<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(this, GetLootTierDataTablesSlot())(this, OutLootTierDataTables);
+        return;
+    }
+
+    for (auto& LootTierDataTable : UFortGameData::Get()->GetLootTierDataTables())
+    {
+        if (auto DataTable = LootTierDataTable.LoadSynchronous())
+            OutLootTierDataTables.Add(DataTable);
+    }
+}
+
+void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const
+{
+    if (Scanner::IsSlot(GetLootTierDataTablesSlot()))
+    {
+        Scanner::Virtual<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(this, GetLootTierDataTablesSlot(), sizeof(void*))(this, OutLootPackageDataTables);
+        return;
+    }
+
+    for (auto& LootPackageDataTable : UFortGameData::Get()->GetLootPackageDataTables())
+    {
+        if (auto DataTable = LootPackageDataTable.LoadSynchronous())
+            OutLootPackageDataTables.Add(DataTable);
+    }
 }

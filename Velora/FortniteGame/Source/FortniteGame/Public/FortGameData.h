@@ -41,16 +41,16 @@ public:
 
     bool HasLootPackageData() const;
 
+    void GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const;
+
+    void GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const;
+
     template <typename PredicateType>
     void FindLootTierDataByPredicate(TArray<TPair<FName, FFortLootTierData*>>& OutLootTierData, float& OutTotalWeight, PredicateType&& Predicate) const
     {
         TArray<UDataTable*> LootTierDataTables;
 
-        for (auto& LootTierDataTable : GetLootTierDataTables())
-        {
-            if (auto DataTable = LootTierDataTable.LoadSynchronous())
-                LootTierDataTables.Add(DataTable);
-        }
+        GetLootTierDataTables(LootTierDataTables);
 
         FindLootDataTypeByPredicate(OutLootTierData, OutTotalWeight, LootTierDataTables, Predicate);
     }
@@ -60,11 +60,7 @@ public:
     {
         TArray<UDataTable*> LootPackageDataTables;
 
-        for (auto& LootPackageDataTable : GetLootPackageDataTables())
-        {
-            if (auto DataTable = LootPackageDataTable.LoadSynchronous())
-                LootPackageDataTables.Add(DataTable);
-        }
+        GetLootPackageDataTables(LootPackageDataTables);
 
         FindLootDataTypeByPredicate(OutLootPackageData, OutTotalWeight, LootPackageDataTables, Predicate);
     }

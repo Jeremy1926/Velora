@@ -6,6 +6,7 @@
 #include "UObject/AssetPtr.h"
 
 class ABuildingActor;
+class UDataTable;
 class AFortGameSession;
 class AFortPlayerController;
 class UFortGameDeathPenalty;
@@ -33,4 +34,8 @@ public:
     UFortPlaylistManager* GetPlaylistManager() const;
 
     FName GetCurrentPlaylistName() const;
+
+    void GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const;
+
+    void GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const;
 };

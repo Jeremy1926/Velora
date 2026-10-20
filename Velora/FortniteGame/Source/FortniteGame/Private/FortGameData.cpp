@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortGameData.h"
 #include "FortAssetManager.h"
+#include "FortGameMode.h"
 #include "GameDataBR.h"
 #include "GameDataCosmetics.h"
 #include "Abilities/FortAbilitySet.h"
@@ -14,6 +15,10 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "Engine/GameEngine.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
 #include "Scanner.h"
 
 UFortGameData* UFortGameData::Get()
@@ -83,15 +88,28 @@ const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootPackageDataTables() c
     return LootPackageDataTables ? *LootPackageDataTables->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this) : UGameDataBR::Get()->GetLootPackageDataTablesBR();
 }
 
+void UFortGameData::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const
+{
+    if (auto GameMode = Cast<AFortGameMode>(static_cast<UGameEngine*>(GEngine)->GetGameInstance()->GetWorld()->GetAuthGameMode()))
+        GameMode->GetLootTierDataTables(OutLootTierDataTables);
+}
+
+void UFortGameData::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const
+{
+    if (auto GameMode = Cast<AFortGameMode>(static_cast<UGameEngine*>(GEngine)->GetGameInstance()->GetWorld()->GetAuthGameMode()))
+        GameMode->GetLootPackageDataTables(OutLootPackageDataTables);
+}
+
 FFortLootTierData* UFortGameData::FindLootTierDataRow(FName TierGroupName, const FString& ContextString) const
 {
-    for (auto& LootTierDataTable : GetLootTierDataTables())
+    TArray<UDataTable*> LootTierDataTables;
+
+    GetLootTierDataTables(LootTierDataTables);
+
+    for (auto DataTable : LootTierDataTables)
     {
-        if (auto DataTable = LootTierDataTable.LoadSynchronous())
-        {
-            if (auto LootTierData = DataTable->FindRow<FFortLootTierData>(TierGroupName, *ContextString, false))
-                return LootTierData;
-        }
+        if (auto LootTierData = DataTable->FindRow<FFortLootTierData>(TierGroupName, *ContextString, false))
+            return LootTierData;
     }
 
     UE_LOG(LogFort, Warning, TEXT("UFortGameData::FindLootTierDataRow : TierGroupName %s with context %s not found!"), *TierGroupName.ToString(), *ContextString);
@@ -101,13 +119,11 @@ FFortLootTierData* UFortGameData::FindLootTierDataRow(FName TierGroupName, const
 
 bool UFortGameData::HasLootPackageData() const
 {
-    for (auto& LootPackageDataTable : GetLootPackageDataTables())
-    {
-        if (LootPackageDataTable.LoadSynchronous())
-            return true;
-    }
+    TArray<UDataTable*> LootPackageDataTables;
 
-    return false;
+    GetLootPackageDataTables(LootPackageDataTables);
+
+    return LootPackageDataTables.Num() > 0;
 }
 
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
