@@ -20,12 +20,13 @@ void AFortAthenaVehicle::InitializeServerImplementations()
 {
     static auto ServerImplementations = []
     {
-        auto ServerUpdatePhysicsParams = (UFunction*)StaticFindObject(nullptr, nullptr, GetServerFunctionPath(TEXT("ServerUpdatePhysicsParams")));
+        auto PhysicsFunctionName = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerMove")) ? TEXT("ServerMove") : TEXT("ServerUpdatePhysicsParams");
+        auto ServerUpdatePhysicsParams = (UFunction*)StaticFindObject(nullptr, nullptr, GetServerFunctionPath(PhysicsFunctionName));
 
         if (!ServerUpdatePhysicsParams)
             return false;
 
-        auto ServerUpdatePhysicsParams_Implementation = Scanner::Exec(GetServerFunctionPath(TEXT("ServerUpdatePhysicsParams"))).Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"));
+        auto ServerUpdatePhysicsParams_Implementation = Scanner::Exec(GetServerFunctionPath(PhysicsFunctionName)).Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"));
         auto ServerUpdateInputParams = Scanner::Exec(GetServerFunctionPath(TEXT("ServerUpdateInputParams")));
         auto ServerUpdateInputParams_Implementation = ServerUpdateInputParams.Get() ? ServerUpdateInputParams.Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation")) : 0;
         auto OwnerClass = (UClass*)ServerUpdatePhysicsParams->GetOuter();
@@ -59,7 +60,7 @@ void AFortAthenaVehicle::InitializeServerImplementations()
 
 const TCHAR* AFortAthenaVehicle::GetServerFunctionPath(const TCHAR* FunctionName)
 {
-    static auto Owner = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerUpdatePhysicsParams")) ? TEXT("FortPhysicsPawn") : StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSMVehicle:ServerUpdatePhysicsParams")) ? TEXT("FortAthenaSMVehicle") : TEXT("FortAthenaVehicle");
+    static auto Owner = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerUpdatePhysicsParams")) || StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerMove")) ? TEXT("FortPhysicsPawn") : StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSMVehicle:ServerUpdatePhysicsParams")) ? TEXT("FortAthenaSMVehicle") : TEXT("FortAthenaVehicle");
     static TCHAR Path[256];
 
     swprintf_s(Path, TEXT("/Script/FortniteGame.%s:%s"), Owner, FunctionName);
