@@ -1016,6 +1016,13 @@ void AFortPlayerController::ResetQuickBarToPrimary()
     ResetQuickBarToPrimary(this);
 }
 
+bool AFortPlayerController::ForceEquipValidWeapon()
+{
+    auto MyFortPawn = GetMyFortPawn();
+
+    return MyFortPawn && MyFortPawn->EquipBestWeapon();
+}
+
 UStatManager* AFortPlayerController::GetStatManager() const
 {
     static auto StatManager = GetClass()->FindPropertyByName(FName(TEXT("StatManager")));

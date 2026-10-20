@@ -19,6 +19,8 @@ public:
 
     AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid);
 
+    bool EquipBestWeapon();
+
     UAbilitySystemComponent* GetAbilitySystemComponent() const;
 
     void StopPerformingNativeAction(const FGameplayTag& ActionTag);

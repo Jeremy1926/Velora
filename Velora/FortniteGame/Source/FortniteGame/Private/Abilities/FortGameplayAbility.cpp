@@ -10,6 +10,7 @@
 #include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 static Scanner::FCode ClientEndAbilityWeaponCall()
 {
@@ -46,6 +47,22 @@ static auto execEquipAbilityWeapon = []
     Function->SetNativeFunc((Native)&UFortGameplayAbility::execEquipAbilityWeapon);
 
     return true;
+}();
+
+static auto ForceEquipValidWeapon = []
+{
+    if (!ClientEndAbilityWeaponCall().Get())
+        return false;
+
+    auto RemoveAbilityWeapon = ClientEndAbilityWeaponCall().Start().Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]").Find("call [rax+0x*]");
+
+    if (RemoveAbilityWeapon.Is("call [rax+0x*]; mov rcx, *; call 0x*"))
+        return DetourCall(TEXT("AFortPlayerController::ForceEquipValidWeapon"), RemoveAbilityWeapon.Find("call 0x*").Get(), &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
+
+    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+    auto Slot = RemoveAbilityWeapon.Is("call [rax+0x*]; mov rax, [*]; mov rcx, *; call [rax+0x*]") ? RemoveAbilityWeapon.Find("call [rax+0x*]").Disp() : 0;
+
+    return DetourVTable(TEXT("AFortPlayerController::ForceEquipValidWeapon"), VTable, Slot, &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
 }();
 
 UClass* UFortGameplayAbility::StaticClass()

@@ -27,6 +27,13 @@ AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* W
     return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid);
 }
 
+bool AFortPawn::EquipBestWeapon()
+{
+    static auto EquipBestWeapon = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:EquipBestWeapon")).Find("call [rax+0x*]").Slot(TEXT("AFortPawn::EquipBestWeapon"));
+
+    return Scanner::Virtual<bool (*)(AFortPawn*)>(this, EquipBestWeapon)(this);
+}
+
 UAbilitySystemComponent* AFortPawn::GetAbilitySystemComponent() const
 {
     static auto AbilitySystemComponent = GetClass()->FindPropertyByName(FName(TEXT("AbilitySystemComponent")));

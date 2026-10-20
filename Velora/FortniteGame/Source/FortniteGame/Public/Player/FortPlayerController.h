@@ -112,6 +112,8 @@ public:
 
     void ResetQuickBarToPrimary();
 
+    bool ForceEquipValidWeapon();
+
     UFortItem* K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const;
 
     bool RemoveInventoryItem(const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars);
