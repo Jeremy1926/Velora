@@ -4,6 +4,7 @@
 #include "Containers/Array.h"
 
 class AFortInventory;
+class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
 struct FFortAthenaLoadout;
 struct FItemAndCount;
@@ -22,6 +23,8 @@ public:
     AFortInventory*& GetInventory();
 
     UFortAthenaAIBotInventoryItems* GetStartupInventory() const;
+
+    UBehaviorTree* GetBehaviorTree() const;
 
     FFortAthenaLoadout& GetCosmeticLoadoutBC();
 };

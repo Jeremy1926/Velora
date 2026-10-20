@@ -68,6 +68,8 @@ void AFortGameModeAthena::InitGameState()
     ServerBotManager->GetCachedGameState() = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
     GetServerBotManager() = ServerBotManager;
 
+    ServerBotManager->SetBotBrainActivationTimer();
+
     if (auto PhoebeEnable = IConsoleManager::Get().FindConsoleVariable(TEXT("Phoebe.Enable")))
         PhoebeEnable->Set(TEXT("0"), ECVF_SetByCode);
 }

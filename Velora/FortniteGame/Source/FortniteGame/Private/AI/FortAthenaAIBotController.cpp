@@ -102,6 +102,13 @@ UFortAthenaAIBotInventoryItems* AFortAthenaAIBotController::GetStartupInventory(
     return *StartupInventory->ContainerPtrToValuePtr<UFortAthenaAIBotInventoryItems*>(this);
 }
 
+UBehaviorTree* AFortAthenaAIBotController::GetBehaviorTree() const
+{
+    static auto BehaviorTree = GetClass()->FindPropertyByName(FName(TEXT("BehaviorTree")));
+
+    return *BehaviorTree->ContainerPtrToValuePtr<UBehaviorTree*>(this);
+}
+
 FFortAthenaLoadout& AFortAthenaAIBotController::GetCosmeticLoadoutBC()
 {
     static auto CosmeticLoadoutBC = GetClass()->FindPropertyByName(FName(TEXT("CosmeticLoadoutBC")));

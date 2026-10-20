@@ -16,6 +16,7 @@ class AWorldSettings;
 class UAISystemBase;
 class UGameInstance;
 class ULevel;
+class ULevelStreaming;
 class UNetDriver;
 struct FCollisionShape;
 struct FHitResult;
@@ -80,6 +81,8 @@ public:
     AGameNetworkManager* GetNetworkManager() const;
 
     ULevel* GetCurrentLevelPendingVisibility() const;
+
+    const TArray<ULevelStreaming*>& GetStreamingLevels() const;
 
     ULevel* GetCurrentLevelPendingInvisibility() const;
 

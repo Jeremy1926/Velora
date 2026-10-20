@@ -56,6 +56,13 @@ ULevel* UWorld::GetCurrentLevelPendingVisibility() const
     return *CurrentLevelPendingVisibility->ContainerPtrToValuePtr<ULevel*>(this);
 }
 
+const TArray<ULevelStreaming*>& UWorld::GetStreamingLevels() const
+{
+    static auto StreamingLevels = GetClass()->FindPropertyByName(FName(TEXT("StreamingLevels")));
+
+    return *StreamingLevels->ContainerPtrToValuePtr<TArray<ULevelStreaming*>>(this);
+}
+
 ULevel* UWorld::GetCurrentLevelPendingInvisibility() const
 {
     static auto CurrentLevelPendingInvisibility = GetClass()->FindPropertyByName(FName(TEXT("CurrentLevelPendingInvisibility")));

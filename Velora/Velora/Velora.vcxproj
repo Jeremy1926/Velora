@@ -423,6 +423,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AIController.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAthenaAIBotController.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotInventoryItems.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\LevelStreaming.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -638,6 +639,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortServerBotManagerAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAthenaAIBotController.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotInventoryItems.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\AIController.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\LevelStreaming.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
