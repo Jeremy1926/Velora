@@ -241,6 +241,15 @@ AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AAct
     return GetFortPlayerControllerFromActor(Actor);
 }
 
+float UFortKismetLibrary::GetServerWorldTimeSeconds(const UObject* WorldContextObject)
+{
+    static auto GetServerWorldTimeSeconds = Anchor::Function<float (*)(const UObject*)>(TEXT("UFortKismetLibrary::GetServerWorldTimeSeconds"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetServerWorldTimeSeconds"))
+        .Get();
+
+    return GetServerWorldTimeSeconds(WorldContextObject);
+}
+
 void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise)
 {
     static auto BroadcastAbilityImpactAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, UObject*, const FVector&, float, FName, bool)>(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation"))

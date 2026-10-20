@@ -1012,6 +1012,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortIndicatedActorManagementLibrary.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortPlaylistManager.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
     </ClInclude>
@@ -1061,6 +1064,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Aircraft.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_IndicatedActorManagement.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerStateAthena.h">
@@ -1654,6 +1660,9 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortIndicatedActorManagementLibrary.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
     </ClCompile>
@@ -1724,6 +1733,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Aircraft.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_IndicatedActorManagement.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerStateAthena.cpp">

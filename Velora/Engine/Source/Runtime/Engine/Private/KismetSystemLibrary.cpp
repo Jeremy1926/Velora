@@ -31,6 +31,15 @@ bool UKismetSystemLibrary::CapsuleTraceMultiForObjects(const UObject* WorldConte
     return CapsuleTraceMultiForObjects(WorldContextObject, Start, End, Radius, HalfHeight, ObjectTypes, bTraceComplex, ActorsToIgnore, DrawDebugType, OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
 }
 
+bool UKismetSystemLibrary::SphereOverlapActors(const UObject* WorldContextObject, const FVector SpherePos, float SphereRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes, UClass* ActorClassFilter, const TArray<AActor*>& ActorsToIgnore, TArray<AActor*>& OutActors)
+{
+    static auto SphereOverlapActors = Anchor::Function<bool (*)(const UObject*, const FVector, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, UClass*, const TArray<AActor*>&, TArray<AActor*>&)>(TEXT("UKismetSystemLibrary::SphereOverlapActors"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:SphereOverlapActors"))
+        .Get();
+
+    return SphereOverlapActors(WorldContextObject, SpherePos, SphereRadius, ObjectTypes, ActorClassFilter, ActorsToIgnore, OutActors);
+}
+
 FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FPrimaryAssetId PrimaryAssetId)
 {
     static auto GetSoftObjectReferenceFromPrimaryAssetId = Anchor::Function<FSoftObjectPtr (*)(FPrimaryAssetId)>(TEXT("UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId"))

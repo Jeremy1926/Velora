@@ -366,6 +366,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaPickaxeItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpItemDefinitionBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortIndicatedActorManagementLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortPlaylistManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventory.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortItem.h" />
@@ -383,6 +384,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerControllerAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AthenaMarkerComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Aircraft.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_IndicatedActorManagement.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerStateAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h" />
@@ -580,6 +582,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaPickaxeItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Private\McpProfileGroup.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortIndicatedActorManagementLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventory.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortItemDefinition.cpp" />
@@ -616,6 +619,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerControllerAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AthenaMarkerComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Aircraft.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_IndicatedActorManagement.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerStateAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameModeAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp" />

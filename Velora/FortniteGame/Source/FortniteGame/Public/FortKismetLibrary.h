@@ -51,6 +51,8 @@ public:
 
     static AFortPlayerController* GetFortPlayerControllerFromActor(AActor* Actor);
 
+    static float GetServerWorldTimeSeconds(const UObject* WorldContextObject);
+
     static void BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise);
 
     static void BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier);
