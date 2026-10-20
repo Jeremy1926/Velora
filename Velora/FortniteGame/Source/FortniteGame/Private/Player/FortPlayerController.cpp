@@ -610,6 +610,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
 
     const bool bBuildingRestricted = IsBuildingRestricted(BuildingClassData, BuildLoc, BuildRot);
     TArray<ABuildingActor*> ExistingBuildings;
+    auto MarkerOptionalAdjustment = EFortBuildPreviewMarkerOptionalAdjustment::None;
     bool bCanAfford = false;
     auto QueryResults = EFortStructuralGridQueryResults::CanAdd;
 
@@ -621,7 +622,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
         const FVector OldBuildLoc = BuildLoc;
         const FRotator OldBuildRot = BuildRot;
 
-        QueryResults = CanPlaceBuildableClassInStructuralGrid(BuildingClass, BuildLoc, BuildRot, bMirrored, &ExistingBuildings);
+        QueryResults = CanPlaceBuildableClassInStructuralGrid(BuildingClass, BuildLoc, BuildRot, bMirrored, &ExistingBuildings, MarkerOptionalAdjustment);
 
         if (!BuildLoc.Equals(OldBuildLoc) || !BuildRot.Equals(OldBuildRot))
         {
@@ -877,7 +878,7 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
     return Scanner::Virtual<bool (*)(const AFortPlayerController*, FBuildingClassData)>(this, CanAffordToPlaceBuildableClass)(this, BuildingClassData);
 }
 
-EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings)
+EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings, EFortBuildPreviewMarkerOptionalAdjustment& MarkerOptionalAdjustment)
 {
     static auto CanPlaceBuildableClassInStructuralGrid = []
     {
@@ -885,6 +886,11 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
         return Scanner::Slot(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"), Call.Get() ? Call.Disp() : IsBuildingRestrictedSlot() + 10 * (int32_t)sizeof(void*));
     }();
+
+    static auto bMarkerOptionalAdjustment = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildPreviewMarkerOptionalAdjustment")) != nullptr;
+
+    if (bMarkerOptionalAdjustment)
+        return Scanner::Virtual<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>(this, CanPlaceBuildableClassInStructuralGrid)(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
 
     return Scanner::Virtual<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*)>(this, CanPlaceBuildableClassInStructuralGrid)(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings);
 }

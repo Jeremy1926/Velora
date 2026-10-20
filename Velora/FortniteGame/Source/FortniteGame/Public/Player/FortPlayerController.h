@@ -36,6 +36,13 @@ enum class EFortStructuralGridQueryResults : uint8
     EFortStructuralGridQueryResults_MAX
 };
 
+enum class EFortBuildPreviewMarkerOptionalAdjustment : uint8
+{
+    None,
+    FreeWallPieceOnTop,
+    FreeWallPieceOnBottom,
+};
+
 class AFortPlayerController : public APlayerController
 {
 public:
@@ -63,7 +70,7 @@ public:
 
     bool CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData) const;
 
-    EFortStructuralGridQueryResults CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings);
+    EFortStructuralGridQueryResults CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings, EFortBuildPreviewMarkerOptionalAdjustment& MarkerOptionalAdjustment);
 
     int32 PayBuildableClassPlacementCost(FBuildingClassData BuildingClassData);
 
