@@ -108,5 +108,8 @@ void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
 
 void AFortPlayerControllerZone::ApplyDeathDurabilityPenalty(float DurabilityPenalty)
 {
-    Scanner::Virtual<void (*)(AFortPlayerControllerZone*, float)>(this, OnPawnRevivedSlot(), sizeof(void*))(this, DurabilityPenalty);
+    static auto bApplyDeathDurabilityPenalty = Scanner::At(Scanner::Virtual<const void*>(this, OnPawnRevivedSlot(), sizeof(void*))).Is("mov r11, rsp; push r13; sub rsp, *; mov r13, rcx; movaps [rsp+*], xmm7; mov rcx, [rcx+*]; movaps xmm7, xmm1");
+
+    if (bApplyDeathDurabilityPenalty)
+        Scanner::Virtual<void (*)(AFortPlayerControllerZone*, float)>(this, OnPawnRevivedSlot(), sizeof(void*))(this, DurabilityPenalty);
 }
