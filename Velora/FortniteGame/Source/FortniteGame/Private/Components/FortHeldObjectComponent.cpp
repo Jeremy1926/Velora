@@ -17,47 +17,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-
-static auto HeldObjectNatives = []
-{
-    int32 Hooked = 0;
-
-    for (auto [FunctionPath, ExecFunction] : {
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"), (Native)&UFortHeldObjectComponent::execPickupHeldObject },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"), (Native)&UFortHeldObjectComponent::execDropHeldObject },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"), (Native)&UFortHeldObjectComponent::execPlaceHeldObject },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"), (Native)&UFortHeldObjectComponent::execThrowHeldObject },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"), (Native)&UFortHeldObjectComponent::execOnThrowComplete },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"), (Native)&UFortHeldObjectComponent::execOnWeaponUnequipped },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"), (Native)&UFortHeldObjectComponent::execHandleOwnerDestroyed },
-        std::pair{ TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"), (Native)&UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed } })
-    {
-        auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath);
-
-        if (!Function)
-            continue;
-
-        auto Finish = Scanner::Exec(FunctionPath).Find("mov [*+0x20], *; jmp 0x*");
-        auto Body = Finish.Get() ? Scanner::At(Finish.Find("jmp 0x*").Target()) : Scanner::Native(FunctionPath);
-
-        if (!Body.Is("ret*"))
-            continue;
-
-        UE_LOG(LogVelora, Log, TEXT("Hooked %s, was 0x%llX"), FunctionPath, std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-        Function->SetNativeFunc(ExecFunction);
-        Hooked++;
-    }
-
-    return Hooked;
-}();
-
-static Scanner::FCode UpdatePlacementPreview()
-{
-    static auto UpdatePlacementPreview = Scanner::String(TEXT("HeldObject.Placement.Mesh")).Start();
-
-    return UpdatePlacementPreview;
-}
+#include "Detour.h"
 
 UClass* UFortHeldObjectComponent::StaticClass()
 {
@@ -122,9 +82,10 @@ void UFortHeldObjectComponent::DropHeldObject()
 
 void UFortHeldObjectComponent::PlaceHeldObject()
 {
-    static auto PlacementForwardDistance = (const float*)UpdatePlacementPreview().Find("movss xmm1, dword ptr [0x*]; movaps xmm6, xmm0").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement forward distance"));
-    static auto PlacementDownDistance = (const float*)UpdatePlacementPreview().Find("subss xmm7, [0x*]").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement down distance"));
-    static auto PlacementTraceChannel = (ECollisionChannel)UpdatePlacementPreview().Find("mov dword ptr [rsp+0x28], 0x*").Imm(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement trace channel"));
+    static auto UpdatePlacementPreview = Scanner::String(TEXT("HeldObject.Placement.Mesh")).Start();
+    static auto PlacementForwardDistance = (const float*)UpdatePlacementPreview.Find("movss xmm1, dword ptr [0x*]; movaps xmm6, xmm0").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement forward distance"));
+    static auto PlacementDownDistance = (const float*)UpdatePlacementPreview.Find("subss xmm7, [0x*]").Target(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement down distance"));
+    static auto PlacementTraceChannel = (ECollisionChannel)UpdatePlacementPreview.Find("mov dword ptr [rsp+0x28], 0x*").Imm(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement trace channel"));
 
     auto Owner = GetOwner();
     auto RootComponent = Owner ? Owner->GetRootComponent() : nullptr;
@@ -229,28 +190,39 @@ void UFortHeldObjectComponent::HandleOwnerAsBuildingActorDestroyed(AActor* Damag
 
 void UFortHeldObjectComponent::OnRep_OwningPawn()
 {
-    static auto OnRep_OwningPawn = Scanner::Function<void (*)(UFortHeldObjectComponent*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn")).Find("mov [*+0x20], *; jmp 0x*").Find("jmp 0x*").Target(TEXT("UFortHeldObjectComponent::OnRep_OwningPawn")));
+    static auto OnRep_OwningPawn = Anchor::Function<void (*)(UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::OnRep_OwningPawn"))
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_OwningPawn(this);
 }
 
 float UFortHeldObjectComponent::GetGravityScale() const
 {
-    static auto GetGravityScale = Scanner::Function<float (*)(const UFortHeldObjectComponent*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale")).Get(TEXT("UFortHeldObjectComponent::GetGravityScale")));
+    static auto GetGravityScale = Anchor::Function<float (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetGravityScale"))
+        .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
+        .Get();
 
     return GetGravityScale(this);
 }
 
 AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
 {
-    static auto GetInstigator = Scanner::Function<AFortPlayerPawn* (*)(const UFortHeldObjectComponent*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator")).Get(TEXT("UFortHeldObjectComponent::GetInstigator")));
+    static auto GetInstigator = Anchor::Function<AFortPlayerPawn* (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetInstigator"))
+        .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+        .Get();
 
     return GetInstigator(this);
 }
 
 float UFortHeldObjectComponent::GetMaxSpeed() const
 {
-    static auto GetMaxSpeed = Scanner::Function<float (*)(const UFortHeldObjectComponent*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed")).Get(TEXT("UFortHeldObjectComponent::GetMaxSpeed")));
+    static auto GetMaxSpeed = Anchor::Function<float (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetMaxSpeed"))
+        .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
+        .Get();
 
     return GetMaxSpeed(this);
 }
@@ -345,6 +317,11 @@ void UFortHeldObjectComponent::UnequipBackingWeapon()
     GetGrantedWeapon() = nullptr;
 }
 
+DETOUR(UFortHeldObjectComponent, execPickupHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"), &UFortHeldObjectComponent::execPickupHeldObject)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject")))
 void UFortHeldObjectComponent::execPickupHeldObject(FFrame& Stack, void* const Z_Param__Result)
 {
     AFortPlayerPawn* PlayerPawn = nullptr;
@@ -355,6 +332,11 @@ void UFortHeldObjectComponent::execPickupHeldObject(FFrame& Stack, void* const Z
     PickupHeldObject(PlayerPawn);
 }
 
+DETOUR(UFortHeldObjectComponent, execDropHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"), &UFortHeldObjectComponent::execDropHeldObject)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject")))
 void UFortHeldObjectComponent::execDropHeldObject(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -362,6 +344,11 @@ void UFortHeldObjectComponent::execDropHeldObject(FFrame& Stack, void* const Z_P
     DropHeldObject();
 }
 
+DETOUR(UFortHeldObjectComponent, execPlaceHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"), &UFortHeldObjectComponent::execPlaceHeldObject)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject")))
 void UFortHeldObjectComponent::execPlaceHeldObject(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -369,6 +356,11 @@ void UFortHeldObjectComponent::execPlaceHeldObject(FFrame& Stack, void* const Z_
     PlaceHeldObject();
 }
 
+DETOUR(UFortHeldObjectComponent, execThrowHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"), &UFortHeldObjectComponent::execThrowHeldObject)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject")))
 void UFortHeldObjectComponent::execThrowHeldObject(FFrame& Stack, void* const Z_Param__Result)
 {
     FVector DetachLocation;
@@ -381,6 +373,11 @@ void UFortHeldObjectComponent::execThrowHeldObject(FFrame& Stack, void* const Z_
     ThrowHeldObject(DetachLocation, ThrowDirection);
 }
 
+DETOUR(UFortHeldObjectComponent, execOnThrowComplete, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"), &UFortHeldObjectComponent::execOnThrowComplete)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete")))
 void UFortHeldObjectComponent::execOnThrowComplete(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -388,6 +385,11 @@ void UFortHeldObjectComponent::execOnThrowComplete(FFrame& Stack, void* const Z_
     OnThrowComplete();
 }
 
+DETOUR(UFortHeldObjectComponent, execOnWeaponUnequipped, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"), &UFortHeldObjectComponent::execOnWeaponUnequipped)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped")))
 void UFortHeldObjectComponent::execOnWeaponUnequipped(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -395,6 +397,11 @@ void UFortHeldObjectComponent::execOnWeaponUnequipped(FFrame& Stack, void* const
     OnWeaponUnequipped();
 }
 
+DETOUR(UFortHeldObjectComponent, execHandleOwnerDestroyed, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"), &UFortHeldObjectComponent::execHandleOwnerDestroyed)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed")))
 void UFortHeldObjectComponent::execHandleOwnerDestroyed(FFrame& Stack, void* const Z_Param__Result)
 {
     AActor* DestroyedActor = nullptr;
@@ -405,6 +412,11 @@ void UFortHeldObjectComponent::execHandleOwnerDestroyed(FFrame& Stack, void* con
     HandleOwnerDestroyed(DestroyedActor);
 }
 
+DETOUR(UFortHeldObjectComponent, execHandleOwnerAsBuildingActorDestroyed, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"), &UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed)
+    .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed")))
 void UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed(FFrame& Stack, void* const Z_Param__Result)
 {
     AActor* DamagedActor = nullptr;
