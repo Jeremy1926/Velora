@@ -13,6 +13,7 @@ struct FReplicatedAthenaVehiclePhysicsState
 };
 
 struct FReplicatedAthenaVehicleInputState;
+class AFortPlayerPawn;
 
 class AFortAthenaVehicle : public AActor
 {
@@ -28,4 +29,6 @@ public:
     void ServerUpdateInputParams_Implementation(const FReplicatedAthenaVehicleInputState& InState);
 
     void WakeUp();
+
+    AFortPlayerPawn* GetPawnAtSeat(int32 SeatIdx) const;
 };

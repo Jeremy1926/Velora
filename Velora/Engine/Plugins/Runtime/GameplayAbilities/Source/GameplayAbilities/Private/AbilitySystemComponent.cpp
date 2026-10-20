@@ -42,6 +42,16 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSe
     return ActiveGameplayEffectHandle;
 }
 
+FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GameplayEffectClass, UAbilitySystemComponent* Target, float Level, FGameplayEffectContextHandle Context)
+{
+    static auto BP_ApplyGameplayEffectToTarget = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget")).Get(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget")));
+
+    FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+    BP_ApplyGameplayEffectToTarget(this, &ActiveGameplayEffectHandle, GameplayEffectClass, Target, Level, MoveTemp(Context));
+
+    return ActiveGameplayEffectHandle;
+}
+
 void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
     static auto OnTagUpdated = []

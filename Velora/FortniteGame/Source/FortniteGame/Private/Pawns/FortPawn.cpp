@@ -75,3 +75,10 @@ UFortHealthSet* AFortPawn::GetHealthSet() const
 
     return *HealthSet->ContainerPtrToValuePtr<UFortHealthSet*>(this);
 }
+
+void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent)
+{
+    static auto LaunchCharacterJump = Scanner::Function<void (*)(AFortPawn*, const FVector&, bool, bool, bool, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump")).Get(TEXT("AFortPawn::LaunchCharacterJump")));
+
+    LaunchCharacterJump(this, LaunchVelocity, bXYOverride, bZOverride, bIgnoreFallDamage, bPlayFeedbackEvent);
+}

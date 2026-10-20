@@ -1027,6 +1027,30 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Analytics</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Color.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetSystemLibrary.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Kismet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkeletalMeshComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\CapsuleComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleInterface.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaSKPushCannon.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortMountedWeaponInterface.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1488,6 +1512,27 @@
     </ClCompile>
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp">
       <Filter>Engine\Source\Runtime\Launch\Private\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetSystemLibrary.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CapsuleComponent.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleInterface.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaSKPushCannon.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortMountedWeaponInterface.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

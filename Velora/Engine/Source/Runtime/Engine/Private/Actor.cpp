@@ -46,6 +46,13 @@ bool AActor::HasAuthority() const
     return (ENetRole)*Role->ContainerPtrToValuePtr<uint8>(this) == ROLE_Authority;
 }
 
+bool AActor::CanBeDamaged() const
+{
+    static auto bCanBeDamaged = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bCanBeDamaged")));
+
+    return bCanBeDamaged->GetPropertyValue_InContainer(this);
+}
+
 ENetDormancy AActor::GetNetDormancy() const
 {
     static auto NetDormancy = GetClass()->FindPropertyByName(FName(TEXT("NetDormancy")));

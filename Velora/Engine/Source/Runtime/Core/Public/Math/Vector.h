@@ -80,6 +80,20 @@ struct FVector
         return false;
     }
 
+    FORCEINLINE FVector GetSafeNormal(float Tolerance = 1.e-8f) const
+    {
+        const float SquareSum = X * X + Y * Y + Z * Z;
+
+        if (SquareSum == 1.f)
+            return *this;
+        else if (SquareSum < Tolerance)
+            return FVector(ForceInitToZero);
+
+        const float Scale = FMath::InvSqrt(SquareSum);
+
+        return FVector(X * Scale, Y * Scale, Z * Scale);
+    }
+
     FORCEINLINE bool Equals(const FVector& V, float Tolerance = 1.e-4f) const
     {
         return FMath::Abs(X - V.X) <= Tolerance && FMath::Abs(Y - V.Y) <= Tolerance && FMath::Abs(Z - V.Z) <= Tolerance;

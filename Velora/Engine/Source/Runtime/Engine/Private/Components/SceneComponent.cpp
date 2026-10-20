@@ -44,3 +44,12 @@ void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotat
 
     K2_SetWorldLocationAndRotation(this, NewLocation, NewRotation, bSweep, nullptr, bTeleport);
 }
+
+FVector USceneComponent::GetSocketLocation(FName InSocketName) const
+{
+    static auto GetSocketLocation = Scanner::Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation")).Find("call [*+0x*]").Slot(TEXT("USceneComponent::GetSocketLocation"));
+
+    FVector Result;
+
+    return *Scanner::Virtual<FVector* (*)(const USceneComponent*, FVector*, FName)>(this, GetSocketLocation)(this, &Result, InSocketName);
+}

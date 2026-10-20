@@ -114,3 +114,12 @@ void AFortAthenaVehicle::WakeUp()
 
     Scanner::Virtual<void (*)(AFortAthenaVehicle*)>(this, WakeUp)(this);
 }
+
+AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
+{
+    static auto Call = Scanner::Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat")).Find("setnz *").Find("mov [*+0x20], *").Find("call *");
+    static auto Slot = Call.Is("call [*]") ? Call.Slot(TEXT("AFortAthenaVehicle::GetPawnAtSeat")) : 0;
+    static auto GetPawnAtSeat = Scanner::Function<AFortPlayerPawn* (*)(const AFortAthenaVehicle*, int32)>(Slot ? nullptr : Call.Target(TEXT("AFortAthenaVehicle::GetPawnAtSeat")));
+
+    return (Slot ? Scanner::Virtual<decltype(GetPawnAtSeat)>(this, Slot) : GetPawnAtSeat)(this, SeatIdx);
+}

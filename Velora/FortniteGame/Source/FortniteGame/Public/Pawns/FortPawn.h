@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "Math/Vector.h"
 
 class AFortWeapon;
 class UAbilitySystemComponent;
@@ -29,4 +30,6 @@ public:
     void SetPlayedDying(bool bInPlayedDying);
 
     UFortHealthSet* GetHealthSet() const;
+
+    void LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent);
 };

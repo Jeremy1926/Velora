@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Items/FortPickup.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
@@ -18,6 +19,57 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UClass* AFortPlayerPawn::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn"));
+
+    return Class;
+}
+
+UScriptStruct* FVehiclePawnState::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehiclePawnState"));
+
+    return Struct;
+}
+
+AActor* FVehiclePawnState::GetVehicle() const
+{
+    static auto Vehicle = StaticStruct()->FindPropertyByName(FName(TEXT("Vehicle")));
+
+    return *Vehicle->ContainerPtrToValuePtr<AActor*>(this);
+}
+
+AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
+{
+    return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());
+}
+
+AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior)
+{
+    static auto bExitForceBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:ServerOnExitVehicle")))->FindPropertyByName(FName(TEXT("ExitForceBehavior"))) != nullptr;
+    static auto ServerOnExitVehicle = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerOnExitVehicle")).Get(TEXT("AFortPlayerPawn::ServerOnExitVehicle"));
+
+    if (bExitForceBehavior)
+        return Scanner::Function<AFortAthenaVehicle* (*)(AFortPlayerPawn*, ETryExitVehicleBehavior)>(ServerOnExitVehicle)(this, ExitForceBehavior);
+
+    return Scanner::Function<AFortAthenaVehicle* (*)(AFortPlayerPawn*)>(ServerOnExitVehicle)(this);
+}
+
+void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)
+{
+    static auto AddIgnoredActor = Scanner::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:AddIgnoredActor")).Get(TEXT("AFortPlayerPawn::AddIgnoredActor")));
+
+    AddIgnoredActor(this, InActorToIgnore, InIgnoreDuration);
+}
+
+const FVehiclePawnState& AFortPlayerPawn::GetVehicleStateLocal() const
+{
+    static auto VehicleStateLocal = GetClass()->FindPropertyByName(FName(TEXT("VehicleStateLocal")));
+
+    return *VehicleStateLocal->ContainerPtrToValuePtr<FVehiclePawnState>(this);
+}
 
 void AFortPlayerPawn::OnBlueprintPlace()
 {

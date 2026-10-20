@@ -5,12 +5,16 @@
 #include "Containers/Array.h"
 #include "UObject/NameTypes.h"
 #include "UObject/ScriptInterface.h"
+#include "Templates/SubclassOf.h"
 
+class AActor;
 class AFortPickup;
 class AFortPlayerController;
+struct FActiveGameplayEffectHandle;
 struct FFortAbilitySetHandle;
 struct FFortItemEntry;
 struct FFrame;
+struct FGameplayTagContainer;
 struct FGuid;
 struct FTimespan;
 class FString;
@@ -19,6 +23,7 @@ class IFortInventoryOwnerInterface;
 class UFortAbilitySet;
 class UFortItem;
 class UFortWorldItemDefinition;
+class UGameplayEffect;
 class USoundBase;
 
 class UFortKismetLibrary : public UBlueprintFunctionLibrary
@@ -43,6 +48,8 @@ public:
     static void BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier);
 
     static bool PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier);
+
+    static FActiveGameplayEffectHandle ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags);
 
     static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
 

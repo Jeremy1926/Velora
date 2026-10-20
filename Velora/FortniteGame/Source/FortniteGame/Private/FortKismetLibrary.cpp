@@ -10,6 +10,8 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "GameplayEffectTypes.h"
+#include "GameplayTagContainer.h"
 #include "Engine/World.h"
 #include "Math/Rotator.h"
 #include "Math/UnrealMathUtility.h"
@@ -266,6 +268,16 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
         return false;
 
     return UFortLootPackage::PickLootDrops(*OutLootToDrop, WorldLevel, LootTierKey, FGameplayTagContainer(), false, false);
+}
+
+FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags)
+{
+    static auto ApplyGlobalEnvironmentGameplayEffectToActor = Scanner::Function<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, UClass*, int32, const FGameplayTagContainer&)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor")).Find("mov [rsp+0x20], rax; call 0x*").Find("call 0x*").Target(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor")));
+
+    FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+    ApplyGlobalEnvironmentGameplayEffectToActor(&ActiveGameplayEffectHandle, EffectTargetActor, GameplayEffect, GameplayEffectLevel, AdditionalContextTags);
+
+    return ActiveGameplayEffectHandle;
 }
 
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)

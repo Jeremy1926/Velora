@@ -27,6 +27,8 @@ public:
 
     bool HasAuthority() const;
 
+    bool CanBeDamaged() const;
+
     ENetDormancy GetNetDormancy() const;
 
     float GetNetUpdateFrequency() const;

@@ -36,3 +36,10 @@ void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, 
 
     SetPhysicsAngularVelocityInRadians(this, NewAngVel, bAddToCurrent, BoneName);
 }
+
+void UPrimitiveComponent::IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnore)
+{
+    static auto IgnoreActorWhenMoving = Scanner::Function<void (*)(UPrimitiveComponent*, AActor*, bool)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:IgnoreActorWhenMoving")).Get(TEXT("UPrimitiveComponent::IgnoreActorWhenMoving")));
+
+    IgnoreActorWhenMoving(this, Actor, bShouldIgnore);
+}

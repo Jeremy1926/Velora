@@ -376,6 +376,14 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Color.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetSystemLibrary.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkeletalMeshComponent.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\CapsuleComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaSKPushCannon.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortMountedWeaponInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -549,6 +557,13 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetSystemLibrary.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CapsuleComponent.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaSKPushCannon.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortMountedWeaponInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
