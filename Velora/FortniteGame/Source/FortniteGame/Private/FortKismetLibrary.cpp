@@ -181,6 +181,58 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(AFortPlayerController* P
     return 0;
 }
 
+static auto execK2_RemoveFortItemFromPlayer = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer"));
+
+    if (!Function || Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() != Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execK2_RemoveFortItemFromPlayer, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&UFortKismetLibrary::execK2_RemoveFortItemFromPlayer);
+
+    return true;
+}();
+
+int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* PlayerController, UFortItem* Item, int32 AmountToRemove, bool bForceRemoval)
+{
+    auto WorldInventory = PlayerController && Item ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory)
+        return 0;
+
+    const FGuid ItemGuid = Item->GetItemGuid();
+
+    for (auto& ItemEntry : WorldInventory->GetInventory().ReplicatedEntries)
+    {
+        if (ItemEntry.GetItemGuid() != ItemGuid)
+            continue;
+
+        const int32 Count = AmountToRemove < 0 ? ItemEntry.GetCount() : FMath::Min(ItemEntry.GetCount(), AmountToRemove);
+
+        return PlayerController->RemoveInventoryItem(ItemGuid, Count, bForceRemoval) ? Count : 0;
+    }
+
+    return 0;
+}
+
+void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
+{
+    AFortPlayerController* PlayerController = nullptr;
+    UFortItem* Item = nullptr;
+    int32 AmountToRemove = 0;
+    uint32 bForceRemoval = 0;
+
+    Stack.StepCompiledIn(&PlayerController);
+    Stack.StepCompiledIn(&Item);
+    Stack.StepCompiledIn(&AmountToRemove);
+    Stack.StepCompiledIn(&bForceRemoval);
+    Stack.Code += !!Stack.Code;
+
+    *(int32*)Z_Param__Result = K2_RemoveFortItemFromPlayer(PlayerController, Item, AmountToRemove, !!bForceRemoval);
+}
+
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
     static auto BroadcastSoundAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation")));

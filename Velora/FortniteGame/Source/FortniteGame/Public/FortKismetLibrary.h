@@ -15,6 +15,7 @@ struct FGuid;
 class IAbilitySystemInterface;
 class IFortInventoryOwnerInterface;
 class UFortAbilitySet;
+class UFortItem;
 class UFortWorldItemDefinition;
 class USoundBase;
 
@@ -32,6 +33,10 @@ public:
     static int32 K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval);
 
     static int32 K2_RemoveItemFromPlayerByGuid(AFortPlayerController* PlayerController, const FGuid& ItemGuid, int32 AmountToRemove, bool bForceRemoval);
+
+    static int32 K2_RemoveFortItemFromPlayer(AFortPlayerController* PlayerController, UFortItem* Item, int32 AmountToRemove, bool bForceRemoval);
+
+    void execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result);
 
     static void BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier);
 
