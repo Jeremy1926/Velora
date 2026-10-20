@@ -4,13 +4,20 @@
 
 void FWeakObjectPtr::operator=(const UObject* Object)
 {
-    static auto Assign = Scanner::Function<void (*)(FWeakObjectPtr*, const UObject*)>([]
-    {
-        auto Close = Scanner::String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s*")).Start();
-        auto ActorChannels = Close.Find("add rcx, 0x*");
-
-        return ActorChannels.Get() ? ActorChannels.Last("call 0x*").Target(TEXT("FWeakObjectPtr::operator=")) : Close.Find("mov *[*], *; mov rcx, *; call 0x*").Last("call 0x*").Call().Call().Get(TEXT("FWeakObjectPtr::operator="));
-    }());
+    static auto Assign = Anchor::Function<void (*)(FWeakObjectPtr*, const UObject*)>(TEXT("FWeakObjectPtr::operator="))
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s*"))
+        .Start()
+        .Find("add rcx, 0x*")
+        .Last("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s*"))
+        .Start()
+        .Find("mov *[*], *; mov rcx, *; call 0x*")
+        .Last("call 0x*")
+        .Call()
+        .Call()
+        .Get();
 
     Assign(this, Object);
 }
