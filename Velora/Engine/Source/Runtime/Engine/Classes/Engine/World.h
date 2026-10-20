@@ -12,6 +12,7 @@ class AGameNetworkManager;
 class AGameStateBase;
 class APawn;
 class AWorldSettings;
+class UGameInstance;
 class ULevel;
 class UNetDriver;
 struct FRotator;
@@ -64,6 +65,8 @@ public:
     AGameModeBase* GetAuthGameMode() const;
 
     AGameStateBase* GetGameState() const;
+
+    UGameInstance* GetGameInstance() const;
 
     AGameNetworkManager* GetNetworkManager() const;
 

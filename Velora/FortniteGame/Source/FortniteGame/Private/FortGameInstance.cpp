@@ -1,6 +1,15 @@
 #include "pch.h"
 #include "FortGameInstance.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
+
+UFortPlaylistManager* UFortGameInstance::GetPlaylistManager() const
+{
+    static auto PlaylistManager = GetClass()->FindPropertyByName(FName(TEXT("PlaylistManager")));
+
+    return *PlaylistManager->ContainerPtrToValuePtr<UFortPlaylistManager*>(this);
+}
 
 TSharedPtr<IAnalyticsProvider>& UFortGameInstance::GetServerAnalyticsProvider()
 {

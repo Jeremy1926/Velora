@@ -36,6 +36,13 @@ AGameStateBase* UWorld::GetGameState() const
     return *GameState->ContainerPtrToValuePtr<AGameStateBase*>(this);
 }
 
+UGameInstance* UWorld::GetGameInstance() const
+{
+    static auto OwningGameInstance = GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance")));
+
+    return *OwningGameInstance->ContainerPtrToValuePtr<UGameInstance*>(this);
+}
+
 AGameNetworkManager* UWorld::GetNetworkManager() const
 {
     static auto NetworkManager = GetClass()->FindPropertyByName(FName(TEXT("NetworkManager")));

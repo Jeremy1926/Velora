@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "FortGameMode.h"
+#include "FortGameInstance.h"
+#include "Engine/World.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
@@ -89,6 +91,9 @@ TAssetPtr<UFortGameDeathPenalty>& AFortGameMode::GetDeathPenaltyData()
 UFortPlaylistManager* AFortGameMode::GetPlaylistManager() const
 {
     static auto PlaylistManager = GetClass()->FindPropertyByName(FName(TEXT("PlaylistManager")));
+
+    if (!PlaylistManager)
+        return ((UFortGameInstance*)GetWorld()->GetGameInstance())->GetPlaylistManager();
 
     return *PlaylistManager->ContainerPtrToValuePtr<UFortPlaylistManager*>(this);
 }
