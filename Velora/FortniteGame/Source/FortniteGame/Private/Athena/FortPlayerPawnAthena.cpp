@@ -19,6 +19,11 @@ DETOUR(AFortPlayerPawnAthena, OnPlayerPawnReady, Anchor::Hook()
     .Reference("call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax")
     .Start()
     .Or()
+    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+    .Start()
+    .Reference("call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *")
+    .Start()
+    .Or()
     .String(TEXT("ExitAircraft: %s (Pawn %s)"))
     .Caller()
     .Or()
@@ -34,6 +39,9 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
     {
         auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
         auto PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax").Start();
+
+        if (!PlayerPawnReady.Get())
+            PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *").Start();
 
         if (!PlayerPawnReady.Get())
             PlayerPawnReady = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
