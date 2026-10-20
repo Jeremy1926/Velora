@@ -4,7 +4,10 @@
 
 void FOutputDeviceRedirector::AddOutputDevice(FOutputDevice* OutputDevice)
 {
-    static auto AddOutputDevice = Scanner::Function<void (*)(FOutputDeviceRedirector*, FOutputDevice*)>(Scanner::String(TEXT("NOCONSOLE")).Call(3).Get(TEXT("FOutputDeviceRedirector::AddOutputDevice")));
+    static auto AddOutputDevice = Anchor::Function<void (*)(FOutputDeviceRedirector*, FOutputDevice*)>(TEXT("FOutputDeviceRedirector::AddOutputDevice"))
+        .String(TEXT("NOCONSOLE"))
+        .Call(3)
+        .Get();
 
     AddOutputDevice(this, OutputDevice);
 }
