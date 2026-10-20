@@ -103,6 +103,7 @@ namespace Anchor
         void Log(ELogLevel Level, const wchar_t* Format, ...);
         int64_t LogSlot(const wchar_t* Name, int64_t Value);
         void** FindVTable(const wchar_t* Name);
+        const uint8_t* Unhooked(const uint8_t* Target);
     }
 
     void* Detour(const wchar_t* Name, void* Target, void* Function);

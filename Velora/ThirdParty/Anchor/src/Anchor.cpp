@@ -506,7 +506,7 @@ namespace Anchor
                 if ((Operand.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Operand.imm.is_relative) || (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && Operand.mem.base == ZYDIS_REGISTER_RIP))
                 {
                     if (ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Operand, (ZyanU64)Address, &Result)))
-                        return (const uint8_t*)Result;
+                        return Private::Unhooked((const uint8_t*)Result);
                 }
             }
         }

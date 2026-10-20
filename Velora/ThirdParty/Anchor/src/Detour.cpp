@@ -11,6 +11,23 @@ extern "C"
 
 namespace Anchor
 {
+    namespace Private
+    {
+        static const uint8_t* HookedCalls[256][2];
+        static int32_t NumHookedCalls = 0;
+
+        const uint8_t* Unhooked(const uint8_t* Target)
+        {
+            for (int32_t Index = 0; Index < NumHookedCalls; Index++)
+            {
+                if (HookedCalls[Index][0] == Target)
+                    return HookedCalls[Index][1];
+            }
+
+            return Target;
+        }
+    }
+
     void* Detour(const wchar_t* Name, void* Target, void* Function)
     {
         static auto Status = MH_Initialize();
@@ -46,6 +63,12 @@ namespace Anchor
 
         auto Original = (void*)(Call + 5 + *(int32_t*)(Call + 1));
         *(int32_t*)(Call + 1) = (int32_t)((uint8_t*)Jump - (Call + 5));
+
+        if (Private::NumHookedCalls < 256)
+        {
+            Private::HookedCalls[Private::NumHookedCalls][0] = (const uint8_t*)Jump;
+            Private::HookedCalls[Private::NumHookedCalls++][1] = (const uint8_t*)Private::Unhooked((const uint8_t*)Original);
+        }
 
         VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), Protect, &Protect);
         FlushInstructionCache(GetCurrentProcess(), Call, 5);
