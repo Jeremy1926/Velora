@@ -7,6 +7,7 @@
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
 #include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingGameplayActorSpawnMachine.h"
@@ -149,6 +150,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABGAConsumableSpawner::TickPendingSpawns();
         ABuildingItemCollectorActor::TickPendingOutputs();
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
+        UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {

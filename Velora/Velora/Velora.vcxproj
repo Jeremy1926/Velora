@@ -417,6 +417,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaToyItemDefinition.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -627,6 +628,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaToyItemDefinition.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

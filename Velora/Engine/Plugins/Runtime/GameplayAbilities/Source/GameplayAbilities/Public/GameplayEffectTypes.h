@@ -6,6 +6,7 @@
 #include "Templates/SharedPointer.h"
 #include "GameplayTagContainer.h"
 
+class UScriptStruct;
 struct FGameplayEffectContext;
 struct FGameplayEffectSpec;
 
@@ -57,6 +58,8 @@ struct FGameplayEffectSpecHandle
 
 struct FScalableFloat
 {
+    static UScriptStruct* StaticStruct();
+
     float GetValueAtLevel(float Level, const FString* ContextString = nullptr) const;
 };
 

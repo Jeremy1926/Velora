@@ -46,6 +46,13 @@ public:
         return Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertiesSize : GetStruct()->PropertiesSize;
     }
 
+    FORCEINLINE int32 GetMinAlignment() const
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->MinAlignment : GetStruct()->MinAlignment;
+    }
+
     bool IsChildOf(const UStruct* SomeBase) const
     {
         for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())

@@ -1,6 +1,15 @@
 #include "pch.h"
 #include "GameplayEffectTypes.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UScriptStruct* FScalableFloat::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.ScalableFloat"));
+
+    return Struct;
+}
 
 float FScalableFloat::GetValueAtLevel(float Level, const FString* ContextString) const
 {

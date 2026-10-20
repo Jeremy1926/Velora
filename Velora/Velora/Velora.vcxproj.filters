@@ -355,6 +355,12 @@
     <Filter Include="Engine\Source\Runtime\Engine\Private\Collision">
       <UniqueIdentifier>{36FA6E67-9395-458D-A1BA-1AFB169DB159}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\Abilities">
+      <UniqueIdentifier>{3057E0D9-E6A3-424E-B943-7F3E848D0980}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\Abilities">
+      <UniqueIdentifier>{DB320153-61BB-48EC-8605-FDD3437D2AEB}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1171,6 +1177,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaToyItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Abilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1731,6 +1740,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaToyItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Abilities\FortGameplayAbilityAthena_PeriodicItemGrant.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Abilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
