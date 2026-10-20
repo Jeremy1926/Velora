@@ -10,6 +10,8 @@ struct alignas(16) FQuat
     float Z;
     float W;
 
+    static const FQuat Identity;
+
     FORCEINLINE FQuat()
     {
     }

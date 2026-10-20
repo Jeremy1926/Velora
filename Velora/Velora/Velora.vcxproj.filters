@@ -352,6 +352,9 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\AI">
       <UniqueIdentifier>{ECE66E80-90C4-4DCC-AC04-E874DAF471DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Private\Collision">
+      <UniqueIdentifier>{36FA6E67-9395-458D-A1BA-1AFB169DB159}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1144,6 +1147,24 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\ScriptDelegates.h">
+      <Filter>Engine\Source\Runtime\Core\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\WorldCollision.h">
+      <Filter>Engine\Source\Runtime\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\CollisionQueryParams.h">
+      <Filter>Engine\Source\Runtime\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\ProjectileMovementComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortProjectileMovementComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1683,6 +1704,18 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\WorldCollision.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

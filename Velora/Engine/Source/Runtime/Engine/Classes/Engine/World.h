@@ -5,6 +5,7 @@
 #include "Engine/EngineBaseTypes.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/PendingNetGame.h"
+#include "CollisionQueryParams.h"
 
 class AActor;
 class AGameModeBase;
@@ -16,6 +17,9 @@ class UAISystemBase;
 class UGameInstance;
 class ULevel;
 class UNetDriver;
+struct FCollisionShape;
+struct FHitResult;
+struct FQuat;
 struct FRotator;
 struct FTransform;
 struct FURL;
@@ -62,6 +66,8 @@ public:
     AActor* SpawnActor(UClass* InClass, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 
     AActor* SpawnActor(UClass* Class, FVector const* Location = nullptr, FRotator const* Rotation = nullptr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
+
+    bool SweepSingleByChannel(FHitResult& OutHit, const FVector& Start, const FVector& End, const FQuat& Rot, ECollisionChannel TraceChannel, const FCollisionShape& CollisionShape, const FCollisionQueryParams& Params = FCollisionQueryParams::DefaultQueryParam, const FCollisionResponseParams& ResponseParam = FCollisionResponseParams::DefaultResponseParam) const;
 
     AGameModeBase* GetAuthGameMode() const;
 

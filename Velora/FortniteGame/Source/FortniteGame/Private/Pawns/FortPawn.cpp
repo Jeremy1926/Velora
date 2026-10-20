@@ -123,6 +123,13 @@ void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Resul
     MovingEmoteStopped();
 }
 
+FMulticastScriptDelegate& AFortPawn::GetOnWeaponUnEquippedDelegate()
+{
+    static auto OnWeaponUnEquippedDelegate = GetClass()->FindPropertyByName(FName(TEXT("OnWeaponUnEquippedDelegate")));
+
+    return *OnWeaponUnEquippedDelegate->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
 UFortHealthSet* AFortPawn::GetHealthSet() const
 {
     static auto HealthSet = GetClass()->FindPropertyByName(FName(TEXT("HealthSet")));

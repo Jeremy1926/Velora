@@ -43,6 +43,10 @@ public:
 
     AFortAthenaVehicle* GetVehicle() const;
 
+    AActor* GetHeldObject() const;
+
+    void SetHeldObject(AActor* InHeldObject);
+
     AFortAthenaVehicle* ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior);
 
     void AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration);

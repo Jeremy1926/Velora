@@ -42,6 +42,8 @@ FRotator FQuat::Rotator() const
 
 const FTransform FTransform::Identity;
 
+const FQuat FQuat::Identity(0, 0, 0, 1);
+
 FVector FMath::VRand()
 {
     static auto VRand = Scanner::Function<FVector* (*)(FVector*)>(Scanner::Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector")).Get(TEXT("UKismetMathLibrary::RandomUnitVector")));

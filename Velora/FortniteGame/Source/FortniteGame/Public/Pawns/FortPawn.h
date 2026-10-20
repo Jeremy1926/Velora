@@ -2,6 +2,7 @@
 
 #include "GameFramework/Character.h"
 #include "Math/Vector.h"
+#include "UObject/ScriptDelegates.h"
 
 class AFortWeapon;
 class UAbilitySystemComponent;
@@ -39,6 +40,8 @@ public:
     void MovingEmoteStopped();
 
     void execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result);
+
+    FMulticastScriptDelegate& GetOnWeaponUnEquippedDelegate();
 
     UFortHealthSet* GetHealthSet() const;
 

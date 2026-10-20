@@ -409,6 +409,12 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\ScriptDelegates.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\WorldCollision.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\CollisionQueryParams.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\ProjectileMovementComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortProjectileMovementComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -612,6 +618,10 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\WorldCollision.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

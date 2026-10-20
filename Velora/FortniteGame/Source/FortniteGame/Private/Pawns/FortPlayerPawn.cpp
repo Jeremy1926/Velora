@@ -18,6 +18,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
 UClass* AFortPlayerPawn::StaticClass()
@@ -51,6 +52,20 @@ uint8 FVehiclePawnState::GetSeatIndex() const
 AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
 {
     return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());
+}
+
+AActor* AFortPlayerPawn::GetHeldObject() const
+{
+    static auto HeldObject = GetClass()->FindPropertyByName(FName(TEXT("HeldObject")));
+
+    return HeldObject ? HeldObject->ContainerPtrToValuePtr<TWeakObjectPtr<AActor>>(this)->Get() : nullptr;
+}
+
+void AFortPlayerPawn::SetHeldObject(AActor* InHeldObject)
+{
+    static auto HeldObject = GetClass()->FindPropertyByName(FName(TEXT("HeldObject")));
+
+    *HeldObject->ContainerPtrToValuePtr<TWeakObjectPtr<AActor>>(this) = InHeldObject;
 }
 
 AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior)

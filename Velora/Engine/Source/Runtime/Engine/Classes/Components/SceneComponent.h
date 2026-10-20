@@ -14,6 +14,8 @@ public:
 
     const FBoxSphereBounds& GetBounds() const;
 
+    FBoxSphereBounds CalcLocalBounds() const;
+
     void K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport);
 
     FVector GetSocketLocation(FName InSocketName) const;

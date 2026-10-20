@@ -35,6 +35,8 @@ public:
 
     void K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies);
 
+    void K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule RotationRule, EDetachmentRule ScaleRule);
+
     ENetDormancy GetNetDormancy() const;
 
     float GetNetUpdateFrequency() const;

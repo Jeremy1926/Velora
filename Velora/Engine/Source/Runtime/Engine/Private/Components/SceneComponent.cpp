@@ -38,6 +38,15 @@ const FBoxSphereBounds& USceneComponent::GetBounds() const
     return *(FBoxSphereBounds*)((uint8_t*)this + Bounds);
 }
 
+FBoxSphereBounds USceneComponent::CalcLocalBounds() const
+{
+    static auto CalcLocalBounds = Scanner::String(TEXT("HeldObject.Placement.Mesh")).Start().Find("mov rax, [rcx]; call [rax+0x*]; lea rcx, [*+0x*]; call 0x*; mov rcx, [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("USceneComponent::CalcLocalBounds"));
+
+    FBoxSphereBounds Result;
+
+    return *Scanner::Virtual<FBoxSphereBounds* (*)(const USceneComponent*, FBoxSphereBounds*)>(this, CalcLocalBounds)(this, &Result);
+}
+
 void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport)
 {
     static auto K2_SetWorldLocationAndRotation = Scanner::Function<void (*)(USceneComponent*, FVector, FRotator, bool, void*, bool)>(Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_SetWorldLocationAndRotation")).Get(TEXT("USceneComponent::K2_SetWorldLocationAndRotation")));

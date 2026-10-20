@@ -72,6 +72,13 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
     K2_AttachToActor(this, ParentActor, SocketName, LocationRule, RotationRule, ScaleRule, bWeldSimulatedBodies);
 }
 
+void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule RotationRule, EDetachmentRule ScaleRule)
+{
+    static auto K2_DetachFromActor = Scanner::Function<void (*)(AActor*, EDetachmentRule, EDetachmentRule, EDetachmentRule)>(Scanner::Native(TEXT("/Script/Engine.Actor:K2_DetachFromActor")).Get(TEXT("AActor::K2_DetachFromActor")));
+
+    K2_DetachFromActor(this, LocationRule, RotationRule, ScaleRule);
+}
+
 ENetDormancy AActor::GetNetDormancy() const
 {
     static auto NetDormancy = GetClass()->FindPropertyByName(FName(TEXT("NetDormancy")));
