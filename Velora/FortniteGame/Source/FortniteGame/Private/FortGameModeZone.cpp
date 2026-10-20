@@ -51,7 +51,6 @@ void AFortGameModeZone::FinishWorldInitialization()
 
 void AFortGameModeZone::CreateAIDirector()
 {
-    static auto CanCreateInCurrentContext = DetourCall(TEXT("UObject::CanCreateInCurrentContext"), Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Get(), &UObject::CanCreateInCurrentContext);
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
     static auto GetAIDirector = []
     {
@@ -113,6 +112,7 @@ void AFortGameModeZone::CreateAIDirector()
         return;
 
     auto AIDirectorClass = (*AIDirectors)[AIDirectorIndex].LoadSynchronous();
+    static auto CanCreateInCurrentContext = DetourCall(TEXT("UObject::CanCreateInCurrentContext"), Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Get(), &UObject::CanCreateInCurrentContext);
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
