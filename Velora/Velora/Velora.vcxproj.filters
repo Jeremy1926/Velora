@@ -1240,6 +1240,18 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavMesh.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\PrimaryAssetId.h">
+      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortBotCosmeticItemDataTable.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCosmeticLibraryData.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCustomizationData.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1830,6 +1842,15 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavMesh.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\AI\Navigation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortBotCosmeticItemDataTable.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCosmeticLibraryData.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

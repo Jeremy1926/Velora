@@ -30,3 +30,12 @@ bool UKismetSystemLibrary::CapsuleTraceMultiForObjects(const UObject* WorldConte
 
     return CapsuleTraceMultiForObjects(WorldContextObject, Start, End, Radius, HalfHeight, ObjectTypes, bTraceComplex, ActorsToIgnore, DrawDebugType, OutHits, bIgnoreSelf, TraceColor, TraceHitColor, DrawTime);
 }
+
+FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FPrimaryAssetId PrimaryAssetId)
+{
+    static auto GetSoftObjectReferenceFromPrimaryAssetId = Anchor::Function<FSoftObjectPtr (*)(FPrimaryAssetId)>(TEXT("UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetSoftObjectReferenceFromPrimaryAssetId"))
+        .Get();
+
+    return GetSoftObjectReferenceFromPrimaryAssetId(PrimaryAssetId);
+}

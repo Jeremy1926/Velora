@@ -432,6 +432,10 @@
     <ClInclude Include="..\Engine\Source\Runtime\NavigationSystem\Public\NavMesh\RecastNavMesh.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\FortNavMesh.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavMesh.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\PrimaryAssetId.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortBotCosmeticItemDataTable.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCosmeticLibraryData.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCustomizationData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -652,6 +656,9 @@
     <ClCompile Include="..\Engine\Source\Runtime\NavigationSystem\Private\NavigationSystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavSystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavMesh.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortBotCosmeticItemDataTable.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCosmeticLibraryData.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

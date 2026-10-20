@@ -3,11 +3,25 @@
 #include "Player/FortPlayerControllerPvP.h"
 
 class AFortPlayerState;
+class UAthenaBackpackItemDefinition;
+class UAthenaCharacterItemDefinition;
+class UAthenaGliderItemDefinition;
 class UAthenaMarkerComponent;
 class UAthenaPickaxeItemDefinition;
+class UAthenaSkyDiveContrailItemDefinition;
 
 struct FFortAthenaLoadout
 {
+    static UScriptStruct* StaticStruct();
+
+    UAthenaCharacterItemDefinition*& GetCharacter();
+
+    UAthenaGliderItemDefinition*& GetGlider();
+
+    UAthenaSkyDiveContrailItemDefinition*& GetSkyDiveContrail();
+
+    UAthenaBackpackItemDefinition*& GetBackpack();
+
     UAthenaPickaxeItemDefinition*& GetPickaxe();
 };
 

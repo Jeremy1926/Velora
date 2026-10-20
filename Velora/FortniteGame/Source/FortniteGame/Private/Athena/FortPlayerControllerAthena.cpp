@@ -8,6 +8,40 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UScriptStruct* FFortAthenaLoadout::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaLoadout"));
+
+    return Struct;
+}
+
+UAthenaCharacterItemDefinition*& FFortAthenaLoadout::GetCharacter()
+{
+    static auto Character = StaticStruct()->FindPropertyByName(FName(TEXT("Character")));
+
+    return *Character->ContainerPtrToValuePtr<UAthenaCharacterItemDefinition*>(this);
+}
+
+UAthenaGliderItemDefinition*& FFortAthenaLoadout::GetGlider()
+{
+    static auto Glider = StaticStruct()->FindPropertyByName(FName(TEXT("Glider")));
+
+    return *Glider->ContainerPtrToValuePtr<UAthenaGliderItemDefinition*>(this);
+}
+
+UAthenaSkyDiveContrailItemDefinition*& FFortAthenaLoadout::GetSkyDiveContrail()
+{
+    static auto SkyDiveContrail = StaticStruct()->FindPropertyByName(FName(TEXT("SkyDiveContrail")));
+
+    return *SkyDiveContrail->ContainerPtrToValuePtr<UAthenaSkyDiveContrailItemDefinition*>(this);
+}
+
+UAthenaBackpackItemDefinition*& FFortAthenaLoadout::GetBackpack()
+{
+    static auto Backpack = StaticStruct()->FindPropertyByName(FName(TEXT("Backpack")));
+
+    return *Backpack->ContainerPtrToValuePtr<UAthenaBackpackItemDefinition*>(this);
+}
 
 UAthenaPickaxeItemDefinition*& FFortAthenaLoadout::GetPickaxe()
 {
