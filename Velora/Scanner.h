@@ -125,6 +125,13 @@ namespace Scanner
         };
     }
 
+    template<typename ChainType>
+    struct TChainAccess : Anchor::TChain<ChainType>
+    {
+        using Anchor::TChain<ChainType>::Code;
+        using Anchor::TChain<ChainType>::SlotValue;
+    };
+
     template<typename FunctionType>
     inline FunctionType Virtual(const void* Object, int64 Slot, int64 Offset = 0)
     {
@@ -163,6 +170,87 @@ namespace Anchor
             auto& Chain = static_cast<ChainType&>(*this);
 
             return Chain.IsActive() ? Chain.At(Scanner::Event(FunctionName)) : Chain;
+        }
+
+        ChainType& Log(const TCHAR* Name)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+            auto& Code = Chain.*(&Scanner::TChainAccess<ChainType>::Code);
+
+            if (!Chain.IsActive() && Code.Get())
+                return Chain;
+
+            auto Address = Code.Get(Name);
+
+            return Chain.IsActive() ? Chain.At(Address) : Chain;
+        }
+
+        ChainType& If(bool bCondition)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && !bCondition ? Chain.At(FCode()) : Chain;
+        }
+
+        ChainType& Is(std::string_view Instructions)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && !(Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Is(Instructions) ? Chain.At(FCode()) : Chain;
+        }
+
+        ChainType& Has(std::string_view Instructions)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && !(Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Has(Instructions) ? Chain.At(FCode()) : Chain;
+        }
+
+        ChainType& LogSlot(const TCHAR* Name)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            if (Chain.IsActive() || !(Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Get())
+                Private::LogSlot(Name, (Chain.*(&Scanner::TChainAccess<ChainType>::SlotValue))());
+
+            return Chain;
+        }
+
+        ChainType& SlotIn(const TCHAR* VTableName)
+        {
+            return SlotOf(Scanner::FindVTable(VTableName));
+        }
+
+        ChainType& SlotIn(const void* Object)
+        {
+            return SlotOf(Object ? *(const void* const* const*)Object : nullptr);
+        }
+
+        ChainType& Entry(const TCHAR* VTableName)
+        {
+            return EntryIn(Scanner::FindVTable(VTableName));
+        }
+
+        ChainType& Entry(const void* Object)
+        {
+            return EntryIn(Object ? *(const void* const* const*)Object : nullptr);
+        }
+
+    private:
+        ChainType& SlotOf(const void* const* VTable)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+            auto Address = (Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Get();
+
+            return Chain.Virtual(VTable, [Address](const FCode& Entry) { return Entry.Get() == Address; });
+        }
+
+        ChainType& EntryIn(const void* const* VTable)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+            auto VTableSlot = (Chain.*(&Scanner::TChainAccess<ChainType>::SlotValue))();
+
+            return Chain.IsActive() ? Chain.At(VTable && IsSlot(VTableSlot) ? VTable[VTableSlot / sizeof(void*)] : nullptr) : Chain;
         }
     };
 }
