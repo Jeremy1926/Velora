@@ -175,7 +175,7 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         return true;
     }();
 
-    static auto ServerRemoveItemInternal = []
+    static auto ServerRemoveItemInternal = !StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortQuickBars:ServerRemoveItemInternal")) ? nullptr : []
     {
         auto ServerRemoveItemInternal_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:ServerRemoveItemInternal")).Find("call [*+0x*]", 2).Slot(TEXT("AFortQuickBars::ServerRemoveItemInternal_Implementation"));
         auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortQuickBars"));

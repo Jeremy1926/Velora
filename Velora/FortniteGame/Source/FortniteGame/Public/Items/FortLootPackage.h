@@ -15,8 +15,10 @@ struct FFortLootPackageData : public FTableRowBase
 
     FName LootPackageID;
     float Weight;
-    int32 Count;
-    int32 LootPackageCategory;
+
+    int32 GetCount() const;
+
+    int32 GetLootPackageCategory() const;
 
     FName GetRequiredTag() const;
 

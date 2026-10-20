@@ -21,6 +21,20 @@ UScriptStruct* FFortLootPackageData::StaticStruct()
     return Struct;
 }
 
+int32 FFortLootPackageData::GetCount() const
+{
+    static auto Count = StaticStruct()->FindPropertyByName(FName(TEXT("Count")));
+
+    return *Count->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootPackageData::GetLootPackageCategory() const
+{
+    static auto LootPackageCategory = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageCategory")));
+
+    return *LootPackageCategory->ContainerPtrToValuePtr<int32>(this);
+}
+
 FName FFortLootPackageData::GetRequiredTag() const
 {
     static auto RequiredTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredTag")));
@@ -58,7 +72,7 @@ int32 FFortLootPackageData::GetMaxWorldLevel() const
 
 static bool PackageMeetsCriteria(const FFortLootPackageData& LootPackageData, FName LootPackageName, int32 LootPackageCategory, const FGameplayTagContainer& GameplayTags, int32 WorldLevel)
 {
-    if (LootPackageName != LootPackageData.LootPackageID || (LootPackageCategory != -1 && LootPackageData.LootPackageCategory != LootPackageCategory))
+    if (LootPackageName != LootPackageData.LootPackageID || (LootPackageCategory != -1 && LootPackageData.GetLootPackageCategory() != LootPackageCategory))
         return false;
 
     if (LootPackageData.GetRequiredTag() != NAME_None)
@@ -202,7 +216,7 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
                             ItemLevel = UFortLootLevel::GetItemLevel(WorldItemDefinition->GetLootLevelData(), WorldLevel);
                         }
 
-                        for (int32 NumberToDrop = LootPackageData->Count; NumberToDrop > 0;)
+                        for (int32 NumberToDrop = LootPackageData->GetCount(); NumberToDrop > 0;)
                         {
                             const int32 NumberToStack = FMath::Min(NumberToDrop, ItemDefinition->GetMaxStackSize());
 
@@ -224,7 +238,7 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
             }
             else
             {
-                for (int32 Index = 0; Index < LootPackageData->Count; ++Index)
+                for (int32 Index = 0; Index < LootPackageData->GetCount(); ++Index)
                 {
                     PickLootDropsFromLootPackage(OutLootToDrop, FName(*LootPackageData->GetLootPackageCall()), WorldLevel, -1, GameplayTags, false);
                 }
