@@ -21,10 +21,22 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
         auto ApplyHeroPartDisplaySettings = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerSetShowHeroBackpack_Implementation)).Find("jmp [*+0x*]").Slot(TEXT("AFortPlayerState::ApplyHeroPartDisplaySettings"))));
         auto ApplyCustomizationToCharacter = ApplyHeroPartDisplaySettings.Find("ret").Last("call 0x*").Call();
 
-        auto TailCall = ApplyCustomizationToCharacter.Find("pop *; jmp 0x*");
-        auto Call = ApplyCustomizationToCharacter.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*");
-
-        return Scanner::Function<void (*)(AFortPlayerState*, APawn*)>((TailCall.Get() ? TailCall.Find("jmp 0x*") : (Call.Get() ? Call : ApplyHeroPartDisplaySettings.Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")).Find("call 0x*")).Target(TEXT("AFortPlayerState::ApplyCharacterCustomization")));
+        return Anchor::Function<void (*)(AFortPlayerState*, APawn*)>(TEXT("AFortPlayerState::ApplyCharacterCustomization"))
+            .At(ApplyCustomizationToCharacter)
+            .Find("pop *; jmp 0x*")
+            .Find("jmp 0x*")
+            .Target()
+            .Or()
+            .At(ApplyCustomizationToCharacter)
+            .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Or()
+            .At(ApplyHeroPartDisplaySettings)
+            .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
     }();
 
     ApplyCharacterCustomization(this, Pawn);
@@ -32,7 +44,9 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 
 APawn* AFortPlayerState::GetCurrentPawn() const
 {
-    static auto GetCurrentPawn = Scanner::Function<APawn* (*)(const AFortPlayerState*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn")).Get(TEXT("AFortPlayerState::GetCurrentPawn")));
+    static auto GetCurrentPawn = Anchor::Function<APawn* (*)(const AFortPlayerState*)>(TEXT("AFortPlayerState::GetCurrentPawn"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn"))
+        .Get();
 
     return GetCurrentPawn(this);
 }
