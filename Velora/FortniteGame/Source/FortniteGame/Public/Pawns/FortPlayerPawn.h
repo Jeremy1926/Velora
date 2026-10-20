@@ -11,6 +11,7 @@ class AFortPickup;
 class UFortMontageItemDefinitionBase;
 class UGameplayEffect;
 class UScriptStruct;
+class UStatManager;
 struct FFrame;
 struct FGameplayTag;
 struct FScalableFloat;
@@ -36,6 +37,15 @@ struct FZiplinePawnState
     static UScriptStruct* StaticStruct();
 
     int32 GetAuthoritativeValue() const;
+};
+
+struct FFortClientObservedStatArray
+{
+    static UScriptStruct* StaticStruct();
+
+    void SetStatManager(UStatManager* InStatManager);
+
+    UStatManager* GetMyStatManager() const;
 };
 
 class AFortPlayerPawn : public AFortPawn
@@ -71,6 +81,10 @@ public:
 
     void execUpdateGameStateModifiedGravity(FFrame& Stack, void* const Z_Param__Result);
 
+    void SetClientObservedStatsFromAnotherPawn(AFortPlayerPawn* OtherPawn);
+
+    void execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, void* const Z_Param__Result);
+
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 
     void HandleZiplineStateChanged();
@@ -88,4 +102,6 @@ public:
     FScalableFloat& GetSetByCallerReviveHealth();
 
     FGameplayTag& GetEventReviveTag();
+
+    FFortClientObservedStatArray& GetClientObservedStats();
 };

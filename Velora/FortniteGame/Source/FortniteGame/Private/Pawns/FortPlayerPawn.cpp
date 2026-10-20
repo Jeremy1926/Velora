@@ -230,6 +230,31 @@ int32 FZiplinePawnState::GetAuthoritativeValue() const
     return *AuthoritativeValue->ContainerPtrToValuePtr<int32>(this);
 }
 
+UScriptStruct* FFortClientObservedStatArray::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortClientObservedStatArray"));
+
+    return Struct;
+}
+
+void FFortClientObservedStatArray::SetStatManager(UStatManager* InStatManager)
+{
+    static auto SetStatManager = Anchor::Function<void (*)(FFortClientObservedStatArray*, UStatManager*)>(TEXT("FFortClientObservedStatArray::SetStatManager"))
+        .FieldPattern("48 8D ? %o 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SetStatManager(this, InStatManager);
+}
+
+UStatManager* FFortClientObservedStatArray::GetMyStatManager() const
+{
+    static auto MyStatManager = StaticStruct()->FindPropertyByName(FName(TEXT("MyStatManager")));
+
+    return *MyStatManager->ContainerPtrToValuePtr<UStatManager*>(this);
+}
+
 void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState)
 {
     auto& ZiplineState = GetZiplineState();
@@ -311,6 +336,27 @@ void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* co
     UpdateGameStateModifiedGravity(GravityMultiplier);
 }
 
+void AFortPlayerPawn::SetClientObservedStatsFromAnotherPawn(AFortPlayerPawn* OtherPawn)
+{
+    GetClientObservedStats().SetStatManager(OtherPawn ? OtherPawn->GetClientObservedStats().GetMyStatManager() : nullptr);
+}
+
+void AFortPlayerPawn::execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execSetClientObservedStatsFromAnotherPawn, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetClientObservedStatsFromAnotherPawn"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:SetClientObservedStatsFromAnotherPawn")));
+
+    AFortPlayerPawn* OtherPawn = nullptr;
+
+    Stack.StepCompiledIn(&OtherPawn);
+    Stack.Code += !!Stack.Code;
+
+    SetClientObservedStatsFromAnotherPawn(OtherPawn);
+}
+
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 {
     static auto CanReviveFromDBNO = [this]
@@ -375,4 +421,11 @@ FGameplayTag& AFortPlayerPawn::GetEventReviveTag()
     static auto EventReviveTag = GetClass()->FindPropertyByName(FName(TEXT("EventReviveTag")));
 
     return *EventReviveTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+}
+
+FFortClientObservedStatArray& AFortPlayerPawn::GetClientObservedStats()
+{
+    static auto ClientObservedStats = GetClass()->FindPropertyByName(FName(TEXT("ClientObservedStats")));
+
+    return *ClientObservedStats->ContainerPtrToValuePtr<FFortClientObservedStatArray>(this);
 }
