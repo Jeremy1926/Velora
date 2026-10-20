@@ -34,7 +34,15 @@ void FWindowsConsoleOutputDevice::Serialize(const TCHAR* Data, ELogVerbosity::Ty
         Color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
     }
 
-    const auto CategoryName = Category == NAME_None ? FString() : Category.ToString();
+    static thread_local bool bResolvingCategory = false;
+    FString CategoryName;
+
+    if (Category != NAME_None && !bResolvingCategory)
+    {
+        bResolvingCategory = true;
+        CategoryName = Category.ToString();
+        bResolvingCategory = false;
+    }
 
     TCHAR Line[2048];
     auto Length = _snwprintf_s(Line, _TRUNCATE, TEXT("[%02hu:%02hu:%02hu] %s%s%s%s\r\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, *CategoryName, CategoryName.Len() ? TEXT(": ") : TEXT(""), Prefix, Data);
