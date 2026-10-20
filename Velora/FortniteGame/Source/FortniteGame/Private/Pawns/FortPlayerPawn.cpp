@@ -23,34 +23,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
-
-static auto execPlayGroupEmote = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"));
-
-    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerPawn::execPlayGroupEmote, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&AFortPlayerPawn::execPlayGroupEmote);
-
-    return true;
-}();
-
-static auto execUpdateGameStateModifiedGravity = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"));
-
-    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerPawn::execUpdateGameStateModifiedGravity, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&AFortPlayerPawn::execUpdateGameStateModifiedGravity);
-
-    return true;
-}();
+#include "Detour.h"
 
 UClass* AFortPlayerPawn::StaticClass()
 {
@@ -112,7 +85,9 @@ AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior
 
 void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)
 {
-    static auto AddIgnoredActor = Scanner::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:AddIgnoredActor")).Get(TEXT("AFortPlayerPawn::AddIgnoredActor")));
+    static auto AddIgnoredActor = Anchor::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(TEXT("AFortPlayerPawn::AddIgnoredActor"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:AddIgnoredActor"))
+        .Get();
 
     AddIgnoredActor(this, InActorToIgnore, InIgnoreDuration);
 }
@@ -126,7 +101,9 @@ const FVehiclePawnState& AFortPlayerPawn::GetVehicleStateLocal() const
 
 void AFortPlayerPawn::BeginSkydiving(bool bFromBus)
 {
-    static auto BeginSkydiving = Scanner::Function<void (*)(AFortPlayerPawn*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:BeginSkydiving")).Get(TEXT("AFortPlayerPawn::BeginSkydiving")));
+    static auto BeginSkydiving = Anchor::Function<void (*)(AFortPlayerPawn*, bool)>(TEXT("AFortPlayerPawn::BeginSkydiving"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:BeginSkydiving"))
+        .Get();
 
     BeginSkydiving(this, bFromBus);
 }
@@ -265,7 +242,11 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
 
 void AFortPlayerPawn::HandleZiplineStateChanged()
 {
-    static auto HandleZiplineStateChanged = Scanner::Function<void (*)(AFortPlayerPawn*)>(Scanner::CallTo(Scanner::Event(TEXT("ServerSendZiplineState")).Get()).Last("call 0x*").Target(TEXT("AFortPlayerPawn::HandleZiplineStateChanged")));
+    static auto HandleZiplineStateChanged = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::HandleZiplineStateChanged"))
+        .At(Scanner::CallTo(Scanner::Event(TEXT("ServerSendZiplineState")).Get()))
+        .Last("call 0x*")
+        .Target()
+        .Get();
 
     HandleZiplineStateChanged(this);
 }
@@ -283,6 +264,11 @@ void AFortPlayerPawn::PlayGroupEmote(const UFortMontageItemDefinitionBase* Emote
         PlayerController->ServerPlayEmoteItem_Implementation(const_cast<UFortMontageItemDefinitionBase*>(EmoteAsset));
 }
 
+DETOUR(AFortPlayerPawn, execPlayGroupEmote, Anchor::Hook()
+    .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")))
 void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result)
 {
     UFortMontageItemDefinitionBase* EmoteAsset = nullptr;
@@ -308,6 +294,11 @@ void AFortPlayerPawn::UpdateGameStateModifiedGravity(float GravityMultiplier)
     SetGravityMultiplier(GravityMultiplier);
 }
 
+DETOUR(AFortPlayerPawn, execUpdateGameStateModifiedGravity, Anchor::Hook()
+    .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")))
 void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* const Z_Param__Result)
 {
     float GravityMultiplier = 0.f;
@@ -348,7 +339,10 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 
 void AFortPlayerPawn::UpdateDBNOInteractCollision()
 {
-    static auto UpdateDBNOInteractCollision = Scanner::Function<void (*)(AFortPlayerPawn*)>(Scanner::String(TEXT("DBNOInteractCollision")).Start().Get(TEXT("AFortPlayerPawn::UpdateDBNOInteractCollision")));
+    static auto UpdateDBNOInteractCollision = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::UpdateDBNOInteractCollision"))
+        .String(TEXT("DBNOInteractCollision"))
+        .Start()
+        .Get();
 
     UpdateDBNOInteractCollision(this);
 }
