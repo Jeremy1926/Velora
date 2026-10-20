@@ -2,6 +2,7 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
+#include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
@@ -15,7 +16,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto OnPlaylistLootTableAssetsDataLoadCompleted = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) ? []
+static auto OnPlaylistLootTableAssetsDataLoadCompleted = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass() ? []
 {
     auto bPlaylistDataIsLoaded = (uint32)AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal();
     auto PlaylistDataIsLoaded = std::format("66 C7 ? {:02X} {:02X} {:02X} {:02X} 01 00", bPlaylistDataIsLoaded & 0xFF, (bPlaylistDataIsLoaded >> 8) & 0xFF, (bPlaylistDataIsLoaded >> 16) & 0xFF, bPlaylistDataIsLoaded >> 24);
@@ -48,11 +49,23 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 {
     (this->*::OnPlaylistLootTableAssetsDataLoadCompleted)();
 
-    TArray<AActor*> VehicleSpawners;
-    UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
+    if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
+    {
+        TArray<AActor*> VehicleSpawners;
+        UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
 
-    for (auto VehicleSpawner : VehicleSpawners)
-        ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+        for (auto VehicleSpawner : VehicleSpawners)
+            ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+    }
+
+    if (ABuildingItemWeaponUpgradeActor::StaticClass())
+    {
+        TArray<AActor*> WeaponUpgradeActors;
+        UGameplayStatics::GetAllActorsOfClass(this, ABuildingItemWeaponUpgradeActor::StaticClass(), WeaponUpgradeActors);
+
+        for (auto WeaponUpgradeActor : WeaponUpgradeActors)
+            ((ABuildingItemWeaponUpgradeActor*)WeaponUpgradeActor)->AthenaPostApplyPlaylistDataTables();
+    }
 }
 
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()

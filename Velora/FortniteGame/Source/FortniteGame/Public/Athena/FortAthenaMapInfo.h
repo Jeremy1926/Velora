@@ -47,6 +47,8 @@ public:
 
     const FScalableFloat* GetVendingMachineRarityCount() const;
 
+    const FScalableFloat* GetWeaponUpgradeMachineSpawnChance() const;
+
     const FScalableFloat* GetSupplyDropMinPlacementHeight() const;
 
     const FScalableFloat* GetSupplyDropMaxPlacementHeight() const;

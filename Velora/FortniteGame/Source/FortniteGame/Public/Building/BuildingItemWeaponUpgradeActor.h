@@ -10,5 +10,7 @@ class ABuildingItemWeaponUpgradeActor : public ABuildingItemCollectorActor
 public:
     static UClass* StaticClass();
 
+    void AthenaPostApplyPlaylistDataTables();
+
     void GrantOutput(AFortPlayerController* Player, UFortWorldItemDefinition* Item);
 };

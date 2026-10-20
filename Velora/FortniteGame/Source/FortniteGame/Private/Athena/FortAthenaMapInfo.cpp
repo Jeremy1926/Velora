@@ -137,6 +137,13 @@ const FScalableFloat* AFortAthenaMapInfo::GetVendingMachineRarityCount() const
     return VendingMachineRarityCount ? VendingMachineRarityCount->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
+const FScalableFloat* AFortAthenaMapInfo::GetWeaponUpgradeMachineSpawnChance() const
+{
+    static auto WeaponUpgradeMachineSpawnChance = GetClass()->FindPropertyByName(FName(TEXT("WeaponUpgradeMachineSpawnChance")));
+
+    return WeaponUpgradeMachineSpawnChance ? WeaponUpgradeMachineSpawnChance->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMinPlacementHeight() const
 {
     static auto SupplyDropMinPlacementHeight = GetClass()->FindPropertyByName(FName(TEXT("SupplyDropMinPlacementHeight")));
