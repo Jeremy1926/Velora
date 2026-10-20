@@ -6,15 +6,14 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ServerUpdateTowhook = []
-{
-    auto ServerUpdateTowhook = Scanner::Exec(TEXT("/Script/FortniteGame.FortOctopusVehicle:ServerUpdateTowhook"));
-    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortOctopusVehicle"));
-    auto Slot = ServerUpdateTowhook.Get() ? ServerUpdateTowhook.Find("call [*+0x*]", 2).Slot(TEXT("AFortOctopusVehicle::ServerUpdateTowhook_Implementation")) : 0;
-
-    return Slot && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, Slot)).Is("ret*") ? DetourVTable(TEXT("AFortOctopusVehicle::ServerUpdateTowhook_Implementation"), *(void***)DefaultObject, Slot, &AFortOctopusVehicle::ServerUpdateTowhook_Implementation) : nullptr;
-}();
-
+DETOUR(AFortOctopusVehicle, ServerUpdateTowhook_Implementation, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortOctopusVehicle:ServerUpdateTowhook"))
+    .Optional()
+    .Find("call [*+0x*]", 2)
+    .LogSlot(TEXT("AFortOctopusVehicle::ServerUpdateTowhook_Implementation"))
+    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortOctopusVehicle"), "ret*")
+    .Optional()
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortOctopusVehicle")))
 void AFortOctopusVehicle::ServerUpdateTowhook_Implementation(FVector_NetQuantizeNormal InNetTowhookAimDir)
 {
     static auto NetTowhookAimDir = GetClass()->FindPropertyByName(FName(TEXT("NetTowhookAimDir")));
