@@ -16,27 +16,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto FinishWorldInitialization = []
-{
-    auto AthenaFinishWorldInitialization = Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start().Get();
-    auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-    auto Slot = Scanner::Slot(TEXT("AFortGameMode::FinishWorldInitialization"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaFinishWorldInitialization; });
-    auto PvPBaseFinishWorldInitialization = Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGamePvPBase")), Slot);
-    auto Call = Scanner::At(PvPBaseFinishWorldInitialization).Find("call 0x*");
-
-    if (!Call.Get())
-        Call = Scanner::At(AthenaFinishWorldInitialization).Find(std::format("call 0x{:x}", (uintptr_t)PvPBaseFinishWorldInitialization));
-
-    return DetourCall(TEXT("AFortGameModeZone::FinishWorldInitialization"), Call.Get(), &AFortGameModeZone::FinishWorldInitialization);
-}();
-
-static auto CreateAIDirector = []
-{
-    auto AthenaCreateAIDirector = Scanner::String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"));
-
-    return AthenaCreateAIDirector.Get() ? DetourCall(TEXT("AFortGameModeZone::CreateAIDirector"), AthenaCreateAIDirector.Start().Find("call 0x*").Get(), &AFortGameModeZone::CreateAIDirector) : nullptr;
-}();
-
 UClass* AFortGameModeZone::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeZone"));
@@ -44,11 +23,31 @@ UClass* AFortGameModeZone::StaticClass()
     return Class;
 }
 
+DETOUR(AFortGameModeZone, FinishWorldInitialization, Anchor::Hook()
+    .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+    .Start()
+    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+    .LogSlot(TEXT("AFortGameMode::FinishWorldInitialization"))
+    .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
+    .Find("call 0x*")
+    .Or()
+    .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+    .Start()
+    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+    .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
+    .CallIn(Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start())
+    .AtCall())
 void AFortGameModeZone::FinishWorldInitialization()
 {
     Super::FinishWorldInitialization();
 }
 
+DETOUR(AFortGameModeZone, CreateAIDirector, Anchor::Hook()
+    .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
+    .Optional()
+    .Start()
+    .Find("call 0x*")
+    .AtCall())
 void AFortGameModeZone::CreateAIDirector()
 {
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
@@ -59,21 +58,22 @@ void AFortGameModeZone::CreateAIDirector()
 
     static auto GetAIDirector = []
     {
-        auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
         auto GameGetAIDirector = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector")).Get(TEXT("UFortKismetLibrary::GetAIDirector"));
         auto CallGetAIDirector = std::format("call 0x{:x}", (uintptr_t)GameGetAIDirector);
+        auto execGetAIDirector = THook(TEXT("UFortKismetLibrary::execGetAIDirector"), &UFortKismetLibrary::execGetAIDirector)
+            .At(GameGetAIDirector)
+            .Is("xor eax, eax; ret")
+            .Optional()
+            .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
 
-        if (!Function || !Scanner::At(GameGetAIDirector).Is("xor eax, eax; ret"))
+        if (!execGetAIDirector)
             return false;
-
-        UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execGetAIDirector, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-        Function->SetNativeFunc((Native)&UFortKismetLibrary::execGetAIDirector);
 
         auto RedirectGetAIDirector = [&](const uint8_t* Caller)
         {
-            for (auto Call = Scanner::At(Caller).Find(CallGetAIDirector); Call.Get(); Call = Call.Find(CallGetAIDirector))
-                DetourCall(TEXT("UFortKismetLibrary::GetAIDirector"), Call.Get(), &UFortKismetLibrary::GetAIDirector);
+            THook(TEXT("UFortKismetLibrary::GetAIDirector"), &UFortKismetLibrary::GetAIDirector)
+                .At(GameGetAIDirector)
+                .AtCallsIn(Scanner::At(Caller));
         };
 
         for (auto FunctionPath : { TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounterFromGeneratedProfile"), TEXT("/Script/FortniteGame.FortMission:StopMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequence"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequenceByIndex"), TEXT("/Script/FortniteGame.FortMission:StopEncounterSequence") })
@@ -116,7 +116,10 @@ void AFortGameModeZone::CreateAIDirector()
         return;
 
     auto AIDirectorClass = (*AIDirectors)[AIDirectorIndex].LoadSynchronous();
-    static auto CanCreateInCurrentContext = DetourCall(TEXT("UObject::CanCreateInCurrentContext"), Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Get(), &UObject::CanCreateInCurrentContext);
+    static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Last("call 0x*; test al, al")
+        .AtCall();
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
