@@ -50,6 +50,18 @@ void AFortPlayerControllerAthena::ClientEquipItem(const FGuid& ItemGuid, bool bF
     ClientEquipItem(this, ItemGuid, bForceExecution);
 }
 
+void AFortPlayerControllerAthena::ClientReportPhaseFound(const FString& Phase)
+{
+    static auto ClientReportPhaseFound = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerControllerAthena:ClientReportPhaseFound"));
+
+    struct
+    {
+        FString Phase;
+    } Parms{ Phase };
+
+    CallRemoteFunction(ClientReportPhaseFound, &Parms, nullptr, nullptr);
+}
+
 UAthenaMarkerComponent* AFortPlayerControllerAthena::GetMarkerComponent() const
 {
     static auto MarkerComponent = GetClass()->FindPropertyByName(FName(TEXT("MarkerComponent")));

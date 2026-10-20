@@ -24,6 +24,8 @@ public:
 
     void ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution);
 
+    void ClientReportPhaseFound(const FString& Phase);
+
     UAthenaMarkerComponent* GetMarkerComponent() const;
 
     uint8 GetSquadId() const;
