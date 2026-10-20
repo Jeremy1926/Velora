@@ -33,42 +33,13 @@ static Scanner::FCode PostUpdateCalledFlag()
     return PostUpdateCalledFlag;
 }
 
-static auto SetDynamicFoundationTransform = []
-{
-    auto Call = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform")).Find("mov [*+0x20], *; call 0x*").Find("call 0x*");
-
-    return Scanner::At(Call.Target()).Is("ret*") ? DetourCall(TEXT("ABuildingFoundation::SetDynamicFoundationTransform"), Call.Get(), &ABuildingFoundation::SetDynamicFoundationTransform) : nullptr;
-}();
-
-static auto PostUpdate = ::SetDynamicFoundationTransform ? Detour(TEXT("ABuildingFoundation::PostUpdate"), PostUpdateCall().Start().Get(), &ABuildingFoundation::PostUpdate) : nullptr;
-
-static auto execSetDynamicFoundationEnabled = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"));
-
-    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked ABuildingFoundation::execSetDynamicFoundationEnabled, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&ABuildingFoundation::execSetDynamicFoundationEnabled);
-
-    return true;
-}();
-
-void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues)
-{
-    if (!TransformIsSet())
-        SetDynamicFoundationTransform(GetTransform());
-
-    (this->*::PostUpdate)(PersistentState, ReservedRandomValues);
-
-    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
-
-    if (FoundationEnabledState && *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Disabled && GetLevelToStream() != NAME_None)
-        StreamOutMyBuilding();
-}
-
+DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform"))
+    .Find("mov [*+0x20], *; call 0x*")
+    .Find("call 0x*")
+    .IsTarget("ret*")
+    .Optional()
+    .AtCall())
 void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
 {
     static auto Offset = TransformIsSetFlag().Disp();
@@ -91,6 +62,24 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     RepData.Rotation = NewTransform.GetRotation();
 
     OnRep_DynamicFoundationRepData();
+}
+
+DETOUR(ABuildingFoundation, PostUpdate, Anchor::Hook()
+    .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform))
+    .At(PostUpdateCall())
+    .Start()
+    .Inline())
+void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues)
+{
+    if (!TransformIsSet())
+        SetDynamicFoundationTransform(GetTransform());
+
+    Original(PersistentState, ReservedRandomValues);
+
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
+
+    if (FoundationEnabledState && *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Disabled && GetLevelToStream() != NAME_None)
+        StreamOutMyBuilding();
 }
 
 void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
@@ -142,6 +131,11 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
     }
 }
 
+DETOUR(ABuildingFoundation, execSetDynamicFoundationEnabled, Anchor::Hook()
+    .Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"))
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")))
 void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result)
 {
     uint32 bEnabled = 0;
@@ -170,21 +164,33 @@ bool ABuildingFoundation::StreamOutMyBuilding()
 
 void ABuildingFoundation::OnRep_DynamicFoundationTransform()
 {
-    static auto OnRep_DynamicFoundationTransform = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationTransform")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationTransform")));
+    static auto OnRep_DynamicFoundationTransform = Anchor::Function<void (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::OnRep_DynamicFoundationTransform"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationTransform"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_DynamicFoundationTransform(this);
 }
 
 void ABuildingFoundation::OnRep_DynamicFoundationRepData()
 {
-    static auto OnRep_DynamicFoundationRepData = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationRepData")));
+    static auto OnRep_DynamicFoundationRepData = Anchor::Function<void (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::OnRep_DynamicFoundationRepData"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_DynamicFoundationRepData(this);
 }
 
 void ABuildingFoundation::OnRep_FoundationEnabledState()
 {
-    static auto OnRep_FoundationEnabledState = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabledState")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabledState")));
+    static auto OnRep_FoundationEnabledState = Anchor::Function<void (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::OnRep_FoundationEnabledState"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabledState"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_FoundationEnabledState(this);
 }
@@ -196,13 +202,22 @@ void ABuildingFoundation::OnRep_FoundationEnabled(bool bOldEnabled)
 
     if (bTakesOldEnabled)
     {
-        static auto OnRep_FoundationEnabled = Scanner::Function<void (*)(ABuildingFoundation*, bool)>(Exec.Find("setnz dl; call 0x*").Find("call 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabled")));
+        static auto OnRep_FoundationEnabled = Anchor::Function<void (*)(ABuildingFoundation*, bool)>(TEXT("ABuildingFoundation::OnRep_FoundationEnabled"))
+            .At(Exec)
+            .Find("setnz dl; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
 
         OnRep_FoundationEnabled(this, bOldEnabled);
         return;
     }
 
-    static auto OnRep_FoundationEnabled = Scanner::Function<void (*)(ABuildingFoundation*)>(Exec.Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabled")));
+    static auto OnRep_FoundationEnabled = Anchor::Function<void (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::OnRep_FoundationEnabled"))
+        .At(Exec)
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_FoundationEnabled(this);
 }
