@@ -8,6 +8,7 @@
 #include "Engine/CurveTable.h"
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "EnvironmentQuery/EnvQuery.h"
 #include "FortKismetLibrary.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -119,6 +120,7 @@ void AFortGameModeZone::CreateAIDirector()
 
     NewAIDirector->GetBaseEncounterClass() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_BaseEncounterSettings.Deimos_BaseEncounterSettings_C"));
     NewAIDirector->GetDummyDebugEncounter() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_DummyDebugEncounter.Deimos_DummyDebugEncounter_C"));
+    NewAIDirector->GetSpawnLocationActorSearchQueries((EFortEncounterSpawnLocationPlacementMode)StaticEnum<EFortEncounterSpawnLocationPlacementMode>()->GetValueByName(FName(TEXT("EFortEncounterSpawnLocationPlacementMode::Custom")))).GetEnvironmentQuery() = LoadObject<UEnvQuery>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/EQS/Deimos_EQS_RiftSpawner_Search.Deimos_EQS_RiftSpawner_Search"));
 
     if (auto BaseLootDrops = LoadObject<UDataTable>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/DataTables/Deimos_BaseLootDrops.Deimos_BaseLootDrops")))
     {

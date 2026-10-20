@@ -4,6 +4,28 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
+template<>
+UEnum* StaticEnum<EFortEncounterSpawnLocationPlacementMode>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortEncounterSpawnLocationPlacementMode"));
+
+    return Enum;
+}
+
+UScriptStruct* FEncounterEnvironmentQueryInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EncounterEnvironmentQueryInfo"));
+
+    return Struct;
+}
+
+UEnvQuery*& FEncounterEnvironmentQueryInfo::GetEnvironmentQuery()
+{
+    static auto EnvironmentQuery = StaticStruct()->FindPropertyByName(FName(TEXT("EnvironmentQuery")));
+
+    return *EnvironmentQuery->ContainerPtrToValuePtr<UEnvQuery*>(this);
+}
+
 FFortAIEncounterSpawnGroupCap::FFortAIEncounterSpawnGroupCap()
 {
     memset(this, 0, GetTypeSize());
@@ -183,6 +205,13 @@ TArray<FFortAIEncounterSpawnPointsProfile>& AFortAIDirector::GetEncounterSpawnPo
     static auto EncounterSpawnPointsSettings = GetClass()->FindPropertyByName(FName(TEXT("EncounterSpawnPointsSettings")));
 
     return *EncounterSpawnPointsSettings->ContainerPtrToValuePtr<TArray<FFortAIEncounterSpawnPointsProfile>>(this);
+}
+
+FEncounterEnvironmentQueryInfo& AFortAIDirector::GetSpawnLocationActorSearchQueries(EFortEncounterSpawnLocationPlacementMode SpawnLocationPlacementMode)
+{
+    static auto SpawnLocationActorSearchQueries = GetClass()->FindPropertyByName(FName(TEXT("SpawnLocationActorSearchQueries")));
+
+    return *SpawnLocationActorSearchQueries->ContainerPtrToValuePtr<FEncounterEnvironmentQueryInfo>(this, (int32)SpawnLocationPlacementMode);
 }
 
 TArray<FDataTableRowHandle>& AFortAIDirector::GetBaseLootDropData()

@@ -8,7 +8,24 @@
 #include "Templates/SubclassOf.h"
 
 class UFortAIEncounterInfo;
+class UEnvQuery;
 class UScriptStruct;
+
+enum class EFortEncounterSpawnLocationPlacementMode : uint8
+{
+    Directional,
+    Ring,
+    Volume,
+    Custom,
+    Max_None
+};
+
+struct FEncounterEnvironmentQueryInfo
+{
+    static UScriptStruct* StaticStruct();
+
+    UEnvQuery*& GetEnvironmentQuery();
+};
 
 struct FFortAIEncounterSpawnGroupCap
 {
@@ -98,6 +115,8 @@ public:
     TArray<FFortAIEncounterSpawnGroupCapsProfile>& GetEncounterSpawnGroupCapSettings();
 
     TArray<FFortAIEncounterSpawnPointsProfile>& GetEncounterSpawnPointsSettings();
+
+    FEncounterEnvironmentQueryInfo& GetSpawnLocationActorSearchQueries(EFortEncounterSpawnLocationPlacementMode SpawnLocationPlacementMode);
 
     TArray<FDataTableRowHandle>& GetBaseLootDropData();
 

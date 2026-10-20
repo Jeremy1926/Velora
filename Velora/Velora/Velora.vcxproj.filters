@@ -784,6 +784,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameStateAthena.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQuery.h">
+      <Filter>Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.h">
       <Filter>Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery</Filter>
     </ClInclude>
@@ -1335,6 +1338,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQuery.cpp">
+      <Filter>Engine\Source\Runtime\AIModule\Private\EnvironmentQuery</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.cpp">
       <Filter>Engine\Source\Runtime\AIModule\Private\EnvironmentQuery</Filter>
