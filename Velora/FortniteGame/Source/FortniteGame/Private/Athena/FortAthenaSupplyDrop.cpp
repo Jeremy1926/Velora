@@ -12,8 +12,12 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto SpawnPickup = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")) ? DetourCall(TEXT("AFortAthenaSupplyDrop::SpawnPickup"), Scanner::Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")).Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*").Get(), &AFortAthenaSupplyDrop::SpawnPickup) : nullptr;
-
+DETOUR(AFortAthenaSupplyDrop, SpawnPickup, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")))
+    .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
+    .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
+    .Find("call 0x*")
+    .AtCall())
 AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const FVector& Position, const FVector& Direction)
 {
     if (!ItemDefinition || NumberToSpawn <= 0)
