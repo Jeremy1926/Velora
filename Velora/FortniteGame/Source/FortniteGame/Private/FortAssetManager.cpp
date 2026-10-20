@@ -6,14 +6,31 @@
 
 UFortAssetManager& UFortAssetManager::Get()
 {
-    static auto Get = Scanner::Function<UFortAssetManager& (*)()>(Scanner::Native(TEXT("/Script/FortniteGame.FortGameData:GetPersonalXpBoost")).Call().Get(TEXT("UFortAssetManager::Get")));
+    static auto Get = Scanner::Function<UFortAssetManager& (*)()>([]
+    {
+        auto GetPersonalXpBoost = Scanner::Native(TEXT("/Script/FortniteGame.FortGameData:GetPersonalXpBoost"));
+
+        return (GetPersonalXpBoost.Get() ? GetPersonalXpBoost : Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call()).Call().Get(TEXT("UFortAssetManager::Get"));
+    }());
 
     return Get();
 }
 
 UFortGameData* UFortAssetManager::GetGameData()
 {
-    static auto GetGameData = Scanner::Function<UFortGameData* (*)(UFortAssetManager*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortGameData:GetPersonalXpBoost")).Call(2).Get(TEXT("UFortAssetManager::GetGameData")));
+    static auto GetGameData = Scanner::Function<UFortGameData* (*)(UFortAssetManager*)>([]
+    {
+        auto GetPersonalXpBoost = Scanner::Native(TEXT("/Script/FortniteGame.FortGameData:GetPersonalXpBoost"));
+
+        return (GetPersonalXpBoost.Get() ? GetPersonalXpBoost.Call(2) : Scanner::At(Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition")).Call().Find("jmp 0x*").Target())).Get(TEXT("UFortAssetManager::GetGameData"));
+    }());
 
     return GetGameData(this);
+}
+
+UGameDataBR* UFortAssetManager::GetGameDataBR()
+{
+    static auto GetGameDataBR = Scanner::Function<UGameDataBR* (*)(UFortAssetManager*)>(Scanner::At(Scanner::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov rcx, rax; call 0x*").Call().Find("jmp 0x*").Target()).Get(TEXT("UFortAssetManager::GetGameDataBR")));
+
+    return GetGameDataBR(this);
 }
