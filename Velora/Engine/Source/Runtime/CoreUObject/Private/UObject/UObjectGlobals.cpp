@@ -21,25 +21,26 @@ void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* Erro
 
 UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const TCHAR* OrigInName, bool ExactClass)
 {
-    static auto StaticFindObject = Scanner::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, bool)>([]
-    {
-        auto CollectingGarbage = Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; mov edx, 0x*; mov [rsp+0x20], rax; call 0x*; lea r9, [0x*]; mov r8d, 0x*; lea rdx, [0x*]; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff");
-
-        if (!CollectingGarbage.Get())
-            CollectingGarbage = Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rsi, [0x*]; mov r9d, 0x1; mov [rbp+0x*], rax; lea r8, [rbp+0x*]; mov [rsp+0x20], rsi; mov edx, 0x*; lea rcx, [0x*]; call 0x*; mov r9, rsi; lea rdx, [0x*]; mov r8d, 0x*; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff");
-
-        if (!CollectingGarbage.Get())
-            CollectingGarbage = Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; lea r8, [0x*]; mov [rsp+0x20], rax; mov edx, 0x*; lea rcx, [0x*]; call 0x*; call 0x*; cmp *, 0xffffffffffffffff");
-
-        return CollectingGarbage.Start().Get(TEXT("StaticFindObject"));
-    }());
+    static auto StaticFindObject = Anchor::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, bool)>(TEXT("StaticFindObject"))
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; mov edx, 0x*; mov [rsp+0x20], rax; call 0x*; lea r9, [0x*]; mov r8d, 0x*; lea rdx, [0x*]; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff")
+        .Start()
+        .Or()
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rsi, [0x*]; mov r9d, 0x1; mov [rbp+0x*], rax; lea r8, [rbp+0x*]; mov [rsp+0x20], rsi; mov edx, 0x*; lea rcx, [0x*]; call 0x*; mov r9, rsi; lea rdx, [0x*]; mov r8d, 0x*; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff")
+        .Start()
+        .Or()
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; lea r8, [0x*]; mov [rsp+0x20], rax; mov edx, 0x*; lea rcx, [0x*]; call 0x*; call 0x*; cmp *, 0xffffffffffffffff")
+        .Start()
+        .Get();
 
     return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
 }
 
 UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename, uint32 LoadFlags, UPackageMap* Sandbox, bool bAllowObjectReconciliation, FUObjectSerializeContext* InSerializeContext)
 {
-    static auto StaticLoadObject = Scanner::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, const TCHAR*, uint32, UPackageMap*, bool, FUObjectSerializeContext*)>(Scanner::String(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'")).Start().Get(TEXT("StaticLoadObject")));
+    static auto StaticLoadObject = Anchor::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, const TCHAR*, uint32, UPackageMap*, bool, FUObjectSerializeContext*)>(TEXT("StaticLoadObject"))
+        .String(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'"))
+        .Start()
+        .Get();
 
     return StaticLoadObject(Class, InOuter, Name, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation, InSerializeContext);
 }
