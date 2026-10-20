@@ -7,23 +7,26 @@
 
 UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InController)
 {
-    static auto GetDefaultPawnClassForController = Scanner::Function<UClass* (*)(AGameModeBase*, AController*)>(Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot")).Call().Get(TEXT("AGameModeBase::GetDefaultPawnClassForController")));
+    static auto GetDefaultPawnClassForController = Anchor::Function<UClass* (*)(AGameModeBase*, AController*)>(TEXT("AGameModeBase::GetDefaultPawnClassForController"))
+        .String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot"))
+        .Call()
+        .Get();
 
     return GetDefaultPawnClassForController(this, InController);
 }
 
 APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
-    static auto SpawnDefaultPawnFor = []
-    {
-        auto AthenaSpawnDefaultPawnFor = Scanner::String(TEXT("SpawnDefaultPawnFor: Failed due to no world")).Start().Get(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"));
-        auto AthenaVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
-        auto SpawnDefaultPawnFor = Scanner::Slot(TEXT("AGameModeBase::SpawnDefaultPawnFor_Implementation"), AthenaVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaSpawnDefaultPawnFor; });
+    static auto SpawnDefaultPawnFor = Anchor::Slot(TEXT("AGameModeBase::SpawnDefaultPawnFor_Implementation"))
+        .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
+        .Start()
+        .Log(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Get();
 
-        return Scanner::Virtual<APawn* (*)(AGameModeBase*, AController*, AActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameModeBase")), SpawnDefaultPawnFor);
-    }();
+    static auto GameModeBaseSpawnDefaultPawnFor = Scanner::Virtual<APawn* (*)(AGameModeBase*, AController*, AActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__GameModeBase")), SpawnDefaultPawnFor);
 
-    return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);
+    return GameModeBaseSpawnDefaultPawnFor(this, NewPlayer, StartSpot);
 }
 
 FString& AGameModeBase::GetOptionsString()
