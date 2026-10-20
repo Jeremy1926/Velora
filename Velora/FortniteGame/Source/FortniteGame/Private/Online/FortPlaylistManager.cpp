@@ -11,14 +11,20 @@ bool UFortPlaylistManager::GetMaxTeamInfoForPlaylist(UFortPlaylistManager* Playl
     if (bOwnedByGameMode && !PlaylistManager)
         return false;
 
-    static auto GetMaxTeamInfoForPlaylist = Scanner::Function<bool (*)(UFortPlaylistManager*, int32, int32*, int32*, int32*, int32*)>(Scanner::String(TEXT("GetMaxTeamInfoForPlaylist: Unable to find playlist %d")).Start().Get(TEXT("UFortPlaylistManager::GetMaxTeamInfoForPlaylist")));
+    static auto GetMaxTeamInfoForPlaylist = Anchor::Function<bool (*)(UFortPlaylistManager*, int32, int32*, int32*, int32*, int32*)>(TEXT("UFortPlaylistManager::GetMaxTeamInfoForPlaylist"))
+        .String(TEXT("GetMaxTeamInfoForPlaylist: Unable to find playlist %d"))
+        .Start()
+        .Get();
 
     return GetMaxTeamInfoForPlaylist(PlaylistManager, PlaylistId, &MaxTeamCount, &MaxTeamSize, &MaxSquadSize, &MaxPlayers);
 }
 
 UObject* UFortPlaylistManager::GetAthenaPlaylist(FName PlaylistName)
 {
-    static auto GetAthenaPlaylist = Scanner::Function<UObject* (*)(UFortPlaylistManager*, FName)>(Scanner::Smallest(TEXT("UFortPlaylistManager::GetAthenaPlaylist: Unable to find playlist %s")).Start().Get(TEXT("UFortPlaylistManager::GetAthenaPlaylist")));
+    static auto GetAthenaPlaylist = Anchor::Function<UObject* (*)(UFortPlaylistManager*, FName)>(TEXT("UFortPlaylistManager::GetAthenaPlaylist"))
+        .Smallest(TEXT("UFortPlaylistManager::GetAthenaPlaylist: Unable to find playlist %s"))
+        .Start()
+        .Get();
 
     return GetAthenaPlaylist(this, PlaylistName);
 }
