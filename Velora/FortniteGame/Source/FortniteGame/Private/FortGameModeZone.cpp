@@ -101,6 +101,8 @@ void AFortGameModeZone::CreateAIDirector()
                 RedirectGetAIDirector((const uint8_t*)VTable[Slot / sizeof(void*)]);
         }
 
+        RedirectGetAIDirector(Scanner::CallTo(Scanner::String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i.")).Start().Get()).Start().Get());
+
         return true;
     }();
 
