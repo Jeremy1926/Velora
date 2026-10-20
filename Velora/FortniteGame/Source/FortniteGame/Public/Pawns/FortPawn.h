@@ -22,9 +22,11 @@ public:
 
     void StopPerformingNativeAction(const FGameplayTag& ActionTag);
 
-    bool& GetIsDBNO();
+    bool GetIsDBNO() const;
 
-    bool& GetPlayedDying();
+    void SetIsDBNO(bool bInIsDBNO);
+
+    void SetPlayedDying(bool bInPlayedDying);
 
     UFortHealthSet* GetHealthSet() const;
 };

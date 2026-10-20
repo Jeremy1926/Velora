@@ -49,8 +49,8 @@ void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInst
 
         if (SpecHandle.IsValid())
         {
-            GetIsDBNO() = false;
-            GetPlayedDying() = false;
+            SetIsDBNO(false);
+            SetPlayedDying(false);
 
             const float ReviveHealth = GetSetByCallerReviveHealth().GetValueAtLevel(0.f);
 
@@ -138,7 +138,9 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
         auto VTable = *(const uint8_t***)this;
         auto Image = Scanner::Base();
         auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
-        auto Check = std::format("cmp byte ptr [rcx+{:#x}], 0x0; mov r*, rdx; mov r*, rcx", GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")))->GetOffset_ForInternal());
+        auto bIsDBNO = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
+        auto Offset = bIsDBNO->GetOffset_ForInternal() + bIsDBNO->GetByteOffset();
+        auto Check = bIsDBNO->GetFieldMask() == 0xFF ? std::format("cmp byte ptr [rcx+{:#x}], 0x0; mov r*, rdx; mov r*, rcx", Offset) : std::format("test byte ptr [rcx+{:#x}], {:#x}; mov r*, rdx; mov r*, rcx", Offset, bIsDBNO->GetFieldMask());
 
         for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
         {

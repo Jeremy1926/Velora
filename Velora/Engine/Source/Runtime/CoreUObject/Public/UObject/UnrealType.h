@@ -64,6 +64,18 @@ public:
         return GetPropertyValue(ContainerPtrToValuePtr<void>(A, ArrayIndex));
     }
 
+    FORCEINLINE void SetPropertyValue(void* A, bool Value) const
+    {
+        uint8* ByteValue = (uint8*)A + ByteOffset;
+
+        *ByteValue = ((*ByteValue) & ~FieldMask) | (Value ? ByteMask : 0);
+    }
+
+    FORCEINLINE void SetPropertyValue_InContainer(void* A, bool Value, int32 ArrayIndex = 0) const
+    {
+        SetPropertyValue(ContainerPtrToValuePtr<void>(A, ArrayIndex), Value);
+    }
+
     FORCEINLINE uint8 GetByteOffset() const
     {
         return ByteOffset;

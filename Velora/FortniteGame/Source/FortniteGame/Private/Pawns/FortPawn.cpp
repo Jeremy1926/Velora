@@ -48,18 +48,25 @@ void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
     Scanner::Virtual<void (*)(AFortPawn*, const FGameplayTag&)>(this, StopPerformingNativeAction)(this, ActionTag);
 }
 
-bool& AFortPawn::GetIsDBNO()
+bool AFortPawn::GetIsDBNO() const
 {
-    static auto bIsDBNO = GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
+    static auto bIsDBNO = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
 
-    return *bIsDBNO->ContainerPtrToValuePtr<bool>(this);
+    return bIsDBNO->GetPropertyValue_InContainer(this);
 }
 
-bool& AFortPawn::GetPlayedDying()
+void AFortPawn::SetIsDBNO(bool bInIsDBNO)
 {
-    static auto bPlayedDying = GetClass()->FindPropertyByName(FName(TEXT("bPlayedDying")));
+    static auto bIsDBNO = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
 
-    return *bPlayedDying->ContainerPtrToValuePtr<bool>(this);
+    bIsDBNO->SetPropertyValue_InContainer(this, bInIsDBNO);
+}
+
+void AFortPawn::SetPlayedDying(bool bInPlayedDying)
+{
+    static auto bPlayedDying = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlayedDying")));
+
+    bPlayedDying->SetPropertyValue_InContainer(this, bInPlayedDying);
 }
 
 UFortHealthSet* AFortPawn::GetHealthSet() const
