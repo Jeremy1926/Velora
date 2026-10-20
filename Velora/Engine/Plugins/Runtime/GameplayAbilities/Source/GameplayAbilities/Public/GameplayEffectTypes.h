@@ -73,5 +73,5 @@ struct FGameplayTagCountContainer
     }
 
 private:
-    bool UpdateTagMap_Internal(const FGameplayTag& Tag, int32 CountDelta);
+    bool UpdateTagMap_Internal(const FGameplayTag& Tag, int32 CountDelta, bool bDeferParentTagsOnRemove = false);
 };

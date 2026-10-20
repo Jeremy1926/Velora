@@ -9,9 +9,9 @@ float FScalableFloat::GetValueAtLevel(float Level, const FString* ContextString)
     return GetValueAtLevel(this, Level, ContextString);
 }
 
-bool FGameplayTagCountContainer::UpdateTagMap_Internal(const FGameplayTag& Tag, int32 CountDelta)
+bool FGameplayTagCountContainer::UpdateTagMap_Internal(const FGameplayTag& Tag, int32 CountDelta, bool bDeferParentTagsOnRemove)
 {
-    static auto UpdateTagMap_Internal = Scanner::Function<bool (*)(FGameplayTagCountContainer*, const FGameplayTag&, int32)>(Scanner::String(TEXT("Attempted to remove tag: %s from tag count container, but it is not explicitly in the container!")).Start().Get(TEXT("FGameplayTagCountContainer::UpdateTagMap_Internal")));
+    static auto UpdateTagMap_Internal = Scanner::Function<bool (*)(FGameplayTagCountContainer*, const FGameplayTag&, int32, bool)>(Scanner::String(TEXT("Attempted to remove tag: %s from tag count container, but it is not explicitly in the container!")).Start().Get(TEXT("FGameplayTagCountContainer::UpdateTagMap_Internal")));
 
-    return UpdateTagMap_Internal(this, Tag, CountDelta);
+    return UpdateTagMap_Internal(this, Tag, CountDelta, bDeferParentTagsOnRemove);
 }
