@@ -22,6 +22,7 @@ Universal gameserver for Fortnite.
 | Season 9 | 9.00 to 9.41 |
 | Season X | 10.00 to 10.40 |
 | Chapter 2 Season 1 | 11.00 to 11.50 |
+| Chapter 2 Season 2 | 12.61 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
