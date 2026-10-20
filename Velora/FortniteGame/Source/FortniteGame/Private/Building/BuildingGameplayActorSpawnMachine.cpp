@@ -58,29 +58,6 @@ static TArray<FPendingNextPlayer> PendingNextPlayers;
 
 static TArray<FPendingSkydiveCheck> PendingSkydiveChecks;
 
-static Scanner::FCode ServerOnAttemptInteract()
-{
-    static auto ServerOnAttemptInteract = Scanner::String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting")).Start();
-
-    return ServerOnAttemptInteract;
-}
-
-static auto HandleOnResurrectTimerComplete = []
-{
-    auto StartResurrectionTimer = ServerOnAttemptInteract().Find("lea rax, [0x*]; xor esi, esi");
-
-    if (!StartResurrectionTimer.Get() || !Scanner::At(StartResurrectionTimer.Target()).Is("ret*"))
-        return (const uint8_t*)nullptr;
-
-    void (ABuildingGameplayActorSpawnMachine::*Function)() = &ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete;
-    void* Address = nullptr;
-    memcpy(&Address, &Function, sizeof(Address));
-
-    auto Jump = (JMP_ABS*)AllocateBuffer((LPVOID)StartResurrectionTimer.Get());
-    *Jump = { 0xFF, 0x25, 0, (UINT64)Address };
-
-    return PatchBranch(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete"), StartResurrectionTimer.Get() + 1, (const uint8_t*)Jump);
-}();
 
 UClass* ABuildingGameplayActorSpawnMachine::StaticClass()
 {
@@ -89,10 +66,25 @@ UClass* ABuildingGameplayActorSpawnMachine::StaticClass()
     return Class;
 }
 
+DETOUR(ABuildingGameplayActorSpawnMachine, HandleOnResurrectTimerComplete, Anchor::Hook()
+    .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+    .Start()
+    .Find("lea rax, [0x*]; xor esi, esi")
+    .IsTarget("ret*")
+    .Optional()
+    .AtReference())
 void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
 {
-    static auto GetGameAccountId = Scanner::Function<FUniqueNetIdRepl* (*)(const AFortPlayerController*, FUniqueNetIdRepl*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:GetGameAccountId")).Get(TEXT("AFortPlayerController::GetGameAccountId")));
-    static auto Contains = Scanner::Function<bool (*)(const TArray<FUniqueNetIdRepl>*, const FUniqueNetIdRepl&)>(ServerOnAttemptInteract().Find("mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]; test al, al").Find("call 0x*", 2).Target(TEXT("TArray<FUniqueNetIdRepl>::Contains")));
+    static auto GetGameAccountId = Anchor::Function<FUniqueNetIdRepl* (*)(const AFortPlayerController*, FUniqueNetIdRepl*)>(TEXT("AFortPlayerController::GetGameAccountId"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerController:GetGameAccountId"))
+        .Get();
+    static auto Contains = Anchor::Function<bool (*)(const TArray<FUniqueNetIdRepl>*, const FUniqueNetIdRepl&)>(TEXT("TArray<FUniqueNetIdRepl>::Contains"))
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]; test al, al")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
 
     if (!HasAuthority() || GetSpawnMachineState() != ESpawnMachineState::Active)
         return;
@@ -127,8 +119,11 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         return;
     }
 
-    static auto HandleOnTeamWipedOut = Scanner::At(ServerOnAttemptInteract().Find("lea rcx, [0x*]; mov [rsp+0x*], rcx").Target(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))).Find("lea rcx, [rdi+0x*]");
-    static auto RemoveAll = Scanner::Function<void (*)(FMulticastDelegateBase<FWeakObjectPtr>*, const void*)>(HandleOnTeamWipedOut.Call().Get(TEXT("FMulticastDelegateBase::RemoveAll")));
+    static auto HandleOnTeamWipedOut = Scanner::At(Scanner::String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting")).Start().Find("lea rcx, [0x*]; mov [rsp+0x*], rcx").Target(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))).Find("lea rcx, [rdi+0x*]");
+    static auto RemoveAll = Anchor::Function<void (*)(FMulticastDelegateBase<FWeakObjectPtr>*, const void*)>(TEXT("FMulticastDelegateBase::RemoveAll"))
+        .At(HandleOnTeamWipedOut)
+        .Call()
+        .Get();
 
     if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
         RemoveAll((FMulticastDelegateBase<FWeakObjectPtr>*)((uint8_t*)GameMode + HandleOnTeamWipedOut.Disp()), this);
@@ -138,7 +133,9 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
 
 void ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted()
 {
-    static auto OnResurrectionCompleted = Scanner::Function<void (*)(ABuildingGameplayActorSpawnMachine*)>(Scanner::Event(TEXT("OnResurrectionCompleted")).Get(TEXT("ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted")));
+    static auto OnResurrectionCompleted = Anchor::Function<void (*)(ABuildingGameplayActorSpawnMachine*)>(TEXT("ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted"))
+        .Event(TEXT("OnResurrectionCompleted"))
+        .Get();
 
     OnResurrectionCompleted(this);
 }
@@ -163,7 +160,9 @@ void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn
 
 bool ABuildingGameplayActorSpawnMachine::RebootPlayersInAir() const
 {
-    static auto RebootPlayersInAir = Scanner::Function<bool (*)(const ABuildingGameplayActorSpawnMachine*)>(Scanner::Native(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir")).Get(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir")));
+    static auto RebootPlayersInAir = Anchor::Function<bool (*)(const ABuildingGameplayActorSpawnMachine*)>(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir"))
+        .Native(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+        .Get();
 
     return RebootPlayersInAir(this);
 }
