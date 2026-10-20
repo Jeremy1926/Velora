@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HAL/Platform.h"
+
 class AActor;
 class AFortPlayerPawn;
 class AFortWeaponRanged;
