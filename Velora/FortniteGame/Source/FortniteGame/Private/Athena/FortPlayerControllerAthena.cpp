@@ -8,13 +8,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto ServerRestartPlayer = []
-{
-    auto ServerRestartPlayer = Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer")).Find("jmp [rax+*]");
-    auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-
-    return ServerRestartPlayer.Get() && Scanner::At(Scanner::Virtual<const void*>(DefaultObject, ServerRestartPlayer.Disp())).Is("ret*") ? DetourVTable(TEXT("AFortPlayerControllerAthena::ServerRestartPlayer_Implementation"), *(void***)DefaultObject, ServerRestartPlayer.Disp(), &AFortPlayerControllerAthena::ServerRestartPlayer_Implementation) : nullptr;
-}();
 
 UAthenaPickaxeItemDefinition*& FFortAthenaLoadout::GetPickaxe()
 {
@@ -30,6 +23,12 @@ UClass* AFortPlayerControllerAthena::StaticClass()
     return Class;
 }
 
+DETOUR(AFortPlayerControllerAthena, ServerRestartPlayer_Implementation, Anchor::Hook()
+    .Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer"))
+    .Find("jmp [rax+*]")
+    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
+    .Optional()
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")))
 void AFortPlayerControllerAthena::ServerRestartPlayer_Implementation()
 {
     Super::ServerRestartPlayer_Implementation();
@@ -45,7 +44,9 @@ FFortAthenaLoadout* AFortPlayerControllerAthena::GetCustomizationLoadout()
 
 void AFortPlayerControllerAthena::ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution)
 {
-    static auto ClientEquipItem = Scanner::Function<void (*)(AFortPlayerControllerAthena*, const FGuid&, bool)>(Scanner::Event(TEXT("ClientEquipItem")).Get(TEXT("AFortPlayerControllerAthena::ClientEquipItem")));
+    static auto ClientEquipItem = Anchor::Function<void (*)(AFortPlayerControllerAthena*, const FGuid&, bool)>(TEXT("AFortPlayerControllerAthena::ClientEquipItem"))
+        .Event(TEXT("ClientEquipItem"))
+        .Get();
 
     ClientEquipItem(this, ItemGuid, bForceExecution);
 }
@@ -85,7 +86,9 @@ AFortPlayerState* AFortPlayerControllerAthena::GetSkydiveLeader() const
 
 void AFortPlayerControllerAthena::RespawnPlayerAfterDeath(bool bEnterSkydiving)
 {
-    static auto RespawnPlayerAfterDeath = Scanner::Function<void (*)(AFortPlayerControllerAthena*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:RespawnPlayerAfterDeath")).Get(TEXT("AFortPlayerControllerAthena::RespawnPlayerAfterDeath")));
+    static auto RespawnPlayerAfterDeath = Anchor::Function<void (*)(AFortPlayerControllerAthena*, bool)>(TEXT("AFortPlayerControllerAthena::RespawnPlayerAfterDeath"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:RespawnPlayerAfterDeath"))
+        .Get();
 
     RespawnPlayerAfterDeath(this, bEnterSkydiving);
 }
