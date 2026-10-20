@@ -23,11 +23,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto TickFlushFunction = Scanner::String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s")).Last("call 0x*").Target(TEXT("UNetDriver::TickFlush"));
-
-static auto IsServerSlot = Scanner::At(TickFlushFunction).Find("call [rax+0x*]").Slot(TEXT("UNetDriver::IsServer"));
-
-static auto TickFlush = Detour(TEXT("UNetDriver::TickFlush"), TickFlushFunction, &UNetDriver::TickFlush);
 
 int32 UNetDriver::GetMaxInternetClientRate() const
 {
@@ -215,18 +210,32 @@ FNetworkObjectList& UNetDriver::GetNetworkObjectList()
 
 bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReuseAddressAndPort, FString& Error)
 {
-    static auto InitListen = Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("call [*]").Slot(TEXT("UNetDriver::InitListen"));
+    static auto InitListen = Anchor::Slot(TEXT("UNetDriver::InitListen"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call [*]")
+        .Get();
 
     return Scanner::Virtual<bool (*)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&)>(this, InitListen)(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
 }
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = Scanner::Function<void (*)(UNetDriver*, UWorld*)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx; mov rcx, *").Last("call 0x*").Target(TEXT("UNetDriver::SetWorld")));
+    static auto SetWorld = Anchor::Function<void (*)(UNetDriver*, UWorld*)>(TEXT("UNetDriver::SetWorld"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor edx, edx; mov rcx, *")
+        .Last("call 0x*")
+        .Target()
+        .Get();
 
     SetWorld(this, InWorld);
 }
 
+DETOUR(UNetDriver, TickFlush, Anchor::Hook()
+    .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
+    .Last("call 0x*")
+    .Target()
+    .Log(TEXT("UNetDriver::TickFlush"))
+    .Inline())
 void UNetDriver::TickFlush(float DeltaSeconds)
 {
     static auto FlushActorDormancy = []
@@ -255,7 +264,7 @@ void UNetDriver::TickFlush(float DeltaSeconds)
         ServerReplicateActors(DeltaSeconds);
     }
 
-    (this->*::TickFlush)(DeltaSeconds);
+    Original(DeltaSeconds);
 }
 
 void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
@@ -282,6 +291,13 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
     }
 }
 
+static auto IsServerSlot = Anchor::Slot(TEXT("UNetDriver::IsServer"))
+    .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
+    .Last("call 0x*")
+    .Target()
+    .Find("call [rax+0x*]")
+    .Get();
+
 bool UNetDriver::IsServer() const
 {
     return Scanner::Virtual<bool (*)(const UNetDriver*)>(this, IsServerSlot)(this);
@@ -294,7 +310,11 @@ ENetMode UNetDriver::GetNetMode() const
 
 bool UNetDriver::IsLevelInitializedForActor(const AActor* InActor, const UNetConnection* InConnection) const
 {
-    static auto IsLevelInitializedForActor = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("call [*]; test al, al").Slot(TEXT("UNetDriver::IsLevelInitializedForActor"));
+    static auto IsLevelInitializedForActor = Anchor::Slot(TEXT("UNetDriver::IsLevelInitializedForActor"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("call [*]; test al, al")
+        .Get();
 
     return Scanner::Virtual<bool (*)(const UNetDriver*, const AActor*, const UNetConnection*)>(this, IsLevelInitializedForActor)(this, InActor, InConnection);
 }
