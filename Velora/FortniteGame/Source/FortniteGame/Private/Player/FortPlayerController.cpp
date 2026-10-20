@@ -79,7 +79,7 @@ static auto DropItemsOnPawnDestruction = []
     if (Call.Get())
         return DetourCall(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), Call.Find("call 0x*").Get(), &AFortPlayerController::DropItemsOnPawnDestruction);
 
-    auto Slot = Deaths.Find("mov *[rsp+0x*], *; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"));
+    auto Slot = Deaths.Find("mov *[r?p+0x*], *; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"));
     auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
     return DetourVTable(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"), VTable, Slot, &AFortPlayerController::DropItemsOnPawnDestruction);
