@@ -264,13 +264,14 @@ void AFortPlayerPawn::PlayGroupEmote(const UFortMontageItemDefinitionBase* Emote
         PlayerController->ServerPlayEmoteItem_Implementation(const_cast<UFortMontageItemDefinitionBase*>(EmoteAsset));
 }
 
-DETOUR(AFortPlayerPawn, execPlayGroupEmote, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"))
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")))
 void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPlayerPawn, execPlayGroupEmote, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")));
+
     UFortMontageItemDefinitionBase* EmoteAsset = nullptr;
 
     Stack.StepCompiledIn(&EmoteAsset);
@@ -294,13 +295,14 @@ void AFortPlayerPawn::UpdateGameStateModifiedGravity(float GravityMultiplier)
     SetGravityMultiplier(GravityMultiplier);
 }
 
-DETOUR(AFortPlayerPawn, execUpdateGameStateModifiedGravity, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"))
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")))
 void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPlayerPawn, execUpdateGameStateModifiedGravity, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")));
+
     float GravityMultiplier = 0.f;
 
     Stack.StepCompiledIn(&GravityMultiplier);

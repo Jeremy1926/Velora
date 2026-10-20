@@ -36,12 +36,13 @@ UGameInstance* UGameEngine::GetGameInstance() const
     return *GameInstance->ContainerPtrToValuePtr<UGameInstance*>(this);
 }
 
-DETOUR(UGameEngine, Tick, Anchor::Hook()
-    .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
-    .Start()
-    .Inline())
 void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 {
+    DETOUR(UGameEngine, Tick, Anchor::Hook()
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Inline());
+
     const TCHAR* State = TEXT("Loading");
 
     if (!GIsServer)

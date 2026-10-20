@@ -151,31 +151,33 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::AwardItem(const FActiveItemGr
     WorldInventory->HandleInventoryLocalUpdate();
 }
 
-DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStartItemAwardTimers, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers"))
-    .Find("mov [*+0x20], *; jmp 0x*")
-    .Find("jmp 0x*")
-    .Target()
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers")))
 void UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStartItemAwardTimers, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers")));
+
     Stack.Code += !!Stack.Code;
 
     StartItemAwardTimers();
 }
 
-DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStopItemAwardTimers, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers"))
-    .Find("mov [*+0x20], *; jmp 0x*")
-    .Find("jmp 0x*")
-    .Target()
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers")))
 void UFortGameplayAbilityAthena_PeriodicItemGrant::execStopItemAwardTimers(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStopItemAwardTimers, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers")));
+
     Stack.Code += !!Stack.Code;
 
     StopItemAwardTimers();

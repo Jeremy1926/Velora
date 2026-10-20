@@ -97,22 +97,23 @@ UClass* ABuildingItemCollectorActor::StaticClass()
     return Class;
 }
 
-DETOUR(ABuildingItemCollectorActor, BeginPlay, Anchor::Hook()
-    .If(FColletorUnitInfo::StaticStruct())
-    .String(TEXT("ReceiveBeginPlay"))
-    .Find("lea *, [0x*]")
-    .Target()
-    .Log(TEXT("ENGINE_ReceiveBeginPlay"))
-    .Reference("mov rdx, *")
-    .Start()
-    .Log(TEXT("AActor::ReceiveBeginPlay"))
-    .Caller()
-    .Log(TEXT("AActor::BeginPlay"))
-    .SlotIn(TEXT("/Script/Engine.Default__Actor"))
-    .LogSlot(TEXT("AActor::BeginPlay"))
-    .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemCollectorActor")))
 void ABuildingItemCollectorActor::BeginPlay()
 {
+    DETOUR(ABuildingItemCollectorActor, BeginPlay, Anchor::Hook()
+        .If(FColletorUnitInfo::StaticStruct())
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+        .Reference("mov rdx, *")
+        .Start()
+        .Log(TEXT("AActor::ReceiveBeginPlay"))
+        .Caller()
+        .Log(TEXT("AActor::BeginPlay"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemCollectorActor")));
+
     Original();
 
     AthenaPostApplyPlaylistDataTables();
@@ -194,15 +195,16 @@ void ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables()
     ForceNetUpdate();
 }
 
-DETOUR(ABuildingItemCollectorActor, CheckDepositGoalReached, Anchor::Hook()
-    .If(FColletorUnitInfo::StaticStruct())
-    .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
-    .Log(TEXT("ABuildingItemCollectorActor::GetDepositGoal"))
-    .Reference("call 0x*; xor *, *; mov *, eax; test *, *")
-    .Start()
-    .Inline())
 void ABuildingItemCollectorActor::CheckDepositGoalReached(AFortPlayerController* Player, UFortWorldItemDefinition* Item)
 {
+    DETOUR(ABuildingItemCollectorActor, CheckDepositGoalReached, Anchor::Hook()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Log(TEXT("ABuildingItemCollectorActor::GetDepositGoal"))
+        .Reference("call 0x*; xor *, *; mov *, eax; test *, *")
+        .Start()
+        .Inline());
+
     auto& ControllingPlayer = GetControllingPlayer();
     auto LastControllingPlayer = ControllingPlayer;
 

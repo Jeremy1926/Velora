@@ -9,16 +9,17 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-DETOUR(AFortWeaponRangedMountedCannon, ServerFireActorInCannon_Implementation, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"))
-    .Optional()
-    .Find("call [*+0x*]", 2)
-    .LogSlot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"))
-    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"), "ret*")
-    .Optional()
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon")))
 void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(const FVector& LaunchDir)
 {
+    DETOUR(AFortWeaponRangedMountedCannon, ServerFireActorInCannon_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"))
+        .Optional()
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"), "ret*")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon")));
+
     ShouldFireRiderInCannon(LaunchDir, true);
 }
 

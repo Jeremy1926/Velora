@@ -25,29 +25,31 @@ void ANightNightBase::ReturnToNight()
         ((AFortPlayerControllerAthena*)PlayerController)->ClientReportPhaseFound(TEXT("NoBernieNo"));
 }
 
-DETOUR(ANightNightBase, execMakePreparationsForNightNight, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight"))
-    .Find("jmp 0x*")
-    .Target()
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight")))
 void ANightNightBase::execMakePreparationsForNightNight(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(ANightNightBase, execMakePreparationsForNightNight, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight"))
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight")));
+
     Stack.Code += !!Stack.Code;
 
     MakePreparationsForNightNight();
 }
 
-DETOUR(ANightNightBase, execReturnToNight, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight"))
-    .Find("jmp 0x*")
-    .Target()
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight")))
 void ANightNightBase::execReturnToNight(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(ANightNightBase, execReturnToNight, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight"))
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight")));
+
     Stack.Code += !!Stack.Code;
 
     ReturnToNight();

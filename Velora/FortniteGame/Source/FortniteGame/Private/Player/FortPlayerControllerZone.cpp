@@ -52,29 +52,30 @@ void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
     ServerRestartPlayer(this);
 }
 
-DETOUR(AFortPlayerControllerZone, OnPawnDied, Anchor::Hook((void*)+[](AFortPlayerControllerZone* PlayerController, AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
-    {
-        PlayerController->OnPawnDied(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
-    })
-    .String(TEXT("Deaths"))
-    .Start()
-    .Find("movaps xmm6, xmm*")
-    .Is("movaps xmm6, xmm2")
-    .Start()
-    .Or()
-    .String(TEXT("Deaths"))
-    .Start()
-    .Find("movaps xmm6, xmm*")
-    .Is("movaps xmm6, xmm1")
-    .Start()
-    .With((void*)+[](AFortPlayerControllerZone* PlayerController, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
-    {
-        PlayerController->OnPawnDied(PlayerController->GetMyFortPawn(), Damage, InTags, EffectContext, EventInstigator, DamageCauser, nullptr);
-    })
-    .Optional()
-    .Inline())
 void AFortPlayerControllerZone::OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
 {
+    DETOUR(AFortPlayerControllerZone, OnPawnDied, Anchor::Hook((void*)+[](AFortPlayerControllerZone* PlayerController, AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
+        {
+            PlayerController->OnPawnDied(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+        })
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("movaps xmm6, xmm*")
+        .Is("movaps xmm6, xmm2")
+        .Start()
+        .Or()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("movaps xmm6, xmm*")
+        .Is("movaps xmm6, xmm1")
+        .Start()
+        .With((void*)+[](AFortPlayerControllerZone* PlayerController, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
+        {
+            PlayerController->OnPawnDied(PlayerController->GetMyFortPawn(), Damage, InTags, EffectContext, EventInstigator, DamageCauser, nullptr);
+        })
+        .Optional()
+        .Inline());
+
     static auto bKilledPawn = Scanner::String(TEXT("Deaths")).Start().Find("movaps xmm6, xmm*").Is("movaps xmm6, xmm2");
 
     if (bKilledPawn)

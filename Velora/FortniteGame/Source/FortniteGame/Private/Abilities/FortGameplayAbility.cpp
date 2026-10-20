@@ -69,15 +69,16 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
     GetAbilityWeapon() = Pawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid);
 }
 
-DETOUR(UFortGameplayAbility, execEquipAbilityWeapon, Anchor::Hook()
-    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ClientEndAbilityWeapon")))
-    .Native(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon"))
-    .Is("ret*")
-    .Optional()
-    .If([] { return AbilityWeaponItemOffset() > 0 && AbilityWeaponOffset() > 0; })
-    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon")))
 void UFortGameplayAbility::execEquipAbilityWeapon(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(UFortGameplayAbility, execEquipAbilityWeapon, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ClientEndAbilityWeapon")))
+        .Native(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon"))
+        .Is("ret*")
+        .Optional()
+        .If([] { return AbilityWeaponItemOffset() > 0 && AbilityWeaponOffset() > 0; })
+        .InExec(TEXT("/Script/FortniteGame.FortGameplayAbility:EquipAbilityWeapon")));
+
     UFortWeaponItemDefinition* WeaponDefinition = nullptr;
     int32 ItemLevel = 0;
 

@@ -33,15 +33,16 @@ static Scanner::FCode PostUpdateCalledFlag()
     return PostUpdateCalledFlag;
 }
 
-DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform"))
-    .Find("mov [*+0x20], *; call 0x*")
-    .Find("call 0x*")
-    .IsTarget("ret*")
-    .Optional()
-    .AtCall())
 void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
 {
+    DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform"))
+        .Find("mov [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("ret*")
+        .Optional()
+        .AtCall());
+
     static auto Offset = TransformIsSetFlag().Disp();
     static auto Mask = (uint8_t)TransformIsSetFlag().Imm();
     static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
@@ -64,13 +65,14 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     OnRep_DynamicFoundationRepData();
 }
 
-DETOUR(ABuildingFoundation, PostUpdate, Anchor::Hook()
-    .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform))
-    .At(PostUpdateCall())
-    .Start()
-    .Inline())
 void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues)
 {
+    DETOUR(ABuildingFoundation, PostUpdate, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform))
+        .At(PostUpdateCall())
+        .Start()
+        .Inline());
+
     if (!TransformIsSet())
         SetDynamicFoundationTransform(GetTransform());
 
@@ -131,13 +133,14 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
     }
 }
 
-DETOUR(ABuildingFoundation, execSetDynamicFoundationEnabled, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"))
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")))
 void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(ABuildingFoundation, execSetDynamicFoundationEnabled, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")));
+
     uint32 bEnabled = 0;
 
     Stack.StepCompiledIn(&bEnabled);

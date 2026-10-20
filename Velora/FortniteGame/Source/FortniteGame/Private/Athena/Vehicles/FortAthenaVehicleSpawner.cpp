@@ -30,22 +30,23 @@ UClass* AFortAthenaVehicleSpawner::StaticClass()
     return Class;
 }
 
-DETOUR(AFortAthenaVehicleSpawner, BeginPlay, Anchor::Hook()
-    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
-    .String(TEXT("ReceiveBeginPlay"))
-    .Find("lea *, [0x*]")
-    .Target()
-    .Log(TEXT("ENGINE_ReceiveBeginPlay"))
-    .Reference("mov rdx, *")
-    .Start()
-    .Log(TEXT("AActor::ReceiveBeginPlay"))
-    .Caller()
-    .Log(TEXT("AActor::BeginPlay"))
-    .SlotIn(TEXT("/Script/Engine.Default__Actor"))
-    .LogSlot(TEXT("AActor::BeginPlay"))
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaVehicleSpawner")))
 void AFortAthenaVehicleSpawner::BeginPlay()
 {
+    DETOUR(AFortAthenaVehicleSpawner, BeginPlay, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+        .Reference("mov rdx, *")
+        .Start()
+        .Log(TEXT("AActor::ReceiveBeginPlay"))
+        .Caller()
+        .Log(TEXT("AActor::BeginPlay"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaVehicleSpawner")));
+
     Original();
 
     auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());

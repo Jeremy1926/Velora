@@ -232,13 +232,14 @@ UClass* AFortAIDirector::StaticClass()
     return Class;
 }
 
-DETOUR(AFortAIDirector, SpawnAIPawn, Anchor::Hook()
-    .String(TEXT("AI Director failed to spawn pawn!"))
-    .Optional()
-    .Start()
-    .Inline())
 AFortAIPawn* AFortAIDirector::SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo)
 {
+    DETOUR(AFortAIDirector, SpawnAIPawn, Anchor::Hook()
+        .String(TEXT("AI Director failed to spawn pawn!"))
+        .Optional()
+        .Start()
+        .Inline());
+
     const float LootDropChance = PendingSpawnInfo.GetLootDropData().GetLootDropChance();
     const FName WorldItemTierGroup = PendingSpawnInfo.GetLootDropData().GetWorldItemTierGroup();
 

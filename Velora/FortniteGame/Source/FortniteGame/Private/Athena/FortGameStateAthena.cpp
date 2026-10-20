@@ -38,13 +38,14 @@ AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
     return MapInfo ? *MapInfo->ContainerPtrToValuePtr<AFortAthenaMapInfo*>(this) : nullptr;
 }
 
-DETOUR(AFortGameStateAthena, OnPlaylistLootTableAssetsDataLoadCompleted, Anchor::Hook()
-    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass())
-    .FieldPattern("66 C7 ? %o 01 00", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
-    .Start()
-    .Inline())
 void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 {
+    DETOUR(AFortGameStateAthena, OnPlaylistLootTableAssetsDataLoadCompleted, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass())
+        .FieldPattern("66 C7 ? %o 01 00", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+        .Start()
+        .Inline());
+
     Original();
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))

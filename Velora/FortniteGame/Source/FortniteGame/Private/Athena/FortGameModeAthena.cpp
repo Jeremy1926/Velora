@@ -50,14 +50,15 @@ UClass* AFortGameModeAthena::StaticClass()
     return Class;
 }
 
-DETOUR(AFortGameModeAthena, ReadyToStartMatch_Implementation, Anchor::Hook()
-    .Exec(TEXT("/Script/Engine.GameMode:ReadyToStartMatch"))
-    .Find("call [rax+*]")
-    .HasVirtual(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "call 0x*; xor al, al")
-    .Optional()
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")))
 bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
 {
+    DETOUR(AFortGameModeAthena, ReadyToStartMatch_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/Engine.GameMode:ReadyToStartMatch"))
+        .Find("call [rax+*]")
+        .HasVirtual(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "call 0x*; xor al, al")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")));
+
     if (GetWorldIsReady() && GetMatchState() == MatchState::WaitingToStart)
     {
         auto GameStateAthena = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -85,12 +86,13 @@ int32 AFortGameModeAthena::CountReadyPlayers()
     return CountReadyPlayers(this);
 }
 
-DETOUR(AFortGameModeAthena, SpawnDefaultPawnFor_Implementation, Anchor::Hook()
-    .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
-    .Start()
-    .Inline())
 APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
 {
+    DETOUR(AFortGameModeAthena, SpawnDefaultPawnFor_Implementation, Anchor::Hook()
+        .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
+        .Start()
+        .Inline());
+
     auto PlayerController = Cast<AFortPlayerControllerAthena>(NewPlayer);
 
     if (!PlayerController)
@@ -186,15 +188,16 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     return Pawn;
 }
 
-DETOUR(AFortGameModeAthena, PlacePlayerOnTeam, Anchor::Hook()
-    .If(FGameMemberInfoArray::StaticStruct())
-    .String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d"))
-    .Start()
-    .Log(TEXT("AFortGameMode::PlacePlayerOnTeam"))
-    .Caller()
-    .Inline())
 void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
 {
+    DETOUR(AFortGameModeAthena, PlacePlayerOnTeam, Anchor::Hook()
+        .If(FGameMemberInfoArray::StaticStruct())
+        .String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d"))
+        .Start()
+        .Log(TEXT("AFortGameMode::PlacePlayerOnTeam"))
+        .Caller()
+        .Inline());
+
     Original(Player);
 
     auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;
@@ -223,13 +226,14 @@ void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerC
     AddToAlivePlayers(this, PlayerController);
 }
 
-DETOUR(AFortGameModeAthena, OnPlaylistDataLoaded, Anchor::Hook()
-    .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
-    .Optional()
-    .Start()
-    .Inline())
 void AFortGameModeAthena::OnPlaylistDataLoaded()
 {
+    DETOUR(AFortGameModeAthena, OnPlaylistDataLoaded, Anchor::Hook()
+        .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
+        .Optional()
+        .Start()
+        .Inline());
+
     if (DETOUR_ORIGINAL(AFortGameModeAthena, OnPlaylistDataLoaded))
         Original();
 
@@ -277,15 +281,16 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
         AFortAthenaVehicle::InitializeServerImplementations();
 }
 
-DETOUR(AFortGameModeAthena, OnGivenMatchAssignment, Anchor::Hook()
-    .String(TEXT("Playtest-%s"))
-    .Start()
-    .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
-    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
-    .LogSlot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")))
 void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)
 {
+    DETOUR(AFortGameModeAthena, OnGivenMatchAssignment, Anchor::Hook()
+        .String(TEXT("Playtest-%s"))
+        .Start()
+        .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
+        .LogSlot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")));
+
     static auto Restart = []
     {
         auto ReturnPlayersToLobby = Scanner::String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame].")).Start().Find("lea rax, [0x*]").Target(TEXT("AFortGameModeAthena::ReturnPlayersToLobby"));

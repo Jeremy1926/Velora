@@ -31,12 +31,13 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
     Scanner::Virtual<void (*)(AFortWeapon*, bool)>(this, PlayWeaponFireFX)(this, bPersistentFire);
 }
 
-DETOUR(AFortWeapon, CheckPendingDestroyedDueToDurability, Anchor::Hook()
-    .FieldPattern("F6 ? %b %m", (UBoolProperty*)AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount"))))
-    .Start()
-    .Inline())
 bool AFortWeapon::CheckPendingDestroyedDueToDurability()
 {
+    DETOUR(AFortWeapon, CheckPendingDestroyedDueToDurability, Anchor::Hook()
+        .FieldPattern("F6 ? %b %m", (UBoolProperty*)AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount"))))
+        .Start()
+        .Inline());
+
     auto Instigator = GetInstigator();
     auto PlayerController = Instigator ? Cast<AFortPlayerController>(Instigator->GetController()) : nullptr;
     auto QuickBars = PlayerController ? PlayerController->GetQuickBars() : nullptr;

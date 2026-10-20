@@ -23,14 +23,15 @@ UClass* AFortPlayerControllerAthena::StaticClass()
     return Class;
 }
 
-DETOUR(AFortPlayerControllerAthena, ServerRestartPlayer_Implementation, Anchor::Hook()
-    .Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer"))
-    .Find("jmp [rax+*]")
-    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
-    .Optional()
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")))
 void AFortPlayerControllerAthena::ServerRestartPlayer_Implementation()
 {
+    DETOUR(AFortPlayerControllerAthena, ServerRestartPlayer_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer"))
+        .Find("jmp [rax+*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
+
     Super::ServerRestartPlayer_Implementation();
 }
 

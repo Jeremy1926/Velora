@@ -75,12 +75,13 @@ static int32_t IsBuildingRestrictedSlot()
     return IsBuildingRestricted;
 }
 
-DETOUR(AFortPlayerController, InitializeMcpProfile, Anchor::Hook()
-    .String(TEXT("Initialized MCP profile for %s*"))
-    .Start()
-    .Inline())
 bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync)
 {
+    DETOUR(AFortPlayerController, InitializeMcpProfile, Anchor::Hook()
+        .String(TEXT("Initialized MCP profile for %s*"))
+        .Start()
+        .Inline());
+
     static auto ServerCreateBuildingActor = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FCreateBuildingActorData))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
         .If(((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))) != nullptr)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
@@ -245,15 +246,16 @@ bool AFortPlayerController::CanServerTryAddToQuickBar() const
     return bCanServerTryAddToQuickBar;
 }
 
-DETOUR(AFortPlayerController, RemoveAllInventoryItems, Anchor::Hook()
-    .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
-    .Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*")
-    .Find("call 0x*", 3)
-    .IsCallTo(Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Target())
-    .Optional()
-    .AtCall())
 void AFortPlayerController::RemoveAllInventoryItems()
 {
+    DETOUR(AFortPlayerController, RemoveAllInventoryItems, Anchor::Hook()
+        .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
+        .Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*")
+        .Find("call 0x*", 3)
+        .IsCallTo(Scanner::String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase")).Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*").Find("call 0x*").Target())
+        .Optional()
+        .AtCall());
+
     auto WorldInventory = GetWorldInventory();
 
     if (!WorldInventory)
@@ -285,14 +287,15 @@ void AFortPlayerController::RemoveAllInventoryItems()
     }
 }
 
-DETOUR(AFortPlayerController, ClientActivateSlot, Anchor::Hook()
-    .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
-    .Find("mov byte ptr [rsp+0x20], 0x1; xor edx, edx; mov rcx, *; call 0x*")
-    .Find("call 0x*")
-    .Optional()
-    .AtCall())
 void AFortPlayerController::ClientActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot, bool bForceExecution)
 {
+    DETOUR(AFortPlayerController, ClientActivateSlot, Anchor::Hook()
+        .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
+        .Find("mov byte ptr [rsp+0x20], 0x1; xor edx, edx; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Optional()
+        .AtCall());
+
     static auto ClientActivateSlot = Anchor::Function<void (*)(AFortPlayerController*, EFortQuickBars, int32, float, bool, bool)>(TEXT("AFortPlayerController::ClientActivateSlot"))
         .Event(TEXT("ClientActivateSlot"))
         .Get();
@@ -303,14 +306,16 @@ void AFortPlayerController::ClientActivateSlot(EFortQuickBars InQuickBar, int32 
         RemoveAllInventoryItems();
 }
 
-DETOUR(AFortPlayerController, ActivateSlot, Anchor::Hook()
-    .If(!DETOUR_ORIGINAL(AFortPlayerController, ClientActivateSlot))
-    .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
-    .Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*")
-    .Find("call 0x*")
-    .AtCall())
 void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, float ActivateDelay, bool bUpdatePreviousFocusedSlot)
 {
+    DETOUR(AFortPlayerController, ActivateSlot, Anchor::Hook()
+        .After(DETOUR_ORIGINAL(AFortPlayerController, RemoveAllInventoryItems))
+        .If(!DETOUR_ORIGINAL(AFortPlayerController, ClientActivateSlot))
+        .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
+        .Find("mov *[rsp+0x20], *; xor r8d, r8d; xor edx, edx; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .AtCall());
+
     if (GetQuickBars())
         GetQuickBars()->ActivateSlot(InQuickBar, Slot, ActivateDelay, bUpdatePreviousFocusedSlot);
 
@@ -511,13 +516,14 @@ AActor* AFortPlayerController::SpawnToyInstance(UClass* ToyClass, const FTransfo
     return ToyInstance;
 }
 
-DETOUR(AFortPlayerController, execSpawnToyInstance, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
-    .Is("xor eax, eax; ret")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")))
 void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPlayerController, execSpawnToyInstance, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
+        .Is("xor eax, eax; ret")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")));
+
     UClass* ToyClass = nullptr;
     FTransform SpawnPosition;
 
@@ -542,20 +548,21 @@ TMap<UClass*, int32>& AFortPlayerController::GetToySummonCounts()
     return *ToySummonCounts->ContainerPtrToValuePtr<TMap<UClass*, int32>>(this);
 }
 
-DETOUR(AFortPlayerController, DropItemsOnPawnDestruction, Anchor::Hook()
-    .String(TEXT("Deaths"))
-    .Start()
-    .Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*")
-    .Find("call 0x*")
-    .Or()
-    .String(TEXT("Deaths"))
-    .Start()
-    .Find("mov *[r?p+0x*], *; call [rax+0x*]")
-    .Find("call [rax+0x*]")
-    .LogSlot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"))
-    .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")))
 void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems)
 {
+    DETOUR(AFortPlayerController, DropItemsOnPawnDestruction, Anchor::Hook()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("mov byte ptr [rsp+0x*], 0x0; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Or()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("mov *[r?p+0x*], *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"))
+        .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
+
     auto WorldInventory = GetWorldInventory();
 
     if (!WorldInventory || !DestroyedPawn)
@@ -608,13 +615,14 @@ void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDe
         ServerSpawnInventoryDrop_Implementation(ItemToDrop.Key, ItemToDrop.Value);
 }
 
-DETOUR(AFortPlayerController, execDropAllItems, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"))
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")))
 void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPlayerController, execDropAllItems, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")));
+
     static auto bHasIgnoreBuildingMaterials = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")))->FindPropertyByName(FName(TEXT("bIgnoreBuildingMaterials"))) != nullptr;
 
     UFortItemDefinition* IgnoreItemDef = nullptr;
@@ -649,13 +657,14 @@ void AFortPlayerController::DropSpecificItem(const UFortItemDefinition* DropItem
         ServerSpawnInventoryDrop_Implementation(ItemToDrop.Key, ItemToDrop.Value);
 }
 
-DETOUR(AFortPlayerController, execDropSpecificItem, Anchor::Hook()
-    .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem"))
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")))
 void AFortPlayerController::execDropSpecificItem(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPlayerController, execDropSpecificItem, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")));
+
     UFortItemDefinition* DropItemDef = nullptr;
 
     Stack.StepCompiledIn(&DropItemDef);
@@ -1244,22 +1253,23 @@ void AFortPlayerController::ResetQuickBarToPrimary()
     ResetQuickBarToPrimary(this);
 }
 
-DETOUR(AFortPlayerController, ForceEquipValidWeapon, Anchor::Hook()
-    .Event(TEXT("ClientEndAbilityWeapon"))
-    .Caller()
-    .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
-    .Find("call [rax+0x*]")
-    .Find("call *")
-    .Or()
-    .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
-    .Start()
-    .Optional()
-    .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
-    .Find("call [rax+0x*]")
-    .Find("call *")
-    .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")))
 bool AFortPlayerController::ForceEquipValidWeapon()
 {
+    DETOUR(AFortPlayerController, ForceEquipValidWeapon, Anchor::Hook()
+        .Event(TEXT("ClientEndAbilityWeapon"))
+        .Caller()
+        .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Find("call *")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .Optional()
+        .Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Find("call *")
+        .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
+
     auto MyFortPawn = GetMyFortPawn();
 
     return MyFortPawn && MyFortPawn->EquipBestWeapon();

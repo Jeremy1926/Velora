@@ -13,27 +13,28 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-DETOUR(AFortPlayerPawnAthena, OnPlayerPawnReady, Anchor::Hook()
-    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
-    .Start()
-    .Reference("call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax")
-    .Start()
-    .Or()
-    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
-    .Start()
-    .Reference("call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *")
-    .Start()
-    .Or()
-    .String(TEXT("ExitAircraft: %s (Pawn %s)"))
-    .Caller()
-    .Or()
-    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
-    .Start()
-    .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
-    .Start()
-    .Inline())
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {
+    DETOUR(AFortPlayerPawnAthena, OnPlayerPawnReady, Anchor::Hook()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax")
+        .Start()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; jmp 0x*; xor *, *; mov rcx, *; call 0x*; test *, *")
+        .Start()
+        .Or()
+        .String(TEXT("ExitAircraft: %s (Pawn %s)"))
+        .Caller()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
+        .Start()
+        .Inline());
+
     static auto bIsPlayerPawnReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsPlayerPawnReady")));
     static auto bChecksPlayerPawnReady = []
     {

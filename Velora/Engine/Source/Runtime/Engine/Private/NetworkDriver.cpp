@@ -230,14 +230,15 @@ void UNetDriver::SetWorld(UWorld* InWorld)
     SetWorld(this, InWorld);
 }
 
-DETOUR(UNetDriver, TickFlush, Anchor::Hook()
-    .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
-    .Last("call 0x*")
-    .Target()
-    .Log(TEXT("UNetDriver::TickFlush"))
-    .Inline())
 void UNetDriver::TickFlush(float DeltaSeconds)
 {
+    DETOUR(UNetDriver, TickFlush, Anchor::Hook()
+        .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
+        .Last("call 0x*")
+        .Target()
+        .Log(TEXT("UNetDriver::TickFlush"))
+        .Inline());
+
     static auto FlushActorDormancy = []
     {
         for (auto ActorFunction : { Scanner::At(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target(TEXT("AActor::FlushNetDormancy"))), Scanner::Native(TEXT("/Script/Engine.Actor:SetNetDormancy")) })

@@ -6,6 +6,7 @@
 #include "Windows/WindowsConsoleOutputDevice.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 #include "Config.h"
 #include "MinHook.h"
 
@@ -71,7 +72,10 @@ void Main()
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)
 {
     if (Reason == DLL_PROCESS_ATTACH)
+    {
+        DetourInstall();
         std::thread(Main).detach();
+    }
 
     return TRUE;
 }

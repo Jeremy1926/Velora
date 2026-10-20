@@ -47,6 +47,11 @@ public:
         return *this;
     }
 
+    THook& After(const void*)
+    {
+        return *this;
+    }
+
     THook& Optional()
     {
         return this->IsActive() || this->Code.Get() ? *this : Skip();
@@ -171,11 +176,6 @@ public:
     }
 };
 
-template<uint64_t Hash>
-struct TDetourKey
-{
-};
-
 consteval uint64_t DetourHash(std::string_view Name)
 {
     uint64_t Hash = 14695981039346656037ull;
@@ -204,44 +204,115 @@ const void* DetourAddress(FunctionType Function)
     return Address;
 }
 
+template<typename FunctionType>
+FunctionType DetourAs(const void* Address)
+{
+    FunctionType Function = {};
+    memcpy(&Function, &Address, sizeof(Address));
+
+    return Function;
+}
+
+struct FDetourEntry
+{
+    uint64_t Hash;
+    void (*Install)();
+    FDetourEntry* Next;
+    bool bInstalled;
+};
+
+inline FDetourEntry* DetourEntries = nullptr;
+inline FDetourEntry** DetourTail = &DetourEntries;
+inline bool bDetoursInstalled = false;
+
+template<uint64_t Hash>
+inline const void* DetourAddresses = nullptr;
+
+inline void DetourInstall(uint64_t Hash)
+{
+    for (auto Entry = DetourEntries; Entry; Entry = Entry->Next)
+    {
+        if (Entry->bInstalled || Entry->Hash != Hash)
+            continue;
+
+        Entry->bInstalled = true;
+        Entry->Install();
+    }
+}
+
+inline void DetourInstall()
+{
+    for (auto Entry = DetourEntries; Entry; Entry = Entry->Next)
+        DetourInstall(Entry->Hash);
+
+    bDetoursInstalled = true;
+}
+
+template<uint64_t Hash>
+const void* DetourOriginalOf()
+{
+    if (!bDetoursInstalled)
+        DetourInstall(Hash);
+
+    return DetourAddresses<Hash>;
+}
+
+template<typename ClassType, auto Name, auto Function>
+struct TDetourAnchor
+{
+    static auto Hook()
+    {
+        return THook(Name(), Function(std::type_identity<ClassType>()));
+    }
+
+    template<typename FunctionType>
+    static auto Hook(FunctionType Detour)
+    {
+        return THook(Name(), Detour);
+    }
+
+    template<typename FunctionType>
+    static auto Hook(const wchar_t* InName, FunctionType Detour)
+    {
+        return THook(InName, Detour);
+    }
+};
+
+template<uint64_t Hash, auto Install>
+struct TDetour
+{
+    static void Run()
+    {
+        if (auto Address = DetourAddress(Install()))
+            DetourAddresses<Hash> = Address;
+    }
+
+    static auto Get()
+    {
+        (void)*(const volatile bool*)&bRegistered;
+
+        return DetourAs<decltype(Install())>(DetourAddresses<Hash>);
+    }
+
+    static inline FDetourEntry Entry = { Hash, &Run, nullptr, false };
+    static inline const bool bRegistered = (*DetourTail = &Entry, DetourTail = &Entry.Next, true);
+};
+
+#define DETOUR_LOCAL(Line) DETOUR_LOCAL_LINE(Line)
+#define DETOUR_LOCAL_LINE(Line) DetourOriginal##Line
+
+#define DETOUR(Class, Function, ...) \
+    __pragma(comment(linker, "/include:" __FUNCDNAME__)) \
+    [[maybe_unused]] const auto DETOUR_LOCAL(__LINE__) = TDetour<DetourHash(#Class "::" #Function), [] \
+    { \
+        using Anchor = TDetourAnchor<Class, [] { return TEXT(#Class) TEXT("::") TEXT(#Function); }, [](auto Type) { return &decltype(Type)::type::Function; }>; \
+        \
+        return (__VA_ARGS__); \
+    }>::Get(); \
+    using DetourType = std::remove_const_t<decltype(DETOUR_LOCAL(__LINE__))>
+
 #define DETOUR_SCOPE(Class, Function, Line) DETOUR_SCOPE_LINE(Class, Function, Line)
 #define DETOUR_SCOPE_LINE(Class, Function, Line) Class##_##Function##_Detour##Line
-
-#define DETOUR(Class, Function, ...) DETOUR_IN(Class, Function, DETOUR_SCOPE(Class, Function, __LINE__), __VA_ARGS__)
-
-#define DETOUR_IN(Class, Function, Scope, ...) \
-    namespace Scope \
-    { \
-        namespace Anchor \
-        { \
-            using namespace ::Anchor; \
-            \
-            template<typename ClassType = Class> \
-            auto Hook() \
-            { \
-                return THook(TEXT(#Class) TEXT("::") TEXT(#Function), &ClassType::Function); \
-            } \
-            \
-            template<typename FunctionType> \
-            auto Hook(FunctionType Detour) \
-            { \
-                return THook(TEXT(#Class) TEXT("::") TEXT(#Function), Detour); \
-            } \
-            \
-            template<typename FunctionType> \
-            auto Hook(const wchar_t* Name, FunctionType Detour) \
-            { \
-                return THook(Name, Detour); \
-            } \
-        } \
-        \
-        static const auto Original = (__VA_ARGS__); \
-    } \
-    \
-    static auto& DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>, decltype(&Scope::Original) = nullptr) \
-    { \
-        return Scope::Original; \
-    }
 
 #define PATCH(Class, Function, ...) PATCH_IN(Class, Function, DETOUR_SCOPE(Class, Function, __LINE__), __VA_ARGS__)
 
@@ -261,8 +332,8 @@ const void* DetourAddress(FunctionType Function)
         static const auto Patched = (__VA_ARGS__); \
     }
 
-#define Original(...) DetourBind(DetourOriginal(TDetourKey<DetourHash(__FUNCTION__)>()), this)(__VA_ARGS__)
+#define Original(...) DetourBind(DetourAs<DetourType>(DetourAddresses<DetourHash(__FUNCTION__)>), this)(__VA_ARGS__)
 
-#define ORIGINAL_OF(Class, Function) DetourBind(DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>()), this)
+#define ORIGINAL_OF(Class, Function) DetourBind(DetourAs<DetourType>(DETOUR_ORIGINAL(Class, Function)), this)
 
-#define DETOUR_ORIGINAL(Class, Function) DetourAddress(DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>()))
+#define DETOUR_ORIGINAL(Class, Function) DetourOriginalOf<DetourHash(#Class "::" #Function)>()

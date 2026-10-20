@@ -31,14 +31,15 @@ bool& UFortControllerComponent_Aircraft::GetIsAttemptingAircraftJump()
     return *(bool*)((uint8_t*)this + bIsAttemptingAircraftJump);
 }
 
-DETOUR(UFortControllerComponent_Aircraft, ServerAttemptAircraftJump_Implementation, Anchor::Hook()
-    .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump"))
-    .Find("call [*+0x*]", 2)
-    .IsVirtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"), "ret*")
-    .Optional()
-    .InVTable(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft")))
 void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation(FRotator ClientRotation)
 {
+    DETOUR(UFortControllerComponent_Aircraft, ServerAttemptAircraftJump_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump"))
+        .Find("call [*+0x*]", 2)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"), "ret*")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft")));
+
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
 
     if (!PlayerController)

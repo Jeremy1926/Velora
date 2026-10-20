@@ -66,15 +66,16 @@ UClass* ABuildingGameplayActorSpawnMachine::StaticClass()
     return Class;
 }
 
-DETOUR(ABuildingGameplayActorSpawnMachine, HandleOnResurrectTimerComplete, Anchor::Hook()
-    .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
-    .Start()
-    .Find("lea rax, [0x*]; xor esi, esi")
-    .IsTarget("ret*")
-    .Optional()
-    .AtReference())
 void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
 {
+    DETOUR(ABuildingGameplayActorSpawnMachine, HandleOnResurrectTimerComplete, Anchor::Hook()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rax, [0x*]; xor esi, esi")
+        .IsTarget("ret*")
+        .Optional()
+        .AtReference());
+
     static auto GetGameAccountId = Anchor::Function<FUniqueNetIdRepl* (*)(const AFortPlayerController*, FUniqueNetIdRepl*)>(TEXT("AFortPlayerController::GetGameAccountId"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:GetGameAccountId"))
         .Get();

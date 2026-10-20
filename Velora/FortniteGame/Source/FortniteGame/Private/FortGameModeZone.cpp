@@ -23,33 +23,35 @@ UClass* AFortGameModeZone::StaticClass()
     return Class;
 }
 
-DETOUR(AFortGameModeZone, FinishWorldInitialization, Anchor::Hook()
-    .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
-    .Start()
-    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
-    .LogSlot(TEXT("AFortGameMode::FinishWorldInitialization"))
-    .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
-    .Find("call 0x*")
-    .Or()
-    .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
-    .Start()
-    .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
-    .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
-    .CallIn(Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start())
-    .AtCall())
 void AFortGameModeZone::FinishWorldInitialization()
 {
+    DETOUR(AFortGameModeZone, FinishWorldInitialization, Anchor::Hook()
+        .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .LogSlot(TEXT("AFortGameMode::FinishWorldInitialization"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
+        .Find("call 0x*")
+        .Or()
+        .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
+        .CallIn(Scanner::String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases.")).Start())
+        .AtCall());
+
     Super::FinishWorldInitialization();
 }
 
-DETOUR(AFortGameModeZone, CreateAIDirector, Anchor::Hook()
-    .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
-    .Optional()
-    .Start()
-    .Find("call 0x*")
-    .AtCall())
 void AFortGameModeZone::CreateAIDirector()
 {
+    DETOUR(AFortGameModeZone, CreateAIDirector, Anchor::Hook()
+        .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
+        .Optional()
+        .Start()
+        .Find("call 0x*")
+        .AtCall());
+
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
     auto AIDirectors = UFortGameData::Get()->GetAIDirectors();
 

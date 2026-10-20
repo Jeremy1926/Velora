@@ -12,14 +12,15 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-DETOUR(AFortAthenaSupplyDrop, SpawnPickup, Anchor::Hook()
-    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")))
-    .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
-    .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
-    .Find("call 0x*")
-    .AtCall())
 AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const FVector& Position, const FVector& Direction)
 {
+    DETOUR(AFortAthenaSupplyDrop, SpawnPickup, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
+        .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
+        .Find("call 0x*")
+        .AtCall());
+
     if (!ItemDefinition || NumberToSpawn <= 0)
         return nullptr;
 

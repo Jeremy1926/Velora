@@ -87,14 +87,15 @@ UNetDriver* UWorld::GetNetDriver() const
     return *NetDriver->ContainerPtrToValuePtr<UNetDriver*>(this);
 }
 
-DETOUR(UWorld, InternalGetNetMode, Anchor::Hook()
-    .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
-    .Start()
-    .Find("mov rcx, rax; call 0x*")
-    .Call()
-    .Inline())
 ENetMode UWorld::InternalGetNetMode() const
 {
+    DETOUR(UWorld, InternalGetNetMode, Anchor::Hook()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, rax; call 0x*")
+        .Call()
+        .Inline());
+
     if (GetNetDriver() != nullptr)
     {
         return GetNetDriver()->GetNetMode();
@@ -128,13 +129,14 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
     return FindCollectionByType(this, InType);
 }
 
-DETOUR(UWorld, Listen, Anchor::Hook()
-    .String(TEXT("LoadMap: failed to Listen(%s)"))
-    .Last("call 0x*; test al, al")
-    .Optional()
-    .AtCall())
 bool UWorld::Listen(FURL& InURL)
 {
+    DETOUR(UWorld, Listen, Anchor::Hook()
+        .String(TEXT("LoadMap: failed to Listen(%s)"))
+        .Last("call 0x*; test al, al")
+        .Optional()
+        .AtCall());
+
     if (GetNetDriver())
     {
         GEngine->BroadcastNetworkFailure(this, GetNetDriver(), ENetworkFailure::NetDriverAlreadyExists);

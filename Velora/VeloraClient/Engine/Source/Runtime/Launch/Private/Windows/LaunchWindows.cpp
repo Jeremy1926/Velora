@@ -4,6 +4,7 @@
 #include "Logging/LogCategory.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 #include "MinHook.h"
 
 #pragma warning(disable: 4073)
@@ -35,7 +36,10 @@ void Main()
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)
 {
     if (Reason == DLL_PROCESS_ATTACH)
+    {
+        DetourInstall();
         std::thread(Main).detach();
+    }
 
     return TRUE;
 }

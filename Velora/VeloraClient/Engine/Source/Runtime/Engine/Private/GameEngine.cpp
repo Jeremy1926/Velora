@@ -11,12 +11,13 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-DETOUR(UGameEngine, Tick, Anchor::Hook()
-    .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
-    .Start()
-    .Inline())
 void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 {
+    DETOUR(UGameEngine, Tick, Anchor::Hook()
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Inline());
+
     auto GameViewport = GetGameViewport();
 
     if (GameViewport && !GameViewport->GetViewportConsole())

@@ -104,17 +104,18 @@ void AFortPawn::MovingEmoteStopped()
     SetMovingEmoteForwardOnly(false);
 }
 
-DETOUR(AFortPawn, execMovingEmoteStopped, Anchor::Hook()
-    .If(AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
-    .Exec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"))
-    .Find("mov [*+0x20], *; jmp 0x*")
-    .Find("jmp 0x*")
-    .Target()
-    .Is("ret*")
-    .Optional()
-    .InExec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")))
 void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result)
 {
+    DETOUR(AFortPawn, execMovingEmoteStopped, Anchor::Hook()
+        .If(AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")));
+
     Stack.Code += !!Stack.Code;
 
     MovingEmoteStopped();
