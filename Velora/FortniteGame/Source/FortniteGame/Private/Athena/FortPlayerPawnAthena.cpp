@@ -13,31 +13,41 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto PlayerPawnReady = []
-{
-    auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
-    auto AircraftComponentCaller = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax").Start();
-
-    if (AircraftComponentCaller.Get())
-        return AircraftComponentCaller;
-
-    auto ExitAircraftCaller = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
-
-    return ExitAircraftCaller.Get() ? ExitAircraftCaller : Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
-}();
-static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), PlayerPawnReady.Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
-
+DETOUR(AFortPlayerPawnAthena, OnPlayerPawnReady, Anchor::Hook()
+    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+    .Start()
+    .Reference("call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax")
+    .Start()
+    .Or()
+    .String(TEXT("ExitAircraft: %s (Pawn %s)"))
+    .Caller()
+    .Or()
+    .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+    .Start()
+    .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
+    .Start()
+    .Inline())
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {
     static auto bIsPlayerPawnReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsPlayerPawnReady")));
     static auto bChecksPlayerPawnReady = []
     {
+        auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
+        auto PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax").Start();
+
+        if (!PlayerPawnReady.Get())
+            PlayerPawnReady = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
+
+        if (!PlayerPawnReady.Get())
+            PlayerPawnReady = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
+
         if (!PlayerPawnReady.Has(std::format("cmp byte ptr [rcx+{:#x}], *", bIsPlayerPawnReady->GetOffset_ForInternal())))
             return false;
 
-        auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
-
-        DetourCall(TEXT("UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor"), PlayerPawnReady.Find(std::format("call {:#x}", (uintptr_t)UpdateAbilitySystemActor)).Get(), &UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor);
+        THook(TEXT("UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor"), &UFortRegisteredPlayerInfo::PlayerPawnReadyUpdateAbilitySystemActor)
+            .At(PlayerPawnReady)
+            .FindCall(UpdateAbilitySystemActor)
+            .AtCall();
 
         return true;
     }();
@@ -51,7 +61,7 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
             MyPlayerInfo->UpdateAbilitySystemActor(false);
     }
 
-    (this->*::OnPlayerPawnReady)();
+    Original();
 
     if (bChecksPlayerPawnReady && (bWasPlayerPawnReady || !bIsPlayerPawnReady->GetPropertyValue_InContainer(this)))
         return;
