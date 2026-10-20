@@ -62,7 +62,7 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 {
     FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel);
 
-    FFortItemEntry(const FFortItemEntry&) = delete;
+    FFortItemEntry(const FFortItemEntry& Other);
 
     FFortItemEntry& operator=(const FFortItemEntry&) = delete;
 

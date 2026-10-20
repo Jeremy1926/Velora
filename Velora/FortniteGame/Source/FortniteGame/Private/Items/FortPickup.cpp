@@ -36,8 +36,39 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
 {
     static auto SpawnMissionItemPickup = Scanner::Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"));
     static auto Arguments = SpawnMissionItemPickup.Find("mov qword ptr [rsp+0x28], *");
-    static auto Address = (Arguments.Get() ? Arguments.Call() : SpawnMissionItemPickup.Find("lea r8d, [r9+0x1]").Call(2)).Get(TEXT("AFortPickup::CreateFromData"));
+    static auto bItemEntryByValue = SpawnMissionItemPickup.Find("lea r8d, [r9+0x1]; call 0x*; mov rdx, rax").Get() != nullptr;
+    static auto Address = (Arguments.Get() ? Arguments.Call() : SpawnMissionItemPickup.Find("lea r8d, [r9+0x1]").Call(bItemEntryByValue ? 3 : 2)).Get(TEXT("AFortPickup::CreateFromData"));
     static auto PickupSourceTypeFlags = StaticClass()->FindPropertyByName(FName(TEXT("PickupSourceTypeFlags")));
+
+    if (bItemEntryByValue)
+    {
+        struct
+        {
+            FVector SpawnLocation;
+            FRotator SpawnRotation;
+            AFortPlayerController* OptionalOwnerPC;
+            UClass* OverrideClass;
+            AActor* Owner;
+            EFortPickupSourceTypeFlag SourceTypeFlags;
+            EFortPickupSpawnSource PickupSpawnSource;
+            uint8 bRandomRotation : 1;
+            uint8 bPickupOnlyRelevantToOwner : 1;
+        } const AfterItemEntry{ SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, EFortPickupSpawnSource::Unset, bRandomRotation, bPickupOnlyRelevantToOwner };
+
+        TArray<uint8> CreationData;
+        CreationData.AddUninitialized(sizeof(UWorld*) + FFortItemEntry::GetTypeSize() + sizeof(AfterItemEntry));
+
+        *(UWorld**)CreationData.GetData() = World;
+        auto ItemEntryCopy = new(CreationData.GetData() + sizeof(UWorld*)) FFortItemEntry(ItemEntry);
+        memcpy(CreationData.GetData() + sizeof(UWorld*) + FFortItemEntry::GetTypeSize(), &AfterItemEntry, sizeof(AfterItemEntry));
+
+        static auto CreateFromData = Scanner::Function<AFortPickup* (*)(const uint8*)>(Address);
+
+        auto Pickup = CreateFromData(CreationData.GetData());
+        ItemEntryCopy->~FFortItemEntry();
+
+        return Pickup;
+    }
 
     if (!Arguments.Get() && PickupSourceTypeFlags && PickupSourceTypeFlags->GetSize() == sizeof(EFortPickupSourceTypeFlag))
     {
