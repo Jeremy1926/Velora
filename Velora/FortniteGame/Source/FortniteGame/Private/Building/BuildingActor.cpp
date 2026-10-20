@@ -49,16 +49,35 @@ void ABuildingActor::BeginPlay()
     Scanner::Virtual<void (*)(ABuildingActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingActor")), BeginPlay)(this);
 }
 
-void ABuildingActor::SilentDie()
+void ABuildingActor::SilentDie(bool bPropagateSilentDeath)
 {
-    static auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingActor::SilentDie"));
+    static auto SilentDie = []
+    {
+        auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"));
+        auto Jump = SilentDie.Find("jmp [*+0x*]");
+
+        return (Jump.Get() ? Jump : SilentDie.Find("call [*+0x*]")).Slot(TEXT("ABuildingActor::SilentDie"));
+    }();
+    static auto bHasPropagateSilentDeath = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor:SilentDie")))->FindPropertyByName(FName(TEXT("bPropagateSilentDeath"))) != nullptr;
+
+    if (bHasPropagateSilentDeath)
+    {
+        Scanner::Virtual<void (*)(ABuildingActor*, bool)>(this, SilentDie)(this, bPropagateSilentDeath);
+        return;
+    }
 
     Scanner::Virtual<void (*)(ABuildingActor*)>(this, SilentDie)(this);
 }
 
 void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext)
 {
-    static auto Die = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingActor::SilentDie")) - (int32_t)sizeof(void*);
+    static auto Die = []
+    {
+        auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"));
+        auto Jump = SilentDie.Find("jmp [*+0x*]");
+
+        return (Jump.Get() ? Jump : SilentDie.Find("call [*+0x*]")).Slot(TEXT("ABuildingActor::SilentDie")) - (int32_t)sizeof(void*);
+    }();
     static auto bEffectContext = Scanner::At(Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor")), Die, sizeof(void*))).Has("mov qword ptr [rsp+0x20], 0x0");
 
     if (bEffectContext)

@@ -65,7 +65,7 @@ public:
 
     void BeginPlay();
 
-    void SilentDie();
+    void SilentDie(bool bPropagateSilentDeath);
 
     void Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext);
 

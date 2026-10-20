@@ -145,7 +145,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
             SetContainerSearched(Searcher);
 
             if (ShouldDestroyContainerOnSearch())
-                SilentDie();
+                SilentDie(false);
         }
     }
 
