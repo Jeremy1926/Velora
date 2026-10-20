@@ -66,7 +66,7 @@ bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName N
 
 UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
 {
-    static auto FindNamedNetDriver = Scanner::Function<UNetDriver* (*)(UEngine*, UWorld*, FName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]; call 0x*").Call().Get(TEXT("UEngine::FindNamedNetDriver")));
+    static auto FindNamedNetDriver = Scanner::Function<UNetDriver* (*)(UEngine*, UWorld*, FName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("mov rcx, [0x*]").Call().Get(TEXT("UEngine::FindNamedNetDriver")));
 
     return FindNamedNetDriver(this, InWorld, NetDriverName);
 }
