@@ -40,6 +40,13 @@ UClass* UEngine::GetConsoleClass() const
     return *ConsoleClass->ContainerPtrToValuePtr<UClass*>(this);
 }
 
+UObject* UEngine::GetGameSingleton() const
+{
+    static auto GameSingleton = GetClass()->FindPropertyByName(FName(TEXT("GameSingleton")));
+
+    return *GameSingleton->ContainerPtrToValuePtr<UObject*>(this);
+}
+
 void UEngine::BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
 {
     static auto Call = Scanner::String(TEXT("Beacon close from unexpected control message")).Start().Find("mov r9d, 0x6").Find("call 0x*");

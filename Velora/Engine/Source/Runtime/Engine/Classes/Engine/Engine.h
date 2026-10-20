@@ -24,6 +24,8 @@ public:
 
     UClass* GetConsoleClass() const;
 
+    UObject* GetGameSingleton() const;
+
     void BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString = TEXT(""));
 
     bool CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition);

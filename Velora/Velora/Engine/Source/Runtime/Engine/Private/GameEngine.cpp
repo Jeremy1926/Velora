@@ -20,6 +20,7 @@
 #include "Misc/CommandLine.h"
 #include "Online/FortPlaylistManager.h"
 #include "FortGameInstance.h"
+#include "FortGlobals.h"
 #include "Analytics/FortAnalytics.h"
 #include "CoreGlobals.h"
 #include "Config.h"
@@ -115,7 +116,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
         }
 
-        UGameplayStatics::OpenLevel(GameInstance, FName(Config::Map), true, FString(Options));
+        auto BRMapFullName = UFortGlobals::Get()->GetBRMapFullName();
+
+        UGameplayStatics::OpenLevel(GameInstance, FName(BRMapFullName ? **BRMapFullName : Config::Map), true, FString(Options));
     }
     else if (auto World = GetGameInstance()->GetWorld())
     {

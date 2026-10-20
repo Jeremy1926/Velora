@@ -316,6 +316,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortAssetManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\GameDataBR.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\GameDataCosmetics.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGlobals.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySet.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortGameplayAbility.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySystemComponent.h" />
@@ -486,6 +487,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortAssetManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\GameDataBR.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\GameDataCosmetics.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGlobals.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortAbilitySet.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortGameplayAbility.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRegisteredPlayerInfo.cpp" />

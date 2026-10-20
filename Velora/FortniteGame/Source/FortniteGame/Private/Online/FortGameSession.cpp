@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
+#include "FortGlobals.h"
 #include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -33,5 +34,7 @@ void AFortGameSession::Restart()
     if (*Options == TEXT('?'))
         Options++;
 
-    UGameplayStatics::OpenLevel(this, FName(Config::Map), true, FString(Options));
+    auto BRMapFullName = UFortGlobals::Get()->GetBRMapFullName();
+
+    UGameplayStatics::OpenLevel(this, FName(BRMapFullName ? **BRMapFullName : Config::Map), true, FString(Options));
 }
