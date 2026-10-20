@@ -56,7 +56,10 @@ AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVect
     {
         auto SupplyDropSpawn = Scanner::String(TEXT("SupplyDropSpawn"));
 
-        return Scanner::CallTo((SupplyDropSpawn.Get() ? SupplyDropSpawn : Scanner::String(TEXT("FortAthenaSupplyDrop"))).Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
+        if (SupplyDropSpawn.Get())
+            return Scanner::CallTo(SupplyDropSpawn.Start().Get()).Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
+
+        return Scanner::Reference(Scanner::String(TEXT("FortAthenaSupplyDrop")).Start().Get(), "call 0x*; test rax, rax; jz *; lea r8, [rax+0x30]").Start().Get(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"));
     }());
 
     return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
