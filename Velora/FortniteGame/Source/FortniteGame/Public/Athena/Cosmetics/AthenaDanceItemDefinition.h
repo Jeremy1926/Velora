@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Items/FortMontageItemDefinitionBase.h"
+#include "UObject/AssetPtr.h"
 
 class UAthenaDanceItemDefinition : public UFortMontageItemDefinitionBase
 {
@@ -10,4 +11,6 @@ public:
     bool GetMovingEmote() const;
 
     bool GetMoveForwardOnly() const;
+
+    const TAssetPtr<UClass>* GetCustomDanceAbility() const;
 };

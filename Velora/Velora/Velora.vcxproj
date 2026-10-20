@@ -415,6 +415,8 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\ProjectileMovementComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortProjectileMovementComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaToyItemDefinition.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -622,6 +624,8 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaToyItemDefinition.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

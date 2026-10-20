@@ -1165,6 +1165,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaToyItemDefinition.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1716,6 +1722,12 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaToyItemDefinition.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

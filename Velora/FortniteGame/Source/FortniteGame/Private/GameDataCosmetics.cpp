@@ -15,3 +15,10 @@ const TAssetPtr<UClass>& UGameDataCosmetics::GetEmoteGameplayAbility() const
 
     return *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this);
 }
+
+const TAssetPtr<UClass>* UGameDataCosmetics::GetSprayGameplayAbility() const
+{
+    static auto SprayGameplayAbility = GetClass()->FindPropertyByName(FName(TEXT("SprayGameplayAbility")));
+
+    return SprayGameplayAbility ? SprayGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : nullptr;
+}

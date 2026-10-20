@@ -7,6 +7,7 @@
 class AFortWeapon;
 class UAbilitySystemComponent;
 class UFortHealthSet;
+class UFortItemDefinition;
 class UFortWeaponItemDefinition;
 struct FFrame;
 struct FGameplayTag;
@@ -42,6 +43,10 @@ public:
     void execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result);
 
     FMulticastScriptDelegate& GetOnWeaponUnEquippedDelegate();
+
+    void SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplicatedEmoteExecuted);
+
+    void OnRep_LastReplicatedEmoteExecuted();
 
     UFortHealthSet* GetHealthSet() const;
 

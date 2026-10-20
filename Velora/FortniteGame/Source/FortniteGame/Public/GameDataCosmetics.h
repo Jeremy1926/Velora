@@ -9,4 +9,6 @@ public:
     static UGameDataCosmetics* Get();
 
     const TAssetPtr<UClass>& GetEmoteGameplayAbility() const;
+
+    const TAssetPtr<UClass>* GetSprayGameplayAbility() const;
 };

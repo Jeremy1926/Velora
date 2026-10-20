@@ -24,3 +24,10 @@ bool UAthenaDanceItemDefinition::GetMoveForwardOnly() const
 
     return bMoveForwardOnly && bMoveForwardOnly->GetPropertyValue_InContainer(this);
 }
+
+const TAssetPtr<UClass>* UAthenaDanceItemDefinition::GetCustomDanceAbility() const
+{
+    static auto CustomDanceAbility = StaticClass()->FindPropertyByName(FName(TEXT("CustomDanceAbility")));
+
+    return CustomDanceAbility ? CustomDanceAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : nullptr;
+}

@@ -74,6 +74,18 @@ const TAssetPtr<UClass>& UFortGameData::GetEmoteGameplayAbility() const
     return EmoteGameplayAbility ? *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : UGameDataCosmetics::Get()->GetEmoteGameplayAbility();
 }
 
+const TAssetPtr<UClass>* UFortGameData::GetSprayGameplayAbility() const
+{
+    static auto SprayGameplayAbility = GetClass()->FindPropertyByName(FName(TEXT("SprayGameplayAbility")));
+
+    if (SprayGameplayAbility)
+        return SprayGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this);
+
+    auto GameDataCosmetics = UGameDataCosmetics::Get();
+
+    return GameDataCosmetics ? GameDataCosmetics->GetSprayGameplayAbility() : nullptr;
+}
+
 const TArray<TAssetPtr<UClass>>* UFortGameData::GetAIDirectors() const
 {
     static auto AIDirectors = GetClass()->FindPropertyByName(FName(TEXT("AIDirectors")));

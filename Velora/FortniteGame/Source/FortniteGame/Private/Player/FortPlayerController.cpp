@@ -4,6 +4,8 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaDanceItemDefinition.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
+#include "Athena/Cosmetics/AthenaSprayItemDefinition.h"
+#include "Athena/Cosmetics/AthenaToyItemDefinition.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortPlayerStateZone.h"
 #include "Building/BuildingSMActor.h"
@@ -392,12 +394,27 @@ void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemD
     if (!AbilitySystemComponent || !CanPerformNativeAction(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Action.Player.InteractUse")))))
         return;
 
-    auto EmoteGameplayAbility = UFortGameData::Get()->GetEmoteGameplayAbility().LoadSynchronous();
+    const TAssetPtr<UClass>* AbilityToGrant = nullptr;
+
+    if (auto ToyAsset = Cast<UAthenaToyItemDefinition>(EmoteAsset))
+        AbilityToGrant = ToyAsset->GetToySpawnAbility();
+    else if (Cast<UAthenaSprayItemDefinition>(EmoteAsset))
+        AbilityToGrant = UFortGameData::Get()->GetSprayGameplayAbility();
+    else if (auto DanceAsset = Cast<UAthenaDanceItemDefinition>(EmoteAsset))
+        AbilityToGrant = DanceAsset->GetCustomDanceAbility();
+
+    if (!AbilityToGrant || AbilityToGrant->IsNull())
+        AbilityToGrant = &UFortGameData::Get()->GetEmoteGameplayAbility();
+
+    auto EmoteGameplayAbility = AbilityToGrant->LoadSynchronous();
 
     if (!EmoteGameplayAbility || !EmoteGameplayAbility->IsChildOf(UFortGameplayAbility::StaticClass()))
         return;
 
     AbilitySystemComponent->GiveAbilityAndActivateOnce(FGameplayAbilitySpec(EmoteGameplayAbility->GetDefaultObject<UFortGameplayAbility>(), 1, INDEX_NONE, EmoteAsset));
+
+    MyFortPawn->SetLastReplicatedEmoteExecuted(EmoteAsset);
+    MyFortPawn->OnRep_LastReplicatedEmoteExecuted();
 
     static auto bHasMovingEmote = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))) != nullptr;
 

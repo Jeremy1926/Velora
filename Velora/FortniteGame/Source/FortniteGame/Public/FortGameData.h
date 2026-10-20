@@ -33,6 +33,8 @@ public:
 
     const TAssetPtr<UClass>& GetEmoteGameplayAbility() const;
 
+    const TAssetPtr<UClass>* GetSprayGameplayAbility() const;
+
     const TArray<TAssetPtr<UClass>>* GetAIDirectors() const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTables() const;

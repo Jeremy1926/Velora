@@ -130,6 +130,26 @@ FMulticastScriptDelegate& AFortPawn::GetOnWeaponUnEquippedDelegate()
     return *OnWeaponUnEquippedDelegate->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
+void AFortPawn::SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplicatedEmoteExecuted)
+{
+    static auto LastReplicatedEmoteExecuted = GetClass()->FindPropertyByName(FName(TEXT("LastReplicatedEmoteExecuted")));
+
+    if (LastReplicatedEmoteExecuted)
+        *LastReplicatedEmoteExecuted->ContainerPtrToValuePtr<UFortItemDefinition*>(this) = InLastReplicatedEmoteExecuted;
+}
+
+void AFortPawn::OnRep_LastReplicatedEmoteExecuted()
+{
+    static auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted")).Find("mov [*+0x20], *");
+    static auto OnRep_LastReplicatedEmoteExecuted = Finish.Is("mov [*+0x20], *; jmp 0x*") ? Finish.Find("jmp 0x*").Target(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted")) : nullptr;
+    static auto OnRep_LastReplicatedEmoteExecutedSlot = Finish.Is("mov [*+0x20], *; mov rax, [rcx]; jmp [rax+0x*]") ? Finish.Find("jmp [rax+0x*]").Slot(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted")) : 0;
+
+    if (OnRep_LastReplicatedEmoteExecuted)
+        Scanner::Function<void (*)(AFortPawn*)>(OnRep_LastReplicatedEmoteExecuted)(this);
+    else
+        Scanner::Virtual<void (*)(AFortPawn*)>(this, OnRep_LastReplicatedEmoteExecutedSlot)(this);
+}
+
 UFortHealthSet* AFortPawn::GetHealthSet() const
 {
     static auto HealthSet = GetClass()->FindPropertyByName(FName(TEXT("HealthSet")));
