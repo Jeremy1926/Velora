@@ -41,6 +41,13 @@ AActor* FVehiclePawnState::GetVehicle() const
     return *Vehicle->ContainerPtrToValuePtr<AActor*>(this);
 }
 
+uint8 FVehiclePawnState::GetSeatIndex() const
+{
+    static auto SeatIndex = StaticStruct()->FindPropertyByName(FName(TEXT("SeatIndex")));
+
+    return *SeatIndex->ContainerPtrToValuePtr<uint8>(this);
+}
+
 AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
 {
     return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());

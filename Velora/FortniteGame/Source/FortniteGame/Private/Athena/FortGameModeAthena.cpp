@@ -16,6 +16,8 @@
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingSMActor.h"
 #include "Building/FortVolumeManager.h"
+#include "Weapons/FortMountedWeaponInterface.h"
+#include "Weapons/FortWeapon.h"
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
 #include "Player/FortPlayerState.h"
@@ -356,6 +358,40 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         UE_LOG(LogVelora, Log, TEXT("Hooked ABuildingSMActor::AttemptSpawnResources in %d classes"), Classes);
 
         return AttemptSpawnResources;
+    }();
+
+    static auto SetupCachedHostVehicleRepped = []
+    {
+        auto AttachWeaponTo = Scanner::String(TEXT("DebugVehicleWeaponAttachment: AFortWeaponRangedForVehicle::AttachWeaponTo(Actor:%s(Role: %s))  Failed to set up MountedWeaponInfoRepped.GetHostVehicleCached()!")).Start();
+
+        if (!AttachWeaponTo.Get())
+            return 0;
+
+        auto SetupCachedHostVehicleRepped = AttachWeaponTo.Find("lea rcx, [*+0x*]; mov rdx, *; mov rax, [rcx]; call [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("IFortMountedWeaponInterface::SetupCachedHostVehicleRepped"));
+        auto FortMountedWeaponInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMountedWeaponInterface"));
+        auto Classes = 0;
+
+        for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+        {
+            auto ObjectItem = GUObjectArray.IndexToObject(Index);
+            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+            if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(AFortWeapon::StaticClass()))
+                continue;
+
+            auto DefaultObject = ((UClass*)Object)->GetDefaultObject(false);
+            auto MountedWeaponInterface = DefaultObject ? DefaultObject->GetInterfaceAddress(FortMountedWeaponInterface) : nullptr;
+
+            if (MountedWeaponInterface && Scanner::At(Scanner::Virtual<const void*>(MountedWeaponInterface, SetupCachedHostVehicleRepped)).Is("ret*"))
+            {
+                DetourVTable(nullptr, *(void***)MountedWeaponInterface, SetupCachedHostVehicleRepped, &IFortMountedWeaponInterface::SetupCachedHostVehicleRepped);
+                Classes++;
+            }
+        }
+
+        UE_LOG(LogVelora, Log, TEXT("Hooked IFortMountedWeaponInterface::SetupCachedHostVehicleRepped in %d classes"), Classes);
+
+        return SetupCachedHostVehicleRepped;
     }();
 
     static auto BeginPlay = []

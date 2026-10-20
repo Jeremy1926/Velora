@@ -25,6 +25,8 @@ struct FVehiclePawnState
     static UScriptStruct* StaticStruct();
 
     AActor* GetVehicle() const;
+
+    uint8 GetSeatIndex() const;
 };
 
 struct FZiplinePawnState
