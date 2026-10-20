@@ -898,7 +898,7 @@ int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData B
 
 FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralGridQueryResults QueryResults) const
 {
-    static auto GetErrorMessageFromStructuralQuery = ClientBuild().Find("mov r8d, *; *; call [*+0x*]; mov rdx, rax").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::GetErrorMessageFromStructuralQuery"));
+    static auto GetErrorMessageFromStructuralQuery = ClientBuild().Find("mov r8d, *; *; call [*+0x*]").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::GetErrorMessageFromStructuralQuery"));
 
     if (!Scanner::IsSlot(GetErrorMessageFromStructuralQuery))
         return FText();

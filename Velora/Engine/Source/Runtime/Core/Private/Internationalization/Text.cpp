@@ -52,7 +52,12 @@ FText& FText::operator=(FText&& Source)
 
 bool FText::IsEmpty() const
 {
-    static auto IsEmpty = Scanner::Function<bool (*)(const FText*)>(ClientBuild().Find("mov r8d, *; *; call [*+0x*]; mov rdx, rax").Find("lea rcx, *; call 0x*", 2).Call().Get(TEXT("FText::IsEmpty")));
+    static auto IsEmpty = Scanner::Function<bool (*)(const FText*)>([]
+    {
+        auto ErrorMessage = ClientBuild().Find("mov r8d, *; *; call [*+0x*]");
+
+        return ErrorMessage.Find("lea rcx, *; call 0x*", ErrorMessage.Is("mov r8d, *; *; call [*+0x*]; mov rdx, rax") ? 2 : 1).Call().Get(TEXT("FText::IsEmpty"));
+    }());
 
     return IsEmpty(this);
 }
