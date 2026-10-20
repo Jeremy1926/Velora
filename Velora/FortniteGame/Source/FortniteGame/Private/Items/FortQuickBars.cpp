@@ -36,7 +36,13 @@ FQuickBar& AFortQuickBars::GetQuickBar(EFortQuickBars InQuickBar)
 
 void AFortQuickBars::OnQuickBarChanged(EFortQuickBars InQuickBar)
 {
-    static auto OnQuickBarChanged = Scanner::Function<void (*)(AFortQuickBars*, EFortQuickBars, FQuickBar*, FQuickBar*)>(Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortQuickBars:OnRep_SecondaryQuickBar")).Find("jmp 0x*").Target()).Find("jmp 0x*").Target(TEXT("AFortQuickBars::OnQuickBarChanged")));
+    static auto OnQuickBarChanged = Anchor::Function<void (*)(AFortQuickBars*, EFortQuickBars, FQuickBar*, FQuickBar*)>(TEXT("AFortQuickBars::OnQuickBarChanged"))
+        .Exec(TEXT("/Script/FortniteGame.FortQuickBars:OnRep_SecondaryQuickBar"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
     static auto PrimaryQuickBar_Previous = GetClass()->FindPropertyByName(FName(TEXT("PrimaryQuickBar_Previous")));
     static auto SecondaryQuickBar_Previous = GetClass()->FindPropertyByName(FName(TEXT("SecondaryQuickBar_Previous")));
 
