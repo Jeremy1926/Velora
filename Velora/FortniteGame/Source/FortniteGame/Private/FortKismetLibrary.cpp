@@ -49,6 +49,8 @@ static auto K2_SpawnPickupInWorld = []
     return DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorld"), (Call.Get() ? Call : Exec.Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*")).Get(), &UFortKismetLibrary::K2_SpawnPickupInWorld);
 }();
 
+static auto K2_SpawnPickupInWorldWithClass = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")) ? DetourCall(TEXT("UFortKismetLibrary::K2_SpawnPickupInWorldWithClass"), Scanner::Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")).Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*").Find("call 0x*").Get(), &UFortKismetLibrary::K2_SpawnPickupInWorldWithClass) : nullptr;
+
 static auto K2_RemoveItemFromPlayerByGuid = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")) ? Detour(TEXT("UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid"), Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")).Get(), &UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid) : nullptr;
 
 static auto GiveItemToInventoryOwner = []
@@ -297,6 +299,11 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
 
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
 {
+    return K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, AFortPickupAthena::StaticClass(), NumberToSpawn, Position, Direction, OverrideMaxStackCount, bToss);
+}
+
+AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
+{
     static auto bHasToss = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")))->FindPropertyByName(FName(TEXT("bToss"))) != nullptr;
 
     auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
@@ -321,7 +328,7 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
             ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
     }
 
-    auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass());
+    auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, PickupClass);
 
     if (Pickup && (bToss || !bHasToss))
         Pickup->TossPickup(Position, nullptr, OverrideMaxStackCount, true);
