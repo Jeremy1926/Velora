@@ -7,22 +7,28 @@
 
 static int32_t InitializeBuildingActorSlot()
 {
-    static auto InitializeBuildingActor = []
-    {
-        auto InitializeKismetSpawnedBuildingActor = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"));
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
-        auto KismetSpawned = Scanner::At(Scanner::Virtual<const void*>(DefaultObject, InitializeKismetSpawnedBuildingActor));
-        auto Call = KismetSpawned.Find("call [*+0x*]");
-
-        return (Call.Get() ? Call : KismetSpawned.Find("mov r10, [r8+0x*]")).Slot(TEXT("ABuildingActor::InitializeBuildingActor"));
-    }();
+    static auto InitializeBuildingActor = Anchor::Slot(TEXT("ABuildingActor::InitializeBuildingActor"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("mov r10, [r8+0x*]")
+        .Get();
 
     return InitializeBuildingActor;
 }
 
 static int32_t GetCurrentBuildingLevelSlot()
 {
-    static auto GetCurrentBuildingLevel = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel"));
+    static auto GetCurrentBuildingLevel = Anchor::Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel"))
+        .Find("call [*+0x*]")
+        .Get();
 
     return GetCurrentBuildingLevel;
 }
@@ -36,28 +42,31 @@ UClass* ABuildingActor::StaticClass()
 
 void ABuildingActor::BeginPlay()
 {
-    static auto BeginPlay = []
-    {
-        auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
-        auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
-        auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
-        auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-
-        return Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
-    }();
+    static auto BeginPlay = Anchor::Slot(TEXT("AActor::BeginPlay"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+        .Reference("mov rdx, *")
+        .Start()
+        .Log(TEXT("AActor::ReceiveBeginPlay"))
+        .Caller()
+        .Log(TEXT("AActor::BeginPlay"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Get();
 
     Scanner::Virtual<void (*)(ABuildingActor*)>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingActor")), BeginPlay)(this);
 }
 
 void ABuildingActor::SilentDie(bool bPropagateSilentDeath)
 {
-    static auto SilentDie = []
-    {
-        auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"));
-        auto Jump = SilentDie.Find("jmp [*+0x*]");
-
-        return (Jump.Get() ? Jump : SilentDie.Find("call [*+0x*]")).Slot(TEXT("ABuildingActor::SilentDie"));
-    }();
+    static auto SilentDie = Anchor::Slot(TEXT("ABuildingActor::SilentDie"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("jmp [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("call [*+0x*]")
+        .Get();
     static auto bHasPropagateSilentDeath = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor:SilentDie")))->FindPropertyByName(FName(TEXT("bPropagateSilentDeath"))) != nullptr;
 
     if (bHasPropagateSilentDeath)
@@ -71,13 +80,13 @@ void ABuildingActor::SilentDie(bool bPropagateSilentDeath)
 
 void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext)
 {
-    static auto Die = []
-    {
-        auto SilentDie = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"));
-        auto Jump = SilentDie.Find("jmp [*+0x*]");
-
-        return (Jump.Get() ? Jump : SilentDie.Find("call [*+0x*]")).Slot(TEXT("ABuildingActor::SilentDie")) - (int32_t)sizeof(void*);
-    }();
+    static auto Die = Anchor::Slot(TEXT("ABuildingActor::SilentDie"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("jmp [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("call [*+0x*]")
+        .Get() - (int32_t)sizeof(void*);
     static auto bEffectContext = Scanner::At(Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor")), Die, sizeof(void*))).Has("mov qword ptr [rsp+0x20], 0x0");
 
     if (bEffectContext)
@@ -125,14 +134,19 @@ EFortBuildingType ABuildingActor::GetBuildingType() const
 
 float ABuildingActor::GetMaxHealth() const
 {
-    static auto GetMaxHealth = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetMaxHealth")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::GetMaxHealth"));
+    static auto GetMaxHealth = Anchor::Slot(TEXT("ABuildingActor::GetMaxHealth"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetMaxHealth"))
+        .Find("call [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<float (*)(const ABuildingActor*)>(this, GetMaxHealth)(this);
 }
 
 bool ABuildingActor::HasHealthLeft() const
 {
-    static auto HasHealthLeft = Scanner::Function<bool (*)(const ABuildingActor*)>(Scanner::Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft")).Get(TEXT("ABuildingActor::HasHealthLeft")));
+    static auto HasHealthLeft = Anchor::Function<bool (*)(const ABuildingActor*)>(TEXT("ABuildingActor::HasHealthLeft"))
+        .Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft"))
+        .Get();
 
     return HasHealthLeft(this);
 }
