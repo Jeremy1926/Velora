@@ -490,6 +490,8 @@ void AFortGameModeAthena::OverrideAISettings(UAthenaAISettings* InAISettings)
 
     if (auto PerceptionManager = AISystem ? AISystem->GetPerceptionManager() : nullptr)
         PerceptionManager->OnAISettingsUpdated(InAISettings);
+
+    GetAIDirector();
 }
 
 UAthenaAISettings*& AFortGameModeAthena::GetAISettings()

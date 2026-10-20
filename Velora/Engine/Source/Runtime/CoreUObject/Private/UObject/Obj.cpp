@@ -17,6 +17,18 @@ UWorld* UObject::GetWorld() const
     return Scanner::Virtual<UWorld* (*)(const UObject*)>(this, GetWorld)(this);
 }
 
+bool UObject::NeedsLoadForServer() const
+{
+    static auto NeedsLoadForClient = Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Call().Find("jmp [rax+0x*]").Slot(TEXT("UObject::NeedsLoadForClient"));
+
+    return Scanner::Virtual<bool (*)(const UObject*)>(this, NeedsLoadForClient, sizeof(void*))(this);
+}
+
+bool UObject::CanCreateInCurrentContext(UObject* Template)
+{
+    return Template->NeedsLoadForServer();
+}
+
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
 {
     static auto GetArchetypeFromRequiredInfoImpl = Scanner::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, bool)>([]

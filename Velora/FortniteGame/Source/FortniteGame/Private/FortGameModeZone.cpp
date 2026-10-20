@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "FortGameModeZone.h"
+#include "FortGameData.h"
+#include "AI/FortAIDirector.h"
+#include "Athena/AI/AthenaAIDirector.h"
 #include "Items/FortInventory.h"
+#include "Engine/World.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -20,9 +24,59 @@ static auto FinishWorldInitialization = []
     return DetourCall(TEXT("AFortGameModeZone::FinishWorldInitialization"), Call.Get(), &AFortGameModeZone::FinishWorldInitialization);
 }();
 
+static auto CreateAIDirector = []
+{
+    auto AthenaCreateAIDirector = Scanner::String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"));
+
+    return AthenaCreateAIDirector.Get() ? DetourCall(TEXT("AFortGameModeZone::CreateAIDirector"), AthenaCreateAIDirector.Start().Find("call 0x*").Get(), &AFortGameModeZone::CreateAIDirector) : nullptr;
+}();
+
 void AFortGameModeZone::FinishWorldInitialization()
 {
     Super::FinishWorldInitialization();
+}
+
+void AFortGameModeZone::CreateAIDirector()
+{
+    static auto CanCreateInCurrentContext = DetourCall(TEXT("UObject::CanCreateInCurrentContext"), Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Get(), &UObject::CanCreateInCurrentContext);
+    static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
+
+    auto& AIDirectors = UFortGameData::Get()->GetAIDirectors();
+    auto AIDirectorIndex = GetOverrideAIDirectorIndex();
+
+    if (AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors.Num())
+        return;
+
+    auto AIDirectorClass = AIDirectors[AIDirectorIndex].LoadSynchronous();
+
+    if (!AIDirectorClass)
+        AIDirectorClass = AAthenaAIDirector::StaticClass();
+
+    *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass);
+}
+
+AFortAIDirector* AFortGameModeZone::GetAIDirector()
+{
+    static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
+    static auto CreateAIDirector = []
+    {
+        auto AthenaCreateAIDirector = Scanner::String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i")).Start().Get();
+        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortGameModeAthena"));
+
+        return Scanner::Slot(TEXT("AFortGameModeZone::CreateAIDirector"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == AthenaCreateAIDirector; });
+    }();
+
+    if (!*AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this))
+        Scanner::Virtual<void (*)(AFortGameModeZone*)>(this, CreateAIDirector)(this);
+
+    return *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this);
+}
+
+int32 AFortGameModeZone::GetOverrideAIDirectorIndex() const
+{
+    static auto OverrideAIDirectorIndex = GetClass()->FindPropertyByName(FName(TEXT("OverrideAIDirectorIndex")));
+
+    return *OverrideAIDirectorIndex->ContainerPtrToValuePtr<int32>(this);
 }
 
 TArray<FItemAndCount>& AFortGameModeZone::GetStartingItems()

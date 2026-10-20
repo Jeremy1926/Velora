@@ -14,6 +14,10 @@ public:
 
     UWorld* GetWorld() const;
 
+    bool NeedsLoadForServer() const;
+
+    static bool CanCreateInCurrentContext(UObject* Template);
+
     FORCEINLINE UObject* GetArchetype() const
     {
         return GetArchetypeFromRequiredInfo(GetClass(), GetOuter(), GetFName(), GetFlags());

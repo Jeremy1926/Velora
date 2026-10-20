@@ -74,6 +74,13 @@ const TAssetPtr<UClass>& UFortGameData::GetEmoteGameplayAbility() const
     return EmoteGameplayAbility ? *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : UGameDataCosmetics::Get()->GetEmoteGameplayAbility();
 }
 
+const TArray<TAssetPtr<UClass>>& UFortGameData::GetAIDirectors() const
+{
+    static auto AIDirectors = GetClass()->FindPropertyByName(FName(TEXT("AIDirectors")));
+
+    return *AIDirectors->ContainerPtrToValuePtr<TArray<TAssetPtr<UClass>>>(this);
+}
+
 const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootTierDataTables() const
 {
     static auto LootTierDataTables = GetClass()->FindPropertyByName(FName(TEXT("LootTierDataTables")));
