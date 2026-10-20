@@ -2,6 +2,7 @@
 
 #include "GameFramework/GameStateBase.h"
 
+class AFortWorldManager;
 class ULevelStreamingDynamic;
 
 struct FPlaylistStreamedLevelData
@@ -33,6 +34,8 @@ public:
     bool AreAllAdditionalPlaylistLevelsLoaded() const;
 
     bool AreAllAdditionalPlaylistLevelsVisible() const;
+
+    AFortWorldManager* GetWorldManager() const;
 
     void StartStreamingAdditionalPlaylistLevel(FName LevelName);
 };

@@ -44,6 +44,13 @@ bool AFortGameState::AreAllAdditionalPlaylistLevelsVisible() const
     return AreAllAdditionalPlaylistLevelsVisible(this);
 }
 
+AFortWorldManager* AFortGameState::GetWorldManager() const
+{
+    static auto WorldManager = GetClass()->FindPropertyByName(FName(TEXT("WorldManager")));
+
+    return *WorldManager->ContainerPtrToValuePtr<AFortWorldManager*>(this);
+}
+
 void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName)
 {
     static auto StartStreamingAdditionalPlaylistLevel = Scanner::Function<void (*)(AFortGameState*, FName)>(Scanner::String(TEXT("PLAYLIST: Failed to locate valid level to be streamed %s")).Start().Get(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel")));

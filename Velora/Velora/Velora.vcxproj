@@ -343,6 +343,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIPerceptionSystem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortFeedbackManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameState.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortWorldManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameDeathPenalty.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\StatManager.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffect.h" />
@@ -531,6 +532,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIPerceptionSystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortFeedbackManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameState.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortWorldManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameDeathPenalty.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\StatManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerZone.cpp" />

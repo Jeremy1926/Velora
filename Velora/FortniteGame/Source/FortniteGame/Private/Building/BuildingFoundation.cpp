@@ -1,7 +1,13 @@
 #include "pch.h"
 #include "Building/BuildingFoundation.h"
+#include "FortGameState.h"
+#include "FortWorldManager.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -20,6 +26,13 @@ static Scanner::FCode TransformIsSetFlag()
     return TransformIsSetFlag;
 }
 
+static Scanner::FCode PostUpdateCalledFlag()
+{
+    static auto PostUpdateCalledFlag = PostUpdateCall().Find("or byte ptr [*+0x*], 0x*");
+
+    return PostUpdateCalledFlag;
+}
+
 static auto SetDynamicFoundationTransform = []
 {
     auto Call = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform")).Find("mov [*+0x20], *; call 0x*").Find("call 0x*");
@@ -28,6 +41,20 @@ static auto SetDynamicFoundationTransform = []
 }();
 
 static auto PostUpdate = ::SetDynamicFoundationTransform ? Detour(TEXT("ABuildingFoundation::PostUpdate"), PostUpdateCall().Start().Get(), &ABuildingFoundation::PostUpdate) : nullptr;
+
+static auto execSetDynamicFoundationEnabled = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked ABuildingFoundation::execSetDynamicFoundationEnabled, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&ABuildingFoundation::execSetDynamicFoundationEnabled);
+
+    return true;
+}();
 
 void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues)
 {
@@ -61,6 +88,67 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     OnRep_DynamicFoundationRepData();
 }
 
+void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
+{
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
+    static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
+    static auto bFoundationEnabled = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bFoundationEnabled")));
+    static auto bConditionalFoundation = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bConditionalFoundation")));
+    static auto LevelToStream = GetClass()->FindPropertyByName(FName(TEXT("LevelToStream")));
+    static auto Offset = PostUpdateCalledFlag().Disp(TEXT("ABuildingFoundation::bPostUpdateCalled"));
+    static auto Mask = (uint8_t)PostUpdateCalledFlag().Imm();
+
+    FlushNetDormancy();
+
+    if (FoundationEnabledState)
+    {
+        auto& State = *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this);
+        State = bEnabled ? EDynamicFoundationEnabledState::Enabled : EDynamicFoundationEnabledState::Disabled;
+
+        if (DynamicFoundationRepData)
+        {
+            DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this)->EnabledState = State;
+            OnRep_DynamicFoundationRepData();
+        }
+        else
+        {
+            OnRep_FoundationEnabledState();
+        }
+    }
+    else
+    {
+        auto bOldEnabled = bFoundationEnabled->GetPropertyValue_InContainer(this);
+        bFoundationEnabled->SetPropertyValue_InContainer(this, bEnabled);
+        OnRep_FoundationEnabled(bOldEnabled);
+    }
+
+    if (!bEnabled || !(*((uint8_t*)this + Offset) & Mask) || bConditionalFoundation->GetPropertyValue_InContainer(this) || *LevelToStream->ContainerPtrToValuePtr<FName>(this) != NAME_None)
+        return;
+
+    if (auto GameState = Cast<AFortGameState>(GetWorld()->GetGameState()))
+    {
+        if (auto WorldManager = GameState->GetWorldManager())
+            SelectAndStreamInLevel(&WorldManager->GetFoundationBuildingActorsRRV());
+    }
+}
+
+void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result)
+{
+    uint32 bEnabled = 0;
+
+    Stack.StepCompiledIn(&bEnabled);
+    Stack.Code += !!Stack.Code;
+
+    SetDynamicFoundationEnabled(!!bEnabled);
+}
+
+void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* ReservedRandomValues)
+{
+    static auto SelectAndStreamInLevel = Scanner::Function<void (*)(ABuildingFoundation*, const FReservedRandomValues*)>(PostUpdateCall().Target());
+
+    SelectAndStreamInLevel(this, ReservedRandomValues);
+}
+
 void ABuildingFoundation::OnRep_DynamicFoundationTransform()
 {
     static auto OnRep_DynamicFoundationTransform = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationTransform")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationTransform")));
@@ -73,6 +161,31 @@ void ABuildingFoundation::OnRep_DynamicFoundationRepData()
     static auto OnRep_DynamicFoundationRepData = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationRepData")));
 
     OnRep_DynamicFoundationRepData(this);
+}
+
+void ABuildingFoundation::OnRep_FoundationEnabledState()
+{
+    static auto OnRep_FoundationEnabledState = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabledState")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabledState")));
+
+    OnRep_FoundationEnabledState(this);
+}
+
+void ABuildingFoundation::OnRep_FoundationEnabled(bool bOldEnabled)
+{
+    static auto Exec = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_FoundationEnabled"));
+    static auto bTakesOldEnabled = Exec.Has("setnz dl; call 0x*");
+
+    if (bTakesOldEnabled)
+    {
+        static auto OnRep_FoundationEnabled = Scanner::Function<void (*)(ABuildingFoundation*, bool)>(Exec.Find("setnz dl; call 0x*").Find("call 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabled")));
+
+        OnRep_FoundationEnabled(this, bOldEnabled);
+        return;
+    }
+
+    static auto OnRep_FoundationEnabled = Scanner::Function<void (*)(ABuildingFoundation*)>(Exec.Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_FoundationEnabled")));
+
+    OnRep_FoundationEnabled(this);
 }
 
 bool ABuildingFoundation::TransformIsSet() const

@@ -4,6 +4,7 @@
 
 enum class EFortBuildingPersistentState : uint8;
 struct FReservedRandomValues;
+struct FFrame;
 
 enum class EDynamicFoundationType : uint8
 {
@@ -36,9 +37,19 @@ public:
 
     void SetDynamicFoundationTransform(const FTransform& NewTransform);
 
+    void SetDynamicFoundationEnabled(bool bEnabled);
+
+    void execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result);
+
+    void SelectAndStreamInLevel(const FReservedRandomValues* ReservedRandomValues);
+
     void OnRep_DynamicFoundationTransform();
 
     void OnRep_DynamicFoundationRepData();
+
+    void OnRep_FoundationEnabledState();
+
+    void OnRep_FoundationEnabled(bool bOldEnabled);
 
     bool TransformIsSet() const;
 
