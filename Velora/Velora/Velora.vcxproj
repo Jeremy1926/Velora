@@ -321,6 +321,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingFoundation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\FortVolumeManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawn.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortAIPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPlayerPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerPawnAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameData.h" />
@@ -561,6 +562,7 @@
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayEffect.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayEffectTypes.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Pawns\FortPawn.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Pawns\FortAIPawn.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Pawns\FortPlayerPawn.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWeaponItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortniteGame.cpp" />

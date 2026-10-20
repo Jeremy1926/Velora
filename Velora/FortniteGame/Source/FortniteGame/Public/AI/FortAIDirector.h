@@ -7,9 +7,26 @@
 #include "Containers/Array.h"
 #include "Templates/SubclassOf.h"
 
+class AFortAIPawn;
 class UFortAIEncounterInfo;
 class UEnvQuery;
 class UScriptStruct;
+
+struct FFortAIPawnLootDropData
+{
+    static UScriptStruct* StaticStruct();
+
+    float& GetLootDropChance();
+
+    FName& GetWorldItemTierGroup();
+};
+
+struct FPendingSpawnInfo
+{
+    static UScriptStruct* StaticStruct();
+
+    FFortAIPawnLootDropData& GetLootDropData();
+};
 
 enum class EFortEncounterSpawnLocationPlacementMode : uint8
 {
@@ -111,6 +128,8 @@ class AFortAIDirector : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    AFortAIPawn* SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo);
 
     TArray<FFortAIEncounterSpawnGroupCapsProfile>& GetEncounterSpawnGroupCapSettings();
 

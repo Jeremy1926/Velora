@@ -1,8 +1,53 @@
 #include "pch.h"
 #include "AI/FortAIDirector.h"
+#include "Pawns/FortAIPawn.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
+#include "Detour.h"
+
+static auto SpawnAIPawn = []
+{
+    auto DirectorSpawnAIPawn = Scanner::String(TEXT("AI Director failed to spawn pawn!"));
+
+    return DirectorSpawnAIPawn.Get() ? Detour(TEXT("AFortAIDirector::SpawnAIPawn"), DirectorSpawnAIPawn.Start().Get(), &AFortAIDirector::SpawnAIPawn) : nullptr;
+}();
+
+UScriptStruct* FFortAIPawnLootDropData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAIPawnLootDropData"));
+
+    return Struct;
+}
+
+float& FFortAIPawnLootDropData::GetLootDropChance()
+{
+    static auto LootDropChance = StaticStruct()->FindPropertyByName(FName(TEXT("LootDropChance")));
+
+    return *LootDropChance->ContainerPtrToValuePtr<float>(this);
+}
+
+FName& FFortAIPawnLootDropData::GetWorldItemTierGroup()
+{
+    static auto WorldItemTierGroup = StaticStruct()->FindPropertyByName(FName(TEXT("WorldItemTierGroup")));
+
+    return *WorldItemTierGroup->ContainerPtrToValuePtr<FName>(this);
+}
+
+UScriptStruct* FPendingSpawnInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PendingSpawnInfo"));
+
+    return Struct;
+}
+
+FFortAIPawnLootDropData& FPendingSpawnInfo::GetLootDropData()
+{
+    static auto LootDropData = StaticStruct()->FindPropertyByName(FName(TEXT("LootDropData")));
+
+    return *LootDropData->ContainerPtrToValuePtr<FFortAIPawnLootDropData>(this);
+}
 
 template<>
 UEnum* StaticEnum<EFortEncounterSpawnLocationPlacementMode>()
@@ -191,6 +236,19 @@ UClass* AFortAIDirector::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAIDirector"));
 
     return Class;
+}
+
+AFortAIPawn* AFortAIDirector::SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo)
+{
+    const float LootDropChance = PendingSpawnInfo.GetLootDropData().GetLootDropChance();
+    const FName WorldItemTierGroup = PendingSpawnInfo.GetLootDropData().GetWorldItemTierGroup();
+
+    auto NewPawn = (this->*::SpawnAIPawn)(PendingSpawnInfo);
+
+    if (NewPawn)
+        NewPawn->SetLootDropData(LootDropChance, WorldItemTierGroup);
+
+    return NewPawn;
 }
 
 TArray<FFortAIEncounterSpawnGroupCapsProfile>& AFortAIDirector::GetEncounterSpawnGroupCapSettings()
