@@ -22,17 +22,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto BeginPlay = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) ? []
-{
-    auto ReceiveBeginPlayName = Scanner::String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target(TEXT("ENGINE_ReceiveBeginPlay"));
-    auto ReceiveBeginPlay = Scanner::Reference(ReceiveBeginPlayName, "mov rdx, *").Start().Get(TEXT("AActor::ReceiveBeginPlay"));
-    auto ActorBeginPlay = Scanner::CallTo(ReceiveBeginPlay).Start().Get(TEXT("AActor::BeginPlay"));
-    auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-    auto BeginPlay = Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
-    auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAthenaVehicleSpawner"));
-
-    return DetourVTable(TEXT("AFortAthenaVehicleSpawner::BeginPlay"), VTable, BeginPlay, &AFortAthenaVehicleSpawner::BeginPlay);
-}() : nullptr;
 
 UClass* AFortAthenaVehicleSpawner::StaticClass()
 {
@@ -41,9 +30,23 @@ UClass* AFortAthenaVehicleSpawner::StaticClass()
     return Class;
 }
 
+DETOUR(AFortAthenaVehicleSpawner, BeginPlay, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
+    .String(TEXT("ReceiveBeginPlay"))
+    .Find("lea *, [0x*]")
+    .Target()
+    .Log(TEXT("ENGINE_ReceiveBeginPlay"))
+    .Reference("mov rdx, *")
+    .Start()
+    .Log(TEXT("AActor::ReceiveBeginPlay"))
+    .Caller()
+    .Log(TEXT("AActor::BeginPlay"))
+    .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+    .LogSlot(TEXT("AActor::BeginPlay"))
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaVehicleSpawner")))
 void AFortAthenaVehicleSpawner::BeginPlay()
 {
-    (this->*::BeginPlay)();
+    Original();
 
     auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -97,7 +100,9 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
 
 UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
 {
-    static auto GetVehicleClass = Scanner::Function<UClass* (*)(const AFortAthenaVehicleSpawner*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass")).Get(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass")));
+    static auto GetVehicleClass = Anchor::Function<UClass* (*)(const AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+        .Get();
 
     return GetVehicleClass(this);
 }
