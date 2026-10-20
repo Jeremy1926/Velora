@@ -6,25 +6,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
-
-static auto execMovingEmoteStopped = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"));
-
-    if (!Function || !AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
-        return false;
-
-    auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")).Find("mov [*+0x20], *; jmp 0x*");
-
-    if (!Finish.Get() || !Scanner::At(Finish.Find("jmp 0x*").Target()).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPawn::execMovingEmoteStopped, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&AFortPawn::execMovingEmoteStopped);
-
-    return true;
-}();
+#include "Detour.h"
 
 UClass* AFortPawn::StaticClass()
 {
@@ -42,14 +24,19 @@ AFortWeapon* AFortPawn::GetCurrentWeapon() const
 
 AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid)
 {
-    static auto EquipWeaponDefinition = Scanner::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")).Get(TEXT("AFortPawn::EquipWeaponDefinition")));
+    static auto EquipWeaponDefinition = Anchor::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&)>(TEXT("AFortPawn::EquipWeaponDefinition"))
+        .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
+        .Get();
 
     return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid);
 }
 
 bool AFortPawn::EquipBestWeapon()
 {
-    static auto EquipBestWeapon = Scanner::Exec(TEXT("/Script/FortniteGame.FortPawn:EquipBestWeapon")).Find("call [rax+0x*]").Slot(TEXT("AFortPawn::EquipBestWeapon"));
+    static auto EquipBestWeapon = Anchor::Slot(TEXT("AFortPawn::EquipBestWeapon"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:EquipBestWeapon"))
+        .Find("call [rax+0x*]")
+        .Get();
 
     return Scanner::Virtual<bool (*)(AFortPawn*)>(this, EquipBestWeapon)(this);
 }
@@ -67,9 +54,10 @@ void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
     {
         auto NotActive = Scanner::String(TEXT("Can't stop native action %s, not active!"));
         auto StopNativeAction = std::format("mov rcx, [rcx+0x*]; test rcx, rcx; jnz {:#x}", (uintptr_t)(NotActive.Get() ? NotActive : Scanner::String(TEXT("Native Action Role(%s) Can't stop %s, not active!"))).Start().Get(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction")));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPawn"));
 
-        return Scanner::Slot(TEXT("AFortPawn::StopPerformingNativeAction"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(StopNativeAction); });
+        return Anchor::Slot(TEXT("AFortPawn::StopPerformingNativeAction"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortPawn"), [&](const Anchor::FCode& Entry) { return Entry.Is(StopNativeAction); })
+            .Get();
     }();
 
     Scanner::Virtual<void (*)(AFortPawn*, const FGameplayTag&)>(this, StopPerformingNativeAction)(this, ActionTag);
@@ -116,6 +104,15 @@ void AFortPawn::MovingEmoteStopped()
     SetMovingEmoteForwardOnly(false);
 }
 
+DETOUR(AFortPawn, execMovingEmoteStopped, Anchor::Hook()
+    .If(AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
+    .Exec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"))
+    .Find("mov [*+0x20], *; jmp 0x*")
+    .Find("jmp 0x*")
+    .Target()
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")))
 void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -159,14 +156,18 @@ UFortHealthSet* AFortPawn::GetHealthSet() const
 
 void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent)
 {
-    static auto LaunchCharacterJump = Scanner::Function<void (*)(AFortPawn*, const FVector&, bool, bool, bool, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump")).Get(TEXT("AFortPawn::LaunchCharacterJump")));
+    static auto LaunchCharacterJump = Anchor::Function<void (*)(AFortPawn*, const FVector&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
+        .Native(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
+        .Get();
 
     LaunchCharacterJump(this, LaunchVelocity, bXYOverride, bZOverride, bIgnoreFallDamage, bPlayFeedbackEvent);
 }
 
 void AFortPawn::SetGravityMultiplier(float NewGravityVal)
 {
-    static auto SetGravityMultiplier = Scanner::Function<void (*)(AFortPawn*, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier")).Get(TEXT("AFortPawn::SetGravityMultiplier")));
+    static auto SetGravityMultiplier = Anchor::Function<void (*)(AFortPawn*, float)>(TEXT("AFortPawn::SetGravityMultiplier"))
+        .Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier"))
+        .Get();
 
     SetGravityMultiplier(this, NewGravityVal);
 }
