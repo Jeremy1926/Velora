@@ -10,12 +10,14 @@
 
 class ABuildingSMActor;
 class AFortInventory;
+class AFortPawn;
 class AFortPlayerPawn;
 class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
 class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
+class UFortWorldItem;
 class UStatManager;
 struct FFrame;
 struct FTransform;
@@ -151,6 +153,8 @@ public:
     TMap<UClass*, int32>& GetToySummonCounts();
 
     void DropItemsOnPawnDestruction(AActor* DamageCauser, const FGameplayTagContainer& DeathTags, AFortPlayerPawn* DestroyedPawn, bool& bDroppedItems);
+
+    static void DropItemsAsPickups(const TArray<UFortWorldItem*>& Items, AFortPawn* Pawn, AFortInventory* Inventory, AFortPlayerController* PlayerController);
 
     AFortQuickBars* GetQuickBars();
 

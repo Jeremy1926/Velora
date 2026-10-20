@@ -2,6 +2,7 @@
 #include "Player/FortPlayerController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/Cosmetics/AthenaDanceItemDefinition.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Athena/Cosmetics/AthenaSprayItemDefinition.h"
@@ -590,6 +591,36 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
         RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), true);
 
         bDroppedItems = true;
+    }
+}
+
+void AFortPlayerController::DropItemsAsPickups(const TArray<UFortWorldItem*>& Items, AFortPawn* Pawn, AFortInventory* Inventory, AFortPlayerController* PlayerController)
+{
+    DETOUR(AFortPlayerController, DropItemsAsPickups, Anchor::Hook()
+        .FieldPattern("80 ? %o 00", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+        .Optional()
+        .Call()
+        .Find("xor r9d, r9d; call 0x*")
+        .Find("call 0x*")
+        .AtCall());
+
+    if (!Pawn)
+        return;
+
+    const FVector Location = Pawn->GetActorLocation();
+
+    for (auto Item : Items)
+    {
+        if (!Item)
+            continue;
+
+        auto& ItemEntry = Item->GetItemEntry();
+        FFortItemEntry DropItemEntry(ItemEntry.GetItemDefinition(), ItemEntry.GetCount(), ItemEntry.GetLevel());
+        DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
+        DropItemEntry.GetDurability() = ItemEntry.GetDurability();
+
+        if (auto Pickup = AFortPickup::CreateFromData(Pawn->GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, PlayerController, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
+            Pickup->TossPickup(Location, Pawn, 0, true);
     }
 }
 

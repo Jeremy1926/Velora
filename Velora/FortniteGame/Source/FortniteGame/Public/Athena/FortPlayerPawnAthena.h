@@ -7,6 +7,8 @@ struct FGuid;
 class AFortPlayerPawnAthena : public AFortPlayerPawn
 {
 public:
+    static UClass* StaticClass();
+
     void OnPlayerPawnReady();
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);

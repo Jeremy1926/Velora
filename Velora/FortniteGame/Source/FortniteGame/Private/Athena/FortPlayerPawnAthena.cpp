@@ -10,8 +10,16 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UClass* AFortPlayerPawnAthena::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena"));
+
+    return Class;
+}
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
 {
