@@ -11,7 +11,11 @@ FGameplayAttribute::FGameplayAttribute(UProperty* NewProperty)
 
     if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
     {
-        static auto GameplayAttribute = Scanner::Function<FGameplayAttribute* (*)(FGameplayAttribute*, UProperty*)>(Scanner::String(TEXT("IncomingDuration")).Find("mov rdx, [0x*]; lea rcx, *; call 0x*").Call().Get(TEXT("FGameplayAttribute::FGameplayAttribute")));
+        static auto GameplayAttribute = Anchor::Function<FGameplayAttribute* (*)(FGameplayAttribute*, UProperty*)>(TEXT("FGameplayAttribute::FGameplayAttribute"))
+            .String(TEXT("IncomingDuration"))
+            .Find("mov rdx, [0x*]; lea rcx, *; call 0x*")
+            .Call()
+            .Get();
 
         GameplayAttribute(this, NewProperty);
         return;
