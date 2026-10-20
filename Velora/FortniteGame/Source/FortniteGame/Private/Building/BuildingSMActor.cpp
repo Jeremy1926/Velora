@@ -18,30 +18,24 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-static Scanner::FCode InteractionText()
-{
-    static auto InteractionText = Scanner::String(TEXT("EditHPBlocked")).Start();
-
-    return InteractionText;
-}
-
-static Scanner::FCode ClientRepair()
-{
-    static auto ClientRepair = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerRepairBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
-
-    return ClientRepair;
-}
-
 static int32_t GetEditingPlayerSlot()
 {
-    static auto GetEditingPlayer = InteractionText().Find("call [rax+0x???]", 2).Slot(TEXT("ABuildingSMActor::GetEditingPlayer"));
+    static auto GetEditingPlayer = Anchor::Slot(TEXT("ABuildingSMActor::GetEditingPlayer"))
+        .String(TEXT("EditHPBlocked"))
+        .Start()
+        .Find("call [rax+0x???]", 2)
+        .Get();
 
     return GetEditingPlayer;
 }
 
 static int32_t CanBePlayerEditedSlot()
 {
-    static auto CanBePlayerEdited = InteractionText().Find("call [rax+0x???]", 5).Slot(TEXT("ABuildingSMActor::CanBePlayerEdited"));
+    static auto CanBePlayerEdited = Anchor::Slot(TEXT("ABuildingSMActor::CanBePlayerEdited"))
+        .String(TEXT("EditHPBlocked"))
+        .Start()
+        .Find("call [rax+0x???]", 5)
+        .Get();
 
     return CanBePlayerEdited;
 }
@@ -59,9 +53,16 @@ void ABuildingSMActor::SetMirrored(bool bIsMirrored)
     {
         auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
         auto ReplaceBuildingActor = Scanner::Virtual<const void*>(DefaultObject, CanBePlayerEditedSlot(), -2 * (int32_t)sizeof(void*));
-        auto SetCurrentBuildingLevel = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel")).Find("call [*+0x*]").Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel")) + (int32_t)sizeof(void*);
+        auto SetCurrentBuildingLevel = Anchor::Slot(TEXT("ABuildingActor::GetCurrentBuildingLevel"))
+            .Exec(TEXT("/Script/FortniteGame.BuildingActor:GetCurrentBuildingLevel"))
+            .Find("call [*+0x*]")
+            .Get() + (int32_t)sizeof(void*);
 
-        return Scanner::At(ReplaceBuildingActor).Find(std::format("call [*+{:#x}]", SetCurrentBuildingLevel)).Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::SetMirrored"));
+        return Anchor::Slot(TEXT("ABuildingSMActor::SetMirrored"))
+            .At(ReplaceBuildingActor)
+            .Find(std::format("call [*+{:#x}]", SetCurrentBuildingLevel))
+            .Find("call [*+0x*]")
+            .Get();
     }();
 
     Scanner::Virtual<void (*)(ABuildingSMActor*, bool)>(this, SetMirrored)(this, bIsMirrored);
@@ -94,14 +95,21 @@ bool ABuildingSMActor::IsBeingEdited() const
 
 bool ABuildingSMActor::NeedsRepair() const
 {
-    static auto NeedsRepair = ClientRepair().Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::NeedsRepair"));
+    static auto NeedsRepair = Anchor::Slot(TEXT("ABuildingSMActor::NeedsRepair"))
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Caller()
+        .Find("call [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<bool (*)(const ABuildingSMActor*)>(this, NeedsRepair)(this);
 }
 
 void ABuildingSMActor::RepairBuilding(AFortPlayerController* RepairingController, int32 ResourcesSpent)
 {
-    static auto RepairBuilding = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding")).Find("call [*+0x*]").Slot(TEXT("ABuildingSMActor::RepairBuilding"));
+    static auto RepairBuilding = Anchor::Slot(TEXT("ABuildingSMActor::RepairBuilding"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding"))
+        .Find("call [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(ABuildingSMActor*, AFortPlayerController*, int32)>(this, RepairBuilding)(this, RepairingController, ResourcesSpent);
 }
@@ -251,14 +259,15 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 
 float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
 {
-    static auto DetermineMaxResourcesToSpawn = []
-    {
-        auto ContextString = Scanner::String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn")).Last("mov rcx, [0x*]").Target();
-        auto Function = Scanner::Reference(ContextString, "lea rdx, *").Start().Get(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor"));
-
-        return Scanner::Slot(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
-    }();
+    static auto DetermineMaxResourcesToSpawn = Anchor::Slot(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
+        .String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
+        .Last("mov rcx, [0x*]")
+        .Target()
+        .Reference("lea rdx, *")
+        .Start()
+        .Log(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Get();
 
     return Scanner::Virtual<float (*)(ABuildingSMActor*, bool)>(this, DetermineMaxResourcesToSpawn)(this, bRandomize);
 }
