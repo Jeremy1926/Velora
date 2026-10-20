@@ -23,9 +23,9 @@ struct FFortBotInventoryInfo
 
     UFortWorldItem*& GetFortItem();
 
-    EFortItemType& GetItemType();
+    EFortItemType* GetItemType();
 
-    EFortWeaponType& GetWeaponType();
+    EFortWeaponType* GetWeaponType();
 };
 
 class AFortAthenaAIBotController : public AAIController

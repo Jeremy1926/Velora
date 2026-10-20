@@ -45,27 +45,27 @@ UFortWorldItem*& FFortBotInventoryInfo::GetFortItem()
     return *FortItem->ContainerPtrToValuePtr<UFortWorldItem*>(this);
 }
 
-EFortItemType& FFortBotInventoryInfo::GetItemType()
+EFortItemType* FFortBotInventoryInfo::GetItemType()
 {
     static auto ItemType = Anchor::Offset(TEXT("FFortBotInventoryInfo::ItemType"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Origin("mov qword ptr [*-0x*], *; mov byte ptr [*], 0x70")
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x70")
         .Find("mov byte ptr [*], 0x70")
         .Disp();
 
-    return *(EFortItemType*)((uint8*)this + ItemType);
+    return ItemType > 0 ? (EFortItemType*)((uint8*)this + ItemType) : nullptr;
 }
 
-EFortWeaponType& FFortBotInventoryInfo::GetWeaponType()
+EFortWeaponType* FFortBotInventoryInfo::GetWeaponType()
 {
     static auto WeaponType = Anchor::Offset(TEXT("FFortBotInventoryInfo::WeaponType"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Origin("mov qword ptr [*-0x*], *; mov byte ptr [*], 0x70")
-        .Find("mov byte ptr [*], 0x70; call 0x*; mov byte ptr [*+0x*], al")
-        .Find("mov byte ptr [*+0x*], al")
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x70")
+        .Find("mov byte ptr [*], 0x70; call 0x*; mov [*+0x*], al")
+        .Find("mov [*+0x*], al")
         .Disp();
 
-    return *(EFortWeaponType*)((uint8*)this + WeaponType);
+    return WeaponType > 0 ? (EFortWeaponType*)((uint8*)this + WeaponType) : nullptr;
 }
 
 bool AFortAthenaAIBotController::CreateInventory()
@@ -116,6 +116,19 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
 
     Inventory->HandleInventoryLocalUpdate();
 
+    static auto bFindWeaponTypeForStats = Anchor::Exists()
+        .FieldPattern("41 C7 00 FF FF FF FF ? 8B ? 48 83 B9 %o 00", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("Inventory"))) : nullptr)
+        .Find("cmp [*+0x*], *; jnz *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (!bFindWeaponTypeForStats)
+        return;
+
     for (auto& ItemAndCount : Items)
     {
         UFortWorldItem* WorldItem = nullptr;
@@ -135,10 +148,16 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
             continue;
 
         auto& SlotItem = GetSlotItems(SlotIndex);
+        auto ItemType = SlotItem.GetItemType();
+        auto WeaponType = SlotItem.GetWeaponType();
+
+        if (!ItemType || !WeaponType)
+            return;
+
         SlotItem.GetItemDefinition() = ItemAndCount.Item;
         SlotItem.GetFortItem() = WorldItem;
-        SlotItem.GetItemType() = ItemAndCount.Item->GetItemType();
-        SlotItem.GetWeaponType() = AFortWeapon::FindWeaponTypeForStats(ItemAndCount.Item);
+        *ItemType = ItemAndCount.Item->GetItemType();
+        *WeaponType = AFortWeapon::FindWeaponTypeForStats(ItemAndCount.Item);
     }
 }
 
@@ -167,7 +186,7 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
 
     static auto bAllowUnsupportedItems = Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Find("mov byte ptr [rcx+0x*], al")
+        .Find("mov [rcx+0x*], al")
         .Disp();
 
     if (bAllowUnsupportedItems)
