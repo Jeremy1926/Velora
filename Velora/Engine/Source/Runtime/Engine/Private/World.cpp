@@ -13,14 +13,6 @@
 
 static FLogCategoryBase& LogWorld = *(FLogCategoryBase*)Scanner::String(TEXT("Bringing %s up for play (max tick rate %i) at %s")).Last("movzx *, byte ptr [0x*]").Target(TEXT("LogWorld"));
 
-static auto Listen = []
-{
-    auto Call = Scanner::String(TEXT("LoadMap: failed to Listen(%s)")).Last("call 0x*; test al, al");
-
-    return Call.Get() ? DetourCall(TEXT("UWorld::Listen"), Call.Get(), &UWorld::Listen) : nullptr;
-}();
-
-static auto InternalGetNetMode = Detour(TEXT("UWorld::InternalGetNetMode"), Scanner::String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail")).Start().Find("mov rcx, rax; call 0x*").Call().Get(), &UWorld::InternalGetNetMode);
 
 AGameModeBase* UWorld::GetAuthGameMode() const
 {
@@ -80,7 +72,10 @@ float UWorld::GetTimeSeconds() const
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
 {
-    static auto GetWorldSettings = Scanner::Function<AWorldSettings* (*)(const UWorld*, bool, bool)>(Scanner::Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation")).Call(2).Get(TEXT("UWorld::GetWorldSettings")));
+    static auto GetWorldSettings = Anchor::Function<AWorldSettings* (*)(const UWorld*, bool, bool)>(TEXT("UWorld::GetWorldSettings"))
+        .Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation"))
+        .Call(2)
+        .Get();
 
     return GetWorldSettings(this, bCheckStreamingPesistent, bChecked);
 }
@@ -92,6 +87,12 @@ UNetDriver* UWorld::GetNetDriver() const
     return *NetDriver->ContainerPtrToValuePtr<UNetDriver*>(this);
 }
 
+DETOUR(UWorld, InternalGetNetMode, Anchor::Hook()
+    .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+    .Start()
+    .Find("mov rcx, rax; call 0x*")
+    .Call()
+    .Inline())
 ENetMode UWorld::InternalGetNetMode() const
 {
     if (GetNetDriver() != nullptr)
@@ -99,7 +100,7 @@ ENetMode UWorld::InternalGetNetMode() const
         return GetNetDriver()->GetNetMode();
     }
 
-    return (this->*::InternalGetNetMode)();
+    return Original();
 }
 
 void UWorld::SetNetDriver(UNetDriver* NewDriver)
@@ -118,11 +119,20 @@ void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)
 {
-    static auto FindCollectionByType = Scanner::Function<FLevelCollection* (*)(UWorld*, ELevelCollectionType)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Find("xor edx, edx; mov rcx, *").Call().Get(TEXT("UWorld::FindCollectionByType")));
+    static auto FindCollectionByType = Anchor::Function<FLevelCollection* (*)(UWorld*, ELevelCollectionType)>(TEXT("UWorld::FindCollectionByType"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor edx, edx; mov rcx, *")
+        .Call()
+        .Get();
 
     return FindCollectionByType(this, InType);
 }
 
+DETOUR(UWorld, Listen, Anchor::Hook()
+    .String(TEXT("LoadMap: failed to Listen(%s)"))
+    .Last("call 0x*; test al, al")
+    .Optional()
+    .AtCall())
 bool UWorld::Listen(FURL& InURL)
 {
     if (GetNetDriver())
