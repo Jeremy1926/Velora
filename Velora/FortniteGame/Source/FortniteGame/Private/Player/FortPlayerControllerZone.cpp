@@ -11,46 +11,23 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static void* OnPawnDied = []() -> void*
-{
-    auto OnPawnDied = Scanner::String(TEXT("Deaths")).Start();
-    auto DamageRegister = OnPawnDied.Find("movaps xmm6, xmm*");
-
-    if (DamageRegister.Is("movaps xmm6, xmm2"))
-    {
-        return Detour(TEXT("AFortPlayerControllerZone::OnPawnDied"), (void*)OnPawnDied.Get(), (void*)+[](AFortPlayerControllerZone* PlayerController, AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
-        {
-            PlayerController->OnPawnDied(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
-        });
-    }
-
-    if (DamageRegister.Is("movaps xmm6, xmm1"))
-    {
-        return Detour(TEXT("AFortPlayerControllerZone::OnPawnDied"), (void*)OnPawnDied.Get(), (void*)+[](AFortPlayerControllerZone* PlayerController, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
-        {
-            PlayerController->OnPawnDied(PlayerController->GetMyFortPawn(), Damage, InTags, EffectContext, EventInstigator, DamageCauser, nullptr);
-        });
-    }
-
-    return nullptr;
-}();
-
 static int32_t OnPawnRevivedSlot()
 {
     static auto OnPawnRevived = []
     {
         auto ClientOnPawnRevived = Scanner::Event(TEXT("ClientOnPawnRevived")).Get(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
-        return Scanner::Slot(TEXT("AFortPlayerControllerZone::OnPawnRevived"), VTable, [&](const Scanner::FCode& Entry)
-        {
-            auto Call = Entry.Find("call 0x*");
+        return Anchor::Slot(TEXT("AFortPlayerControllerZone::OnPawnRevived"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), [&](const Anchor::FCode& Entry)
+            {
+                auto Call = Entry.Find("call 0x*");
 
-            for (int32 Index = 2; Call.Get() && Call.Target() != ClientOnPawnRevived; Index++)
-                Call = Entry.Find("call 0x*", Index);
+                for (int32 Index = 2; Call.Get() && Call.Target() != ClientOnPawnRevived; Index++)
+                    Call = Entry.Find("call 0x*", Index);
 
-            return Call.Get() != nullptr;
-        });
+                return Call.Get() != nullptr;
+            })
+            .Get();
     }();
 
     return OnPawnRevived;
@@ -75,14 +52,35 @@ void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
     ServerRestartPlayer(this);
 }
 
+DETOUR(AFortPlayerControllerZone, OnPawnDied, Anchor::Hook((void*)+[](AFortPlayerControllerZone* PlayerController, AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
+    {
+        PlayerController->OnPawnDied(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+    })
+    .String(TEXT("Deaths"))
+    .Start()
+    .Find("movaps xmm6, xmm*")
+    .Is("movaps xmm6, xmm2")
+    .Start()
+    .Or()
+    .String(TEXT("Deaths"))
+    .Start()
+    .Find("movaps xmm6, xmm*")
+    .Is("movaps xmm6, xmm1")
+    .Start()
+    .With((void*)+[](AFortPlayerControllerZone* PlayerController, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
+    {
+        PlayerController->OnPawnDied(PlayerController->GetMyFortPawn(), Damage, InTags, EffectContext, EventInstigator, DamageCauser, nullptr);
+    })
+    .Optional()
+    .Inline())
 void AFortPlayerControllerZone::OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
 {
     static auto bKilledPawn = Scanner::String(TEXT("Deaths")).Start().Find("movaps xmm6, xmm*").Is("movaps xmm6, xmm2");
 
     if (bKilledPawn)
-        ((void (*)(AFortPlayerControllerZone*, AFortPlayerPawn*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*, AController*))::OnPawnDied)(this, KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+        ((void (*)(AFortPlayerControllerZone*, AFortPlayerPawn*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*, AController*))DETOUR_ORIGINAL(AFortPlayerControllerZone, OnPawnDied))(this, KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
     else
-        ((void (*)(AFortPlayerControllerZone*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*))::OnPawnDied)(this, Damage, InTags, EffectContext, EventInstigator, DamageCauser);
+        ((void (*)(AFortPlayerControllerZone*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*))DETOUR_ORIGINAL(AFortPlayerControllerZone, OnPawnDied))(this, Damage, InTags, EffectContext, EventInstigator, DamageCauser);
 
     static auto EarnedElimination = FGameplayTag::RequestGameplayTag(FName(TEXT("Event.EarnedElimination")), false);
 
