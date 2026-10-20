@@ -38,7 +38,10 @@ int32 IConsoleVariable::GetInt() const
     {
         auto Lookup = Scanner::String(TEXT("sg.ShadowQuality"), "lea rdx, [0x*]; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]");
 
-        return (Lookup.Get() ? Lookup : Scanner::String(TEXT("sg.ShadowQuality"), "lea rdx, [0x*]; mov r8b, 0x1; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")).Find("call [*+0x*]", 2).Slot(TEXT("IConsoleVariable::GetInt"));
+        if (!Lookup.Get())
+            Lookup = Scanner::String(TEXT("sg.ShadowQuality"), "lea rdx, [0x*]; mov r8b, 0x1; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]");
+
+        return (Lookup.Get() ? Lookup : Scanner::String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, 0x1; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")).Find("call [*+0x*]", 2).Slot(TEXT("IConsoleVariable::GetInt"));
     }();
 
     return Scanner::Virtual<int32 (*)(const IConsoleVariable*)>(this, GetInt)(this);
