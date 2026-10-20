@@ -24,7 +24,7 @@ inline uint32 PointerHash(const void* Key, uint32 C = 0)
 {
     auto PtrInt = reinterpret_cast<UPTRINT>(Key) >> 4;
 
-    return HashCombine(PtrInt, C);
+    return HashCombine((uint32)PtrInt, C);
 }
 
 inline uint32 GetTypeHash(const int32 A)
