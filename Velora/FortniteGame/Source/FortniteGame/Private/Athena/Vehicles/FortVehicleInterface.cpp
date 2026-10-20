@@ -4,7 +4,10 @@
 
 FTransform IFortVehicleInterface::GetExitSocketTransform(const int32 SeatIndex, const int32 SocketIndex) const
 {
-    static auto GetExitSocketTransform = Scanner::Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform")).Find("call [*+0x*]").Slot(TEXT("IFortVehicleInterface::GetExitSocketTransform"));
+    static auto GetExitSocketTransform = Anchor::Slot(TEXT("IFortVehicleInterface::GetExitSocketTransform"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
+        .Find("call [*+0x*]")
+        .Get();
 
     FTransform Result;
 
@@ -13,14 +16,20 @@ FTransform IFortVehicleInterface::GetExitSocketTransform(const int32 SeatIndex, 
 
 AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
 {
-    static auto GetPawnAtSeat = Scanner::Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat")).Find("call [rax+0x*]").Slot(TEXT("IFortVehicleInterface::GetPawnAtSeat"));
+    static auto GetPawnAtSeat = Anchor::Slot(TEXT("IFortVehicleInterface::GetPawnAtSeat"))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
+        .Find("call [rax+0x*]")
+        .Get();
 
     return Scanner::Virtual<AFortPlayerPawn* (*)(const IFortVehicleInterface*, int32)>(this, GetPawnAtSeat)(this, SeatIdx);
 }
 
 const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
 {
-    static auto GetVehicleActorPtrConst = Scanner::Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleActorPtrConst")).Find("call [*+0x*]").Slot(TEXT("IFortVehicleInterface::GetVehicleActorPtrConst"));
+    static auto GetVehicleActorPtrConst = Anchor::Slot(TEXT("IFortVehicleInterface::GetVehicleActorPtrConst"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleActorPtrConst"))
+        .Find("call [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<const AActor* (*)(const IFortVehicleInterface*)>(this, GetVehicleActorPtrConst)(this);
 }
