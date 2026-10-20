@@ -193,10 +193,15 @@ namespace Anchor
 
         ChainType& FindCall(const void* Function, int32_t Index = 1)
         {
-            char Call[32];
-            snprintf(Call, sizeof(Call), "call 0x%llx", (unsigned long long)Function);
+            return FindTo("call", Function, Index);
+        }
 
-            return static_cast<ChainType&>(*this).Find(Call, Index);
+        ChainType& FindTo(const char* Mnemonic, const void* Target, int32_t Index = 1)
+        {
+            char Branch[48];
+            snprintf(Branch, sizeof(Branch), "%s 0x%llx", Mnemonic, (unsigned long long)Target);
+
+            return static_cast<ChainType&>(*this).Find(Branch, Index);
         }
 
         template<typename PropertyType>
@@ -317,6 +322,13 @@ namespace Anchor
             auto& Chain = static_cast<ChainType&>(*this);
 
             return Chain.IsActive() && !Anchor::At((Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Target()).Is(Instructions) ? Chain.At(FCode()) : Chain;
+        }
+
+        ChainType& IsCallTo(const void* Function)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && (Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Target() != Function ? Chain.At(FCode()) : Chain;
         }
 
         ChainType& LogSlot(const TCHAR* Name)

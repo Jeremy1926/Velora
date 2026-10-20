@@ -39,6 +39,14 @@ public:
         return !this->IsActive() || Predicate() ? *this : Skip();
     }
 
+    THook& With(FunctionType InDetour)
+    {
+        if (this->IsActive())
+            Detour = InDetour;
+
+        return *this;
+    }
+
     THook& Optional()
     {
         return this->IsActive() || this->Code.Get() ? *this : Skip();
@@ -142,6 +150,27 @@ private:
     bool bSkipped = false;
 };
 
+class FPatch : public Anchor::TChain<FPatch>
+{
+public:
+    explicit FPatch(const wchar_t* InName)
+        : Anchor::TChain<FPatch>(InName)
+    {
+    }
+
+    const uint8_t* Jump() const
+    {
+        auto Branch = Code.Get();
+
+        return Branch && *Branch == 0x0F ? Anchor::Patch(Name, Branch, { 0x90, 0xE9 }) : Anchor::Patch(Name, Branch, { 0xEB });
+    }
+
+    const uint8_t* BranchTo(const void* Target) const
+    {
+        return Anchor::PatchBranch(Name, Code.Get(), (const uint8_t*)Target);
+    }
+};
+
 template<uint64_t Hash>
 struct TDetourKey
 {
@@ -212,6 +241,24 @@ const void* DetourAddress(FunctionType Function)
     static auto& DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>, decltype(&Scope::Original) = nullptr) \
     { \
         return Scope::Original; \
+    }
+
+#define PATCH(Class, Function, ...) PATCH_IN(Class, Function, DETOUR_SCOPE(Class, Function, __LINE__), __VA_ARGS__)
+
+#define PATCH_IN(Class, Function, Scope, ...) \
+    namespace Scope \
+    { \
+        namespace Anchor \
+        { \
+            using namespace ::Anchor; \
+            \
+            inline FPatch Patch() \
+            { \
+                return FPatch(TEXT(#Class) TEXT("::") TEXT(#Function)); \
+            } \
+        } \
+        \
+        static const auto Patched = (__VA_ARGS__); \
     }
 
 #define Original(...) DetourBind(DetourOriginal(TDetourKey<DetourHash(__FUNCTION__)>()), this)(__VA_ARGS__)
