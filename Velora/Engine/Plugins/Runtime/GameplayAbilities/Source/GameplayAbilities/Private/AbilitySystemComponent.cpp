@@ -44,7 +44,9 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSe
 
 FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GameplayEffectClass, UAbilitySystemComponent* Target, float Level, FGameplayEffectContextHandle Context)
 {
-    static auto BP_ApplyGameplayEffectToTarget = Scanner::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget")).Get(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget")));
+    static auto BP_ApplyGameplayEffectToTarget = Anchor::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
     BP_ApplyGameplayEffectToTarget(this, &ActiveGameplayEffectHandle, GameplayEffectClass, Target, Level, MoveTemp(Context));
@@ -54,13 +56,12 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
 
 void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
-    static auto OnTagUpdated = []
-    {
-        auto FortOnTagUpdated = Scanner::String(TEXT("UFortAbilitySystemComponent::OnTagUpdated is updating the HealthRegenDelay tag. bTagExists: %s")).Start().Get(TEXT("UFortAbilitySystemComponent::OnTagUpdated"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAbilitySystemComponent"));
-
-        return Scanner::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == FortOnTagUpdated; });
-    }();
+    static auto OnTagUpdated = Anchor::Slot(TEXT("UAbilitySystemComponent::OnTagUpdated"))
+        .String(TEXT("UFortAbilitySystemComponent::OnTagUpdated is updating the HealthRegenDelay tag. bTagExists: %s"))
+        .Start()
+        .Log(TEXT("UFortAbilitySystemComponent::OnTagUpdated"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortAbilitySystemComponent"))
+        .Get();
 
     Scanner::Virtual<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(this, OnTagUpdated)(this, Tag, TagExists);
 }
