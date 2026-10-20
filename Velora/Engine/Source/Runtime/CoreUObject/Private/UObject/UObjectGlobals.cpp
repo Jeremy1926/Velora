@@ -34,11 +34,11 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
     return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
 }
 
-UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename, uint32 LoadFlags, UPackageMap* Sandbox, bool bAllowObjectReconciliation)
+UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename, uint32 LoadFlags, UPackageMap* Sandbox, bool bAllowObjectReconciliation, FUObjectSerializeContext* InSerializeContext)
 {
-    static auto StaticLoadObject = Scanner::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, const TCHAR*, uint32, UPackageMap*, bool)>(Scanner::String(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'")).Start().Get(TEXT("StaticLoadObject")));
+    static auto StaticLoadObject = Scanner::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, const TCHAR*, uint32, UPackageMap*, bool, FUObjectSerializeContext*)>(Scanner::String(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'")).Start().Get(TEXT("StaticLoadObject")));
 
-    return StaticLoadObject(Class, InOuter, Name, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation);
+    return StaticLoadObject(Class, InOuter, Name, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation, InSerializeContext);
 }
 
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
