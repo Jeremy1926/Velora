@@ -15,6 +15,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 struct FPendingItemAward
 {
@@ -25,44 +26,6 @@ struct FPendingItemAward
 };
 
 static TArray<FPendingItemAward> PendingItemAwards;
-
-static auto execStartItemAwardTimers = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers"));
-
-    if (!Function)
-        return false;
-
-    auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers")).Find("mov [*+0x20], *; jmp 0x*");
-
-    if (!Finish.Get() || !Scanner::At(Finish.Find("jmp 0x*").Target()).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers);
-
-    return true;
-}();
-
-static auto execStopItemAwardTimers = []
-{
-    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers"));
-
-    if (!Function)
-        return false;
-
-    auto Finish = Scanner::Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers")).Find("mov [*+0x20], *; jmp 0x*");
-
-    if (!Finish.Get() || !Scanner::At(Finish.Find("jmp 0x*").Target()).Is("ret*"))
-        return false;
-
-    UE_LOG(LogVelora, Log, TEXT("Hooked UFortGameplayAbilityAthena_PeriodicItemGrant::execStopItemAwardTimers, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
-
-    Function->SetNativeFunc((Native)&UFortGameplayAbilityAthena_PeriodicItemGrant::execStopItemAwardTimers);
-
-    return true;
-}();
 
 UScriptStruct* FActiveItemGrantInfo::StaticStruct()
 {
@@ -188,6 +151,14 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::AwardItem(const FActiveItemGr
     WorldInventory->HandleInventoryLocalUpdate();
 }
 
+DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStartItemAwardTimers, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers"))
+    .Find("mov [*+0x20], *; jmp 0x*")
+    .Find("jmp 0x*")
+    .Target()
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers")))
 void UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
@@ -195,6 +166,14 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers(FFra
     StartItemAwardTimers();
 }
 
+DETOUR(UFortGameplayAbilityAthena_PeriodicItemGrant, execStopItemAwardTimers, Anchor::Hook()
+    .Exec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers"))
+    .Find("mov [*+0x20], *; jmp 0x*")
+    .Find("jmp 0x*")
+    .Target()
+    .Is("ret*")
+    .Optional()
+    .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers")))
 void UFortGameplayAbilityAthena_PeriodicItemGrant::execStopItemAwardTimers(FFrame& Stack, void* const Z_Param__Result)
 {
     Stack.Code += !!Stack.Code;
