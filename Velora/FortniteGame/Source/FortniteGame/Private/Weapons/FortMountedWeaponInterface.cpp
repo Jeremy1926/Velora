@@ -30,23 +30,37 @@ int32& FMountedWeaponInfoRepped::GetHostVehicleSeatIndexCached()
 
 AActor* IFortMountedWeaponInterface::GetHostVehicleCached()
 {
-    static auto GetHostVehicleCached = Scanner::Exec(TEXT("/Script/FortniteGame.FortMountedWeaponInterface:GetHostVehicleCached")).Find("call [*+0x*]").Slot(TEXT("IFortMountedWeaponInterface::GetHostVehicleCached"));
+    static auto GetHostVehicleCached = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetHostVehicleCached"))
+        .Exec(TEXT("/Script/FortniteGame.FortMountedWeaponInterface:GetHostVehicleCached"))
+        .Find("call [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<AActor* (*)(IFortMountedWeaponInterface*)>(this, GetHostVehicleCached)(this);
 }
 
 FMountedWeaponInfoRepped& IFortMountedWeaponInterface::GetMountedWeaponInfoRepped()
 {
-    static auto FinishMountedWeaponInitialization = Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped")).Find("jmp 0x*").Target()).Call();
-    static auto GetMountedWeaponInfoRepped = FinishMountedWeaponInitialization.Find("call [rax+0x*]").Slot(TEXT("IFortMountedWeaponInterface::GetMountedWeaponInfoRepped"));
+    static auto GetMountedWeaponInfoRepped = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetMountedWeaponInfoRepped"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
+        .Find("jmp 0x*")
+        .Target()
+        .Call()
+        .Find("call [rax+0x*]")
+        .Get();
 
     return *Scanner::Virtual<FMountedWeaponInfoRepped* (*)(IFortMountedWeaponInterface*)>(this, GetMountedWeaponInfoRepped)(this);
 }
 
 AFortPlayerPawn* IFortMountedWeaponInterface::GetInstigatorPawn()
 {
-    static auto ReattachWeaponIfNeeded = Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped")).Find("jmp 0x*").Target()).Find("mov [rsp+0x20], *; call 0x*").Call();
-    static auto GetInstigatorPawn = ReattachWeaponIfNeeded.Find("call [rax+0x*]", 2).Slot(TEXT("IFortMountedWeaponInterface::GetInstigatorPawn"));
+    static auto GetInstigatorPawn = Anchor::Slot(TEXT("IFortMountedWeaponInterface::GetInstigatorPawn"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], *; call 0x*")
+        .Call()
+        .Find("call [rax+0x*]", 2)
+        .Get();
 
     return Scanner::Virtual<AFortPlayerPawn* (*)(IFortMountedWeaponInterface*)>(this, GetInstigatorPawn)(this);
 }
@@ -78,7 +92,12 @@ void IFortMountedWeaponInterface::SetupCachedHostVehicleRepped(AFortWeaponRanged
 
 void IFortMountedWeaponInterface::FinishMountedWeaponInitialization(AFortWeaponRanged* Weapon)
 {
-    static auto FinishMountedWeaponInitialization = Scanner::Function<void (*)(IFortMountedWeaponInterface*, AFortWeaponRanged*)>(Scanner::At(Scanner::Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped")).Find("jmp 0x*").Target()).Call().Get(TEXT("IFortMountedWeaponInterface::FinishMountedWeaponInitialization")));
+    static auto FinishMountedWeaponInitialization = Anchor::Function<void (*)(IFortMountedWeaponInterface*, AFortWeaponRanged*)>(TEXT("IFortMountedWeaponInterface::FinishMountedWeaponInitialization"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
+        .Find("jmp 0x*")
+        .Target()
+        .Call()
+        .Get();
 
     FinishMountedWeaponInitialization(this, Weapon);
 }
