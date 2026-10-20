@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Online/FortPlaylistManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "Misc/CoreMiscDefines.h"
 #include "Templates/Casts.h"
@@ -10,6 +12,15 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
+
+static auto OnPlaylistLootTableAssetsDataLoadCompleted = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) ? []
+{
+    auto bPlaylistDataIsLoaded = (uint32)AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal();
+    auto PlaylistDataIsLoaded = std::format("66 C7 ? {:02X} {:02X} {:02X} {:02X} 01 00", bPlaylistDataIsLoaded & 0xFF, (bPlaylistDataIsLoaded >> 8) & 0xFF, (bPlaylistDataIsLoaded >> 16) & 0xFF, bPlaylistDataIsLoaded >> 24);
+
+    return Detour(TEXT("AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted"), Scanner::Pattern(PlaylistDataIsLoaded.c_str()).Start().Get(), &AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted);
+}() : nullptr;
 
 UClass* AFortGameStateAthena::StaticClass()
 {
@@ -30,6 +41,24 @@ AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
     static auto MapInfo = GetClass()->FindPropertyByName(FName(TEXT("MapInfo")));
 
     return MapInfo ? *MapInfo->ContainerPtrToValuePtr<AFortAthenaMapInfo*>(this) : nullptr;
+}
+
+void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
+{
+    (this->*::OnPlaylistLootTableAssetsDataLoadCompleted)();
+
+    TArray<AActor*> VehicleSpawners;
+    UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
+
+    for (auto VehicleSpawner : VehicleSpawners)
+        ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+}
+
+bool AFortGameStateAthena::GetPlaylistDataIsLoaded() const
+{
+    static auto bPlaylistDataIsLoaded = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
+
+    return bPlaylistDataIsLoaded->GetPropertyValue_InContainer(this);
 }
 
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()

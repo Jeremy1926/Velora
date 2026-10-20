@@ -189,10 +189,12 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\BlueprintFunctionLibrary.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetMathLibrary.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogVerbosity.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogCategory.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Logging\LogMacros.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Parse.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Timespan.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\CommandLine.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineTypes.h" />
@@ -294,6 +296,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortOctopusVehicle.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicleSpawner.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryTypes.h" />
@@ -407,6 +410,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\ScriptCore.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameInstance.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameplayStatics.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetMathLibrary.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CommandLine.cpp" />
@@ -471,6 +475,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortOctopusVehicle.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicleSpawner.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryTypes.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryManager.cpp" />

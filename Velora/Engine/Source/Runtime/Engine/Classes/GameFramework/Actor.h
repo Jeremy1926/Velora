@@ -15,6 +15,8 @@ class UNetDriver;
 class AActor : public UObject
 {
 public:
+    static UClass* StaticClass();
+
     bool GetOnlyRelevantToOwner() const;
 
     bool GetTearOff() const;

@@ -8,11 +8,53 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+UScriptStruct* FVehicleClassDetails::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehicleClassDetails"));
+
+    return Struct;
+}
+
+int32 FVehicleClassDetails::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+TAssetPtr<UClass>& FVehicleClassDetails::GetVehicleClass()
+{
+    static auto VehicleClass = StaticStruct()->FindPropertyByName(FName(TEXT("VehicleClass")));
+
+    return *VehicleClass->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this);
+}
+
+const FScalableFloat& FVehicleClassDetails::GetVehicleMinSpawnPercent()
+{
+    static auto VehicleMinSpawnPercent = StaticStruct()->FindPropertyByName(FName(TEXT("VehicleMinSpawnPercent")));
+
+    return *VehicleMinSpawnPercent->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const FScalableFloat& FVehicleClassDetails::GetVehicleMaxSpawnPercent()
+{
+    static auto VehicleMaxSpawnPercent = StaticStruct()->FindPropertyByName(FName(TEXT("VehicleMaxSpawnPercent")));
+
+    return *VehicleMaxSpawnPercent->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
 UClass* AFortAthenaMapInfo::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaMapInfo"));
 
     return Class;
+}
+
+TArray<FVehicleClassDetails>& AFortAthenaMapInfo::GetVehicleClassDetails()
+{
+    static auto VehicleClassDetails = GetClass()->FindPropertyByName(FName(TEXT("VehicleClassDetails")));
+
+    return *VehicleClassDetails->ContainerPtrToValuePtr<TArray<FVehicleClassDetails>>(this);
 }
 
 void AFortAthenaMapInfo::SpawnLlamas()

@@ -25,6 +25,7 @@
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortGameplayAbility.h"
 #include "GameplayAbilitySpec.h"
+#include "GameplayEffectTypes.h"
 #include "FortKismetLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
@@ -427,6 +428,55 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
 
     if (AFortAthenaVehicle::StaticClass())
         AFortAthenaVehicle::InitializeServerImplementations();
+}
+
+TSubclassOf<AActor> AFortGameModeAthena::GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const
+{
+    static auto GetVehicleClassOverride = Scanner::Function<TSubclassOf<AActor>* (*)(const AFortGameModeAthena*, TSubclassOf<AActor>*, TSubclassOf<AActor>)>(Scanner::Native(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride")).Get(TEXT("AFortGameModeAthena::GetVehicleClassOverride")));
+
+    TSubclassOf<AActor> Result;
+
+    return *GetVehicleClassOverride(this, &Result, DefaultVehicleClass);
+}
+
+bool AFortGameModeAthena::ShouldSpawnVehicle(TSubclassOf<AFortAthenaVehicle> VehicleClass)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (!GameState)
+        return false;
+
+    if (!GameState->GetPlaylistDataIsLoaded())
+        return true;
+
+    auto MapInfo = GameState->GetMapInfo();
+
+    if (!MapInfo)
+        return false;
+
+    for (auto& VehicleClassDetails : MapInfo->GetVehicleClassDetails())
+    {
+        if (VehicleClassDetails.GetVehicleClass().IsNull())
+            continue;
+
+        if (VehicleClassDetails.GetVehicleClass().LoadSynchronous() == *VehicleClass)
+        {
+            const float MinSpawnPercent = FMath::Clamp(VehicleClassDetails.GetVehicleMinSpawnPercent().GetValueAtLevel(0.0f) * 0.01f, 0.0f, 1.0f);
+            const float MaxSpawnPercent = FMath::Clamp(VehicleClassDetails.GetVehicleMaxSpawnPercent().GetValueAtLevel(0.0f) * 0.01f, 0.0f, 1.0f);
+            const float SpawnPercent = FMath::Lerp(MinSpawnPercent, MaxSpawnPercent, FMath::FRand());
+
+            return SpawnPercent >= FMath::FRand();
+        }
+    }
+
+    return false;
+}
+
+bool AFortGameModeAthena::IsMapInfoInitialized() const
+{
+    static auto bMapInfoInitialized = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMapInfoInitialized")));
+
+    return bMapInfoInitialized->GetPropertyValue_InContainer(this);
 }
 
 bool AFortGameModeAthena::GetDisableGCOnServerDuringMatch() const

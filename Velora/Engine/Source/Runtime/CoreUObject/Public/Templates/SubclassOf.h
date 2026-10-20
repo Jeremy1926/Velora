@@ -28,6 +28,16 @@ public:
         return (TClass*)Result;
     }
 
+    FORCEINLINE UClass* operator*() const
+    {
+        if (!Class || !Class->IsChildOf(TClass::StaticClass()))
+        {
+            return nullptr;
+        }
+
+        return Class;
+    }
+
     FORCEINLINE operator UClass*() const
     {
         return Class;

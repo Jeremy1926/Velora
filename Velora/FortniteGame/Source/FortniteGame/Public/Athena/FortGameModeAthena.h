@@ -1,6 +1,9 @@
 #pragma once
 
 #include "FortGamePvPBase.h"
+#include "Templates/SubclassOf.h"
+
+class AFortAthenaVehicle;
 
 class AFortGameModeAthena : public AFortGamePvPBase
 {
@@ -24,4 +27,10 @@ public:
     bool GetDisableGCOnServerDuringMatch() const;
 
     FName RedirectLootTierGroup(FName LootTierGroup) const;
+
+    TSubclassOf<AActor> GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const;
+
+    bool ShouldSpawnVehicle(TSubclassOf<AFortAthenaVehicle> VehicleClass);
+
+    bool IsMapInfoInitialized() const;
 };

@@ -41,6 +41,10 @@ public:
 
     AFortAthenaMapInfo* GetMapInfo() const;
 
+    void OnPlaylistLootTableAssetsDataLoadCompleted();
+
+    bool GetPlaylistDataIsLoaded() const;
+
     FGameMemberInfoArray& GetGameMemberInfoArray();
 
     bool GetPlaylistDataIsLoaded() const;

@@ -42,6 +42,15 @@ public:
     {
     }
 
+    FORCEINLINE explicit FTransform(const FRotator& InRotation, const FVector& InTranslation, const FVector& InScale3D)
+    {
+        const FQuat InQuatRotation = InRotation.Quaternion();
+
+        Rotation = _mm_setr_ps(InQuatRotation.X, InQuatRotation.Y, InQuatRotation.Z, InQuatRotation.W);
+        Translation = _mm_setr_ps(InTranslation.X, InTranslation.Y, InTranslation.Z, 0.0f);
+        Scale3D = _mm_setr_ps(InScale3D.X, InScale3D.Y, InScale3D.Z, 0.0f);
+    }
+
     FORCEINLINE FVector GetTranslation() const
     {
         return FVector(Translation.m128_f32[0], Translation.m128_f32[1], Translation.m128_f32[2]);

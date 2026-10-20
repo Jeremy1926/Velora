@@ -301,3 +301,17 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
 
     return Pickup;
 }
+
+bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
+{
+    static auto AreAthenaVehiclesEnabled = Scanner::Function<bool (*)()>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled")).Get(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled")));
+
+    return AreAthenaVehiclesEnabled();
+}
+
+void UFortKismetLibrary::GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio)
+{
+    static auto GetCalendarEventInformation = Scanner::Function<void (*)(UObject*, const FString&, bool&, FTimespan&, FTimespan&, float&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetCalendarEventInformation")).Get(TEXT("UFortKismetLibrary::GetCalendarEventInformation")));
+
+    GetCalendarEventInformation(WorldContextObject, EventName, bIsEventActive, TimeSinceBegin, TimeUntilEnd, TimespanRatio);
+}

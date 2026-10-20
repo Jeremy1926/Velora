@@ -12,6 +12,8 @@ struct FFortAbilitySetHandle;
 struct FFortItemEntry;
 struct FFrame;
 struct FGuid;
+struct FTimespan;
+class FString;
 class IAbilitySystemInterface;
 class IFortInventoryOwnerInterface;
 class UFortAbilitySet;
@@ -43,4 +45,8 @@ public:
     static bool PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier);
 
     static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
+
+    static bool AreAthenaVehiclesEnabled();
+
+    static void GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio);
 };

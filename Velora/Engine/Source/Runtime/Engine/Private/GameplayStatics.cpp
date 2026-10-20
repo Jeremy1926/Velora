@@ -18,3 +18,17 @@ void UGameplayStatics::GetAllActorsOfClass(const UObject* WorldContextObject, TS
 
     GetAllActorsOfClass(WorldContextObject, ActorClass, OutActors);
 }
+
+AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, const FTransform& SpawnTransform, ESpawnActorCollisionHandlingMethod CollisionHandlingOverride, AActor* Owner)
+{
+    static auto BeginDeferredActorSpawnFromClass = Scanner::Function<AActor* (*)(const UObject*, TSubclassOf<AActor>, const FTransform&, ESpawnActorCollisionHandlingMethod, AActor*)>(Scanner::Native(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass")).Get(TEXT("UGameplayStatics::BeginDeferredActorSpawnFromClass")));
+
+    return BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner);
+}
+
+AActor* UGameplayStatics::FinishSpawningActor(AActor* Actor, const FTransform& SpawnTransform)
+{
+    static auto FinishSpawningActor = Scanner::Function<AActor* (*)(AActor*, const FTransform&)>(Scanner::Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor")).Get(TEXT("UGameplayStatics::FinishSpawningActor")));
+
+    return FinishSpawningActor(Actor, SpawnTransform);
+}

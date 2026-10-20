@@ -4,6 +4,13 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+UClass* AActor::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor"));
+
+    return Class;
+}
+
 bool AActor::GetOnlyRelevantToOwner() const
 {
     static auto bOnlyRelevantToOwner = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bOnlyRelevantToOwner")));
