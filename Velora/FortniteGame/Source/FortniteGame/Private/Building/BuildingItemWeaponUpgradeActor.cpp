@@ -50,7 +50,7 @@ static auto AthenaPostApplyPlaylistDataTables = ABuildingItemWeaponUpgradeActor:
     auto ActorVTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
     auto BeginPlay = Scanner::Slot(TEXT("AActor::BeginPlay"), ActorVTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ActorBeginPlay; });
     auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor"));
-    auto PlaylistDataIsLoaded = std::format("cmp byte ptr [*+{:#x}], *", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal());
+    auto PlaylistDataIsLoaded = std::format("cmp *[*+{:#x}], *", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal());
     auto CollectorBeginPlay = Scanner::At(Scanner::IsSlot(BeginPlay) ? VTable[BeginPlay / sizeof(void*)] : nullptr).Call();
 
     return DetourVTable(TEXT("ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables"), VTable, CollectorBeginPlay.Find(PlaylistDataIsLoaded).Find("call [rax+0x*]").Slot(TEXT("ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables")), &ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables);
