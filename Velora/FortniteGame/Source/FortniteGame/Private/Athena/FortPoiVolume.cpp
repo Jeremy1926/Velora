@@ -5,19 +5,18 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto OverlapsPawn = []
-{
-    auto CheckPawnOverlap = Scanner::String(TEXT("STAT_PoiVolume_CheckPawnOverlap"));
-
-    return CheckPawnOverlap.Get() ? Detour(TEXT("AFortPoiVolume::OverlapsPawn"), CheckPawnOverlap.Find("call 0x*").Target(), &AFortPoiVolume::OverlapsPawn) : nullptr;
-}();
-
+DETOUR(AFortPoiVolume, OverlapsPawn, Anchor::Hook()
+    .String(TEXT("STAT_PoiVolume_CheckPawnOverlap"))
+    .Optional()
+    .Find("call 0x*")
+    .Target()
+    .Inline())
 bool AFortPoiVolume::OverlapsPawn(APawn* Pawn) const
 {
     if (!GetBrushComponent())
         return false;
 
-    return (this->*::OverlapsPawn)(Pawn);
+    return Original(Pawn);
 }
 
 UObject* AFortPoiVolume::GetBrushComponent() const
