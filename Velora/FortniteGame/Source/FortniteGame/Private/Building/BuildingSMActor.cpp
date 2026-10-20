@@ -207,7 +207,7 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
         if (auto WorldInventory = PlayerController->GetWorldInventory())
         {
             auto& Inventory = WorldInventory->GetInventory();
-            const int32 MaxStackSize = ResourceItemDefinition->GetMaxStackSize();
+            const int32 MaxStackSize = ResourceItemDefinition->GetMaxStackSize(InstigatorPawn->GetAbilitySystemComponent());
             FFortItemEntry* ResourceItemEntry = nullptr;
 
             for (auto& ItemEntry : Inventory.ReplicatedEntries)

@@ -112,7 +112,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             return;
 
         auto& Inventory = WorldInventory->GetInventory();
-        const int32 MaxStackSize = ItemDefinition->GetMaxStackSize();
+        const int32 MaxStackSize = ItemDefinition->GetMaxStackSize(PickupTarget->GetAbilitySystemComponent());
         int32 NumberToGive = PickupItemEntry.GetCount();
         auto bCanAddStack = true;
 
