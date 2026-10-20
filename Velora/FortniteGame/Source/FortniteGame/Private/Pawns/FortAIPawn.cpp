@@ -19,8 +19,9 @@ static auto HandleDeathNotifications = []
 {
     auto GameHandleDeathNotifications = Scanner::CallTo(Scanner::String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i.")).Start().Get()).Start().Get();
     auto CallHandleDeathNotifications = std::format("call 0x{:x}", (uintptr_t)GameHandleDeathNotifications);
-    auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAIPawn"));
-    auto Destroyed = GameHandleDeathNotifications ? Scanner::Slot(TEXT("AFortAIPawn::Destroyed"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(CallHandleDeathNotifications); }) : 0;
+    auto DefaultObject = GameHandleDeathNotifications ? StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortAIPawn")) : nullptr;
+    auto VTable = DefaultObject ? *(const void***)DefaultObject : nullptr;
+    auto Destroyed = VTable ? Scanner::Slot(TEXT("AFortAIPawn::Destroyed"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(CallHandleDeathNotifications); }) : 0;
     auto HandleOutOfHealth = Scanner::IsSlot(Destroyed) ? Scanner::Slot(TEXT("AFortAIPawn::HandleOutOfHealth"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(CallHandleDeathNotifications); }, Destroyed / (int32)sizeof(void*) + 1) : 0;
 
     return Scanner::IsSlot(HandleOutOfHealth) ? DetourCall(TEXT("AFortAIPawn::HandleDeathNotifications"), Scanner::At(VTable[HandleOutOfHealth / sizeof(void*)]).Find(CallHandleDeathNotifications).Get(), &AFortAIPawn::HandleDeathNotifications) : nullptr;
