@@ -79,8 +79,23 @@ bool ABuildingFoundation::TransformIsSet() const
 {
     static auto Offset = TransformIsSetFlag().Disp(TEXT("ABuildingFoundation::TransformIsSet"));
     static auto Mask = TransformIsSetFlag().Imm();
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
 
-    return GetDynamicFoundationType() == EDynamicFoundationType::Static || (*((uint8_t*)this + Offset) & Mask);
+    if (!FoundationEnabledState)
+        return GetDynamicFoundationType() == EDynamicFoundationType::Static || (*((uint8_t*)this + Offset) & Mask);
+
+    switch (GetDynamicFoundationType())
+    {
+    case EDynamicFoundationType::Static:
+    case EDynamicFoundationType::StartEnabled_Stationary:
+        return true;
+    case EDynamicFoundationType::StartEnabled_Dynamic:
+        return (*((uint8_t*)this + Offset) & Mask) != 0;
+    case EDynamicFoundationType::StartDisabled:
+        return *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Enabled;
+    }
+
+    return false;
 }
 
 EDynamicFoundationType ABuildingFoundation::GetDynamicFoundationType() const

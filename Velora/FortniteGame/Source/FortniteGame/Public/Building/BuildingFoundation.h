@@ -8,7 +8,9 @@ struct FReservedRandomValues;
 enum class EDynamicFoundationType : uint8
 {
     Static,
-    Dynamic_StartEnabled,
+    StartEnabled_Stationary,
+    StartEnabled_Dynamic,
+    StartDisabled,
     EDynamicFoundationType_MAX
 };
 
