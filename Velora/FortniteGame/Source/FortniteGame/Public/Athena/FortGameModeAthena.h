@@ -5,6 +5,8 @@
 
 class AFortAthenaVehicle;
 
+class UAthenaAISettings;
+
 class AFortGameModeAthena : public AFortGamePvPBase
 {
 public:
@@ -21,6 +23,10 @@ public:
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
     void OnPlaylistDataLoaded();
+
+    void OverrideAISettings(UAthenaAISettings* InAISettings);
+
+    UAthenaAISettings*& GetAISettings();
 
     int32& GetWarmupRequiredPlayerCount();
 

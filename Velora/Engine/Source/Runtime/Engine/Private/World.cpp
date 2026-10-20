@@ -36,6 +36,13 @@ AGameStateBase* UWorld::GetGameState() const
     return *GameState->ContainerPtrToValuePtr<AGameStateBase*>(this);
 }
 
+UAISystemBase* UWorld::GetAISystem() const
+{
+    static auto AISystem = GetClass()->FindPropertyByName(FName(TEXT("AISystem")));
+
+    return *AISystem->ContainerPtrToValuePtr<UAISystemBase*>(this);
+}
+
 UGameInstance* UWorld::GetGameInstance() const
 {
     static auto OwningGameInstance = GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance")));

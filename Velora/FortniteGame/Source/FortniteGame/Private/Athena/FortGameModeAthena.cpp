@@ -7,6 +7,8 @@
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Athena/AI/AthenaAISystem.h"
+#include "Athena/AI/AthenaAIPerceptionManager.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Building/BuildingContainer.h"
@@ -477,6 +479,24 @@ bool AFortGameModeAthena::IsMapInfoInitialized() const
     static auto bMapInfoInitialized = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMapInfoInitialized")));
 
     return bMapInfoInitialized->GetPropertyValue_InContainer(this);
+}
+
+void AFortGameModeAthena::OverrideAISettings(UAthenaAISettings* InAISettings)
+{
+    GetAISettings() = InAISettings;
+
+    auto World = GetWorld();
+    auto AISystem = World ? Cast<UAthenaAISystem>(World->GetAISystem()) : nullptr;
+
+    if (auto PerceptionManager = AISystem ? AISystem->GetPerceptionManager() : nullptr)
+        PerceptionManager->OnAISettingsUpdated(InAISettings);
+}
+
+UAthenaAISettings*& AFortGameModeAthena::GetAISettings()
+{
+    static auto AISettings = GetClass()->FindPropertyByName(FName(TEXT("AISettings")));
+
+    return *AISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(this);
 }
 
 bool AFortGameModeAthena::GetDisableGCOnServerDuringMatch() const

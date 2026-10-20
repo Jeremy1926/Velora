@@ -12,6 +12,7 @@ class AGameNetworkManager;
 class AGameStateBase;
 class APawn;
 class AWorldSettings;
+class UAISystemBase;
 class UGameInstance;
 class ULevel;
 class UNetDriver;
@@ -65,6 +66,8 @@ public:
     AGameModeBase* GetAuthGameMode() const;
 
     AGameStateBase* GetGameState() const;
+
+    UAISystemBase* GetAISystem() const;
 
     UGameInstance* GetGameInstance() const;
 

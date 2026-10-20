@@ -86,6 +86,7 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
     static auto AirCraftBehavior = GetClass()->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
     static auto PlaylistNameProperty = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("PlaylistName")));
     static auto PlaylistAirCraftBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
+    static auto PlaylistAISettings = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AISettings")));
 
     auto PlaylistInfo = CurrentPlaylistInfo ? CurrentPlaylistInfo->ContainerPtrToValuePtr<void>(this) : nullptr;
     auto& Playlist = PlaylistInfo ? *BasePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo) : *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
@@ -120,6 +121,9 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
     }
 
     *AirCraftBehavior->ContainerPtrToValuePtr<uint8>(this) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
+
+    if (auto AISettings = PlaylistAISettings ? *PlaylistAISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(NewPlaylist) : nullptr)
+        GameMode->OverrideAISettings(AISettings);
 
     if (PlaylistInfo)
         OnRep_CurrentPlaylistInfo();

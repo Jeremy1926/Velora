@@ -334,6 +334,15 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Weapons">
       <UniqueIdentifier>{068c9ba1-6e98-45c0-96f5-3edd6a062cf5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Classes\AI">
+      <UniqueIdentifier>{DFFCD34B-1954-4C5D-A88C-D12825D80994}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\AI">
+      <UniqueIdentifier>{BCE1E9DA-92BE-4D38-B9C3-7458B1B1C070}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\AI">
+      <UniqueIdentifier>{ECE66E80-90C4-4DCC-AC04-E874DAF471DD}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1054,6 +1063,24 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\AISystemBase.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISystem.h">
+      <Filter>Engine\Source\Runtime\AIModule\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISubsystem.h">
+      <Filter>Engine\Source\Runtime\AIModule\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAISystem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAISystem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIPerceptionManager.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1512,6 +1539,12 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Analytics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISystem.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIPerceptionManager.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>

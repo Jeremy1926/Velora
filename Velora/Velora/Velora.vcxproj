@@ -385,6 +385,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaSKPushCannon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortMountedWeaponInterface.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\AISystemBase.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISystem.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISubsystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAISystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAISystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIPerceptionManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -557,6 +563,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISystem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIPerceptionManager.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetSystemLibrary.cpp" />
