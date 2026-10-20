@@ -105,7 +105,10 @@ void AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer()
 
 void AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation()
 {
-    static auto MultiCastPushCannonLaunchedPlayer_Implementation = Scanner::Exec(TEXT("/Script/FortniteGame.FortAthenaSKPushCannon:MultiCastPushCannonLaunchedPlayer")).Find("jmp [*+0x*]").Slot(TEXT("AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation"));
+    static auto MultiCastPushCannonLaunchedPlayer_Implementation = Anchor::Slot(TEXT("AFortAthenaSKPushCannon::MultiCastPushCannonLaunchedPlayer_Implementation"))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaSKPushCannon:MultiCastPushCannonLaunchedPlayer"))
+        .Find("jmp [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(AFortAthenaSKPushCannon*)>(this, MultiCastPushCannonLaunchedPlayer_Implementation)(this);
 }
