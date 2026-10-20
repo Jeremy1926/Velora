@@ -4,7 +4,10 @@
 
 IAbilitySystemInterface* UFortRegisteredPlayerInfo::UpdateAbilitySystemActor(bool bForceUpdate)
 {
-    static auto UpdateAbilitySystemActor = Scanner::Function<IAbilitySystemInterface* (*)(UFortRegisteredPlayerInfo*, bool)>(Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get(TEXT("UFortRegisteredPlayerInfo::UpdateAbilitySystemActor")));
+    static auto UpdateAbilitySystemActor = Anchor::Function<IAbilitySystemInterface* (*)(UFortRegisteredPlayerInfo*, bool)>(TEXT("UFortRegisteredPlayerInfo::UpdateAbilitySystemActor"))
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Get();
 
     return UpdateAbilitySystemActor(this, bForceUpdate);
 }
