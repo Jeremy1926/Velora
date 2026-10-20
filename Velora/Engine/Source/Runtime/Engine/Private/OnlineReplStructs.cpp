@@ -4,7 +4,10 @@
 
 FUniqueNetIdRepl& FUniqueNetIdRepl::operator=(const FUniqueNetIdRepl& Other)
 {
-    static auto CopyAssign = Scanner::Function<FUniqueNetIdRepl& (*)(FUniqueNetIdRepl*, const FUniqueNetIdRepl&)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortPlayerState:GetUniqueID")).Call(2).Get(TEXT("FUniqueNetIdRepl::operator=(const FUniqueNetIdRepl&)")));
+    static auto CopyAssign = Anchor::Function<FUniqueNetIdRepl& (*)(FUniqueNetIdRepl*, const FUniqueNetIdRepl&)>(TEXT("FUniqueNetIdRepl::operator=(const FUniqueNetIdRepl&)"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerState:GetUniqueID"))
+        .Call(2)
+        .Get();
 
     return CopyAssign(this, Other);
 }
