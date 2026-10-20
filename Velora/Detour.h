@@ -41,32 +41,7 @@ public:
 
     THook& Optional()
     {
-        return this->IsActive() || IsDone() ? *this : Skip();
-    }
-
-    THook& Is(std::string_view Instructions)
-    {
-        return IsDone() || (this->IsActive() && this->Code.Is(Instructions)) ? *this : Skip();
-    }
-
-    THook& Has(std::string_view Instructions)
-    {
-        return IsDone() || (this->IsActive() && this->Code.Has(Instructions)) ? *this : Skip();
-    }
-
-    THook& IsVirtual(const wchar_t* VTableName, std::string_view Instructions)
-    {
-        return IsDone() || (this->IsActive() && FindEntry(VTableName).Is(Instructions)) ? *this : Skip();
-    }
-
-    THook& HasVirtual(const wchar_t* VTableName, std::string_view Instructions)
-    {
-        return IsDone() || (this->IsActive() && FindEntry(VTableName).Has(Instructions)) ? *this : Skip();
-    }
-
-    THook& IsTarget(std::string_view Instructions)
-    {
-        return IsDone() || (this->IsActive() && Anchor::At(this->Code.Target()).Is(Instructions)) ? *this : Skip();
+        return this->IsActive() || this->Code.Get() ? *this : Skip();
     }
 
     FunctionType Inline() const
@@ -79,6 +54,11 @@ public:
         return bSkipped ? FunctionType() : Anchor::DetourCall(this->Name, this->Code.Get(), Detour);
     }
 
+    FunctionType AtCall(const wchar_t* VTableName) const
+    {
+        return !bSkipped && this->Code.Is("call 0x*") ? AtCall() : InVTable(VTableName);
+    }
+
     FunctionType InVTable(void** VTable) const
     {
         return bSkipped ? FunctionType() : Anchor::DetourVTable(this->Name, VTable, VTable ? this->SlotValue() : 0, Detour);
@@ -87,6 +67,12 @@ public:
     FunctionType InVTable(const wchar_t* VTableName) const
     {
         return InVTable(Scanner::FindVTable(VTableName));
+    }
+
+    template<typename SlotType> requires std::is_invocable_r_v<int32_t, SlotType>
+    FunctionType InVTable(const wchar_t* VTableName, SlotType Slot) const
+    {
+        return bSkipped ? FunctionType() : Anchor::DetourVTable(this->Name, Scanner::FindVTable(VTableName), Slot(), Detour);
     }
 
     FunctionType InExec(const wchar_t* FunctionPath) const
@@ -106,11 +92,6 @@ public:
     }
 
 private:
-    bool IsDone() const
-    {
-        return !this->IsActive() && this->Code.Get();
-    }
-
     THook& Skip()
     {
         bSkipped = true;
@@ -119,14 +100,6 @@ private:
             this->Or();
 
         return this->At((const void*)this).Or();
-    }
-
-    Anchor::FCode FindEntry(const wchar_t* VTableName) const
-    {
-        auto VTable = Scanner::FindVTable(VTableName);
-        auto Slot = this->SlotValue();
-
-        return Anchor::At(VTable && Anchor::IsSlot(Slot) ? VTable[Slot / sizeof(void*)] : nullptr);
     }
 
     FunctionType Detour;
@@ -206,5 +179,7 @@ const void* DetourAddress(FunctionType Function)
     }
 
 #define Original(...) DetourBind(DetourOriginal(TDetourKey<DetourHash(__FUNCTION__)>()), this)(__VA_ARGS__)
+
+#define ORIGINAL_OF(Class, Function) DetourBind(DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>()), this)
 
 #define DETOUR_ORIGINAL(Class, Function) DetourAddress(DetourOriginal(TDetourKey<DetourHash(#Class "::" #Function)>()))
