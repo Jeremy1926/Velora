@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Weapons/FortWeapon.h"
+#include "AI/FortAthenaAIBotController.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortQuickBars.h"
 #include "GameFramework/Pawn.h"
@@ -16,6 +17,21 @@ UClass* AFortWeapon::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWeapon"));
 
     return Class;
+}
+
+EFortWeaponType AFortWeapon::FindWeaponTypeForStats(const UFortItemDefinition* ItemDefinition)
+{
+    static auto FindWeaponTypeForStats = Anchor::Function<EFortWeaponType (*)(const UFortItemDefinition*)>(TEXT("AFortWeapon::FindWeaponTypeForStats"))
+        .FieldPattern("41 C7 00 FF FF FF FF ? 8B ? 48 83 B9 %o 00", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("Inventory"))) : nullptr)
+        .Find("cmp byte ptr [*+0x*], *; jnz *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return FindWeaponTypeForStats(ItemDefinition);
 }
 
 void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)

@@ -4,11 +4,15 @@
 #include "Misc/Guid.h"
 
 struct FFrame;
+class UFortItemDefinition;
+enum class EFortWeaponType : uint8;
 
 class AFortWeapon : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    static EFortWeaponType FindWeaponTypeForStats(const UFortItemDefinition* ItemDefinition);
 
     void PlayWeaponFireFX(bool bPersistentFire);
 

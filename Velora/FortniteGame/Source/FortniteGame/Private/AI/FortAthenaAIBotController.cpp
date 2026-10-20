@@ -5,7 +5,9 @@
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
+#include "Items/FortWorldItem.h"
 #include "Player/FortPlayerState.h"
+#include "Weapons/FortWeapon.h"
 #include "Templates/Casts.h"
 #include "Engine/World.h"
 #include "UObject/Class.h"
@@ -19,6 +21,50 @@ UClass* AFortAthenaAIBotController::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotController"));
 
     return Class;
+}
+
+UScriptStruct* FFortBotInventoryInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortBotInventoryInfo"));
+
+    return Struct;
+}
+
+UFortItemDefinition*& FFortBotInventoryInfo::GetItemDefinition()
+{
+    static auto ItemDefinition = StaticStruct()->FindPropertyByName(FName(TEXT("ItemDefinition")));
+
+    return *ItemDefinition->ContainerPtrToValuePtr<UFortItemDefinition*>(this);
+}
+
+UFortWorldItem*& FFortBotInventoryInfo::GetFortItem()
+{
+    static auto FortItem = StaticStruct()->FindPropertyByName(FName(TEXT("FortItem")));
+
+    return *FortItem->ContainerPtrToValuePtr<UFortWorldItem*>(this);
+}
+
+EFortItemType& FFortBotInventoryInfo::GetItemType()
+{
+    static auto ItemType = Anchor::Offset(TEXT("FFortBotInventoryInfo::ItemType"))
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Origin("mov qword ptr [*-0x*], *; mov byte ptr [*], 0x70")
+        .Find("mov byte ptr [*], 0x70")
+        .Disp();
+
+    return *(EFortItemType*)((uint8*)this + ItemType);
+}
+
+EFortWeaponType& FFortBotInventoryInfo::GetWeaponType()
+{
+    static auto WeaponType = Anchor::Offset(TEXT("FFortBotInventoryInfo::WeaponType"))
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Origin("mov qword ptr [*-0x*], *; mov byte ptr [*], 0x70")
+        .Find("mov byte ptr [*], 0x70; call 0x*; mov byte ptr [*+0x*], al")
+        .Find("mov byte ptr [*+0x*], al")
+        .Disp();
+
+    return *(EFortWeaponType*)((uint8*)this + WeaponType);
 }
 
 bool AFortAthenaAIBotController::CreateInventory()
@@ -62,6 +108,31 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
     }
 
     Inventory->HandleInventoryLocalUpdate();
+
+    for (auto& ItemAndCount : Items)
+    {
+        UFortWorldItem* WorldItem = nullptr;
+
+        for (auto ItemInstance : Inventory->GetInventory().GetItemInstances())
+        {
+            if (ItemInstance && ItemInstance->GetItemEntry().GetItemDefinition() == ItemAndCount.Item)
+            {
+                WorldItem = ItemInstance;
+                break;
+            }
+        }
+
+        int32 SlotIndex = -1;
+
+        if (!WorldItem || !WouldItemFitInBotInventory(WorldItem, SlotIndex) || SlotIndex < 0)
+            continue;
+
+        auto& SlotItem = GetSlotItems(SlotIndex);
+        SlotItem.GetItemDefinition() = ItemAndCount.Item;
+        SlotItem.GetFortItem() = WorldItem;
+        SlotItem.GetItemType() = ItemAndCount.Item->GetItemType();
+        SlotItem.GetWeaponType() = AFortWeapon::FindWeaponTypeForStats(ItemAndCount.Item);
+    }
 }
 
 void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory)
@@ -87,7 +158,28 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
     if (auto Pickaxe = GetCosmeticLoadoutBC().GetPickaxe())
         Items.Add({ 1, Pickaxe->GetWeaponDefinition() });
 
+    static auto bAllowUnsupportedItems = Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Find("mov byte ptr [rcx+0x*], al")
+        .Disp();
+
+    if (bAllowUnsupportedItems)
+        *((uint8*)this + bAllowUnsupportedItems) = GetbAllowUnsupportedItemsInDefaultInventory();
+
     GiveInventory(Items);
+
+    if (bAllowUnsupportedItems)
+        *((uint8*)this + bAllowUnsupportedItems) = false;
+}
+
+bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex)
+{
+    static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))
+        .FieldPattern("41 C7 00 FF FF FF FF ? 8B ? 48 83 B9 %o 00", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("Inventory"))) : nullptr)
+        .Start()
+        .Get();
+
+    return WouldItemFitInBotInventory(this, Item, OutSlotIndex);
 }
 
 void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId)
@@ -104,6 +196,20 @@ void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLo
 
     if (PlayerState && GetPawn())
         PlayerState->ApplyCharacterCustomization(GetPawn());
+}
+
+FFortBotInventoryInfo& AFortAthenaAIBotController::GetSlotItems(int32 Index)
+{
+    static auto SlotItems = GetClass()->FindPropertyByName(FName(TEXT("SlotItems")));
+
+    return *SlotItems->ContainerPtrToValuePtr<FFortBotInventoryInfo>(this, Index);
+}
+
+bool AFortAthenaAIBotController::GetbAllowUnsupportedItemsInDefaultInventory() const
+{
+    static auto bAllowUnsupportedItemsInDefaultInventory = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bAllowUnsupportedItemsInDefaultInventory")));
+
+    return bAllowUnsupportedItemsInDefaultInventory->GetPropertyValue_InContainer(this);
 }
 
 AFortInventory*& AFortAthenaAIBotController::GetInventory()
