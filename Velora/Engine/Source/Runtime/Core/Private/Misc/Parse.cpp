@@ -4,14 +4,21 @@
 
 bool FParse::Param(const TCHAR* Stream, const TCHAR* Param)
 {
-    static auto ParseParam = Scanner::Function<bool (*)(const TCHAR*, const TCHAR*)>(Scanner::String(TEXT("NOCONSOLE")).Call().Get(TEXT("FParse::Param")));
+    static auto ParseParam = Anchor::Function<bool (*)(const TCHAR*, const TCHAR*)>(TEXT("FParse::Param"))
+        .String(TEXT("NOCONSOLE"))
+        .Call()
+        .Get();
 
     return ParseParam(Stream, Param);
 }
 
 bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int32& Value)
 {
-    static auto ParseValue = Scanner::Function<bool (*)(const TCHAR*, const TCHAR*, int32&)>(Scanner::String(TEXT("MaxTeamSize=")).Find("call 0x*").Target(TEXT("FParse::Value")));
+    static auto ParseValue = Anchor::Function<bool (*)(const TCHAR*, const TCHAR*, int32&)>(TEXT("FParse::Value"))
+        .String(TEXT("MaxTeamSize="))
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     return ParseValue(Stream, Match, Value);
 }
