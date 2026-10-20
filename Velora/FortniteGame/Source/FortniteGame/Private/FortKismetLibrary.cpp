@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FortKismetLibrary.h"
+#include "FortGameModeZone.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortInventory.h"
@@ -347,4 +348,22 @@ void UFortKismetLibrary::GetCalendarEventInformation(UObject* WorldContextObject
     static auto GetCalendarEventInformation = Scanner::Function<void (*)(UObject*, const FString&, bool&, FTimespan&, FTimespan&, float&)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetCalendarEventInformation")).Get(TEXT("UFortKismetLibrary::GetCalendarEventInformation")));
 
     GetCalendarEventInformation(WorldContextObject, EventName, bIsEventActive, TimeSinceBegin, TimeUntilEnd, TimespanRatio);
+}
+
+AFortAIDirector* UFortKismetLibrary::GetAIDirector(const UObject* WorldContextObject)
+{
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+    auto GameMode = World ? Cast<AFortGameModeZone>(World->GetAuthGameMode()) : nullptr;
+
+    return GameMode ? GameMode->GetAIDirector() : nullptr;
+}
+
+void UFortKismetLibrary::execGetAIDirector(FFrame& Stack, void* const Z_Param__Result)
+{
+    UObject* WorldContextObject = nullptr;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+    Stack.Code += !!Stack.Code;
+
+    *(AFortAIDirector**)Z_Param__Result = GetAIDirector(WorldContextObject);
 }

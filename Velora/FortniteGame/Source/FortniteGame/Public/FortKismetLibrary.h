@@ -8,6 +8,7 @@
 #include "Templates/SubclassOf.h"
 
 class AActor;
+class AFortAIDirector;
 class AFortPickup;
 class AFortPlayerController;
 struct FActiveGameplayEffectHandle;
@@ -57,6 +58,10 @@ public:
     static bool PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier);
 
     static FActiveGameplayEffectHandle ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags);
+
+    static AFortAIDirector* GetAIDirector(const UObject* WorldContextObject);
+
+    void execGetAIDirector(FFrame& Stack, void* const Z_Param__Result);
 
     static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
 

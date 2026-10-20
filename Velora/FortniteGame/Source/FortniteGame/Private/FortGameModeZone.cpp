@@ -8,6 +8,8 @@
 #include "Engine/CurveTable.h"
 #include "Engine/DataTable.h"
 #include "GameplayTagContainer.h"
+#include "FortKismetLibrary.h"
+#include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -34,6 +36,13 @@ static auto CreateAIDirector = []
     return AthenaCreateAIDirector.Get() ? DetourCall(TEXT("AFortGameModeZone::CreateAIDirector"), AthenaCreateAIDirector.Start().Find("call 0x*").Get(), &AFortGameModeZone::CreateAIDirector) : nullptr;
 }();
 
+UClass* AFortGameModeZone::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeZone"));
+
+    return Class;
+}
+
 void AFortGameModeZone::FinishWorldInitialization()
 {
     Super::FinishWorldInitialization();
@@ -43,6 +52,56 @@ void AFortGameModeZone::CreateAIDirector()
 {
     static auto CanCreateInCurrentContext = DetourCall(TEXT("UObject::CanCreateInCurrentContext"), Scanner::String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").Get(), &UObject::CanCreateInCurrentContext);
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
+    static auto GetAIDirector = []
+    {
+        auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
+        auto GameGetAIDirector = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector")).Get(TEXT("UFortKismetLibrary::GetAIDirector"));
+        auto CallGetAIDirector = std::format("call 0x{:x}", (uintptr_t)GameGetAIDirector);
+
+        if (!Function || !Scanner::At(GameGetAIDirector).Is("xor eax, eax; ret"))
+            return false;
+
+        UE_LOG(LogVelora, Log, TEXT("Hooked UFortKismetLibrary::execGetAIDirector, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+        Function->SetNativeFunc((Native)&UFortKismetLibrary::execGetAIDirector);
+
+        auto RedirectGetAIDirector = [&](const uint8_t* Caller)
+        {
+            for (auto Call = Scanner::At(Caller).Find(CallGetAIDirector); Call.Get(); Call = Call.Find(CallGetAIDirector))
+                DetourCall(TEXT("UFortKismetLibrary::GetAIDirector"), Call.Get(), &UFortKismetLibrary::GetAIDirector);
+        };
+
+        for (auto FunctionPath : { TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:StartMissionAIEncounterFromGeneratedProfile"), TEXT("/Script/FortniteGame.FortMission:StopMissionAIEncounter"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequence"), TEXT("/Script/FortniteGame.FortMission:CreateEncounterSequenceByIndex"), TEXT("/Script/FortniteGame.FortMission:StopEncounterSequence") })
+        {
+            for (auto Call = Scanner::Exec(FunctionPath).Find("call 0x*"); Call.Get(); Call = Call.Find("call 0x*"))
+            {
+                if (Call.Target() != GameGetAIDirector && Scanner::At(Call.Target()).Has(CallGetAIDirector))
+                {
+                    RedirectGetAIDirector(Call.Target());
+                    break;
+                }
+            }
+        }
+
+        auto HandleAthenaSafeZonePhaseChanged = Scanner::Exec(TEXT("/Script/FortniteGame.FortMission_RiftSpawners:HandleAthenaSafeZonePhaseChanged")).Find("jmp 0x*").Target(TEXT("AFortMission_RiftSpawners::HandleAthenaSafeZonePhaseChanged"));
+
+        for (auto Call = Scanner::At(HandleAthenaSafeZonePhaseChanged).Find("call 0x*"); Call.Get(); Call = Call.Find("call 0x*"))
+        {
+            if (Call.Target() != GameGetAIDirector && Scanner::At(Call.Target()).Has(CallGetAIDirector))
+                RedirectGetAIDirector(Call.Target());
+        }
+
+        for (auto [DefaultObjectPath, FunctionName] : { std::pair{ TEXT("/Script/FortniteGame.Default__FortAIDataProvider_AIDirector"), TEXT("UFortAIDataProvider_AIDirector::BindData") }, std::pair{ TEXT("/Script/FortniteGame.Default__AthenaAISense_Hearing"), TEXT("UAthenaAISense_Hearing::Update") } })
+        {
+            auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, DefaultObjectPath);
+            auto Slot = Scanner::Slot(FunctionName, VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(CallGetAIDirector); });
+
+            if (Scanner::IsSlot(Slot))
+                RedirectGetAIDirector((const uint8_t*)VTable[Slot / sizeof(void*)]);
+        }
+
+        return true;
+    }();
 
     auto& AIDirectors = UFortGameData::Get()->GetAIDirectors();
     auto AIDirectorIndex = GetOverrideAIDirectorIndex();

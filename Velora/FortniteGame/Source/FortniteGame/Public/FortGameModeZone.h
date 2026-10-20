@@ -11,6 +11,8 @@ class AFortGameModeZone : public AFortGameMode
 public:
     typedef AFortGameMode Super;
 
+    static UClass* StaticClass();
+
     void FinishWorldInitialization();
 
     void CreateAIDirector();
