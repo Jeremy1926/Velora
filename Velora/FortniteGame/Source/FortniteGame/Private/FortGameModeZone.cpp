@@ -52,6 +52,11 @@ void AFortGameModeZone::FinishWorldInitialization()
 void AFortGameModeZone::CreateAIDirector()
 {
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
+    auto AIDirectors = UFortGameData::Get()->GetAIDirectors();
+
+    if (!AIDirectors)
+        return;
+
     static auto GetAIDirector = []
     {
         auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
@@ -105,10 +110,9 @@ void AFortGameModeZone::CreateAIDirector()
         return true;
     }();
 
-    auto AIDirectors = UFortGameData::Get()->GetAIDirectors();
     auto AIDirectorIndex = GetOverrideAIDirectorIndex();
 
-    if (!AIDirectors || AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors->Num())
+    if (AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors->Num())
         return;
 
     auto AIDirectorClass = (*AIDirectors)[AIDirectorIndex].LoadSynchronous();
