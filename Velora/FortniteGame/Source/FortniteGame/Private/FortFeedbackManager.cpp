@@ -4,19 +4,23 @@
 
 AFortFeedbackManager* AFortFeedbackManager::GetFeedbackManager(UObject* WorldContextObject)
 {
-    static auto GetFeedbackManager = Scanner::Function<AFortFeedbackManager* (*)(UObject*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortFeedbackManager:GetFeedbackManager")).Get(TEXT("AFortFeedbackManager::GetFeedbackManager")));
+    static auto GetFeedbackManager = Anchor::Function<AFortFeedbackManager* (*)(UObject*)>(TEXT("AFortFeedbackManager::GetFeedbackManager"))
+        .Native(TEXT("/Script/FortniteGame.FortFeedbackManager:GetFeedbackManager"))
+        .Get();
 
     return GetFeedbackManager(WorldContextObject);
 }
 
 void AFortFeedbackManager::TriggerEvent(FFortFeedbackHandle Handle, AFortPawn* Instigator, AFortPawn* Recipient, float Delay, bool bOverriddenQueuing, bool bCanQue)
 {
-    static auto TriggerEvent = Scanner::Function<void (*)(AFortFeedbackManager*, FFortFeedbackHandle, AFortPawn*, AFortPawn*, float, bool, bool)>([]
-    {
-        auto DayPhaseChange = Scanner::String(TEXT("Invalid EFortDayPhase::Type in AFortTimeOfDayManager::HandleDayPhaseChange.")).Find("mov byte ptr [rsp+0x*], 0x5; call 0x*");
-
-        return (DayPhaseChange.Get() ? DayPhaseChange.Call() : Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:TriggerFeedbackEvent")).Call(3)).Get(TEXT("AFortFeedbackManager::TriggerEvent"));
-    }());
+    static auto TriggerEvent = Anchor::Function<void (*)(AFortFeedbackManager*, FFortFeedbackHandle, AFortPawn*, AFortPawn*, float, bool, bool)>(TEXT("AFortFeedbackManager::TriggerEvent"))
+        .String(TEXT("Invalid EFortDayPhase::Type in AFortTimeOfDayManager::HandleDayPhaseChange."))
+        .Find("mov byte ptr [rsp+0x*], 0x5; call 0x*")
+        .Call()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:TriggerFeedbackEvent"))
+        .Call(3)
+        .Get();
 
     TriggerEvent(this, Handle, Instigator, Recipient, Delay, bOverriddenQueuing, bCanQue);
 }
