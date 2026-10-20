@@ -185,6 +185,14 @@ namespace Anchor
             return Chain.IsActive() ? Chain.At(Address) : Chain;
         }
 
+        ChainType& FindCall(const void* Function, int32_t Index = 1)
+        {
+            char Call[32];
+            snprintf(Call, sizeof(Call), "call 0x%llx", (unsigned long long)Function);
+
+            return static_cast<ChainType&>(*this).Find(Call, Index);
+        }
+
         ChainType& If(bool bCondition)
         {
             auto& Chain = static_cast<ChainType&>(*this);
