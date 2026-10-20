@@ -45,9 +45,20 @@ FText& FText::operator=(const FText& Source)
 
 FText& FText::operator=(FText&& Source)
 {
-    static auto MoveAssign = Scanner::Function<FText& (*)(FText*, FText&)>(Scanner::Pattern("48 8B 02 4C 8B 01 48 89 01 4C 89 02 48 8B 42 08 4C 8B 41 08 48 89 41 08 4C 89 42 08 8B 42 10 89 41 10 48 8B C1 C3").Get(TEXT("FText::operator=(FText&&)")));
+    static auto MoveAssign = []
+    {
+        auto MoveAssign = Scanner::Pattern("48 8B 02 4C 8B 01 48 89 01 4C 89 02 48 8B 42 08 4C 8B 41 08 48 89 41 08 4C 89 42 08 8B 42 10 89 41 10 48 8B C1 C3");
 
-    return MoveAssign(this, Source);
+        return MoveAssign.Get() ? (FText& (*)(FText*, FText&))MoveAssign.Get(TEXT("FText::operator=(FText&&)")) : nullptr;
+    }();
+
+    if (MoveAssign)
+        return MoveAssign(this, Source);
+
+    TextData = MoveTemp(Source.TextData);
+    Flags = Source.Flags;
+
+    return *this;
 }
 
 bool FText::IsEmpty() const

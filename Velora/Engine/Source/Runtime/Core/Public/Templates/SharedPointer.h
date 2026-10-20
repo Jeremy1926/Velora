@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "HAL/UnrealMemory.h"
 #include "Templates/SharedPointerInternals.h"
 #include "Templates/UnrealTemplate.h"
 
@@ -64,6 +65,12 @@ public:
     FORCEINLINE TSharedRef()
         : Object(nullptr)
     {
+    }
+
+    FORCEINLINE TSharedRef& operator=(TSharedRef&& InSharedRef)
+    {
+        FMemory::Memswap(this, &InSharedRef, sizeof(TSharedRef));
+        return *this;
     }
 
     FORCEINLINE ObjectType& Get() const

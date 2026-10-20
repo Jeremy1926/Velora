@@ -19,4 +19,9 @@ struct FMemory
     {
         return memset(Dest, 0, Count);
     }
+
+    static FORCEINLINE void Memswap(void* Ptr1, void* Ptr2, SIZE_T Size)
+    {
+        std::swap_ranges((uint8*)Ptr1, (uint8*)Ptr1 + Size, (uint8*)Ptr2);
+    }
 };
