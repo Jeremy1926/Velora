@@ -19,9 +19,10 @@ void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
         auto EditActor = StaticClass()->FindPropertyByName(FName(TEXT("EditActor")))->GetOffset_ForInternal();
         auto Store = std::format("cmp byte ptr [rcx+0x*], 0x3; jnz *; mov [rcx+{:#x}], rdx; jmp 0x*", EditActor);
         auto StoreAndForceNetUpdate = std::format("push rbx; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; mov rax, [rcx]; mov [rcx+{:#x}], rdx; call [rax+0x*]", EditActor);
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"));
 
-        return Scanner::Slot(TEXT("AFortWeap_EditingTool::SetEditActor"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Store) || Entry.Is(StoreAndForceNetUpdate); });
+        return Anchor::Slot(TEXT("AFortWeap_EditingTool::SetEditActor"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), [&](const Anchor::FCode& Entry) { return Entry.Is(Store) || Entry.Is(StoreAndForceNetUpdate); })
+            .Get();
     }();
 
     Scanner::Virtual<void (*)(AFortWeap_EditingTool*, ABuildingSMActor*)>(this, SetEditActor)(this, InEditActor);
