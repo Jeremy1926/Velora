@@ -60,21 +60,28 @@ FVector AActor::GetActorForwardVector() const
 
 void AActor::SetLifeSpan(float InLifespan)
 {
-    static auto SetLifeSpan = Scanner::Exec(TEXT("/Script/Engine.Actor:SetLifeSpan")).Find("call [*+0x*]").Slot(TEXT("AActor::SetLifeSpan"));
+    static auto SetLifeSpan = Anchor::Slot(TEXT("AActor::SetLifeSpan"))
+        .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
+        .Find("call [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(AActor*, float)>(this, SetLifeSpan)(this, InLifespan);
 }
 
 void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
 {
-    static auto K2_AttachToActor = Scanner::Function<void (*)(AActor*, AActor*, FName, EAttachmentRule, EAttachmentRule, EAttachmentRule, bool)>(Scanner::Native(TEXT("/Script/Engine.Actor:K2_AttachToActor")).Get(TEXT("AActor::K2_AttachToActor")));
+    static auto K2_AttachToActor = Anchor::Function<void (*)(AActor*, AActor*, FName, EAttachmentRule, EAttachmentRule, EAttachmentRule, bool)>(TEXT("AActor::K2_AttachToActor"))
+        .Native(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+        .Get();
 
     K2_AttachToActor(this, ParentActor, SocketName, LocationRule, RotationRule, ScaleRule, bWeldSimulatedBodies);
 }
 
 void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule RotationRule, EDetachmentRule ScaleRule)
 {
-    static auto K2_DetachFromActor = Scanner::Function<void (*)(AActor*, EDetachmentRule, EDetachmentRule, EDetachmentRule)>(Scanner::Native(TEXT("/Script/Engine.Actor:K2_DetachFromActor")).Get(TEXT("AActor::K2_DetachFromActor")));
+    static auto K2_DetachFromActor = Anchor::Function<void (*)(AActor*, EDetachmentRule, EDetachmentRule, EDetachmentRule)>(TEXT("AActor::K2_DetachFromActor"))
+        .Native(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+        .Get();
 
     K2_DetachFromActor(this, LocationRule, RotationRule, ScaleRule);
 }
@@ -171,7 +178,10 @@ AActor* AActor::GetOwner() const
 
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
 {
-    static auto FindComponentByClass = Scanner::Native(TEXT("/Script/Engine.Actor:GetComponentByClass")).Find("jmp [rax+0x*]").Slot(TEXT("AActor::FindComponentByClass"));
+    static auto FindComponentByClass = Anchor::Slot(TEXT("AActor::FindComponentByClass"))
+        .Native(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("jmp [rax+0x*]")
+        .Get();
 
     return Scanner::Virtual<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(this, FindComponentByClass)(this, ComponentClass);
 }
@@ -186,10 +196,11 @@ const AActor* AActor::GetNetOwner() const
     static auto GetNetOwner = [this]
     {
         auto Owner = GetClass()->FindPropertyByName(FName(TEXT("Owner")))->GetOffset_ForInternal();
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
         auto Getter = std::format("mov rax, [rcx+0x{:x}]; ret", Owner);
 
-        return Scanner::Slot(TEXT("AActor::GetNetOwner"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Getter); });
+        return Anchor::Slot(TEXT("AActor::GetNetOwner"))
+            .Virtual(TEXT("/Script/Engine.Default__Actor"), [&](const Anchor::FCode& Entry) { return Entry.Is(Getter); })
+            .Get();
     }();
 
     return Scanner::Virtual<const AActor* (*)(const AActor*)>(this, GetNetOwner)(this);
@@ -197,39 +208,44 @@ const AActor* AActor::GetNetOwner() const
 
 bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* ActorOwner, const AActor* ConnectionActor) const
 {
-    static auto IsRelevancyOwnerFor = []
-    {
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-
-        return Scanner::Slot(TEXT("AActor::IsRelevancyOwnerFor"), VTable, [](const Scanner::FCode& Entry) { return Entry.Is("cmp r8, rcx; setz al; ret"); });
-    }();
+    static auto IsRelevancyOwnerFor = Anchor::Slot(TEXT("AActor::IsRelevancyOwnerFor"))
+        .Virtual(TEXT("/Script/Engine.Default__Actor"), [](const Anchor::FCode& Entry) { return Entry.Is("cmp r8, rcx; setz al; ret"); })
+        .Get();
 
     return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const AActor*)>(this, IsRelevancyOwnerFor)(this, ReplicatedActor, ActorOwner, ConnectionActor);
 }
 
 void AActor::ForceNetUpdate()
 {
-    static auto ForceNetUpdate = Scanner::Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate")).Find("jmp [*+0x*]").Slot(TEXT("AActor::ForceNetUpdate"));
+    static auto ForceNetUpdate = Anchor::Slot(TEXT("AActor::ForceNetUpdate"))
+        .Exec(TEXT("/Script/Engine.Actor:ForceNetUpdate"))
+        .Find("jmp [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(AActor*)>(this, ForceNetUpdate)(this);
 }
 
 void AActor::FlushNetDormancy()
 {
-    static auto FlushNetDormancy = Scanner::Function<void (*)(AActor*)>(Scanner::Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy")).Find("jmp 0x*").Target(TEXT("AActor::FlushNetDormancy")));
+    static auto FlushNetDormancy = Anchor::Function<void (*)(AActor*)>(TEXT("AActor::FlushNetDormancy"))
+        .Exec(TEXT("/Script/Engine.Actor:FlushNetDormancy"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     FlushNetDormancy(this);
 }
 
 bool AActor::Destroy(bool bNetForce, bool bShouldModifyLevel)
 {
-    static auto Destroy = []
-    {
-        auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
-        auto K2_DestroyActor = Scanner::Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor")).Find("jmp [*+0x*]").Slot(TEXT("AActor::K2_DestroyActor"));
-
-        return Scanner::Function<bool (*)(AActor*, bool, bool)>(Scanner::At(Scanner::Virtual<const void*>(DefaultObject, K2_DestroyActor)).Find("jmp 0x*").Target(TEXT("AActor::Destroy")));
-    }();
+    static auto Destroy = Anchor::Function<bool (*)(AActor*, bool, bool)>(TEXT("AActor::Destroy"))
+        .Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor"))
+        .Find("jmp [*+0x*]")
+        .LogSlot(TEXT("AActor::K2_DestroyActor"))
+        .Entry(TEXT("/Script/Engine.Default__Actor"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     return Destroy(this, bNetForce, bShouldModifyLevel);
 }
