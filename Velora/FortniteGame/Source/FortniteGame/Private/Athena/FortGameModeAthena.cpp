@@ -388,7 +388,7 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         auto Image = Scanner::Base();
         auto ImageEnd = Image + ((IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew))->OptionalHeader.SizeOfImage;
         auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));
-        auto RedirectMap = RedirectAthenaLootTierGroups ? std::format("add rcx, {:#x}", RedirectAthenaLootTierGroups->GetOffset_ForInternal()) : std::string();
+        auto RedirectMap = RedirectAthenaLootTierGroups ? std::format("mov *, [*+{:#x}]", RedirectAthenaLootTierGroups->GetOffset_ForInternal()) : std::string();
 
         for (int32 Index = 0; Scanner::IsCode(VTable[Index]); Index++)
         {
