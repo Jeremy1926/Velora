@@ -234,6 +234,8 @@ void ABuildingItemCollectorActor::GrantOutput(UFortWorldItemDefinition* Item)
             {
                 Pickup->GetTossedFromContainer() = true;
                 Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
+
+                PickupSpawned_Bind();
             }
         }
 
@@ -258,6 +260,35 @@ void ABuildingItemCollectorActor::TickPendingOutputs()
         if (ItemCollector && Player)
             ItemCollector->GrantOutput(Item);
     }
+}
+
+void ABuildingItemCollectorActor::PickupSpawned_Bind()
+{
+    static auto B_Athena_VendingMachine_C = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Game/Athena/Items/Gameplay/VendingMachine/B_Athena_VendingMachine.B_Athena_VendingMachine_C"));
+    static auto SpawnedItemCount = B_Athena_VendingMachine_C ? B_Athena_VendingMachine_C->FindPropertyByName(FName(TEXT("SpawnedItemCount"))) : nullptr;
+    static auto MaxItemsToSpawnCached = B_Athena_VendingMachine_C ? B_Athena_VendingMachine_C->FindPropertyByName(FName(TEXT("MaxItemsToSpawnCached"))) : nullptr;
+
+    if (!SpawnedItemCount || !MaxItemsToSpawnCached || !IsA(B_Athena_VendingMachine_C))
+        return;
+
+    auto& ItemCount = *SpawnedItemCount->ContainerPtrToValuePtr<int32>(this);
+    const int32 MaxItemsToSpawn = *MaxItemsToSpawnCached->ContainerPtrToValuePtr<int32>(this);
+
+    ItemCount++;
+
+    if (MaxItemsToSpawn > 0 && ItemCount >= MaxItemsToSpawn)
+    {
+        DoVendDeath();
+        Destroy();
+    }
+}
+
+void ABuildingItemCollectorActor::DoVendDeath()
+{
+    static auto DoVendDeath = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Game/Athena/Items/Gameplay/VendingMachine/B_Athena_VendingMachine.B_Athena_VendingMachine_C:DoVendDeath"));
+
+    if (DoVendDeath)
+        CallRemoteFunction(DoVendDeath, nullptr, nullptr, nullptr);
 }
 
 FName ABuildingItemCollectorActor::GetDefaultItemLootTierGroupName() const

@@ -50,6 +50,10 @@ public:
 
     static void TickPendingOutputs();
 
+    void PickupSpawned_Bind();
+
+    void DoVendDeath();
+
     FName GetDefaultItemLootTierGroupName() const;
 
     TArray<FColletorUnitInfo>& GetItemCollections();
