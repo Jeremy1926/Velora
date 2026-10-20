@@ -6,14 +6,20 @@
 
 UAbilitySystemComponent* UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AActor* Actor)
 {
-    static auto GetAbilitySystemComponent = Scanner::Function<UAbilitySystemComponent* (*)(AActor*)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent")).Get(TEXT("UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent")));
+    static auto GetAbilitySystemComponent = Anchor::Function<UAbilitySystemComponent* (*)(AActor*)>(TEXT("UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Get();
 
     return GetAbilitySystemComponent(Actor);
 }
 
 float UAbilitySystemBlueprintLibrary::EvaluateAttributeValueWithTagsAndBase(UAbilitySystemComponent* AbilitySystem, FGameplayAttribute Attribute, const FGameplayTagContainer& SourceTags, const FGameplayTagContainer& TargetTags, float BaseValue, bool& bSuccess)
 {
-    static auto EvaluateAttributeValueWithTagsAndBase = Scanner::Function<float (*)(UAbilitySystemComponent*, FGameplayAttribute, const FGameplayTagContainer&, const FGameplayTagContainer&, float, bool&)>(Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase")).Find("movss [rsp+0x20], xmm*").Call().Get(TEXT("UAbilitySystemBlueprintLibrary::EvaluateAttributeValueWithTagsAndBase")));
+    static auto EvaluateAttributeValueWithTagsAndBase = Anchor::Function<float (*)(UAbilitySystemComponent*, FGameplayAttribute, const FGameplayTagContainer&, const FGameplayTagContainer&, float, bool&)>(TEXT("UAbilitySystemBlueprintLibrary::EvaluateAttributeValueWithTagsAndBase"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("movss [rsp+0x20], xmm*")
+        .Call()
+        .Get();
 
     return EvaluateAttributeValueWithTagsAndBase(AbilitySystem, Attribute, SourceTags, TargetTags, BaseValue, bSuccess);
 }
