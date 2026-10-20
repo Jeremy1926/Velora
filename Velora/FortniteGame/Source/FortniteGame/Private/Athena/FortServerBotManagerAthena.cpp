@@ -1,13 +1,16 @@
 #include "pch.h"
 #include "Athena/FortServerBotManagerAthena.h"
 #include "AI/FortAthenaAIBotController.h"
+#include "Athena/FortGameModeAthena.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/World.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
+#include "Templates/Casts.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 struct FPendingBotBrainActivation
 {
@@ -43,6 +46,25 @@ UClass* UFortServerBotManagerAthena::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortServerBotManagerAthena"));
 
     return Class;
+}
+
+UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UWorld* World)
+{
+    DETOUR(UFortServerBotManagerAthena, GetServerBotManager, Anchor::Hook()
+        .String(TEXT("AFortGameSessionDedicatedAthena: Removing navigation locks"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("ret")
+        .Last("call 0x*")
+        .Target()
+        .Is("push *; sub rsp, 0x20; mov rax, [rcx]; mov *, rcx; call [rax+0x*]; mov rcx, rax; call 0x*")
+        .Optional()
+        .Find("call 0x*")
+        .AtCall());
+
+    auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
+
+    return GameMode ? GameMode->GetServerBotManager() : nullptr;
 }
 
 void UFortServerBotManagerAthena::SetBotBrainActivationTimer()

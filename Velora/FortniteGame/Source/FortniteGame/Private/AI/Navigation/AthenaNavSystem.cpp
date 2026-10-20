@@ -1,19 +1,17 @@
 #include "pch.h"
 #include "AI/Navigation/AthenaNavSystem.h"
-#include "Athena/AI/AthenaAISystem.h"
-#include "Athena/FortGameModeAthena.h"
-#include "Engine/World.h"
-#include "Templates/Casts.h"
 #include "Scanner.h"
 #include "Detour.h"
 
-void UAthenaNavSystem::RemoveNavigationLocks()
+void UAthenaNavSystem::ReleaseInitialBuildingLock()
 {
-    DETOUR(UAthenaNavSystem, RemoveNavigationLocks, Anchor::Hook()
+    DETOUR(UAthenaNavSystem, ReleaseInitialBuildingLock, Anchor::Hook()
         .String(TEXT("AFortGameSessionDedicatedAthena: Removing navigation locks"))
         .Find("call 0x*", 2)
         .Target()
-        .Inline());
+        .Find("call [rax+0x*]", 2)
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__AthenaNavSystem")));
 
     if (GetNavDataSet().Num() == 0)
     {
@@ -31,13 +29,6 @@ void UAthenaNavSystem::RemoveNavigationLocks()
             ProcessRegistrationCandidates();
         }
     }
-
-    auto World = GetWorld();
-    auto AISystem = World ? Cast<UAthenaAISystem>(World->GetAISystem()) : nullptr;
-    auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
-
-    if (AISystem && GameMode && GameMode->GetServerBotManager())
-        AISystem->GetPlayerBotManager() = GameMode->GetServerBotManager();
 
     Original();
 }

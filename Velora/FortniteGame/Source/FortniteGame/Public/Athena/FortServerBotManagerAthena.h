@@ -6,6 +6,7 @@
 class AFortAthenaAIBotController;
 class AFortGameModeAthena;
 class AFortGameStateAthena;
+class UWorld;
 class UScriptStruct;
 
 struct FFortServerBotInfo
@@ -26,6 +27,8 @@ class UFortServerBotManagerAthena : public UObject
 {
 public:
     static UClass* StaticClass();
+
+    static UFortServerBotManagerAthena* GetServerBotManager(UWorld* World);
 
     void SetBotBrainActivationTimer();
 

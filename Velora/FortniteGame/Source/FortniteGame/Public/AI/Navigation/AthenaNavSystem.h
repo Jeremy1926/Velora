@@ -5,5 +5,5 @@
 class UAthenaNavSystem : public UFortNavSystem
 {
 public:
-    void RemoveNavigationLocks();
+    void ReleaseInitialBuildingLock();
 };
