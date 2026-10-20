@@ -4,7 +4,6 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-static auto IsNetReadySlot = Scanner::String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it")).Start().Find("xor edx, edx").Find("call [*]").Slot(TEXT("UNetConnection::IsNetReady"));
 
 TArray<UChildConnection*>& UNetConnection::GetChildren()
 {
@@ -80,9 +79,15 @@ static int32_t TickCountOffset()
 {
     static auto TickCount = []
     {
+        auto IsNetReady = Anchor::Slot(TEXT("UNetConnection::IsNetReady"))
+            .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+            .Start()
+            .Find("xor edx, edx")
+            .Find("call [*]")
+            .Get();
         auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
 
-        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, IsNetReadySlot)).Find("mov [*], e*").Disp(TEXT("UNetConnection::QueuedBits")) + (int32_t)sizeof(int32);
+        return Scanner::At(Scanner::Virtual<const void*>(DefaultObject, IsNetReady)).Find("mov [*], e*").Disp(TEXT("UNetConnection::QueuedBits")) + (int32_t)sizeof(int32);
     }();
 
     return TickCount;
@@ -151,25 +156,34 @@ TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
 
 int32 UNetConnection::IsNetReady(bool Saturate)
 {
-    return Scanner::Virtual<int32 (*)(UNetConnection*, bool)>(this, IsNetReadySlot)(this, Saturate);
+    static auto IsNetReady = Anchor::Slot(TEXT("UNetConnection::IsNetReady"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("xor edx, edx")
+        .Find("call [*]")
+        .Get();
+
+    return Scanner::Virtual<int32 (*)(UNetConnection*, bool)>(this, IsNetReady)(this, Saturate);
 }
 
 UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex)
 {
-    static auto CreateChannel = Scanner::Function<UChannel* (*)(UNetConnection*, EChannelType, bool, int32)>(Scanner::String(TEXT("Created channel %i of type %i")).Start().Get(TEXT("UNetConnection::CreateChannel")));
+    static auto CreateChannel = Anchor::Function<UChannel* (*)(UNetConnection*, EChannelType, bool, int32)>(TEXT("UNetConnection::CreateChannel"))
+        .String(TEXT("Created channel %i of type %i"))
+        .Start()
+        .Get();
 
     return CreateChannel(this, Type, bOpenedLocally, ChannelIndex);
 }
 
 void UNetConnection::FlushDormancy(AActor* Actor)
 {
-    static auto FlushDormancy = []
-    {
-        auto Function = Scanner::String(TEXT("FlushDormancy: %s. Connection: %s")).Start().Get(TEXT("UNetConnection::FlushDormancy"));
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__NetConnection"));
-
-        return Scanner::Slot(TEXT("UNetConnection::FlushDormancy"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == Function; });
-    }();
+    static auto FlushDormancy = Anchor::Slot(TEXT("UNetConnection::FlushDormancy"))
+        .String(TEXT("FlushDormancy: %s. Connection: %s"))
+        .Start()
+        .Log(TEXT("UNetConnection::FlushDormancy"))
+        .SlotIn(TEXT("/Script/Engine.Default__NetConnection"))
+        .Get();
 
     Scanner::Virtual<void (*)(UNetConnection*, AActor*)>(this, FlushDormancy)(this, Actor);
 }
