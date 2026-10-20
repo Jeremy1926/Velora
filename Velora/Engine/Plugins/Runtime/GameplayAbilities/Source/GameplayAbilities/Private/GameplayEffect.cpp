@@ -4,7 +4,10 @@
 
 void FGameplayEffectSpec::SetSetByCallerMagnitude(FName DataName, float Magnitude)
 {
-    static auto SetSetByCallerMagnitude = Scanner::Function<void (*)(FGameplayEffectSpec*, FName, float)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignSetByCallerMagnitude")).Call().Get(TEXT("FGameplayEffectSpec::SetSetByCallerMagnitude")));
+    static auto SetSetByCallerMagnitude = Anchor::Function<void (*)(FGameplayEffectSpec*, FName, float)>(TEXT("FGameplayEffectSpec::SetSetByCallerMagnitude"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignSetByCallerMagnitude"))
+        .Call()
+        .Get();
 
     SetSetByCallerMagnitude(this, DataName, Magnitude);
 }
