@@ -43,7 +43,11 @@ void UStat::ModifyStat(double Amount, EStatMod ModType)
 
 UStat* UStatManager::AddOrGetStat(FName StatName, EStatRecordingPeriod HighestPeriodToTrack)
 {
-    static auto AddOrGetStat = Scanner::Function<UStat* (*)(UStatManager*, FName, EStatRecordingPeriod)>(OnPawnRevived().Find("mov r8b, 0x*").Call().Get(TEXT("UStatManager::AddOrGetStat")));
+    static auto AddOrGetStat = Anchor::Function<UStat* (*)(UStatManager*, FName, EStatRecordingPeriod)>(TEXT("UStatManager::AddOrGetStat"))
+        .At(OnPawnRevived())
+        .Find("mov r8b, 0x*")
+        .Call()
+        .Get();
 
     auto& Version = FEngineVersion::Current();
 
