@@ -128,6 +128,10 @@ public:
 
     void execDropAllItems(FFrame& Stack, void* const Z_Param__Result);
 
+    void DropSpecificItem(const UFortItemDefinition* DropItemDef);
+
+    void execDropSpecificItem(FFrame& Stack, void* const Z_Param__Result);
+
     void RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition);
 
     void ServerExecuteInventoryItem_Implementation(FGuid ItemGuid);

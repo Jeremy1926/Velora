@@ -76,6 +76,20 @@ static auto execDropAllItems = []
     return true;
 }();
 
+static auto execDropSpecificItem = []
+{
+    auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem"));
+
+    if (!Function || !Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")).Is("ret*"))
+        return false;
+
+    UE_LOG(LogVelora, Log, TEXT("Hooked AFortPlayerController::execDropSpecificItem, was 0x%llX"), std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) - Scanner::Base());
+
+    Function->SetNativeFunc((Native)&AFortPlayerController::execDropSpecificItem);
+
+    return true;
+}();
+
 static auto execSpawnToyInstance = []
 {
     auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"));
@@ -599,6 +613,35 @@ void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param_
     Stack.Code += !!Stack.Code;
 
     DropAllItems(IgnoreItemDef, !!bIgnoreBuildingMaterials);
+}
+
+void AFortPlayerController::DropSpecificItem(const UFortItemDefinition* DropItemDef)
+{
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory || !DropItemDef)
+        return;
+
+    TArray<TPair<FGuid, int32>> ItemsToDrop;
+
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
+    {
+        if (ItemEntry.GetItemDefinition() == DropItemDef)
+            ItemsToDrop.Add({ ItemEntry.GetItemGuid(), ItemEntry.GetCount() });
+    }
+
+    for (auto& ItemToDrop : ItemsToDrop)
+        ServerSpawnInventoryDrop_Implementation(ItemToDrop.Key, ItemToDrop.Value);
+}
+
+void AFortPlayerController::execDropSpecificItem(FFrame& Stack, void* const Z_Param__Result)
+{
+    UFortItemDefinition* DropItemDef = nullptr;
+
+    Stack.StepCompiledIn(&DropItemDef);
+    Stack.Code += !!Stack.Code;
+
+    DropSpecificItem(DropItemDef);
 }
 
 UClass* AFortPlayerController::StaticClass()
