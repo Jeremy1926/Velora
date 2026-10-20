@@ -40,7 +40,12 @@ const FBoxSphereBounds& USceneComponent::GetBounds() const
 
 FBoxSphereBounds USceneComponent::CalcLocalBounds() const
 {
-    static auto CalcLocalBounds = Scanner::String(TEXT("HeldObject.Placement.Mesh")).Start().Find("mov rax, [rcx]; call [rax+0x*]; lea rcx, [*+0x*]; call 0x*; mov rcx, [rax+0x*]").Find("call [rax+0x*]").Slot(TEXT("USceneComponent::CalcLocalBounds"));
+    static auto CalcLocalBounds = Anchor::Slot(TEXT("USceneComponent::CalcLocalBounds"))
+        .String(TEXT("HeldObject.Placement.Mesh"))
+        .Start()
+        .Find("mov rax, [rcx]; call [rax+0x*]; lea rcx, [*+0x*]; call 0x*; mov rcx, [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
 
     FBoxSphereBounds Result;
 
@@ -49,14 +54,19 @@ FBoxSphereBounds USceneComponent::CalcLocalBounds() const
 
 void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport)
 {
-    static auto K2_SetWorldLocationAndRotation = Scanner::Function<void (*)(USceneComponent*, FVector, FRotator, bool, void*, bool)>(Scanner::Native(TEXT("/Script/Engine.SceneComponent:K2_SetWorldLocationAndRotation")).Get(TEXT("USceneComponent::K2_SetWorldLocationAndRotation")));
+    static auto K2_SetWorldLocationAndRotation = Anchor::Function<void (*)(USceneComponent*, FVector, FRotator, bool, void*, bool)>(TEXT("USceneComponent::K2_SetWorldLocationAndRotation"))
+        .Native(TEXT("/Script/Engine.SceneComponent:K2_SetWorldLocationAndRotation"))
+        .Get();
 
     K2_SetWorldLocationAndRotation(this, NewLocation, NewRotation, bSweep, nullptr, bTeleport);
 }
 
 FVector USceneComponent::GetSocketLocation(FName InSocketName) const
 {
-    static auto GetSocketLocation = Scanner::Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation")).Find("call [*+0x*]").Slot(TEXT("USceneComponent::GetSocketLocation"));
+    static auto GetSocketLocation = Anchor::Slot(TEXT("USceneComponent::GetSocketLocation"))
+        .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
+        .Find("call [*+0x*]")
+        .Get();
 
     FVector Result;
 
