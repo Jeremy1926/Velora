@@ -16,13 +16,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto OnPlaylistLootTableAssetsDataLoadCompleted = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass() ? []
-{
-    auto bPlaylistDataIsLoaded = (uint32)AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")))->GetOffset_ForInternal();
-    auto PlaylistDataIsLoaded = std::format("66 C7 ? {:02X} {:02X} {:02X} {:02X} 01 00", bPlaylistDataIsLoaded & 0xFF, (bPlaylistDataIsLoaded >> 8) & 0xFF, (bPlaylistDataIsLoaded >> 16) & 0xFF, bPlaylistDataIsLoaded >> 24);
-
-    return Detour(TEXT("AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted"), Scanner::Pattern(PlaylistDataIsLoaded.c_str()).Start().Get(), &AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted);
-}() : nullptr;
 
 UClass* AFortGameStateAthena::StaticClass()
 {
@@ -45,9 +38,14 @@ AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
     return MapInfo ? *MapInfo->ContainerPtrToValuePtr<AFortAthenaMapInfo*>(this) : nullptr;
 }
 
+DETOUR(AFortGameStateAthena, OnPlaylistLootTableAssetsDataLoadCompleted, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass())
+    .FieldPattern("66 C7 ? %o 01 00", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+    .Start()
+    .Inline())
 void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 {
-    (this->*::OnPlaylistLootTableAssetsDataLoadCompleted)();
+    Original();
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
     {
@@ -149,14 +147,22 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 
 void AFortGameStateAthena::OnRep_CurrentPlaylistData()
 {
-    static auto OnRep_CurrentPlaylistData = Scanner::Function<void (*)(AFortGameStateAthena*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:OnRep_CurrentPlaylistData")).Find("jmp 0x*").Target(TEXT("AFortGameStateAthena::OnRep_CurrentPlaylistData")));
+    static auto OnRep_CurrentPlaylistData = Anchor::Function<void (*)(AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::OnRep_CurrentPlaylistData"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:OnRep_CurrentPlaylistData"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_CurrentPlaylistData(this);
 }
 
 void AFortGameStateAthena::OnRep_CurrentPlaylistInfo()
 {
-    static auto OnRep_CurrentPlaylistInfo = Scanner::Function<void (*)(AFortGameStateAthena*)>(Scanner::Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:OnRep_CurrentPlaylistInfo")).Find("jmp 0x*").Target(TEXT("AFortGameStateAthena::OnRep_CurrentPlaylistInfo")));
+    static auto OnRep_CurrentPlaylistInfo = Anchor::Function<void (*)(AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::OnRep_CurrentPlaylistInfo"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:OnRep_CurrentPlaylistInfo"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     OnRep_CurrentPlaylistInfo(this);
 }
