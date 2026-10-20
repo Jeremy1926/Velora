@@ -28,6 +28,9 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         if (!CollectingGarbage.Get())
             CollectingGarbage = Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rsi, [0x*]; mov r9d, 0x1; mov [rbp+0x*], rax; lea r8, [rbp+0x*]; mov [rsp+0x20], rsi; mov edx, 0x*; lea rcx, [0x*]; call 0x*; mov r9, rsi; lea rdx, [0x*]; mov r8d, 0x*; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff");
 
+        if (!CollectingGarbage.Get())
+            CollectingGarbage = Scanner::String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; lea r8, [0x*]; mov [rsp+0x20], rax; mov edx, 0x*; lea rcx, [0x*]; call 0x*; call 0x*; cmp *, 0xffffffffffffffff");
+
         return CollectingGarbage.Start().Get(TEXT("StaticFindObject"));
     }());
 
