@@ -50,9 +50,13 @@ static auto K2_RemoveItemFromPlayerByGuid = StaticFindObject(nullptr, nullptr, T
 
 static auto GiveItemToInventoryOwner = []
 {
-    auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode")).Find("lea rcx, [rsp+0x20]; mov rdx, *; call 0x*").Find("call 0x*");
+    auto GameGiveItemToInventoryOwner = Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get();
+    auto Call = Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode")).Find("call 0x*");
 
-    return Call.Get() && Call.Target() == Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")).Get() ? DetourCall(TEXT("UFortKismetLibrary::GiveItemToInventoryOwner"), Call.Get(), &UFortKismetLibrary::GiveItemToInventoryOwner) : nullptr;
+    while (Call.Get() && Call.Target() != GameGiveItemToInventoryOwner)
+        Call = Call.Find("call 0x*");
+
+    return Call.Get() ? DetourCall(TEXT("UFortKismetLibrary::GiveItemToInventoryOwner"), Call.Get(), &UFortKismetLibrary::GiveItemToInventoryOwner) : nullptr;
 }();
 
 FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject)
