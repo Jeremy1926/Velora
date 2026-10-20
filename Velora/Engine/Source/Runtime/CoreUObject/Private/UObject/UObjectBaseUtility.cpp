@@ -10,7 +10,15 @@ bool UObjectBaseUtility::IsA(const UClass* SomeBase) const
 
 void* UObjectBaseUtility::GetInterfaceAddress(UClass* InterfaceClass)
 {
-    static auto GetInterfaceAddress = Scanner::Function<void* (*)(UObjectBaseUtility*, UClass*)>(Scanner::At(Scanner::Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent")).Find("ret").Last("call 0x*").Call().Find("jmp 0x*").Target()).Call(2).Get(TEXT("UObjectBaseUtility::GetInterfaceAddress")));
+    static auto GetInterfaceAddress = Anchor::Function<void* (*)(UObjectBaseUtility*, UClass*)>(TEXT("UObjectBaseUtility::GetInterfaceAddress"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("ret")
+        .Last("call 0x*")
+        .Call()
+        .Find("jmp 0x*")
+        .Target()
+        .Call(2)
+        .Get();
 
     return GetInterfaceAddress(this, InterfaceClass);
 }
