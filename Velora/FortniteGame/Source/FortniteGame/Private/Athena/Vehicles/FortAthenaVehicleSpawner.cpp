@@ -3,7 +3,12 @@
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortAthenaMapInfo.h"
 #include "FortKismetLibrary.h"
+#include "Items/FortVehicleItemDefinition.h"
+#include "GameplayEffectTypes.h"
+#include "Math/UnrealMathUtility.h"
+#include "UObject/AssetPtr.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/World.h"
@@ -67,7 +72,9 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
         if (VehicleClassOverride && !VehicleClassOverride->IsPendingKill())
             VehicleClass = VehicleClassOverride;
 
-        if (GameMode->ShouldSpawnVehicle(VehicleClass))
+        static auto VehicleClassDetails = AFortAthenaMapInfo::StaticClass()->FindPropertyByName(FName(TEXT("VehicleClassDetails")));
+
+        if (VehicleClassDetails ? GameMode->ShouldSpawnVehicle(VehicleClass) : ShouldSelfSpawnVehicle())
         {
             bool bIsEventActive = false;
             FTimespan TimeSinceBegin;
@@ -93,4 +100,30 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
     static auto GetVehicleClass = Scanner::Function<UClass* (*)(const AFortAthenaVehicleSpawner*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass")).Get(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass")));
 
     return GetVehicleClass(this);
+}
+
+UFortVehicleItemDefinition* AFortAthenaVehicleSpawner::GetFortVehicleItemDef() const
+{
+    static auto FortVehicleItemDef = GetClass()->FindPropertyByName(FName(TEXT("FortVehicleItemDef")));
+
+    return FortVehicleItemDef->ContainerPtrToValuePtr<TAssetPtr<UFortVehicleItemDefinition>>(this)->LoadSynchronous();
+}
+
+bool AFortAthenaVehicleSpawner::ShouldSelfSpawnVehicle() const
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (!GameState || !GameState->GetPlaylistDataIsLoaded())
+        return false;
+
+    auto FortVehicleItemDef = GetFortVehicleItemDef();
+
+    if (!FortVehicleItemDef)
+        return false;
+
+    const float MinSpawnPercent = FMath::Clamp(FortVehicleItemDef->GetVehicleMinSpawnPercent().GetValueAtLevel(0.0f) * 0.01f, 0.0f, 1.0f);
+    const float MaxSpawnPercent = FMath::Clamp(FortVehicleItemDef->GetVehicleMaxSpawnPercent().GetValueAtLevel(0.0f) * 0.01f, 0.0f, 1.0f);
+    const float SpawnPercent = FMath::Lerp(MinSpawnPercent, MaxSpawnPercent, FMath::FRand());
+
+    return SpawnPercent >= FMath::FRand();
 }
