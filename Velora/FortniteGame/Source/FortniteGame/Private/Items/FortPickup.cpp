@@ -59,7 +59,7 @@ void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner,
 
 decltype(AFortPickup::GameGivePickupTo) AFortPickup::GameGivePickupTo = nullptr;
 
-void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner)
+void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, bool DestoryAfterPickup)
 {
     static auto bStripped = Scanner::At(std::bit_cast<const uint8_t*>(GameGivePickupTo)).Is("ret*");
 
@@ -72,7 +72,7 @@ void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner)
     }
 
     if (!bStripped)
-        (this->*GameGivePickupTo)(InventoryOwner);
+        (this->*GameGivePickupTo)(InventoryOwner, DestoryAfterPickup);
 }
 
 void AFortPickup::SetSwapItemGuid(const FGuid& SwapItemGuid)

@@ -77,9 +77,9 @@ public:
 
     void TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag InPickupSourceTypeFlags = EFortPickupSourceTypeFlag::Other, EFortPickupSpawnSource InPickupSpawnSource = EFortPickupSpawnSource::Unset);
 
-    void GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner);
+    void GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, bool DestoryAfterPickup);
 
-    static void (AFortPickup::*GameGivePickupTo)(IFortInventoryOwnerInterface* InventoryOwner);
+    static void (AFortPickup::*GameGivePickupTo)(IFortInventoryOwnerInterface* InventoryOwner, bool DestoryAfterPickup);
 
     void SetSwapItemGuid(const FGuid& SwapItemGuid);
 

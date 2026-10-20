@@ -188,8 +188,9 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
             auto Role = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role")))->GetOffset_ForInternal();
             auto Body = std::format("cmp byte ptr [rcx+{:#x}], 0x3; jnz *; test rdx, rdx; jz *", Role);
             auto FrameBody = std::format("push rbx; sub rsp, 0x20; cmp byte ptr [rcx+{:#x}], 0x3; mov rbx, rcx; jnz *; test rdx, rdx; jz *", Role);
+            auto DestoryAfterPickupBody = std::format("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+{:#x}], 0x3; movzx edi, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *", Role);
 
-            GivePickupTo = Scanner::Slot(TEXT("AFortPickup::GivePickupTo"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Body) || Entry.Is(FrameBody); });
+            GivePickupTo = Scanner::Slot(TEXT("AFortPickup::GivePickupTo"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Is(Body) || Entry.Is(FrameBody) || Entry.Is(DestoryAfterPickupBody); });
         }
         else
         {
