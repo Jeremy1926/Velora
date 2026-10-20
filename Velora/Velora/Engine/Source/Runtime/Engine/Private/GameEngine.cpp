@@ -29,8 +29,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto Tick = Detour(TEXT("UGameEngine::Tick"), Scanner::String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)")).Start().Get(), &UGameEngine::Tick);
-
 UGameInstance* UGameEngine::GetGameInstance() const
 {
     static auto GameInstance = GetClass()->FindPropertyByName(FName(TEXT("GameInstance")));
@@ -38,6 +36,10 @@ UGameInstance* UGameEngine::GetGameInstance() const
     return *GameInstance->ContainerPtrToValuePtr<UGameInstance*>(this);
 }
 
+DETOUR(UGameEngine, Tick, Anchor::Hook()
+    .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+    .Start()
+    .Inline())
 void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 {
     const TCHAR* State = TEXT("Loading");
@@ -205,5 +207,5 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         LastState = State;
     }
 
-    (this->*::Tick)(DeltaSeconds, bIdleMode);
+    Original(DeltaSeconds, bIdleMode);
 }
