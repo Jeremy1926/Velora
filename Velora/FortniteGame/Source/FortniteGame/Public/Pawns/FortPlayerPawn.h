@@ -7,8 +7,16 @@
 class AController;
 class AFortPickup;
 class UGameplayEffect;
+class UScriptStruct;
 struct FGameplayTag;
 struct FScalableFloat;
+
+struct FZiplinePawnState
+{
+    static UScriptStruct* StaticStruct();
+
+    int32 GetAuthoritativeValue() const;
+};
 
 class AFortPlayerPawn : public AFortPawn
 {
@@ -18,6 +26,12 @@ public:
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
+
+    void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
+
+    void HandleZiplineStateChanged();
+
+    FZiplinePawnState& GetZiplineState();
 
     bool CanReviveFromDBNO(AController* EventInstigator);
 

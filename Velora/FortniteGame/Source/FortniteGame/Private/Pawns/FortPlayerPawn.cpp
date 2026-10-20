@@ -16,6 +16,7 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 void AFortPlayerPawn::OnBlueprintPlace()
@@ -124,6 +125,44 @@ void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInst
             }
         }
     }
+}
+
+UScriptStruct* FZiplinePawnState::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ZiplinePawnState"));
+
+    return Struct;
+}
+
+int32 FZiplinePawnState::GetAuthoritativeValue() const
+{
+    static auto AuthoritativeValue = StaticStruct()->FindPropertyByName(FName(TEXT("AuthoritativeValue")));
+
+    return *AuthoritativeValue->ContainerPtrToValuePtr<int32>(this);
+}
+
+void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState)
+{
+    auto& ZiplineState = GetZiplineState();
+
+    if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
+        memcpy(&ZiplineState, &InZiplineState, FZiplinePawnState::StaticStruct()->GetPropertiesSize());
+
+    HandleZiplineStateChanged();
+}
+
+void AFortPlayerPawn::HandleZiplineStateChanged()
+{
+    static auto HandleZiplineStateChanged = Scanner::Function<void (*)(AFortPlayerPawn*)>(Scanner::CallTo(Scanner::Event(TEXT("ServerSendZiplineState")).Get()).Last("call 0x*").Target(TEXT("AFortPlayerPawn::HandleZiplineStateChanged")));
+
+    HandleZiplineStateChanged(this);
+}
+
+FZiplinePawnState& AFortPlayerPawn::GetZiplineState()
+{
+    static auto ZiplineState = GetClass()->FindPropertyByName(FName(TEXT("ZiplineState")));
+
+    return *ZiplineState->ContainerPtrToValuePtr<FZiplinePawnState>(this);
 }
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
