@@ -829,6 +829,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaMapInfo.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaSupplyDrop.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
@@ -1388,6 +1391,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaSupplyDrop.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp">
