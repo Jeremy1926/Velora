@@ -727,6 +727,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTasks\Classes\GameplayTasksComponent.h">
       <Filter>Engine\Source\Runtime\GameplayTasks\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagAssetInterface.h">
+      <Filter>Engine\Source\Runtime\GameplayTags\Classes</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagContainer.h">
       <Filter>Engine\Source\Runtime\GameplayTags\Classes</Filter>
     </ClInclude>
@@ -1245,6 +1248,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\Misc\StringAssetReference.cpp">
       <Filter>Engine\Source\Runtime\CoreUObject\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagAssetInterface.cpp">
+      <Filter>Engine\Source\Runtime\GameplayTags\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagContainer.cpp">
       <Filter>Engine\Source\Runtime\GameplayTags\Private</Filter>

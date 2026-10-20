@@ -22,9 +22,12 @@ class IAbilitySystemInterface;
 class IFortInventoryOwnerInterface;
 class UFortAbilitySet;
 class UFortItem;
+class UFortWeaponItemDefinition;
 class UFortWorldItemDefinition;
 class UGameplayEffect;
 class USoundBase;
+enum class EFortPickupSourceTypeFlag : uint8;
+enum class EFortPickupSpawnSource : uint8;
 
 class UFortKismetLibrary : public UBlueprintFunctionLibrary
 {
@@ -52,6 +55,8 @@ public:
     static FActiveGameplayEffectHandle ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags);
 
     static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
+
+    static void CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource);
 
     static bool AreAthenaVehiclesEnabled();
 

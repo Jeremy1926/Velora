@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Building/BuildingContainer.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/FortGameStateAthena.h"
 #include "Items/FortInventory.h"
 #include "Items/FortLootPackage.h"
 #include "Items/FortLootTier.h"
@@ -9,8 +10,11 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Pawns/FortPawn.h"
+#include "FortKismetLibrary.h"
 #include "FortniteGame.h"
 #include "Engine/World.h"
+#include "GameplayTagAssetInterface.h"
+#include "GameplayTagContainer.h"
 #include "Logging/LogMacros.h"
 #include "Math/Rotator.h"
 #include "Templates/Casts.h"
@@ -115,6 +119,18 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
                         Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
 
                         bSpawnedLoot = true;
+
+                        auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(WorldItemDefinition);
+
+                        if (WeaponItemDefinition && AFortGameStateAthena::AmmoDroppedFromContainersForWeaponPickup())
+                        {
+                            static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
+
+                            FGameplayTagContainer SourceTags;
+                            ((IGameplayTagAssetInterface*)GetInterfaceAddress(GameplayTagAssetInterface))->GetOwnedGameplayTags(SourceTags);
+
+                            UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(this, WeaponItemDefinition, SourceTags, LootSpawnLocation, EFortPickupSourceTypeFlag::Container, EFortPickupSpawnSource::Unset);
+                        }
                     }
                 }
                 else

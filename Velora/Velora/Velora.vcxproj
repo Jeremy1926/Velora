@@ -273,6 +273,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\AssetManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\ActorComponent.h" />
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTasks\Classes\GameplayTasksComponent.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagAssetInterface.h" />
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagContainer.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffectTypes.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayPrediction.h" />
@@ -465,6 +466,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\LevelActor.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Guid.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\Misc\StringAssetReference.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagAssetInterface.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\GameplayTags\Private\GameplayTagContainer.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemLog.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayPrediction.cpp" />

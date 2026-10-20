@@ -56,4 +56,6 @@ public:
     void OnRep_CurrentPlaylistInfo();
 
     void StreamAdditionalPlaylistLevels();
+
+    static bool AmmoDroppedFromContainersForWeaponPickup();
 };

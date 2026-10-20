@@ -4,6 +4,7 @@
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "HAL/IConsoleManager.h"
 #include "Engine/World.h"
 #include "Misc/CoreMiscDefines.h"
 #include "Templates/Casts.h"
@@ -169,6 +170,13 @@ void AFortGameStateAthena::StreamAdditionalPlaylistLevels()
         if (!Level.IsNull())
             StartStreamingAdditionalPlaylistLevel(FName(*Level.GetLongPackageName()));
     }
+}
+
+bool AFortGameStateAthena::AmmoDroppedFromContainersForWeaponPickup()
+{
+    static auto bAmmoDroppedFromContainersForWeaponPickup = IConsoleManager::Get().FindConsoleVariable(TEXT("Athena.bAmmoDroppedFromContainersForWeaponPickup"));
+
+    return bAmmoDroppedFromContainersForWeaponPickup && bAmmoDroppedFromContainersForWeaponPickup->GetInt() == 1;
 }
 
 UScriptStruct* FGameMemberInfoArray::StaticStruct()

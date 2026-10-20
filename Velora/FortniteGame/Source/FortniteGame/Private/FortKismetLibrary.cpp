@@ -314,6 +314,13 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
     return Pickup;
 }
 
+void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
+{
+    static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Scanner::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation")).Get(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation")));
+
+    CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(WorldContextObject, WeaponItemDefinition, SourceTags, Location, SourceTypeFlag, SpawnSource);
+}
+
 bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
 {
     static auto AreAthenaVehiclesEnabled = Scanner::Function<bool (*)()>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled")).Get(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled")));
