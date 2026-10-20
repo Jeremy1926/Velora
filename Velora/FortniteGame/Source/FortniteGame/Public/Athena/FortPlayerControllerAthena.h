@@ -2,6 +2,7 @@
 
 #include "Player/FortPlayerControllerPvP.h"
 
+class AFortPlayerState;
 class UAthenaMarkerComponent;
 class UAthenaPickaxeItemDefinition;
 
@@ -26,4 +27,6 @@ public:
     UAthenaMarkerComponent* GetMarkerComponent() const;
 
     uint8 GetSquadId() const;
+
+    AFortPlayerState* GetSkydiveLeader() const;
 };

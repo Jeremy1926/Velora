@@ -17,5 +17,9 @@ public:
 
     FRotator GetControlRotation() const;
 
+    void SetControlRotation(const FRotator& NewRotation);
+
+    FName& GetStateName();
+
     void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const;
 };

@@ -360,6 +360,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerPvP.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerControllerAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AthenaMarkerComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Aircraft.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerStateAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGamePvPBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameModeAthena.h" />
@@ -525,6 +526,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerControllerAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AthenaMarkerComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Aircraft.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerStateAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameModeAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameMode.cpp" />

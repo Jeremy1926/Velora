@@ -22,6 +22,12 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\Vehicles">
       <UniqueIdentifier>{544B5930-BAB4-4BD0-BD68-3E1C3AC18CB8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Components">
+      <UniqueIdentifier>{35978C84-351E-4431-8C38-1352D1015A92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Components">
+      <UniqueIdentifier>{6812C81A-9AD1-42CE-8FE6-202F05B9D5EC}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine">
       <UniqueIdentifier>{521C08BF-BDBB-4170-9702-D299CA29AA14}</UniqueIdentifier>
     </Filter>
@@ -949,6 +955,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AthenaMarkerComponent.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Aircraft.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerStateAthena.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
@@ -1413,6 +1422,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AthenaMarkerComponent.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Aircraft.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerStateAthena.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>

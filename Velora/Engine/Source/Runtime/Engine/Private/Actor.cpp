@@ -129,6 +129,13 @@ AActor* AActor::GetOwner() const
     return *Owner->ContainerPtrToValuePtr<AActor*>(this);
 }
 
+UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
+{
+    static auto FindComponentByClass = Scanner::Native(TEXT("/Script/Engine.Actor:GetComponentByClass")).Find("jmp [rax+0x*]").Slot(TEXT("AActor::FindComponentByClass"));
+
+    return Scanner::Virtual<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(this, FindComponentByClass)(this, ComponentClass);
+}
+
 ULevel* AActor::GetLevel() const
 {
     return (ULevel*)GetOuter();

@@ -26,3 +26,10 @@ void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
 
     ServerAcknowledgePossession(this, P);
 }
+
+void APlayerController::ServerRestartPlayer_Implementation()
+{
+    static auto ServerRestartPlayer = Scanner::Exec(TEXT("/Script/Engine.PlayerController:ServerRestartPlayer")).Find("jmp [rax+*]").Slot(TEXT("APlayerController::ServerRestartPlayer_Implementation"));
+
+    Scanner::Virtual<void (*)(APlayerController*)>(this, ServerRestartPlayer)(this);
+}

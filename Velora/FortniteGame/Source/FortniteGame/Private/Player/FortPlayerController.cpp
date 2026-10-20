@@ -992,3 +992,10 @@ UStatManager* AFortPlayerController::GetStatManager() const
 
     return *StatManager->ContainerPtrToValuePtr<UStatManager*>(this);
 }
+
+FRotator& AFortPlayerController::GetAirSpawnControlRotation()
+{
+    static auto AirSpawnControlRotation = Scanner::String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying.")).Start().Find("cmp [rax+0x*], r*").Find("movsd xmm*, qword ptr [r*+0x*]").Disp(TEXT("AFortPlayerController::AirSpawnControlRotation"));
+
+    return *(FRotator*)((uint8_t*)this + AirSpawnControlRotation);
+}

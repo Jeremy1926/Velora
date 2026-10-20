@@ -63,3 +63,10 @@ uint8 AFortPlayerControllerAthena::GetSquadId() const
 
     return FortPlayerState ? FortPlayerState->GetSquadId() : 0;
 }
+
+AFortPlayerState* AFortPlayerControllerAthena::GetSkydiveLeader() const
+{
+    static auto SkydiveLeader = GetClass()->FindPropertyByName(FName(TEXT("SkydiveLeader")));
+
+    return *SkydiveLeader->ContainerPtrToValuePtr<AFortPlayerState*>(this);
+}

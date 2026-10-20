@@ -4,9 +4,11 @@
 #include "Engine/EngineTypes.h"
 #include "Components/SceneComponent.h"
 #include "Math/Vector.h"
+#include "Templates/SubclassOf.h"
 
 class APawn;
 class UActorChannel;
+class UActorComponent;
 class ULevel;
 class UNetDriver;
 
@@ -42,6 +44,14 @@ public:
     APawn* GetInstigator() const;
 
     AActor* GetOwner() const;
+
+    UActorComponent* FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const;
+
+    template<class T>
+    T* FindComponentByClass() const
+    {
+        return (T*)FindComponentByClass(T::StaticClass());
+    }
 
     FORCEINLINE FVector GetActorLocation() const
     {

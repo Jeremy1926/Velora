@@ -134,4 +134,6 @@ public:
     UFortRegisteredPlayerInfo*& GetMyPlayerInfo();
 
     UStatManager* GetStatManager() const;
+
+    FRotator& GetAirSpawnControlRotation();
 };

@@ -35,6 +35,20 @@ FRotator AController::GetControlRotation() const
     return Result;
 }
 
+void AController::SetControlRotation(const FRotator& NewRotation)
+{
+    static auto SetControlRotation = Scanner::Exec(TEXT("/Script/Engine.Controller:SetControlRotation")).Find("call [*+0x*]").Slot(TEXT("AController::SetControlRotation"));
+
+    Scanner::Virtual<void (*)(AController*, const FRotator&)>(this, SetControlRotation)(this, NewRotation);
+}
+
+FName& AController::GetStateName()
+{
+    static auto StateName = GetClass()->FindPropertyByName(FName(TEXT("StateName")));
+
+    return *StateName->ContainerPtrToValuePtr<FName>(this);
+}
+
 void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
     static auto GetPlayerViewPoint = []

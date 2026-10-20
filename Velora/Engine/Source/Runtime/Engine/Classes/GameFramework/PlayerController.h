@@ -8,4 +8,6 @@ public:
     void SendClientAdjustment();
 
     void ServerAcknowledgePossession_Implementation(APawn* P);
+
+    void ServerRestartPlayer_Implementation();
 };
