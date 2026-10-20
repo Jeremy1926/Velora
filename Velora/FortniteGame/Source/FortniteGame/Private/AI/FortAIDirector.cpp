@@ -7,12 +7,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto SpawnAIPawn = []
-{
-    auto DirectorSpawnAIPawn = Scanner::String(TEXT("AI Director failed to spawn pawn!"));
-
-    return DirectorSpawnAIPawn.Get() ? Detour(TEXT("AFortAIDirector::SpawnAIPawn"), DirectorSpawnAIPawn.Start().Get(), &AFortAIDirector::SpawnAIPawn) : nullptr;
-}();
 
 UScriptStruct* FFortAIPawnLootDropData::StaticStruct()
 {
@@ -238,12 +232,17 @@ UClass* AFortAIDirector::StaticClass()
     return Class;
 }
 
+DETOUR(AFortAIDirector, SpawnAIPawn, Anchor::Hook()
+    .String(TEXT("AI Director failed to spawn pawn!"))
+    .Optional()
+    .Start()
+    .Inline())
 AFortAIPawn* AFortAIDirector::SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo)
 {
     const float LootDropChance = PendingSpawnInfo.GetLootDropData().GetLootDropChance();
     const FName WorldItemTierGroup = PendingSpawnInfo.GetLootDropData().GetWorldItemTierGroup();
 
-    auto NewPawn = (this->*::SpawnAIPawn)(PendingSpawnInfo);
+    auto NewPawn = Original(PendingSpawnInfo);
 
     if (NewPawn)
         NewPawn->SetLootDropData(LootDropChance, WorldItemTierGroup);
