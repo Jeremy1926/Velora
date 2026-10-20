@@ -14,6 +14,19 @@ FName::FName(EName N)
         return;
     }
 
+    if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
+    {
+        static auto FromValidEName = Scanner::Function<void (*)(NAME_INDEX*, EName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov edx, 0x11e").Find("call 0x*").Target(TEXT("FNameEntryId::FromValidEName")));
+
+        ComparisonIndex = NAME_None;
+        Number = 0;
+
+        if (N != NAME_None)
+            FromValidEName(&ComparisonIndex, N);
+
+        return;
+    }
+
     static auto Constructor = Scanner::Function<void (*)(FName*, EName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov edx, 0x11e").Find("call 0x*").Target(TEXT("FName::FName(EName)")));
 
     Constructor(this, N);
