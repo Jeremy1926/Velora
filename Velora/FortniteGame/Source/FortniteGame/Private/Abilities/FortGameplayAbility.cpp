@@ -51,16 +51,18 @@ static auto execEquipAbilityWeapon = []
 
 static auto ForceEquipValidWeapon = []
 {
-    if (!ClientEndAbilityWeaponCall().Get())
+    auto Caller = ClientEndAbilityWeaponCall().Get() ? ClientEndAbilityWeaponCall().Start() : Scanner::String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d")).Start();
+
+    if (!Caller.Get())
         return false;
 
-    auto RemoveAbilityWeapon = ClientEndAbilityWeaponCall().Start().Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]").Find("call [rax+0x*]");
+    auto RemoveAbilityWeapon = Caller.Find("test rdx, rdx; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]").Find("call [rax+0x*]");
 
     if (RemoveAbilityWeapon.Is("call [rax+0x*]; mov rcx, *; call 0x*"))
         return DetourCall(TEXT("AFortPlayerController::ForceEquipValidWeapon"), RemoveAbilityWeapon.Find("call 0x*").Get(), &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
 
     auto VTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
-    auto Slot = RemoveAbilityWeapon.Is("call [rax+0x*]; mov rax, [*]; mov rcx, *; call [rax+0x*]") ? RemoveAbilityWeapon.Find("call [rax+0x*]").Disp() : 0;
+    auto Slot = RemoveAbilityWeapon.Is("call [rax+0x*]; mov rax, [*]; mov rcx, *; call [rax+0x*]") || RemoveAbilityWeapon.Is("call [rax+0x*]; test *, *; jz *; mov rax, [*]; mov rcx, *; call [rax+0x*]") ? RemoveAbilityWeapon.Find("call [rax+0x*]").Disp() : 0;
 
     return DetourVTable(TEXT("AFortPlayerController::ForceEquipValidWeapon"), VTable, Slot, &AFortPlayerController::ForceEquipValidWeapon) != nullptr;
 }();
