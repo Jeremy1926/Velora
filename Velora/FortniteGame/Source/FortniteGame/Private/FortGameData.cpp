@@ -2,6 +2,7 @@
 #include "FortGameData.h"
 #include "FortAssetManager.h"
 #include "GameDataBR.h"
+#include "GameDataCosmetics.h"
 #include "Abilities/FortAbilitySet.h"
 #include "UObject/AssetPtr.h"
 #include "UObject/UnrealType.h"
@@ -54,7 +55,7 @@ const TAssetPtr<UClass>& UFortGameData::GetEmoteGameplayAbility() const
 {
     static auto EmoteGameplayAbility = GetClass()->FindPropertyByName(FName(TEXT("EmoteGameplayAbility")));
 
-    return *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this);
+    return EmoteGameplayAbility ? *EmoteGameplayAbility->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : UGameDataCosmetics::Get()->GetEmoteGameplayAbility();
 }
 
 const TArray<TAssetPtr<UDataTable>>& UFortGameData::GetLootTierDataTables() const

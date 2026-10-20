@@ -34,3 +34,10 @@ UGameDataBR* UFortAssetManager::GetGameDataBR()
 
     return GetGameDataBR(this);
 }
+
+UGameDataCosmetics* UFortAssetManager::GetGameDataCosmetics()
+{
+    static auto GetGameDataCosmetics = Scanner::Function<UGameDataCosmetics* (*)(UFortAssetManager*)>(Scanner::At(Scanner::Native(TEXT("/Script/FortniteGame.FortBannerUtilities:GetBannerColorCategoryName")).Call().Find("jmp 0x*").Target()).Get(TEXT("UFortAssetManager::GetGameDataCosmetics")));
+
+    return GetGameDataCosmetics(this);
+}

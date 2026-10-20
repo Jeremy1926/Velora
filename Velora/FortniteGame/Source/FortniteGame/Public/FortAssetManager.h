@@ -4,6 +4,7 @@
 
 class UFortGameData;
 class UGameDataBR;
+class UGameDataCosmetics;
 
 class UFortAssetManager : public UAssetManager
 {
@@ -13,4 +14,6 @@ public:
     UFortGameData* GetGameData();
 
     UGameDataBR* GetGameDataBR();
+
+    UGameDataCosmetics* GetGameDataCosmetics();
 };
