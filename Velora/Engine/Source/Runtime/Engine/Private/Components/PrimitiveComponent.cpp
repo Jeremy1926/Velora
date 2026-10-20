@@ -19,7 +19,9 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
     if (Scanner::IsSlot(Slot))
         return Scanner::Virtual<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(this, Slot)(this, NewVel, bAddToCurrent, BoneName);
 
-    static auto SetPhysicsLinearVelocity = Scanner::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity")).Get(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity")));
+    static auto SetPhysicsLinearVelocity = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
+        .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
+        .Get();
 
     SetPhysicsLinearVelocity(this, NewVel, bAddToCurrent, BoneName);
 }
@@ -32,21 +34,27 @@ void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, 
     if (Scanner::IsSlot(Slot))
         return Scanner::Virtual<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(this, Slot)(this, NewAngVel, bAddToCurrent, BoneName);
 
-    static auto SetPhysicsAngularVelocityInRadians = Scanner::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians")).Get(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians")));
+    static auto SetPhysicsAngularVelocityInRadians = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
+        .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
+        .Get();
 
     SetPhysicsAngularVelocityInRadians(this, NewAngVel, bAddToCurrent, BoneName);
 }
 
 void UPrimitiveComponent::IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnore)
 {
-    static auto IgnoreActorWhenMoving = Scanner::Function<void (*)(UPrimitiveComponent*, AActor*, bool)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:IgnoreActorWhenMoving")).Get(TEXT("UPrimitiveComponent::IgnoreActorWhenMoving")));
+    static auto IgnoreActorWhenMoving = Anchor::Function<void (*)(UPrimitiveComponent*, AActor*, bool)>(TEXT("UPrimitiveComponent::IgnoreActorWhenMoving"))
+        .Native(TEXT("/Script/Engine.PrimitiveComponent:IgnoreActorWhenMoving"))
+        .Get();
 
     IgnoreActorWhenMoving(this, Actor, bShouldIgnore);
 }
 
 void UPrimitiveComponent::GetOverlappingActors(TArray<AActor*>& OverlappingActors, TSubclassOf<AActor> ClassFilter) const
 {
-    static auto GetOverlappingActors = Scanner::Function<void (*)(const UPrimitiveComponent*, TArray<AActor*>&, UClass*)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors")).Get(TEXT("UPrimitiveComponent::GetOverlappingActors")));
+    static auto GetOverlappingActors = Anchor::Function<void (*)(const UPrimitiveComponent*, TArray<AActor*>&, UClass*)>(TEXT("UPrimitiveComponent::GetOverlappingActors"))
+        .Native(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
+        .Get();
 
     GetOverlappingActors(this, OverlappingActors, ClassFilter);
 }
