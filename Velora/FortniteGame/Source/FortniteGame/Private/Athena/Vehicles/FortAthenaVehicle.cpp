@@ -26,7 +26,9 @@ void AFortAthenaVehicle::InitializeServerImplementations()
         if (!ServerUpdatePhysicsParams)
             return false;
 
-        auto ServerUpdatePhysicsParams_Implementation = Scanner::Exec(GetServerFunctionPath(PhysicsFunctionName)).Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"));
+        auto ServerUpdatePhysicsParamsExec = Scanner::Exec(GetServerFunctionPath(PhysicsFunctionName));
+        auto Implementation = ServerUpdatePhysicsParamsExec.Find("call [rax+*]", 2);
+        auto ServerUpdatePhysicsParams_Implementation = (Implementation.Get() ? Implementation : ServerUpdatePhysicsParamsExec.Find("call [rax+*]")).Slot(TEXT("AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation"));
         auto ServerUpdateInputParams = Scanner::Exec(GetServerFunctionPath(TEXT("ServerUpdateInputParams")));
         auto ServerUpdateInputParams_Implementation = ServerUpdateInputParams.Get() ? ServerUpdateInputParams.Find("call [rax+*]", 2).Slot(TEXT("AFortAthenaVehicle::ServerUpdateInputParams_Implementation")) : 0;
         auto OwnerClass = (UClass*)ServerUpdatePhysicsParams->GetOuter();
