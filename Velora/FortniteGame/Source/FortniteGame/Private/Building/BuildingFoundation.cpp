@@ -41,13 +41,24 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
 {
     static auto Offset = TransformIsSetFlag().Disp();
     static auto Mask = (uint8_t)TransformIsSetFlag().Imm();
+    static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
 
     FlushNetDormancy();
 
     GetDynamicFoundationTransform() = NewTransform;
     *((uint8_t*)this + Offset) |= Mask;
 
-    OnRep_DynamicFoundationTransform();
+    if (!DynamicFoundationRepData)
+    {
+        OnRep_DynamicFoundationTransform();
+        return;
+    }
+
+    auto& RepData = *DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this);
+    RepData.Translation = NewTransform.GetTranslation();
+    RepData.Rotation = NewTransform.GetRotation();
+
+    OnRep_DynamicFoundationRepData();
 }
 
 void ABuildingFoundation::OnRep_DynamicFoundationTransform()
@@ -55,6 +66,13 @@ void ABuildingFoundation::OnRep_DynamicFoundationTransform()
     static auto OnRep_DynamicFoundationTransform = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationTransform")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationTransform")));
 
     OnRep_DynamicFoundationTransform(this);
+}
+
+void ABuildingFoundation::OnRep_DynamicFoundationRepData()
+{
+    static auto OnRep_DynamicFoundationRepData = Scanner::Function<void (*)(ABuildingFoundation*)>(Scanner::Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData")).Find("jmp 0x*").Target(TEXT("ABuildingFoundation::OnRep_DynamicFoundationRepData")));
+
+    OnRep_DynamicFoundationRepData(this);
 }
 
 bool ABuildingFoundation::TransformIsSet() const
