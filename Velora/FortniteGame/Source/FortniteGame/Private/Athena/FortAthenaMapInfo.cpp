@@ -102,7 +102,11 @@ const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMaxPlacementHeight() cons
 const FScalableFloat* AFortAthenaMapInfo::GetSafeZoneRadius() const
 {
     static auto SafeZoneDefinitions = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinitions")));
+    static auto SafeZoneDefinition = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinition")));
     static auto Radius = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition")))->FindPropertyByName(FName(TEXT("Radius")))->GetOffset_ForInternal();
+
+    if (!SafeZoneDefinitions)
+        return (const FScalableFloat*)(SafeZoneDefinition->ContainerPtrToValuePtr<uint8>(this) + Radius);
 
     auto& Definitions = *SafeZoneDefinitions->ContainerPtrToValuePtr<TArray<uint8>>(this);
 
