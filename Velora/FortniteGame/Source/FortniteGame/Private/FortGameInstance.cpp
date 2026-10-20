@@ -11,7 +11,8 @@ TSharedPtr<IAnalyticsProvider>& UFortGameInstance::GetServerAnalyticsProvider()
         if (GetServerAnalyticsProvider.Is("lea rax, [rcx+0x*]; ret"))
             return Scanner::Offset(TEXT("UFortGameInstance::ServerAnalyticsProvider"), (int64)GetServerAnalyticsProvider.Disp());
 
-        auto Assign = Scanner::Reference(Scanner::String("AnalyticsET").Start().Get(), "call 0x*").Find("*");
+        auto EmptyGameState = Scanner::String(TEXT("%s|[EMPTY]"));
+        auto Assign = Scanner::Reference((EmptyGameState.Get() ? EmptyGameState : Scanner::String("AnalyticsET")).Start().Get(), "call 0x*").Find("*");
 
         return Scanner::Offset(TEXT("UFortGameInstance::ServerAnalyticsProvider"), Assign.Imm() + Assign.Disp());
     }();

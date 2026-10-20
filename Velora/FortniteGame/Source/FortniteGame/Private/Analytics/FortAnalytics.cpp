@@ -4,7 +4,12 @@
 
 TSharedPtr<IAnalyticsProvider> UFortAnalytics::CreateAnalyticsProvider(const FString& UserID, const FString& GameSessionID, const FString& Platform, EAnalyticsProviderType ProviderType, const FString& GameState)
 {
-    static auto CreateAnalyticsProvider = Scanner::Function<TSharedPtr<IAnalyticsProvider> (*)(const FString&, const FString&, const FString&, EAnalyticsProviderType, const FString&)>(Scanner::String("AnalyticsET").Start().Get(TEXT("UFortAnalytics::CreateAnalyticsProvider")));
+    static auto CreateAnalyticsProvider = Scanner::Function<TSharedPtr<IAnalyticsProvider> (*)(const FString&, const FString&, const FString&, EAnalyticsProviderType, const FString&)>([]
+    {
+        auto EmptyGameState = Scanner::String(TEXT("%s|[EMPTY]"));
+
+        return (EmptyGameState.Get() ? EmptyGameState : Scanner::String("AnalyticsET")).Start().Get(TEXT("UFortAnalytics::CreateAnalyticsProvider"));
+    }());
 
     return CreateAnalyticsProvider(UserID, GameSessionID, Platform, ProviderType, GameState);
 }
