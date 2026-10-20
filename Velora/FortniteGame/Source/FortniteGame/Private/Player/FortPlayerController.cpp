@@ -454,11 +454,16 @@ void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDe
 
 void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
 {
+    static auto bHasIgnoreBuildingMaterials = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")))->FindPropertyByName(FName(TEXT("bIgnoreBuildingMaterials"))) != nullptr;
+
     UFortItemDefinition* IgnoreItemDef = nullptr;
     uint32 bIgnoreBuildingMaterials = 0;
 
     Stack.StepCompiledIn(&IgnoreItemDef);
-    Stack.StepCompiledIn(&bIgnoreBuildingMaterials);
+
+    if (bHasIgnoreBuildingMaterials)
+        Stack.StepCompiledIn(&bIgnoreBuildingMaterials);
+
     Stack.Code += !!Stack.Code;
 
     DropAllItems(IgnoreItemDef, !!bIgnoreBuildingMaterials);
