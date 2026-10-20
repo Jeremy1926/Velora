@@ -5,34 +5,52 @@
 
 UProperty* UStruct::FindPropertyByName(FName InName) const
 {
-    static auto FindPropertyByName = []
-    {
-        auto& Version = FEngineVersion::Current();
-        auto FindPropertyByName = Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? Scanner::Pattern("48 8B 49 70 48 85 C9 74 ? 4C 8B CA 49 C1 E9 20 48 8B 41 28") : Version.GetMajor() > 4 || Version.GetMinor() >= 22 ? Scanner::Pattern("48 8B 41 68 48 89 54 24 10 48 85 C0 74 ? 44 8B 54 24 14") : Scanner::Pattern("48 8B 41 58 48 85 C0 74 ? 0F 1F 80 00 00 00 00 48 39 50 18 74 ? 48 8B 40 50 48 85 C0 75 ? 33 C0 C3");
+    auto& Version = FEngineVersion::Current();
 
-        return Scanner::Function<UProperty* (*)(const UStruct*, FName)>(FindPropertyByName.Get(TEXT("UStruct::FindPropertyByName")));
-    }();
+    static auto FindPropertyByName = Anchor::Function<UProperty* (*)(const UStruct*, FName)>(TEXT("UStruct::FindPropertyByName"))
+        .If(Version.GetMajor() > 4 || Version.GetMinor() >= 25)
+        .Pattern("48 8B 49 70 48 85 C9 74 ? 4C 8B CA 49 C1 E9 20 48 8B 41 28")
+        .Or()
+        .If(Version.GetMajor() <= 4 && Version.GetMinor() >= 22 && Version.GetMinor() < 25)
+        .Pattern("48 8B 41 68 48 89 54 24 10 48 85 C0 74 ? 44 8B 54 24 14")
+        .Or()
+        .If(Version.GetMajor() <= 4 && Version.GetMinor() < 22)
+        .Pattern("48 8B 41 58 48 85 C0 74 ? 0F 1F 80 00 00 00 00 48 39 50 18 74 ? 48 8B 40 50 48 85 C0 75 ? 33 C0 C3")
+        .Get();
 
     return FindPropertyByName(this, InName);
 }
 
 void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
 {
-    static auto InitializeStruct = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r8d, 0x1").Find("call [*+0x*]").Slot(TEXT("UStruct::InitializeStruct"));
+    static auto InitializeStruct = Anchor::Slot(TEXT("UStruct::InitializeStruct"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r8d, 0x1")
+        .Find("call [*+0x*]")
+        .Get();
 
     Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, InitializeStruct)(this, Dest, ArrayDim);
 }
 
 void UStruct::DestroyStruct(void* Dest, int32 ArrayDim) const
 {
-    static auto DestroyStruct = Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r8d, 0x1").Find("call [*+0x*]").Slot(TEXT("UStruct::InitializeStruct")) + (int32)sizeof(void*);
+    static auto DestroyStruct = Anchor::Slot(TEXT("UStruct::InitializeStruct"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r8d, 0x1")
+        .Find("call [*+0x*]")
+        .Get() + (int32)sizeof(void*);
 
     Scanner::Virtual<void (*)(const UStruct*, void*, int32)>(this, DestroyStruct)(this, Dest, ArrayDim);
 }
 
 void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim) const
 {
-    static auto CopyScriptStruct = Scanner::Function<void (*)(const UScriptStruct*, void*, void const*, int32)>(Scanner::Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData")).Find("mov r9d, 0x1").Find("call 0x*").Target(TEXT("UScriptStruct::CopyScriptStruct")));
+    static auto CopyScriptStruct = Anchor::Function<void (*)(const UScriptStruct*, void*, void const*, int32)>(TEXT("UScriptStruct::CopyScriptStruct"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9d, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Get();
 
     CopyScriptStruct(this, Dest, Src, ArrayDim);
 }
@@ -79,7 +97,11 @@ UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 
 UObject* UClass::InternalCreateDefaultObjectWrapper() const
 {
-    static auto CreateDefaultObject = Scanner::String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'.")).Start().Find("call [rax+0x*]; mov *, [*+0x*]").Slot(TEXT("UClass::CreateDefaultObject"));
+    static auto CreateDefaultObject = Anchor::Slot(TEXT("UClass::CreateDefaultObject"))
+        .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
+        .Start()
+        .Find("call [rax+0x*]; mov *, [*+0x*]")
+        .Get();
 
     return Scanner::Virtual<UObject* (*)(const UClass*)>(this, CreateDefaultObject)(this);
 }
