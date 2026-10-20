@@ -62,6 +62,11 @@ void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentStat
         SetDynamicFoundationTransform(GetTransform());
 
     (this->*::PostUpdate)(PersistentState, ReservedRandomValues);
+
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
+
+    if (FoundationEnabledState && *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Disabled && GetLevelToStream() != NAME_None)
+        StreamOutMyBuilding();
 }
 
 void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
@@ -94,7 +99,6 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
     static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
     static auto bFoundationEnabled = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bFoundationEnabled")));
     static auto bConditionalFoundation = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bConditionalFoundation")));
-    static auto LevelToStream = GetClass()->FindPropertyByName(FName(TEXT("LevelToStream")));
     static auto Offset = PostUpdateCalledFlag().Disp(TEXT("ABuildingFoundation::bPostUpdateCalled"));
     static auto Mask = (uint8_t)PostUpdateCalledFlag().Imm();
 
@@ -122,8 +126,14 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
         OnRep_FoundationEnabled(bOldEnabled);
     }
 
-    if (!bEnabled || !(*((uint8_t*)this + Offset) & Mask) || bConditionalFoundation->GetPropertyValue_InContainer(this) || *LevelToStream->ContainerPtrToValuePtr<FName>(this) != NAME_None)
+    if (!(*((uint8_t*)this + Offset) & Mask) || bConditionalFoundation->GetPropertyValue_InContainer(this) || bEnabled == (GetLevelToStream() != NAME_None))
         return;
+
+    if (!bEnabled)
+    {
+        StreamOutMyBuilding();
+        return;
+    }
 
     if (auto GameState = Cast<AFortGameState>(GetWorld()->GetGameState()))
     {
@@ -147,6 +157,15 @@ void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* Re
     static auto SelectAndStreamInLevel = Scanner::Function<void (*)(ABuildingFoundation*, const FReservedRandomValues*)>(PostUpdateCall().Target());
 
     SelectAndStreamInLevel(this, ReservedRandomValues);
+}
+
+bool ABuildingFoundation::StreamOutMyBuilding()
+{
+    static auto bNeverStreamOut = GetClass()->FindPropertyByName(FName(TEXT("bNeverStreamOut")));
+    static auto Offset = bNeverStreamOut ? bNeverStreamOut->GetOffset_ForInternal() : 0;
+    static auto StreamOutMyBuilding = Scanner::Function<bool (*)(ABuildingFoundation*)>(Offset ? Scanner::Pattern(std::format("80 B9 {:02X} {:02X} {:02X} {:02X} 00 48 8B D9", Offset & 0xFF, (Offset >> 8) & 0xFF, (Offset >> 16) & 0xFF, (Offset >> 24) & 0xFF).c_str()).Start().Get(TEXT("ABuildingFoundation::StreamOutMyBuilding")) : nullptr);
+
+    return StreamOutMyBuilding(this);
 }
 
 void ABuildingFoundation::OnRep_DynamicFoundationTransform()
@@ -216,6 +235,13 @@ EDynamicFoundationType ABuildingFoundation::GetDynamicFoundationType() const
     static auto DynamicFoundationType = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationType")));
 
     return *DynamicFoundationType->ContainerPtrToValuePtr<EDynamicFoundationType>(this);
+}
+
+FName ABuildingFoundation::GetLevelToStream() const
+{
+    static auto LevelToStream = GetClass()->FindPropertyByName(FName(TEXT("LevelToStream")));
+
+    return *LevelToStream->ContainerPtrToValuePtr<FName>(this);
 }
 
 FTransform& ABuildingFoundation::GetDynamicFoundationTransform()
