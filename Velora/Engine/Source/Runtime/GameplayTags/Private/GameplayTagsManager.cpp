@@ -2,9 +2,21 @@
 #include "GameplayTagsManager.h"
 #include "Scanner.h"
 
+static Scanner::FCode InstantDeathSilent()
+{
+    static auto InstantDeathSilent = []
+    {
+        auto Tag = Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent"));
+
+        return (Tag.Get() ? Tag : Scanner::String("Gameplay.Effect.InstantDeath.Silent")).Start();
+    }();
+
+    return InstantDeathSilent;
+}
+
 UGameplayTagsManager& UGameplayTagsManager::Get()
 {
-    static auto SingletonManager = (UGameplayTagsManager**)Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Target(TEXT("UGameplayTagsManager::SingletonManager"));
+    static auto SingletonManager = (UGameplayTagsManager**)InstantDeathSilent().Find("mov *, [0x*]; test *").Target(TEXT("UGameplayTagsManager::SingletonManager"));
 
     if (*SingletonManager == nullptr)
     {
@@ -16,7 +28,7 @@ UGameplayTagsManager& UGameplayTagsManager::Get()
 
 void UGameplayTagsManager::InitializeManager()
 {
-    static auto InitializeManager = Scanner::Function<void (*)()>(Scanner::String(TEXT("Gameplay.Effect.InstantDeath.Silent")).Start().Find("mov *, [0x*]; test *").Call().Get(TEXT("UGameplayTagsManager::InitializeManager")));
+    static auto InitializeManager = Scanner::Function<void (*)()>(InstantDeathSilent().Find("mov *, [0x*]; test *").Call().Get(TEXT("UGameplayTagsManager::InitializeManager")));
 
     InitializeManager();
 }

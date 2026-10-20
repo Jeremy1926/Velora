@@ -23,8 +23,9 @@ void AFortPlayerPawn::OnBlueprintPlace()
     static auto OnBlueprintPlace = []
     {
         auto ClientBuild = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerCreateBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
+        auto CheckAutoChangeMaterial = ClientBuild.Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
 
-        return (void (*)(AFortPlayerPawn*))ClientBuild.Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*").Call().Get(TEXT("AFortPlayerPawn::OnBlueprintPlace"));
+        return (void (*)(AFortPlayerPawn*))(CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild).Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*").Call().Get(TEXT("AFortPlayerPawn::OnBlueprintPlace"));
     }();
 
     OnBlueprintPlace(this);

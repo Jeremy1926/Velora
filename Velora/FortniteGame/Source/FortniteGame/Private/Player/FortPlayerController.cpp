@@ -70,6 +70,13 @@ static Scanner::FCode ClientBuild()
     return ClientBuild;
 }
 
+static Scanner::FCode CheckAutoChangeMaterial()
+{
+    static auto CheckAutoChangeMaterial = ClientBuild().Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
+
+    return CheckAutoChangeMaterial;
+}
+
 static Scanner::FCode ClientRepair()
 {
     static auto ClientRepair = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerRepairBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
@@ -582,7 +589,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
     }
 
     static auto BuildingIsRestrictedText = (const FText*)ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Target(TEXT("BuildingIsRestrictedText"));
-    static auto UnableToAfford = (const FText*)ClientBuild().Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]").Target(TEXT("UnableToAfford"));
+    static auto UnableToAfford = (const FText*)(CheckAutoChangeMaterial().Get() ? CheckAutoChangeMaterial() : ClientBuild()).Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]").Target(TEXT("UnableToAfford"));
 
     FText Message;
 
@@ -785,7 +792,7 @@ bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortR
 
 bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData) const
 {
-    static auto CanAffordToPlaceBuildableClass = ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Find("call [*+0x*]").Slot(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass"));
+    static auto CanAffordToPlaceBuildableClass = (CheckAutoChangeMaterial().Get() ? CheckAutoChangeMaterial().Find("call [*+0x*]; mov [rsp+0x*], al") : ClientBuild().Find("lea rdx, [0x*]; lea rcx, *; call 0x*").Find("call [*+0x*]")).Slot(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass"));
 
     return Scanner::Virtual<bool (*)(const AFortPlayerController*, FBuildingClassData)>(this, CanAffordToPlaceBuildableClass)(this, BuildingClassData);
 }

@@ -7,10 +7,18 @@ static int32_t OnPawnRevivedSlot()
 {
     static auto OnPawnRevived = []
     {
-        auto ZoneOnPawnRevived = Scanner::CallTo(Scanner::Event(TEXT("ClientOnPawnRevived")).Get(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"))).Start().Get(TEXT("AFortPlayerControllerZone::OnPawnRevived"));
+        auto ClientOnPawnRevived = Scanner::Event(TEXT("ClientOnPawnRevived")).Get(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"));
         auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
-        return Scanner::Slot(TEXT("AFortPlayerControllerZone::OnPawnRevived"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Get() == ZoneOnPawnRevived; });
+        return Scanner::Slot(TEXT("AFortPlayerControllerZone::OnPawnRevived"), VTable, [&](const Scanner::FCode& Entry)
+        {
+            auto Call = Entry.Find("call 0x*");
+
+            for (int32 Index = 2; Call.Get() && Call.Target() != ClientOnPawnRevived; Index++)
+                Call = Entry.Find("call 0x*", Index);
+
+            return Call.Get() != nullptr;
+        });
     }();
 
     return OnPawnRevived;

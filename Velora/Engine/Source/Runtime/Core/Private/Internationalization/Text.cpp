@@ -13,7 +13,12 @@ static Scanner::FCode ClientBuild()
 
 static Scanner::FCode UnableToAfford()
 {
-    static auto UnableToAfford = ClientBuild().Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]");
+    static auto UnableToAfford = []
+    {
+        auto CheckAutoChangeMaterial = ClientBuild().Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
+
+        return (CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild()).Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Find("lea rdx, [0x*]");
+    }();
 
     return UnableToAfford;
 }

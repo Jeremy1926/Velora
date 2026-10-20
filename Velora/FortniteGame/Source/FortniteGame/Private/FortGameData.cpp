@@ -31,8 +31,9 @@ FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) con
     static auto GetBuildingResourceName = []
     {
         auto ClientBuild = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerCreateBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
+        auto CheckAutoChangeMaterial = ClientBuild.Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
 
-        return Scanner::Function<FText* (*)(const UFortGameData*, FText*, EFortResourceType)>(ClientBuild.Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Call(2).Get(TEXT("UFortGameData::GetBuildingResourceName")));
+        return Scanner::Function<FText* (*)(const UFortGameData*, FText*, EFortResourceType)>((CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild).Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Call(2).Get(TEXT("UFortGameData::GetBuildingResourceName")));
     }();
 
     FText Result(NoInit);
