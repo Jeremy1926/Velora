@@ -54,13 +54,6 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
 }
 
-bool AFortGameStateAthena::GetPlaylistDataIsLoaded() const
-{
-    static auto bPlaylistDataIsLoaded = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
-
-    return bPlaylistDataIsLoaded->GetPropertyValue_InContainer(this);
-}
-
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()
 {
     static auto GameMemberInfoArray = GetClass()->FindPropertyByName(FName(TEXT("GameMemberInfoArray")));

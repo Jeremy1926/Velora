@@ -43,8 +43,6 @@ public:
 
     void OnPlaylistLootTableAssetsDataLoadCompleted();
 
-    bool GetPlaylistDataIsLoaded() const;
-
     FGameMemberInfoArray& GetGameMemberInfoArray();
 
     bool GetPlaylistDataIsLoaded() const;
