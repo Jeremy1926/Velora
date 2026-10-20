@@ -1,6 +1,23 @@
 #include "pch.h"
 #include "UObject/NameTypes.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
+
+FName::FName(EName N)
+{
+    auto& Version = FEngineVersion::Current();
+
+    if (Version.GetMajor() == 4 && Version.GetMinor() < 24)
+    {
+        ComparisonIndex = N;
+        Number = 0;
+        return;
+    }
+
+    static auto Constructor = Scanner::Function<void (*)(FName*, EName)>(Scanner::String(TEXT("RecordReplay: failed to create demo net driver!")).Last("mov edx, 0x11e").Find("call 0x*").Target(TEXT("FName::FName(EName)")));
+
+    Constructor(this, N);
+}
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {

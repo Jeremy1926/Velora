@@ -31,11 +31,7 @@ public:
         return N.ComparisonIndex + N.Number;
     }
 
-    FORCEINLINE FName(EName N)
-        : ComparisonIndex(N)
-        , Number(0)
-    {
-    }
+    FName(EName N);
 
     FName(const WIDECHAR* Name, EFindName FindType = FNAME_Add);
 
