@@ -46,13 +46,19 @@ UFortAbilitySet* UFortGameData::GetAthenaPlayerAbilitySet() const
 
 FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) const
 {
-    static auto GetBuildingResourceName = []
-    {
-        auto ClientBuild = Scanner::CallTo(Scanner::Reference(Scanner::String(TEXT("ServerCreateBuildingActor")).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start().Get()).Start();
-        auto CheckAutoChangeMaterial = ClientBuild.Find("lea rdx, [rsp+0x*]; call 0x*; test al, al").Call();
-
-        return Scanner::Function<FText* (*)(const UFortGameData*, FText*, EFortResourceType)>((CheckAutoChangeMaterial.Get() ? CheckAutoChangeMaterial : ClientBuild).Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*").Call(2).Get(TEXT("UFortGameData::GetBuildingResourceName")));
-    }();
+    static auto GetBuildingResourceName = Anchor::Function<FText* (*)(const UFortGameData*, FText*, EFortResourceType)>(TEXT("UFortGameData::GetBuildingResourceName"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Call()
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
+        .Call(2)
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
+        .Call(2)
+        .Get();
 
     FText Result(NoInit);
     GetBuildingResourceName(this, &Result, ResourceType);
@@ -147,13 +153,14 @@ bool UFortGameData::HasLootPackageData() const
 
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
 {
-    static auto GetResourceItemDefinition = Scanner::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>([]
-    {
-        auto Native = Scanner::Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"));
-        auto Call = Native.Call(2);
-
-        return Call.Get() ? Call.Get(TEXT("UFortGameData::GetResourceItemDefinition")) : Native.Find("jmp 0x*").Target(TEXT("UFortGameData::GetResourceItemDefinition"));
-    }());
+    static auto GetResourceItemDefinition = Anchor::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>(TEXT("UFortGameData::GetResourceItemDefinition"))
+        .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Call(2)
+        .Or()
+        .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
 
     return GetResourceItemDefinition(this, ResourceType);
 }
