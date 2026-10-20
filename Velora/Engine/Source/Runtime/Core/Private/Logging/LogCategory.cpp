@@ -9,13 +9,19 @@ FLogCategoryBase::FLogCategoryBase(const TCHAR* CategoryName, ELogVerbosity::Typ
 
     if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
     {
-        static auto Constructor = Scanner::Function<void (*)(FLogCategoryBase*, const FName&, ELogVerbosity::Type, ELogVerbosity::Type)>(Scanner::String(TEXT("LogFortBuilding")).Call(2).Get(TEXT("FLogCategoryBase::FLogCategoryBase")));
+        static auto Constructor = Anchor::Function<void (*)(FLogCategoryBase*, const FName&, ELogVerbosity::Type, ELogVerbosity::Type)>(TEXT("FLogCategoryBase::FLogCategoryBase"))
+            .String(TEXT("LogFortBuilding"))
+            .Call(2)
+            .Get();
 
         Constructor(this, FName(CategoryName), InDefaultVerbosity, InCompileTimeVerbosity);
         return;
     }
 
-    static auto Constructor = Scanner::Function<void (*)(FLogCategoryBase*, const TCHAR*, ELogVerbosity::Type, ELogVerbosity::Type)>(Scanner::String(TEXT("LogFortBuilding")).Call().Get(TEXT("FLogCategoryBase::FLogCategoryBase")));
+    static auto Constructor = Anchor::Function<void (*)(FLogCategoryBase*, const TCHAR*, ELogVerbosity::Type, ELogVerbosity::Type)>(TEXT("FLogCategoryBase::FLogCategoryBase"))
+        .String(TEXT("LogFortBuilding"))
+        .Call()
+        .Get();
 
     Constructor(this, CategoryName, InDefaultVerbosity, InCompileTimeVerbosity);
 }
