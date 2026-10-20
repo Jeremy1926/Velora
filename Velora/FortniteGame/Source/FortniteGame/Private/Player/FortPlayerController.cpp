@@ -952,9 +952,9 @@ int32 AFortPlayerController::GetWorldPlayerId() const
 
 void AFortPlayerController::ClientSendMessage(const FText& MESSAGE)
 {
-    static auto ClientSendMessage = Scanner::Function<void (*)(AFortPlayerController*, const FText&)>(Scanner::Event(TEXT("ClientSendMessage")).Get(TEXT("AFortPlayerController::ClientSendMessage")));
+    static auto ClientSendMessage = Scanner::Function<void (*)(AFortPlayerController*, const FText&, USoundBase*)>(Scanner::Event(TEXT("ClientSendMessage")).Get(TEXT("AFortPlayerController::ClientSendMessage")));
 
-    ClientSendMessage(this, MESSAGE);
+    ClientSendMessage(this, MESSAGE, nullptr);
 }
 
 void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, float Delay, bool bForceExecute, bool bActivateSlotAfterSettingFocused)
