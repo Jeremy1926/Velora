@@ -21,8 +21,9 @@ static int32 OnPawnEnterSeatSlot()
     {
         auto UnEquipVehicleWeapon = Scanner::String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d")).Start().Get(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon"));
         auto UnEquipLastWeapon = std::format("mov r9b, 0x1; mov r8, *; mov rdx, *; mov rcx, *; call {:#x}", (uintptr_t)UnEquipVehicleWeapon);
-        auto VTable = *(const void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"));
-        auto OnPawnExitSeat = Scanner::Slot(TEXT("UFortVehicleSeatWeaponComponent::OnPawnExitSeat"), VTable, [&](const Scanner::FCode& Entry) { return Entry.Has(UnEquipLastWeapon); });
+        auto OnPawnExitSeat = Anchor::Slot(TEXT("UFortVehicleSeatWeaponComponent::OnPawnExitSeat"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), [&](const Anchor::FCode& Entry) { return Entry.Has(UnEquipLastWeapon); })
+            .Get();
 
         return Scanner::Slot(TEXT("UFortVehicleSeatWeaponComponent::OnPawnEnterSeat"), Scanner::IsSlot(OnPawnExitSeat) ? OnPawnExitSeat - (int32)sizeof(void*) : 0);
     }();
@@ -30,9 +31,6 @@ static int32 OnPawnEnterSeatSlot()
     return OnPawnEnterSeat;
 }
 
-static auto OnPawnEnterSeat = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")) ? DetourVTable(TEXT("UFortVehicleSeatWeaponComponent::OnPawnEnterSeat"), *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent")), OnPawnEnterSeatSlot(), &UFortVehicleSeatWeaponComponent::OnPawnEnterSeat) : nullptr;
-
-static auto AimingWeaponCompOnPawnEnterSeat = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp")) ? DetourVTable(TEXT("UFortVehicleAimingWeaponComp::OnPawnEnterSeat"), *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp")), OnPawnEnterSeatSlot(), &UFortVehicleSeatWeaponComponent::OnPawnEnterSeat) : nullptr;
 
 UScriptStruct* FWeaponSeatDefinition::StaticStruct()
 {
@@ -93,11 +91,20 @@ UClass* UFortVehicleSeatWeaponComponent::StaticClass()
     return Class;
 }
 
+DETOUR(UFortVehicleSeatWeaponComponent, OnPawnEnterSeat, Anchor::Hook()
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), &OnPawnEnterSeatSlot))
+DETOUR(UFortVehicleAimingWeaponComp, OnPawnEnterSeat, Anchor::Hook(&UFortVehicleSeatWeaponComponent::OnPawnEnterSeat)
+    .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp")))
+    .InVTable(TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp"), &OnPawnEnterSeatSlot))
 void UFortVehicleSeatWeaponComponent::OnPawnEnterSeat(IFortVehicleInterface* Vehicle, int32 SeatIdx, bool bSwitchingSeats)
 {
     static auto AimingWeaponComp = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleAimingWeaponComp"));
 
-    (this->*(AimingWeaponComp && IsA(AimingWeaponComp) ? ::AimingWeaponCompOnPawnEnterSeat : ::OnPawnEnterSeat))(Vehicle, SeatIdx, bSwitchingSeats);
+    if (AimingWeaponComp && IsA(AimingWeaponComp))
+        ORIGINAL_OF(UFortVehicleAimingWeaponComp, OnPawnEnterSeat)(Vehicle, SeatIdx, bSwitchingSeats);
+    else
+        Original(Vehicle, SeatIdx, bSwitchingSeats);
 
     for (auto& WeaponSeatDefinition : GetWeaponSeatDefinitions())
     {

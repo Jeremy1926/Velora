@@ -7,6 +7,7 @@
 class AFortPawn;
 class AFortWeapon;
 class IFortVehicleInterface;
+class UFortVehicleAimingWeaponComp;
 class UFortWeaponItemDefinition;
 class UFortWorldItem;
 class UScriptStruct;
