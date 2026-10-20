@@ -6,6 +6,7 @@
 
 class AController;
 class AFortGameStateZone;
+struct FGameplayEffectContextHandle;
 
 enum class EFortBuildingType : uint8
 {
@@ -66,7 +67,7 @@ public:
 
     void SilentDie();
 
-    void Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser);
+    void Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext);
 
     void InitializeBuildingActor(EFortBuildingInitializationReason InitializationReason, int32 InOwnerPersistentID, ABuildingActor* BuildingOwner, ABuildingActor* ReplacedBuilding, bool bFlag);
 

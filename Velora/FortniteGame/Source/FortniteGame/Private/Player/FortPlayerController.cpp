@@ -637,7 +637,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
             for (auto ExistingBuilding : ExistingBuildings)
             {
                 if (ExistingBuilding && ExistingBuilding->GetDestroyOnPlayerBuildingPlacement())
-                    ExistingBuilding->Die(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Effect.InstantDeath.StructuralSupport"))), nullptr, nullptr);
+                    ExistingBuilding->Die(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Effect.InstantDeath.StructuralSupport"))), nullptr, nullptr, nullptr);
             }
 
             FActorSpawnParameters SpawnParameters;

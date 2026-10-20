@@ -56,9 +56,16 @@ void ABuildingActor::SilentDie()
     Scanner::Virtual<void (*)(ABuildingActor*)>(this, SilentDie)(this);
 }
 
-void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser)
+void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, AActor* DamageCauser, const FGameplayEffectContextHandle* EffectContext)
 {
     static auto Die = Scanner::Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie")).Find("jmp [*+0x*]").Slot(TEXT("ABuildingActor::SilentDie")) - (int32_t)sizeof(void*);
+    static auto bEffectContext = Scanner::At(Scanner::Virtual<const void*>(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__BuildingSMActor")), Die, sizeof(void*))).Has("mov qword ptr [rsp+0x20], 0x0");
+
+    if (bEffectContext)
+    {
+        Scanner::Virtual<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*, const FGameplayEffectContextHandle*)>(this, Die)(this, DamageTag, EventInstigator, DamageCauser, EffectContext);
+        return;
+    }
 
     Scanner::Virtual<void (*)(ABuildingActor*, FGameplayTag, AController*, AActor*)>(this, Die)(this, DamageTag, EventInstigator, DamageCauser);
 }
