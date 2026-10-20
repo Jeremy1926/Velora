@@ -20,7 +20,7 @@ Universal gameserver for Fortnite.
 | Season 7 | 7.00 to 7.40 |
 | Season 8 | 8.00 to 8.51 |
 | Season 9 | 9.00 to 9.41 |
-| Season X | 10.00 |
+| Season X | 10.00 to 10.40 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
