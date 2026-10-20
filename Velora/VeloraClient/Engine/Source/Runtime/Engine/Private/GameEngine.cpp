@@ -11,8 +11,10 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto Tick = Detour(TEXT("UGameEngine::Tick"), Scanner::String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)")).Start().Get(), &UGameEngine::Tick);
-
+DETOUR(UGameEngine, Tick, Anchor::Hook()
+    .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+    .Start()
+    .Inline())
 void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 {
     auto GameViewport = GetGameViewport();
@@ -64,5 +66,5 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         LastWorld = World;
     }
 
-    (this->*::Tick)(DeltaSeconds, bIdleMode);
+    Original(DeltaSeconds, bIdleMode);
 }
