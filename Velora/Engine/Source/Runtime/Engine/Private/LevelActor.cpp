@@ -16,7 +16,10 @@ FActorSpawnParameters::FActorSpawnParameters()
 
 AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters)
 {
-    static auto SpawnActor = Scanner::Function<AActor* (*)(UWorld*, UClass*, FTransform const*, const FActorSpawnParameters&)>(Scanner::String(TEXT("SpawnActor failed because no class was specified")).Start().Get(TEXT("UWorld::SpawnActor")));
+    static auto SpawnActor = Anchor::Function<AActor* (*)(UWorld*, UClass*, FTransform const*, const FActorSpawnParameters&)>(TEXT("UWorld::SpawnActor"))
+        .String(TEXT("SpawnActor failed because no class was specified"))
+        .Start()
+        .Get();
 
     return SpawnActor(this, Class, UserTransformPtr, SpawnParameters);
 }
