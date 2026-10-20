@@ -15,9 +15,15 @@
 
 static auto PlayerPawnReady = []
 {
+    auto UpdateAbilitySystemActor = Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get();
+    auto AircraftComponentCaller = Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; test rax, rax").Start();
+
+    if (AircraftComponentCaller.Get())
+        return AircraftComponentCaller;
+
     auto ExitAircraftCaller = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
 
-    return ExitAircraftCaller.Get() ? ExitAircraftCaller : Scanner::Reference(Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get(), "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
+    return ExitAircraftCaller.Get() ? ExitAircraftCaller : Scanner::Reference(UpdateAbilitySystemActor, "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
 }();
 static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), PlayerPawnReady.Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
 
