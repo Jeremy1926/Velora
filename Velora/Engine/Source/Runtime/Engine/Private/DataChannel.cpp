@@ -35,9 +35,10 @@ bool UChannel::GetDormant() const
 
 bool UChannel::GetPendingDormancy() const
 {
-    static auto bPendingDormancy = Scanner::String(TEXT("StartBecomingDormant: %s")).Start().Find("or dword ptr [*], 0x*");
-    static auto Offset = bPendingDormancy.Disp(TEXT("UChannel::bPendingDormancy"));
-    static auto Mask = bPendingDormancy.Imm();
+    static auto StartBecomingDormant = Scanner::String(TEXT("StartBecomingDormant: %s")).Start();
+    static auto bPendingDormancy = StartBecomingDormant.Find("or dword ptr [*], 0x*");
+    static auto Offset = (bPendingDormancy.Get() ? bPendingDormancy : StartBecomingDormant.Find("bts e*, 0x*").Find("mov [*], e*")).Disp(TEXT("UChannel::bPendingDormancy"));
+    static auto Mask = bPendingDormancy.Get() ? bPendingDormancy.Imm() : 1ll << StartBecomingDormant.Find("bts e*, 0x*").Imm();
 
     return *(uint32_t*)((uint8_t*)this + Offset) & Mask;
 }
