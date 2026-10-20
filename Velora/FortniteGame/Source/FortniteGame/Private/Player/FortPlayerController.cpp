@@ -133,7 +133,10 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
 {
     static auto Building = []
     {
-        InstallImplementation(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"), &AFortPlayerController::ServerCreateBuildingActor_Implementation);
+        if (((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))))
+            InstallImplementation(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"), (void (AFortPlayerController::*)(FCreateBuildingActorData))&AFortPlayerController::ServerCreateBuildingActor_Implementation);
+        else
+            InstallImplementation(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"), (void (AFortPlayerController::*)(FBuildingClassData, FVector, FRotator, bool))&AFortPlayerController::ServerCreateBuildingActor_Implementation);
         InstallImplementation(TEXT("AFortPlayerController::ServerBeginEditingBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerBeginEditingBuildingActor"), &AFortPlayerController::ServerBeginEditingBuildingActor_Implementation);
         InstallImplementation(TEXT("AFortPlayerController::ServerEditBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"), &AFortPlayerController::ServerEditBuildingActor_Implementation);
         InstallImplementation(TEXT("AFortPlayerController::ServerEndEditingBuildingActor_Implementation"), TEXT("/Script/FortniteGame.FortPlayerController:ServerEndEditingBuildingActor"), &AFortPlayerController::ServerEndEditingBuildingActor_Implementation);
@@ -690,6 +693,16 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
         ClientSendMessage(Message);
 
     TriggerUIFeedbackEvent(!bBuildingRestricted && !bCanAfford ? FName(TEXT("BuildPreviewUnableToAfford")) : FName(TEXT("BuildPreviewUnableToPlace")));
+}
+
+void AFortPlayerController::ServerCreateBuildingActor_Implementation(FCreateBuildingActorData CreateBuildingData)
+{
+    auto GameState = Cast<AFortGameStateZone>(GetWorld()->GetGameState());
+
+    if (!GameState)
+        return;
+
+    ServerCreateBuildingActor_Implementation(CreateBuildingData.GetBuildingClassData(GameState), CreateBuildingData.BuildLoc, CreateBuildingData.BuildRot, CreateBuildingData.bMirrored);
 }
 
 void AFortPlayerController::ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit)

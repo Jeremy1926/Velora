@@ -28,5 +28,7 @@ public:
 
     const FPlayerBuildableClassContainer* GetPlayerBuildableClasses() const;
 
+    const TArray<UClass*>& GetAllPlayerBuildableClasses() const;
+
     void OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface);
 };

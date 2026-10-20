@@ -51,6 +51,13 @@ const FPlayerBuildableClassContainer* AFortGameStateZone::GetPlayerBuildableClas
     return PlayerBuildableClasses->ContainerPtrToValuePtr<FPlayerBuildableClassContainer>(this);
 }
 
+const TArray<UClass*>& AFortGameStateZone::GetAllPlayerBuildableClasses() const
+{
+    static auto AllPlayerBuildableClasses = GetClass()->FindPropertyByName(FName(TEXT("AllPlayerBuildableClasses")));
+
+    return *AllPlayerBuildableClasses->ContainerPtrToValuePtr<TArray<UClass*>>(this);
+}
+
 void AFortGameStateZone::OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface)
 {
     static auto OnAbilitySystemInterfaceReadyForPersistentGameplayEffects = Scanner::Function<void (*)(AFortGameStateZone*, IAbilitySystemInterface*)>(Scanner::String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects")).Start().Get());

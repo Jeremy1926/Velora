@@ -1,9 +1,11 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Engine/NetSerialization.h"
 #include "GameplayTagContainer.h"
 
 class AController;
+class AFortGameStateZone;
 
 enum class EFortBuildingType : uint8
 {
@@ -41,6 +43,18 @@ struct FBuildingClassData
     UClass* BuildingClass;
     int32 PreviousBuildingLevel;
     int32 UpgradeLevel;
+};
+
+struct FCreateBuildingActorData
+{
+    uint32 BuildingClassHandle;
+    FVector_NetQuantize10 BuildLoc;
+    FRotator BuildRot;
+    bool bMirrored;
+    float SyncKey;
+    FBuildingClassData BuildingClassData;
+
+    FBuildingClassData GetBuildingClassData(AFortGameStateZone* GameState);
 };
 
 class ABuildingActor : public AActor

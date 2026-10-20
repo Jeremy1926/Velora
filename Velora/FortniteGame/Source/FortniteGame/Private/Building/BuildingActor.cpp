@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Building/BuildingActor.h"
+#include "FortGameStateZone.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -122,4 +123,12 @@ bool ABuildingActor::GetDestroyed() const
     static auto bDestroyed = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bDestroyed")));
 
     return bDestroyed->GetPropertyValue_InContainer(this);
+}
+
+FBuildingClassData FCreateBuildingActorData::GetBuildingClassData(AFortGameStateZone* GameState)
+{
+    if (GameState && GameState->GetAllPlayerBuildableClasses().IsValidIndex(BuildingClassHandle))
+        BuildingClassData.BuildingClass = GameState->GetAllPlayerBuildableClasses()[BuildingClassHandle];
+
+    return BuildingClassData;
 }

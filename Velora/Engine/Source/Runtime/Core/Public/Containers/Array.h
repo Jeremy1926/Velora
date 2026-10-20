@@ -39,6 +39,11 @@ public:
         return (ElementType*)AllocatorInstance.GetAllocation();
     }
 
+    FORCEINLINE bool IsValidIndex(int32 Index) const
+    {
+        return Index >= 0 && Index < ArrayNum;
+    }
+
     FORCEINLINE int32 Num() const
     {
         return ArrayNum;
