@@ -35,17 +35,17 @@ void FWindowsConsoleOutputDevice::Serialize(const TCHAR* Data, ELogVerbosity::Ty
     }
 
     static thread_local bool bResolvingCategory = false;
-    FString CategoryName;
+    TCHAR CategoryName[256] = {};
 
     if (Category != NAME_None && !bResolvingCategory)
     {
         bResolvingCategory = true;
-        CategoryName = Category.ToString();
+        wcsncpy_s(CategoryName, *Category.ToString(), _TRUNCATE);
         bResolvingCategory = false;
     }
 
     TCHAR Line[2048];
-    auto Length = _snwprintf_s(Line, _TRUNCATE, TEXT("[%02hu:%02hu:%02hu] %s%s%s%s\r\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, *CategoryName, CategoryName.Len() ? TEXT(": ") : TEXT(""), Prefix, Data);
+    auto Length = _snwprintf_s(Line, _TRUNCATE, TEXT("[%02hu:%02hu:%02hu] %s%s%s%s\r\n"), LocalTime.wHour, LocalTime.wMinute, LocalTime.wSecond, CategoryName, CategoryName[0] ? TEXT(": ") : TEXT(""), Prefix, Data);
 
     if (Length < 0)
         Length = (int32)wcslen(Line);
