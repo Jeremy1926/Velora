@@ -79,7 +79,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\NavigationSystem\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\NavigationSystem\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,7 +115,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\NavigationSystem\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..;$(ProjectDir)..\ThirdParty\MinHook\include;$(ProjectDir)..\ThirdParty\Zydis;$(ProjectDir)..\ThirdParty\Anchor\include;$(ProjectDir)..\ThirdParty\MinHook\src;$(ProjectDir)..\Engine\Source\Runtime\Core\Public;$(ProjectDir)..\Engine\Source\Runtime\CoreUObject\Public;$(ProjectDir)..\Engine\Source\Runtime\Engine\Classes;$(ProjectDir)..\Engine\Source\Runtime\Engine\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTasks\Classes;$(ProjectDir)..\Engine\Source\Runtime\AIModule\Classes;$(ProjectDir)..\Engine\Source\Runtime\NavigationSystem\Public;$(ProjectDir)..\Engine\Source\Runtime\GameplayTags\Classes;$(ProjectDir)..\Engine\Source\Runtime\Analytics\Analytics\Public;$(ProjectDir)..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public;$(ProjectDir)..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public;$(ProjectDir)..\FortniteGame\Source\FortniteGame\Public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -424,6 +424,10 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAthenaAIBotController.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotInventoryItems.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\LevelStreaming.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\NavigationSystemBase.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\NavigationSystem\Public\NavigationSystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\FortNavSystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -641,6 +645,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotInventoryItems.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\AIController.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\LevelStreaming.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\NavigationSystem\Private\NavigationSystem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavSystem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

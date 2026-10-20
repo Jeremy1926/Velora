@@ -361,6 +361,21 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\Abilities">
       <UniqueIdentifier>{DB320153-61BB-48EC-8605-FDD3437D2AEB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\NavigationSystem">
+      <UniqueIdentifier>{6BC23616-4061-435D-A0C7-B1E66A96917B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\NavigationSystem\Public">
+      <UniqueIdentifier>{11D1ED3F-A02C-485E-8F7A-B9999CA9E0F4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\NavigationSystem\Private">
+      <UniqueIdentifier>{20D2B1B6-5B2B-49B4-A1E3-9C861922251E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\AI\Navigation">
+      <UniqueIdentifier>{4A79C860-21C0-48B9-BDB2-C89B95811ED4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\AI\Navigation">
+      <UniqueIdentifier>{697DE69D-B1EE-4114-BE62-44A389ABC488}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1198,6 +1213,18 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\LevelStreaming.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\NavigationSystemBase.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\NavigationSystem\Public\NavigationSystem.h">
+      <Filter>Engine\Source\Runtime\NavigationSystem\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\FortNavSystem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\Navigation\AthenaNavSystem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\AI\Navigation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1779,6 +1806,12 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\LevelStreaming.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\NavigationSystem\Private\NavigationSystem.cpp">
+      <Filter>Engine\Source\Runtime\NavigationSystem\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\Navigation\AthenaNavSystem.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\AI\Navigation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

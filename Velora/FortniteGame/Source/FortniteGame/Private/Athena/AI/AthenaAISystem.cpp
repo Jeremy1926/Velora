@@ -16,3 +16,10 @@ UAthenaAIPerceptionManager* UAthenaAISystem::GetPerceptionManager() const
 
     return *PerceptionManager->ContainerPtrToValuePtr<UAthenaAIPerceptionManager*>(this);
 }
+
+UFortServerBotManagerAthena*& UAthenaAISystem::GetPlayerBotManager()
+{
+    static auto PlayerBotManager = GetClass()->FindPropertyByName(FName(TEXT("PlayerBotManager")));
+
+    return *PlayerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this);
+}
