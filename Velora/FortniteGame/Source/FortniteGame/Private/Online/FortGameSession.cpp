@@ -13,7 +13,12 @@ static auto ValidatePlayer = []
     std::array<const uint8_t*, 2> Branches = { Reservation.Start().Find(std::format("jnz 0x{:x}", (uintptr_t)Reservation.Target())).Get(), Scanner::At(Reservation.Target()).Find("call 0x*; test al, al; jnz 0x*").Find("jnz 0x*").Get() };
 
     for (auto Branch : Branches)
-        Patch(TEXT("AFortGameSession::ValidatePlayer"), Branch, 0xEB);
+    {
+        if (Branch && *Branch == 0x0F)
+            Patch(TEXT("AFortGameSession::ValidatePlayer"), Branch, { 0x90, 0xE9 });
+        else
+            Patch(TEXT("AFortGameSession::ValidatePlayer"), Branch, { 0xEB });
+    }
 
     return Branches;
 }();

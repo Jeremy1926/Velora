@@ -110,7 +110,7 @@ inline const uint8_t* PatchBranch(const TCHAR* Name, const uint8_t* Branch, cons
     return Branch;
 }
 
-inline const uint8_t* Patch(const TCHAR* Name, const uint8_t* Address, uint8_t Byte)
+inline const uint8_t* Patch(const TCHAR* Name, const uint8_t* Address, std::initializer_list<uint8_t> Bytes)
 {
     if (!Address)
     {
@@ -119,12 +119,12 @@ inline const uint8_t* Patch(const TCHAR* Name, const uint8_t* Address, uint8_t B
     }
 
     DWORD Protect;
-    VirtualProtect((LPVOID)Address, sizeof(Byte), PAGE_EXECUTE_READWRITE, &Protect);
+    VirtualProtect((LPVOID)Address, Bytes.size(), PAGE_EXECUTE_READWRITE, &Protect);
 
-    *(uint8_t*)Address = Byte;
+    memcpy((uint8_t*)Address, Bytes.begin(), Bytes.size());
 
-    VirtualProtect((LPVOID)Address, sizeof(Byte), Protect, &Protect);
-    FlushInstructionCache(GetCurrentProcess(), Address, sizeof(Byte));
+    VirtualProtect((LPVOID)Address, Bytes.size(), Protect, &Protect);
+    FlushInstructionCache(GetCurrentProcess(), Address, Bytes.size());
 
     UE_LOG(LogVelora, Log, TEXT("Patched %s at 0x%llX"), Name, Address - Scanner::Base());
 
