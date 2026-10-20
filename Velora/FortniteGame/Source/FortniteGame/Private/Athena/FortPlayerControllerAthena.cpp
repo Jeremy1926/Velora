@@ -82,3 +82,10 @@ AFortPlayerState* AFortPlayerControllerAthena::GetSkydiveLeader() const
 
     return *SkydiveLeader->ContainerPtrToValuePtr<AFortPlayerState*>(this);
 }
+
+void AFortPlayerControllerAthena::RespawnPlayerAfterDeath(bool bEnterSkydiving)
+{
+    static auto RespawnPlayerAfterDeath = Scanner::Function<void (*)(AFortPlayerControllerAthena*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:RespawnPlayerAfterDeath")).Get(TEXT("AFortPlayerControllerAthena::RespawnPlayerAfterDeath")));
+
+    RespawnPlayerAfterDeath(this, bEnterSkydiving);
+}

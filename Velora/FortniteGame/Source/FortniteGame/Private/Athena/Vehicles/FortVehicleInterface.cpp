@@ -17,3 +17,10 @@ AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
 
     return Scanner::Virtual<AFortPlayerPawn* (*)(const IFortVehicleInterface*, int32)>(this, GetPawnAtSeat)(this, SeatIdx);
 }
+
+const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
+{
+    static auto GetVehicleActorPtrConst = Scanner::Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleActorPtrConst")).Find("call [*+0x*]").Slot(TEXT("IFortVehicleInterface::GetVehicleActorPtrConst"));
+
+    return Scanner::Virtual<const AActor* (*)(const IFortVehicleInterface*)>(this, GetVehicleActorPtrConst)(this);
+}

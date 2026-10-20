@@ -94,6 +94,32 @@ struct FVector
         return FVector(X * Scale, Y * Scale, Z * Scale);
     }
 
+    FORCEINLINE FVector RotateAngleAxis(const float AngleDeg, const FVector& Axis) const
+    {
+        const float S = sinf(AngleDeg * 0.017453292f);
+        const float C = cosf(AngleDeg * 0.017453292f);
+
+        const float XX = Axis.X * Axis.X;
+        const float YY = Axis.Y * Axis.Y;
+        const float ZZ = Axis.Z * Axis.Z;
+
+        const float XY = Axis.X * Axis.Y;
+        const float YZ = Axis.Y * Axis.Z;
+        const float ZX = Axis.Z * Axis.X;
+
+        const float XS = Axis.X * S;
+        const float YS = Axis.Y * S;
+        const float ZS = Axis.Z * S;
+
+        const float OMC = 1.f - C;
+
+        return FVector(
+            (OMC * XX + C) * X + (OMC * XY - ZS) * Y + (OMC * ZX + YS) * Z,
+            (OMC * XY + ZS) * X + (OMC * YY + C) * Y + (OMC * YZ - XS) * Z,
+            (OMC * ZX - YS) * X + (OMC * YZ + XS) * Y + (OMC * ZZ + C) * Z
+        );
+    }
+
     FORCEINLINE bool Equals(const FVector& V, float Tolerance = 1.e-4f) const
     {
         return FMath::Abs(X - V.X) <= Tolerance && FMath::Abs(Y - V.Y) <= Tolerance && FMath::Abs(Z - V.Z) <= Tolerance;

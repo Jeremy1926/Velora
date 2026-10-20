@@ -31,4 +31,6 @@ public:
     uint8 GetSquadId() const;
 
     AFortPlayerState* GetSkydiveLeader() const;
+
+    void RespawnPlayerAfterDeath(bool bEnterSkydiving);
 };

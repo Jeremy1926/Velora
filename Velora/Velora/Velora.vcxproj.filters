@@ -1095,6 +1095,10 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Building</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1602,6 +1606,8 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Building</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

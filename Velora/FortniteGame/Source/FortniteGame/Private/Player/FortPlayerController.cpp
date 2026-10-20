@@ -1017,6 +1017,13 @@ AFortPlayerPawn* AFortPlayerController::GetMyFortPawn() const
     return *MyFortPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
 }
 
+bool AFortPlayerController::IsPlayerAlive()
+{
+    static auto IsPlayerAlive = Scanner::String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting")).Start().Find("mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]; test al, al").Find("call [rax+0x*]").Slot(TEXT("AFortPlayerController::IsPlayerAlive"));
+
+    return Scanner::Virtual<bool (*)(AFortPlayerController*)>(this, IsPlayerAlive)(this);
+}
+
 TAssetPtr<UObject>& AFortPlayerController::GetStartRepairSound()
 {
     static auto StartRepairSound = GetClass()->FindPropertyByName(FName(TEXT("StartRepairSound")));

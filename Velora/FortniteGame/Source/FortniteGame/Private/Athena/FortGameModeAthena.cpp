@@ -225,6 +225,13 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
     GameMemberInfoArray.MarkItemDirty(*Member);
 }
 
+void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController)
+{
+    static auto AddToAlivePlayers = Scanner::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*)>(Scanner::String(TEXT("FortGameModeAthena: Player [%s] added to alive players list (Team [%d]).  Player count is now [%d].  Team count is now [%d]. ")).Start().Get(TEXT("AFortGameModeAthena::AddToAlivePlayers")));
+
+    AddToAlivePlayers(this, PlayerController);
+}
+
 void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions)
 {
     static auto Restart = []

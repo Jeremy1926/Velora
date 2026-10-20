@@ -53,6 +53,25 @@ bool AActor::CanBeDamaged() const
     return bCanBeDamaged->GetPropertyValue_InContainer(this);
 }
 
+FVector AActor::GetActorForwardVector() const
+{
+    return GetActorRotation().Vector();
+}
+
+void AActor::SetLifeSpan(float InLifespan)
+{
+    static auto SetLifeSpan = Scanner::Exec(TEXT("/Script/Engine.Actor:SetLifeSpan")).Find("call [*+0x*]").Slot(TEXT("AActor::SetLifeSpan"));
+
+    Scanner::Virtual<void (*)(AActor*, float)>(this, SetLifeSpan)(this, InLifespan);
+}
+
+void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
+{
+    static auto K2_AttachToActor = Scanner::Function<void (*)(AActor*, AActor*, FName, EAttachmentRule, EAttachmentRule, EAttachmentRule, bool)>(Scanner::Native(TEXT("/Script/Engine.Actor:K2_AttachToActor")).Get(TEXT("AActor::K2_AttachToActor")));
+
+    K2_AttachToActor(this, ParentActor, SocketName, LocationRule, RotationRule, ScaleRule, bWeldSimulatedBodies);
+}
+
 ENetDormancy AActor::GetNetDormancy() const
 {
     static auto NetDormancy = GetClass()->FindPropertyByName(FName(TEXT("NetDormancy")));

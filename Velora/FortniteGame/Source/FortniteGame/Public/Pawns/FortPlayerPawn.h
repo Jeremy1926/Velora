@@ -47,6 +47,8 @@ public:
 
     const FVehiclePawnState& GetVehicleStateLocal() const;
 
+    void BeginSkydiving(bool bFromBus);
+
     void OnBlueprintPlace();
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);

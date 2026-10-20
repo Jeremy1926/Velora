@@ -3,6 +3,8 @@
 #include "Components/SceneComponent.h"
 #include "Math/Vector.h"
 #include "UObject/NameTypes.h"
+#include "Containers/Array.h"
+#include "Templates/SubclassOf.h"
 
 class AActor;
 
@@ -16,4 +18,6 @@ public:
     void SetPhysicsAngularVelocityInRadians(FVector NewAngVel, bool bAddToCurrent, FName BoneName);
 
     void IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnore);
+
+    void GetOverlappingActors(TArray<AActor*>& OverlappingActors, TSubclassOf<AActor> ClassFilter) const;
 };

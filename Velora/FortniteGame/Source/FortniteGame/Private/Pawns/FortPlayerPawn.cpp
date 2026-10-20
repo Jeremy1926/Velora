@@ -71,6 +71,13 @@ const FVehiclePawnState& AFortPlayerPawn::GetVehicleStateLocal() const
     return *VehicleStateLocal->ContainerPtrToValuePtr<FVehiclePawnState>(this);
 }
 
+void AFortPlayerPawn::BeginSkydiving(bool bFromBus)
+{
+    static auto BeginSkydiving = Scanner::Function<void (*)(AFortPlayerPawn*, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortPlayerPawn:BeginSkydiving")).Get(TEXT("AFortPlayerPawn::BeginSkydiving")));
+
+    BeginSkydiving(this, bFromBus);
+}
+
 void AFortPlayerPawn::OnBlueprintPlace()
 {
     static auto OnBlueprintPlace = []

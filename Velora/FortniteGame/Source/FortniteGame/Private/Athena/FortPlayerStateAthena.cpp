@@ -24,3 +24,16 @@ uint8 AFortPlayerStateAthena::GetTeamIndex() const
 
     return *TeamIndex->ContainerPtrToValuePtr<uint8>(this);
 }
+
+void AFortPlayerStateAthena::PlayerPawnRebooted()
+{
+    if (HasAuthority())
+        GetRebootCounter()++;
+}
+
+int32& AFortPlayerStateAthena::GetRebootCounter()
+{
+    static auto RebootCounter = GetClass()->FindPropertyByName(FName(TEXT("RebootCounter")));
+
+    return *RebootCounter->ContainerPtrToValuePtr<int32>(this);
+}

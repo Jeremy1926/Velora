@@ -10,4 +10,8 @@ public:
     uint8 GetSquadId() const;
 
     uint8 GetTeamIndex() const;
+
+    void PlayerPawnRebooted();
+
+    int32& GetRebootCounter();
 };

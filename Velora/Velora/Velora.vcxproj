@@ -396,6 +396,8 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIPerceptionManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIDirector.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -584,6 +586,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

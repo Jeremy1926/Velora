@@ -48,6 +48,10 @@ public:
 
     void execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result);
 
+    static AFortPlayerController* GetFortPlayerControllerFromActor(AActor* Actor);
+
+    static void BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise);
+
     static void BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier);
 
     static bool PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier);

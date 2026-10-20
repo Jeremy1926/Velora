@@ -94,6 +94,8 @@ public:
 
     AFortPlayerPawn* GetMyFortPawn() const;
 
+    bool IsPlayerAlive();
+
     TAssetPtr<UObject>& GetStartRepairSound();
 
     void ClientReportDamagedResourceBuilding(ABuildingSMActor* BuildingSMActor, EFortResourceType PotentialResourceType, int32 PotentialResourceCount, bool bDestroyed, bool bJustHitWeakspot);

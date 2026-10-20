@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "HAL/UnrealMemory.h"
 #include "Engine/NetSerialization.h"
 #include "UObject/NameTypes.h"
 #include "UObject/WeakObjectPtr.h"
@@ -44,6 +45,50 @@ enum ENetDormancy
     DORN_MAX,
 };
 
+enum class ETraceTypeQuery : uint8
+{
+    TraceTypeQuery1,
+    TraceTypeQuery2,
+    TraceTypeQuery3,
+    TraceTypeQuery4,
+    TraceTypeQuery5,
+    TraceTypeQuery6,
+    TraceTypeQuery7,
+    TraceTypeQuery8,
+    TraceTypeQuery9,
+    TraceTypeQuery10,
+    TraceTypeQuery11,
+    TraceTypeQuery12,
+    TraceTypeQuery13,
+    TraceTypeQuery14,
+    TraceTypeQuery15,
+    TraceTypeQuery16,
+    TraceTypeQuery17,
+    TraceTypeQuery18,
+    TraceTypeQuery19,
+    TraceTypeQuery20,
+    TraceTypeQuery21,
+    TraceTypeQuery22,
+    TraceTypeQuery23,
+    TraceTypeQuery24,
+    TraceTypeQuery25,
+    TraceTypeQuery26,
+    TraceTypeQuery27,
+    TraceTypeQuery28,
+    TraceTypeQuery29,
+    TraceTypeQuery30,
+    TraceTypeQuery31,
+    TraceTypeQuery32,
+    TraceTypeQuery_MAX,
+};
+
+enum class EAttachmentRule : uint8
+{
+    KeepRelative,
+    KeepWorld,
+    SnapToTarget,
+};
+
 enum EObjectTypeQuery
 {
     ObjectTypeQuery1,
@@ -83,6 +128,14 @@ enum EObjectTypeQuery
 
 struct FHitResult
 {
+    FHitResult()
+        : BoneName(NAME_None)
+        , MyBoneName(NAME_None)
+    {
+        FMemory::Memzero(this, sizeof(FHitResult));
+        Time = 1.f;
+    }
+
     uint8 bBlockingHit : 1;
     uint8 bStartPenetrating : 1;
     int32 FaceIndex;

@@ -252,6 +252,20 @@ void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* co
     *(int32*)Z_Param__Result = K2_RemoveFortItemFromPlayer(PlayerController, Item, AmountToRemove, !!bForceRemoval);
 }
 
+AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AActor* Actor)
+{
+    static auto GetFortPlayerControllerFromActor = Scanner::Function<AFortPlayerController* (*)(AActor*)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor")).Get(TEXT("UFortKismetLibrary::GetFortPlayerControllerFromActor")));
+
+    return GetFortPlayerControllerFromActor(Actor);
+}
+
+void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise)
+{
+    static auto BroadcastAbilityImpactAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, UObject*, const FVector&, float, FName, bool)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastAbilityImpactAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation")));
+
+    BroadcastAbilityImpactAtLocation(WorldContextObject, InSound, Instigator, Position, Radius, Tag, bSubtractLocalNoise);
+}
+
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
     static auto BroadcastSoundAtLocation = Scanner::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(Scanner::Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation")).Get(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation")));

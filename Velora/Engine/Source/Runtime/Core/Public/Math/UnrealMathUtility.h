@@ -127,6 +127,11 @@ struct FMath
         return Rand() / (float)RAND_MAX;
     }
 
+    static FORCEINLINE float FRandRange(float InMin, float InMax)
+    {
+        return InMin + (InMax - InMin) * FRand();
+    }
+
     static FORCEINLINE int32 RandHelper(int32 A)
     {
         return A > 0 ? Min(TruncToInt(FRand() * A), A - 1) : 0;

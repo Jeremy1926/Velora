@@ -4,6 +4,7 @@
 #include "Templates/SubclassOf.h"
 
 class AFortAthenaVehicle;
+class AFortPlayerControllerAthena;
 
 class UAthenaAISettings;
 
@@ -19,6 +20,8 @@ public:
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
 
     void PlacePlayerOnTeam(AController* Player);
+
+    void AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController);
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 

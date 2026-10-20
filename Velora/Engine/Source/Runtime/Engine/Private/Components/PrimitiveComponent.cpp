@@ -43,3 +43,10 @@ void UPrimitiveComponent::IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnor
 
     IgnoreActorWhenMoving(this, Actor, bShouldIgnore);
 }
+
+void UPrimitiveComponent::GetOverlappingActors(TArray<AActor*>& OverlappingActors, TSubclassOf<AActor> ClassFilter) const
+{
+    static auto GetOverlappingActors = Scanner::Function<void (*)(const UPrimitiveComponent*, TArray<AActor*>&, UClass*)>(Scanner::Native(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors")).Get(TEXT("UPrimitiveComponent::GetOverlappingActors")));
+
+    GetOverlappingActors(this, OverlappingActors, ClassFilter);
+}

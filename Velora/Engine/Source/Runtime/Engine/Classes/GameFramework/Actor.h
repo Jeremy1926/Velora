@@ -29,6 +29,12 @@ public:
 
     bool CanBeDamaged() const;
 
+    FVector GetActorForwardVector() const;
+
+    void SetLifeSpan(float InLifespan);
+
+    void K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies);
+
     ENetDormancy GetNetDormancy() const;
 
     float GetNetUpdateFrequency() const;
