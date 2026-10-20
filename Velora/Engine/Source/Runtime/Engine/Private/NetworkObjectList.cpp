@@ -5,15 +5,19 @@
 
 void FNetworkObjectList::Remove(AActor* const Actor)
 {
-    static auto Remove = []
-    {
-        auto& Version = FEngineVersion::Current();
+    auto& Version = FEngineVersion::Current();
 
-        auto NotifyActorDestroyed = Scanner::String(TEXT("NotifyActorDestroyed %s - StartupActor"));
-        auto NetworkObjects = Version.GetMajor() > 4 || Version.GetMinor() >= 20 ? NotifyActorDestroyed.Find("mov rcx, [*]; mov rdx, *; call 0x*; mov rdx, [*+0x18]") : NotifyActorDestroyed.Find("mov rcx, [*]; call 0x*");
-
-        return Scanner::Function<void (*)(FNetworkObjectList*, AActor*)>(NetworkObjects.Call().Get(TEXT("FNetworkObjectList::Remove")));
-    }();
+    static auto Remove = Anchor::Function<void (*)(FNetworkObjectList*, AActor*)>(TEXT("FNetworkObjectList::Remove"))
+        .If(Version.GetMajor() > 4 || Version.GetMinor() >= 20)
+        .String(TEXT("NotifyActorDestroyed %s - StartupActor"))
+        .Find("mov rcx, [*]; mov rdx, *; call 0x*; mov rdx, [*+0x18]")
+        .Call()
+        .Or()
+        .If(Version.GetMajor() <= 4 && Version.GetMinor() < 20)
+        .String(TEXT("NotifyActorDestroyed %s - StartupActor"))
+        .Find("mov rcx, [*]; call 0x*")
+        .Call()
+        .Get();
 
     Remove(this, Actor);
 }
