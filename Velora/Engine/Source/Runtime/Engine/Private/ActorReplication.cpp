@@ -3,15 +3,18 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-static auto IsNetRelevantForSlot = Scanner::String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)")).Start().Find("call [*+0x*]").Slot(TEXT("AActor::IsNetRelevantFor"));
-
 static int32_t GetNetPrioritySlot()
 {
     static auto GetNetPriority = []
     {
+        auto IsNetRelevantFor = Anchor::Slot(TEXT("AActor::IsNetRelevantFor"))
+            .String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)"))
+            .Start()
+            .Find("call [*+0x*]")
+            .Get();
         auto VTable = *(const uint8_t***)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Default__Actor"));
 
-        for (auto Index = IsNetRelevantForSlot / (int32_t)sizeof(void*) - 1; Index > 0; Index--)
+        for (auto Index = IsNetRelevantFor / (int32_t)sizeof(void*) - 1; Index > 0; Index--)
         {
             auto Function = Scanner::At(VTable[Index]);
             auto Self = std::format("[*+{:#x}]", Index * sizeof(void*));
@@ -28,7 +31,13 @@ static int32_t GetNetPrioritySlot()
 
 bool AActor::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
-    return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const FVector&)>(this, IsNetRelevantForSlot)(this, RealViewer, ViewTarget, SrcLocation);
+    static auto IsNetRelevantFor = Anchor::Slot(TEXT("AActor::IsNetRelevantFor"))
+        .String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)"))
+        .Start()
+        .Find("call [*+0x*]")
+        .Get();
+
+    return Scanner::Virtual<bool (*)(const AActor*, const AActor*, const AActor*, const FVector&)>(this, IsNetRelevantFor)(this, RealViewer, ViewTarget, SrcLocation);
 }
 
 float AActor::GetNetPriority(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth)
@@ -54,13 +63,17 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
 
 void AActor::CallPreReplication(UNetDriver* NetDriver)
 {
-    static auto CallPreReplication = Scanner::Function<void (*)(AActor*, UNetDriver*)>([]
-    {
-        auto TickDemoRecord = Scanner::String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."));
-        auto Call = TickDemoRecord.Last("xor r9d, r9d").Last("call 0x*");
-
-        return (Call.Get() ? Call : TickDemoRecord.Start().Find("call 0x*; mov r8, [*]; xor r9d, r9d")).Target(TEXT("AActor::CallPreReplication"));
-    }());
+    static auto CallPreReplication = Anchor::Function<void (*)(AActor*, UNetDriver*)>(TEXT("AActor::CallPreReplication"))
+        .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
+        .Last("xor r9d, r9d")
+        .Last("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
+        .Start()
+        .Find("call 0x*; mov r8, [*]; xor r9d, r9d")
+        .Target()
+        .Get();
 
     CallPreReplication(this, NetDriver);
 }
