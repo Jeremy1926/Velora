@@ -59,6 +59,42 @@ public:
         return !bSkipped && this->Code.Is("call 0x*") ? AtCall() : InVTable(VTableName);
     }
 
+    FunctionType AtCallsIn(const Anchor::FCode& Caller) const
+    {
+        FunctionType Original = {};
+        auto Function = bSkipped ? nullptr : this->Code.Get();
+
+        for (auto Call = Caller.Find("call 0x*"); Function && Call.Get(); Call = Call.Find("call 0x*"))
+        {
+            if (Call.Target() == Function)
+                Original = Anchor::DetourCall(this->Name, Call.Get(), Detour);
+        }
+
+        return Original;
+    }
+
+    FunctionType AtReference() const
+    {
+        auto Reference = bSkipped ? nullptr : this->Code.Get();
+
+        if (!Reference)
+            return FunctionType();
+
+        void* Address = nullptr;
+        memcpy(&Address, &Detour, sizeof(Address));
+
+        auto Jump = (JMP_ABS*)AllocateBuffer((LPVOID)Reference);
+        *Jump = { 0xFF, 0x25, 0, (UINT64)Address };
+
+        FunctionType Original = {};
+        auto Target = this->Code.Target();
+        memcpy(&Original, &Target, sizeof(Target));
+
+        Anchor::PatchBranch(this->Name, Reference + 1, (const uint8_t*)Jump);
+
+        return Original;
+    }
+
     FunctionType InVTable(void** VTable) const
     {
         return bSkipped ? FunctionType() : Anchor::DetourVTable(this->Name, VTable, VTable ? this->SlotValue() : 0, Detour);

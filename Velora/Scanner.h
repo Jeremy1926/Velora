@@ -172,6 +172,18 @@ namespace Anchor
             return Chain.IsActive() ? Chain.At(Scanner::Event(FunctionName)) : Chain;
         }
 
+        ChainType& Body(const TCHAR* FunctionPath)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            if (!Chain.IsActive())
+                return Chain;
+
+            auto Finish = Scanner::Exec(FunctionPath).Find("mov [*+0x20], *; jmp 0x*");
+
+            return Chain.At(Finish.Get() ? Anchor::At(Finish.Find("jmp 0x*").Target()) : Scanner::Native(FunctionPath));
+        }
+
         ChainType& Log(const TCHAR* Name)
         {
             auto& Chain = static_cast<ChainType&>(*this);
@@ -230,6 +242,39 @@ namespace Anchor
             }
 
             return Chain.Pattern(Pattern.c_str());
+        }
+
+        template<typename PropertyType>
+        ChainType& FieldFind(std::string_view Instructions, const PropertyType* Property)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            if (!Chain.IsActive() || !Property)
+                return Chain.IsActive() ? Chain.At(FCode()) : Chain;
+
+            std::string Text(Instructions);
+            auto Token = Text.find("%x");
+            char Offset[16];
+            snprintf(Offset, sizeof(Offset), "0x%x", (uint32_t)Property->GetOffset_ForInternal());
+
+            if (Token != std::string::npos)
+                Text.replace(Token, 2, Offset);
+
+            return Chain.Find(Text);
+        }
+
+        ChainType& LastCall(const void* Function)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+            FCode Found;
+
+            for (auto Call = (Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Find("call 0x*"); Chain.IsActive() && Function && Call.Get(); Call = Call.Find("call 0x*"))
+            {
+                if (Call.Target() == Function)
+                    Found = Call;
+            }
+
+            return Chain.IsActive() ? Chain.At(Found) : Chain;
         }
 
         ChainType& If(bool bCondition)
