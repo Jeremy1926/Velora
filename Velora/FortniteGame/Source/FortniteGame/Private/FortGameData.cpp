@@ -25,7 +25,18 @@ UFortAbilitySet* UFortGameData::GetGenericPlayerAbilitySet() const
 {
     static auto GenericPlayerAbilitySet = GetClass()->FindPropertyByName(FName(TEXT("GenericPlayerAbilitySet")));
 
-    return GenericPlayerAbilitySet ? GenericPlayerAbilitySet->ContainerPtrToValuePtr<TAssetPtr<UFortAbilitySet>>(this)->LoadSynchronous() : UGameDataBR::Get()->GetPlayerAbilitySetBR();
+    return GenericPlayerAbilitySet->ContainerPtrToValuePtr<TAssetPtr<UFortAbilitySet>>(this)->LoadSynchronous();
+}
+
+UFortAbilitySet* UFortGameData::GetAthenaPlayerAbilitySet() const
+{
+    static auto AthenaPlayerAbilitySet = GetClass()->FindPropertyByName(FName(TEXT("AthenaPlayerAbilitySet")));
+    static auto GenericPlayerAbilitySet = GetClass()->FindPropertyByName(FName(TEXT("GenericPlayerAbilitySet")));
+
+    if (AthenaPlayerAbilitySet)
+        return AthenaPlayerAbilitySet->ContainerPtrToValuePtr<TAssetPtr<UFortAbilitySet>>(this)->LoadSynchronous();
+
+    return GenericPlayerAbilitySet ? GetGenericPlayerAbilitySet() : UGameDataBR::Get()->GetPlayerAbilitySetBR();
 }
 
 FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) const

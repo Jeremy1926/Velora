@@ -23,6 +23,8 @@ public:
 
     UFortAbilitySet* GetGenericPlayerAbilitySet() const;
 
+    UFortAbilitySet* GetAthenaPlayerAbilitySet() const;
+
     UFortResourceItemDefinition* GetResourceItemDefinition(EFortResourceType ResourceType) const;
 
     FText GetBuildingResourceName(EFortResourceType ResourceType) const;

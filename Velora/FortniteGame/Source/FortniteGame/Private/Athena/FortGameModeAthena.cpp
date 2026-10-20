@@ -114,7 +114,7 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
         static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
 
-        if (auto AbilitySet = UFortGameData::Get()->GetGenericPlayerAbilitySet())
+        if (auto AbilitySet = UFortGameData::Get()->GetAthenaPlayerAbilitySet())
         {
             for (auto& GameplayAbility : AbilitySet->GetGameplayAbilities())
             {
