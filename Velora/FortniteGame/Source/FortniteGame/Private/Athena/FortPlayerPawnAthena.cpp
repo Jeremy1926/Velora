@@ -13,7 +13,12 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-static auto PlayerPawnReady = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
+static auto PlayerPawnReady = []
+{
+    auto ExitAircraftCaller = Scanner::CallTo(Scanner::String(TEXT("ExitAircraft: %s (Pawn %s)")).Start().Get()).Start();
+
+    return ExitAircraftCaller.Get() ? ExitAircraftCaller : Scanner::Reference(Scanner::String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]")).Start().Get(), "call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al").Start();
+}();
 static auto OnPlayerPawnReady = Detour(TEXT("AFortPlayerPawnAthena::OnPlayerPawnReady"), PlayerPawnReady.Get(), &AFortPlayerPawnAthena::OnPlayerPawnReady);
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()
