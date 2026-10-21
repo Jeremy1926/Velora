@@ -196,8 +196,15 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         auto bCanAddStack = true;
 
         static auto DecoItemDefinitionClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoItemDefinition"));
+        static auto CanItemTypeBeSwapped = Anchor::Optional<bool (*)(AFortPickup*, EFortItemType, AFortPlayerController*)>(TEXT("AFortPickup::CanItemTypeBeSwapped"))
+            .String(TEXT("SwapEquippedText"))
+            .Find("mov r8, rax; mov rcx, *; call 0x*")
+            .Call()
+            .Has("bt eax, edx")
+            .Get();
         auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
-        auto bSwapEquipped = bNeedsPrimarySlot && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
+        auto bCanBeSwapped = CanItemTypeBeSwapped ? CanItemTypeBeSwapped(this, ItemDefinition->GetItemType(), PlayerController) : bNeedsPrimarySlot;
+        auto bSwapEquipped = bCanBeSwapped && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
 
         for (auto& ItemEntry : Inventory.GetReplicatedEntries())
         {
