@@ -24,6 +24,8 @@ public:
 
     void execTryReloadAmmoFromAbility(FFrame& Stack, void* const Z_Param__Result);
 
+    void ModAmmo(int32 AmountToUse);
+
     bool GetPendingDestroyDueToDurabilityOrStackCount() const;
 
     FGuid& GetItemEntryGuid();

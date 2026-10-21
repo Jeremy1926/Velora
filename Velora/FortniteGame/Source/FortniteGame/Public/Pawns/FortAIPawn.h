@@ -2,6 +2,8 @@
 
 #include "Pawns/FortPawn.h"
 
+struct FFrame;
+
 class AFortAIPawn : public AFortPawn
 {
 public:
@@ -12,6 +14,10 @@ public:
     void SetLootDropData(float LootDropChance, FName WorldItemTierGroup);
 
     void DropLoot();
+
+    void GiveAmmo(const int32 AmmoQuantity);
+
+    void execGiveAmmo(FFrame& Stack, void* const Z_Param__Result);
 
     bool GetHasDroppedLoot() const;
 

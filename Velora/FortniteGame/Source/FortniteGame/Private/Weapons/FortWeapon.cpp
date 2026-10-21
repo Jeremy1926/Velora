@@ -102,6 +102,17 @@ void AFortWeapon::execTryReloadAmmoFromAbility(FFrame& Stack, void* const Z_Para
     *(bool*)Z_Param__Result = TryReloadAmmoFromAbility();
 }
 
+void AFortWeapon::ModAmmo(int32 AmountToUse)
+{
+    static auto ModAmmo = Anchor::VirtualFunction<void (*)(AFortWeapon*, int32)>(TEXT("AFortWeapon::ModAmmo"))
+        .Native(TEXT("/Script/FortniteGame.FortWeapon:K2_ConsumeAmmo"))
+        .Is("mov rax, [rcx]; neg edx; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
+        .Get();
+
+    ModAmmo(this, AmountToUse);
+}
+
 bool AFortWeapon::GetPendingDestroyDueToDurabilityOrStackCount() const
 {
     static auto bPendingDestroyDueToDurabilityOrStackCount = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPendingDestroyDueToDurabilityOrStackCount")));

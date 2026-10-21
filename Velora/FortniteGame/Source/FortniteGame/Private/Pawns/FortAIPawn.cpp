@@ -4,11 +4,13 @@
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "Weapons/FortWeapon.h"
 #include "FortKismetLibrary.h"
 #include "Engine/World.h"
 #include "Math/Rotator.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
@@ -73,6 +75,28 @@ void AFortAIPawn::DropLoot()
         if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
             Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
     }
+}
+
+void AFortAIPawn::GiveAmmo(const int32 AmmoQuantity)
+{
+    if (auto Weapon = GetCurrentWeapon())
+        Weapon->ModAmmo(AmmoQuantity);
+}
+
+void AFortAIPawn::execGiveAmmo(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAIPawn, execGiveAmmo, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortAIPawn:GiveAmmo"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortAIPawn:GiveAmmo")));
+
+    int32 AmmoQuantity = 0;
+
+    Stack.StepCompiledIn(&AmmoQuantity);
+    Stack.Code += !!Stack.Code;
+
+    GiveAmmo(AmmoQuantity);
 }
 
 bool AFortAIPawn::GetHasDroppedLoot() const
