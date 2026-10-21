@@ -92,9 +92,9 @@ void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, b
         .Or()
         .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Call()
-        .Find("ret")
-        .Last("call 0x*")
-        .Call()
+        .Find("mov r8b, 0x1; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     MarkAbilitySpecDirty(this, Spec, WasAddOrRemove);
