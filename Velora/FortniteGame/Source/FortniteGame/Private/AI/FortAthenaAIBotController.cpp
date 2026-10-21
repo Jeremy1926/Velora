@@ -144,20 +144,25 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
 
         int32 SlotIndex = -1;
 
-        if (!WorldItem || !WouldItemFitInBotInventory(WorldItem, SlotIndex) || SlotIndex < 0)
-            continue;
+        while (WorldItem && WouldItemFitInBotInventory(WorldItem, SlotIndex) && SlotIndex >= 0)
+        {
+            auto& SlotItem = GetSlotItems(SlotIndex);
+            auto ItemType = SlotItem.GetItemType();
+            auto WeaponType = SlotItem.GetWeaponType();
 
-        auto& SlotItem = GetSlotItems(SlotIndex);
-        auto ItemType = SlotItem.GetItemType();
-        auto WeaponType = SlotItem.GetWeaponType();
+            if (!ItemType || !WeaponType)
+                return;
 
-        if (!ItemType || !WeaponType)
-            return;
+            auto ReplacedItem = SlotItem.GetFortItem();
+            auto ItemDefinition = WorldItem->GetItemEntry().GetItemDefinition();
 
-        SlotItem.GetItemDefinition() = ItemAndCount.Item;
-        SlotItem.GetFortItem() = WorldItem;
-        *ItemType = ItemAndCount.Item->GetItemType();
-        *WeaponType = AFortWeapon::FindWeaponTypeForStats(ItemAndCount.Item);
+            SlotItem.GetItemDefinition() = ItemDefinition;
+            SlotItem.GetFortItem() = WorldItem;
+            *ItemType = ItemDefinition->GetItemType();
+            *WeaponType = AFortWeapon::FindWeaponTypeForStats(ItemDefinition);
+
+            WorldItem = ReplacedItem != WorldItem ? ReplacedItem : nullptr;
+        }
     }
 }
 
