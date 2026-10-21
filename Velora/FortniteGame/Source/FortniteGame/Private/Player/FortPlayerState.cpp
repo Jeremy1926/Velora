@@ -49,6 +49,9 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
         .Find("mov rdx, *; mov rcx, *; call 0x*; jmp 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("AFortPlayerState::ApplyCharacterCustomization - Failed initialization, using default parts. Player Controller: %s PlayerState: %s, HeroId: %s"))
+        .Start()
         .Get();
 
     ApplyCharacterCustomization(this, Pawn);
