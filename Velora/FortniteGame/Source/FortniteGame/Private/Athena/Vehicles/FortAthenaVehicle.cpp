@@ -6,7 +6,6 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UObjectArray.h"
-#include "Misc/EngineVersion.h"
 #include "Detour.h"
 #include "Scanner.h"
 
@@ -64,13 +63,17 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
         return PhysicsState->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
     }();
 
+    static auto EncodedRotationX = Anchor::Address()
+        .Pattern("F3 0F 58 2D ? ? ? ? F3 0F 58 0D")
+        .Target()
+        .Get();
+
     auto PrimitiveComponent = Cast<UPrimitiveComponent>(GetRootComponent());
 
     if (!PrimitiveComponent)
         return;
 
-    auto& Version = FEngineVersion::Current();
-    auto Rotation = !bEncodedRotation ? InState.Rotation : Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? FQuat(InState.Rotation.X - 0.3f, InState.Rotation.Y / -0.75f, InState.Rotation.Z + 0.15f, InState.Rotation.W / 1.1f) : FQuat(InState.Rotation.X - 2.5f, InState.Rotation.Y / 0.3f, InState.Rotation.Z + 2.0f, InState.Rotation.W / -1.2f);
+    auto Rotation = !bEncodedRotation ? InState.Rotation : EncodedRotationX && *(const float*)EncodedRotationX == 0.3f ? FQuat(InState.Rotation.X - 0.3f, InState.Rotation.Y / -0.75f, InState.Rotation.Z + 0.15f, InState.Rotation.W / 1.1f) : FQuat(InState.Rotation.X - 2.5f, InState.Rotation.Y / 0.3f, InState.Rotation.Z + 2.0f, InState.Rotation.W / -1.2f);
 
     PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.Translation, Rotation.Rotator(), false, true);
     PrimitiveComponent->SetPhysicsLinearVelocity(InState.LinearVelocity, false, NAME_None);
