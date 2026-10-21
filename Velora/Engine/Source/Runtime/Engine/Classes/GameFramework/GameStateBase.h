@@ -9,4 +9,6 @@ class AGameStateBase : public AInfo
 {
 public:
     TArray<APlayerState*>& GetPlayerArray();
+
+    float GetServerWorldTimeSeconds() const;
 };
