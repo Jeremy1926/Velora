@@ -446,6 +446,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortBotCosmeticItemDataTable.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCosmeticLibraryData.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCustomizationData.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldVolume.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -681,6 +682,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortBotCosmeticItemDataTable.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCosmeticLibraryData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldVolume.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,6 +5,7 @@
 #include "Athena/Vehicles/FortVehicleManager.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "FortAthenaLivingWorldManager.h"
+#include "FortAthenaLivingWorldVolume.h"
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
@@ -75,6 +76,16 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
             FScriptDelegate OnCurrentPlaylistLoadedDelegate;
             OnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldManager, FName(TEXT("OnCurrentPlaylistLoaded")));
             GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);
+
+            TArray<AActor*> LivingWorldVolumes;
+            UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaLivingWorldVolume::StaticClass(), LivingWorldVolumes);
+
+            for (auto LivingWorldVolume : LivingWorldVolumes)
+            {
+                FScriptDelegate VolumeOnCurrentPlaylistLoadedDelegate;
+                VolumeOnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldVolume, FName(TEXT("OnCurrentPlaylistLoaded")));
+                GetOnCurrentPlaylistLoaded().AddUnique(VolumeOnCurrentPlaylistLoadedDelegate);
+            }
         }
     }
 
