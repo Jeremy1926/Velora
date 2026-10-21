@@ -66,6 +66,10 @@ void AFortGameModeAthena::InitGameState()
 
     ServerBotManager->GetCachedGameMode() = this;
     ServerBotManager->GetCachedGameState() = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem()))
+        ServerBotManager->SetCachedAIPopulationTracker(AISystem->GetAIPopulationTracker());
+
     GetServerBotManager() = ServerBotManager;
 
     ServerBotManager->SetBotBrainActivationTimer();

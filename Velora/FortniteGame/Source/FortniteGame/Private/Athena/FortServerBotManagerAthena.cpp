@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortServerBotManagerAthena.h"
+#include "Athena/AI/AthenaAIPopulationTracker.h"
 #include "AI/FortAthenaAIBotController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Engine/LevelStreaming.h"
@@ -143,31 +144,41 @@ void UFortServerBotManagerAthena::CheckForBotBrainActivation()
 
     *((uint8*)this + bCanStartBrain) = true;
 
-    for (auto& BotInfo : GetPlayerBots())
+    for (auto BotInfos : { GetPlayerBots(), GetNoneAthenaParticipantBots() })
     {
-        if (auto BotController = BotInfo.GetBotController())
-            BotController->RunBehaviorTree(BotController->GetBehaviorTree());
-    }
+        if (!BotInfos)
+            continue;
 
-    for (auto& BotInfo : GetNoneAthenaParticipantBots())
-    {
-        if (auto BotController = BotInfo.GetBotController())
-            BotController->RunBehaviorTree(BotController->GetBehaviorTree());
+        for (auto& BotInfo : *BotInfos)
+        {
+            if (auto BotController = BotInfo.GetBotController())
+                BotController->RunBehaviorTree(BotController->GetBehaviorTree());
+        }
     }
 }
 
-TArray<FFortServerBotInfo>& UFortServerBotManagerAthena::GetPlayerBots()
+TArray<FFortServerBotInfo>* UFortServerBotManagerAthena::GetPlayerBots()
 {
     static auto PlayerBots = GetClass()->FindPropertyByName(FName(TEXT("PlayerBots")));
 
-    return *PlayerBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+    if (PlayerBots)
+        return PlayerBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+
+    auto AIPopulationTracker = GetCachedAIPopulationTracker();
+
+    return AIPopulationTracker ? &AIPopulationTracker->GetPlayerBots() : nullptr;
 }
 
-TArray<FFortServerBotInfo>& UFortServerBotManagerAthena::GetNoneAthenaParticipantBots()
+TArray<FFortServerBotInfo>* UFortServerBotManagerAthena::GetNoneAthenaParticipantBots()
 {
     static auto NoneAthenaParticipantBots = GetClass()->FindPropertyByName(FName(TEXT("NoneAthenaParticipantBots")));
 
-    return *NoneAthenaParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+    if (NoneAthenaParticipantBots)
+        return NoneAthenaParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+
+    auto AIPopulationTracker = GetCachedAIPopulationTracker();
+
+    return AIPopulationTracker ? &AIPopulationTracker->GetNoneAthenaParticipantBots() : nullptr;
 }
 
 AFortGameModeAthena*& UFortServerBotManagerAthena::GetCachedGameMode()
@@ -182,4 +193,19 @@ AFortGameStateAthena*& UFortServerBotManagerAthena::GetCachedGameState()
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
     return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this);
+}
+
+UAthenaAIPopulationTracker* UFortServerBotManagerAthena::GetCachedAIPopulationTracker()
+{
+    static auto CachedAIPopulationTracker = GetClass()->FindPropertyByName(FName(TEXT("CachedAIPopulationTracker")));
+
+    return CachedAIPopulationTracker ? *CachedAIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) : nullptr;
+}
+
+void UFortServerBotManagerAthena::SetCachedAIPopulationTracker(UAthenaAIPopulationTracker* InCachedAIPopulationTracker)
+{
+    static auto CachedAIPopulationTracker = GetClass()->FindPropertyByName(FName(TEXT("CachedAIPopulationTracker")));
+
+    if (CachedAIPopulationTracker)
+        *CachedAIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) = InCachedAIPopulationTracker;
 }

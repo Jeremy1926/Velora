@@ -6,6 +6,7 @@
 class AFortAthenaAIBotController;
 class AFortGameModeAthena;
 class AFortGameStateAthena;
+class UAthenaAIPopulationTracker;
 class UWorld;
 class UScriptStruct;
 
@@ -36,11 +37,15 @@ public:
 
     void CheckForBotBrainActivation();
 
-    TArray<FFortServerBotInfo>& GetPlayerBots();
+    TArray<FFortServerBotInfo>* GetPlayerBots();
 
-    TArray<FFortServerBotInfo>& GetNoneAthenaParticipantBots();
+    TArray<FFortServerBotInfo>* GetNoneAthenaParticipantBots();
 
     AFortGameModeAthena*& GetCachedGameMode();
 
     AFortGameStateAthena*& GetCachedGameState();
+
+    UAthenaAIPopulationTracker* GetCachedAIPopulationTracker();
+
+    void SetCachedAIPopulationTracker(UAthenaAIPopulationTracker* InCachedAIPopulationTracker);
 };

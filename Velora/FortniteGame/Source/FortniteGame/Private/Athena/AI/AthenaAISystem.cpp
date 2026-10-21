@@ -16,3 +16,10 @@ UAthenaAIPerceptionManager* UAthenaAISystem::GetPerceptionManager() const
 
     return *PerceptionManager->ContainerPtrToValuePtr<UAthenaAIPerceptionManager*>(this);
 }
+
+UAthenaAIPopulationTracker* UAthenaAISystem::GetAIPopulationTracker() const
+{
+    static auto AIPopulationTracker = GetClass()->FindPropertyByName(FName(TEXT("AIPopulationTracker")));
+
+    return AIPopulationTracker ? *AIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) : nullptr;
+}
