@@ -78,7 +78,7 @@ public:
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
-    void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
+    void ForceReviveFromDBNO(AController* EventInstigator);
 
     void PlayGroupEmote(const UFortMontageItemDefinitionBase* EmoteAsset);
 

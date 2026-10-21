@@ -173,11 +173,11 @@ void AFortPlayerPawn::ServerHandlePickup_Implementation(AFortPickup* Pickup, flo
         Pickup->SetPickupTarget(this, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
-void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
+void AFortPlayerPawn::ForceReviveFromDBNO(AController* EventInstigator)
 {
     auto FortAbilitySystemComponent = Cast<UFortAbilitySystemComponent>(GetAbilitySystemComponent());
 
-    if (CanReviveFromDBNO(EventInstigator) && FortAbilitySystemComponent)
+    if (FortAbilitySystemComponent)
     {
         const bool bSelfRevive = EventInstigator == GetController();
         auto ReviveGameplayEffect = bSelfRevive ? GetSelfReviveGameplayEffect() : GetTeammateReviveGameplayEffect();

@@ -22,6 +22,10 @@ public:
 
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
+    void ForceReviveFromDBNO(AController* EventInstigator);
+
+    void execForceReviveFromDBNO(FFrame& Stack, void* const Z_Param__Result);
+
     float GetPickupSpeedMultiplier() const;
 
     uint8& GetDBNORevivalStacking();

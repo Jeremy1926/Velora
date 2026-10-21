@@ -9,6 +9,7 @@
 #include "GameplayTagContainer.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -131,7 +132,13 @@ void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* P
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
 {
-    AFortPlayerPawn::ServerReviveFromDBNO_Implementation(EventInstigator);
+    if (CanReviveFromDBNO(EventInstigator))
+        ForceReviveFromDBNO(EventInstigator);
+}
+
+void AFortPlayerPawnAthena::ForceReviveFromDBNO(AController* EventInstigator)
+{
+    AFortPlayerPawn::ForceReviveFromDBNO(EventInstigator);
 
     if (!GetIsDBNO())
     {
@@ -144,6 +151,20 @@ void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* Eve
         AbilitySystemComponent->RemoveLooseGameplayTag(DBNOBeingRevivedTag);
         AbilitySystemComponent->RemoveGameplayCue(BeingRevivedFromDBNOCueTag);
     }
+}
+
+void AFortPlayerPawnAthena::execForceReviveFromDBNO(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawnAthena, execForceReviveFromDBNO, Anchor::Hook()
+        .Body(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO")));
+
+    Stack.Code += !!Stack.Code;
+
+    if (GetIsDBNO())
+        ForceReviveFromDBNO(GetController());
 }
 
 float AFortPlayerPawnAthena::GetPickupSpeedMultiplier() const
