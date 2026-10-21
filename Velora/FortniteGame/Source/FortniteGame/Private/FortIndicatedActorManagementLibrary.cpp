@@ -155,9 +155,18 @@ void UFortIndicatedActorManagementLibrary::AddActorsToIndicatedList(AFortPlayerC
             .FindEither("movzx r9d, *; lea rdx, [*]; call 0x*", "lea rdx, [*]; mov r8, rax; call 0x*")
             .Call()
             .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
+            .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
+            .Call()
+            .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
             .Get())
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
         .FindEither("movzx r9d, *; lea rdx, [*]; call 0x*", "lea rdx, [*]; mov r8, rax; call 0x*")
+        .Find("call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
+        .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
         .Find("call 0x*")
         .AtCall());
 
