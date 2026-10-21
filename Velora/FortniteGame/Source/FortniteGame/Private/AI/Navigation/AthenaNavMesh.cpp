@@ -4,13 +4,6 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-UClass* AAthenaNavMesh::StaticClass()
-{
-    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaNavMesh"));
-
-    return Class;
-}
-
 void AAthenaNavMesh::RebuildAll()
 {
     DETOUR(AAthenaNavMesh, RebuildAll, Anchor::Hook()

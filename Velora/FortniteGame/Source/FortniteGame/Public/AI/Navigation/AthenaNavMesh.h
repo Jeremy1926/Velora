@@ -5,7 +5,5 @@
 class AAthenaNavMesh : public AFortNavMesh
 {
 public:
-    static UClass* StaticClass();
-
     void RebuildAll();
 };
