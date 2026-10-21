@@ -60,6 +60,13 @@ UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UW
         .Is("push *; sub rsp, 0x20; mov rax, [rcx]; mov *, rcx; call [rax+0x*]; mov rcx, rax; call 0x*")
         .Optional()
         .Find("call 0x*")
+        .AtCall(), Anchor::Hook()
+        .String(TEXT("UFortAthenaAISpawnerDataComponent_AIBotAffiliation::OnSpawned Can't set team Pawn=%s Controller=%s as can't retrieve AIBotController on pawn!"))
+        .Start()
+        .Find("or [*+0x*], al; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("xor eax, eax; ret*")
+        .Optional()
         .AtCall());
 
     auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
