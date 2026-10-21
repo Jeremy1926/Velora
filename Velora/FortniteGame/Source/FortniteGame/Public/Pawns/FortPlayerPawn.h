@@ -3,6 +3,7 @@
 #include "Pawns/FortPawn.h"
 #include "Math/Vector.h"
 #include "Templates/SubclassOf.h"
+#include "UObject/ScriptDelegates.h"
 
 class AActor;
 class AController;
@@ -52,6 +53,8 @@ class AFortPlayerPawn : public AFortPawn
 {
 public:
     static UClass* StaticClass();
+
+    static FMulticastScriptDelegate* GetOnVehicleSpawnedEvent();
 
     AFortAthenaVehicle* GetVehicle() const;
 

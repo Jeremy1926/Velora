@@ -5,6 +5,7 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortAthenaMapInfo.h"
+#include "Pawns/FortPlayerPawn.h"
 #include "FortKismetLibrary.h"
 #include "Items/FortVehicleItemDefinition.h"
 #include "GameplayEffectTypes.h"
@@ -103,6 +104,11 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
                     if (auto VehicleInterface = (IFortVehicleInterface*)SpawnedVehicle->GetInterfaceAddress(FortVehicleInterface))
                         VehicleInterface->SetForcedToAlwaysSpawn(GetForceSpawnAlways());
                 }
+
+                AFortAthenaVehicle* Vehicle = Cast<AFortAthenaVehicle>(SpawnedVehicle);
+
+                if (auto OnVehicleSpawnedEvent = Vehicle ? AFortPlayerPawn::GetOnVehicleSpawnedEvent() : nullptr)
+                    OnVehicleSpawnedEvent->ProcessMulticastDelegate<UObject>(&Vehicle);
             }
         }
     }

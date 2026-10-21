@@ -55,6 +55,18 @@ uint8 FVehiclePawnState::GetSeatIndex() const
     return *SeatIndex->ContainerPtrToValuePtr<uint8>(this);
 }
 
+FMulticastScriptDelegate* AFortPlayerPawn::GetOnVehicleSpawnedEvent()
+{
+    static auto OnVehicleSpawnedEvent = Anchor::Data<FMulticastScriptDelegate*>(TEXT("AFortPlayerPawn::OnVehicleSpawnedEvent"))
+        .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawned"))
+        .Optional()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return OnVehicleSpawnedEvent;
+}
+
 AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
 {
     return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());
