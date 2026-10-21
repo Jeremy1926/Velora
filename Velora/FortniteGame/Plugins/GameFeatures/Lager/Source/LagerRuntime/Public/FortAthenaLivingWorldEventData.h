@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/DataAsset.h"
+#include "UObject/Class.h"
 #include "Containers/Array.h"
 #include "GameplayTagContainer.h"
 #include "UObject/SoftObjectPtr.h"
