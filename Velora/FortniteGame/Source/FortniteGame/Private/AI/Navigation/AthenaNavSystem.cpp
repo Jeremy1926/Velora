@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "AI/Navigation/AthenaNavSystem.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -27,6 +29,11 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
 
             SpawnMissingNavigationData();
             ProcessRegistrationCandidates();
+
+            static auto bRebuildOnInitialUnlock = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bRebuildOnInitialUnlock")));
+
+            if (bRebuildOnInitialUnlock)
+                bRebuildOnInitialUnlock->SetPropertyValue_InContainer(this, true);
         }
     }
 
