@@ -2,14 +2,11 @@
 #include "AttributeSet.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
-#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 FGameplayAttribute::FGameplayAttribute(UProperty* NewProperty)
 {
-    auto& Version = FEngineVersion::Current();
-
-    if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
+    if (FField::StaticClass())
     {
         static auto GameplayAttribute = Anchor::Function<FGameplayAttribute* (*)(FGameplayAttribute*, UProperty*)>(TEXT("FGameplayAttribute::FGameplayAttribute"))
             .String(TEXT("IncomingDuration"))

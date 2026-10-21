@@ -8,10 +8,10 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
     auto& Version = FEngineVersion::Current();
 
     static auto FindPropertyByName = Anchor::Function<UProperty* (*)(const UStruct*, FName)>(TEXT("UStruct::FindPropertyByName"))
-        .If(Version.GetMajor() > 4 || Version.GetMinor() >= 25)
+        .If(FField::StaticClass())
         .Pattern("48 8B 49 70 48 85 C9 74 ? 4C 8B CA 49 C1 E9 20 48 8B 41 28")
         .Or()
-        .If(Version.GetMajor() <= 4 && Version.GetMinor() >= 22 && Version.GetMinor() < 25)
+        .If(!FField::StaticClass() && Version.GetMajor() <= 4 && Version.GetMinor() >= 22)
         .Pattern("48 8B 41 68 48 89 54 24 10 48 85 C0 74 ? 44 8B 54 24 14")
         .Or()
         .If(Version.GetMajor() <= 4 && Version.GetMinor() < 22)

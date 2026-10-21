@@ -24,6 +24,8 @@ class FField
     FFieldClass* ClassPrivate;
 
 public:
+    static FFieldClass* StaticClass();
+
     virtual ~FField();
 
     FFieldVariant Owner;

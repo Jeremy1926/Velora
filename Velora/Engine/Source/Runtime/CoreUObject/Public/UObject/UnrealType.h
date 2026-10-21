@@ -2,7 +2,6 @@
 
 #include "HAL/Platform.h"
 #include "Containers/EnumAsByte.h"
-#include "Misc/EngineVersion.h"
 #include "UObject/Class.h"
 #include "UObject/Field.h"
 #include "UObject/CoreNetTypes.h"
@@ -42,9 +41,7 @@ public:
 protected:
     FORCEINLINE const UProperty* GetProperty() const
     {
-        auto& Version = FEngineVersion::Current();
-
-        return Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? (const UProperty*)((const uint8*)this + sizeof(FField) - sizeof(UField)) : this;
+        return FField::StaticClass() ? (const UProperty*)((const uint8*)this + sizeof(FField) - sizeof(UField)) : this;
     }
 
 private:

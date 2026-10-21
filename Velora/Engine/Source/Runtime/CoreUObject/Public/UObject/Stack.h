@@ -25,9 +25,8 @@ public:
         }
         else
         {
-            auto& Version = FEngineVersion::Current();
             auto Property = (UProperty*)PropertyChainForCompiledIn;
-            PropertyChainForCompiledIn = Version.GetMajor() > 4 || Version.GetMinor() >= 25 ? (UField*)((FField*)PropertyChainForCompiledIn)->Next : PropertyChainForCompiledIn->Next;
+            PropertyChainForCompiledIn = FField::StaticClass() ? (UField*)((FField*)PropertyChainForCompiledIn)->Next : PropertyChainForCompiledIn->Next;
             StepExplicitProperty(Result, Property);
         }
     }
