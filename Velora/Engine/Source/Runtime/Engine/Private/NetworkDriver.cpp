@@ -237,7 +237,8 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 {
     static auto InitListen = Anchor::VirtualFunction<bool (*)(UNetDriver*, FNetworkNotify*, FURL&, bool, FString&)>(TEXT("UNetDriver::InitListen"))
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
-        .Find("call [*]")
+        .Find("xor r9d, r9d; call [*+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return InitListen(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
