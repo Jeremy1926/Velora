@@ -192,6 +192,13 @@ AActor* AActor::GetOwner() const
     return *Owner->ContainerPtrToValuePtr<AActor*>(this);
 }
 
+FActorDestroyedSignature& AActor::GetOnDestroyed()
+{
+    static auto OnDestroyed = GetClass()->FindPropertyByName(FName(TEXT("OnDestroyed")));
+
+    return *OnDestroyed->ContainerPtrToValuePtr<FActorDestroyedSignature>(this);
+}
+
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
 {
     static auto FindComponentByClass = Anchor::VirtualFunction<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(TEXT("AActor::FindComponentByClass"))

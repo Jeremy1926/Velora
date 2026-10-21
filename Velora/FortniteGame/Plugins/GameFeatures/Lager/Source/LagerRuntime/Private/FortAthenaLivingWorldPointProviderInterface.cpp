@@ -31,6 +31,16 @@ void IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags(FGameplayTagCo
     GetFiltersTags(this, FilterTags);
 }
 
+void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor(AActor* SpawnedActor) const
+{
+    static auto OnSpawnedActor = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, AActor*)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    OnSpawnedActor(this, SpawnedActor);
+}
+
 void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActorFailed()
 {
     static auto OnSpawnedActorFailed = Anchor::VirtualFunction<void (*)(IFortAthenaLivingWorldPointProviderInterface*)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActorFailed"))

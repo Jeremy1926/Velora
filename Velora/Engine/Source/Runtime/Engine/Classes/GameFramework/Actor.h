@@ -5,12 +5,17 @@
 #include "Components/SceneComponent.h"
 #include "Math/Vector.h"
 #include "Templates/SubclassOf.h"
+#include "UObject/SparseDelegate.h"
 
 class APawn;
 class UActorChannel;
 class UActorComponent;
 class ULevel;
 class UNetDriver;
+
+struct FActorDestroyedSignature : public FSparseDelegate
+{
+};
 
 class AActor : public UObject
 {
@@ -56,6 +61,8 @@ public:
     APawn* GetInstigator() const;
 
     AActor* GetOwner() const;
+
+    FActorDestroyedSignature& GetOnDestroyed();
 
     UActorComponent* FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const;
 

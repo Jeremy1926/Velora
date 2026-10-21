@@ -50,6 +50,8 @@ public:
 
     void GenerateEvents();
 
+    void OnActorSpawned(AActor* SpawnedActor, int32 RequestID);
+
     void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight);
 
     int32 GetEventBudget(FFortAthenaLivingWorldEvent* Event);

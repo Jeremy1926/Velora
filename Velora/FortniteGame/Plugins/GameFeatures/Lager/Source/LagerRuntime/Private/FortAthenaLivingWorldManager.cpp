@@ -18,6 +18,7 @@
 #include "Misc/Parse.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/SparseDelegate.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -87,6 +88,15 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
     if (!CategoryTable || !GetCachedGameState())
         return;
 
+    auto& EventInstances = GetEventInstances();
+    const float TimeSeconds = GetWorld()->GetTimeSeconds();
+
+    for (int32 Index = EventInstances.Num() - 1; Index >= 0; Index--)
+    {
+        if (!EventInstances[Index].SpawnedActors.Num() && !EventInstances[Index].PendingRequestIDs.Num() && TimeSeconds >= EventInstances[Index].RespawnTime)
+            EventInstances.RemoveAt(Index);
+    }
+
     int32 ActorBudget = (int32)LagerConfig->GetMaxActorCount().GetValueAtLevel(0.0f) - GetActorCount(nullptr, nullptr);
     int32 EventSpawnBudget = (int32)LagerConfig->GetMaxEventSpawnPerTick().GetValueAtLevel(0.0f);
 
@@ -147,6 +157,37 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             ActorBudget -= ActorCount;
             EventSpawnBudget--;
         }
+    }
+}
+
+void UFortAthenaLivingWorldManager::OnActorSpawned(AActor* SpawnedActor, int32 RequestID)
+{
+    for (auto& EventInstance : GetEventInstances())
+    {
+        if (!EventInstance.PendingRequestIDs.RemoveSingle(RequestID))
+            continue;
+
+        auto PointProvider = EventInstance.PointProvider.Get();
+        auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
+
+        if (!SpawnedActor)
+        {
+            if (PointProviderInterface)
+                PointProviderInterface->OnSpawnedActorFailed();
+
+            return;
+        }
+
+        EventInstance.SpawnedActors.Add(SpawnedActor);
+
+        FScriptDelegate OnSpawnedActorDestroyDelegate;
+        OnSpawnedActorDestroyDelegate.BindUFunction(this, FName(TEXT("OnSpawnedActorDestroy")));
+        SpawnedActor->GetOnDestroyed().bIsBound |= FSparseDelegateStorage::Add(SpawnedActor, FName(TEXT("OnDestroyed")), OnSpawnedActorDestroyDelegate);
+
+        if (PointProviderInterface)
+            PointProviderInterface->OnSpawnedActor(SpawnedActor);
+
+        return;
     }
 }
 

@@ -4,6 +4,7 @@
 #include "Math/Rotator.h"
 #include "Math/Vector.h"
 
+class AActor;
 class UClass;
 
 struct FFortAthenaLivingWorldPointProviderFilterRules
@@ -19,6 +20,8 @@ public:
     bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const;
 
     void GetFiltersTags(FGameplayTagContainer& FilterTags) const;
+
+    void OnSpawnedActor(AActor* SpawnedActor) const;
 
     void OnSpawnedActorFailed();
 
