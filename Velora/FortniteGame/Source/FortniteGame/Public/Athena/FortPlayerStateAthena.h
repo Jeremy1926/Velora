@@ -3,6 +3,7 @@
 #include "Player/FortPlayerStatePvP.h"
 
 class AActor;
+class AFortPlayerPawnAthena;
 class UScriptStruct;
 struct FGameplayTagContainer;
 struct FVector;
@@ -32,6 +33,8 @@ struct FDeathInfo
 
     void SetInitialized(bool bInInitialized);
 
+    int32* GetDeathCircumstance();
+
     FGameplayTagContainer* GetDeathTags();
 
     FGameplayTagContainer* GetFinisherOrDownerTags();
@@ -48,6 +51,8 @@ public:
     static UClass* StaticClass();
 
     static EDeathCause ToDeathCause(const FGameplayTagContainer& InTags, bool bWasDBNO);
+
+    static int32 ToDeathCircumstance(AFortPlayerPawnAthena* Pawn);
 
     FDeathInfo& GetDeathInfo();
 

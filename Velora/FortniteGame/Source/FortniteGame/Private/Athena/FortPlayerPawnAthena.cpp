@@ -245,6 +245,9 @@ void AFortPlayerPawnAthena::InitializeDeathInfoOnPawnDeath(const FGameplayTagCon
     if (auto DeathLocation = DeathInfo.GetDeathLocation())
         *DeathLocation = GetActorLocation();
 
+    if (auto DeathCircumstance = DeathInfo.GetDeathCircumstance())
+        *DeathCircumstance = AFortPlayerStateAthena::ToDeathCircumstance(this);
+
     if (auto DeathTags = DeathInfo.GetDeathTags())
         *DeathTags = InTags;
 

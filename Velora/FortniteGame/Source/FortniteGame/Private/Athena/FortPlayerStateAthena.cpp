@@ -74,6 +74,13 @@ void FDeathInfo::SetInitialized(bool bInInitialized)
         bInitialized->SetPropertyValue_InContainer(this, bInInitialized);
 }
 
+int32* FDeathInfo::GetDeathCircumstance()
+{
+    static auto DeathCircumstance = StaticStruct()->FindPropertyByName(FName(TEXT("DeathCircumstance")));
+
+    return DeathCircumstance ? DeathCircumstance->ContainerPtrToValuePtr<int32>(this) : nullptr;
+}
+
 FGameplayTagContainer* FDeathInfo::GetDeathTags()
 {
     static auto DeathTags = StaticStruct()->FindPropertyByName(FName(TEXT("DeathTags")));
@@ -120,6 +127,20 @@ EDeathCause AFortPlayerStateAthena::ToDeathCause(const FGameplayTagContainer& In
         .Get();
 
     return ToDeathCause(InTags, bWasDBNO);
+}
+
+int32 AFortPlayerStateAthena::ToDeathCircumstance(AFortPlayerPawnAthena* Pawn)
+{
+    static auto ToDeathCircumstance = Anchor::Function<int32 (*)(AFortPlayerPawnAthena*)>(TEXT("AFortPlayerStateAthena::ToDeathCircumstance"))
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Start()
+        .Find("call 0x*; mov rcx, r*; mov [r*], al; call 0x*; mov [r*], eax")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return ToDeathCircumstance(Pawn);
 }
 
 FDeathInfo& AFortPlayerStateAthena::GetDeathInfo()
