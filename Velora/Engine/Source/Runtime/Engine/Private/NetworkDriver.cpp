@@ -245,14 +245,25 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
 
 void UNetDriver::SetWorld(UWorld* InWorld)
 {
-    static auto SetWorld = Anchor::Function<void (*)(UNetDriver*, UWorld*)>(TEXT("UNetDriver::SetWorld"))
+    static auto SetWorld = Anchor::Optional<void (*)(UNetDriver*, UWorld*)>(TEXT("UNetDriver::SetWorld"))
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("xor edx, edx; mov rcx, *")
-        .Last("call 0x*")
+        .Last("call *")
+        .Is("call 0x*")
         .Target()
         .Get();
 
-    SetWorld(this, InWorld);
+    if (SetWorld)
+        return SetWorld(this, InWorld);
+
+    static auto VirtualSetWorld = Anchor::VirtualFunction<void (*)(UNetDriver*, UWorld*)>(TEXT("UNetDriver::SetWorld"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor edx, edx; mov rcx, *")
+        .Last("call *")
+        .Is("call [*+0x*]")
+        .Get();
+
+    VirtualSetWorld(this, InWorld);
 }
 
 void UNetDriver::TickFlush(float DeltaSeconds)
