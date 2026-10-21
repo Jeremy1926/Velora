@@ -244,8 +244,11 @@ void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLo
 {
     DETOUR(AFortAthenaAIBotController, ApplyCharacterCustomization, Anchor::Hook()
         .FieldPattern("48 83 B9 %o 00 ? 0F B6 ?", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn"))) : nullptr)
-        .Optional()
         .Start()
+        .Or()
+        .FieldPattern("48 83 B9 %o 00 48 8B D9 74 ? 48 85 D2", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn"))) : nullptr)
+        .Start()
+        .Optional()
         .Inline());
 
     Original(InCustomizationLoadout, InBotNameSettings, bRequiresUniqueNetId);
