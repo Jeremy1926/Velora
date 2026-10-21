@@ -124,6 +124,13 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (!bFindWeaponTypeForStats)
@@ -143,8 +150,9 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         }
 
         int32 SlotIndex = -1;
+        bool bIsItemSupported = false;
 
-        while (WorldItem && WouldItemFitInBotInventory(WorldItem, SlotIndex) && SlotIndex >= 0)
+        while (WorldItem && WouldItemFitInBotInventory(WorldItem, SlotIndex, bIsItemSupported) && SlotIndex >= 0)
         {
             auto& SlotItem = GetSlotItems(SlotIndex);
             auto ItemType = SlotItem.GetItemType();
@@ -203,14 +211,17 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
         *((uint8*)this + bAllowUnsupportedItems) = false;
 }
 
-bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex)
+bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported)
 {
-    static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))
+    static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&, bool&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))
         .FieldPattern("41 C7 00 FF FF FF FF ? 8B ? 48 83 B9 %o 00", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("Inventory"))) : nullptr)
+        .Start()
+        .Or()
+        .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
         .Start()
         .Get();
 
-    return WouldItemFitInBotInventory(this, Item, OutSlotIndex);
+    return WouldItemFitInBotInventory(this, Item, OutSlotIndex, bOutIsItemSupported);
 }
 
 void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId)

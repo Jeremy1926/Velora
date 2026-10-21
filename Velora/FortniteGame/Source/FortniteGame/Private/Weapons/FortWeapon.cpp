@@ -29,6 +29,13 @@ EFortWeaponType AFortWeapon::FindWeaponTypeForStats(const UFortItemDefinition* I
         .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]; cmp al, 0x*; jnz *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return FindWeaponTypeForStats(ItemDefinition);
