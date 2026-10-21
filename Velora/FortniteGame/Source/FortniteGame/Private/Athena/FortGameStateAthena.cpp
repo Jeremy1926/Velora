@@ -17,6 +17,13 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+PATCH(AFortGameStateAthena, BeginPlay, Anchor::Patch()
+    .String(TEXT("GS BeginPlay"))
+    .Optional()
+    .Start()
+    .Find("mov dl, 0x1; mov rcx, rax; mov r8, [rax]; call [r8+0x50]")
+    .JumpOver("call [r8+0x50]"))
+
 UClass* AFortGameStateAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameStateAthena"));

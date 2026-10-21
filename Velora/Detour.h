@@ -303,22 +303,52 @@ public:
     {
     }
 
+    FPatch& Optional()
+    {
+        bSkipped = !this->IsActive() && !Code.Get();
+
+        return *this;
+    }
+
     const uint8_t* Jump() const
     {
         auto Branch = Code.Get();
 
+        if (bSkipped)
+            return nullptr;
+
         return Branch && *Branch == 0x0F ? Anchor::Patch(Name, Branch, { 0x90, 0xE9 }) : Anchor::Patch(Name, Branch, { 0xEB });
+    }
+
+    const uint8_t* JumpOver(std::string_view Instructions) const
+    {
+        auto Branch = Code.Get();
+        auto Next = Code.Find(Instructions).Find("*").Get();
+
+        if (bSkipped)
+            return nullptr;
+
+        return Next ? Anchor::Patch(Name, Branch, { 0xEB, (uint8_t)(Next - (Branch + 2)) }) : Anchor::Patch(Name, nullptr, {});
     }
 
     const uint8_t* BranchTo(const void* Target) const
     {
+        if (bSkipped)
+            return nullptr;
+
         return Anchor::PatchBranch(Name, Code.Get(), (const uint8_t*)Target);
     }
 
     const uint8_t* BranchToLast(std::string_view Instructions) const
     {
+        if (bSkipped)
+            return nullptr;
+
         return Anchor::PatchBranch(Name, Code.Get(), Code.Last(Instructions).Target());
     }
+
+private:
+    bool bSkipped = false;
 };
 
 consteval uint64_t DetourHash(std::string_view Name)
