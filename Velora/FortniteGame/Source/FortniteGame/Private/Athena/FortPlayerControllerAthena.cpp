@@ -75,20 +75,45 @@ void AFortPlayerControllerAthena::ServerRestartPlayer_Implementation()
 
 void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
 {
-    DETOUR(AFortPlayerControllerAthena, OnPawnDied, Anchor::Hook()
-        .String(TEXT("FortGameModeAthena: Player [%s] removed from alive players list*"))
-        .Start()
-        .Has("cmp al, 0x12")
-        .Optional()
+    DETOUR(AFortPlayerControllerAthena, OnPawnDied, Anchor::Hook((void*)+[](AFortPlayerControllerAthena* PlayerController, AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)
+        {
+            PlayerController->OnPawnDied(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+        })
+        .If(!::Anchor::Exists().String(TEXT("FortGameModeAthena: Player [%s] killed after %d seconds*")).Get())
         .String(TEXT("Deaths"))
         .Start()
         .Find("movaps xmm6, xmm*")
         .Is("movaps xmm6, xmm2")
         .Start()
-        .InVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), TEXT("AFortPlayerControllerAthena::OnPawnDied"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Or()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("movaps xmm6, xmm*")
+        .Is("movaps xmm6, xmm1")
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .With((void*)+[](AFortPlayerControllerAthena* PlayerController, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
+        {
+            PlayerController->OnPawnDied(PlayerController->GetMyFortPawn(), Damage, InTags, EffectContext, EventInstigator, DamageCauser, nullptr);
+        })
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
-    Original(KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+    static auto bKilledPawn = Anchor::Exists()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("movaps xmm6, xmm*")
+        .Is("movaps xmm6, xmm2")
+        .Get();
+
+    if (bKilledPawn)
+        ((void (*)(AFortPlayerControllerAthena*, AFortPlayerPawn*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*, AController*))DETOUR_ORIGINAL(AFortPlayerControllerAthena, OnPawnDied))(this, KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
+    else
+        ((void (*)(AFortPlayerControllerAthena*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*))DETOUR_ORIGINAL(AFortPlayerControllerAthena, OnPawnDied))(this, Damage, InTags, EffectContext, EventInstigator, DamageCauser);
+
+    static auto bWasDBNOOnDeath = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));
+
+    auto bWasDBNO = KilledPawn && (bWasDBNOOnDeath ? KilledPawn->GetWasDBNOOnDeath() : KilledPawn->GetIsDBNO());
 
     auto World = GetWorld();
     auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
@@ -99,7 +124,7 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
 
     auto& PlayerDeathReport = GetPlayerDeathReport();
 
-    GameMode->RemoveFromAlivePlayers(this, PlayerDeathReport.GetKillerPlayerState(), PlayerDeathReport.GetKillerPawn(), PlayerDeathReport.GetKillerWeapon(), AFortPlayerStateAthena::ToDeathCause(InTags, KilledPawn && KilledPawn->GetWasDBNOOnDeath()), false);
+    GameMode->RemoveFromAlivePlayers(this, PlayerDeathReport.GetKillerPlayerState(), PlayerDeathReport.GetKillerPawn(), PlayerDeathReport.GetKillerWeapon(), AFortPlayerStateAthena::ToDeathCause(InTags, bWasDBNO), false);
 }
 
 bool AFortPlayerControllerAthena::GetMarkedAlive() const

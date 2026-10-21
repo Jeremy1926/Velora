@@ -256,15 +256,31 @@ void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerC
     AddToAlivePlayers(this, PlayerController);
 }
 
-void AFortGameModeAthena::RemoveFromAlivePlayers(AFortPlayerControllerAthena* PlayerController, APlayerState* KillerPlayerState, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bSkipWinCheck)
+void AFortGameModeAthena::RemoveFromAlivePlayers(AFortPlayerControllerAthena* PC, APlayerState* RemovalInstigator, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bIsTeamSwitching)
 {
     static auto RemoveFromAlivePlayers = Anchor::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*, APlayerState*, APawn*, UFortWeaponItemDefinition*, EDeathCause, bool)>(TEXT("AFortGameModeAthena::RemoveFromAlivePlayers"))
         .String(TEXT("FortGameModeAthena: Player [%s] removed from alive players list*"))
         .Start()
-        .Has("cmp al, 0x12")
         .Get();
 
-    RemoveFromAlivePlayers(this, PlayerController, KillerPlayerState, FinisherPawn, FinishingWeapon, DeathCause, bSkipWinCheck);
+    static auto bDeathCause = Anchor::Exists()
+        .At((const void*)RemoveFromAlivePlayers)
+        .CallSite()
+        .LastSince("mov byte ptr [rsp+0x28], *", "call 0x*")
+        .Get();
+
+    static auto bTeamSwitching = Anchor::Exists()
+        .At((const void*)RemoveFromAlivePlayers)
+        .CallSite()
+        .LastSince("mov *[rsp+0x30], *", "call 0x*")
+        .Get();
+
+    if (bTeamSwitching)
+        RemoveFromAlivePlayers(this, PC, RemovalInstigator, FinisherPawn, FinishingWeapon, DeathCause, bIsTeamSwitching);
+    else if (bDeathCause)
+        ((void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*, APlayerState*, APawn*, UFortWeaponItemDefinition*, EDeathCause))RemoveFromAlivePlayers)(this, PC, RemovalInstigator, FinisherPawn, FinishingWeapon, DeathCause);
+    else
+        ((void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*, APlayerState*))RemoveFromAlivePlayers)(this, PC, RemovalInstigator);
 }
 
 void AFortGameModeAthena::OnPlaylistDataLoaded()

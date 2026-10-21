@@ -29,7 +29,7 @@ public:
 
     void AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController);
 
-    void RemoveFromAlivePlayers(AFortPlayerControllerAthena* PlayerController, APlayerState* KillerPlayerState, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bSkipWinCheck);
+    void RemoveFromAlivePlayers(AFortPlayerControllerAthena* PC, APlayerState* RemovalInstigator, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bIsTeamSwitching);
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 

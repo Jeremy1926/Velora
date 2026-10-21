@@ -38,7 +38,7 @@ UFortWeaponItemDefinition* FFortPlayerDeathReport::GetKillerWeapon() const
 {
     static auto KillerWeapon = StaticStruct()->FindPropertyByName(FName(TEXT("KillerWeapon")));
 
-    return *KillerWeapon->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this);
+    return KillerWeapon ? *KillerWeapon->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this) : nullptr;
 }
 
 UClass* AFortPlayerControllerZone::StaticClass()

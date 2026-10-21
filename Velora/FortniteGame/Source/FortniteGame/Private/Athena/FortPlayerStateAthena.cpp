@@ -19,6 +19,14 @@ EDeathCause AFortPlayerStateAthena::ToDeathCause(const FGameplayTagContainer& In
         .Find("setnz *")
         .Find("mov [*+0x20], *")
         .Call()
+        .Or()
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Start()
+        .Find("cmov* rsi, r*")
+        .Find("call 0x*")
+        .LastSince("xor edx, edx", "cmov* rsi, r*")
+        .Call()
         .Get();
 
     return ToDeathCause(InTags, bWasDBNO);
