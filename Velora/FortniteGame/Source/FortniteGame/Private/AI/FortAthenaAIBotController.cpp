@@ -49,8 +49,8 @@ EFortItemType* FFortBotInventoryInfo::GetItemType()
 {
     static auto ItemType = Anchor::Offset(TEXT("FFortBotInventoryInfo::ItemType"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x70")
-        .Find("mov byte ptr [*], 0x70")
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
+        .Find("mov byte ptr [*], 0x*")
         .Disp();
 
     return ItemType > 0 ? (EFortItemType*)((uint8*)this + ItemType) : nullptr;
@@ -60,8 +60,8 @@ EFortWeaponType* FFortBotInventoryInfo::GetWeaponType()
 {
     static auto WeaponType = Anchor::Offset(TEXT("FFortBotInventoryInfo::WeaponType"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x70")
-        .Find("mov byte ptr [*], 0x70; call 0x*; mov [*+0x*], al")
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
+        .Find("mov byte ptr [*], 0x*; call 0x*; mov [*+0x*], al")
         .Find("mov [*+0x*], al")
         .Disp();
 
