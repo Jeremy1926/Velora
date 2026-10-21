@@ -61,3 +61,33 @@ bool UInventoryManagementLibrary::GiveItemEntryToInventoryOwner(TScriptInterface
 
     return true;
 }
+
+bool UInventoryManagementLibrary::RemoveItem(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, const FGuid& ItemGuid, int32 Count)
+{
+    DETOUR(UInventoryManagementLibrary, RemoveItem, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.InventoryManagementLibrary:RemoveItem"))
+        .Is("sub rsp, 0x28; cmp qword ptr [rcx], 0x0; jnz 0x*; xor al, al; add rsp, 0x28; ret")
+        .AtCallsIn(Anchor::Address()
+            .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:RemoveItem"))
+            .Get()));
+
+    if (!InventoryOwner.GetObject())
+        return false;
+
+    auto PlayerController = Cast<AFortPlayerController>(InventoryOwner.GetObject());
+    auto WorldInventory = PlayerController && PlayerController->HasAuthority() ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory)
+        return true;
+
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
+    {
+        if (ItemEntry.GetItemGuid() == ItemGuid)
+        {
+            PlayerController->RemoveInventoryItem(ItemGuid, Count < 0 ? ItemEntry.GetCount() : Count, false);
+            break;
+        }
+    }
+
+    return true;
+}
