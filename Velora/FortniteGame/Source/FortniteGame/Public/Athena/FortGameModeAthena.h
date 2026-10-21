@@ -2,12 +2,14 @@
 
 #include "FortGamePvPBase.h"
 #include "Templates/SubclassOf.h"
+#include "UObject/SoftObjectPtr.h"
 
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
 class APlayerState;
 class UFortServerBotManagerAthena;
 class UFortWeaponItemDefinition;
+class UDataTable;
 enum class EDeathCause : uint8;
 
 class UAthenaAISettings;
@@ -50,6 +52,12 @@ public:
     bool GetDisableGCOnServerDuringMatch() const;
 
     FName RedirectLootTierGroup(FName LootTierGroup) const;
+
+    void PerformAsyncLoadForGameFeatureLootData();
+
+    TArray<TSoftObjectPtr<UDataTable>>& GetGameFeatureLootTierData();
+
+    TArray<TSoftObjectPtr<UDataTable>>& GetGameFeatureLootPackageData();
 
     TSubclassOf<AActor> GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const;
 

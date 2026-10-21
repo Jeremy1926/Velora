@@ -139,6 +139,9 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         }
     }
 
+    if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
+        GameMode->PerformAsyncLoadForGameFeatureLootData();
+
     Original();
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
@@ -167,6 +170,24 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         for (auto WeaponUpgradeActor : WeaponUpgradeActors)
             ((ABuildingItemWeaponUpgradeActor*)WeaponUpgradeActor)->AthenaPostApplyPlaylistDataTables();
     }
+}
+
+FGameplayTagContainer AFortGameStateAthena::GetAthenaPlaylistContextTags() const
+{
+    static auto GetAthenaPlaylistContextTags = Anchor::Function<FGameplayTagContainer* (*)(const AFortGameStateAthena*, FGameplayTagContainer*)>(TEXT("AFortGameStateAthena::GetAthenaPlaylistContextTags"))
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Start()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Call(3)
+        .Optional()
+        .Get();
+
+    FGameplayTagContainer PlaylistContextTags;
+
+    if (GetAthenaPlaylistContextTags)
+        GetAthenaPlaylistContextTags(this, &PlaylistContextTags);
+
+    return PlaylistContextTags;
 }
 
 FMulticastScriptDelegate& AFortGameStateAthena::GetOnCurrentPlaylistLoaded()

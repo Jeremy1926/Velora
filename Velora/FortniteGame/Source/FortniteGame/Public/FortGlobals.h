@@ -3,6 +3,8 @@
 #include "UObject/Object.h"
 #include "Containers/UnrealString.h"
 
+class UFortGameFeaturePluginManager;
+
 class UFortGlobals : public UObject
 {
 public:
@@ -11,4 +13,6 @@ public:
     static UFortGlobals* Get();
 
     FString* GetBRMapFullName();
+
+    UFortGameFeaturePluginManager* GetGameFeaturePluginManager() const;
 };

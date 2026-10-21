@@ -138,8 +138,13 @@ FName AFortGameMode::GetCurrentPlaylistName() const
 void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const
 {
     static auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
+    static auto GameModeAthena = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
     static auto GetLootTierDataTables = Anchor::VirtualFunction<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(TEXT("AFortGameModeAthena::GetLootTierDataTables"))
         .FieldReaderPair(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr, Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr)
+        .Or()
+        .FieldPattern("4C 8B B6 %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Optional()
         .Get();
 
@@ -159,8 +164,13 @@ void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTa
 void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackageDataTables) const
 {
     static auto Playlist = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist"));
+    static auto GameModeAthena = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
     static auto GetLootPackageDataTables = Anchor::VirtualFunction<void (*)(const AFortGameMode*, TArray<UDataTable*>&)>(TEXT("AFortGameModeAthena::GetLootTierDataTables"))
         .FieldReaderPair(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr, Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr)
+        .Or()
+        .FieldPattern("4C 8B B6 %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Optional()
         .Get(sizeof(void*));
 

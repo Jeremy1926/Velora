@@ -24,3 +24,10 @@ FString* UFortGlobals::GetBRMapFullName()
 
     return BRMapFullName ? BRMapFullName->ContainerPtrToValuePtr<FString>(this) : nullptr;
 }
+
+UFortGameFeaturePluginManager* UFortGlobals::GetGameFeaturePluginManager() const
+{
+    static auto GameFeaturePluginManager = GetClass()->FindPropertyByName(FName(TEXT("GameFeaturePluginManager")));
+
+    return GameFeaturePluginManager ? *GameFeaturePluginManager->ContainerPtrToValuePtr<UFortGameFeaturePluginManager*>(this) : nullptr;
+}

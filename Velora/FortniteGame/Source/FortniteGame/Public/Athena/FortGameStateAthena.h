@@ -3,6 +3,7 @@
 #include "FortGameStateZone.h"
 #include "Engine/NetSerialization.h"
 #include "GameFramework/OnlineReplStructs.h"
+#include "GameplayTagContainer.h"
 #include "UObject/ScriptDelegates.h"
 
 class AFortAthenaMapInfo;
@@ -56,6 +57,8 @@ public:
     AFortAthenaMapInfo* GetMapInfo() const;
 
     void OnPlaylistLootTableAssetsDataLoadCompleted();
+
+    FGameplayTagContainer GetAthenaPlaylistContextTags() const;
 
     FMulticastScriptDelegate& GetOnCurrentPlaylistLoaded();
 

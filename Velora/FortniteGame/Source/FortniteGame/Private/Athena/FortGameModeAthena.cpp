@@ -26,6 +26,9 @@
 #include "Items/FortWorldItemDefinition.h"
 #include "FortniteGame.h"
 #include "FortGameData.h"
+#include "FortGameFeatureData.h"
+#include "FortGameFeaturePluginManager.h"
+#include "Engine/DataTable.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortGameplayAbility.h"
@@ -635,4 +638,50 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
     RedirectLootTierGroup(this, &Result, LootTierGroup);
 
     return Result;
+}
+
+void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto GameFeaturePluginManager = UFortGameFeaturePluginManager::Get();
+
+    if (!GameState || !GameFeaturePluginManager)
+        return;
+
+    TArray<UFortGameFeatureData*> GameFeatureDatas;
+    GameFeaturePluginManager->GetGameFeatureDataForActivePlugins(GameFeatureDatas);
+
+    if (!GameFeatureDatas.Num())
+        return;
+
+    auto PlaylistContextTags = GameState->GetAthenaPlaylistContextTags();
+
+    for (auto GameFeatureData : GameFeatureDatas)
+    {
+        if (!GameFeatureData)
+            continue;
+
+        GameFeatureData->GetLootTierDataForPlaylist(PlaylistContextTags, GetGameFeatureLootTierData());
+        GameFeatureData->GetLootPackageDataForPlaylist(PlaylistContextTags, GetGameFeatureLootPackageData());
+    }
+
+    for (auto& LootTierData : GetGameFeatureLootTierData())
+        LootTierData.LoadSynchronous();
+
+    for (auto& LootPackageData : GetGameFeatureLootPackageData())
+        LootPackageData.LoadSynchronous();
+}
+
+TArray<TSoftObjectPtr<UDataTable>>& AFortGameModeAthena::GetGameFeatureLootTierData()
+{
+    static auto GameFeatureLootTierData = StaticClass()->FindPropertyByName(FName(TEXT("GameFeatureLootTierData")));
+
+    return *GameFeatureLootTierData->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UDataTable>>>(this);
+}
+
+TArray<TSoftObjectPtr<UDataTable>>& AFortGameModeAthena::GetGameFeatureLootPackageData()
+{
+    static auto GameFeatureLootPackageData = StaticClass()->FindPropertyByName(FName(TEXT("GameFeatureLootPackageData")));
+
+    return *GameFeatureLootPackageData->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UDataTable>>>(this);
 }

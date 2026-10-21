@@ -8,6 +8,11 @@ template<class T = UObject>
 class TSoftObjectPtr
 {
 public:
+    FORCEINLINE bool IsNull() const
+    {
+        return SoftObjectPtr.IsNull();
+    }
+
     T* LoadSynchronous() const
     {
         return Cast<T>(SoftObjectPtr.LoadSynchronous());
