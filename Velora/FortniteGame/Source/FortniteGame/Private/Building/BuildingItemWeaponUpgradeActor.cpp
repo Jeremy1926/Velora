@@ -64,7 +64,7 @@ void ABuildingItemWeaponUpgradeActor::AthenaPostApplyPlaylistDataTables()
     auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
     auto WeaponUpgradeMachineSpawnChance = MapInfo ? MapInfo->GetWeaponUpgradeMachineSpawnChance() : nullptr;
 
-    if (!HasAuthority() || !WeaponUpgradeMachineSpawnChance)
+    if (!HasAuthority() || !IsNetStartupActor() || !WeaponUpgradeMachineSpawnChance)
         return;
 
     if (WeaponUpgradeMachineSpawnChance->GetValueAtLevel(0.0f) < FMath::FRand())
