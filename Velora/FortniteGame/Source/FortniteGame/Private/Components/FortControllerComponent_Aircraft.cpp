@@ -32,7 +32,7 @@ bool& UFortControllerComponent_Aircraft::GetIsAttemptingAircraftJump()
     static auto bIsAttemptingAircraftJump = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::bIsAttemptingAircraftJump"))
         .String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying."))
         .Start()
-        .Find("cmp [rax+0x*], r*")
+        .Find("cmp [rax+0x*], *")
         .Disp();
 
     return *(bool*)((uint8_t*)this + bIsAttemptingAircraftJump);

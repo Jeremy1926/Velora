@@ -1350,7 +1350,7 @@ FRotator& AFortPlayerController::GetAirSpawnControlRotation()
     static auto AirSpawnControlRotation = Anchor::Offset(TEXT("AFortPlayerController::AirSpawnControlRotation"))
         .String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying."))
         .Start()
-        .Find("cmp [rax+0x*], r*")
+        .Find("cmp [rax+0x*], *")
         .Find("movsd xmm*, qword ptr [r*+0x*]")
         .Disp();
 
