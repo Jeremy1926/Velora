@@ -25,6 +25,20 @@ PATCH(AFortGameStateAthena, BeginPlay, Anchor::Patch()
     .Find("mov dl, 0x1; mov rcx, rax; mov r8, [rax]; call [r8+0x50]")
     .JumpOver("call [r8+0x50]"))
 
+PATCH(AFortGameStateAthena, UpdateGamePhaseStep, Anchor::Patch()
+    .String(TEXT("Gamephase Step: %s"))
+    .Optional()
+    .Start()
+    .Find("call 0x*")
+    .Is("call 0x*; test al, al; jz 0x*")
+    .Find("test al, al")
+    .Or()
+    .String(TEXT("Gamephase Step: %s"))
+    .Start()
+    .Find("movzx *, byte ptr [*+0x40]; test *, *; jz 0x*")
+    .Find("test *, *; jnz 0x*")
+    .JumpOver("j*z 0x*"))
+
 UClass* AFortGameStateAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameStateAthena"));
