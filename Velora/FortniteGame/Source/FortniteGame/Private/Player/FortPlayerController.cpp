@@ -572,6 +572,11 @@ void AFortPlayerController::DropItemsAsPickups(const TArray<UFortWorldItem*>& It
         .Call()
         .Find("xor r9d, r9d; call 0x*")
         .Find("call 0x*")
+        .Or()
+        .FieldPattern("80 ? %o 00", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+        .Call()
+        .Find("xor r9d, r9d; mov dword ptr [rsp+0x20], *; call 0x*")
+        .Find("call 0x*")
         .AtCall());
 
     if (!Pawn)
