@@ -16,8 +16,11 @@ struct AbilitySystemComponent_eventClientActivateAbilityFailed_Parms
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayAbilitySpec& Spec)
 {
     static auto GiveAbility = Anchor::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(TEXT("UAbilitySystemComponent::GiveAbility"))
-        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Find("lea rdx, [rbp+0x*]")
+        .Call()
+        .Or()
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Call()
         .Get();
 
@@ -40,7 +43,7 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
 FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(const FGameplayAbilitySpec& Spec)
 {
     static auto GiveAbilityAndActivateOnce = Anchor::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(TEXT("UAbilitySystemComponent::GiveAbilityAndActivateOnce"))
-        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Start()
         .Get();
 
@@ -80,8 +83,14 @@ FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromClass(TSubclas
 void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, bool WasAddOrRemove)
 {
     static auto MarkAbilitySpecDirty = Anchor::Function<void (*)(UAbilitySystemComponent*, FGameplayAbilitySpec&, bool)>(TEXT("UAbilitySystemComponent::MarkAbilitySpecDirty"))
-        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Find("lea rdx, [rbp+0x*]")
+        .Call()
+        .Find("ret")
+        .Last("call 0x*")
+        .Call()
+        .Or()
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Call()
         .Find("ret")
         .Last("call 0x*")
