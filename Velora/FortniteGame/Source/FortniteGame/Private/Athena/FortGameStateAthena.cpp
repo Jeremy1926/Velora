@@ -75,6 +75,33 @@ int32 AFortGameStateAthena::GetSafeZonePhase() const
     return *SafeZonePhase->ContainerPtrToValuePtr<uint8>(this);
 }
 
+UObject* AFortGameStateAthena::GetCurrentPlaylist() const
+{
+    static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));
+    static auto CurrentPlaylistInfo = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistInfo")));
+    static auto BasePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("BasePlaylist"))) : nullptr;
+    static auto OverridePlaylist = CurrentPlaylistInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistPropertyArray")))->FindPropertyByName(FName(TEXT("OverridePlaylist"))) : nullptr;
+
+    if (!CurrentPlaylistInfo)
+        return *CurrentPlaylistData->ContainerPtrToValuePtr<UObject*>(this);
+
+    auto PlaylistInfo = CurrentPlaylistInfo->ContainerPtrToValuePtr<void>(this);
+
+    if (OverridePlaylist && *OverridePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo))
+        return *OverridePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo);
+
+    return *BasePlaylist->ContainerPtrToValuePtr<UObject*>(PlaylistInfo);
+}
+
+int32 AFortGameStateAthena::GetAvgPlayerMMR() const
+{
+    static auto GetAvgPlayerMMR = Anchor::Function<int32 (*)(const AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR"))
+        .Native(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+        .Get();
+
+    return GetAvgPlayerMMR(this);
+}
+
 AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
 {
     static auto MapInfo = GetClass()->FindPropertyByName(FName(TEXT("MapInfo")));

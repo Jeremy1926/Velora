@@ -39,6 +39,8 @@ public:
 
     void InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory);
 
+    void InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets);
+
     bool WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported);
 
     void ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId);

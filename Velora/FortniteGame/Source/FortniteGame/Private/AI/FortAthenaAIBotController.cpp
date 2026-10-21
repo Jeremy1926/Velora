@@ -227,6 +227,16 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
         *((uint8*)this + bAllowUnsupportedItems) = false;
 }
 
+void AFortAthenaAIBotController::InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets)
+{
+    static auto InitializeSkills = Anchor::Function<void (*)(AFortAthenaAIBotController*, const float*, const TArray<UClass*>*)>(TEXT("AFortAthenaAIBotController::InitializeSkills"))
+        .FieldPattern("48 85 D2 74 ? 8B 02 89 81 %o", StaticClass()->FindPropertyByName(FName(TEXT("Skill"))))
+        .Start()
+        .Get();
+
+    InitializeSkills(this, InSkill, InSkillSets);
+}
+
 bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported)
 {
     static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&, bool&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))

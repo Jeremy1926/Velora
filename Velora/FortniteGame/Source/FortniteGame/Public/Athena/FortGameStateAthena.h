@@ -49,6 +49,10 @@ public:
 
     int32 GetSafeZonePhase() const;
 
+    UObject* GetCurrentPlaylist() const;
+
+    int32 GetAvgPlayerMMR() const;
+
     AFortAthenaMapInfo* GetMapInfo() const;
 
     void OnPlaylistLootTableAssetsDataLoadCompleted();
