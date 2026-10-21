@@ -5,6 +5,7 @@
 enum class EFortBuildingPersistentState : uint8;
 struct FReservedRandomValues;
 struct FFrame;
+class UScriptStruct;
 
 enum class EDynamicFoundationType : uint8
 {
@@ -25,9 +26,13 @@ enum class EDynamicFoundationEnabledState : uint8
 
 struct FDynamicBuildingFoundationRepData
 {
-    FVector Translation;
-    FQuat Rotation;
-    EDynamicFoundationEnabledState EnabledState;
+    static UScriptStruct* StaticStruct();
+
+    FVector& GetTranslation();
+
+    void SetRotation(const FQuat& InRotation);
+
+    EDynamicFoundationEnabledState& GetEnabledState();
 };
 
 class ABuildingFoundation : public ABuildingSMActor

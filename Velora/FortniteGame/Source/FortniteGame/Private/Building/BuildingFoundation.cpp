@@ -11,6 +11,37 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UScriptStruct* FDynamicBuildingFoundationRepData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.DynamicBuildingFoundationRepData"));
+
+    return Struct;
+}
+
+FVector& FDynamicBuildingFoundationRepData::GetTranslation()
+{
+    static auto Translation = StaticStruct()->FindPropertyByName(FName(TEXT("Translation")));
+
+    return *Translation->ContainerPtrToValuePtr<FVector>(this);
+}
+
+void FDynamicBuildingFoundationRepData::SetRotation(const FQuat& InRotation)
+{
+    static auto Rotation = StaticStruct()->FindPropertyByName(FName(TEXT("Rotation")));
+
+    if (Rotation->GetSize() == sizeof(FQuat))
+        *Rotation->ContainerPtrToValuePtr<FQuat>(this) = InRotation;
+    else
+        *Rotation->ContainerPtrToValuePtr<FRotator>(this) = InRotation.Rotator();
+}
+
+EDynamicFoundationEnabledState& FDynamicBuildingFoundationRepData::GetEnabledState()
+{
+    static auto EnabledState = StaticStruct()->FindPropertyByName(FName(TEXT("EnabledState")));
+
+    return *EnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this);
+}
+
 void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
 {
     DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
@@ -50,8 +81,8 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     }
 
     auto& RepData = *DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this);
-    RepData.Translation = NewTransform.GetTranslation();
-    RepData.Rotation = NewTransform.GetRotation();
+    RepData.GetTranslation() = NewTransform.GetTranslation();
+    RepData.SetRotation(NewTransform.GetRotation());
 
     OnRep_DynamicFoundationRepData();
 }
@@ -108,7 +139,7 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
 
         if (DynamicFoundationRepData)
         {
-            DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this)->EnabledState = State;
+            DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this)->GetEnabledState() = State;
             OnRep_DynamicFoundationRepData();
         }
         else
