@@ -1036,6 +1036,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicleManager.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortValetGameFeatureData.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -1697,6 +1700,9 @@
       <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicleManager.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortValetGameFeatureData.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp">

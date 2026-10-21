@@ -1,12 +1,21 @@
 #include "pch.h"
 #include "FortDagwoodVehicleManager.h"
 #include "FortDagwoodVehicle.h"
+#include "FortValetGameFeatureData.h"
+#include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
+#include "Building/BuildingActor.h"
 #include "Items/FortVehicleItemDefinition.h"
 #include "GameplayEffectTypes.h"
+#include "Engine/EngineTypes.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Math/TransformVectorized.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectArray.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -81,4 +90,79 @@ void UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated(UFortVehicleItemDefiniti
         NumWithGas--;
         Vehicle->AddSpawningFuel();
     }
+}
+
+void UFortDagwoodVehicleManager::UpdatePropReplacement()
+{
+    static auto bHasUpdatedPropReplacement = StaticClass()->FindPropertyByName(FName(TEXT("bHasUpdatedPropReplacement")));
+
+    auto Owner = GetOwner();
+    auto& bHasUpdated = *bHasUpdatedPropReplacement->ContainerPtrToValuePtr<bool>(this);
+
+    if (bHasUpdated || !Owner || !Owner->HasAuthority())
+        return;
+
+    bHasUpdated = true;
+
+    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+    {
+        auto ObjectItem = GUObjectArray.IndexToObject(Index);
+        auto GameFeatureData = ObjectItem ? Cast<UFortValetGameFeatureData>((UObject*)ObjectItem->Object) : nullptr;
+
+        if (!GameFeatureData)
+            continue;
+
+        auto VehicleSpawnerClass = GameFeatureData->GetVehicleSpawnerClass().LoadSynchronous();
+
+        for (auto& PropReplacement : GameFeatureData->GetPropReplacements())
+        {
+            auto PropClass = PropReplacement.Key.LoadSynchronous();
+
+            if (!PropClass)
+                continue;
+
+            TArray<AActor*> BuildingProps;
+            UGameplayStatics::GetAllActorsOfClass(Owner, PropClass, BuildingProps);
+
+            for (auto BuildingProp : BuildingProps)
+                SwapOutProp((ABuildingActor*)BuildingProp, VehicleSpawnerClass, PropReplacement.Value, GameFeatureData->GetSpawnActorCollisionHandlingMethod());
+        }
+    }
+}
+
+void UFortDagwoodVehicleManager::execUpdatePropReplacement(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortDagwoodVehicleManager, execUpdatePropReplacement, Anchor::Hook()
+        .Exec(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:UpdatePropReplacement"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:UpdatePropReplacement")));
+
+    Stack.Code += !!Stack.Code;
+
+    UpdatePropReplacement();
+}
+
+AFortAthenaVehicleSpawner* UFortDagwoodVehicleManager::SwapOutProp(ABuildingActor* BuildingProp, UClass* VehicleSpawnerClass, const FVehiclePropReplacementData& PropReplacementData, ESpawnActorCollisionHandlingMethod SpawnActorCollisionHandlingMethod)
+{
+    auto VehicleItemDef = PropReplacementData.FortVehicleItemDefinition.LoadSynchronous();
+
+    if (!BuildingProp || !VehicleSpawnerClass || !VehicleItemDef)
+        return nullptr;
+
+    const FTransform SpawnTransform = UKismetMathLibrary::ComposeTransforms(FTransform(PropReplacementData.RotOffset, PropReplacementData.TransOffset, FVector(1.0f, 1.0f, 1.0f)), BuildingProp->GetTransform());
+
+    BuildingProp->SilentDie(true);
+
+    auto VehicleSpawner = Cast<AFortAthenaVehicleSpawner>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, VehicleSpawnerClass, SpawnTransform, SpawnActorCollisionHandlingMethod));
+
+    if (!VehicleSpawner)
+        return nullptr;
+
+    VehicleSpawner->SetFortVehicleItemDef(VehicleItemDef);
+
+    return Cast<AFortAthenaVehicleSpawner>(UGameplayStatics::FinishSpawningActor(VehicleSpawner, SpawnTransform));
 }

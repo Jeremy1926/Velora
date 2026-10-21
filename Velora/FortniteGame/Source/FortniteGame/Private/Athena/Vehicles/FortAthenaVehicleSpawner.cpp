@@ -156,6 +156,18 @@ UFortVehicleItemDefinition* AFortAthenaVehicleSpawner::GetFortVehicleItemDef() c
     return FortVehicleItemDef->ContainerPtrToValuePtr<TAssetPtr<UFortVehicleItemDefinition>>(this)->LoadSynchronous();
 }
 
+void AFortAthenaVehicleSpawner::SetFortVehicleItemDef(UFortVehicleItemDefinition* InFortVehicleItemDef)
+{
+    static auto CachedFortVehicleItemDef = StaticClass()->FindPropertyByName(FName(TEXT("CachedFortVehicleItemDef")));
+    static auto bIsVehicleItemDefCached = StaticClass()->FindPropertyByName(FName(TEXT("bIsVehicleItemDefCached")));
+
+    if (!CachedFortVehicleItemDef || !bIsVehicleItemDefCached)
+        return;
+
+    *CachedFortVehicleItemDef->ContainerPtrToValuePtr<UFortVehicleItemDefinition*>(this) = InFortVehicleItemDef;
+    *bIsVehicleItemDefCached->ContainerPtrToValuePtr<bool>(this) = true;
+}
+
 AActor* AFortAthenaVehicleSpawner::GetSpawnedVehicle() const
 {
     auto SpawnedVehicle = GetClass()->FindPropertyByName(FName(TEXT("SpawnedVehicle")));
