@@ -211,7 +211,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             if (ItemEntry.GetItemDefinition() != ItemDefinition)
                 continue;
 
-            const int32 NumberToStack = FMath::Min(NumberToGive, MaxStackSize - ItemEntry.GetCount());
+            const int32 NumberToStack = ItemEntry.GetLevel() == PickupItemEntry.GetLevel() ? FMath::Min(NumberToGive, MaxStackSize - ItemEntry.GetCount()) : 0;
 
             if (NumberToStack > 0)
             {

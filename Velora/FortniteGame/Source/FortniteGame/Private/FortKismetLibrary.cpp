@@ -14,6 +14,7 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "Pawns/FortPlayerPawn.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 #include "Containers/Map.h"
@@ -104,27 +105,73 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
         return;
 
     auto& Inventory = WorldInventory->GetInventory();
-    auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(ItemDefinition, NumberToGive, ItemDefinition->GetMinLevel());
-    const FGuid ItemGuid = ItemEntry->GetItemGuid();
+    auto Pawn = PlayerController->GetMyFortPawn();
+    const int32 ItemLevel = ItemDefinition->GetMinLevel();
+    const int32 MaxStackSize = ItemDefinition->GetMaxStackSize(Pawn ? Pawn->GetAbilitySystemComponent() : nullptr);
 
-    ItemEntry->GetParentInventory() = WorldInventory;
-    ItemEntry->GetIsReplicatedCopy() = true;
+    for (auto& ItemEntry : Inventory.GetReplicatedEntries())
+    {
+        if (ItemEntry.GetItemDefinition() != ItemDefinition || ItemEntry.GetLevel() != ItemLevel)
+            continue;
 
-    if (ItemEntry->GetParentInventory().IsValid())
-        ItemEntry->GetParentInventory().Get()->SetItemRequiresUpdate(*ItemEntry);
+        const int32 NumberToStack = FMath::Min(NumberToGive, MaxStackSize - ItemEntry.GetCount());
 
-    ItemEntry->GetIsDirty() = true;
+        if (NumberToStack <= 0)
+            continue;
+
+        int32 NewItemCount = 0;
+
+        ItemEntry.GetStateValue(EFortItemEntryState::NewItemCount, NewItemCount);
+        ItemEntry.SetCount(ItemEntry.GetCount() + NumberToStack);
+        ItemEntry.SetStateValue(EFortItemEntryState::NewItemCount, NewItemCount + NumberToStack);
+        Inventory.MarkItemDirty(ItemEntry);
+
+        NumberToGive -= NumberToStack;
+    }
 
     WorldInventory->HandleInventoryLocalUpdate();
 
-    if (!PlayerController->CanServerTryAddToQuickBar())
+    if (NumberToGive <= 0)
         return;
 
-    for (auto Item : Inventory.GetItemInstances())
+    const int32 NumberToDrop = PlayerController->CanServerTryAddToQuickBar() ? 0 : FMath::Clamp(WorldInventory->GetOverflowFromAddingItem(FFortItemEntry(ItemDefinition, NumberToGive, ItemLevel)), 0, NumberToGive);
+
+    NumberToGive -= NumberToDrop;
+
+    while (NumberToGive > 0)
     {
-        if (Item->GetItemGuid() == ItemGuid)
-            PlayerController->TryAddToQuickBar(Item);
+        auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(ItemDefinition, MaxStackSize > 0 ? FMath::Min(NumberToGive, MaxStackSize) : NumberToGive, ItemLevel);
+        const FGuid ItemGuid = ItemEntry->GetItemGuid();
+
+        NumberToGive -= ItemEntry->GetCount();
+
+        ItemEntry->GetParentInventory() = WorldInventory;
+        ItemEntry->GetIsReplicatedCopy() = true;
+
+        if (ItemEntry->GetParentInventory().IsValid())
+            ItemEntry->GetParentInventory().Get()->SetItemRequiresUpdate(*ItemEntry);
+
+        ItemEntry->GetIsDirty() = true;
+
+        WorldInventory->HandleInventoryLocalUpdate();
+
+        if (!PlayerController->CanServerTryAddToQuickBar())
+            continue;
+
+        for (auto Item : Inventory.GetItemInstances())
+        {
+            if (Item->GetItemGuid() == ItemGuid)
+                PlayerController->TryAddToQuickBar(Item);
+        }
     }
+
+    if (NumberToDrop <= 0 || !Pawn)
+        return;
+
+    const FVector Location = Pawn->GetActorLocation();
+
+    if (auto Pickup = AFortPickup::CreateFromData(PlayerController->GetWorld(), FFortItemEntry(ItemDefinition, NumberToDrop, ItemLevel), Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
+        Pickup->TossPickup(Location, Pawn, 0, true);
 }
 
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
