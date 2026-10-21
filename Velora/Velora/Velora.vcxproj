@@ -371,6 +371,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventory.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortItemDefinition.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\InventoryManagementLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortWorldItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortWorldItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortVehicleItemDefinition.h" />
@@ -586,6 +587,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortIndicatedActorManagementLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventory.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortItem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\InventoryManagementLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortVehicleItemDefinition.cpp" />
