@@ -24,6 +24,16 @@ AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
     return GetPawnAtSeat(this, SeatIdx);
 }
 
+UFortVehicleSeatWeaponComponent* IFortVehicleInterface::GetSeatWeaponComponent(const int32 SeatIndex) const
+{
+    static auto GetSeatWeaponComponent = Anchor::VirtualFunction<UFortVehicleSeatWeaponComponent* (*)(const IFortVehicleInterface*, int32)>(TEXT("IFortVehicleInterface::GetSeatWeaponComponent"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetSeatWeaponComponent"))
+        .Find("call [*+0x*]")
+        .Get();
+
+    return GetSeatWeaponComponent(this, SeatIndex);
+}
+
 const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
 {
     static auto GetVehicleActorPtrConst = Anchor::VirtualFunction<const AActor* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::GetVehicleActorPtrConst"))

@@ -2,6 +2,8 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Athena/Vehicles/FortVehicleInterface.h"
+#include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
 #include "Items/FortPickup.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
@@ -85,6 +87,29 @@ AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior
     return ((AFortAthenaVehicle* (*)(AFortPlayerPawn*))ServerOnExitVehicle)(this);
 }
 
+void AFortPlayerPawn::OnRep_InVehicle()
+{
+    DETOUR(AFortPlayerPawn, OnRep_InVehicle, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .Body(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle"))
+        .Inline());
+
+    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+
+    auto& VehicleStateLocal = GetVehicleStateLocal();
+    auto& VehicleStateRep = GetVehicleStateRep();
+    auto Vehicle = VehicleStateLocal.GetVehicle();
+    auto VehicleInterface = Vehicle ? (IFortVehicleInterface*)Vehicle->GetInterfaceAddress(FortVehicleInterface) : nullptr;
+
+    if (VehicleInterface && (VehicleStateRep.GetVehicle() != Vehicle || VehicleStateRep.GetSeatIndex() != VehicleStateLocal.GetSeatIndex()))
+    {
+        if (auto WeaponComponent = VehicleInterface->GetSeatWeaponComponent(VehicleStateLocal.GetSeatIndex()))
+            WeaponComponent->OnPawnExitSeat(VehicleInterface, this, VehicleStateLocal.GetSeatIndex());
+    }
+
+    Original();
+}
+
 void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)
 {
     static auto AddIgnoredActor = Anchor::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(TEXT("AFortPlayerPawn::AddIgnoredActor"))
@@ -92,6 +117,13 @@ void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgn
         .Get();
 
     AddIgnoredActor(this, InActorToIgnore, InIgnoreDuration);
+}
+
+const FVehiclePawnState& AFortPlayerPawn::GetVehicleStateRep() const
+{
+    static auto VehicleStateRep = GetClass()->FindPropertyByName(FName(TEXT("VehicleStateRep")));
+
+    return *VehicleStateRep->ContainerPtrToValuePtr<FVehiclePawnState>(this);
 }
 
 const FVehiclePawnState& AFortPlayerPawn::GetVehicleStateLocal() const

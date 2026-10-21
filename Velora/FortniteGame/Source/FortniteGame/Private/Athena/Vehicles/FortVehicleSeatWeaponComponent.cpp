@@ -111,6 +111,17 @@ void UFortVehicleSeatWeaponComponent::OnPawnEnterSeat(IFortVehicleInterface* Veh
     }
 }
 
+void UFortVehicleSeatWeaponComponent::OnPawnExitSeat(IFortVehicleInterface* Vehicle, AFortPlayerPawn* PlayerPawn, int32 SeatIdx)
+{
+    static auto OnPawnExitSeat = Anchor::VirtualFunction<void (*)(UFortVehicleSeatWeaponComponent*, IFortVehicleInterface*, AFortPlayerPawn*, int32)>(TEXT("UFortVehicleSeatWeaponComponent::OnPawnExitSeat"))
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r9b, 0x1; mov r8, *; mov rdx, *; mov rcx, *; ")
+        .Get();
+
+    OnPawnExitSeat(this, Vehicle, PlayerPawn, SeatIdx);
+}
+
 void UFortVehicleSeatWeaponComponent::EquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, int32 ItemLevel)
 {
     auto PlayerController = FortPawn ? Cast<AFortPlayerControllerAthena>(FortPawn->GetController()) : nullptr;

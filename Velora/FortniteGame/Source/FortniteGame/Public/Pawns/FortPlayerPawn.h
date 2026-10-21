@@ -61,7 +61,11 @@ public:
 
     AFortAthenaVehicle* ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior);
 
+    void OnRep_InVehicle();
+
     void AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration);
+
+    const FVehiclePawnState& GetVehicleStateRep() const;
 
     const FVehiclePawnState& GetVehicleStateLocal() const;
 

@@ -5,6 +5,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AFortPawn;
+class AFortPlayerPawn;
 class AFortWeapon;
 class IFortVehicleInterface;
 class UFortVehicleAimingWeaponComp;
@@ -49,6 +50,8 @@ public:
     static UClass* StaticClass();
 
     void OnPawnEnterSeat(IFortVehicleInterface* Vehicle, int32 SeatIdx, bool bSwitchingSeats);
+
+    void OnPawnExitSeat(IFortVehicleInterface* Vehicle, AFortPlayerPawn* PlayerPawn, int32 SeatIdx);
 
     void EquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, int32 ItemLevel);
 
