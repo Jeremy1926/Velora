@@ -10,9 +10,19 @@
 
 class UAbilitySystemComponent;
 class UFortGameplayAbility;
+class UScriptStruct;
 
 struct FFortAbilitySetHandle
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    bool IsValid() const
+    {
+        return TargetAbilitySystemComponent.IsValid();
+    }
+
 protected:
     TWeakObjectPtr<UAbilitySystemComponent> TargetAbilitySystemComponent;
     TArray<FGameplayAbilitySpecHandle> GrantedAbilityHandles;
@@ -24,6 +34,8 @@ class UFortAbilitySet : public UPrimaryDataAsset
 {
 public:
     static UClass* StaticClass();
+
+    static void UnequipAbilitySet(FFortAbilitySetHandle& Handle);
 
     TArray<TSubclassOf<UFortGameplayAbility>>& GetGameplayAbilities();
 };

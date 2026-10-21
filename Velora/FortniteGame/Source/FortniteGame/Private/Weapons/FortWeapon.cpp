@@ -3,6 +3,12 @@
 #include "AI/FortAthenaAIBotController.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortQuickBars.h"
+#include "Pawns/FortPawn.h"
+#include "Abilities/FortAbilitySet.h"
+#include "FortGameModeZone.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -118,6 +124,81 @@ void AFortWeapon::ModAmmo(int32 AmountToUse)
         .Get();
 
     ModAmmo(this, AmountToUse);
+}
+
+void AFortWeapon::OnUnEquip()
+{
+    DETOUR(AFortWeapon, OnUnEquip, Anchor::Hook()
+        .If(AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("GrantedAbilityRemovalPolicy"))))
+        .Event(TEXT("K2_OnUnEquip"))
+        .Caller()
+        .Inline());
+
+    Original();
+
+    AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason::Unequipped);
+}
+
+void AFortWeapon::AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason Reason)
+{
+    static auto GrantedAbilityRemovalPolicy = StaticClass()->FindPropertyByName(FName(TEXT("GrantedAbilityRemovalPolicy")));
+
+    auto RemovalPolicy = *GrantedAbilityRemovalPolicy->ContainerPtrToValuePtr<EFortWeaponAbilityRemovalPolicy>(this, (int32)Reason);
+    auto GameMode = Cast<AFortGameModeZone>(GetWorld()->GetAuthGameMode());
+
+    if (RemovalPolicy == EFortWeaponAbilityRemovalPolicy::Remove || (RemovalPolicy == EFortWeaponAbilityRemovalPolicy::GameDefault && GameMode && GameMode->ShouldWeaponRemoveGrantedAbilities(this, Reason)))
+        RemoveGrantedAbilities();
+}
+
+void AFortWeapon::RemoveGrantedAbilities()
+{
+    static auto WeaponData = StaticClass()->FindPropertyByName(FName(TEXT("WeaponData")));
+    static UProperty* const AbilitySpecHandles[] =
+    {
+        StaticClass()->FindPropertyByName(FName(TEXT("PrimaryAbilitySpecHandle"))),
+        StaticClass()->FindPropertyByName(FName(TEXT("SecondaryAbilitySpecHandle"))),
+        StaticClass()->FindPropertyByName(FName(TEXT("ReloadAbilitySpecHandle"))),
+        StaticClass()->FindPropertyByName(FName(TEXT("ImpactAbilitySpecHandle"))),
+    };
+    static auto EquippedAbilityHandles = StaticClass()->FindPropertyByName(FName(TEXT("EquippedAbilityHandles")));
+    static auto EquippedAbilitySetHandles = StaticClass()->FindPropertyByName(FName(TEXT("EquippedAbilitySetHandles")));
+
+    auto Pawn = Cast<AFortPawn>(GetInstigator());
+    auto AbilitySystemComponent = Pawn ? UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Pawn) : nullptr;
+
+    if (!AbilitySystemComponent || !*WeaponData->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this) || !HasAuthority())
+        return;
+
+    for (auto AbilitySpecHandle : AbilitySpecHandles)
+    {
+        auto& Handle = *AbilitySpecHandle->ContainerPtrToValuePtr<FGameplayAbilitySpecHandle>(this);
+
+        if (!Handle.IsValid())
+            continue;
+
+        AbilitySystemComponent->ClearAbility(Handle);
+        Handle = FGameplayAbilitySpecHandle();
+    }
+
+    auto& AbilityHandles = *EquippedAbilityHandles->ContainerPtrToValuePtr<TArray<FGameplayAbilitySpecHandle>>(this);
+
+    for (auto& Handle : AbilityHandles)
+    {
+        if (Handle.IsValid())
+            AbilitySystemComponent->ClearAbility(Handle);
+    }
+
+    AbilityHandles.Empty();
+
+    auto& AbilitySetHandles = *EquippedAbilitySetHandles->ContainerPtrToValuePtr<TRuntimeSizedArray<FFortAbilitySetHandle>>(this);
+
+    for (auto& AbilitySetHandle : AbilitySetHandles)
+    {
+        if (AbilitySetHandle.IsValid())
+            UFortAbilitySet::UnequipAbilitySet(AbilitySetHandle);
+    }
+
+    AbilitySetHandles.RemoveAt(0, AbilitySetHandles.Num());
 }
 
 bool AFortWeapon::GetPendingDestroyDueToDurabilityOrStackCount() const

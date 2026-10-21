@@ -219,6 +219,15 @@ int32 AFortGameModeZone::GetOverrideAIDirectorIndex() const
     return *OverrideAIDirectorIndex->ContainerPtrToValuePtr<int32>(this);
 }
 
+bool AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, EFortWeaponAbilityRemovalReason Reason) const
+{
+    static auto ShouldWeaponRemoveGrantedAbilities = Anchor::VirtualFunction<bool (*)(const AFortGameModeZone*, AFortWeapon*, EFortWeaponAbilityRemovalReason)>(TEXT("AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; jmp 0x*")
+        .Get();
+
+    return ShouldWeaponRemoveGrantedAbilities(this, Weapon, Reason);
+}
+
 TArray<FItemAndCount>& AFortGameModeZone::GetStartingItems()
 {
     static auto StartingItems = GetClass()->FindPropertyByName(FName(TEXT("StartingItems")));

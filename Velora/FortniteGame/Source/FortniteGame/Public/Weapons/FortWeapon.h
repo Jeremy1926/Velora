@@ -7,6 +7,20 @@ struct FFrame;
 class UFortItemDefinition;
 enum class EFortWeaponType : uint8;
 
+enum class EFortWeaponAbilityRemovalReason : uint8
+{
+    RemovedFromInventory,
+    EndPlay,
+    Unequipped,
+};
+
+enum class EFortWeaponAbilityRemovalPolicy : uint8
+{
+    GameDefault,
+    Remove,
+    Persist,
+};
+
 class AFortWeapon : public AActor
 {
 public:
@@ -25,6 +39,12 @@ public:
     void execTryReloadAmmoFromAbility(FFrame& Stack, void* const Z_Param__Result);
 
     void ModAmmo(int32 AmountToUse);
+
+    void OnUnEquip();
+
+    void AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason Reason);
+
+    void RemoveGrantedAbilities();
 
     bool GetPendingDestroyDueToDurabilityOrStackCount() const;
 

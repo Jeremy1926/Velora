@@ -54,6 +54,18 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(c
     return Handle;
 }
 
+void UAbilitySystemComponent::ClearAbility(const FGameplayAbilitySpecHandle& Handle)
+{
+    static auto ClearAbility = Anchor::Function<void (*)(UAbilitySystemComponent*, const FGameplayAbilitySpecHandle&)>(TEXT("UAbilitySystemComponent::ClearAbility"))
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Find("test al, al; jnz *; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    ClearAbility(this, Handle);
+}
+
 FGameplayAbilitySpec* UAbilitySystemComponent::FindAbilitySpecFromHandle(FGameplayAbilitySpecHandle Handle)
 {
     for (FGameplayAbilitySpec& Spec : GetActivatableAbilities().GetItems())
