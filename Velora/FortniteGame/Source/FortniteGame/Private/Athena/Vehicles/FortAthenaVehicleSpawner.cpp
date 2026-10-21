@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortAthenaMapInfo.h"
@@ -64,6 +65,8 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
     if (!YAxisForward)
         return;
 
+    AActor* SpawnedVehicle = nullptr;
+
     if (HasAuthority() && UFortKismetLibrary::AreAthenaVehiclesEnabled() && GameMode)
     {
         UClass* VehicleClass = GetVehicleClass();
@@ -91,12 +94,23 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
             {
                 const FTransform SpawnTransform = YAxisForward->GetPropertyValue_InContainer(this) ? UKismetMathLibrary::ComposeTransforms(FTransform(FRotator{ 0.0f, 90.0f, 0.0f }, FVector(0.0f, 0.0f, 0.0f), FVector(1.0f, 1.0f, 1.0f)), GetTransform()) : GetTransform();
 
-                UGameplayStatics::FinishSpawningActor(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, VehicleClass, SpawnTransform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, nullptr), SpawnTransform);
+                SpawnedVehicle = UGameplayStatics::FinishSpawningActor(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, VehicleClass, SpawnTransform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, nullptr), SpawnTransform);
+
+                if (SpawnedVehicle && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways")))
+                {
+                    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+
+                    if (auto VehicleInterface = (IFortVehicleInterface*)SpawnedVehicle->GetInterfaceAddress(FortVehicleInterface))
+                        VehicleInterface->SetForcedToAlwaysSpawn(GetForceSpawnAlways());
+                }
             }
         }
     }
 
-    Destroy();
+    auto bShouldDestroyAfterVehicleSpawn = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bShouldDestroyAfterVehicleSpawn")));
+
+    if (!SpawnedVehicle || !bShouldDestroyAfterVehicleSpawn || bShouldDestroyAfterVehicleSpawn->GetPropertyValue_InContainer(this))
+        Destroy();
 }
 
 UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
@@ -106,6 +120,15 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
         .Get();
 
     return GetVehicleClass(this);
+}
+
+bool AFortAthenaVehicleSpawner::GetForceSpawnAlways() const
+{
+    static auto GetForceSpawnAlways = Anchor::Function<bool (*)(const AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::GetForceSpawnAlways"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
+        .Get();
+
+    return GetForceSpawnAlways(this);
 }
 
 UFortVehicleItemDefinition* AFortAthenaVehicleSpawner::GetFortVehicleItemDef() const

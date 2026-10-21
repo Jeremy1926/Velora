@@ -16,4 +16,6 @@ public:
     UFortVehicleSeatWeaponComponent* GetSeatWeaponComponent(const int32 SeatIndex) const;
 
     const AActor* GetVehicleActorPtrConst() const;
+
+    void SetForcedToAlwaysSpawn(const bool bSetTo);
 };

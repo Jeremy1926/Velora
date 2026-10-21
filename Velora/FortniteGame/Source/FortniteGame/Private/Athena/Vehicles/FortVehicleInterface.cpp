@@ -43,3 +43,13 @@ const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
 
     return GetVehicleActorPtrConst(this);
 }
+
+void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
+{
+    static auto SetForcedToAlwaysSpawn = Anchor::VirtualFunction<void (*)(IFortVehicleInterface*, bool)>(TEXT("IFortVehicleInterface::SetForcedToAlwaysSpawn"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:SetForcedToAlwaysSpawn"))
+        .Find("call [*+0x*]")
+        .Get();
+
+    SetForcedToAlwaysSpawn(this, bSetTo);
+}

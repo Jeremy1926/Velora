@@ -15,6 +15,8 @@ public:
 
     UClass* GetVehicleClass() const;
 
+    bool GetForceSpawnAlways() const;
+
     UFortVehicleItemDefinition* GetFortVehicleItemDef() const;
 
     bool ShouldSelfSpawnVehicle() const;
