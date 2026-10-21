@@ -4,6 +4,7 @@
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Athena/Vehicles/FortVehicleManager.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
+#include "FortAthenaLivingWorldManager.h"
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
@@ -53,6 +54,16 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         .Start()
         .Inline());
 
+    if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+    {
+        if (auto LivingWorldManager = FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
+        {
+            FScriptDelegate OnCurrentPlaylistLoadedDelegate;
+            OnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldManager, FName(TEXT("OnCurrentPlaylistLoaded")));
+            GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);
+        }
+    }
+
     Original();
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
@@ -81,6 +92,13 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         for (auto WeaponUpgradeActor : WeaponUpgradeActors)
             ((ABuildingItemWeaponUpgradeActor*)WeaponUpgradeActor)->AthenaPostApplyPlaylistDataTables();
     }
+}
+
+FMulticastScriptDelegate& AFortGameStateAthena::GetOnCurrentPlaylistLoaded()
+{
+    static auto OnCurrentPlaylistLoaded = GetClass()->FindPropertyByName(FName(TEXT("OnCurrentPlaylistLoaded")));
+
+    return *OnCurrentPlaylistLoaded->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()

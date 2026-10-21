@@ -223,6 +223,18 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\Valet">
       <UniqueIdentifier>{BB6C2C08-B5C3-4047-8E2B-6D766580E995}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Lager">
+      <UniqueIdentifier>{A81EF23A-9918-43F0-90D8-B5D6C8E83C08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Lager\Source">
+      <UniqueIdentifier>{80E0780D-6616-40F9-85E1-BBC5773C2620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime">
+      <UniqueIdentifier>{24BE2990-1DBC-48B5-989B-F1826A0416CA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private">
+      <UniqueIdentifier>{E125FB81-27D3-4F17-B9F8-94B7BD7B731D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Valet\Source">
       <UniqueIdentifier>{495DAA7B-FD00-4A94-93D9-1119497B5FE8}</UniqueIdentifier>
     </Filter>
@@ -231,6 +243,9 @@
     </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private">
       <UniqueIdentifier>{08A93CFA-C045-4808-BC10-365A657C45FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public">
+      <UniqueIdentifier>{78E43DF9-C897-4F4B-BC95-DD2968FFAB7F}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public">
       <UniqueIdentifier>{48982F69-9025-47E2-BAAF-19491CA7B117}</UniqueIdentifier>
@@ -1033,6 +1048,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpItemDefinitionBase.h">
       <Filter>FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldManager.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicle.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public</Filter>
     </ClInclude>
@@ -1707,6 +1725,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Private\McpProfileGroup.cpp">
       <Filter>FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldManager.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicle.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private</Filter>
