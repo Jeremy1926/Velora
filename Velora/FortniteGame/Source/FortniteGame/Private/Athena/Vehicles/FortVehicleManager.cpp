@@ -83,8 +83,8 @@ FMulticastScriptDelegate* AFortVehicleManager::GetOnVehicleSpawnsUpdated()
     static auto OnVehicleSpawnsUpdated = Anchor::Offset(TEXT("AFortVehicleManager::OnVehicleSpawnsUpdated"))
         .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated"))
         .Optional()
-        .Find("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*")
-        .Disp();
+        .FindEither("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*", "add rdi, 0x*")
+        .Get();
 
     return OnVehicleSpawnsUpdated > 0 ? (FMulticastScriptDelegate*)((uint8*)this + OnVehicleSpawnsUpdated) : nullptr;
 }
