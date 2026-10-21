@@ -25,3 +25,38 @@ const FScalableFloat& UFortVehicleItemDefinition::GetVehicleMaxSpawnPercent() co
 
     return *VehicleMaxSpawnPercent->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
+
+const FScalableFloat& UFortVehicleItemDefinition::GetMinPercentWithGas() const
+{
+    static auto MinPercentWithGas = StaticClass()->FindPropertyByName(FName(TEXT("MinPercentWithGas")));
+
+    return *MinPercentWithGas->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const FScalableFloat& UFortVehicleItemDefinition::GetMaxPercentWithGas() const
+{
+    static auto MaxPercentWithGas = StaticClass()->FindPropertyByName(FName(TEXT("MaxPercentWithGas")));
+
+    return *MaxPercentWithGas->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const FScalableFloat& UFortVehicleItemDefinition::GetMinPercentInoperable() const
+{
+    static auto MinPercentInoperable = StaticClass()->FindPropertyByName(FName(TEXT("MinPercentInoperable")));
+
+    return *MinPercentInoperable->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const FScalableFloat& UFortVehicleItemDefinition::GetMaxPercentInoperable() const
+{
+    static auto MaxPercentInoperable = StaticClass()->FindPropertyByName(FName(TEXT("MaxPercentInoperable")));
+
+    return *MaxPercentInoperable->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const TSoftClassPtr<UClass>& UFortVehicleItemDefinition::GetVehicleActorClass() const
+{
+    static auto VehicleActorClass = StaticClass()->FindPropertyByName(FName(TEXT("VehicleActorClass")));
+
+    return *VehicleActorClass->ContainerPtrToValuePtr<TSoftClassPtr<UClass>>(this);
+}

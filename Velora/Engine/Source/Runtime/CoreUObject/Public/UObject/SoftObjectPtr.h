@@ -7,6 +7,12 @@ class UObject;
 template<class T = UObject>
 class TSoftObjectPtr
 {
+public:
+    T* LoadSynchronous() const
+    {
+        return Cast<T>(SoftObjectPtr.LoadSynchronous());
+    }
+
 private:
     FSoftObjectPtr SoftObjectPtr;
 };
@@ -14,6 +20,12 @@ private:
 template<class TClass = UObject>
 class TSoftClassPtr
 {
+public:
+    UClass* LoadSynchronous() const
+    {
+        return Cast<UClass>(SoftObjectPtr.LoadSynchronous());
+    }
+
 private:
     FSoftObjectPtr SoftObjectPtr;
 };
