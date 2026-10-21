@@ -53,6 +53,14 @@ public:
 
     void InitializeDeathInfo(const FDeathInfo& NewDeathInfo);
 
+    void ClientReportKill(AFortPlayerStateAthena* Player);
+
+    void ClientReportTeamKill(int32 TeamKills);
+
+    int32& GetKillScore();
+
+    int32& GetTeamKillScore();
+
     uint8 GetSquadId() const;
 
     uint8 GetTeamIndex() const;

@@ -157,6 +157,50 @@ void AFortPlayerStateAthena::InitializeDeathInfo(const FDeathInfo& NewDeathInfo)
     ForceNetUpdate();
 }
 
+void AFortPlayerStateAthena::ClientReportKill(AFortPlayerStateAthena* Player)
+{
+    static auto ClientReportKill = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateAthena:ClientReportKill"));
+
+    if (ClientReportKill->GetPropertiesSize() != sizeof(Player))
+        return;
+
+    struct
+    {
+        AFortPlayerStateAthena* Player;
+    } Parms{ Player };
+
+    CallRemoteFunction(ClientReportKill, &Parms, nullptr, nullptr);
+}
+
+void AFortPlayerStateAthena::ClientReportTeamKill(int32 TeamKills)
+{
+    static auto ClientReportTeamKill = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateAthena:ClientReportTeamKill"));
+
+    if (!ClientReportTeamKill)
+        return;
+
+    struct
+    {
+        int32 TeamKills;
+    } Parms{ TeamKills };
+
+    CallRemoteFunction(ClientReportTeamKill, &Parms, nullptr, nullptr);
+}
+
+int32& AFortPlayerStateAthena::GetKillScore()
+{
+    static auto KillScore = GetClass()->FindPropertyByName(FName(TEXT("KillScore")));
+
+    return *KillScore->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32& AFortPlayerStateAthena::GetTeamKillScore()
+{
+    static auto TeamKillScore = GetClass()->FindPropertyByName(FName(TEXT("TeamKillScore")));
+
+    return *TeamKillScore->ContainerPtrToValuePtr<int32>(this);
+}
+
 uint8 AFortPlayerStateAthena::GetSquadId() const
 {
     static auto SquadId = GetClass()->FindPropertyByName(FName(TEXT("SquadId")));

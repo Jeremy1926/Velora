@@ -115,6 +115,27 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
     if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(KilledPawn))
         PlayerPawn->InitializeDeathInfoOnPawnDeath(InTags, EventInstigator, DBNOFinisher, DamageCauser);
 
+    auto PlayerState = Cast<AFortPlayerStateAthena>(GetPlayerState());
+    auto KillerPlayerState = EventInstigator ? Cast<AFortPlayerStateAthena>(EventInstigator->GetPlayerState()) : nullptr;
+
+    if (PlayerState && KillerPlayerState)
+    {
+        if (KillerPlayerState != PlayerState && KillerPlayerState->GetTeamIndex() != PlayerState->GetTeamIndex() && GetMarkedAlive())
+        {
+            KillerPlayerState->GetKillScore()++;
+
+            for (auto OtherPlayerState : GetWorld()->GetGameState()->GetPlayerArray())
+            {
+                auto TeamMember = Cast<AFortPlayerStateAthena>(OtherPlayerState);
+
+                if (TeamMember && TeamMember->GetTeamIndex() == KillerPlayerState->GetTeamIndex())
+                    TeamMember->ClientReportTeamKill(++TeamMember->GetTeamKillScore());
+            }
+        }
+
+        KillerPlayerState->ClientReportKill(PlayerState);
+    }
+
     static auto bWasDBNOOnDeath = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));
 
     auto bWasDBNO = KilledPawn && (bWasDBNOOnDeath ? KilledPawn->GetWasDBNOOnDeath() : KilledPawn->GetIsDBNO());
