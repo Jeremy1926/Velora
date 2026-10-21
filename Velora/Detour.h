@@ -138,6 +138,28 @@ public:
         return Original;
     }
 
+    FunctionType AtStubBranches() const
+    {
+        FunctionType Original = {};
+        auto Function = bSkipped ? Anchor::FCode() : this->Code.Start();
+
+        for (auto Instructions : { "call 0x*", "jmp 0x*" })
+        {
+            for (auto Branch = Function.Find(Instructions); Branch.Get(); Branch = Branch.Find(Instructions))
+            {
+                auto Target = Branch.Get() + 5 + *(const int32_t*)(Branch.Get() + 1);
+
+                if ((*Branch.Get() & 0xFE) == 0xE8 && Anchor::At(Target).Is("ret*") && Anchor::FCode(Target).Start().Get() != Function.Get())
+                    Original = Anchor::DetourCall(this->Name, Branch.Get(), Detour);
+            }
+        }
+
+        if (!bSkipped && !Original)
+            UE_LOG(LogVelora, Error, TEXT("Could not find %s"), this->Name);
+
+        return Original;
+    }
+
     FunctionType AtReference() const
     {
         auto Reference = bSkipped ? nullptr : this->Code.Get();

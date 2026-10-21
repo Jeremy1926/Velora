@@ -60,6 +60,53 @@ float AFortSafeZoneIndicator::GetShrinkDuration()
     return FMath::Max(GetSafeZoneFinishShrinkTime() - GetSafeZoneStartShrinkTime(), 0.0f);
 }
 
+void AFortSafeZoneIndicator::OnSafeZoneTimerPauseChanged(bool bIsPaused)
+{
+    DETOUR(AFortSafeZoneIndicator, OnSafeZoneTimerPauseChanged, Anchor::Hook()
+        .If(AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .String(TEXT("PAUSESAFEZONE"))
+        .Find("setz dl; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx edx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("PAUSESAFEZONE"))
+        .Find("movzx edx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .AtStubBranches(), Anchor::Hook()
+        .If(AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
+        .AtStubBranches());
+
+    auto GameState = GetWorld()->GetGameState();
+
+    if (!GameState)
+        return;
+
+    auto& TimeRemainingWhenPhasePaused = GetTimeRemainingWhenPhasePaused();
+
+    if (bIsPaused)
+    {
+        if (TimeRemainingWhenPhasePaused < 0.0f)
+            TimeRemainingWhenPhasePaused = GetSafeZoneFinishShrinkTime() - GameState->GetServerWorldTimeSeconds();
+
+        return;
+    }
+
+    if (TimeRemainingWhenPhasePaused >= 0.0f)
+    {
+        const float ShrinkDuration = GetShrinkDuration();
+
+        GetSafeZoneFinishShrinkTime() = GameState->GetServerWorldTimeSeconds() + TimeRemainingWhenPhasePaused;
+        GetSafeZoneStartShrinkTime() = GetSafeZoneFinishShrinkTime() - ShrinkDuration;
+    }
+
+    TimeRemainingWhenPhasePaused = -1.0f;
+}
+
 float& AFortSafeZoneIndicator::GetSafeZoneStartShrinkTime()
 {
     static auto SafeZoneStartShrinkTime = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneStartShrinkTime")));
@@ -72,4 +119,11 @@ float& AFortSafeZoneIndicator::GetSafeZoneFinishShrinkTime()
     static auto SafeZoneFinishShrinkTime = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneFinishShrinkTime")));
 
     return *SafeZoneFinishShrinkTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& AFortSafeZoneIndicator::GetTimeRemainingWhenPhasePaused()
+{
+    static auto TimeRemainingWhenPhasePaused = GetClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused")));
+
+    return *TimeRemainingWhenPhasePaused->ContainerPtrToValuePtr<float>(this);
 }

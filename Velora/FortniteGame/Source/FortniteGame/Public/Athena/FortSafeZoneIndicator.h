@@ -13,7 +13,11 @@ public:
 
     float GetShrinkDuration();
 
+    void OnSafeZoneTimerPauseChanged(bool bIsPaused);
+
     float& GetSafeZoneStartShrinkTime();
 
     float& GetSafeZoneFinishShrinkTime();
+
+    float& GetTimeRemainingWhenPhasePaused();
 };
