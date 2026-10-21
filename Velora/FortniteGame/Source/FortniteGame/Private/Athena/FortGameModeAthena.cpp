@@ -167,7 +167,7 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                     WorldPlayerId = FMath::Max(WorldPlayerId, FortPlayerState->GetWorldPlayerId() + 1);
             }
 
-            PlayerState->GetWorldPlayerId() = WorldPlayerId;
+            PlayerState->SetWorldPlayerId(WorldPlayerId);
         }
 
         PlayerState->ApplyCharacterCustomization(Pawn);

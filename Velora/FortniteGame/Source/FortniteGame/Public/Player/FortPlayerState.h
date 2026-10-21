@@ -14,7 +14,9 @@ public:
 
     APawn* GetCurrentPawn() const;
 
-    int32& GetWorldPlayerId();
+    int32 GetWorldPlayerId() const;
+
+    void SetWorldPlayerId(int32 InWorldPlayerId);
 
     UFortAbilitySystemComponent*& GetAbilitySystemComponent();
 };

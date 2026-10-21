@@ -66,11 +66,21 @@ APawn* AFortPlayerState::GetCurrentPawn() const
     return GetCurrentPawn(this);
 }
 
-int32& AFortPlayerState::GetWorldPlayerId()
+int32 AFortPlayerState::GetWorldPlayerId() const
 {
     static auto WorldPlayerId = GetClass()->FindPropertyByName(FName(TEXT("WorldPlayerId")));
 
-    return *WorldPlayerId->ContainerPtrToValuePtr<int32>(this);
+    return WorldPlayerId->GetSize() == sizeof(int16) ? *WorldPlayerId->ContainerPtrToValuePtr<int16>(this) : *WorldPlayerId->ContainerPtrToValuePtr<int32>(this);
+}
+
+void AFortPlayerState::SetWorldPlayerId(int32 InWorldPlayerId)
+{
+    static auto WorldPlayerId = GetClass()->FindPropertyByName(FName(TEXT("WorldPlayerId")));
+
+    if (WorldPlayerId->GetSize() == sizeof(int16))
+        *WorldPlayerId->ContainerPtrToValuePtr<int16>(this) = (int16)InWorldPlayerId;
+    else
+        *WorldPlayerId->ContainerPtrToValuePtr<int32>(this) = InWorldPlayerId;
 }
 
 UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
