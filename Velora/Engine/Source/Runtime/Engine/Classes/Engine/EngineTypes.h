@@ -7,6 +7,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
+class UPrimitiveComponent;
 class UScriptStruct;
 
 enum class ELevelCollectionType
@@ -182,6 +183,10 @@ struct alignas(8) FHitResult
     FVector_NetQuantize& GetLocation();
 
     TWeakObjectPtr<AActor>& GetActor();
+
+    const TWeakObjectPtr<UPrimitiveComponent>& GetComponent() const;
+
+    uint8 GetElementIndex() const;
 
 private:
     uint8 Data[0x100];

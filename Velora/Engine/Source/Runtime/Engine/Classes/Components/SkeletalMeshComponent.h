@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Components/PrimitiveComponent.h"
+#include "Components/SkinnedMeshComponent.h"
 
-class USkeletalMeshComponent : public UPrimitiveComponent
+class USkeletalMeshComponent : public USkinnedMeshComponent
 {
 };

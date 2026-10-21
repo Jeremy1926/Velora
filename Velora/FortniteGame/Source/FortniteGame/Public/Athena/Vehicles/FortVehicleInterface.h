@@ -4,7 +4,9 @@
 
 class AActor;
 class AFortPlayerPawn;
+class UFortVehicleConfigs;
 class UFortVehicleSeatWeaponComponent;
+class USkeletalMeshComponent;
 
 class IFortVehicleInterface
 {
@@ -18,4 +20,8 @@ public:
     const AActor* GetVehicleActorPtrConst() const;
 
     void SetForcedToAlwaysSpawn(const bool bSetTo);
+
+    const UFortVehicleConfigs* GetVehicleConfigs() const;
+
+    USkeletalMeshComponent* GetSkeletalMeshComponent() const;
 };

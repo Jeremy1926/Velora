@@ -403,8 +403,13 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Color.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetSystemLibrary.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkeletalMeshComponent.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkinnedMeshComponent.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\AggregateGeom.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\BodyInstance.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\BodySetup.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\CapsuleComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleConfigs.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaSKPushCannon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortMountedWeaponInterface.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h" />
@@ -568,6 +573,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicator.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiVolume.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortOctopusVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicleSpawner.cpp" />
@@ -668,6 +674,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CapsuleComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleConfigs.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaSKPushCannon.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortMountedWeaponInterface.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp" />
@@ -678,6 +685,8 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\Collision.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\WorldCollision.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\KAggregateGeom.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PhysicsEngine\BodySetup.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp" />

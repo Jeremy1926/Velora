@@ -1,11 +1,21 @@
 #include "pch.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Athena/Vehicles/FortVehicleConfigs.h"
+#include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/EngineTypes.h"
+#include "GameplayEffectTypes.h"
+#include "Math/UnrealMathUtility.h"
+#include "PhysicsEngine/AggregateGeom.h"
+#include "PhysicsEngine/BodyInstance.h"
+#include "PhysicsEngine/BodySetup.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UObjectArray.h"
+#include "UObject/Stack.h"
 #include "Detour.h"
 #include "Scanner.h"
 
@@ -134,4 +144,150 @@ AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
         .Get();
 
     return GetPawnAtSeat(this, SeatIdx);
+}
+
+float AFortAthenaVehicle::ModifyIncomingDamage(float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
+{
+    DETOUR(AFortAthenaVehicle, ModifyIncomingDamage, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts")) != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:ModifyIncomingDamage"))
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("AFortAthenaVehicle::ModifyIncomingDamage"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaVehicle"))
+        .Optional()
+        .Inline());
+
+    const float ModifiedDamage = Original(Damage, InTags, EffectContext, EventInstigator, DamageCauser);
+
+    if (ModifiedDamage > 0.0f)
+        AbsorbDamageIntoDamagablePart(Damage, EffectContext);
+
+    return ModifiedDamage;
+}
+
+void AFortAthenaVehicle::AbsorbDamageIntoDamagablePart(float Damage, const FGameplayEffectContextHandle& EffectContext)
+{
+    auto HitResult = EffectContext.GetHitResult();
+    auto BulletCollisionComponent = GetVehicleBulletCollisionComponent();
+
+    if (!HasAuthority() || !HitResult || !BulletCollisionComponent || HitResult->GetComponent().Get() != BulletCollisionComponent)
+        return;
+
+    auto& DamageableParts = GetDamageableParts();
+
+    for (int32 Index = 0; Index < DamageableParts.Num(); Index++)
+    {
+        if (DamageableParts[Index].ShapeIndex != HitResult->GetElementIndex() || DamageableParts[Index].Health <= 0.0f)
+            continue;
+
+        const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+
+        DamageableParts[Index].Health = FMath::Max(DamageableParts[Index].Health - Damage, 0.0f);
+
+        OnRep_DamageableParts(PrevDamageableParts);
+        ForceNetUpdate();
+
+        return;
+    }
+}
+
+void AFortAthenaVehicle::DestroyAllDamageableParts()
+{
+    auto& DamageableParts = GetDamageableParts();
+    const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+
+    for (auto& Part : DamageableParts)
+    {
+        if (Part.Health > 0.0f)
+            Part.Health = 0.0f;
+    }
+
+    OnRep_DamageableParts(PrevDamageableParts);
+    ForceNetUpdate();
+}
+
+void AFortAthenaVehicle::execDestroyAllDamageableParts(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAthenaVehicle, execDestroyAllDamageableParts, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:DestroyAllDamageableParts"))
+        .Find("mov [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortAthenaVehicle:DestroyAllDamageableParts")));
+
+    Stack.Code += !!Stack.Code;
+
+    DestroyAllDamageableParts();
+}
+
+void AFortAthenaVehicle::SetupToggleableShapeCollision()
+{
+    DETOUR(AFortAthenaVehicle, SetupToggleableShapeCollision, Anchor::Hook()
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .VirtualIs(TEXT("/Script/FortniteGame.Default__FortAthenaVehicle"), "lea rdx, [rcx+0x*]; jmp %t")
+        .LogSlot(TEXT("AFortAthenaVehicle::SetupToggleableShapeCollision"))
+        .Optional()
+        .Inline());
+
+    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+
+    auto& DamageableParts = GetDamageableParts();
+    auto VehicleInterface = (IFortVehicleInterface*)GetInterfaceAddress(FortVehicleInterface);
+    auto VehicleConfigs = HasAuthority() && !DamageableParts.Num() && VehicleInterface ? VehicleInterface->GetVehicleConfigs() : nullptr;
+    auto BulletCollisionComponent = VehicleConfigs ? GetVehicleBulletCollisionComponent() : nullptr;
+    auto BodyInstance = BulletCollisionComponent ? BulletCollisionComponent->GetBodyInstance(NAME_None, true) : nullptr;
+    auto BodySetup = BodyInstance ? BodyInstance->GetBodySetup() : nullptr;
+
+    if (BodySetup)
+    {
+        auto SkeletalMeshComponent = VehicleInterface->GetSkeletalMeshComponent();
+        const auto& PartConfigs = VehicleConfigs->GetDamageableParts();
+
+        for (int32 ConfigIndex = 0; ConfigIndex < PartConfigs.Num(); ConfigIndex++)
+        {
+            const int32 ShapeIndex = BodySetup->GetAggGeom().GetElementIndexByName(PartConfigs[ConfigIndex].ShapeName);
+
+            if (ShapeIndex == INDEX_NONE)
+                continue;
+
+            FVehicleDamageablePart Part;
+            Part.ConfigIndex = ConfigIndex;
+            Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].BoneName) : INDEX_NONE;
+            Part.ShapeIndex = ShapeIndex;
+            Part.Health = PartConfigs[ConfigIndex].MaxHealth;
+
+            DamageableParts.Add(Part);
+        }
+    }
+
+    Original();
+}
+
+void AFortAthenaVehicle::OnRep_DamageableParts(const TArray<FVehicleDamageablePart>& PrevDamageableParts)
+{
+    static auto OnRep_DamageableParts = Anchor::Function<void (*)(AFortAthenaVehicle*, const TArray<FVehicleDamageablePart>&)>(TEXT("AFortAthenaVehicle::OnRep_DamageableParts"))
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Get();
+
+    OnRep_DamageableParts(this, PrevDamageableParts);
+}
+
+TArray<FVehicleDamageablePart>& AFortAthenaVehicle::GetDamageableParts()
+{
+    static auto DamageableParts = StaticClass()->FindPropertyByName(FName(TEXT("DamageableParts")));
+
+    return *DamageableParts->ContainerPtrToValuePtr<TArray<FVehicleDamageablePart>>(this);
+}
+
+UPrimitiveComponent* AFortAthenaVehicle::GetVehicleBulletCollisionComponent() const
+{
+    static auto GetVehicleBulletCollisionComponent = Anchor::Function<UPrimitiveComponent* (*)(const AFortAthenaVehicle*)>(TEXT("AFortAthenaVehicle::GetVehicleBulletCollisionComponent"))
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetVehicleBulletCollisionComponent(this);
 }

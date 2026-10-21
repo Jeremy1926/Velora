@@ -64,3 +64,13 @@ void UPrimitiveComponent::GetOverlappingActors(TArray<AActor*>& OverlappingActor
 
     GetOverlappingActors(this, OverlappingActors, ClassFilter);
 }
+
+FBodyInstance* UPrimitiveComponent::GetBodyInstance(FName BoneName, bool bGetWelded) const
+{
+    static auto GetBodyInstance = Anchor::VirtualFunction<FBodyInstance* (*)(const UPrimitiveComponent*, FName, bool)>(TEXT("UPrimitiveComponent::GetBodyInstance"))
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call [*+0x*]", 2)
+        .Get();
+
+    return GetBodyInstance(this, BoneName, bGetWelded);
+}

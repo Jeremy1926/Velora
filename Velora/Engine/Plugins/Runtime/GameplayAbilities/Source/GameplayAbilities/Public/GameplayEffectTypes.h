@@ -7,8 +7,8 @@
 #include "GameplayTagContainer.h"
 
 class UScriptStruct;
-struct FGameplayEffectContext;
 struct FGameplayEffectSpec;
+struct FHitResult;
 
 struct FActiveGameplayEffectHandle
 {
@@ -23,6 +23,11 @@ private:
     bool bPassedFiltersAndWasExecuted;
 };
 
+struct FGameplayEffectContext
+{
+    const FHitResult* GetHitResult() const;
+};
+
 struct FGameplayEffectContextHandle
 {
     FGameplayEffectContextHandle()
@@ -33,6 +38,11 @@ struct FGameplayEffectContextHandle
 
     virtual ~FGameplayEffectContextHandle()
     {
+    }
+
+    const FHitResult* GetHitResult() const
+    {
+        return Data.IsValid() ? Data->GetHitResult() : nullptr;
     }
 
 private:

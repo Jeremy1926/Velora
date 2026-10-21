@@ -7,6 +7,7 @@
 #include "Templates/SubclassOf.h"
 
 class AActor;
+struct FBodyInstance;
 
 class UPrimitiveComponent : public USceneComponent
 {
@@ -20,4 +21,6 @@ public:
     void IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnore);
 
     void GetOverlappingActors(TArray<AActor*>& OverlappingActors, TSubclassOf<AActor> ClassFilter) const;
+
+    FBodyInstance* GetBodyInstance(FName BoneName, bool bGetWelded) const;
 };

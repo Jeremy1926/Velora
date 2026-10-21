@@ -4,6 +4,16 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+const FHitResult* FGameplayEffectContext::GetHitResult() const
+{
+    static auto GetHitResult = Anchor::VirtualFunction<const FHitResult* (*)(const FGameplayEffectContext*)>(TEXT("FGameplayEffectContext::GetHitResult"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EffectContextGetHitResult"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetHitResult(this);
+}
+
 UScriptStruct* FScalableFloat::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.ScalableFloat"));

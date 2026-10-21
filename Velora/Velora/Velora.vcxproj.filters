@@ -388,6 +388,12 @@
     <Filter Include="Engine\Source\Runtime\Engine\Private\Collision">
       <UniqueIdentifier>{36FA6E67-9395-458D-A1BA-1AFB169DB159}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Classes\PhysicsEngine">
+      <UniqueIdentifier>{28DFB758-C9DA-495B-AB9A-1E08F42CEB01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Private\PhysicsEngine">
+      <UniqueIdentifier>{BC049E99-C5C8-499E-AF3C-24B20CC82139}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\Abilities">
       <UniqueIdentifier>{3057E0D9-E6A3-424E-B943-7F3E848D0980}</UniqueIdentifier>
     </Filter>
@@ -1186,8 +1192,23 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkeletalMeshComponent.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SkinnedMeshComponent.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\AggregateGeom.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\PhysicsEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\BodyInstance.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\PhysicsEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\PhysicsEngine\BodySetup.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\PhysicsEngine</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\CapsuleComponent.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleConfigs.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleInterface.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
@@ -1627,6 +1648,15 @@
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryTypes.cpp">
       <Filter>Engine\Source\Runtime\AIModule\Private\EnvironmentQuery</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\KAggregateGeom.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PhysicsEngine\BodySetup.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\PhysicsEngine</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
     </ClCompile>
@@ -1908,6 +1938,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleConfigs.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleInterface.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>

@@ -44,3 +44,17 @@ TWeakObjectPtr<AActor>& FHitResult::GetActor()
 
     return *Actor->ContainerPtrToValuePtr<TWeakObjectPtr<AActor>>(this);
 }
+
+const TWeakObjectPtr<UPrimitiveComponent>& FHitResult::GetComponent() const
+{
+    static auto Component = StaticStruct()->FindPropertyByName(FName(TEXT("Component")));
+
+    return *Component->ContainerPtrToValuePtr<TWeakObjectPtr<UPrimitiveComponent>>(this);
+}
+
+uint8 FHitResult::GetElementIndex() const
+{
+    static auto ElementIndex = StaticStruct()->FindPropertyByName(FName(TEXT("ElementIndex")));
+
+    return *ElementIndex->ContainerPtrToValuePtr<uint8>(this);
+}

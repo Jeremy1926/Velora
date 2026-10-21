@@ -53,3 +53,23 @@ void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
 
     SetForcedToAlwaysSpawn(this, bSetTo);
 }
+
+const UFortVehicleConfigs* IFortVehicleInterface::GetVehicleConfigs() const
+{
+    static auto GetVehicleConfigs = Anchor::VirtualFunction<const UFortVehicleConfigs* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::GetVehicleConfigs"))
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetVehicleConfigs(this);
+}
+
+USkeletalMeshComponent* IFortVehicleInterface::GetSkeletalMeshComponent() const
+{
+    static auto GetSkeletalMeshComponent = Anchor::VirtualFunction<USkeletalMeshComponent* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::GetSkeletalMeshComponent"))
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call [*+0x*]", 3)
+        .Get();
+
+    return GetSkeletalMeshComponent(this);
+}
