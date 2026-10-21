@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Misc/Crc.h"
-#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
@@ -17,9 +16,12 @@ uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
         .CallUntil("shr *, 0x8")
         .Get();
 
-    auto& Version = FEngineVersion::Current();
+    static auto bLength = Anchor::Exists()
+        .At(Strihash_DEPRECATED)
+        .Has("test ecx, ecx; jle 0x*")
+        .Get();
 
-    if (Version.GetMajor() > 4 || Version.GetMinor() >= 25)
+    if (bLength)
         return ((uint32 (*)(const int32, const TCHAR*))Strihash_DEPRECATED)((int32)wcslen(Data), Data);
 
     return ((uint32 (*)(const TCHAR*))Strihash_DEPRECATED)(Data);
