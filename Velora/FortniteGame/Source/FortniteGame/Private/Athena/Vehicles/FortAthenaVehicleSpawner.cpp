@@ -110,6 +110,15 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
 
 UFortVehicleItemDefinition* AFortAthenaVehicleSpawner::GetFortVehicleItemDef() const
 {
+    static auto CachedFortVehicleItemDef = StaticClass()->FindPropertyByName(FName(TEXT("CachedFortVehicleItemDef")));
+
+    if (CachedFortVehicleItemDef)
+    {
+        GetVehicleClass();
+
+        return *CachedFortVehicleItemDef->ContainerPtrToValuePtr<UFortVehicleItemDefinition*>(this);
+    }
+
     static auto FortVehicleItemDef = GetClass()->FindPropertyByName(FName(TEXT("FortVehicleItemDef")));
 
     return FortVehicleItemDef->ContainerPtrToValuePtr<TAssetPtr<UFortVehicleItemDefinition>>(this)->LoadSynchronous();
