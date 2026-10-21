@@ -121,6 +121,14 @@ void AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation(A
     ServerHandlePickupWithSwap_Implementation(Pickup, Swap, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
+void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params)
+{
+    if (Params.bUseRequestedSwap)
+        return ServerHandlePickupWithRequestedSwap_Implementation(Pickup, Params.SwapWithItem, Params.FlyTime, Params.Direction, Params.bPlayPickupSound);
+
+    ServerHandlePickup_Implementation(Pickup, Params.FlyTime, Params.Direction, Params.bPlayPickupSound);
+}
+
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
 {
     AFortPlayerPawn::ServerReviveFromDBNO_Implementation(EventInstigator);

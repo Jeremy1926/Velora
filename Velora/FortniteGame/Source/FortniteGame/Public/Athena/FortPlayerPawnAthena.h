@@ -2,6 +2,7 @@
 
 #include "Pawns/FortPlayerPawn.h"
 
+struct FFortPickupRequestInfo;
 struct FGuid;
 
 class AFortPlayerPawnAthena : public AFortPlayerPawn
@@ -16,6 +17,8 @@ public:
     void ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
     void ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
+
+    void ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params);
 
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 

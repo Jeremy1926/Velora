@@ -54,6 +54,17 @@ struct FFortPickupLocationData
     FGuid PickupGuid;
 };
 
+struct FFortPickupRequestInfo
+{
+    FGuid SwapWithItem;
+    float FlyTime;
+    FVector Direction;
+    uint8 bPlayPickupSound : 1;
+    uint8 bIsAutoPickup : 1;
+    uint8 bUseRequestedSwap : 1;
+    uint8 bTrySwapWithWeapon : 1;
+};
+
 struct FortPickupCreationData
 {
     UWorld* World;

@@ -373,6 +373,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPickup"));
 
     static auto ServerHandlePickup = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickup_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickup_Implementation)
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupInfo")))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickup"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickup_Implementation"))
@@ -390,6 +391,13 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Optional()
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupWithRequestedSwap_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
+
+    static auto ServerHandlePickupInfo = THook(TEXT("AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation"), &AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupInfo"))
+        .Optional()
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupInfo_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
     static auto ServerReviveFromDBNO = THook(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation)
