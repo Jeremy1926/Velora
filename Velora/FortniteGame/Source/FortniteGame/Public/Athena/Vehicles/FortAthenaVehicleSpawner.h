@@ -19,5 +19,7 @@ public:
 
     UFortVehicleItemDefinition* GetFortVehicleItemDef() const;
 
+    AActor* GetSpawnedVehicle() const;
+
     bool ShouldSelfSpawnVehicle() const;
 };

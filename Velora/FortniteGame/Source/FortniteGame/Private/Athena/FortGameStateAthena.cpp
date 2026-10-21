@@ -2,6 +2,7 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
+#include "Athena/Vehicles/FortVehicleManager.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -49,11 +50,20 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
     {
-        TArray<AActor*> VehicleSpawners;
-        UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
+        AFortVehicleManager* VehicleManager = nullptr;
 
-        for (auto VehicleSpawner : VehicleSpawners)
-            ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+        if (AFortVehicleManager::GetVehicleManager(this, VehicleManager))
+        {
+            VehicleManager->UpdateVehicleSpawns();
+        }
+        else
+        {
+            TArray<AActor*> VehicleSpawners;
+            UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
+
+            for (auto VehicleSpawner : VehicleSpawners)
+                ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+        }
     }
 
     if (ABuildingItemWeaponUpgradeActor::StaticClass())

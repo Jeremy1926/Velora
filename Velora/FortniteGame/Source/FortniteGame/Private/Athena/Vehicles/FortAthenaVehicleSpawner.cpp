@@ -97,6 +97,9 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
 
                 SpawnedVehicle = UGameplayStatics::FinishSpawningActor(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, VehicleClass, SpawnTransform, ESpawnActorCollisionHandlingMethod::AlwaysSpawn, nullptr), SpawnTransform);
 
+                if (auto SpawnedVehicleProperty = GetClass()->FindPropertyByName(FName(TEXT("SpawnedVehicle"))))
+                    *SpawnedVehicleProperty->ContainerPtrToValuePtr<AActor*>(this) = SpawnedVehicle;
+
                 if (SpawnedVehicle && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways")))
                 {
                     static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
@@ -151,6 +154,13 @@ UFortVehicleItemDefinition* AFortAthenaVehicleSpawner::GetFortVehicleItemDef() c
     static auto FortVehicleItemDef = GetClass()->FindPropertyByName(FName(TEXT("FortVehicleItemDef")));
 
     return FortVehicleItemDef->ContainerPtrToValuePtr<TAssetPtr<UFortVehicleItemDefinition>>(this)->LoadSynchronous();
+}
+
+AActor* AFortAthenaVehicleSpawner::GetSpawnedVehicle() const
+{
+    auto SpawnedVehicle = GetClass()->FindPropertyByName(FName(TEXT("SpawnedVehicle")));
+
+    return SpawnedVehicle ? *SpawnedVehicle->ContainerPtrToValuePtr<AActor*>(this) : nullptr;
 }
 
 bool AFortAthenaVehicleSpawner::ShouldSelfSpawnVehicle() const
