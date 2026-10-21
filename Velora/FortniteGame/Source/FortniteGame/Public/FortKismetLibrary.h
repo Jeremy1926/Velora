@@ -30,6 +30,7 @@ class UScriptStruct;
 class USoundBase;
 enum class EFortPickupSourceTypeFlag : uint8;
 enum class EFortPickupSpawnSource : uint8;
+enum class EFortRarity : uint8;
 
 struct FSpawnItemVariantParams
 {
@@ -119,6 +120,10 @@ public:
     static void CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource);
 
     static bool AreAthenaVehiclesEnabled();
+
+    static bool UpgradeAllWeaponsVerticalToRarity(AFortPlayerController* PlayerController, EFortRarity NewRarity);
+
+    void execUpgradeAllWeaponsVerticalToRarity(FFrame& Stack, void* const Z_Param__Result);
 
     static void GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio);
 };

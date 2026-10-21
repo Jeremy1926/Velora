@@ -120,3 +120,30 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
 
     PlayerController->ClientEquipItem(ItemGuid, true);
 }
+
+FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponItemDefinition* WeaponDefinition, EFortWeaponUpgradeDirection Direction) const
+{
+    static auto GetItemRow = Anchor::Function<FWeaponUpgradeItemRow* (*)(const ABuildingItemWeaponUpgradeActor*, UFortWeaponItemDefinition*, EFortWeaponUpgradeDirection)>(TEXT("ABuildingItemWeaponUpgradeActor::GetItemRow"))
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz r8b; inc r8b; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetItemRow(this, WeaponDefinition, Direction);
+}
+
+UScriptStruct* FWeaponUpgradeItemRow::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.WeaponUpgradeItemRow"));
+
+    return Struct;
+}
+
+UFortWeaponItemDefinition* FWeaponUpgradeItemRow::GetUpgradedWeaponDef() const
+{
+    static auto UpgradedWeaponDef = StaticStruct()->FindPropertyByName(FName(TEXT("UpgradedWeaponDef")));
+
+    return *UpgradedWeaponDef->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this);
+}

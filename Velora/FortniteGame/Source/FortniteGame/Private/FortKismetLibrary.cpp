@@ -6,6 +6,7 @@
 #include "Abilities/FortAbilitySet.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortInventory.h"
+#include "Items/FortItemDefinition.h"
 #include "Items/FortLootPackage.h"
 #include "Items/FortLootTier.h"
 #include "Items/FortPickup.h"
@@ -15,6 +16,7 @@
 #include "Items/FortWorldItemDefinition.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
+#include "Containers/Map.h"
 #include "Engine/World.h"
 #include "Math/Rotator.h"
 #include "Math/UnrealMathUtility.h"
@@ -606,6 +608,71 @@ bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
         .Get();
 
     return AreAthenaVehiclesEnabled();
+}
+
+bool UFortKismetLibrary::UpgradeAllWeaponsVerticalToRarity(AFortPlayerController* PlayerController, EFortRarity NewRarity)
+{
+    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory)
+        return false;
+
+    auto WeaponUpgradeActor = ABuildingItemWeaponUpgradeActor::StaticClass()->GetDefaultObject<ABuildingItemWeaponUpgradeActor>();
+    TArray<TPair<UFortWeaponItemDefinition*, UFortWeaponItemDefinition*>> Upgrades;
+
+    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
+    {
+        auto WeaponDefinition = Cast<UFortWeaponItemDefinition>(ItemEntry.GetItemDefinition());
+        auto UpgradedWeaponDefinition = WeaponDefinition;
+
+        while (UpgradedWeaponDefinition)
+        {
+            auto ItemRow = WeaponUpgradeActor->GetItemRow(UpgradedWeaponDefinition, EFortWeaponUpgradeDirection::Vertical);
+            auto NextWeaponDefinition = ItemRow ? ItemRow->GetUpgradedWeaponDef() : nullptr;
+
+            if (!NextWeaponDefinition || NextWeaponDefinition->GetRarity() > NewRarity)
+                break;
+
+            UpgradedWeaponDefinition = NextWeaponDefinition;
+        }
+
+        if (UpgradedWeaponDefinition != WeaponDefinition)
+            Upgrades.Add({ WeaponDefinition, UpgradedWeaponDefinition });
+    }
+
+    for (auto& Upgrade : Upgrades)
+    {
+        K2_RemoveItemFromPlayer(PlayerController, Upgrade.Key, 1, false);
+        WeaponUpgradeActor->GrantOutput(PlayerController, Upgrade.Value);
+    }
+
+    return Upgrades.Num() > 0;
+}
+
+void UFortKismetLibrary::execUpgradeAllWeaponsVerticalToRarity(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execUpgradeAllWeaponsVerticalToRarity, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity"))
+        .Is("xor al, al; ret")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity")));
+
+    static auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity"));
+    static auto bHasThrottle = Function->FindPropertyByName(FName(TEXT("bThrottle"))) != nullptr;
+
+    AFortPlayerController* PlayerController = nullptr;
+    EFortRarity NewRarity = {};
+    uint32 bThrottle = 0;
+
+    Stack.StepCompiledIn(&PlayerController);
+    Stack.StepCompiledIn(&NewRarity);
+
+    if (bHasThrottle)
+        Stack.StepCompiledIn(&bThrottle);
+
+    Stack.Code += !!Stack.Code;
+
+    *(bool*)Z_Param__Result = UpgradeAllWeaponsVerticalToRarity(PlayerController, NewRarity);
 }
 
 void UFortKismetLibrary::GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio)
