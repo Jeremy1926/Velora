@@ -8,6 +8,9 @@ TSharedPtr<IAnalyticsProvider> UFortAnalytics::CreateAnalyticsProvider(const FSt
         .String(TEXT("%s|[EMPTY]"))
         .Start()
         .Or()
+        .String(TEXT("%s|%s|%s|%s|"), "lea *, [0x*]; mov r9, *; mov [rsp+0x20], *; mov r8, *; lea rcx, [rbp*]; call 0x*")
+        .Start()
+        .Or()
         .String("AnalyticsET")
         .Start()
         .Get();
