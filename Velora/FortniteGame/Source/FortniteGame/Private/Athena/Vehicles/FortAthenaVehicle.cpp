@@ -66,6 +66,9 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
     static auto EncodedRotationX = Anchor::Address()
         .Pattern("F3 0F 58 2D ? ? ? ? F3 0F 58 0D")
         .Target()
+        .Or()
+        .Pattern("F3 0F 58 2D ? ? ? ? E9")
+        .Target()
         .Get();
 
     auto PrimitiveComponent = Cast<UPrimitiveComponent>(GetRootComponent());
