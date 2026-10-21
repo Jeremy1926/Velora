@@ -200,7 +200,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             .String(TEXT("SwapEquippedText"))
             .Find("mov r8, rax; mov rcx, *; call 0x*")
             .Call()
-            .Has("bt eax, edx")
+            .Has("bt *")
             .Get();
         auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
         auto bCanBeSwapped = CanItemTypeBeSwapped ? CanItemTypeBeSwapped(this, ItemDefinition->GetItemType(), PlayerController) : bNeedsPrimarySlot;
