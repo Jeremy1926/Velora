@@ -4,6 +4,7 @@
 #include "Building/BuildingActor.h"
 
 enum class EFortResourceType : uint8;
+class AFortPlayerState;
 class IAbilitySystemInterface;
 
 struct FPlayerBuildableClassContainer
@@ -31,4 +32,6 @@ public:
     const TArray<UClass*>& GetAllPlayerBuildableClasses() const;
 
     void OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface);
+
+    bool IsRespawningAllowed(AFortPlayerState* PlayerState) const;
 };

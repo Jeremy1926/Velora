@@ -32,6 +32,8 @@ public:
 
     void SetIsDBNO(bool bInIsDBNO);
 
+    bool GetWasDBNOOnDeath() const;
+
     void SetPlayedDying(bool bInPlayedDying);
 
     void SetMovingEmote(bool bInMovingEmote);

@@ -67,3 +67,13 @@ void AFortGameStateZone::OnAbilitySystemInterfaceReadyForPersistentGameplayEffec
 
     OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(this, AbilitySystemInterface);
 }
+
+bool AFortGameStateZone::IsRespawningAllowed(AFortPlayerState* PlayerState) const
+{
+    static auto IsRespawningAllowed = Anchor::VirtualFunction<bool (*)(const AFortGameStateZone*, AFortPlayerState*)>(TEXT("AFortGameStateZone::IsRespawningAllowed"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateZone:IsRespawningAllowed"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return IsRespawningAllowed(this, PlayerState);
+}

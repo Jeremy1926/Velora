@@ -256,6 +256,17 @@ void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerC
     AddToAlivePlayers(this, PlayerController);
 }
 
+void AFortGameModeAthena::RemoveFromAlivePlayers(AFortPlayerControllerAthena* PlayerController, APlayerState* KillerPlayerState, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bSkipWinCheck)
+{
+    static auto RemoveFromAlivePlayers = Anchor::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*, APlayerState*, APawn*, UFortWeaponItemDefinition*, EDeathCause, bool)>(TEXT("AFortGameModeAthena::RemoveFromAlivePlayers"))
+        .String(TEXT("FortGameModeAthena: Player [%s] removed from alive players list*"))
+        .Start()
+        .Has("cmp al, 0x12")
+        .Get();
+
+    RemoveFromAlivePlayers(this, PlayerController, KillerPlayerState, FinisherPawn, FinishingWeapon, DeathCause, bSkipWinCheck);
+}
+
 void AFortGameModeAthena::OnPlaylistDataLoaded()
 {
     DETOUR(AFortGameModeAthena, OnPlaylistDataLoaded, Anchor::Hook()

@@ -74,6 +74,13 @@ void AFortPawn::SetIsDBNO(bool bInIsDBNO)
     bIsDBNO->SetPropertyValue_InContainer(this, bInIsDBNO);
 }
 
+bool AFortPawn::GetWasDBNOOnDeath() const
+{
+    static auto bWasDBNOOnDeath = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));
+
+    return bWasDBNOOnDeath->GetPropertyValue_InContainer(this);
+}
+
 void AFortPawn::SetPlayedDying(bool bInPlayedDying)
 {
     static auto bPlayedDying = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlayedDying")));

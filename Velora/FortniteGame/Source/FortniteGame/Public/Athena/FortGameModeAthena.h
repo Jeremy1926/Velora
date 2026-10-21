@@ -5,7 +5,10 @@
 
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
+class APlayerState;
 class UFortServerBotManagerAthena;
+class UFortWeaponItemDefinition;
+enum class EDeathCause : uint8;
 
 class UAthenaAISettings;
 
@@ -25,6 +28,8 @@ public:
     void PlacePlayerOnTeam(AController* Player);
 
     void AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController);
+
+    void RemoveFromAlivePlayers(AFortPlayerControllerAthena* PlayerController, APlayerState* KillerPlayerState, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bSkipWinCheck);
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 

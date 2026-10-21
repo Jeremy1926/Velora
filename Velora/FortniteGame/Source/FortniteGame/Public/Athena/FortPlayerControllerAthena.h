@@ -34,6 +34,10 @@ public:
 
     void ServerRestartPlayer_Implementation();
 
+    void OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher);
+
+    bool GetMarkedAlive() const;
+
     FFortAthenaLoadout* GetCustomizationLoadout();
 
     void ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution);

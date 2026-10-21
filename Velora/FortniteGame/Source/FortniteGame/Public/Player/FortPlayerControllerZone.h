@@ -4,10 +4,25 @@
 
 class AActor;
 class AController;
+class AFortPawn;
 class AFortPlayerPawn;
+class AFortPlayerState;
 class APawn;
+class UFortWeaponItemDefinition;
+class UScriptStruct;
 struct FGameplayEffectContextHandle;
 struct FGameplayTagContainer;
+
+struct FFortPlayerDeathReport
+{
+    static UScriptStruct* StaticStruct();
+
+    AFortPlayerState* GetKillerPlayerState() const;
+
+    AFortPawn* GetKillerPawn() const;
+
+    UFortWeaponItemDefinition* GetKillerWeapon() const;
+};
 
 class AFortPlayerControllerZone : public AFortPlayerControllerGameplay
 {
@@ -25,4 +40,6 @@ public:
     void OnPawnRevived(AController* EventInstigator);
 
     void ApplyDeathDurabilityPenalty(float DurabilityPenalty);
+
+    FFortPlayerDeathReport& GetPlayerDeathReport();
 };

@@ -7,9 +7,39 @@
 #include "GameplayTagContainer.h"
 #include "GameFramework/Controller.h"
 #include "Templates/Casts.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UScriptStruct* FFortPlayerDeathReport::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerDeathReport"));
+
+    return Struct;
+}
+
+AFortPlayerState* FFortPlayerDeathReport::GetKillerPlayerState() const
+{
+    static auto KillerPlayerState = StaticStruct()->FindPropertyByName(FName(TEXT("KillerPlayerState")));
+
+    return *KillerPlayerState->ContainerPtrToValuePtr<AFortPlayerState*>(this);
+}
+
+AFortPawn* FFortPlayerDeathReport::GetKillerPawn() const
+{
+    static auto KillerPawn = StaticStruct()->FindPropertyByName(FName(TEXT("KillerPawn")));
+
+    return *KillerPawn->ContainerPtrToValuePtr<AFortPawn*>(this);
+}
+
+UFortWeaponItemDefinition* FFortPlayerDeathReport::GetKillerWeapon() const
+{
+    static auto KillerWeapon = StaticStruct()->FindPropertyByName(FName(TEXT("KillerWeapon")));
+
+    return *KillerWeapon->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this);
+}
 
 UClass* AFortPlayerControllerZone::StaticClass()
 {
@@ -114,4 +144,11 @@ void AFortPlayerControllerZone::ApplyDeathDurabilityPenalty(float DurabilityPena
 
     if (bApplyDeathDurabilityPenalty)
         ApplyDeathDurabilityPenalty(this, DurabilityPenalty);
+}
+
+FFortPlayerDeathReport& AFortPlayerControllerZone::GetPlayerDeathReport()
+{
+    static auto PlayerDeathReport = GetClass()->FindPropertyByName(FName(TEXT("PlayerDeathReport")));
+
+    return *PlayerDeathReport->ContainerPtrToValuePtr<FFortPlayerDeathReport>(this);
 }
