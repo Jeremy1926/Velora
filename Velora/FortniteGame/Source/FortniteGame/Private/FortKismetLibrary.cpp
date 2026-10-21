@@ -361,6 +361,43 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldCo
     return Pickup;
 }
 
+TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source)
+{
+    DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorldWithLootTier, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Find("mov [rsp+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("xor eax, eax; mov [rcx], rax; mov [rcx+0x8], rax; mov rax, rcx; ret")
+        .Optional()
+        .AtCall());
+
+    TArray<AFortPickup*> Pickups;
+    TArray<FFortItemEntry> LootToDrop;
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+
+    if (!World || !PickLootDrops(&LootToDrop, LootTierName, -1, -1))
+        return Pickups;
+
+    for (auto& ItemEntry : LootToDrop)
+    {
+        if (!Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()))
+            continue;
+
+        auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, SourceType);
+
+        if (!Pickup)
+            continue;
+
+        if (bToss)
+            Pickup->TossPickup(Position, nullptr, OverrideMaxStackCount, true, true, SourceType, Source);
+
+        Pickups.Add(Pickup);
+    }
+
+    return Pickups;
+}
+
 void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
 {
     static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
