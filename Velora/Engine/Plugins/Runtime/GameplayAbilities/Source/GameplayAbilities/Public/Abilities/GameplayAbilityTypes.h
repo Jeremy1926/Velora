@@ -12,17 +12,17 @@
 
 class AActor;
 class UObject;
+class UScriptStruct;
 
 struct FGameplayEventData
 {
-    FGameplayEventData()
-        : Instigator(nullptr)
-        , Target(nullptr)
-        , OptionalObject(nullptr)
-        , OptionalObject2(nullptr)
-        , EventMagnitude(0.f)
-    {
-    }
+    FGameplayEventData();
+
+    FGameplayEventData(const FGameplayEventData&) = delete;
+
+    ~FGameplayEventData();
+
+    static UScriptStruct* StaticStruct();
 
     FGameplayTag EventTag;
 
@@ -34,15 +34,8 @@ struct FGameplayEventData
 
     const UObject* OptionalObject2;
 
-    FGameplayEffectContextHandle ContextHandle;
-
-    FGameplayTagContainer InstigatorTags;
-
-    FGameplayTagContainer TargetTags;
-
-    float EventMagnitude;
-
-    FGameplayAbilityTargetDataHandle TargetData;
+private:
+    uint8 Data[0xD8];
 };
 
 struct FGameplayAbilitySpecHandleAndPredictionKey
