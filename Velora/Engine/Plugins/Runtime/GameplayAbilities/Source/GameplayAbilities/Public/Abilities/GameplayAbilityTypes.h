@@ -53,7 +53,7 @@ struct FGameplayAbilitySpecHandleAndPredictionKey
     }
 
     FGameplayAbilitySpecHandleAndPredictionKey(const FGameplayAbilitySpecHandle& HandleRef, const FPredictionKey& PredictionKeyAtCreationRef)
-        : AbilityHandle(HandleRef), PredictionKeyAtCreation(PredictionKeyAtCreationRef.Current)
+        : AbilityHandle(HandleRef), PredictionKeyAtCreation(PredictionKeyAtCreationRef.GetCurrent())
     {
     }
 

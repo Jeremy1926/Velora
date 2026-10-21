@@ -5,27 +5,25 @@
 #include "UObject/WeakObjectPtrTemplates.h"
 
 class UAbilitySystemComponent;
-class UPackageMap;
+class UScriptStruct;
 
-struct FPredictionKey
+struct alignas(8) FPredictionKey
 {
     typedef int16 KeyType;
 
-    FPredictionKey()
-        : Current(0), Base(0), PredictiveConnection(nullptr), bIsStale(false), bIsServerInitiated(false)
-    {
-    }
+    FPredictionKey();
 
-    int16 Current;
-    int16 Base;
-    UPackageMap* PredictiveConnection;
-    bool bIsStale;
-    bool bIsServerInitiated;
+    static UScriptStruct* StaticStruct();
+
+    KeyType GetCurrent() const;
 
     bool IsValidKey() const
     {
-        return Current > 0;
+        return GetCurrent() > 0;
     }
+
+private:
+    uint8 Data[0x18];
 };
 
 struct FScopedPredictionWindow

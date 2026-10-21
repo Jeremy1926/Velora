@@ -48,46 +48,13 @@ private:
     int32 Handle;
 };
 
-namespace EGameplayAbilityActivationMode
+struct alignas(8) FGameplayAbilitySpec : public FFastArraySerializerItem
 {
-    enum Type
-    {
-        Authority,
-        NonAuthority,
-        Predicting,
-        Confirmed,
-        Rejected,
-    };
-}
+    FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 InLevel = 1, int32 InInputID = INDEX_NONE, UObject* InSourceObject = nullptr);
 
-struct FGameplayAbilityActivationInfo
-{
-    FGameplayAbilityActivationInfo()
-        : ActivationMode(EGameplayAbilityActivationMode::Authority)
-        , bCanBeEndedByOtherInstance(false)
-    {
-    }
+    FGameplayAbilitySpec(const FGameplayAbilitySpec&) = delete;
 
-    mutable TEnumAsByte<EGameplayAbilityActivationMode::Type> ActivationMode;
-
-    uint8 bCanBeEndedByOtherInstance : 1;
-
-private:
-    FPredictionKey PredictionKeyWhenActivated;
-};
-
-struct FGameplayAbilitySpec : public FFastArraySerializerItem
-{
-    FGameplayAbilitySpec()
-        : Ability(nullptr), Level(1), InputID(INDEX_NONE), SourceObject(nullptr), ActiveCount(0), InputPressed(false), RemoveAfterActivation(false), PendingRemove(false)
-    {
-    }
-
-    FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 InLevel = 1, int32 InInputID = INDEX_NONE, UObject* InSourceObject = nullptr)
-        : Ability(InAbility), Level(InLevel), InputID(InInputID), SourceObject(InSourceObject), ActiveCount(0), InputPressed(false), RemoveAfterActivation(false), PendingRemove(false)
-    {
-        Handle.GenerateNewHandle();
-    }
+    ~FGameplayAbilitySpec();
 
     FGameplayAbilitySpecHandle Handle;
 
@@ -107,19 +74,12 @@ struct FGameplayAbilitySpec : public FFastArraySerializerItem
 
     uint8 PendingRemove : 1;
 
-    FGameplayAbilityActivationInfo ActivationInfo;
-
-    TArray<UGameplayAbility*> NonReplicatedInstances;
-
-    TArray<UGameplayAbility*> ReplicatedInstances;
-
-    FActiveGameplayEffectHandle GameplayEffectHandle;
-
-    TMap<FGameplayTag, float> SetByCallerTagMagnitudes;
-
     static UScriptStruct* StaticStruct();
 
     static int32 GetTypeSize();
+
+private:
+    uint8 Data[0xD6];
 };
 
 struct FGameplayAbilitySpecContainer : public FFastArraySerializer

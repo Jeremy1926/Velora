@@ -5,6 +5,25 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
+FGameplayAbilitySpec::FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 InLevel, int32 InInputID, UObject* InSourceObject)
+{
+    FMemory::Memzero(this, sizeof(FGameplayAbilitySpec));
+
+    StaticStruct()->InitializeStruct(this);
+
+    Ability = InAbility;
+    Level = InLevel;
+    InputID = InInputID;
+    SourceObject = InSourceObject;
+
+    Handle.GenerateNewHandle();
+}
+
+FGameplayAbilitySpec::~FGameplayAbilitySpec()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
 UScriptStruct* FGameplayAbilitySpec::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.GameplayAbilitySpec"));

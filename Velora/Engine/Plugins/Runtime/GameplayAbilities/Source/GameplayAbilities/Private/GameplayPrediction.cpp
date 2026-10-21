@@ -1,6 +1,28 @@
 #include "pch.h"
 #include "GameplayPrediction.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
+
+FPredictionKey::FPredictionKey()
+{
+    FMemory::Memzero(this, sizeof(FPredictionKey));
+}
+
+UScriptStruct* FPredictionKey::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.PredictionKey"));
+
+    return Struct;
+}
+
+FPredictionKey::KeyType FPredictionKey::GetCurrent() const
+{
+    static auto Current = StaticStruct()->FindPropertyByName(FName(TEXT("Current")));
+
+    return *Current->ContainerPtrToValuePtr<KeyType>(this);
+}
 
 FScopedPredictionWindow::FScopedPredictionWindow(UAbilitySystemComponent* AbilitySystemComponent, FPredictionKey InPredictionKey, bool InSetReplicatedPredictionKey)
 {

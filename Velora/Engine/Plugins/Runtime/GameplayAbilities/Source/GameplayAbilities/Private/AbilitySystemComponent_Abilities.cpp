@@ -151,7 +151,7 @@ void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpe
     if (!Spec)
     {
         ABILITY_LOG(Display, TEXT("InternalServerTryActiveAbility. Rejecting ClientActivation of ability with invalid SpecHandle!"));
-        ClientActivateAbilityFailed(Handle, PredictionKey.Current);
+        ClientActivateAbilityFailed(Handle, PredictionKey.GetCurrent());
         return;
     }
 
@@ -165,7 +165,7 @@ void UAbilitySystemComponent::InternalServerTryActiveAbility(FGameplayAbilitySpe
     if (!InternalTryActivateAbility(Handle, PredictionKey, &InstancedAbility, nullptr, TriggerEventData))
     {
         ABILITY_LOG(Display, TEXT("InternalServerTryActiveAbility. Rejecting ClientActivation of %s. InternalTryActivateAbility failed: %s"), *GetNameSafe(Spec->Ability), *GetInternalTryActivateAbilityFailureTags().ToStringSimple());
-        ClientActivateAbilityFailed(Handle, PredictionKey.Current);
+        ClientActivateAbilityFailed(Handle, PredictionKey.GetCurrent());
         Spec->InputPressed = false;
     }
     MarkAbilitySpecDirty(*Spec);
