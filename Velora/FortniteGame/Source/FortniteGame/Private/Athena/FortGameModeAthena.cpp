@@ -105,13 +105,13 @@ bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
 
 int32 AFortGameModeAthena::CountReadyPlayers()
 {
-    static auto CountReadyPlayers = Anchor::Function<int32 (*)(AFortGameModeAthena*)>(TEXT("AFortGameModeAthena::CountReadyPlayers"))
+    static auto CountReadyPlayers = Anchor::Function<int32 (*)(AFortGameModeAthena*, bool)>(TEXT("AFortGameModeAthena::CountReadyPlayers"))
         .At(DETOUR_ORIGINAL(AFortGameModeAthena, ReadyToStartMatch_Implementation))
         .Find("call 0x*")
         .Target()
         .Get();
 
-    return CountReadyPlayers(this);
+    return CountReadyPlayers(this, false);
 }
 
 APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
