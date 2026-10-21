@@ -39,6 +39,8 @@ namespace Anchor
             return nullptr;
         }
 
+        Private::Written((uint8_t*)Target - 5, 10);
+
         if (auto Result = MH_CreateHook(Target, Function, &Original); Result != MH_OK)
             Private::Log(ELogLevel::Error, L"Could not hook %s at 0x%llX (%hs)", Name, (uint8_t*)Target - Base(), MH_StatusToString(Result));
         else
@@ -57,6 +59,8 @@ namespace Anchor
 
         auto Jump = (JMP_ABS*)AllocateBuffer((LPVOID)Call);
         *Jump = { 0xFF, 0x25, 0, (UINT64)Function };
+
+        Private::Written(Call + 1, sizeof(int32_t));
 
         DWORD Protect;
         VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), PAGE_EXECUTE_READWRITE, &Protect);
@@ -114,6 +118,8 @@ namespace Anchor
 
         auto Displacement = (int32_t*)(Branch + 2);
 
+        Private::Written(Displacement, sizeof(int32_t));
+
         DWORD Protect;
         VirtualProtect(Displacement, sizeof(int32_t), PAGE_EXECUTE_READWRITE, &Protect);
 
@@ -134,6 +140,8 @@ namespace Anchor
             Private::Log(ELogLevel::Error, L"Could not find %s", Name);
             return nullptr;
         }
+
+        Private::Written(Address, Bytes.size());
 
         DWORD Protect;
         VirtualProtect((LPVOID)Address, Bytes.size(), PAGE_EXECUTE_READWRITE, &Protect);

@@ -1,5 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <algorithm>
+#include <array>
 #include <cstdarg>
 #include <cstdlib>
 #include <span>
@@ -88,8 +90,130 @@ namespace Anchor
         return false;
     }
 
+    static SRWLOCK WrittenLock = SRWLOCK_INIT;
+
+    static std::vector<std::pair<const uint8_t*, const uint8_t*>>& WrittenRanges()
+    {
+        static std::vector<std::pair<const uint8_t*, const uint8_t*>> Ranges;
+
+        return Ranges;
+    }
+
+    void Private::Written(const void* Address, size_t Size)
+    {
+        AcquireSRWLockExclusive(&WrittenLock);
+        WrittenRanges().emplace_back((const uint8_t*)Address, (const uint8_t*)Address + Size);
+        ReleaseSRWLockExclusive(&WrittenLock);
+    }
+
+    static uint64_t ImageSize()
+    {
+        return ((IMAGE_NT_HEADERS*)(Base() + ((IMAGE_DOS_HEADER*)Base())->e_lfanew))->OptionalHeader.SizeOfImage;
+    }
+
+    static bool InCode(const uint8_t* Address, int64_t Front, int64_t Back)
+    {
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+
+            if ((Section.Characteristics & IMAGE_SCN_MEM_EXECUTE) && Address >= Begin + Front && Address + Back <= Begin + Section.Misc.VirtualSize)
+                return true;
+        }
+
+        return false;
+    }
+
+    static const std::array<std::vector<uint64_t>, 3>& References()
+    {
+        static auto Tables = []
+        {
+            std::array<std::vector<uint64_t>, 3> Tables;
+            std::vector<std::pair<uint64_t, uint64_t>> Code;
+            auto Image = Base();
+            auto Size = ImageSize();
+
+            for (auto& Section : Sections())
+            {
+                if (Section.Characteristics & IMAGE_SCN_MEM_EXECUTE)
+                    Code.emplace_back(Section.VirtualAddress, Section.VirtualAddress + Section.Misc.VirtualSize);
+            }
+
+            for (auto [CodeBegin, CodeEnd] : Code)
+            {
+                auto Begin = Image + CodeBegin;
+                auto End = Image + CodeEnd;
+
+                for (auto Address = Begin; Address + 4 <= End; Address++)
+                {
+                    auto Target = (uint64_t)(Address + 4 + *(int32_t*)Address - Image);
+
+                    if (Target >= Size)
+                        continue;
+
+                    auto Key = Target << 32 | (uint64_t)(Address - Image);
+
+                    if (Address >= Begin + 1 && (Address[-1] == 0xE8 || Address[-1] == 0xE9))
+                        Tables[0].push_back(Key - 1);
+
+                    if (Address >= Begin + 2 && Address[-2] == 0x8D && (Address[-1] & 0xC7) == 0x05)
+                        Tables[1].push_back(Key - 2);
+
+                    if (Address >= Begin + ZYDIS_MAX_INSTRUCTION_LENGTH && std::none_of(Code.begin(), Code.end(), [Target](auto& Range) { return Target >= Range.first && Target < Range.second; }))
+                        Tables[2].push_back(Key);
+                }
+            }
+
+            for (auto& Table : Tables)
+                std::sort(Table.begin(), Table.end());
+
+            return Tables;
+        }();
+
+        return Tables;
+    }
+
+    template<typename PredicateType>
+    static const uint8_t* FindIndexed(int32_t Kind, const void* Target, PredicateType Predicate)
+    {
+        auto Image = Base();
+        auto& Table = References()[Kind];
+        auto Key = (uint64_t)((const uint8_t*)Target - Image) << 32;
+        const uint8_t* Found = nullptr;
+
+        for (auto Entry = std::lower_bound(Table.begin(), Table.end(), Key); Entry != Table.end() && (*Entry >> 32) == (Key >> 32); Entry++)
+        {
+            if (Predicate(Image + (uint32_t)*Entry))
+            {
+                Found = Image + (uint32_t)*Entry;
+                break;
+            }
+        }
+
+        AcquireSRWLockShared(&WrittenLock);
+
+        for (auto [Begin, End] : WrittenRanges())
+        {
+            for (auto Address = Begin - ZYDIS_MAX_INSTRUCTION_LENGTH; Address < End && (!Found || Address < Found); Address++)
+            {
+                if (Predicate(Address))
+                {
+                    Found = Address;
+                    break;
+                }
+            }
+        }
+
+        ReleaseSRWLockShared(&WrittenLock);
+
+        return Found;
+    }
+
     static const uint8_t* FindReference(const void* Target)
     {
+        if ((uint64_t)((const uint8_t*)Target - Base()) < ImageSize())
+            return FindIndexed(1, Target, [Target](const uint8_t* Address) { return InCode(Address, 0, 6) && Address[0] == 0x8D && (Address[1] & 0xC7) == 0x05 && Address + 6 + *(int32_t*)(Address + 2) == Target; });
+
         for (auto& Section : Sections())
         {
             if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
@@ -110,6 +234,9 @@ namespace Anchor
 
     static const uint8_t* FindCallReference(const void* Target)
     {
+        if ((uint64_t)((const uint8_t*)Target - Base()) < ImageSize())
+            return FindIndexed(0, Target, [Target](const uint8_t* Address) { return InCode(Address, 0, 5) && (Address[0] == 0xE8 || Address[0] == 0xE9) && Address + 5 + *(int32_t*)(Address + 1) == Target; });
+
         for (auto& Section : Sections())
         {
             if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
@@ -128,6 +255,56 @@ namespace Anchor
         return nullptr;
     }
 
+    template<typename CharType>
+    static const uint8_t* FindString(const CharType* Text, size_t Size)
+    {
+        auto Image = Base();
+        auto& Table = References()[1];
+        const uint8_t* Found = nullptr;
+
+        auto IsText = [&](const uint8_t* Address)
+        {
+            if ((uint64_t)(Address - Image) >= ImageSize() || (Address - Image) % sizeof(CharType) || *(const CharType*)Address != *Text)
+                return false;
+
+            for (auto& Section : Sections())
+            {
+                auto Begin = Image + Section.VirtualAddress;
+
+                if (Address >= Begin && Address + Size <= Begin + Section.Misc.VirtualSize)
+                    return !memcmp(Address, Text, Size);
+            }
+
+            return false;
+        };
+
+        for (auto Entry = Table.begin(); Entry != Table.end() && !Found; Entry++)
+        {
+            if ((Entry == Table.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)) && FindReference(Image + (*Entry >> 32)))
+                Found = Image + (*Entry >> 32);
+        }
+
+        AcquireSRWLockShared(&WrittenLock);
+
+        for (auto [Begin, End] : WrittenRanges())
+        {
+            for (auto Address = Begin - ZYDIS_MAX_INSTRUCTION_LENGTH; Address < End; Address++)
+            {
+                if (InCode(Address, 0, 6) && Address[0] == 0x8D && (Address[1] & 0xC7) == 0x05)
+                {
+                    auto Target = Address + 6 + *(int32_t*)(Address + 2);
+
+                    if ((!Found || Target < Found) && IsText(Target))
+                        Found = Target;
+                }
+            }
+        }
+
+        ReleaseSRWLockShared(&WrittenLock);
+
+        return Found ? FindReference(Found) : nullptr;
+    }
+
     static const uint8_t* FindStringReference(const wchar_t* Text)
     {
         static SRWLOCK Lock = SRWLOCK_INIT;
@@ -142,30 +319,16 @@ namespace Anchor
             return Cached;
 
         auto Length = wcslen(Text);
-        auto Size = (Text[Length - 1] == L'*' ? Length - 1 : Length + 1) * sizeof(wchar_t);
+        auto Reference = FindString(Text, (Text[Length - 1] == L'*' ? Length - 1 : Length + 1) * sizeof(wchar_t));
 
-        for (auto& Section : Sections())
+        if (Reference)
         {
-            auto Begin = Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
-
-            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
-            {
-                if (*(wchar_t*)Address == *Text && !memcmp(Address, Text, Size))
-                {
-                    if (auto Reference = FindReference(Address))
-                    {
-                        AcquireSRWLockExclusive(&Lock);
-                        References.emplace(Text, Reference);
-                        ReleaseSRWLockExclusive(&Lock);
-
-                        return Reference;
-                    }
-                }
-            }
+            AcquireSRWLockExclusive(&Lock);
+            References.emplace(Text, Reference);
+            ReleaseSRWLockExclusive(&Lock);
         }
 
-        return nullptr;
+        return Reference;
     }
 
     static const uint8_t* FindStringReference(const char* Text)
@@ -182,30 +345,16 @@ namespace Anchor
             return Cached;
 
         auto Length = strlen(Text);
-        auto Size = Text[Length - 1] == '*' ? Length - 1 : Length + 1;
+        auto Reference = FindString(Text, Text[Length - 1] == '*' ? Length - 1 : Length + 1);
 
-        for (auto& Section : Sections())
+        if (Reference)
         {
-            auto Begin = Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
-
-            for (auto Address = Begin; Address + Size <= End; Address++)
-            {
-                if (*(char*)Address == *Text && !memcmp(Address, Text, Size))
-                {
-                    if (auto Reference = FindReference(Address))
-                    {
-                        AcquireSRWLockExclusive(&Lock);
-                        References.emplace(Text, Reference);
-                        ReleaseSRWLockExclusive(&Lock);
-
-                        return Reference;
-                    }
-                }
-            }
+            AcquireSRWLockExclusive(&Lock);
+            References.emplace(Text, Reference);
+            ReleaseSRWLockExclusive(&Lock);
         }
 
-        return nullptr;
+        return Reference;
     }
 
     static const uint8_t* FindPattern(const char* Signature)
@@ -626,6 +775,26 @@ namespace Anchor
         if (!Target)
             return FCode();
 
+        auto Referenced = [&](const uint8_t* Address)
+        {
+            for (auto Instruction = Address - 1; Instruction > Address - ZYDIS_MAX_INSTRUCTION_LENGTH; Instruction--)
+            {
+                FCode Code(Instruction);
+
+                if (Code.Target() == Target && Code.Is(Instructions))
+                    return Code;
+            }
+
+            return FCode();
+        };
+
+        if ((uint64_t)((const uint8_t*)Target - Base()) < ImageSize() && !InCode((const uint8_t*)Target, 0, 1))
+        {
+            auto Found = FindIndexed(2, Target, [&](const uint8_t* Address) { return InCode(Address, ZYDIS_MAX_INSTRUCTION_LENGTH, 4) && Address + 4 + *(int32_t*)Address == Target && Referenced(Address).Get(); });
+
+            return Found ? Referenced(Found) : FCode();
+        }
+
         for (auto& Section : Sections())
         {
             if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
@@ -639,13 +808,8 @@ namespace Anchor
                 if (Address + 4 + *(int32_t*)Address != Target)
                     continue;
 
-                for (auto Instruction = Address - 1; Instruction > Address - ZYDIS_MAX_INSTRUCTION_LENGTH; Instruction--)
-                {
-                    FCode Code(Instruction);
-
-                    if (Code.Target() == Target && Code.Is(Instructions))
-                        return Code;
-                }
+                if (auto Code = Referenced(Address); Code.Get())
+                    return Code;
             }
         }
 
