@@ -4,6 +4,7 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Items/FortInventory.h"
+#include "Items/FortInventoryOwnerInterface.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWeaponItemDefinition.h"
@@ -202,6 +203,12 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
 
     Original(InStartupInventory);
 
+    if (!DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        AddStartingItemsToInventory();
+}
+
+void AFortAthenaAIBotController::AddStartingItemsToInventory()
+{
     TArray<FItemAndCount> Items;
 
     if (auto StartupInventory = GetStartupInventory())

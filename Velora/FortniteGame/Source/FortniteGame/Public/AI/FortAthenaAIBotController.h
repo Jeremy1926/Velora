@@ -39,6 +39,8 @@ public:
 
     void InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory);
 
+    void AddStartingItemsToInventory();
+
     void InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets);
 
     bool WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported);
