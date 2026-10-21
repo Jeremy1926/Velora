@@ -30,7 +30,7 @@ void UFortHeldObjectComponent::PickupHeldObject(AFortPlayerPawn* PlayerPawn)
 {
     auto Owner = GetOwner();
 
-    if (!PlayerPawn || !Owner || !Owner->HasAuthority() || GetOwningPawn().IsValid())
+    if (!PlayerPawn || !Owner || !Owner->HasAuthority() || GetOwningPawn())
         return;
 
     Owner->FlushNetDormancy();
@@ -48,7 +48,7 @@ void UFortHeldObjectComponent::PickupHeldObject(AFortPlayerPawn* PlayerPawn)
     GetHeldObjectState() = EHeldObjectState::Held;
 
     EquipBackingWeapon();
-    OnRep_OwningPawn();
+    OnRep_OwningPawn(nullptr);
 
     GetOnHeldObjectPickedUp().ProcessMulticastDelegate<UObject>(nullptr);
 
@@ -70,7 +70,7 @@ void UFortHeldObjectComponent::DropHeldObject()
 
     UnequipBackingWeapon();
     ClearOwningPawn();
-    OnRep_OwningPawn();
+    OnRep_OwningPawn(GetPreviousOwningPawn().Get());
 
     if (auto ProjectileMovementComponent = GetProjectileMovementComponent())
         ProjectileMovementComponent->SetVelocity(FVector(0.f, 0.f, 0.f));
@@ -104,7 +104,7 @@ void UFortHeldObjectComponent::PlaceHeldObject()
 
     auto Owner = GetOwner();
     auto RootComponent = Owner ? Owner->GetRootComponent() : nullptr;
-    auto PlayerPawn = GetOwningPawn().Get();
+    auto PlayerPawn = GetOwningPawn();
 
     if (!RootComponent || !PlayerPawn || !Owner->HasAuthority() || GetHeldObjectState() != EHeldObjectState::Held || !PlacementForwardDistance || !PlacementDownDistance)
         return;
@@ -126,7 +126,7 @@ void UFortHeldObjectComponent::PlaceHeldObject()
 
     UnequipBackingWeapon();
     ClearOwningPawn();
-    OnRep_OwningPawn();
+    OnRep_OwningPawn(GetPreviousOwningPawn().Get());
 
     GetOnHeldObjectPlaced().ProcessMulticastDelegate<UObject>(nullptr);
 
@@ -150,7 +150,7 @@ void UFortHeldObjectComponent::ThrowHeldObject(const FVector& DetachLocation, co
     GetHeldObjectState() = EHeldObjectState::Thrown;
 
     ClearOwningPawn();
-    OnRep_OwningPawn();
+    OnRep_OwningPawn(GetPreviousOwningPawn().Get());
 
     if (auto ProjectileMovementComponent = GetProjectileMovementComponent())
     {
@@ -203,16 +203,18 @@ void UFortHeldObjectComponent::HandleOwnerAsBuildingActorDestroyed(AActor* Damag
     HandleOwnerDestroyed(DamagedActor);
 }
 
-void UFortHeldObjectComponent::OnRep_OwningPawn()
+void UFortHeldObjectComponent::OnRep_OwningPawn(AFortPlayerPawn* LastOwningPawn)
 {
-    static auto OnRep_OwningPawn = Anchor::Function<void (*)(UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::OnRep_OwningPawn"))
+    static auto OnRep_OwningPawn = Anchor::Function<void (*)(UFortHeldObjectComponent*, AFortPlayerPawn*)>(TEXT("UFortHeldObjectComponent::OnRep_OwningPawn"))
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn"))
         .Find("mov [*+0x20], *; jmp 0x*")
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn"))
         .Get();
 
-    OnRep_OwningPawn(this);
+    OnRep_OwningPawn(this, LastOwningPawn);
 }
 
 float UFortHeldObjectComponent::GetGravityScale() const
@@ -244,7 +246,7 @@ float UFortHeldObjectComponent::GetMaxSpeed() const
 
 void UFortHeldObjectComponent::SetupOwningPawn(AFortPlayerPawn* NewOwningPawn)
 {
-    GetOwningPawn() = NewOwningPawn;
+    SetOwningPawn(NewOwningPawn);
 
     if (NewOwningPawn)
         NewOwningPawn->SetHeldObject(GetOwner());
@@ -252,11 +254,13 @@ void UFortHeldObjectComponent::SetupOwningPawn(AFortPlayerPawn* NewOwningPawn)
 
 void UFortHeldObjectComponent::ClearOwningPawn()
 {
-    if (auto OwningPawn = GetOwningPawn().Get())
+    auto OwningPawn = GetOwningPawn();
+
+    if (OwningPawn)
         OwningPawn->SetHeldObject(nullptr);
 
-    GetPreviousOwningPawn() = GetOwningPawn();
-    GetOwningPawn() = nullptr;
+    GetPreviousOwningPawn() = OwningPawn;
+    SetOwningPawn(nullptr);
 }
 
 void UFortHeldObjectComponent::DetachFromOwningPawn()
@@ -267,7 +271,7 @@ void UFortHeldObjectComponent::DetachFromOwningPawn()
 
 void UFortHeldObjectComponent::EquipBackingWeapon()
 {
-    auto PlayerPawn = GetOwningPawn().Get();
+    auto PlayerPawn = GetOwningPawn();
     auto PlayerController = PlayerPawn ? Cast<AFortPlayerControllerAthena>(PlayerPawn->GetController()) : nullptr;
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
     auto WeaponDefinition = WorldInventory ? GetEquippedWeaponItemDefinition().LoadSynchronous() : nullptr;
@@ -520,11 +524,26 @@ EHeldObjectState& UFortHeldObjectComponent::GetHeldObjectState()
     return *HeldObjectState->ContainerPtrToValuePtr<EHeldObjectState>(this);
 }
 
-TWeakObjectPtr<AFortPlayerPawn>& UFortHeldObjectComponent::GetOwningPawn()
+AFortPlayerPawn* UFortHeldObjectComponent::GetOwningPawn()
 {
     static auto OwningPawn = StaticClass()->FindPropertyByName(FName(TEXT("OwningPawn")));
+    static auto LastOwningPawn = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn")))->FindPropertyByName(FName(TEXT("LastOwningPawn")));
 
-    return *OwningPawn->ContainerPtrToValuePtr<TWeakObjectPtr<AFortPlayerPawn>>(this);
+    if (LastOwningPawn)
+        return *OwningPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
+
+    return OwningPawn->ContainerPtrToValuePtr<TWeakObjectPtr<AFortPlayerPawn>>(this)->Get();
+}
+
+void UFortHeldObjectComponent::SetOwningPawn(AFortPlayerPawn* NewOwningPawn)
+{
+    static auto OwningPawn = StaticClass()->FindPropertyByName(FName(TEXT("OwningPawn")));
+    static auto LastOwningPawn = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnRep_OwningPawn")))->FindPropertyByName(FName(TEXT("LastOwningPawn")));
+
+    if (LastOwningPawn)
+        *OwningPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this) = NewOwningPawn;
+    else
+        *OwningPawn->ContainerPtrToValuePtr<TWeakObjectPtr<AFortPlayerPawn>>(this) = NewOwningPawn;
 }
 
 FRotator& UFortHeldObjectComponent::GetObjectPickupRotation()

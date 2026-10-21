@@ -48,7 +48,7 @@ public:
 
     void HandleOwnerAsBuildingActorDestroyed(AActor* DamagedActor, float Damage, AController* InstigatedBy, AActor* DamageCauser, const FVector& HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, const FVector& Momentum);
 
-    void OnRep_OwningPawn();
+    void OnRep_OwningPawn(AFortPlayerPawn* LastOwningPawn);
 
     float GetGravityScale() const;
 
@@ -98,7 +98,9 @@ public:
 
     EHeldObjectState& GetHeldObjectState();
 
-    TWeakObjectPtr<AFortPlayerPawn>& GetOwningPawn();
+    AFortPlayerPawn* GetOwningPawn();
+
+    void SetOwningPawn(AFortPlayerPawn* NewOwningPawn);
 
     FRotator& GetObjectPickupRotation();
 
