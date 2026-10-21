@@ -26,9 +26,50 @@ class UFortItem;
 class UFortWeaponItemDefinition;
 class UFortWorldItemDefinition;
 class UGameplayEffect;
+class UScriptStruct;
 class USoundBase;
 enum class EFortPickupSourceTypeFlag : uint8;
 enum class EFortPickupSpawnSource : uint8;
+
+struct FSpawnItemVariantParams
+{
+    FSpawnItemVariantParams();
+
+    FSpawnItemVariantParams(const FSpawnItemVariantParams&) = delete;
+
+    ~FSpawnItemVariantParams();
+
+    static UScriptStruct* StaticStruct();
+
+    UFortWorldItemDefinition* GetWorldItemDefinition() const;
+
+    int32 GetNumberToSpawn() const;
+
+    const FVector& GetPosition() const;
+
+    const FVector& GetDirection() const;
+
+    int32 GetOverrideMaxStackCount() const;
+
+    bool GetToss() const;
+
+    bool GetRandomRotation() const;
+
+    bool GetBlockedFromAutoPickup() const;
+
+    int32 GetPickupInstigatorHandle() const;
+
+    EFortPickupSourceTypeFlag GetSourceType() const;
+
+    EFortPickupSpawnSource GetSource() const;
+
+    AFortPlayerController* GetOptionalOwnerPC() const;
+
+    bool GetPickupOnlyRelevantToOwner() const;
+
+private:
+    uint8 Data[0x100];
+};
 
 class UFortKismetLibrary : public UBlueprintFunctionLibrary
 {
@@ -70,6 +111,10 @@ public:
     static AFortPickup* K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
 
     static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
+
+    static AFortPickup* SpawnItemVariantPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* WorldItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss, bool bRandomRotation, bool bBlockedFromAutoPickup, int32 PickupInstigatorHandle, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source, AFortPlayerController* OptionalOwnerPC, bool bPickupOnlyRelevantToOwner);
+
+    void execSpawnItemVariantPickupInWorld(FFrame& Stack, void* const Z_Param__Result);
 
     static void CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource);
 

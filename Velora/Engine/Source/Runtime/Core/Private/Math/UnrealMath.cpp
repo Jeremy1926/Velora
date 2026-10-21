@@ -15,6 +15,17 @@ FVector FRotator::Vector() const
     return *Vector(this, &Result);
 }
 
+FRotator FVector::ToOrientationRotator() const
+{
+    static auto ToOrientationRotator = Anchor::Function<FRotator* (*)(const FVector*, FRotator*)>(TEXT("FVector::ToOrientationRotator"))
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_VectorToRotator"))
+        .Get();
+
+    FRotator Result;
+
+    return *ToOrientationRotator(this, &Result);
+}
+
 FQuat FRotator::Quaternion() const
 {
     float SP = sinf(Pitch * 0.008726646f);

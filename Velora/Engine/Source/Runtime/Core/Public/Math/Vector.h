@@ -3,6 +3,8 @@
 #include "HAL/Platform.h"
 #include "Math/UnrealMathUtility.h"
 
+struct FRotator;
+
 enum EForceInit
 {
     ForceInit,
@@ -32,6 +34,8 @@ struct FVector
         , Z(InZ)
     {
     }
+
+    FRotator ToOrientationRotator() const;
 
     FORCEINLINE FVector operator+(const FVector& V) const
     {

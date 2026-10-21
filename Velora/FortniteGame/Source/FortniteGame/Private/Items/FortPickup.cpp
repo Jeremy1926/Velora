@@ -32,7 +32,7 @@ UClass* AFortPickup::StaticClass()
     return Class;
 }
 
-AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner, EFortPickupSourceTypeFlag SourceTypeFlags, bool bRandomRotation, bool bPickupOnlyRelevantToOwner)
+AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner, EFortPickupSourceTypeFlag SourceTypeFlags, bool bRandomRotation, bool bPickupOnlyRelevantToOwner, EFortPickupSpawnSource PickupSpawnSource)
 {
     static auto bArguments = Anchor::Exists()
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
@@ -75,7 +75,7 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
             EFortPickupSpawnSource PickupSpawnSource;
             uint8 bRandomRotation : 1;
             uint8 bPickupOnlyRelevantToOwner : 1;
-        } const AfterItemEntry{ SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, EFortPickupSpawnSource::Unset, bRandomRotation, bPickupOnlyRelevantToOwner };
+        } const AfterItemEntry{ SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner };
 
         TArray<uint8> CreationData;
         CreationData.AddUninitialized(sizeof(UWorld*) + FFortItemEntry::GetTypeSize() + sizeof(AfterItemEntry));
@@ -107,7 +107,7 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
             uint8 bPickupOnlyRelevantToOwner : 1;
         };
 
-        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, EFortPickupSpawnSource::Unset, bRandomRotation, bPickupOnlyRelevantToOwner });
+        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner });
     }
 
     if (!bArguments)

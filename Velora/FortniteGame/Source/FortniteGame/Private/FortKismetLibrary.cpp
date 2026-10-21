@@ -398,6 +398,198 @@ TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObje
     return Pickups;
 }
 
+FSpawnItemVariantParams::FSpawnItemVariantParams()
+{
+    FMemory::Memzero(this, sizeof(FSpawnItemVariantParams));
+
+    StaticStruct()->InitializeStruct(this);
+}
+
+FSpawnItemVariantParams::~FSpawnItemVariantParams()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
+UScriptStruct* FSpawnItemVariantParams::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SpawnItemVariantParams"));
+
+    return Struct;
+}
+
+UFortWorldItemDefinition* FSpawnItemVariantParams::GetWorldItemDefinition() const
+{
+    static auto WorldItemDefinition = StaticStruct()->FindPropertyByName(FName(TEXT("WorldItemDefinition")));
+
+    return *WorldItemDefinition->ContainerPtrToValuePtr<UFortWorldItemDefinition*>(this);
+}
+
+int32 FSpawnItemVariantParams::GetNumberToSpawn() const
+{
+    static auto NumberToSpawn = StaticStruct()->FindPropertyByName(FName(TEXT("NumberToSpawn")));
+
+    return *NumberToSpawn->ContainerPtrToValuePtr<int32>(this);
+}
+
+const FVector& FSpawnItemVariantParams::GetPosition() const
+{
+    static auto Position = StaticStruct()->FindPropertyByName(FName(TEXT("Position")));
+
+    return *Position->ContainerPtrToValuePtr<FVector>(this);
+}
+
+const FVector& FSpawnItemVariantParams::GetDirection() const
+{
+    static auto Direction = StaticStruct()->FindPropertyByName(FName(TEXT("Direction")));
+
+    return *Direction->ContainerPtrToValuePtr<FVector>(this);
+}
+
+int32 FSpawnItemVariantParams::GetOverrideMaxStackCount() const
+{
+    static auto OverrideMaxStackCount = StaticStruct()->FindPropertyByName(FName(TEXT("OverrideMaxStackCount")));
+
+    return *OverrideMaxStackCount->ContainerPtrToValuePtr<int32>(this);
+}
+
+bool FSpawnItemVariantParams::GetToss() const
+{
+    static auto bToss = StaticStruct()->FindPropertyByName(FName(TEXT("bToss")));
+
+    return *bToss->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool FSpawnItemVariantParams::GetRandomRotation() const
+{
+    static auto bRandomRotation = StaticStruct()->FindPropertyByName(FName(TEXT("bRandomRotation")));
+
+    return *bRandomRotation->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool FSpawnItemVariantParams::GetBlockedFromAutoPickup() const
+{
+    static auto bBlockedFromAutoPickup = StaticStruct()->FindPropertyByName(FName(TEXT("bBlockedFromAutoPickup")));
+
+    return *bBlockedFromAutoPickup->ContainerPtrToValuePtr<bool>(this);
+}
+
+int32 FSpawnItemVariantParams::GetPickupInstigatorHandle() const
+{
+    static auto PickupInstigatorHandle = StaticStruct()->FindPropertyByName(FName(TEXT("PickupInstigatorHandle")));
+
+    return *PickupInstigatorHandle->ContainerPtrToValuePtr<int32>(this);
+}
+
+EFortPickupSourceTypeFlag FSpawnItemVariantParams::GetSourceType() const
+{
+    static auto SourceType = StaticStruct()->FindPropertyByName(FName(TEXT("SourceType")));
+
+    return *SourceType->ContainerPtrToValuePtr<EFortPickupSourceTypeFlag>(this);
+}
+
+EFortPickupSpawnSource FSpawnItemVariantParams::GetSource() const
+{
+    static auto Source = StaticStruct()->FindPropertyByName(FName(TEXT("Source")));
+
+    return *Source->ContainerPtrToValuePtr<EFortPickupSpawnSource>(this);
+}
+
+AFortPlayerController* FSpawnItemVariantParams::GetOptionalOwnerPC() const
+{
+    static auto OptionalOwnerPC = StaticStruct()->FindPropertyByName(FName(TEXT("OptionalOwnerPC")));
+
+    return *OptionalOwnerPC->ContainerPtrToValuePtr<AFortPlayerController*>(this);
+}
+
+bool FSpawnItemVariantParams::GetPickupOnlyRelevantToOwner() const
+{
+    static auto bPickupOnlyRelevantToOwner = StaticStruct()->FindPropertyByName(FName(TEXT("bPickupOnlyRelevantToOwner")));
+
+    return *bPickupOnlyRelevantToOwner->ContainerPtrToValuePtr<bool>(this);
+}
+
+AFortPickup* UFortKismetLibrary::SpawnItemVariantPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* WorldItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss, bool bRandomRotation, bool bBlockedFromAutoPickup, int32 PickupInstigatorHandle, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source, AFortPlayerController* OptionalOwnerPC, bool bPickupOnlyRelevantToOwner)
+{
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+
+    if (!World || !WorldItemDefinition)
+        return nullptr;
+
+    FFortItemEntry ItemEntry(WorldItemDefinition, NumberToSpawn, 0);
+
+    auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, Direction.ToOrientationRotator(), OptionalOwnerPC, nullptr, nullptr, SourceType, bRandomRotation, bPickupOnlyRelevantToOwner, Source);
+
+    if (Pickup)
+        Pickup->TossPickup(Position, nullptr, OverrideMaxStackCount, bToss, false, SourceType, Source);
+
+    return Pickup;
+}
+
+void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execSpawnItemVariantPickupInWorld, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Find("movsd [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("xor eax, eax; ret")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Find("movsd [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("push rbx; sub rsp, 0x20; mov rcx, [rdx+0x18]; mov rbx, rdx; test rcx, rcx; jz 0x*; call 0x*; mov rcx, [rbx+0x8]")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld")));
+
+    static auto Params = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld")))->FindPropertyByName(FName(TEXT("Params")));
+
+    UObject* WorldContextObject = nullptr;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+
+    if (Params)
+    {
+        FSpawnItemVariantParams SpawnParams;
+
+        Stack.StepCompiledIn(&SpawnParams);
+        Stack.Code += !!Stack.Code;
+
+        *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, SpawnParams.GetWorldItemDefinition(), SpawnParams.GetNumberToSpawn(), SpawnParams.GetPosition(), SpawnParams.GetDirection(), SpawnParams.GetOverrideMaxStackCount(), SpawnParams.GetToss(), SpawnParams.GetRandomRotation(), SpawnParams.GetBlockedFromAutoPickup(), SpawnParams.GetPickupInstigatorHandle(), SpawnParams.GetSourceType(), SpawnParams.GetSource(), SpawnParams.GetOptionalOwnerPC(), SpawnParams.GetPickupOnlyRelevantToOwner());
+
+        return;
+    }
+
+    UFortWorldItemDefinition* WorldItemDefinition = nullptr;
+    int32 NumberToSpawn = 0;
+    FVector Position(ForceInit);
+    FVector Direction(ForceInit);
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    uint32 bRandomRotation = 0;
+    uint32 bBlockedFromAutoPickup = 0;
+    int32 PickupInstigatorHandle = 0;
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+    AFortPlayerController* OptionalOwnerPC = nullptr;
+    uint32 bPickupOnlyRelevantToOwner = 0;
+
+    Stack.StepCompiledIn(&WorldItemDefinition);
+    Stack.StepCompiledIn(&NumberToSpawn);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&Direction);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+    Stack.StepCompiledIn(&bRandomRotation);
+    Stack.StepCompiledIn(&bBlockedFromAutoPickup);
+    Stack.StepCompiledIn(&PickupInstigatorHandle);
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.StepCompiledIn(&OptionalOwnerPC);
+    Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
+    Stack.Code += !!Stack.Code;
+
+    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, WorldItemDefinition, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
+}
+
 void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
 {
     static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
