@@ -232,6 +232,15 @@ bool AActor::IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* Ac
     return IsRelevancyOwnerFor(this, ReplicatedActor, ActorOwner, ConnectionActor);
 }
 
+float AActor::GetDistanceTo(const AActor* OtherActor) const
+{
+    static auto GetDistanceTo = Anchor::Function<float (*)(const AActor*, const AActor*)>(TEXT("AActor::GetDistanceTo"))
+        .Native(TEXT("/Script/Engine.Actor:GetDistanceTo"))
+        .Get();
+
+    return GetDistanceTo(this, OtherActor);
+}
+
 void AActor::ForceNetUpdate()
 {
     static auto ForceNetUpdate = Anchor::VirtualFunction<void (*)(AActor*)>(TEXT("AActor::ForceNetUpdate"))

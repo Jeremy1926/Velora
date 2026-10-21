@@ -2,6 +2,7 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Engine/World.h"
@@ -110,6 +111,9 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
         ((void (*)(AFortPlayerControllerAthena*, AFortPlayerPawn*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*, AController*))DETOUR_ORIGINAL(AFortPlayerControllerAthena, OnPawnDied))(this, KilledPawn, Damage, InTags, EffectContext, EventInstigator, DamageCauser, DBNOFinisher);
     else
         ((void (*)(AFortPlayerControllerAthena*, float, const FGameplayTagContainer&, const FGameplayEffectContextHandle&, AController*, AActor*))DETOUR_ORIGINAL(AFortPlayerControllerAthena, OnPawnDied))(this, Damage, InTags, EffectContext, EventInstigator, DamageCauser);
+
+    if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(KilledPawn))
+        PlayerPawn->InitializeDeathInfoOnPawnDeath(InTags, EventInstigator, DBNOFinisher, DamageCauser);
 
     static auto bWasDBNOOnDeath = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));
 

@@ -114,6 +114,8 @@ public:
 
     bool GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth);
 
+    float GetDistanceTo(const AActor* OtherActor) const;
+
     void ForceNetUpdate();
 
     void FlushNetDormancy();

@@ -3,7 +3,9 @@
 #include "Pawns/FortPlayerPawn.h"
 
 struct FFortPickupRequestInfo;
+struct FGameplayTagContainer;
 struct FGuid;
+enum class EDeathCause : uint8;
 
 class AFortPlayerPawnAthena : public AFortPlayerPawn
 {
@@ -25,6 +27,10 @@ public:
     void ForceReviveFromDBNO(AController* EventInstigator);
 
     void execForceReviveFromDBNO(FFrame& Stack, void* const Z_Param__Result);
+
+    EDeathCause ToDeathCause(const FGameplayTagContainer& InTags, bool bWasDBNO);
+
+    void InitializeDeathInfoOnPawnDeath(const FGameplayTagContainer& InTags, AController* EventInstigator, AController* DBNOFinisher, AActor* DamageCauser);
 
     float GetPickupSpeedMultiplier() const;
 

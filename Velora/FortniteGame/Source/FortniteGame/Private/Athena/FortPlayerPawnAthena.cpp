@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
 #include "GameFramework/Controller.h"
+#include "GameplayTagAssetInterface.h"
 #include "FortRegisteredPlayerInfo.h"
 #include "Items/FortQuickBars.h"
 #include "Items/FortPickup.h"
@@ -176,6 +178,85 @@ void AFortPlayerPawnAthena::execForceReviveFromDBNO(FFrame& Stack, void* const Z
 
     if (GetIsDBNO())
         ForceReviveFromDBNO(GetController());
+}
+
+EDeathCause AFortPlayerPawnAthena::ToDeathCause(const FGameplayTagContainer& InTags, bool bWasDBNO)
+{
+    static auto ToDeathCause = Anchor::Function<EDeathCause (*)(AFortPlayerPawnAthena*, const FGameplayTagContainer&, bool)>(TEXT("AFortPlayerPawnAthena::ToDeathCause"))
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Start()
+        .Find("cmov* rsi, r*; xor r8d, r8d; call 0x*")
+        .Call()
+        .Get();
+
+    return ToDeathCause(this, InTags, bWasDBNO);
+}
+
+void AFortPlayerPawnAthena::InitializeDeathInfoOnPawnDeath(const FGameplayTagContainer& InTags, AController* EventInstigator, AController* DBNOFinisher, AActor* DamageCauser)
+{
+    static auto bWasDBNOOnDeath = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));
+
+    static auto bPawnToDeathCause = Anchor::Exists()
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Start()
+        .Find("cmov* rsi, r*; xor r8d, r8d; call 0x*")
+        .Get();
+
+    static auto bToDeathCause = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateAthena:ToDeathCause"))
+        .Or()
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Start()
+        .Find("cmov* rsi, r*")
+        .Find("call 0x*")
+        .LastSince("xor edx, edx", "cmov* rsi, r*")
+        .Get();
+
+    static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
+
+    auto PlayerState = Cast<AFortPlayerStateAthena>(GetPlayerState());
+
+    if (!PlayerState)
+        return;
+
+    auto bWasDBNO = bWasDBNOOnDeath ? GetWasDBNOOnDeath() : GetIsDBNO();
+    auto Finisher = DBNOFinisher ? DBNOFinisher : EventInstigator;
+    auto FinisherPawn = Finisher ? Cast<AFortPawn>(Finisher->GetPawn()) : nullptr;
+
+    FDeathInfo DeathInfo;
+
+    DeathInfo.GetFinisherOrDowner() = EventInstigator ? Cast<AFortPlayerStateAthena>(Finisher->GetPlayerState()) : PlayerState;
+    DeathInfo.SetDBNO(false);
+
+    if (bPawnToDeathCause)
+        DeathInfo.GetDeathCause() = ToDeathCause(InTags, bWasDBNO);
+    else if (bToDeathCause)
+        DeathInfo.GetDeathCause() = AFortPlayerStateAthena::ToDeathCause(InTags, bWasDBNO);
+
+    if (auto Downer = DeathInfo.GetDowner(); Downer && bWasDBNO)
+        *Downer = *PlayerState->GetDeathInfo().GetDowner();
+
+    if (auto Distance = DeathInfo.GetDistance(); Distance && FinisherPawn)
+        *Distance = FinisherPawn->GetDistanceTo(this);
+
+    if (auto DeathLocation = DeathInfo.GetDeathLocation())
+        *DeathLocation = GetActorLocation();
+
+    if (auto DeathTags = DeathInfo.GetDeathTags())
+        *DeathTags = InTags;
+
+    auto FinisherAbilitySystemComponent = FinisherPawn ? FinisherPawn->GetAbilitySystemComponent() : nullptr;
+
+    if (auto FinisherOrDownerTags = DeathInfo.GetFinisherOrDownerTags(); FinisherOrDownerTags && FinisherAbilitySystemComponent)
+        ((IGameplayTagAssetInterface*)FinisherAbilitySystemComponent->GetInterfaceAddress(GameplayTagAssetInterface))->GetOwnedGameplayTags(*FinisherOrDownerTags);
+
+    if (auto VictimTags = DeathInfo.GetVictimTags(); VictimTags && GetAbilitySystemComponent())
+        ((IGameplayTagAssetInterface*)GetAbilitySystemComponent()->GetInterfaceAddress(GameplayTagAssetInterface))->GetOwnedGameplayTags(*VictimTags);
+
+    PlayerState->InitializeDeathInfo(DeathInfo);
 }
 
 float AFortPlayerPawnAthena::GetPickupSpeedMultiplier() const

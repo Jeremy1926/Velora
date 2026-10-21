@@ -9,3 +9,10 @@ AController* APawn::GetController() const
 
     return *Controller->ContainerPtrToValuePtr<AController*>(this);
 }
+
+APlayerState* APawn::GetPlayerState() const
+{
+    static auto PlayerState = GetClass()->FindPropertyByName(FName(TEXT("PlayerState")));
+
+    return *PlayerState->ContainerPtrToValuePtr<APlayerState*>(this);
+}
