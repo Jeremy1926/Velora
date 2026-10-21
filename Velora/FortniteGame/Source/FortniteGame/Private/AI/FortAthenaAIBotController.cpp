@@ -51,6 +51,12 @@ EFortItemType* FFortBotInventoryInfo::GetItemType()
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
         .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
         .Find("mov byte ptr [*], 0x*")
+        .Or()
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface"))
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
+        .Find("mov byte ptr [*], 0x*")
         .Disp();
 
     return ItemType > 0 ? (EFortItemType*)((uint8*)this + ItemType) : nullptr;
@@ -60,6 +66,13 @@ EFortWeaponType* FFortBotInventoryInfo::GetWeaponType()
 {
     static auto WeaponType = Anchor::Offset(TEXT("FFortBotInventoryInfo::WeaponType"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
+        .Find("mov byte ptr [*], 0x*; call 0x*; mov [*+0x*], al")
+        .Find("mov [*+0x*], al")
+        .Or()
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface"))
         .Origin("mov [*-0x*], *; mov byte ptr [*], 0x*")
         .Find("mov byte ptr [*], 0x*; call 0x*; mov [*+0x*], al")
         .Find("mov [*+0x*], al")
@@ -178,8 +191,11 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
 {
     DETOUR(AFortAthenaAIBotController, InitializeInventory, Anchor::Hook()
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
-        .Optional()
         .Start()
+        .Or()
+        .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Is("test rdx, rdx; jz *; mov [rcx+0x*], rdx; jmp *")
+        .Optional()
         .Inline());
 
     CreateInventory();
@@ -189,10 +205,7 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
     TArray<FItemAndCount> Items;
 
     if (auto StartupInventory = GetStartupInventory())
-    {
-        for (auto ItemDefinition : StartupInventory->GetItems())
-            Items.Add({ 1, ItemDefinition });
-    }
+        Items = StartupInventory->GetItems();
 
     if (auto Pickaxe = GetCosmeticLoadoutBC().GetPickaxe())
         Items.Add({ 1, Pickaxe->GetWeaponDefinition() });
@@ -200,6 +213,9 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
     static auto bAllowUnsupportedItems = Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
         .Find("mov [rcx+0x*], al")
+        .Or()
+        .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .Find("cmp byte ptr [*+0x*], 0x0")
         .Disp();
 
     if (bAllowUnsupportedItems)

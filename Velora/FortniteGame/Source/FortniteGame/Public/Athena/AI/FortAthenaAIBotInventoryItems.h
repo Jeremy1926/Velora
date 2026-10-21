@@ -4,9 +4,10 @@
 #include "Containers/Array.h"
 
 class UFortItemDefinition;
+struct FItemAndCount;
 
 class UFortAthenaAIBotInventoryItems : public UObject
 {
 public:
-    TArray<UFortItemDefinition*>& GetItems();
+    TArray<FItemAndCount> GetItems();
 };

@@ -858,6 +858,11 @@ namespace Anchor
             return EntryIn(Object ? *(const void* const* const*)Object : nullptr);
         }
 
+        ChainType& Entry(const TCHAR* VTableName, const TCHAR* InterfacePath)
+        {
+            return EntryIn(Scanner::FindVTable(VTableName, InterfacePath));
+        }
+
         ChainType& SlotShift(const TCHAR* VTableName, int64_t Bytes)
         {
             return SlotShiftIn(Scanner::FindVTable(VTableName), Bytes);

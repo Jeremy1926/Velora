@@ -106,3 +106,20 @@ private:
     uint8 ByteMask;
     uint8 FieldMask;
 };
+
+class UArrayProperty : public UProperty
+{
+public:
+    FORCEINLINE UProperty* GetInner() const
+    {
+        return GetProperty()->Inner;
+    }
+
+private:
+    FORCEINLINE const UArrayProperty* GetProperty() const
+    {
+        return (const UArrayProperty*)UProperty::GetProperty();
+    }
+
+    UProperty* Inner;
+};
