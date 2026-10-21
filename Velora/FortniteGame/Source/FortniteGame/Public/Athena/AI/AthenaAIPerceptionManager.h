@@ -8,4 +8,6 @@ class UAthenaAIPerceptionManager : public UAISubsystem
 {
 public:
     void OnAISettingsUpdated(UAthenaAISettings* AISettings);
+
+    void StartPlay();
 };
