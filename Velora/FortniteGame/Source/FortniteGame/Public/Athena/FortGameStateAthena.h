@@ -20,6 +20,8 @@ enum class EAthenaGamePhase : uint8
     EndGame,
 };
 
+enum class EAthenaGamePhaseStep : uint8;
+
 struct FGameMemberInfo : public FFastArraySerializerItem
 {
     uint8 SquadId;
@@ -40,6 +42,10 @@ public:
     static UClass* StaticClass();
 
     EAthenaGamePhase GetGamePhase() const;
+
+    EAthenaGamePhaseStep GetGamePhaseStep() const;
+
+    int32 GetSafeZonePhase() const;
 
     AFortAthenaMapInfo* GetMapInfo() const;
 

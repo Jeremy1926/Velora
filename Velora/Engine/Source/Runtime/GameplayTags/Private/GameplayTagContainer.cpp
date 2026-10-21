@@ -86,6 +86,15 @@ FGameplayTagQuery FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression& Roo
     return Q;
 }
 
+bool FGameplayTagQuery::Matches(const FGameplayTagContainer& Tags) const
+{
+    static auto DoesContainerMatchTagQuery = Anchor::Function<bool (*)(const FGameplayTagContainer&, const FGameplayTagQuery&)>(TEXT("UBlueprintGameplayTagLibrary::DoesContainerMatchTagQuery"))
+        .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
+        .Get();
+
+    return DoesContainerMatchTagQuery(Tags, *this);
+}
+
 FGameplayTagQuery FGameplayTagQuery::MakeQuery_MatchTag(FGameplayTag const& InTag)
 {
     return FGameplayTagQuery::BuildQuery

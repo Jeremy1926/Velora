@@ -12,6 +12,7 @@
 #include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingGameplayActorSpawnMachine.h"
+#include "FortAthenaLivingWorldManager.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -156,6 +157,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
         UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
         UFortServerBotManagerAthena::TickBotBrainActivationTimers();
+
+        if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && World->GetGameState())
+        {
+            if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
+                LivingWorldManager->TickComponent(DeltaSeconds);
+        }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {

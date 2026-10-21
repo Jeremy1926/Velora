@@ -23,3 +23,10 @@ UAthenaAIPopulationTracker* UAthenaAISystem::GetAIPopulationTracker() const
 
     return AIPopulationTracker ? *AIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) : nullptr;
 }
+
+UAthenaAISpawner* UAthenaAISystem::GetAISpawner() const
+{
+    static auto AISpawner = GetClass()->FindPropertyByName(FName(TEXT("AISpawner")));
+
+    return *AISpawner->ContainerPtrToValuePtr<UAthenaAISpawner*>(this);
+}

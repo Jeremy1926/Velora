@@ -48,6 +48,25 @@ struct FGameplayTagContainer
         return GameplayTags.Contains(TagToCheck) || ParentTags.Contains(TagToCheck);
     }
 
+    FORCEINLINE bool HasAny(const FGameplayTagContainer& ContainerToCheck) const
+    {
+        if (ContainerToCheck.IsEmpty())
+            return false;
+
+        for (const FGameplayTag& OtherTag : ContainerToCheck.GameplayTags)
+        {
+            if (GameplayTags.Contains(OtherTag) || ParentTags.Contains(OtherTag))
+                return true;
+        }
+
+        return false;
+    }
+
+    FORCEINLINE bool IsEmpty() const
+    {
+        return GameplayTags.Num() == 0;
+    }
+
     FORCEINLINE const TArray<FGameplayTag>& GetGameplayTagArray() const
     {
         return GameplayTags;
@@ -98,6 +117,13 @@ struct FGameplayTagQuery
     static FGameplayTagQuery BuildQuery(struct FGameplayTagQueryExpression& RootQueryExpr, FString InDescription = FString());
 
     static FGameplayTagQuery MakeQuery_MatchTag(FGameplayTag const& InTag);
+
+    bool Matches(const FGameplayTagContainer& Tags) const;
+
+    FORCEINLINE bool IsEmpty() const
+    {
+        return QueryTokenStream.Num() == 0;
+    }
 
 private:
     int32 TokenStreamVersion;

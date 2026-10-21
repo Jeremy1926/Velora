@@ -447,6 +447,13 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCosmeticLibraryData.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCustomizationData.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldVolume.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldCategory.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldConfigData.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEvent.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEventData.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldPointProviderInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAISpawner.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -683,6 +690,13 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCosmeticLibraryData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldVolume.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldCategory.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldConfigData.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEvent.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEventData.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldPointProviderInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISpawner.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerData.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

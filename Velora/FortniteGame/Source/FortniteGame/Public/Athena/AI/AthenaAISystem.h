@@ -4,6 +4,7 @@
 
 class UAthenaAIPerceptionManager;
 class UAthenaAIPopulationTracker;
+class UAthenaAISpawner;
 
 class UAthenaAISystem : public UFortAISystem
 {
@@ -13,4 +14,6 @@ public:
     UAthenaAIPerceptionManager* GetPerceptionManager() const;
 
     UAthenaAIPopulationTracker* GetAIPopulationTracker() const;
+
+    UAthenaAISpawner* GetAISpawner() const;
 };

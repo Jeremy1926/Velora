@@ -54,6 +54,20 @@ EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
     return *GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
 }
 
+EAthenaGamePhaseStep AFortGameStateAthena::GetGamePhaseStep() const
+{
+    static auto GamePhaseStep = GetClass()->FindPropertyByName(FName(TEXT("GamePhaseStep")));
+
+    return *GamePhaseStep->ContainerPtrToValuePtr<EAthenaGamePhaseStep>(this);
+}
+
+int32 AFortGameStateAthena::GetSafeZonePhase() const
+{
+    static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
+
+    return *SafeZonePhase->ContainerPtrToValuePtr<uint8>(this);
+}
+
 AFortAthenaMapInfo* AFortGameStateAthena::GetMapInfo() const
 {
     static auto MapInfo = GetClass()->FindPropertyByName(FName(TEXT("MapInfo")));
@@ -71,8 +85,10 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 
     if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
     {
-        if (auto LivingWorldManager = FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
+        if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
         {
+            LivingWorldManager->GetCachedGameState() = this;
+
             FScriptDelegate OnCurrentPlaylistLoadedDelegate;
             OnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldManager, FName(TEXT("OnCurrentPlaylistLoaded")));
             GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);

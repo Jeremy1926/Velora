@@ -1318,6 +1318,27 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldVolume.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldCategory.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldConfigData.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEvent.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEventData.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldPointProviderInterface.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAISpawner.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerData.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -1956,6 +1977,27 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldVolume.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldCategory.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldConfigData.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEvent.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEventData.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldPointProviderInterface.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISpawner.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerData.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
