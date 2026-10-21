@@ -39,6 +39,10 @@ float FIndicatedActorData::GetStepTime() const
 EShareActorWith FIndicatedActorData::GetShareActorWith() const
 {
     static auto ShareActorWith = StaticStruct()->FindPropertyByName(FName(TEXT("ShareActorWith")));
+    static auto bIncludeSquad = StaticStruct()->FindPropertyByName(FName(TEXT("bIncludeSquad")));
+
+    if (!ShareActorWith)
+        return *bIncludeSquad->ContainerPtrToValuePtr<bool>(this) ? EShareActorWith::SquadOnTeam : EShareActorWith::None;
 
     return *ShareActorWith->ContainerPtrToValuePtr<EShareActorWith>(this);
 }
@@ -81,7 +85,12 @@ FIndicatedActorInfoEntry::FIndicatedActorInfoEntry(AActor* InActor, float InStar
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
     static auto StartTime = StaticStruct()->FindPropertyByName(FName(TEXT("StartTime")));
     static auto EndTime = StaticStruct()->FindPropertyByName(FName(TEXT("EndTime")));
-    static auto Data = StaticStruct()->FindPropertyByName(FName(TEXT("Data")));
+    static auto Data = []
+    {
+        auto Data = StaticStruct()->FindPropertyByName(FName(TEXT("Data")));
+
+        return Data ? Data : StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedActorData")));
+    }();
 
     StaticStruct()->InitializeStruct(this);
 

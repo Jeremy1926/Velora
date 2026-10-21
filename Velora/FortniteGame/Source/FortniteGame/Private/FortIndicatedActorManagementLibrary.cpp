@@ -54,7 +54,12 @@ UClass* FIndicatedActorDataWithFilter::GetActorClassFilter() const
 
 const FIndicatedActorData& FIndicatedActorDataWithFilter::GetIndicatedData() const
 {
-    static auto IndicatedData = StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedData")));
+    static auto IndicatedData = []
+    {
+        auto IndicatedData = StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedData")));
+
+        return IndicatedData ? IndicatedData : StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedActorData")));
+    }();
 
     return *IndicatedData->ContainerPtrToValuePtr<FIndicatedActorData>(this);
 }
@@ -111,14 +116,21 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
         {
             auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"));
 
-            return Function && Function->FindPropertyByName(FName(TEXT("bAddAsUnique"))) && !Function->FindPropertyByName(FName(TEXT("InstigatingActorOverride")));
+            return Function && !Function->FindPropertyByName(FName(TEXT("InstigatingActorOverride")));
         })
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"))
         .Find("movzx r8d, *; call 0x*")
         .Call()
         .Is("mov rcx, rdx; jmp 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"))
+        .Find("mov rcx, [rsp+*]; lea rdx, [rsp+*]; call 0x*")
+        .Call()
+        .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov edi, [rdx+0x8]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")));
+
+    static auto bTakesAddAsUnique = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")))->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
 
     AFortPlayerControllerAthena* InstigatingController = nullptr;
     TArray<FIndicatedActorDataWithFilter> IndicatedActorFilterDatas;
@@ -126,7 +138,10 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
 
     Stack.StepCompiledIn(&InstigatingController);
     Stack.StepCompiledIn(&IndicatedActorFilterDatas);
-    Stack.StepCompiledIn(&bAddAsUnique);
+
+    if (bTakesAddAsUnique)
+        Stack.StepCompiledIn(&bAddAsUnique);
+
     Stack.Code += !!Stack.Code;
 
     AddActorsInRadiusToIndicatedList(InstigatingController, IndicatedActorFilterDatas, !!bAddAsUnique);
@@ -137,17 +152,19 @@ void UFortIndicatedActorManagementLibrary::AddActorsToIndicatedList(AFortPlayerC
     DETOUR(UFortIndicatedActorManagementLibrary, AddActorsToIndicatedList, Anchor::Hook()
         .If(Anchor::Address()
             .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
-            .Find("movzx r9d, *; lea rdx, [*]; call 0x*")
+            .FindEither("movzx r9d, *; lea rdx, [*]; call 0x*", "lea rdx, [*]; mov r8, rax; call 0x*")
             .Call()
             .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
             .Get())
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
-        .Find("movzx r9d, *; lea rdx, [*]; call 0x*")
+        .FindEither("movzx r9d, *; lea rdx, [*]; call 0x*", "lea rdx, [*]; mov r8, rax; call 0x*")
         .Find("call 0x*")
         .AtCall());
 
+    static auto bTakesAddAsUnique = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList")))->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
+
     if (auto Component = InstigatingController ? InstigatingController->FindComponentByClass<UFortControllerComponent_IndicatedActorManagement>() : nullptr)
-        Component->AddActorsToIndicatedList(IndicatedActors, IndicatedActorData, bAddAsUnique);
+        Component->AddActorsToIndicatedList(IndicatedActors, IndicatedActorData, bTakesAddAsUnique && bAddAsUnique);
 }
 
 void UFortIndicatedActorManagementLibrary::AddActorsToStenciledList(AFortPlayerControllerAthena* InstigatingController, TArray<AActor*> StenciledActors, FStenciledActorData StenciledActorData, const bool bAddAsUnique)
