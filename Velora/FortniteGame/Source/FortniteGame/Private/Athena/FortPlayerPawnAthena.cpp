@@ -132,8 +132,19 @@ void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* P
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
 {
-    if (CanReviveFromDBNO(EventInstigator))
-        ForceReviveFromDBNO(EventInstigator);
+    AFortPlayerPawn::ServerReviveFromDBNO_Implementation(EventInstigator);
+
+    if (!GetIsDBNO())
+    {
+        GetDBNORevivalStacking() = 0;
+
+        static auto DBNOBeingRevivedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Status.DBNOBeingRevived")));
+        static auto BeingRevivedFromDBNOCueTag = FGameplayTag::RequestGameplayTag(FName(TEXT("GameplayCue.Athena.Player.BeingRevivedFromDBNO")));
+
+        auto AbilitySystemComponent = GetAbilitySystemComponent();
+        AbilitySystemComponent->RemoveLooseGameplayTag(DBNOBeingRevivedTag);
+        AbilitySystemComponent->RemoveGameplayCue(BeingRevivedFromDBNOCueTag);
+    }
 }
 
 void AFortPlayerPawnAthena::ForceReviveFromDBNO(AController* EventInstigator)

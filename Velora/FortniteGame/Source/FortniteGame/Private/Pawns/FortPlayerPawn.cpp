@@ -173,6 +173,12 @@ void AFortPlayerPawn::ServerHandlePickup_Implementation(AFortPickup* Pickup, flo
         Pickup->SetPickupTarget(this, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
+void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
+{
+    if (CanReviveFromDBNO(EventInstigator))
+        ForceReviveFromDBNO(EventInstigator);
+}
+
 void AFortPlayerPawn::ForceReviveFromDBNO(AController* EventInstigator)
 {
     auto FortAbilitySystemComponent = Cast<UFortAbilitySystemComponent>(GetAbilitySystemComponent());
