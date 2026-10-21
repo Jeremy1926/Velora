@@ -131,16 +131,21 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
         .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")));
 
     static auto bTakesAddAsUnique = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")))->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
+    static auto bTakesReplaceExistingEntry = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")))->FindPropertyByName(FName(TEXT("bReplaceExistingEntry"))) != nullptr;
 
     AFortPlayerControllerAthena* InstigatingController = nullptr;
     TArray<FIndicatedActorDataWithFilter> IndicatedActorFilterDatas;
     uint32 bAddAsUnique = 0;
+    uint32 bReplaceExistingEntry = 0;
 
     Stack.StepCompiledIn(&InstigatingController);
     Stack.StepCompiledIn(&IndicatedActorFilterDatas);
 
     if (bTakesAddAsUnique)
         Stack.StepCompiledIn(&bAddAsUnique);
+
+    if (bTakesReplaceExistingEntry)
+        Stack.StepCompiledIn(&bReplaceExistingEntry);
 
     Stack.Code += !!Stack.Code;
 
@@ -160,6 +165,11 @@ void UFortIndicatedActorManagementLibrary::AddActorsToIndicatedList(AFortPlayerC
             .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
             .Call()
             .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
+            .Find("movzx r9d, *; mov [rsp+0x20], *; call 0x*")
+            .Call()
+            .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
             .Get())
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
         .FindEither("movzx r9d, *; lea rdx, [*]; call 0x*", "lea rdx, [*]; mov r8, rax; call 0x*")
@@ -167,6 +177,10 @@ void UFortIndicatedActorManagementLibrary::AddActorsToIndicatedList(AFortPlayerC
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
         .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
+        .Find("movzx r9d, *; mov [rsp+0x20], *; call 0x*")
         .Find("call 0x*")
         .AtCall());
 
@@ -184,9 +198,18 @@ void UFortIndicatedActorManagementLibrary::AddActorsToStenciledList(AFortPlayerC
             .Find("movzx r9d, *; lea rdx, [*]; call 0x*")
             .Call()
             .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList"))
+            .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
+            .Call()
+            .Is("push rbx; sub rsp, 0x20; mov rcx, [rdx]")
             .Get())
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList"))
         .Find("movzx r9d, *; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList"))
+        .Find("movzx r9d, *; mov [rsp+0x20], *; lea rdx, [*]; call 0x*")
         .Find("call 0x*")
         .AtCall());
 
