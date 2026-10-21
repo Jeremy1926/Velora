@@ -613,6 +613,13 @@ int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()
     return *WarmupRequiredPlayerCount->ContainerPtrToValuePtr<int32>(this);
 }
 
+TArray<AFortPlayerControllerAthena*>& AFortGameModeAthena::GetAlivePlayers()
+{
+    static auto AlivePlayers = GetClass()->FindPropertyByName(FName(TEXT("AlivePlayers")));
+
+    return *AlivePlayers->ContainerPtrToValuePtr<TArray<AFortPlayerControllerAthena*>>(this);
+}
+
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
     static auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));

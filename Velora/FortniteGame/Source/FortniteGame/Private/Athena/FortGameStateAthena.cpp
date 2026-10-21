@@ -54,6 +54,13 @@ EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
     return *GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
 }
 
+int32 AFortGameStateAthena::GetTeamsLeft() const
+{
+    static auto TeamsLeft = GetClass()->FindPropertyByName(FName(TEXT("TeamsLeft")));
+
+    return *TeamsLeft->ContainerPtrToValuePtr<int32>(this);
+}
+
 EAthenaGamePhaseStep AFortGameStateAthena::GetGamePhaseStep() const
 {
     static auto GamePhaseStep = GetClass()->FindPropertyByName(FName(TEXT("GamePhaseStep")));

@@ -43,6 +43,8 @@ public:
 
     EAthenaGamePhase GetGamePhase() const;
 
+    int32 GetTeamsLeft() const;
+
     EAthenaGamePhaseStep GetGamePhaseStep() const;
 
     int32 GetSafeZonePhase() const;

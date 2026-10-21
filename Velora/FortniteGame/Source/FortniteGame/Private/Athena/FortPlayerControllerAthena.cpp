@@ -147,9 +147,37 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
     if (!GameMode || !GameState || GameState->GetGamePhase() <= EAthenaGamePhase::Warmup || !GetMarkedAlive() || GameState->IsRespawningAllowed(Cast<AFortPlayerState>(GetPlayerState())))
         return;
 
+    if (PlayerState && GameState->GetGamePhase() > EAthenaGamePhase::Aircraft)
+    {
+        auto bTeamEliminated = true;
+
+        for (auto AlivePlayer : GameMode->GetAlivePlayers())
+        {
+            auto AlivePlayerState = AlivePlayer && AlivePlayer != this ? Cast<AFortPlayerStateAthena>(AlivePlayer->GetPlayerState()) : nullptr;
+
+            if (AlivePlayerState && AlivePlayerState->GetTeamIndex() == PlayerState->GetTeamIndex())
+                bTeamEliminated = false;
+        }
+
+        if (bTeamEliminated)
+            SetMatchPlacement(GameState->GetTeamsLeft());
+    }
+
     auto& PlayerDeathReport = GetPlayerDeathReport();
 
     GameMode->RemoveFromAlivePlayers(this, PlayerDeathReport.GetKillerPlayerState(), PlayerDeathReport.GetKillerPawn(), PlayerDeathReport.GetKillerWeapon(), AFortPlayerStateAthena::ToDeathCause(InTags, bWasDBNO), false);
+}
+
+void AFortPlayerControllerAthena::SetMatchPlacement(int32 Placement)
+{
+    static auto SetMatchPlacement = Anchor::Function<void (*)(AFortPlayerControllerAthena*, int32)>(TEXT("AFortPlayerControllerAthena::SetMatchPlacement"))
+        .String(TEXT("FortGameModeAthena: %s won the match!"))
+        .Start()
+        .Find("mov edx, *; mov rcx, r*; call 0x*")
+        .Call()
+        .Get();
+
+    SetMatchPlacement(this, Placement);
 }
 
 bool AFortPlayerControllerAthena::GetMarkedAlive() const

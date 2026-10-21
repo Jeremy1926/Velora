@@ -45,6 +45,8 @@ public:
 
     int32& GetWarmupRequiredPlayerCount();
 
+    TArray<AFortPlayerControllerAthena*>& GetAlivePlayers();
+
     bool GetDisableGCOnServerDuringMatch() const;
 
     FName RedirectLootTierGroup(FName LootTierGroup) const;

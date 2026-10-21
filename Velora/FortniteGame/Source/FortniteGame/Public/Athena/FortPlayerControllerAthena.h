@@ -38,6 +38,8 @@ public:
 
     bool GetMarkedAlive() const;
 
+    void SetMatchPlacement(int32 Placement);
+
     FFortAthenaLoadout* GetCustomizationLoadout();
 
     void ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution);
