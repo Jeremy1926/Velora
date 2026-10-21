@@ -210,9 +210,14 @@ int32& FFortItemEntry::GetLoadedAmmo()
 
 FGuid& FFortItemEntry::GetItemGuid()
 {
-    static auto ItemGuid = StaticStruct()->FindPropertyByName(FName(TEXT("ItemGuid")));
+    static auto ItemGuidProperty = StaticStruct()->FindPropertyByName(FName(TEXT("ItemGuid")));
 
-    return *ItemGuid->ContainerPtrToValuePtr<FGuid>(this);
+    auto& ItemGuid = *ItemGuidProperty->ContainerPtrToValuePtr<FGuid>(this);
+
+    if (!ItemGuid.IsValid())
+        ItemGuid = FGuid::NewGuid();
+
+    return ItemGuid;
 }
 
 bool& FFortItemEntry::GetIsReplicatedCopy()
