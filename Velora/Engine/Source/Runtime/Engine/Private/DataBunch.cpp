@@ -62,6 +62,30 @@ void FOutBunch::SetReliable(bool bInReliable)
         return;
     }
 
+    static auto CloseFlags = Anchor::Offset(TEXT("FOutBunch::bClose"))
+        .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
+        .Start()
+        .Find("test byte ptr [*+0x*], 0x4; jz *; cmp byte ptr [*+0x*], 0x1")
+        .Optional()
+        .Disp();
+
+    static auto ReliableMask = (uint8_t)Anchor::Offset(TEXT("FOutBunch::bReliable"))
+        .If(CloseFlags > 0)
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Find("or byte ptr [*+0x*], 0x*")
+        .Optional()
+        .Value();
+
+    if (CloseFlags > 0 && ReliableMask)
+    {
+        auto& Flags = *((uint8_t*)this + CloseFlags);
+
+        Flags = (Flags & ~ReliableMask) | (bInReliable ? ReliableMask : 0);
+        return;
+    }
+
     static auto Offset = Anchor::Offset(TEXT("FOutBunch::bReliable"))
         .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
         .Start()
@@ -125,6 +149,7 @@ void FOutBunch::SetDormant(bool bInDormant)
         .Find("mov r8b, 0x1")
         .Origin("lea rcx, [rsp+0x*]")
         .Find("movzx *, byte ptr [rsp+0x*]")
+        .Optional()
         .Disp();
 
     static auto Mask = (uint8_t)Anchor::Offset(TEXT("FOutBunch::bDormant"))
@@ -133,7 +158,11 @@ void FOutBunch::SetDormant(bool bInDormant)
         .Find("mov r8b, 0x1")
         .Find("movzx *, byte ptr [rsp+0x*]")
         .Find("and al, 0x*")
+        .Optional()
         .Mask();
+
+    if (Offset <= 0 || !Mask)
+        return;
 
     auto& Flags = *((uint8_t*)this + Offset);
 
