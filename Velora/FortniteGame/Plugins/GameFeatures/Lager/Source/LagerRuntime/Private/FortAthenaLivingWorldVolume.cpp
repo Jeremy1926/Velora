@@ -18,7 +18,7 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(const TSharedPtr<FEnvQuery
     DETOUR(AFortAthenaLivingWorldVolume, OnEnvQueryFinished, Anchor::Hook()
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
-        .Find("lea rax, [0x*]; mov [rsp+0x*], r13")
+        .Find("lea rax, [0x*]; mov [rsp+0x*], *; xor ecx, ecx")
         .Target()
         .Inline());
 
@@ -32,7 +32,7 @@ TArray<FVector>& AFortAthenaLivingWorldVolume::GetPoints()
 {
     static auto Points = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::Points"))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
-        .Find("lea rax, [0x*]; mov [rsp+0x*], r13")
+        .Find("lea rax, [0x*]; mov [rsp+0x*], *; xor ecx, ecx")
         .Target()
         .Find("lea *, [rcx+0x*]")
         .Disp();

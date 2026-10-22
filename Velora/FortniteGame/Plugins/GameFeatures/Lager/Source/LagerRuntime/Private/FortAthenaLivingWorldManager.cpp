@@ -38,8 +38,8 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Optional()
-        .Find("movzx eax, byte ptr [rax+0x*]; xor r14d, r14d; mov [rsp+0x*], eax; cmp [r15+0x*], r14d")
-        .Find("lea r12, [r15+0x*]")
+        .Find("movzx eax, byte ptr [rax+0x*]; xor r14d, r14d; mov [rsp+0x*], eax; cmp [*+0x*], r14d")
+        .Find("lea r12, [*+0x*]")
         .Disp();
 
     return EventInstances;
@@ -412,8 +412,7 @@ float& UFortAthenaLivingWorldManager::GetNextEventGenerationTime()
         .Find("mov rcx, *; call 0x*; mov rbx, [rsp+0x*]")
         .Find("call 0x*")
         .Target()
-        .Find("mov dl, 0x1; mov rcx, *; movss [*+0x*], xmm0")
-        .Find("movss [*+0x*], xmm0")
+        .Find("movss [*+0x*], xmm0; call [rax+0x*]")
         .Disp();
 
     return *(float*)((uint8*)this + NextEventGenerationTime);
