@@ -31,6 +31,16 @@ public:
         }
     }
 
+    template<typename TNativeType>
+    FORCEINLINE TNativeType& StepCompiledInRef(void* const TemporaryBuffer)
+    {
+        MostRecentPropertyAddress = nullptr;
+
+        StepCompiledIn(TemporaryBuffer);
+
+        return MostRecentPropertyAddress ? *(TNativeType*)MostRecentPropertyAddress : *(TNativeType*)TemporaryBuffer;
+    }
+
     UFunction* Node;
     UObject* Object;
     uint8* Code;

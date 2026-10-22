@@ -19,8 +19,6 @@ public:
 
     static bool HasServerLayout();
 
-    UWorld* GetWorld() const;
-
     FConversationParticipants GetParticipantsCopy() const
     {
         return Participants;
@@ -55,8 +53,6 @@ public:
     void ServerAdvanceConversation(const FAdvanceConversationRequest& InChoicePicked);
 
     void ServerAbortConversation();
-
-    void ServerRefreshConversationChoices();
 
     void PauseConversationAndSendClientChoices(const FConversationContext& Context, const FClientConversationMessage& ClientMessage);
 

@@ -16,15 +16,13 @@ public:
 
     void ServerNotifyExecuteTaskAndSideEffects(const FConversationNodeHandle& Handle);
 
-    void ServerForAllConversationsRefreshChoices(UConversationInstance* IgnoreConversation);
-
     void ServerAbortAllConversations();
 
     void SendClientConversationMessage(const FConversationContext& Context, const FClientConversationMessagePayload& Payload);
 
-    void SendClientUpdatedChoices(const FConversationContext& Context);
-
     bool IsInActiveConversation() const;
+
+    FText GetParticipantDisplayName();
 
     void ServerAdvanceConversation_Implementation(const FAdvanceConversationRequest& InChoicePicked);
 

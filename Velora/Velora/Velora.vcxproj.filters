@@ -436,6 +436,27 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Conversation">
       <UniqueIdentifier>{2DACBEA3-A77B-4E39-B4DD-A2820CD92E65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private">
+      <UniqueIdentifier>{4A496ECC-DE77-43DF-A964-0AE848A3DAC0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation">
+      <UniqueIdentifier>{3E49EF8F-E8F4-4EF1-ABDC-CB0C62A557A9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation\Source">
+      <UniqueIdentifier>{D63A3B87-A3C4-482D-97C7-6673A0B040E2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime">
+      <UniqueIdentifier>{529674A0-5AED-4ECC-B972-97DF618B1C94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private">
+      <UniqueIdentifier>{7C59CE73-7C7D-4984-9110-15CAA4563838}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public">
+      <UniqueIdentifier>{1C0C617C-390A-4346-A2FE-C23AF22C829C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Conversation">
+      <UniqueIdentifier>{021B0BFB-8F7F-4D26-8272-C85C131812F9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1462,6 +1483,39 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_Service.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\Optional.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetTextLibrary.h">
+      <Filter>Engine\Source\Runtime\Engine\Classes\Kismet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortConversationContextConditionHelpers.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortPlayerConversationComponent.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationChoiceWithPreviewNode.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationContextLibrary.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_HasService.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_Speech.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortNPCConversationParticipantComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortNonPlayerConversationParticipantComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -2157,6 +2211,87 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameFeaturePluginManager.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationChoiceNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationContext.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationInstance.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationLibrary.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationLinkNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationParticipantComponent.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationRegistry.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationRequirementNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationSideEffectNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationSubNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationTaskNode.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationTypes.cpp">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetTextLibrary.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortConversationContextConditionHelpers.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortPlayerConversationComponent.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationChoiceWithPreviewNode.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationContextLibrary.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_HasService.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_Service.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_Speech.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortNPCConversationParticipantComponent.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortNonPlayerConversationParticipantComponent.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantQuest.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantStaticQuest.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
