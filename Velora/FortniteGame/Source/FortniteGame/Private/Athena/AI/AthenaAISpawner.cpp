@@ -35,6 +35,30 @@ void FOnPawnSpawnedDynamicEvent::ProcessMulticastDelegate(void* Parameters) cons
 
 int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISpawnerComponentList, const FTransform& SpawnTransform)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto RequestSpawnWithInfo = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const FTransform*, const void*)>(TEXT("UAthenaAISpawner::RequestSpawn spawn info"))
+            .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        if (!AISpawnerComponentList)
+            return -1;
+
+        const uint32 SpawnInfo[3] = { 0, 0, 0 };
+
+        return RequestSpawnWithInfo(this, AISpawnerComponentList, &SpawnTransform, SpawnInfo);
+    }
+
     static auto RequestSpawn = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const FTransform&)>(TEXT("UAthenaAISpawner::RequestSpawn"))
         .Native(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
         .Get();
