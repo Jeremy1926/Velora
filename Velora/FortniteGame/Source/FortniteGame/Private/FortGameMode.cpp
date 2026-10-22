@@ -145,6 +145,10 @@ void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTa
         .FieldPattern("4C 8B B6 %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
         .Start()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .FieldPattern("4C 8B BF %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Optional()
         .Get();
 
@@ -169,6 +173,10 @@ void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackage
         .FieldReaderPair(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootTierData"))) : nullptr, Playlist ? Playlist->FindPropertyByName(FName(TEXT("LootPackages"))) : nullptr)
         .Or()
         .FieldPattern("4C 8B B6 %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .FieldPattern("4C 8B BF %o", GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr)
         .Start()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Optional()

@@ -690,7 +690,8 @@ TArray<AFortAthenaAIBotController*>& AFortGameModeAthena::GetAliveBots()
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
     static auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));
-    static auto RedirectLootTierGroup = Anchor::Function<FName* (*)(const AFortGameModeAthena*, FName*, FName)>(TEXT("AFortGameModeAthena::RedirectLootTierGroup"))
+    static auto SupportedAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("SupportedAthenaLootTierGroups")));
+    static auto RedirectLootTierGroup = Anchor::Optional<FName* (*)(const AFortGameModeAthena*, FName*, FName)>(TEXT("AFortGameModeAthena::RedirectLootTierGroup"))
         .FieldUserOf(this, "mov *, [*+%x]", RedirectAthenaLootTierGroups)
         .Or()
         .If(!RedirectAthenaLootTierGroups)
@@ -699,9 +700,29 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 
     FName Result(LootTierGroup);
 
-    RedirectLootTierGroup(this, &Result, LootTierGroup);
+    if (RedirectLootTierGroup)
+    {
+        RedirectLootTierGroup(this, &Result, LootTierGroup);
 
-    return Result;
+        return Result;
+    }
+
+    if (!RedirectAthenaLootTierGroups || !SupportedAthenaLootTierGroups)
+        return Result;
+
+    for (auto& Redirect : *RedirectAthenaLootTierGroups->ContainerPtrToValuePtr<TMap<FName, FName>>(this))
+    {
+        if (Redirect.Key == LootTierGroup)
+            return Redirect.Value;
+    }
+
+    for (auto& SupportedGroup : *SupportedAthenaLootTierGroups->ContainerPtrToValuePtr<TArray<FName>>(this))
+    {
+        if (SupportedGroup == LootTierGroup)
+            return LootTierGroup;
+    }
+
+    return FName(NAME_None);
 }
 
 void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
