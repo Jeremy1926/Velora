@@ -128,6 +128,12 @@ AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
         .Find("mov [*+0x20], *")
         .Find("call *")
         .Is("call [*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call *")
+        .Is("call [*]")
         .Optional()
         .Get();
 
