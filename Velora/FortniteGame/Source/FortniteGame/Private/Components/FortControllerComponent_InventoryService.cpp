@@ -14,6 +14,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/SoftObjectPtr.h"
 #include "Scanner.h"
 
 UClass* UFortControllerComponent_InventoryService::StaticClass()
