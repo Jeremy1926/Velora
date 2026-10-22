@@ -1,9 +1,13 @@
 #pragma once
 
 #include "Containers/Array.h"
+#include "Containers/Map.h"
 #include "UObject/NameTypes.h"
 
 class UScriptStruct;
+class UEnvQuery;
+class UObject;
+class UWorld;
 
 namespace EEnvQueryRunMode
 {
@@ -23,6 +27,21 @@ enum class EAIParamType : uint8
     Int,
     Bool,
     MAX
+};
+
+struct FEnvQueryRequest
+{
+    FEnvQueryRequest(UEnvQuery* Query, UObject* RequestOwner)
+        : QueryTemplate(Query)
+        , Owner(RequestOwner)
+        , World(nullptr)
+    {
+    }
+
+    UEnvQuery* QueryTemplate;
+    UObject* Owner;
+    UWorld* World;
+    TMap<FName, float> NamedParams;
 };
 
 struct FAIDynamicParam

@@ -26,6 +26,8 @@ float FScalableFloat::GetValueAtLevel(float Level, const FString* ContextString)
     static auto GetValueAtLevel = Anchor::Function<float (*)(const FScalableFloat*, float, const FString*)>(TEXT("FScalableFloat::GetValueAtLevel"))
         .String(TEXT("FScalableFloat::GetValueAtLevel"))
         .Start()
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 40 65 48 8B 04 25 58 00 00 00 48 8D 35 ? ? ? ? 48 8B F9 0F 29 74 24 30 B9 ? ? ? ? 49 8B D8 0F 28 F1")
         .Get();
 
     return GetValueAtLevel(this, Level, ContextString);

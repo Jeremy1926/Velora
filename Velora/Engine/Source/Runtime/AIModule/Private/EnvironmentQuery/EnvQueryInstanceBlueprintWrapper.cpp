@@ -1,6 +1,27 @@
 #include "pch.h"
 #include "EnvironmentQuery/EnvQueryInstanceBlueprintWrapper.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UClass* UEnvQueryInstanceBlueprintWrapper::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper"));
+
+    return Class;
+}
+
+void UEnvQueryInstanceBlueprintWrapper::RunQuery(EEnvQueryRunMode::Type InRunMode, FEnvQueryRequest& QueryRequest)
+{
+    static auto RunQuery = Anchor::Function<void (*)(UEnvQueryInstanceBlueprintWrapper*, uint8, FEnvQueryRequest*)>(TEXT("UEnvQueryInstanceBlueprintWrapper::RunQuery"))
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; lea rcx, [*]; call 0x*")
+        .Target()
+        .Get();
+
+    RunQuery(this, (uint8)InRunMode, &QueryRequest);
+}
 
 TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
 {
@@ -16,6 +37,44 @@ TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
 
 void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Value)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto QueryInstance = Anchor::Offset(TEXT("UEnvQueryInstanceBlueprintWrapper::QueryInstance"))
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rcx, [*+0x*]")
+            .Disp();
+
+        static auto NamedParams = Anchor::Offset(TEXT("FEnvQueryInstance::NamedParams"))
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("add rcx, 0x*")
+            .Imm();
+
+        static auto Add = Anchor::Function<float* (*)(TMap<FName, float>*, FName*, float*)>(TEXT("TMap<FName, float>::Add"))
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        auto Instance = QueryInstance ? *(uint8**)((uint8*)this + QueryInstance) : nullptr;
+
+        if (Instance && NamedParams)
+            Add((TMap<FName, float>*)(Instance + NamedParams), &ParamName, &Value);
+
+        return;
+    }
+
     static auto SetNamedParam = Anchor::Function<void (*)(UEnvQueryInstanceBlueprintWrapper*, FName, float)>(TEXT("UEnvQueryInstanceBlueprintWrapper::SetNamedParam"))
         .Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
         .Get();
