@@ -232,6 +232,8 @@ bool AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, 
 {
     static auto ShouldWeaponRemoveGrantedAbilities = Anchor::VirtualFunction<bool (*)(const AFortGameModeZone*, AFortWeapon*, EFortWeaponAbilityRemovalReason)>(TEXT("AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities"))
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; jmp 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "sub rsp, 0x28; mov al, 0x1; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; call 0x*")
         .Get();
 
     return ShouldWeaponRemoveGrantedAbilities(this, Weapon, Reason);
