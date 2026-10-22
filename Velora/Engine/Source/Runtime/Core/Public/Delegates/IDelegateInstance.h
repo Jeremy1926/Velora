@@ -41,8 +41,6 @@ private:
 class IDelegateInstance
 {
 public:
-    virtual ~IDelegateInstance() = default;
-
     virtual UObject* GetUObject() const = 0;
 
     virtual const void* GetObjectForTimerManager() const = 0;
@@ -59,4 +57,6 @@ public:
     virtual bool IsSafeToExecute() const = 0;
 
     virtual FDelegateHandle GetHandle() const = 0;
+
+    virtual ~IDelegateInstance() = default;
 };
