@@ -18,6 +18,7 @@ class UFortAthenaLivingWorldConfigData;
 class UFortAthenaLivingWorldEventData;
 class UWorld;
 struct FFortAthenaLivingWorldCategory;
+struct FFortAthenaLivingWorldDensityGrid;
 struct FFortAthenaLivingWorldEvent;
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription;
 struct FFortAthenaLivingWorldPointProviderFilterRules;
@@ -161,6 +162,8 @@ public:
     UWorld** GetCachedWorld();
 
     AActor* GetEQSHelper();
+
+    FFortAthenaLivingWorldDensityGrid* GetActorDensityGrid();
 
     TArray<AActor*>* GetSpawnedPawns();
 

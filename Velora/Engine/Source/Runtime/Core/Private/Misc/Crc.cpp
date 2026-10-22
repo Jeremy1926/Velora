@@ -29,3 +29,25 @@ uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
 
     return ((uint32 (*)(const TCHAR*))Strihash_DEPRECATED)(Data);
 }
+
+uint32 FCrc::MemCrc32(const void* Data, int32 Length, uint32 CRC)
+{
+    static auto MemCrc32 = Anchor::Function<uint32 (*)(const void*, int32, uint32)>(TEXT("FCrc::MemCrc32"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("movaps xmm2, xmm0; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return MemCrc32(Data, Length, CRC);
+}

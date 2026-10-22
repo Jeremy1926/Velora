@@ -2,6 +2,7 @@
 #include "FortAthenaLivingWorldManager.h"
 #include "FortAthenaLivingWorldCategory.h"
 #include "FortAthenaLivingWorldConfigData.h"
+#include "FortAthenaLivingWorldDensityGrid.h"
 #include "FortAthenaLivingWorldEvent.h"
 #include "FortAthenaLivingWorldEventData.h"
 #include "FortAthenaLivingWorldPointProviderInterface.h"
@@ -149,6 +150,12 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
 
     ProcessEventRequests();
     ProcessEQSRequests();
+
+    auto ActorDensityGrid = GetActorDensityGrid();
+    auto MaxActorDensityUpdatesPerTick = Config->GetMaxActorDensityUpdatesPerTick();
+
+    if (ActorDensityGrid && MaxActorDensityUpdatesPerTick)
+        ActorDensityGrid->UpdateActors((int32)MaxActorDensityUpdatesPerTick->GetValueAtLevel(0.0f));
 }
 
 void UFortAthenaLivingWorldManager::GenerateEvents()
@@ -439,6 +446,9 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& Ev
 
     if (auto SpawnedPawns = GetSpawnedPawns())
         SpawnedPawns->Add(SpawnedActor);
+
+    if (auto ActorDensityGrid = GetActorDensityGrid())
+        ActorDensityGrid->AddActor(SpawnedActor);
 
     if (PointProviderInterface)
         PointProviderInterface->OnSpawnedActor(SpawnedActor);
@@ -916,6 +926,18 @@ AActor* UFortAthenaLivingWorldManager::GetEQSHelper()
     static auto EQSHelper = GetClass()->FindPropertyByName(FName(TEXT("EQSHelper")));
 
     return EQSHelper ? *EQSHelper->ContainerPtrToValuePtr<AActor*>(this) : nullptr;
+}
+
+FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensityGrid()
+{
+    static auto ActorDensityGrid = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::ActorDensityGrid"))
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea rcx, [rbx+0x*]; mov rdx, rbp; call 0x*")
+        .Optional()
+        .Disp();
+
+    return ActorDensityGrid > 0 ? (FFortAthenaLivingWorldDensityGrid*)((uint8*)this + ActorDensityGrid) : nullptr;
 }
 
 TArray<AActor*>* UFortAthenaLivingWorldManager::GetSpawnedPawns()

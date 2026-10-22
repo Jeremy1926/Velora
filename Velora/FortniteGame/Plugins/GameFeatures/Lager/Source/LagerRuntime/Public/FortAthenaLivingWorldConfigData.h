@@ -21,4 +21,6 @@ public:
     FScalableFloat* GetMaxActorDensity();
 
     FScalableFloat* GetDensityComputationDistance();
+
+    FScalableFloat* GetMaxActorDensityUpdatesPerTick();
 };

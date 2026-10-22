@@ -46,6 +46,13 @@ FScalableFloat* UFortAthenaLivingWorldConfigData::GetDensityComputationDistance(
     return DensityComputationDistance ? DensityComputationDistance->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensityUpdatesPerTick()
+{
+    static auto MaxActorDensityUpdatesPerTick = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDensityUpdatesPerTick")));
+
+    return MaxActorDensityUpdatesPerTick ? MaxActorDensityUpdatesPerTick->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensity()
 {
     static auto MaxActorDensity = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDensity")));
