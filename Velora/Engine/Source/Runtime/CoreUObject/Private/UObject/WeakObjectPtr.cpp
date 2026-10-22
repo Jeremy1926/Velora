@@ -2,6 +2,7 @@
 #include "UObject/WeakObjectPtr.h"
 #include "UObject/UObjectArray.h"
 #include "UObject/Object.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 void FWeakObjectPtr::operator=(const UObject* Object)
@@ -14,6 +15,9 @@ void FWeakObjectPtr::operator=(const UObject* Object)
         .Target()
         .Or()
         .Pattern("40 53 48 83 EC 20 48 8B D9 48 85 D2 74 ? 8B 52 0C 89 11 48 8D 0D ? ? ? ? E8 ? ? ? ? 89 43 04")
+        .Or()
+        .If(FEngineVersion::Current().GetMajor() > 4)
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 48 8B D9 48 85 D2 74 ? 8B 42 0C 89 01 3B 05")
         .Or()
         .Pattern("48 85 D2 0F 84 ? ? ? ? 8B 42 0C 89 01 3B 05")
         .Start()
