@@ -56,7 +56,7 @@ void AFortAthenaLivingWorldVolume::execOnCurrentPlaylistLoaded(FFrame& Stack, vo
         .Optional()
         .InExec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded")));
 
-    FName PlaylistName;
+    FName PlaylistName = NAME_None;
     FGameplayTagContainer PlaylistContextTagsTemp;
 
     Stack.StepCompiledIn(&PlaylistName);
