@@ -35,12 +35,12 @@ IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
         .String(TEXT("vm.OptimizeVMByteCode"), "lea rdx, [0x*]; mov r8b, 0x1")
         .Find("call [rax+0x*]")
         .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
+        .Find("call [*+0x*]")
+        .Or()
         .String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms"))
         .Start()
         .Find("mov rcx, [0x*]; test rcx, rcx")
-        .Find("call [*+0x*]")
-        .Or()
-        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Find("call [*+0x*]")
         .Get();
 
