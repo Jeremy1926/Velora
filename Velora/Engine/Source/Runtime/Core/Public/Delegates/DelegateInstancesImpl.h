@@ -3,7 +3,7 @@
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateInstanceInterface.h"
 #include "Templates/UnrealTemplate.h"
-#include "UObject/WeakObjectPtrTemplates.h"
+#include "UObject/WeakObjectPtr.h"
 
 template<bool bConst, class UserClass, typename FuncType>
 class TBaseUObjectMethodDelegateInstance;
