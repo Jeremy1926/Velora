@@ -360,6 +360,9 @@ FGameplayTagContainer AFortGameStateAthena::GetAthenaPlaylistContextTags() const
         .Start()
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; lea rdx, [*]; mov rcx, *; call 0x*")
         .Call(3)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAthenaPlaylistContextTags"))
+        .Call(1)
         .Optional()
         .Get();
 
