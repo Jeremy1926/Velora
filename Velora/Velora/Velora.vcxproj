@@ -399,7 +399,6 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortQuickBars.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerController.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerGameplay.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerFrontEnd.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerPvP.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPlayerControllerAthena.h" />
@@ -711,7 +710,6 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\NightNightBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameDeathPenalty.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\StatManager.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerFrontEnd.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerZone.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\AbilitySystemComponent.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Private\GameplayEffect.cpp" />
