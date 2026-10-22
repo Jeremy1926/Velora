@@ -385,6 +385,7 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\AbandonedCampsiteManager.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\AbandonedCampsitePlacedSpawner.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortGameStateComponent_Campsite.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortControllerComponent_CampsiteAccountItem.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicle.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicleManager.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortValetGameFeatureData.h" />
@@ -693,6 +694,7 @@
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\AbandonedCampsiteManager.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\AbandonedCampsitePlacedSpawner.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortGameStateComponent_Campsite.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortControllerComponent_CampsiteAccountItem.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicleManager.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortValetGameFeatureData.cpp" />

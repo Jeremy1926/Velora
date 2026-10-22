@@ -1222,6 +1222,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortGameStateComponent_Campsite.h">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortControllerComponent_CampsiteAccountItem.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public\FortGameStateComponent_Crafting.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public</Filter>
     </ClInclude>
@@ -2153,6 +2156,9 @@
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortGameStateComponent_Campsite.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortControllerComponent_CampsiteAccountItem.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private\FortGameStateComponent_Crafting.cpp">
