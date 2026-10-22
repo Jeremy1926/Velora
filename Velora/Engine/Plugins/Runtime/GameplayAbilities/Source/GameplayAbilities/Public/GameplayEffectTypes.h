@@ -67,8 +67,15 @@ struct FGameplayEffectContextHandle
 
     FGameplayEffectContextHandle(FGameplayEffectContextHandle&& Other) = default;
 
+    FGameplayEffectContextHandle& operator=(FGameplayEffectContextHandle&& Other) = default;
+
     virtual ~FGameplayEffectContextHandle()
     {
+    }
+
+    bool IsValid() const
+    {
+        return Data.IsValid();
     }
 
     const FHitResult* GetHitResult() const

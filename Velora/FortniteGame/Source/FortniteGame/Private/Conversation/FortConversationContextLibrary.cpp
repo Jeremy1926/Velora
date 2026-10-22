@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortConversationContextLibrary.h"
+#include "Player/FortPlayerController.h"
+#include "Templates/Casts.h"
 #include "Scanner.h"
 
 AActor* UFortConversationContextLibrary::GetParticipantActorNPC(const FConversationContext& Context)
@@ -31,9 +33,9 @@ UConversationParticipantComponent* UFortConversationContextLibrary::GetParticipa
 
 AFortPlayerController* UFortConversationContextLibrary::GetParticipantPlayerController(const FConversationContext& Context)
 {
-    static auto GetParticipantPlayerController = Anchor::Function<AFortPlayerController* (*)(const FConversationContext&)>(TEXT("UFortConversationContextLibrary::GetParticipantPlayerController"))
+    static auto GetParticipantPlayerController = Anchor::Function<AActor* (*)(const FConversationContext&)>(TEXT("UFortConversationContextLibrary::GetParticipantPlayerController"))
         .Native(TEXT("/Script/FortniteGame.FortConversationContextLibrary:GetParticipantPlayerController"))
         .Get();
 
-    return GetParticipantPlayerController(Context);
+    return Cast<AFortPlayerController>(GetParticipantPlayerController(Context));
 }
