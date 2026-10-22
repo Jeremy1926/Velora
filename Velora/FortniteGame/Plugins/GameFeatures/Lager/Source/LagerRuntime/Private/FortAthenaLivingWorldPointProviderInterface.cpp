@@ -3,7 +3,75 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "GameFramework/Actor.h"
+#include "GameplayEffectTypes.h"
 #include "Scanner.h"
+
+FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProviderFilterRules(bool bOnlyInSafeZone, bool bCheckForActorDensity, int32 ExpectedSpawnCount)
+    : Data{}
+{
+    if (GetFlagsOffset())
+        *(int32*)Data = ExpectedSpawnCount;
+
+    Data[GetFlagsOffset()] = bOnlyInSafeZone;
+    Data[GetFlagsOffset() + 1] = bCheckForActorDensity;
+}
+
+UScriptStruct* FFortAthenaLivingWorldPointProviderFilterRules::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderFilterRules"));
+
+    return Struct;
+}
+
+int32 FFortAthenaLivingWorldPointProviderFilterRules::GetFlagsOffset()
+{
+    static auto FlagsOffset = StaticStruct() && StaticStruct()->GetPropertiesSize() >= (int32)sizeof(Data) ? (int32)sizeof(int32) : 0;
+
+    return FlagsOffset;
+}
+
+int32 FFortAthenaLivingWorldPointProviderFilterRules::GetExpectedSpawnCount() const
+{
+    return GetFlagsOffset() ? *(const int32*)Data : 0;
+}
+
+bool FFortAthenaLivingWorldPointProviderFilterRules::GetbOnlyInSafeZone() const
+{
+    return Data[GetFlagsOffset()] != 0;
+}
+
+bool FFortAthenaLivingWorldPointProviderFilterRules::GetbCheckForActorDensity() const
+{
+    return Data[GetFlagsOffset() + 1] != 0;
+}
+
+void FFortAthenaLivingWorldPointProviderFilterRules::SetbCheckForActorDensity(bool bCheckForActorDensity)
+{
+    Data[GetFlagsOffset() + 1] = bCheckForActorDensity;
+}
+
+UScriptStruct* FFortAthenaLivingWorldPointProviderSpawnLimiter::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderSpawnLimiter"));
+
+    return Struct;
+}
+
+FFortAthenaLivingWorldPointProviderSpawnLimiter* FFortAthenaLivingWorldPointProviderSpawnLimiter::Get(const AActor* PointProvider)
+{
+    auto SpawnLimiter = PointProvider && StaticStruct() ? PointProvider->GetClass()->FindPropertyByName(FName(TEXT("SpawnLimiter"))) : nullptr;
+
+    return SpawnLimiter ? (FFortAthenaLivingWorldPointProviderSpawnLimiter*)SpawnLimiter->ContainerPtrToValuePtr<void>((void*)PointProvider) : nullptr;
+}
+
+bool FFortAthenaLivingWorldPointProviderSpawnLimiter::CanSpawn(int32 ExpectedSpawnCount)
+{
+    static auto MaxNumberOfSpawn = StaticStruct()->FindPropertyByName(FName(TEXT("MaxNumberOfSpawn")));
+    const int32 MaxSpawnCount = (int32)MaxNumberOfSpawn->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f);
+
+    return MaxSpawnCount < 0 || CurrentNumberOfSpawn + ExpectedSpawnCount <= MaxSpawnCount;
+}
 
 UClass* IFortAthenaLivingWorldPointProviderInterface::StaticClass()
 {
@@ -50,14 +118,14 @@ void IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags(FGameplayTagCo
     GetFiltersTags(this, FilterTags);
 }
 
-void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor(AActor* SpawnedActor) const
+void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor(AActor* SpawnedActor, const FVector& PositionFromProvider) const
 {
-    static auto OnSpawnedActor = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, AActor*)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor"))
+    static auto OnSpawnedActor = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, AActor*, const FVector&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
         .Find("call [rax+0x*]")
         .Get();
 
-    OnSpawnedActor(this, SpawnedActor);
+    OnSpawnedActor(this, SpawnedActor, PositionFromProvider);
 }
 
 void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActorFailed()

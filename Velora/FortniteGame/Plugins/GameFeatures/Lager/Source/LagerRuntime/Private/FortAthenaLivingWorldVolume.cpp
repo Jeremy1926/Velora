@@ -53,6 +53,10 @@ void AFortAthenaLivingWorldVolume::execOnCurrentPlaylistLoaded(FFrame& Stack, vo
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
         .Has("add [*+0x20], rax; mov rax, [*]; call [rax+0x*]; mov rcx, [rbp-0x*]")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
+        .Has("setnz al; add [*+0x20], rax; test rcx, rcx; jz 0x*; call 0x*")
         .Optional()
         .InExec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded")));
 
@@ -100,6 +104,12 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("cmp [rcx+0x*], rdi; jz 0x*; add rcx, 0x*; mov rax, [rcx]; call [rax+0x*]")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("call 0x*; test al, al; jz 0x*; cmp [rbx+0x*], rsi; jz 0x*; lea rcx, [rbx-0x*]; call 0x*")
         .Optional()
         .Inline());
 
@@ -109,11 +119,15 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
     auto Volume = (const AFortAthenaLivingWorldVolume*)((const uint8*)this - PointerOffset);
     auto GameState = Volume->GetCachedGameState();
     auto& Points = Volume->GetPoints();
+    auto SpawnLimiter = FFortAthenaLivingWorldPointProviderSpawnLimiter::Get(Volume);
+
+    if (SpawnLimiter && !SpawnLimiter->CanSpawn(PointFilter.GetExpectedSpawnCount()))
+        return false;
 
     if (!GameState || Points.Num() <= 0)
         return false;
 
-    if (!PointFilter.bOnlyInSafeZone || GameState->GetSafeZoneState() == EFortSafeZoneState::None)
+    if (!PointFilter.GetbOnlyInSafeZone() || GameState->GetSafeZoneState() == EFortSafeZoneState::None)
         return true;
 
     const FVector Location = Volume->GetActorLocation();
@@ -137,6 +151,12 @@ bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorld
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("add rcx, 0x*; mov [rsp+0x30], rbx; mov rax, [rcx]; call [rax+0x*]")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("add rcx, 0x*; mov [rsp+0x30], rbx; call 0x*")
         .Optional()
         .Inline());
 
@@ -152,7 +172,7 @@ bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorld
     if (Points.Num() <= 0)
         return false;
 
-    if (PointFilter.bOnlyInSafeZone && GameState && GameState->GetSafeZoneState() != EFortSafeZoneState::None)
+    if (PointFilter.GetbOnlyInSafeZone() && GameState && GameState->GetSafeZoneState() != EFortSafeZoneState::None)
     {
         const FVector SafeZoneCenter = GameState->GetSafeZoneCenter();
         const float SafeZoneRadius = GameState->GetSafeZoneRadius();
@@ -207,5 +227,19 @@ TArray<FVector>& AFortAthenaLivingWorldVolume::GetPoints() const
 {
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
-    return *(TArray<FVector>*)((uint8*)this + CachedGameState->GetOffset_ForInternal() + sizeof(AFortGameStateAthena*));
+    static auto InterfacePoints = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::Points"))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnActorSpawnedResult__DelegateSignature")))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Optional()
+        .Find("cmp byte ptr [rbx+0x*], 0x0; jz 0x*; lea r14, [rbx+0x*]")
+        .Find("lea r14, [rbx+0x*]")
+        .Disp();
+
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+    static auto Points = InterfacePoints > 0 ? (int32)PointerOffset + InterfacePoints : CachedGameState->GetOffset_ForInternal() + (int32)sizeof(AFortGameStateAthena*);
+
+    return *(TArray<FVector>*)((uint8*)this + Points);
 }

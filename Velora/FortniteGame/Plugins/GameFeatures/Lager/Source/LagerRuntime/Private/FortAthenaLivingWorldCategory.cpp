@@ -39,9 +39,19 @@ bool FFortAthenaLivingWorldCategory::GetbExcludeFromGlobalAIBudget()
     return bExcludeFromGlobalAIBudget ? *bExcludeFromGlobalAIBudget->ContainerPtrToValuePtr<bool>(this) : false;
 }
 
-FGameplayTagContainer& FFortAthenaLivingWorldCategory::GetRequirePlaylistTags()
+bool FFortAthenaLivingWorldCategory::IsRequiredByPlaylist(const FGameplayTagContainer& PlaylistContextTags)
 {
     static auto RequirePlaylistTags = StaticStruct()->FindPropertyByName(FName(TEXT("RequirePlaylistTags")));
+    static auto RequirePlaylistTagQuery = StaticStruct()->FindPropertyByName(FName(TEXT("RequirePlaylistTagQuery")));
 
-    return *RequirePlaylistTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this);
+    if (RequirePlaylistTagQuery)
+    {
+        auto& TagQuery = *RequirePlaylistTagQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(this);
+
+        return TagQuery.IsEmpty() || TagQuery.Matches(PlaylistContextTags);
+    }
+
+    auto& Tags = *RequirePlaylistTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this);
+
+    return Tags.IsEmpty() || PlaylistContextTags.HasAny(Tags);
 }

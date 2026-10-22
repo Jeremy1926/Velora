@@ -20,6 +20,16 @@ int32 FEnvQueryRequest::Execute(EEnvQueryRunMode::Type RunMode, const FQueryFini
         .Find("lea r8, [*]; mov edx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; *; mov edx, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r8, [*]; mov edx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return Execute(this, RunMode, &FinishDelegate);
