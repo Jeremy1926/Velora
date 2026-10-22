@@ -919,6 +919,47 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_
     *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, ItemDefinition, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
 }
 
+void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_SpawnPickupInWorldWithLootTier, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")))
+        .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
+
+    static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"));
+    static auto bTossWithVelocityParam = Function->FindPropertyByName(FName(TEXT("bTossWithVelocity")));
+    static auto TossVelocityParam = Function->FindPropertyByName(FName(TEXT("TossVelocity")));
+
+    UObject* WorldContextObject = nullptr;
+    FName LootTierName(NAME_None);
+    FVector Position(ForceInit);
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    uint32 bTossWithVelocity = 0;
+    FVector TossVelocity(ForceInit);
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+    Stack.StepCompiledIn(&LootTierName);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+
+    if (bTossWithVelocityParam)
+        Stack.StepCompiledIn(&bTossWithVelocity);
+
+    if (TossVelocityParam)
+        Stack.StepCompiledIn(&TossVelocity);
+
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.Code += !!Stack.Code;
+
+    *(TArray<AFortPickup*>*)Z_Param__Result = K2_SpawnPickupInWorldWithLootTier(WorldContextObject, LootTierName, Position, OverrideMaxStackCount, !!bToss, SourceType, Source);
+}
+
 void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UFortKismetLibrary, execK2_SpawnPickupInWorldWithClass, Anchor::Hook()

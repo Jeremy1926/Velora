@@ -123,6 +123,8 @@ public:
 
     static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
 
+    void execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, void* const Z_Param__Result);
+
     static AFortPickup* SpawnItemVariantPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* WorldItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss, bool bRandomRotation, bool bBlockedFromAutoPickup, int32 PickupInstigatorHandle, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source, AFortPlayerController* OptionalOwnerPC, bool bPickupOnlyRelevantToOwner);
 
     void execSpawnItemVariantPickupInWorld(FFrame& Stack, void* const Z_Param__Result);
