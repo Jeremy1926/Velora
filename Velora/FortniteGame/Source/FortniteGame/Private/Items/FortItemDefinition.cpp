@@ -20,6 +20,13 @@ int32 UFortItemDefinition::GetMinLevel() const
     return *MinLevel->ContainerPtrToValuePtr<int32>(this);
 }
 
+const FText& UFortItemDefinition::GetDisplayName() const
+{
+    static auto DisplayName = GetClass()->FindPropertyByName(FName(TEXT("DisplayName")));
+
+    return *DisplayName->ContainerPtrToValuePtr<FText>(this);
+}
+
 EFortItemType UFortItemDefinition::GetItemType() const
 {
     static auto ItemType = GetClass()->FindPropertyByName(FName(TEXT("ItemType")));

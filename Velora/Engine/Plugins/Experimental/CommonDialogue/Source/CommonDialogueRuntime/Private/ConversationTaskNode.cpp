@@ -8,6 +8,7 @@
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
+#include "Conversation/FortConversationTaskNode_SellItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
@@ -82,6 +83,9 @@ EConversationRequirementResult UConversationTaskNode::IsRequirementSatisfied(con
         .Find("call [*+0x*]")
         .Get();
 
+    if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
+        return SellItem->IsRequirementSatisfied_Implementation(Context);
+
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->IsRequirementSatisfied_Implementation(Context);
 
@@ -111,6 +115,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
         if (ClassName == FName(TEXT("Continue_C")))
             return UConversationContextHelpers::AdvanceConversation(Context);
     }
+
+    if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
+        return SellItem->ExecuteTaskNode_Implementation(Context);
 
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);
@@ -240,6 +247,8 @@ void UConversationTaskNode::GatherStaticChoices(FConversationBranchPointBuilder&
 
 void UConversationTaskNode::GatherDynamicChoices(FConversationBranchPointBuilder& BranchBuilder, const FConversationContext& InContext) const
 {
+    if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
+        SellItem->GatherDynamicChoices(BranchBuilder, InContext);
 }
 
 void UConversationTaskNode::GatherStaticExtraData(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const

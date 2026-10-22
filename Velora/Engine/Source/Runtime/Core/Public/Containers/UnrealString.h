@@ -97,6 +97,14 @@ public:
         return true;
     }
 
+    static FORCEINLINE FString FromInt(int32 Num)
+    {
+        TCHAR Buffer[16];
+        swprintf_s(Buffer, TEXT("%d"), Num);
+
+        return FString(Buffer);
+    }
+
     FORCEINLINE friend uint32 GetTypeHash(const FString& S)
     {
         return FCrc::Strihash_DEPRECATED(*S);

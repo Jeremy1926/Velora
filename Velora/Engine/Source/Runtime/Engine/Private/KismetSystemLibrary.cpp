@@ -48,3 +48,12 @@ FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FP
 
     return GetSoftObjectReferenceFromPrimaryAssetId(PrimaryAssetId);
 }
+
+FString UKismetSystemLibrary::GetPathName(const UObject* Object)
+{
+    static auto GetPathName = Anchor::Function<FString (*)(const UObject*)>(TEXT("UKismetSystemLibrary::GetPathName"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
+        .Get();
+
+    return GetPathName(Object);
+}

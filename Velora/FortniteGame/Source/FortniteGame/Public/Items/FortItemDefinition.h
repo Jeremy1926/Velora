@@ -1,6 +1,7 @@
 #pragma once
 
 #include "McpItemDefinitionBase.h"
+#include "Internationalization/Text.h"
 #include "UObject/Class.h"
 
 class UAbilitySystemComponent;
@@ -98,6 +99,8 @@ class UFortItemDefinition : public UMcpItemDefinitionBase
 {
 public:
     int32 GetMinLevel() const;
+
+    const FText& GetDisplayName() const;
 
     void GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const;
 
