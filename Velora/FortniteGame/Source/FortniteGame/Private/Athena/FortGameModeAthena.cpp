@@ -572,6 +572,47 @@ bool AFortGameModeAthena::IsMapInfoInitialized() const
     return bMapInfoInitialized->GetPropertyValue_InContainer(this);
 }
 
+void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
+{
+    DETOUR(AFortGameModeAthena, SetSafeZoneIndicatorShrinkTimes, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortSafeZoneIndicator, OffsetShrinkTimesFromServerTime) && !DETOUR_ORIGINAL(AFortSafeZoneIndicator, SetShrinkDuration) && AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("call 0x*; mov rcx, [*]; mov *, [rcx+0x*]")
+        .Target()
+        .Optional()
+        .Inline());
+
+    static auto WaitTimes = Anchor::Offset(TEXT("FFortSafeZoneDefinition wait times"))
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("call 0x*; mov rcx, [*]; mov *, [rcx+0x*]")
+        .Target()
+        .Find("cmp eax, [rdi+0x*]; jnl 0x*; movsxd rcx, eax; mov rax, [rdi+0x*]; movss xmm0, dword ptr [rax+rcx*4]")
+        .Find("mov rax, [rdi+0x*]")
+        .Disp();
+
+    Original();
+
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+    static auto SafeZoneDefinition = MapInfo ? MapInfo->GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinition"))) : nullptr;
+
+    if (!MapInfo || !SafeZoneIndicator || !SafeZoneDefinition || WaitTimes <= 0)
+        return;
+
+    auto Definition = SafeZoneDefinition->ContainerPtrToValuePtr<uint8>(MapInfo);
+    auto& SafeZoneWaitTimes = *(TArray<float>*)(Definition + WaitTimes);
+    auto& SafeZoneShrinkTimes = *(TArray<float>*)(Definition + WaitTimes + sizeof(TArray<float>));
+    const int32 SafeZonePhase = GetSafeZonePhase();
+    const float WaitTime = SafeZonePhase >= 0 && SafeZonePhase < SafeZoneWaitTimes.Num() ? SafeZoneWaitTimes[SafeZonePhase] : 0.0f;
+
+    if (WaitTime < 0.0f)
+        return;
+
+    SafeZoneIndicator->OffsetShrinkTimesFromServerTime(WaitTime);
+    SafeZoneIndicator->SetShrinkDuration(SafeZonePhase >= 0 && SafeZonePhase < SafeZoneShrinkTimes.Num() ? SafeZoneShrinkTimes[SafeZonePhase] : 0.0f);
+}
+
 void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
 {
     DETOUR(AFortGameModeAthena, StartNewSafeZonePhase, Anchor::Hook()

@@ -71,6 +71,8 @@ public:
 
     void StartNewSafeZonePhase(int32 NewSafeZonePhase);
 
+    void SetSafeZoneIndicatorShrinkTimes();
+
     int32 GetSafeZonePhase() const;
 
     AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
