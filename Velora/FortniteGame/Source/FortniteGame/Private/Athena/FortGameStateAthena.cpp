@@ -548,6 +548,9 @@ bool AFortGameStateAthena::AdjustedGravityMultiplier(AFortPawn* Pawn, float& New
         .CallSite()
         .Last("call 0x*; test al, al; jz *")
         .Call()
+        .Or()
+        .Pattern("49 8B F0 49 8B F9 4C 8B C1 B3 01 44 8A CB 48 8D 48 B8 E8 ? ? ? ? 48 8B AC 24 B0 00 00 00 4C 8B B4 24 A8 00 00 00 48 8B 4C 24 60 48 85 C9 74 ? 48 8B 01 4C 8B C7 4C 8B 8C 24 A0 00 00 00 48 8B D6 48 89 6C 24 28 4C 89 74 24 20 FF 90 ? ? 00 00 3C 02")
+        .Start()
         .Get();
 
     return AdjustedGravityMultiplier(this, Pawn, &NewGravityVal, &NewVehicleGravityVal, &NewJumpZ, &NewJumpHorizontalAcceleration, &NewJumpHorizontalVelocity);

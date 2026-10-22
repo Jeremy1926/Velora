@@ -35,6 +35,9 @@ TOptional<int32> UFortConversationTaskNode_Service::FindServicePrice(FName Prici
     static auto FindServicePrice = Anchor::Function<TOptional<int32>* (*)(const UFortConversationTaskNode_Service*, TOptional<int32>*, FName, int32)>(TEXT("UFortConversationTaskNode_Service::FindServicePrice"))
         .String(TEXT("UFortConversationTaskNode_Service::FindServicePrice"))
         .Start()
+        .Or()
+        .String(TEXT("UFortConversationTaskNode_Service::FindBaseServicePrice"))
+        .Start()
         .Get();
 
     TOptional<int32> Price;
