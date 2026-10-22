@@ -277,7 +277,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(FFortAthenaLiv
 {
     auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem());
     auto AISpawner = AISystem ? AISystem->GetAISpawner() : nullptr;
-    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone() };
+    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
     auto PointProvider = AISpawner ? GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter) : nullptr;
 
     if (!PointProvider)

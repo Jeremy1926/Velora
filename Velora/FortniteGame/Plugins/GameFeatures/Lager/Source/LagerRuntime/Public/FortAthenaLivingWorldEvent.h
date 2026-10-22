@@ -37,4 +37,6 @@ struct FFortAthenaLivingWorldEvent : public FTableRowBase
     float& GetActivationMaxDelay();
 
     FGameplayTagContainer& GetRequirePlaylistTags();
+
+    bool GetbCheckForActorDensity();
 };

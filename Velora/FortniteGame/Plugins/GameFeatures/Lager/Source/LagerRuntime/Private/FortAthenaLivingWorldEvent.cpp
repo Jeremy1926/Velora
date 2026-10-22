@@ -106,3 +106,10 @@ FGameplayTagContainer& FFortAthenaLivingWorldEvent::GetRequirePlaylistTags()
 
     return *RequirePlaylistTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this);
 }
+
+bool FFortAthenaLivingWorldEvent::GetbCheckForActorDensity()
+{
+    static auto bCheckForActorDensity = StaticStruct()->FindPropertyByName(FName(TEXT("bCheckForActorDensity")));
+
+    return bCheckForActorDensity ? *bCheckForActorDensity->ContainerPtrToValuePtr<bool>(this) : false;
+}

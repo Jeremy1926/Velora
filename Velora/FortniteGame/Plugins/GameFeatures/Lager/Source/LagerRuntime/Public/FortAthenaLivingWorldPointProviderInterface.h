@@ -10,6 +10,7 @@ class UClass;
 struct FFortAthenaLivingWorldPointProviderFilterRules
 {
     bool bOnlyInSafeZone;
+    bool bCheckForActorDensity;
 };
 
 class IFortAthenaLivingWorldPointProviderInterface
