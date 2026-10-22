@@ -40,7 +40,7 @@ UClass* UFortControllerComponent_TransientQuests::StaticClass()
 
 void UFortControllerComponent_TransientQuests::GrantTransientQuest(const UFortQuestItemDefinition* QuestDefToGrant)
 {
-    static auto GrantTransientQuest = Anchor::Function<void (*)(UFortControllerComponent_TransientQuests*, const UFortQuestItemDefinition*)>(TEXT("UFortControllerComponent_TransientQuests::GrantTransientQuest"))
+    static auto GrantTransientQuest = Anchor::Function<void (*)(UFortControllerComponent_TransientQuests*, const UFortQuestItemDefinition*, const UFortQuestItemDefinition*)>(TEXT("UFortControllerComponent_TransientQuests::GrantTransientQuest"))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
         .Find("jmp 0x*")
         .Target()
@@ -62,10 +62,15 @@ void UFortControllerComponent_TransientQuests::GrantTransientQuest(const UFortQu
         .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_TransientQuests:GrantTransientQuest"))
+        .Find("add [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (QuestDefToGrant)
-        GrantTransientQuest(this, QuestDefToGrant);
+        GrantTransientQuest(this, QuestDefToGrant, nullptr);
 }
 
 void UFortControllerComponent_TransientQuests::GrantTransientQuest(TSoftObjectPtr<UFortQuestItemDefinition> QuestDefToGrantPtr)
@@ -101,6 +106,15 @@ void UFortControllerComponent_TransientQuests::OnTransientQuestGranted(const UFo
         .Find("lea rax, [0x*]")
         .Target()
         .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*", 2)
         .Target()
         .Get();
