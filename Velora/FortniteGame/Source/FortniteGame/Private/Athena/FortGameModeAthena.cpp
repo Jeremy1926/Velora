@@ -413,7 +413,8 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .FieldVirtualAny(TEXT("/Script/FortniteGame.Default__FortPickup"), ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Actor")))->FindPropertyByName(FName(TEXT("Role"))),
             "cmp byte ptr [rcx+%x], 0x3; jnz *; test rdx, rdx; jz *",
             "push rbx; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; mov rbx, rcx; jnz *; test rdx, rdx; jz *",
-            "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; movzx edi, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *")
+            "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; movzx edi, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *",
+            "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+%x], 0x3; mov dil, r8b; mov rbx, rcx; jnz *; test rdx, rdx; jz *")
         .Get();
 
     static auto PickupAthenaGivePickupTo = THook(TEXT("AFortPickupAthena::GivePickupTo"), &AFortPickup::GivePickupTo)
