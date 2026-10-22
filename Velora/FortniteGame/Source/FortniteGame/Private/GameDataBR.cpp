@@ -3,6 +3,9 @@
 #include "FortAssetManager.h"
 #include "UObject/UnrealType.h"
 #include "UObject/Class.h"
+#include "UObject/SoftObjectPtr.h"
+#include "Abilities/FortAbilitySet.h"
+#include "Templates/Casts.h"
 #include "Scanner.h"
 
 UGameDataBR* UGameDataBR::Get()
@@ -12,14 +15,19 @@ UGameDataBR* UGameDataBR::Get()
 
 UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
 {
-    static auto GetPlayerAbilitySetBR = Anchor::Function<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
+    static auto GetPlayerAbilitySetBR = Anchor::Optional<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
         .Start()
         .Find("call 0x*; mov rcx, rax; call 0x*")
         .Call(2)
         .Get();
 
-    return GetPlayerAbilitySetBR(this);
+    if (GetPlayerAbilitySetBR)
+        return GetPlayerAbilitySetBR(this);
+
+    static auto PlayerAbilitySetBR = GetClass()->FindPropertyByName(FName(TEXT("PlayerAbilitySetBR")));
+
+    return PlayerAbilitySetBR ? PlayerAbilitySetBR->ContainerPtrToValuePtr<TSoftObjectPtr<UFortAbilitySet>>(this)->LoadSynchronous() : nullptr;
 }
 
 const TArray<TAssetPtr<UDataTable>>& UGameDataBR::GetLootTierDataTablesBR() const

@@ -264,6 +264,10 @@ void AFortPlayerController::ClientActivateSlot(EFortQuickBars InQuickBar, int32 
         .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
         .Find("mov byte ptr [rsp+0x20], 0x1; xor edx, edx; mov rcx, *; call 0x*")
         .Find("call 0x*")
+        .Or()
+        .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase"))
+        .Find("xorps xmm3, xmm3; xor r8d, r8d; mov [rsp+0x20], *; xor edx, edx; mov rcx, *; call 0x*")
+        .Find("call 0x*")
         .Optional()
         .AtCall());
 
@@ -1437,6 +1441,11 @@ bool AFortPlayerController::IsPlayerAlive()
         .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
         .Start()
         .Find("mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]; test al, al")
+        .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; test al, al")
         .Find("call [rax+0x*]")
         .Get();
 

@@ -37,6 +37,8 @@ FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<I
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
         .Find("mov r8, [rsp+0x*]")
         .Call()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
         .Get();
 
     FFortAbilitySetHandle Handle;
