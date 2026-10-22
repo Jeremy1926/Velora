@@ -25,6 +25,20 @@ int32& FFortAthenaLivingWorldCategory::GetMaxCount()
     return *MaxCount->ContainerPtrToValuePtr<int32>(this);
 }
 
+float FFortAthenaLivingWorldCategory::GetPriority()
+{
+    static auto Priority = StaticStruct()->FindPropertyByName(FName(TEXT("Priority")));
+
+    return Priority ? *Priority->ContainerPtrToValuePtr<float>(this) : 0.0f;
+}
+
+bool FFortAthenaLivingWorldCategory::GetbExcludeFromGlobalAIBudget()
+{
+    static auto bExcludeFromGlobalAIBudget = StaticStruct()->FindPropertyByName(FName(TEXT("bExcludeFromGlobalAIBudget")));
+
+    return bExcludeFromGlobalAIBudget ? *bExcludeFromGlobalAIBudget->ContainerPtrToValuePtr<bool>(this) : false;
+}
+
 FGameplayTagContainer& FFortAthenaLivingWorldCategory::GetRequirePlaylistTags()
 {
     static auto RequirePlaylistTags = StaticStruct()->FindPropertyByName(FName(TEXT("RequirePlaylistTags")));

@@ -5,6 +5,7 @@
 #include "GameplayTagContainer.h"
 #include "Math/Vector.h"
 #include "Misc/CoreMiscDefines.h"
+#include "UObject/ScriptInterface.h"
 #include "UObject/SoftObjectPtr.h"
 #include "UObject/WeakObjectPtr.h"
 
@@ -30,13 +31,22 @@ public:
 
     struct FLivingWorldEventInstance
     {
-        FFortAthenaLivingWorldCategory* Category = nullptr;
-        FFortAthenaLivingWorldEvent* Event = nullptr;
+        static int32 GetTypeSize();
+
+        static int32 GetRespawnTimeOffset();
+
+        ~FLivingWorldEventInstance();
+
+        TArray<TWeakObjectPtr<AActor>>& GetSpawnedActors();
+
+        float& GetRespawnTime();
+
+        int32& GetActorCount();
+
+        FFortAthenaLivingWorldCategory* Category;
+        FFortAthenaLivingWorldEvent* Event;
         TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
         TArray<FLivingWorldPendingSpawnRequest> PendingSpawnRequests;
-        TArray<TWeakObjectPtr<AActor>> SpawnedActors;
-        float RespawnTime = 0.0f;
-        int32 ActorCount = 0;
     };
 
     struct FLivingWorldEventRequest
@@ -83,6 +93,8 @@ public:
 
     void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight);
 
+    bool IsEventActive(FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEventData* EventData);
+
     int32 GetEventBudget(FFortAthenaLivingWorldEvent* Event);
 
     int32 GetActorCount(const FFortAthenaLivingWorldCategory* Category, const FFortAthenaLivingWorldEvent* Event);
@@ -95,11 +107,21 @@ public:
 
     FLivingWorldEventRuntimeData& FindOrCreateEventRuntimeData(const FFortAthenaLivingWorldEvent* Event);
 
+    UFortAthenaLivingWorldConfigData* GetConfig();
+
+    void AddPointProvider(AActor* PointProvider);
+
+    void RemovePointProvider(AActor* PointProvider);
+
     TSoftObjectPtr<UFortAthenaLivingWorldConfigData>& GetLagerConfig();
 
     FScalableFloat& GetLagerEnabled();
 
+    bool HasPointProviderInterfaces();
+
     TArray<AActor*>& GetPointProviders();
+
+    TArray<FScriptInterface>& GetPointProviderInterfaces();
 
     TArray<UClass*>& GetLoadedSpawnerDataClass();
 
@@ -107,7 +129,7 @@ public:
 
     TArray<AActor*>& GetRuntimePointProviderList();
 
-    TArray<FLivingWorldEventInstance>& GetEventInstances();
+    TRuntimeSizedArray<FLivingWorldEventInstance>& GetEventInstances();
 
     float& GetNextEventGenerationTime();
 

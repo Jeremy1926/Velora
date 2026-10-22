@@ -12,5 +12,9 @@ struct FFortAthenaLivingWorldCategory : public FTableRowBase
 
     int32& GetMaxCount();
 
+    float GetPriority();
+
+    bool GetbExcludeFromGlobalAIBudget();
+
     FGameplayTagContainer& GetRequirePlaylistTags();
 };
