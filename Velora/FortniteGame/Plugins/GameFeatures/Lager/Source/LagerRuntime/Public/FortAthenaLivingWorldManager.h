@@ -3,6 +3,7 @@
 #include "Components/ActorComponent.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
+#include "Math/Vector.h"
 #include "Misc/CoreMiscDefines.h"
 #include "UObject/SoftObjectPtr.h"
 #include "UObject/WeakObjectPtr.h"
@@ -66,6 +67,8 @@ public:
 
     static void LivingWorldManagerRegisterPointProvider(AActor* PointProvider);
 
+    static void LivingWorldManagerUnregisterPointProvider(AActor* PointProvider);
+
     bool IsLivingWorldEnabled();
 
     void TickComponent(float DeltaTime);
@@ -113,6 +116,10 @@ public:
     UWorld** GetCachedWorld();
 
     TArray<AActor*>* GetSpawnedPawns();
+
+    float GetActorDensity(const FVector& Location, float Radius);
+
+    int32 GetActorDensityBudget(const FVector& Location, float Radius);
 
 private:
     static TArray<FLivingWorldEventRuntimeDataEntry> EventRuntimeData;

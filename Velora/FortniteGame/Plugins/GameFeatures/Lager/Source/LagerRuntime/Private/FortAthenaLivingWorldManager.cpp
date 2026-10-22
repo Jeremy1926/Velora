@@ -59,6 +59,18 @@ void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AAct
     LivingWorldManager->GetPointProviders().AddUnique(PointProvider);
 }
 
+void UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(AActor* PointProvider)
+{
+    auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
+    auto GameState = World ? World->GetGameState() : nullptr;
+    auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(StaticClass()) : nullptr;
+
+    if (!LivingWorldManager || !GameState->HasAuthority())
+        return;
+
+    LivingWorldManager->GetPointProviders().RemoveSingle(PointProvider);
+}
+
 bool UFortAthenaLivingWorldManager::IsLivingWorldEnabled()
 {
     return GetLagerEnabled().GetValueAtLevel(0.0f) > 0.0f && !FParse::Param(FCommandLine::Get(), TEXT("NoLager"));
@@ -545,4 +557,24 @@ TArray<AActor*>* UFortAthenaLivingWorldManager::GetSpawnedPawns()
     static auto SpawnedPawns = GetClass()->FindPropertyByName(FName(TEXT("SpawnedPawns")));
 
     return SpawnedPawns ? SpawnedPawns->ContainerPtrToValuePtr<TArray<AActor*>>(this) : nullptr;
+}
+
+float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, float Radius)
+{
+    static auto GetActorDensity = Anchor::Function<float (*)(UFortAthenaLivingWorldManager*, const FVector&, float)>(TEXT("UFortAthenaLivingWorldManager::GetActorDensity"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("xorps xmm2, xmm2; movsd xmm0, qword ptr [rax]; lea rdx, [rsp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetActorDensity(this, Location, Radius);
+}
+
+int32 UFortAthenaLivingWorldManager::GetActorDensityBudget(const FVector& Location, float Radius)
+{
+    auto LagerConfig = GetLagerConfig().LoadSynchronous();
+    auto MaxActorDensity = LagerConfig ? LagerConfig->GetMaxActorDensity() : nullptr;
+
+    return MaxActorDensity ? FMath::Max(0, (int32)(MaxActorDensity->GetValueAtLevel(0.0f) - GetActorDensity(Location, Radius))) : 0;
 }

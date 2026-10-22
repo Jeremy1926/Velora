@@ -17,4 +17,6 @@ public:
     FScalableFloat& GetMaxEventSpawnPerTick();
 
     FScalableFloat& GetMinimumEventGenerationInterval();
+
+    FScalableFloat* GetMaxActorDensity();
 };

@@ -75,6 +75,71 @@ int32 AFortGameStateAthena::GetSafeZonePhase() const
     return *SafeZonePhase->ContainerPtrToValuePtr<uint8>(this);
 }
 
+const void* AFortGameStateAthena::GetSafeZoneInterface() const
+{
+    static auto SafeZoneInterface = Anchor::Offset(TEXT("AFortGameStateAthena::SafeZoneInterface"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("call 0x*")
+        .Target()
+        .Find("add rcx, 0x*")
+        .Imm();
+
+    return SafeZoneInterface > 0 ? (const uint8*)this + SafeZoneInterface : nullptr;
+}
+
+EFortSafeZoneState AFortGameStateAthena::GetSafeZoneState() const
+{
+    static auto GetSafeZoneState = Anchor::VirtualFunction<EFortSafeZoneState (*)(const void*)>(TEXT("AFortGameStateAthena::GetSafeZoneState"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]")
+        .Get();
+
+    auto SafeZoneInterface = GetSafeZoneInterface();
+
+    return SafeZoneInterface ? GetSafeZoneState(SafeZoneInterface) : EFortSafeZoneState::None;
+}
+
+FVector AFortGameStateAthena::GetSafeZoneCenter() const
+{
+    static auto GetSafeZoneCenter = Anchor::VirtualFunction<FVector* (*)(const void*, FVector*)>(TEXT("AFortGameStateAthena::GetSafeZoneCenter"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]", 2)
+        .Get();
+
+    FVector SafeZoneCenter(0.0f, 0.0f, 0.0f);
+
+    if (auto SafeZoneInterface = GetSafeZoneInterface())
+        GetSafeZoneCenter(SafeZoneInterface, &SafeZoneCenter);
+
+    return SafeZoneCenter;
+}
+
+float AFortGameStateAthena::GetSafeZoneRadius() const
+{
+    static auto GetSafeZoneRadius = Anchor::VirtualFunction<float (*)(const void*)>(TEXT("AFortGameStateAthena::GetSafeZoneRadius"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]", 3)
+        .Get();
+
+    auto SafeZoneInterface = GetSafeZoneInterface();
+
+    return SafeZoneInterface ? GetSafeZoneRadius(SafeZoneInterface) : 0.0f;
+}
+
 UObject* AFortGameStateAthena::GetCurrentPlaylist() const
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));

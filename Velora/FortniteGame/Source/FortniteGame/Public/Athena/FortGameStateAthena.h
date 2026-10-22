@@ -4,6 +4,7 @@
 #include "Engine/NetSerialization.h"
 #include "GameFramework/OnlineReplStructs.h"
 #include "GameplayTagContainer.h"
+#include "Math/Vector.h"
 #include "UObject/ScriptDelegates.h"
 
 class AFortAthenaMapInfo;
@@ -22,6 +23,14 @@ enum class EAthenaGamePhase : uint8
 };
 
 enum class EAthenaGamePhaseStep : uint8;
+
+enum class EFortSafeZoneState : uint8
+{
+    None,
+    Starting,
+    Holding,
+    Shrinking,
+};
 
 struct FGameMemberInfo : public FFastArraySerializerItem
 {
@@ -49,6 +58,14 @@ public:
     EAthenaGamePhaseStep GetGamePhaseStep() const;
 
     int32 GetSafeZonePhase() const;
+
+    const void* GetSafeZoneInterface() const;
+
+    EFortSafeZoneState GetSafeZoneState() const;
+
+    FVector GetSafeZoneCenter() const;
+
+    float GetSafeZoneRadius() const;
 
     UObject* GetCurrentPlaylist() const;
 

@@ -38,3 +38,10 @@ FScalableFloat& UFortAthenaLivingWorldConfigData::GetMinimumEventGenerationInter
 
     return *MinimumEventGenerationInterval->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
+
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensity()
+{
+    static auto MaxActorDensity = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDensity")));
+
+    return MaxActorDensity ? MaxActorDensity->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
