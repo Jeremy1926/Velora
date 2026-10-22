@@ -47,6 +47,12 @@ FQuat FRotator::Quaternion() const
 FRotator FQuat::Rotator() const
 {
     static auto Rotator = Anchor::Function<FRotator* (*)(const FQuat*, FRotator*)>(TEXT("FQuat::Rotator"))
+        .Exec(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
         .Call()
         .Get();
