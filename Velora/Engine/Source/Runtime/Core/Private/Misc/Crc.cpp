@@ -14,6 +14,9 @@ uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
         .Call(2)
         .Call()
         .CallUntil("shr *, 0x8")
+        .Or()
+        .Pattern("4C 8B D2 85 C9 7E ? 48 89 1C 24 48 8D 1D ? ? ? ? 44 8B D9")
+        .Start()
         .Get();
 
     static auto bLength = Anchor::Exists()
