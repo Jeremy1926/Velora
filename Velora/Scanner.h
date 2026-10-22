@@ -80,8 +80,11 @@ namespace Scanner
     {
         auto Exec = Scanner::Exec(FunctionPath);
 
-        if (auto Finish = Exec.Find("setnz *; add [*+0x20], *"); Finish.Get())
-            return Finish.Call();
+        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *" })
+        {
+            if (auto Finish = Exec.Find(Pattern); Finish.Get())
+                return Finish.Call();
+        }
 
         for (auto Finish = Exec.Find("mov [*+0x20], *"); Finish.Get(); Finish = Finish.Find("mov [*+0x20], *"))
         {
@@ -174,6 +177,9 @@ namespace Anchor
                 return Chain;
 
             auto Finish = Scanner::Exec(FunctionPath).Find("setnz *; add [*+0x20], *; jmp 0x*");
+
+            if (!Finish.Get())
+                Finish = Scanner::Exec(FunctionPath).Find("setnz *; *; add [*+0x20], *; jmp 0x*");
 
             if (!Finish.Get())
                 Finish = Scanner::Exec(FunctionPath).Find("mov [*+0x20], *; jmp 0x*");

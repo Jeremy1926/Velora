@@ -11,6 +11,8 @@ void FFrame::Step(UObject* Context, void* const Result)
         .Find("mov rdx, [rdx+0x18]; lea r8, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("48 8B 41 20 4C 8B D2 48 8B D1 44 0F B6 08 48 FF C0 48 89 41 20 41 8B C1 4C 8D 0D ? ? ? ? 49 8B CA 49 FF 24 C1")
         .Get();
 
     Step(this, Context, Result);
@@ -21,6 +23,11 @@ void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
     static auto StepExplicitProperty = Anchor::Function<void (*)(FFrame*, void*, UProperty*)>(TEXT("FFrame::StepExplicitProperty"))
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
         .Find("mov [rdx+0x80], rax; lea rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("mov [*+0x80], rax; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();

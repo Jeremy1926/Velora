@@ -7,6 +7,10 @@ bool FParse::Param(const TCHAR* Stream, const TCHAR* Param)
     static auto ParseParam = Anchor::Function<bool (*)(const TCHAR*, const TCHAR*)>(TEXT("FParse::Param"))
         .String(TEXT("NOCONSOLE"))
         .Call()
+        .Or()
+        .String(TEXT("Multiprocess"))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return ParseParam(Stream, Param);
