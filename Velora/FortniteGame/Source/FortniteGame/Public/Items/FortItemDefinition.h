@@ -99,6 +99,8 @@ enum class EFortRarity : uint8
 class UFortItemDefinition : public UMcpItemDefinitionBase
 {
 public:
+    static UClass* StaticClass();
+
     int32 GetMinLevel() const;
 
     const FText& GetDisplayName() const;

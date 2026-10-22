@@ -14,6 +14,12 @@ class UFortControllerComponent_CampsiteAccountItem : public UActorComponent
 public:
     static UClass* StaticClass();
 
+    void BeginPlay();
+
+    void execOnAthenaProfileInitialized(FFrame& Stack, void* const Z_Param__Result);
+
+    void execCacheAccountItemData(FFrame& Stack, void* const Z_Param__Result);
+
     void execStashCurrentlyHeldItemAndRemoveFromInventory(FFrame& Stack, void* const Z_Param__Result);
 
     void execHasCurrentlyStashedItem(FFrame& Stack, void* const Z_Param__Result);
@@ -27,6 +33,12 @@ public:
     void execWriteStashedItem(FFrame& Stack, void* const Z_Param__Result);
 
     void execWriteStashedItemFromEntry(FFrame& Stack, void* const Z_Param__Result);
+
+    void BindOnAthenaProfileInitialized();
+
+    void OnAthenaProfileInitialized();
+
+    void CacheAccountItemData();
 
     bool StashCurrentlyHeldItemAndRemoveFromInventory(int32 StashedItemIndex);
 

@@ -13,6 +13,13 @@ UEnum* StaticEnum<EFortItemType>()
     return Enum;
 }
 
+UClass* UFortItemDefinition::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition"));
+
+    return Class;
+}
+
 FString UFortItemDefinition::GetPersistentName() const
 {
     static auto GetPersistentName = Anchor::VirtualFunction<FString* (*)(const UFortItemDefinition*, FString*)>(TEXT("UFortItemDefinition::GetPersistentName"))

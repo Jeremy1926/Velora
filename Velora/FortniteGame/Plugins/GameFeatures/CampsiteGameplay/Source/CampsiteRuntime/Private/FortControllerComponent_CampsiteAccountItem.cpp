@@ -4,12 +4,16 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Weapons/FortWeapon.h"
 #include "Items/FortWorldItem.h"
+#include "Items/FortItemDefinition.h"
+#include "Items/FortCampsiteAccountItem.h"
+#include "Online/FortMcpProfile.h"
 #include "Items/FortPickup.h"
 #include "Items/InventoryManagementLibrary.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/ScriptInterface.h"
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
@@ -22,6 +26,45 @@ UClass* UFortControllerComponent_CampsiteAccountItem::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem"));
 
     return Class;
+}
+
+void UFortControllerComponent_CampsiteAccountItem::BeginPlay()
+{
+    DETOUR(UFortControllerComponent_CampsiteAccountItem, BeginPlay, Anchor::Hook()
+        .If(StaticClass())
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx+0x10]; mov rdi, rcx; mov ecx, [rax+0x*]; bt ecx, 0x12")
+        .LogSlot(TEXT("UActorComponent::BeginPlay"))
+        .InVTable(TEXT("/Script/CampsiteRuntime.Default__FortControllerComponent_CampsiteAccountItem")));
+
+    Original();
+
+    BindOnAthenaProfileInitialized();
+}
+
+void UFortControllerComponent_CampsiteAccountItem::execOnAthenaProfileInitialized(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortControllerComponent_CampsiteAccountItem, execOnAthenaProfileInitialized, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:OnAthenaProfileInitialized"))
+        .Optional()
+        .InExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:OnAthenaProfileInitialized")));
+
+    Stack.Code += !!Stack.Code;
+
+    OnAthenaProfileInitialized();
+}
+
+void UFortControllerComponent_CampsiteAccountItem::execCacheAccountItemData(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortControllerComponent_CampsiteAccountItem, execCacheAccountItemData, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:CacheAccountItemData"))
+        .Optional()
+        .InExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:CacheAccountItemData")));
+
+    Stack.Code += !!Stack.Code;
+
+    CacheAccountItemData();
 }
 
 void UFortControllerComponent_CampsiteAccountItem::execStashCurrentlyHeldItemAndRemoveFromInventory(FFrame& Stack, void* const Z_Param__Result)
@@ -229,6 +272,58 @@ void UFortControllerComponent_CampsiteAccountItem::WriteStashedItemFromEntry(con
 
     CurrentlyStashedItemEntries[StashedItemIndex].~FFortItemEntry();
     new (&CurrentlyStashedItemEntries[StashedItemIndex]) FFortItemEntry(ItemEntry);
+}
+
+void UFortControllerComponent_CampsiteAccountItem::BindOnAthenaProfileInitialized()
+{
+    auto PlayerController = GetPlayerController();
+
+    if (!PlayerController)
+        return;
+
+    if (PlayerController->GetAthenaProfile())
+    {
+        OnAthenaProfileInitialized();
+        return;
+    }
+
+    FScriptDelegate Delegate;
+    Delegate.BindUFunction(this, FName(TEXT("OnAthenaProfileInitialized")));
+
+    PlayerController->GetOnMcpProfilesInitializedEvent().AddUnique(Delegate);
+}
+
+void UFortControllerComponent_CampsiteAccountItem::OnAthenaProfileInitialized()
+{
+    CacheAccountItemData();
+}
+
+void UFortControllerComponent_CampsiteAccountItem::CacheAccountItemData()
+{
+    static auto CampsiteAccountItemDefinition = StaticClass()->FindPropertyByName(FName(TEXT("CampsiteAccountItemDefinition")));
+
+    auto PlayerController = GetPlayerController();
+    auto AthenaProfile = PlayerController ? PlayerController->GetAthenaProfile() : nullptr;
+    auto AccountItemDefinition = *CampsiteAccountItemDefinition->ContainerPtrToValuePtr<UFortItemDefinition*>(this);
+
+    if (!AthenaProfile || !AccountItemDefinition)
+        return;
+
+    TArray<UFortAccountItem*> AccountItems;
+    AthenaProfile->GetItemInstancesForTemplate(AccountItemDefinition->GetPersistentName(), AccountItems);
+
+    auto AccountItem = AccountItems.Num() ? Cast<UFortCampsiteAccountItem>(AccountItems[0]) : nullptr;
+
+    if (!AccountItem)
+        return;
+
+    auto& CampsiteAccountData = AccountItem->GetCampsiteAccountData();
+    auto& CurrentlyStashedItemEntries = GetCurrentlyStashedItemEntries();
+
+    while (CurrentlyStashedItemEntries.Num() < CampsiteAccountData.GetStashedItems().Num())
+        new (CurrentlyStashedItemEntries) FFortItemEntry(nullptr, 0, 0);
+
+    CampsiteAccountData.CopyFromMCPData(CurrentlyStashedItemEntries);
 }
 
 UFortWorldItem* UFortControllerComponent_CampsiteAccountItem::GetCurrentlyHeldItem()

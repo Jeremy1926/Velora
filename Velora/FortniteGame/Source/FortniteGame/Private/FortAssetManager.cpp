@@ -110,3 +110,15 @@ UGameDataCosmetics* UFortAssetManager::GetGameDataCosmetics()
 
     return GetGameDataCosmetics(this);
 }
+
+UObject* UFortAssetManager::GetAssetForPersistentName(const FString& PersistentName)
+{
+    static auto GetAssetForPersistentName = Anchor::Function<UObject* (*)(UFortAssetManager*, const FString&)>(TEXT("UFortAssetManager::GetAssetForPersistentName"))
+        .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
+        .Find("call 0x*; lea rdx, [rsp+0x*]; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetAssetForPersistentName(this, PersistentName);
+}

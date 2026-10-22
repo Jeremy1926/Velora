@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/AssetManager.h"
+#include "Containers/UnrealString.h"
 
 class UFortGameData;
 class UGameDataBR;
@@ -16,4 +17,6 @@ public:
     UGameDataBR* GetGameDataBR();
 
     UGameDataCosmetics* GetGameDataCosmetics();
+
+    UObject* GetAssetForPersistentName(const FString& PersistentName);
 };

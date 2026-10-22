@@ -9,6 +9,8 @@ struct FPrimaryAssetType
 
 struct FPrimaryAssetId
 {
+    static FPrimaryAssetId ParseTypeAndName(const FString& TypeAndName);
+
     FPrimaryAssetType PrimaryAssetType;
     FName PrimaryAssetName;
 };

@@ -49,6 +49,15 @@ FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FP
     return GetSoftObjectReferenceFromPrimaryAssetId(PrimaryAssetId);
 }
 
+UObject* UKismetSystemLibrary::GetObjectFromPrimaryAssetId(FPrimaryAssetId PrimaryAssetId)
+{
+    static auto GetObjectFromPrimaryAssetId = Anchor::Function<UObject* (*)(FPrimaryAssetId)>(TEXT("UKismetSystemLibrary::GetObjectFromPrimaryAssetId"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetObjectFromPrimaryAssetId"))
+        .Get();
+
+    return GetObjectFromPrimaryAssetId(PrimaryAssetId);
+}
+
 FString UKismetSystemLibrary::GetPathName(const UObject* Object)
 {
     static auto bInlined = Anchor::Exists()
