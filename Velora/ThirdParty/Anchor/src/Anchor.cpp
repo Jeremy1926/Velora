@@ -124,11 +124,11 @@ namespace Anchor
         return false;
     }
 
-    static const std::array<std::vector<uint64_t>, 3>& References()
+    static const std::array<std::vector<uint64_t>, 4>& References()
     {
         static auto Tables = []
         {
-            std::array<std::vector<uint64_t>, 3> Tables;
+            std::array<std::vector<uint64_t>, 4> Tables;
             std::vector<std::pair<uint64_t, uint64_t>> Code;
             auto Image = Base();
             auto Size = ImageSize();
@@ -158,6 +158,9 @@ namespace Anchor
 
                     if (Address >= Begin + 2 && Address[-2] == 0x8D && (Address[-1] & 0xC7) == 0x05)
                         Tables[1].push_back(Key - 2);
+
+                    if (Address >= Begin + 3 && Address[-3] == 0x0F && (Address[-2] == 0x10 || Address[-2] == 0x28) && (Address[-1] & 0xC7) == 0x05)
+                        Tables[3].push_back(Key - 3);
 
                     if (Address >= Begin + ZYDIS_MAX_INSTRUCTION_LENGTH && std::none_of(Code.begin(), Code.end(), [Target](auto& Range) { return Target >= Range.first && Target < Range.second; }))
                         Tables[2].push_back(Key);
@@ -302,7 +305,18 @@ namespace Anchor
 
         ReleaseSRWLockShared(&WrittenLock);
 
-        return Found ? FindReference(Found) : nullptr;
+        if (Found)
+            return FindReference(Found);
+
+        auto& LoadTable = References()[3];
+
+        for (auto Entry = LoadTable.begin(); Entry != LoadTable.end() && !Found; Entry++)
+        {
+            if ((Entry == LoadTable.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)))
+                Found = Image + (*Entry >> 32);
+        }
+
+        return Found ? FindIndexed(3, Found, [Found](const uint8_t* Address) { return InCode(Address, 0, 7) && Address[0] == 0x0F && (Address[1] == 0x10 || Address[1] == 0x28) && (Address[2] & 0xC7) == 0x05 && Address + 7 + *(int32_t*)(Address + 3) == Found; }) : nullptr;
     }
 
     static const uint8_t* FindStringReference(const wchar_t* Text)
