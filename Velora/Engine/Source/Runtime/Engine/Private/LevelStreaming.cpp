@@ -9,6 +9,11 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
     static auto CurrentState = Anchor::Offset(TEXT("ULevelStreaming::CurrentState"))
         .String(TEXT("Failed to load package '%s'"))
         .Find("mov byte ptr [*+0x*], 0x2")
+        .Or()
+        .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; xor edx, edx; xor ecx, ecx")
+        .Start()
+        .CallSite()
+        .Find("mov byte ptr [*+0x*], 0x2")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);

@@ -9,6 +9,11 @@ FStreamingManagerCollection& IStreamingManager::Get()
         .Start()
         .Find("call 0x*; xor r8d, r8d; movaps xmm1, xmm*; mov rcx, rax")
         .Target()
+        .Or()
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Find("call 0x*; xor r8d, r8d; movaps xmm1, xmm*; mov rcx, [rax]")
+        .Target()
         .Get();
 
     return Get();
