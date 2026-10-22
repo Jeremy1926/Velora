@@ -60,6 +60,7 @@ UConversationInstance* UConversationLibrary::StartConversation(FGameplayTag Conv
 void UConversationLibrary::execStartConversation(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationLibrary, execStartConversation, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationLibrary:StartConversation")));
 
     FGameplayTag ConversationEntryTag;

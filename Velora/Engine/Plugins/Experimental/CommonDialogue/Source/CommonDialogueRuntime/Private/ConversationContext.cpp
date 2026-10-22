@@ -186,6 +186,7 @@ FConversationTaskResult UConversationContextHelpers::ReturnToConversationStart(c
 void UConversationContextHelpers::execMakeConversationParticipant(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execMakeConversationParticipant, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .Native(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
         .Is("ret*")
         .Optional()
@@ -206,6 +207,7 @@ void UConversationContextHelpers::execMakeConversationParticipant(FFrame& Stack,
 void UConversationContextHelpers::execAdvanceConversation(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execAdvanceConversation, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:AdvanceConversation")));
 
     FConversationContext ContextTemp;
@@ -219,6 +221,7 @@ void UConversationContextHelpers::execAdvanceConversation(FFrame& Stack, void* c
 void UConversationContextHelpers::execAdvanceConversationWithChoice(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execAdvanceConversationWithChoice, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:AdvanceConversationWithChoice")));
 
     FConversationContext ContextTemp;
@@ -234,6 +237,7 @@ void UConversationContextHelpers::execAdvanceConversationWithChoice(FFrame& Stac
 void UConversationContextHelpers::execPauseConversationAndSendClientChoices(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execPauseConversationAndSendClientChoices, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:PauseConversationAndSendClientChoices")));
 
     FConversationContext ContextTemp;
@@ -249,6 +253,7 @@ void UConversationContextHelpers::execPauseConversationAndSendClientChoices(FFra
 void UConversationContextHelpers::execReturnToLastClientChoice(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execReturnToLastClientChoice, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:ReturnToLastClientChoice")));
 
     FConversationContext ContextTemp;
@@ -262,6 +267,7 @@ void UConversationContextHelpers::execReturnToLastClientChoice(FFrame& Stack, vo
 void UConversationContextHelpers::execReturnToCurrentClientChoice(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execReturnToCurrentClientChoice, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:ReturnToCurrentClientChoice")));
 
     FConversationContext ContextTemp;
@@ -275,6 +281,7 @@ void UConversationContextHelpers::execReturnToCurrentClientChoice(FFrame& Stack,
 void UConversationContextHelpers::execReturnToConversationStart(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UConversationContextHelpers, execReturnToConversationStart, Anchor::Hook()
+        .If(UConversationInstance::HasServerLayout())
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:ReturnToConversationStart")));
 
     FConversationContext ContextTemp;
