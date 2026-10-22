@@ -43,6 +43,18 @@ const TMap<FGuid, UConversationNode*>& UConversationRegistry::GetReachableNodeMa
 
 UConversationNode* UConversationRegistry::GetRuntimeNodeFromGUID(const FGuid& NodeGUID) const
 {
+    static auto ReachableNodeMap = StaticClass()->FindPropertyByName(FName(TEXT("ReachableNodeMap")));
+
+    if (!ReachableNodeMap)
+    {
+        static auto NativeGetRuntimeNodeFromGUID = Anchor::Function<UConversationNode* (*)(const UConversationRegistry*, const FGuid&)>(TEXT("UConversationRegistry::GetRuntimeNodeFromGUID"))
+            .String(TEXT("Start UConversationRegistry::GetRuntimeNodeFromGUID with NodeGUID: (%s)"))
+            .Start()
+            .Get();
+
+        return NativeGetRuntimeNodeFromGUID(this, NodeGUID);
+    }
+
     for (const auto& Pair : GetReachableNodeMap())
     {
         if (Pair.Key == NodeGUID)
@@ -54,6 +66,11 @@ UConversationNode* UConversationRegistry::GetRuntimeNodeFromGUID(const FGuid& No
 
 TArray<FGuid> UConversationRegistry::GetEntryPointGUIDs(FGameplayTag EntryPoint) const
 {
+    static auto EntryMap = StaticClass()->FindPropertyByName(FName(TEXT("EntryMap")));
+
+    if (!EntryMap)
+        return TArray<FGuid>();
+
     for (const auto& Pair : GetEntryMap())
     {
         if (Pair.Key == EntryPoint)
