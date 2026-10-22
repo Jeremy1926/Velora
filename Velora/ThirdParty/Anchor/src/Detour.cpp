@@ -116,6 +116,31 @@ namespace Anchor
             return nullptr;
         }
 
+        if (*Branch >= 0x70 && *Branch <= 0x7F)
+        {
+            auto Displacement = Target - (Branch + 2);
+
+            if ((int8_t)Displacement != Displacement)
+            {
+                Private::Log(ELogLevel::Error, L"Could not patch %s at 0x%llX (target out of range)", Name, Branch - Base());
+                return nullptr;
+            }
+
+            Private::Written(Branch + 1, sizeof(int8_t));
+
+            DWORD Protect;
+            VirtualProtect((LPVOID)(Branch + 1), sizeof(int8_t), PAGE_EXECUTE_READWRITE, &Protect);
+
+            *(int8_t*)(Branch + 1) = (int8_t)Displacement;
+
+            VirtualProtect((LPVOID)(Branch + 1), sizeof(int8_t), Protect, &Protect);
+            FlushInstructionCache(GetCurrentProcess(), Branch, 2);
+
+            Private::Log(ELogLevel::Log, L"Patched %s at 0x%llX", Name, Branch - Base());
+
+            return Branch;
+        }
+
         auto Displacement = (int32_t*)(Branch + 2);
 
         Private::Written(Displacement, sizeof(int32_t));

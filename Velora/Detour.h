@@ -374,7 +374,7 @@ public:
         if (bSkipped)
             return nullptr;
 
-        return Anchor::PatchBranch(Name, Code.Get(), Code.Find(Instructions, Index).Target());
+        return Anchor::PatchBranch(Name, Code.Get(), Code.Find(Instructions, Index).Get());
     }
 
 private:
