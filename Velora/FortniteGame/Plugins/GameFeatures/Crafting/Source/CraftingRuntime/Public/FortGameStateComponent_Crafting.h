@@ -9,6 +9,11 @@ class UObject;
 
 struct FCraftingResult
 {
+    FCraftingResult()
+        : ResultLootTierKey(NAME_None)
+    {
+    }
+
     FName ResultLootTierKey;
     TArray<FItemAndCount> Results;
 };

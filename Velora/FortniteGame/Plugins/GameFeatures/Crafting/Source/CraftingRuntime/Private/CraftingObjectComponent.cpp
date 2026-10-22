@@ -103,7 +103,7 @@ void UCraftingObjectComponent::EjectItems()
 
     auto OwnerPawn = OwnerController ? (AActor*)OwnerController->GetPawn() : nullptr;
     auto SpawnSource = OwnerPawn ? OwnerPawn : Owner;
-    const TArray<UFortWorldItem*> Items = OwnerInventory->GetItemInstances();
+    const TArray<UFortWorldItem*> Items = OwnerInventory->GetInventory().GetItemInstances();
 
     for (auto Item : Items)
     {
