@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortKismetLibrary.h"
 #include "FortGameModeZone.h"
+#include "FortGlobals.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "Abilities/FortAbilitySet.h"
@@ -65,6 +66,8 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .After(DETOUR_ORIGINAL(UFortKismetLibrary, GiveItemToInventoryOwner))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
@@ -583,6 +586,8 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
         .Find("call 0x*")
         .IsTarget("xor eax, eax; ret")
         .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
         .Find("movsd [*], xmm0; call 0x*")
         .Find("call 0x*")
@@ -651,11 +656,23 @@ void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(U
 
 bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
 {
-    static auto AreAthenaVehiclesEnabled = Anchor::Function<bool (*)()>(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled"))
+    static auto AreAthenaVehiclesEnabled = Anchor::Optional<bool (*)()>(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
+        .Is("sub rsp, *; call 0x*; cmp byte ptr [rax+0x*], 0x0")
         .Get();
 
-    return AreAthenaVehiclesEnabled();
+    if (AreAthenaVehiclesEnabled)
+        return AreAthenaVehiclesEnabled();
+
+    auto Globals = UFortGlobals::Get();
+
+    if (!Globals)
+        return false;
+
+    static auto bAthenaSimVehicles = (UBoolProperty*)Globals->GetClass()->FindPropertyByName(FName(TEXT("bAthenaSimVehicles")));
+    static auto bAthenaUsesSimCollision = (UBoolProperty*)Globals->GetClass()->FindPropertyByName(FName(TEXT("bAthenaUsesSimCollision")));
+
+    return bAthenaSimVehicles && bAthenaUsesSimCollision && bAthenaSimVehicles->GetPropertyValue_InContainer(Globals) && bAthenaUsesSimCollision->GetPropertyValue_InContainer(Globals);
 }
 
 bool UFortKismetLibrary::UpgradeAllWeaponsVerticalToRarity(AFortPlayerController* PlayerController, EFortRarity NewRarity)
@@ -702,6 +719,8 @@ void UFortKismetLibrary::execUpgradeAllWeaponsVerticalToRarity(FFrame& Stack, vo
     DETOUR(UFortKismetLibrary, execUpgradeAllWeaponsVerticalToRarity, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity"))
         .Is("xor al, al; ret")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:UpgradeAllWeaponsVerticalToRarity")));
 
@@ -745,6 +764,8 @@ void UFortKismetLibrary::execSetExtendedSafeZoneInfo(FFrame& Stack, void* const 
     DETOUR(UFortKismetLibrary, execSetExtendedSafeZoneInfo, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:SetExtendedSafeZoneInfo"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SetExtendedSafeZoneInfo"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SetExtendedSafeZoneInfo")));
 

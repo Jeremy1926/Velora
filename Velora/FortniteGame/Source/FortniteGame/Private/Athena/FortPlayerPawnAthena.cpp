@@ -198,6 +198,8 @@ void AFortPlayerPawnAthena::execForceReviveFromDBNO(FFrame& Stack, void* const Z
     DETOUR(AFortPlayerPawnAthena, execForceReviveFromDBNO, Anchor::Hook()
         .Body(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO")));
 

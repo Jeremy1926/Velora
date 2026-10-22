@@ -154,6 +154,9 @@ void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Resul
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .If(AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))))
+        .StubExec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPawn:MovingEmoteStopped")));
 

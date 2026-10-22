@@ -189,6 +189,9 @@ void UConversationContextHelpers::execMakeConversationParticipant(FFrame& Stack,
         .If(UConversationInstance::HasServerLayout())
         .Native(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
         .Is("ret*")
+        .Or()
+        .If(UConversationInstance::HasServerLayout())
+        .StubExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
         .Optional()
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant")));
 

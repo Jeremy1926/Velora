@@ -341,6 +341,8 @@ void UFortHeldObjectComponent::execPickupHeldObject(FFrame& Stack, void* const Z
     DETOUR(UFortHeldObjectComponent, execPickupHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"), &UFortHeldObjectComponent::execPickupHeldObject)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PickupHeldObject")));
 
@@ -357,6 +359,8 @@ void UFortHeldObjectComponent::execDropHeldObject(FFrame& Stack, void* const Z_P
     DETOUR(UFortHeldObjectComponent, execDropHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"), &UFortHeldObjectComponent::execDropHeldObject)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:DropHeldObject")));
 
@@ -370,6 +374,8 @@ void UFortHeldObjectComponent::execPlaceHeldObject(FFrame& Stack, void* const Z_
     DETOUR(UFortHeldObjectComponent, execPlaceHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"), &UFortHeldObjectComponent::execPlaceHeldObject)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:PlaceHeldObject")));
 
@@ -383,6 +389,8 @@ void UFortHeldObjectComponent::execThrowHeldObject(FFrame& Stack, void* const Z_
     DETOUR(UFortHeldObjectComponent, execThrowHeldObject, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"), &UFortHeldObjectComponent::execThrowHeldObject)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject")));
 
@@ -401,6 +409,8 @@ void UFortHeldObjectComponent::execOnThrowComplete(FFrame& Stack, void* const Z_
     DETOUR(UFortHeldObjectComponent, execOnThrowComplete, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"), &UFortHeldObjectComponent::execOnThrowComplete)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnThrowComplete")));
 
@@ -414,6 +424,8 @@ void UFortHeldObjectComponent::execOnWeaponUnequipped(FFrame& Stack, void* const
     DETOUR(UFortHeldObjectComponent, execOnWeaponUnequipped, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"), &UFortHeldObjectComponent::execOnWeaponUnequipped)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:OnWeaponUnequipped")));
 
@@ -427,6 +439,8 @@ void UFortHeldObjectComponent::execHandleOwnerDestroyed(FFrame& Stack, void* con
     DETOUR(UFortHeldObjectComponent, execHandleOwnerDestroyed, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"), &UFortHeldObjectComponent::execHandleOwnerDestroyed)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerDestroyed")));
 
@@ -443,6 +457,8 @@ void UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed(FFrame& S
     DETOUR(UFortHeldObjectComponent, execHandleOwnerAsBuildingActorDestroyed, Anchor::Hook(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"), &UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed)
         .Body(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:HandleOwnerAsBuildingActorDestroyed")));
 

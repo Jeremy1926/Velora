@@ -159,6 +159,8 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::execStartItemAwardTimers(FFra
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StartItemAwardTimers")));
 
@@ -175,6 +177,8 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::execStopItemAwardTimers(FFram
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortGameplayAbilityAthena_PeriodicItemGrant:StopItemAwardTimers")));
 

@@ -88,6 +88,8 @@ void AFortAIPawn::execGiveAmmo(FFrame& Stack, void* const Z_Param__Result)
     DETOUR(AFortAIPawn, execGiveAmmo, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortAIPawn:GiveAmmo"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortAIPawn:GiveAmmo"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortAIPawn:GiveAmmo")));
 
@@ -140,6 +142,8 @@ void AFortAIPawn::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
     DETOUR(AFortAIPawn, execDropAllItems, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortAIPawn:DropAllItems"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortAIPawn:DropAllItems"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortAIPawn:DropAllItems")));
 

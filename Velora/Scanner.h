@@ -119,7 +119,7 @@ namespace Scanner
                 if ((Next.Is("jmp 0x*") && Anchor::FCode(Next.Target()).Start().Get() != Exec.Get()) || Next.Is("jmp [*") || Next.Is("call [*") || (Next.Is("call 0x*") && !Anchor::At(Next.Target()).Is("cmp rcx, [0x*]")))
                     return FCode();
 
-                if ((Next.Is("mov* [*], *") || Next.Is("mov* * ptr [*], *") || Next.Is("and * ptr [*], *") || Next.Is("or * ptr [*], *")) && !Next.Is("mov* [rsp*") && !Next.Is("mov* * ptr [rsp*"))
+                if ((Next.Is("mov* [*], *") || Next.Is("mov* * ptr [*], *") || Next.Is("and * ptr [*], *") || Next.Is("or * ptr [*], *")) && !Next.Is("mov* [rsp*") && !Next.Is("mov* * ptr [rsp*") && !Next.Is("mov * ptr [*], 0x0") && !Next.Is("and * ptr [*], 0x0"))
                     return FCode();
             }
         }

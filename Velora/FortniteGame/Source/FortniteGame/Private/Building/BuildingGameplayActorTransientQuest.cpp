@@ -161,6 +161,8 @@ void ABuildingGameplayActorTransientQuest::execStartUpdatingInteractionText(FFra
     DETOUR(ABuildingGameplayActorTransientQuest, execStartUpdatingInteractionText, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StartUpdatingInteractionText"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StartUpdatingInteractionText"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StartUpdatingInteractionText")));
 
@@ -177,6 +179,8 @@ void ABuildingGameplayActorTransientQuest::execStopUpdatingInteractionText(FFram
     DETOUR(ABuildingGameplayActorTransientQuest, execStopUpdatingInteractionText, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StopUpdatingInteractionText"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StopUpdatingInteractionText"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest:StopUpdatingInteractionText")));
 

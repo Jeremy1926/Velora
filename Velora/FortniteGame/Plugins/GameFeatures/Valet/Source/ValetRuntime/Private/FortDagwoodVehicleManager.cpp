@@ -138,6 +138,8 @@ void UFortDagwoodVehicleManager::execUpdatePropReplacement(FFrame& Stack, void* 
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:UpdatePropReplacement"))
         .Optional()
         .InExec(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:UpdatePropReplacement")));
 

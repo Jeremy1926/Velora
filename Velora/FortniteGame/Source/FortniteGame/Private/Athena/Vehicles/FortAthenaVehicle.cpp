@@ -214,6 +214,8 @@ void AFortAthenaVehicle::execDestroyAllDamageableParts(FFrame& Stack, void* cons
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortAthenaVehicle:DestroyAllDamageableParts"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortAthenaVehicle:DestroyAllDamageableParts")));
 

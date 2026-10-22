@@ -347,6 +347,8 @@ void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Res
     DETOUR(AFortPlayerPawn, execPlayGroupEmote, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PlayGroupEmote")));
 
@@ -378,6 +380,8 @@ void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* co
     DETOUR(AFortPlayerPawn, execUpdateGameStateModifiedGravity, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:UpdateGameStateModifiedGravity")));
 
@@ -399,6 +403,8 @@ void AFortPlayerPawn::execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, v
     DETOUR(AFortPlayerPawn, execSetClientObservedStatsFromAnotherPawn, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetClientObservedStatsFromAnotherPawn"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawn:SetClientObservedStatsFromAnotherPawn"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:SetClientObservedStatsFromAnotherPawn")));
 

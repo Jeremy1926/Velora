@@ -495,6 +495,8 @@ void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Pa
     DETOUR(AFortPlayerController, execSpawnToyInstance, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
         .Is("xor eax, eax; ret")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")));
 
@@ -629,6 +631,8 @@ void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param_
     DETOUR(AFortPlayerController, execDropAllItems, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")));
 
@@ -671,6 +675,8 @@ void AFortPlayerController::execDropSpecificItem(FFrame& Stack, void* const Z_Pa
     DETOUR(AFortPlayerController, execDropSpecificItem, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")));
 

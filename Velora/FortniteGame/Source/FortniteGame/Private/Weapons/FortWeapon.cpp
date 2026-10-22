@@ -107,6 +107,8 @@ void AFortWeapon::execTryReloadAmmoFromAbility(FFrame& Stack, void* const Z_Para
     DETOUR(AFortWeapon, execTryReloadAmmoFromAbility, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortWeapon:TryReloadAmmoFromAbility"))
         .Is("xor al, al; ret")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.FortWeapon:TryReloadAmmoFromAbility"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortWeapon:TryReloadAmmoFromAbility")));
 

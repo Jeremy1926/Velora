@@ -32,6 +32,8 @@ void ANightNightBase::execMakePreparationsForNightNight(FFrame& Stack, void* con
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.NightNightBase:MakePreparationsForNightNight")));
 
@@ -47,6 +49,8 @@ void ANightNightBase::execReturnToNight(FFrame& Stack, void* const Z_Param__Resu
         .Find("jmp 0x*")
         .Target()
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.NightNightBase:ReturnToNight")));
 
