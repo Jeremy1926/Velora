@@ -21,6 +21,7 @@
 #include "Conversation/FortConversationTaskNode_ShowFutureStormCircle.h"
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
+#include "Conversation/FortConversationTaskNode_SupplyDrop.h"
 #include "Components/FortPawnComponent_Disguise.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
@@ -174,6 +175,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto RevealDisguise = Cast<UFortConversationTaskNode_RevealDisguise>(this))
         return RevealDisguise->ExecuteTaskNode_Implementation(Context);
+
+    if (auto SupplyDrop = Cast<UFortConversationTaskNode_SupplyDrop>(this))
+        return SupplyDrop->ExecuteTaskNode_Implementation(Context);
 
     if (auto ApplyDataDrivenEffect = Cast<UFortConversationTaskNode_ApplyDataDrivenEffect>(this))
         return ApplyDataDrivenEffect->ExecuteTaskNode_Implementation(Context);

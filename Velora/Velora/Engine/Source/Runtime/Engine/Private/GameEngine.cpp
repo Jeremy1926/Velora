@@ -17,6 +17,7 @@
 #include "FortAthenaLivingWorldManager.h"
 #include "AbandonedCampsiteManager.h"
 #include "FriendChestNative.h"
+#include "Conversation/FortConversationTaskNode_SupplyDrop.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -173,6 +174,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
         AFriendChestNative::TickActivationTimers();
+        UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
 
         if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && World->GetGameState())
         {

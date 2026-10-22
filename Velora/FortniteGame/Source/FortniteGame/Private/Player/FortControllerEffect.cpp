@@ -148,6 +148,12 @@ void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AC
 {
     static auto CustomFeedMessageTag = StaticClass()->FindPropertyByName(FName(TEXT("CustomFeedMessageTag")));
     static auto AdditionalLocalSpaceContextOriginOffset = StaticClass()->FindPropertyByName(FName(TEXT("AdditionalLocalSpaceContextOriginOffset")));
+
+    TriggerCustomFeedMessage(TargetController, *CustomFeedMessageTag->ContainerPtrToValuePtr<FGameplayTag>(this), *AdditionalLocalSpaceContextOriginOffset->ContainerPtrToValuePtr<FVector>(this));
+}
+
+void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AController* TargetController, const FGameplayTag& CustomFeedMessageTag, const FVector& LocalSpaceContextOriginOffset)
+{
     static auto CustomFeedMessageComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateComponent_CustomFeedMessage"));
     static auto NetMulticastTriggerCustomFeedMessageWithContext = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateComponent_CustomFeedMessage:NetMulticastTriggerCustomFeedMessageWithContext"));
 
@@ -166,9 +172,9 @@ void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AC
         return;
 
     FortPlayerStateComponent_CustomFeedMessage_eventNetMulticastTriggerCustomFeedMessageWithContext_Parms Parms;
-    Parms.CustomFeedMessageGeneratorID = *CustomFeedMessageTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    Parms.CustomFeedMessageGeneratorID = CustomFeedMessageTag;
     Parms.OwningPlayerState = PlayerState;
-    Parms.OriginLocation = Pawn ? Pawn->GetTransform().TransformPosition(*AdditionalLocalSpaceContextOriginOffset->ContainerPtrToValuePtr<FVector>(this)) : FVector(ForceInit);
+    Parms.OriginLocation = Pawn ? Pawn->GetTransform().TransformPosition(LocalSpaceContextOriginOffset) : FVector(ForceInit);
 
     CustomFeedMessageComponent->CallRemoteFunction(NetMulticastTriggerCustomFeedMessageWithContext, &Parms, nullptr, nullptr);
 }

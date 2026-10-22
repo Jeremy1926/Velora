@@ -2,6 +2,7 @@
 
 #include "UObject/Object.h"
 #include "GameplayTagContainer.h"
+#include "Math/Vector.h"
 
 class AActor;
 class AController;
@@ -59,4 +60,6 @@ public:
     static UClass* StaticClass();
 
     void TriggerCustomFeedMessage(AController* TargetController) const;
+
+    static void TriggerCustomFeedMessage(AController* TargetController, const FGameplayTag& CustomFeedMessageTag, const FVector& LocalSpaceContextOriginOffset);
 };
