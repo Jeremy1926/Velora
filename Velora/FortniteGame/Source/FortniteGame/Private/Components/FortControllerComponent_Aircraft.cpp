@@ -21,7 +21,7 @@ bool UFortControllerComponent_Aircraft::IsInAircraft() const
 {
     static auto InAircraft = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::IsInAircraft"))
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:IsInAircraft"))
-        .Find("movzx eax, byte ptr [rcx+0x*]")
+        .FirstOf("movzx eax, byte ptr [rcx+0x*]", "mov al, [rcx+0x*]")
         .Disp();
 
     return *((uint8_t*)this + InAircraft);

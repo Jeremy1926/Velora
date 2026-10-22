@@ -10,6 +10,13 @@ FReservedRandomValues& AFortWorldManager::GetFoundationBuildingActorsRRV()
         .Caller()
         .CallSite()
         .Last("lea rdx, [*+0x*]")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
+        .Caller()
+        .CallSite()
+        .Last("lea rdx, [*+0x*]")
         .Disp();
 
     return *(FReservedRandomValues*)((uint8_t*)this + FoundationBuildingActorsRRV);

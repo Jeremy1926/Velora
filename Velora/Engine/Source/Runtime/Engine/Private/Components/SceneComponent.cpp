@@ -39,6 +39,9 @@ const FBoxSphereBounds& USceneComponent::GetBounds() const
     static auto Bounds = Anchor::Offset(TEXT("USceneComponent::Bounds"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetComponentBounds"))
         .Find("movsd xmm0, qword ptr [*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetComponentBounds"))
+        .Find("movsd xmm0, qword ptr [rcx+0x*]")
         .Disp();
 
     return *(FBoxSphereBounds*)((uint8_t*)this + Bounds);
