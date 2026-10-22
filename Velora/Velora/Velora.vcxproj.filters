@@ -10,6 +10,12 @@
     <Filter Include="Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery">
       <UniqueIdentifier>{D9F50BEB-6845-4429-A9E0-2A0CF414C87A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\AIModule\Classes\Perception">
+      <UniqueIdentifier>{CF9872D7-276F-4ABE-B98A-23AEA283ED94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\AIModule\Private\Perception">
+      <UniqueIdentifier>{994BFA48-1BCE-452A-9B55-3A46A11D1F16}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\AIModule\Private">
       <UniqueIdentifier>{E8AC4B0A-E3CC-4E17-9503-9D87528384C3}</UniqueIdentifier>
     </Filter>
@@ -943,6 +949,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQuery.h">
       <Filter>Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\Perception\AISense_Hearing.h">
+      <Filter>Engine\Source\Runtime\AIModule\Classes\Perception</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.h">
       <Filter>Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery</Filter>
     </ClInclude>
@@ -1836,6 +1845,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\Perception\AISense_Hearing.cpp">
+      <Filter>Engine\Source\Runtime\AIModule\Private\Perception</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQuery.cpp">
       <Filter>Engine\Source\Runtime\AIModule\Private\EnvironmentQuery</Filter>

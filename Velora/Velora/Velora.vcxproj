@@ -311,6 +311,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleSeatWeaponComponent.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQuery.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\Perception\AISense_Hearing.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryTypes.h" />
@@ -634,6 +635,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicleSpawner.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleSeatWeaponComponent.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\Perception\AISense_Hearing.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryTypes.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQuery.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.cpp" />
