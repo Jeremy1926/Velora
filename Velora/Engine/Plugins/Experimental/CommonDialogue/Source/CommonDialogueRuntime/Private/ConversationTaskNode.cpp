@@ -7,12 +7,14 @@
 #include "ConversationRegistry.h"
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
+#include "Conversation/FortConversationTaskNode_ApplyAbility.h"
 #include "Conversation/FortConversationTaskNode_DuelNPC.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_GiveGift.h"
 #include "Conversation/FortConversationTaskNode_GrantQuest.h"
 #include "Conversation/FortConversationTaskNode_HireNPC.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
+#include "Conversation/FortConversationTaskNode_ShowFutureStormCircle.h"
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
 #include "GameFramework/Actor.h"
@@ -144,6 +146,12 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto GiveGift = Cast<UFortConversationTaskNode_GiveGift>(this))
         return GiveGift->ExecuteTaskNode_Implementation(Context);
+
+    if (auto ApplyAbility = Cast<UFortConversationTaskNode_ApplyAbility>(this))
+        return ApplyAbility->ExecuteTaskNode_Implementation(Context);
+
+    if (auto ShowFutureStormCircle = Cast<UFortConversationTaskNode_ShowFutureStormCircle>(this))
+        return ShowFutureStormCircle->ExecuteTaskNode_Implementation(Context);
 
     TAlignedBytes<sizeof(FConversationTaskResult), alignof(FConversationTaskResult)> ResultBytes;
     auto NativeResult = (FConversationTaskResult*)&ResultBytes;

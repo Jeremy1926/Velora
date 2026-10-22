@@ -530,6 +530,8 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortNonPlayerConversationParticipantComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_SellItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_UpgradeItem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ApplyAbility.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ShowFutureStormCircle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_GiveGift.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationGiftTypeDefinitions.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortControllerEffect.h" />
@@ -850,6 +852,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantStaticQuest.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_SellItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_UpgradeItem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ApplyAbility.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ShowFutureStormCircle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GiveGift.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationGiftTypeDefinitions.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortControllerEffect.cpp" />

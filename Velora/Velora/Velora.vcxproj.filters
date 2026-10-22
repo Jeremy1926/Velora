@@ -1717,6 +1717,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortControllerRequirement.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ApplyAbility.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ShowFutureStormCircle.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_UpgradeItem.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
@@ -2607,6 +2613,12 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortControllerRequirement.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ApplyAbility.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ShowFutureStormCircle.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_UpgradeItem.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>

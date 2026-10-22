@@ -5,6 +5,7 @@
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Conversation/FortConversationTaskNode_ShowFutureStormCircle.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
@@ -704,6 +705,8 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
         .Inline());
 
     Original(NewSafeZonePhase);
+
+    UFortConversationTaskNode_ShowFutureStormCircle::HandleSafeZoneUpdated();
 
     auto SafeZoneIndicator = GetSafeZoneIndicator();
     auto FutureReplicator = SafeZoneIndicator ? SafeZoneIndicator->GetFutureReplicator() : nullptr;
