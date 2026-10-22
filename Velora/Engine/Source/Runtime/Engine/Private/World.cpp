@@ -2,6 +2,7 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Engine/NetDriver.h"
+#include "CoreGlobals.h"
 #include "Logging/LogMacros.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
@@ -149,6 +150,20 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
         .Get();
 
     return FindCollectionByType(this, InType);
+}
+
+void UWorld::InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context)
+{
+    DETOUR(UWorld, InitializeActorsForPlay, Anchor::Hook()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Start()
+        .Optional()
+        .Inline());
+
+    if (!GIsClient && !GetNetDriver())
+        Listen(const_cast<FURL&>(InURL));
+
+    Original(InURL, bResetTime, Context);
 }
 
 bool UWorld::Listen(FURL& InURL)
