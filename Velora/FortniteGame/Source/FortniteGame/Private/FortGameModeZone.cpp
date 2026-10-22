@@ -156,6 +156,7 @@ void AFortGameModeZone::CreateAIDirector()
 
     if (!CanCreateInCurrentContext)
         UObject::PatchCanCreateInCurrentContext();
+
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
