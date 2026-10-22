@@ -124,6 +124,60 @@ void AFortAthenaVehicleSpawner::SpawnVehicle()
 
 UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto GetVehicleSpawnData = Anchor::Function<UObject* (*)(const AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass spawn data"))
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto VehicleClassOffset = Anchor::Offset(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass vehicle class"))
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rdx, [rax+0x*]")
+            .Disp();
+
+        static auto LoadSynchronous = Anchor::Function<UObject** (*)(UObject**, const void*)>(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass load"))
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rdx, [rax+0x*]")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto ResultClass = Anchor::Function<UClass* (*)()>(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass result class"))
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rdx, [rax+0x*]")
+            .Find("call 0x*")
+            .Find("test rbx, rbx; jz 0x*; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        auto SpawnData = VehicleClassOffset ? GetVehicleSpawnData(this) : nullptr;
+
+        if (!SpawnData)
+            return nullptr;
+
+        UObject* Loaded = nullptr;
+        LoadSynchronous(&Loaded, (uint8*)SpawnData + VehicleClassOffset);
+
+        return Loaded && Loaded->IsA(ResultClass()) ? (UClass*)Loaded : nullptr;
+    }
+
     static auto GetVehicleClass = Anchor::Function<UClass* (*)(const AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass"))
         .Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
         .Get();
