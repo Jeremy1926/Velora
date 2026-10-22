@@ -116,6 +116,18 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
     return ActiveGameplayEffectHandle;
 }
 
+FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle EffectContext)
+{
+    static auto BP_ApplyGameplayEffectToSelf = Anchor::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToSelf"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToSelf"))
+        .Get();
+
+    FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+    BP_ApplyGameplayEffectToSelf(this, &ActiveGameplayEffectHandle, GameplayEffectClass, Level, MoveTemp(EffectContext));
+
+    return ActiveGameplayEffectHandle;
+}
+
 void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
     static auto OnTagUpdated = Anchor::VirtualFunction<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(TEXT("UAbilitySystemComponent::OnTagUpdated"))

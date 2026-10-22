@@ -508,6 +508,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_UpgradeItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawnComponent_Convert.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_HireNPC.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -801,6 +802,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_UpgradeItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Pawns\FortPawnComponent_Convert.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_HireNPC.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DuelNPC.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,6 +7,7 @@
 #include "ConversationRegistry.h"
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
+#include "Conversation/FortConversationTaskNode_DuelNPC.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_HireNPC.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
@@ -116,6 +117,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
         if (ClassName == FName(TEXT("Continue_C")))
             return UConversationContextHelpers::AdvanceConversation(Context);
+
+        if (ClassName == FName(TEXT("ChallengeNPC_C")))
+            return ((const UFortConversationTaskNode_DuelNPC*)this)->ExecuteChallengeTaskNode(Context);
     }
 
     if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
@@ -126,6 +130,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto HireNPC = Cast<UFortConversationTaskNode_HireNPC>(this))
         return HireNPC->ExecuteTaskNode_Implementation(Context);
+
+    if (auto DuelNPC = Cast<UFortConversationTaskNode_DuelNPC>(this))
+        return DuelNPC->ExecuteTaskNode_Implementation(Context);
 
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);

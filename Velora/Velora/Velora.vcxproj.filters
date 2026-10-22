@@ -1558,6 +1558,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_HireNPC.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -2366,6 +2369,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Pawns</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_HireNPC.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DuelNPC.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
   </ItemGroup>
