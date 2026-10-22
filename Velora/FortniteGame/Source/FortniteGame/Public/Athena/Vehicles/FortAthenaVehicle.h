@@ -52,6 +52,8 @@ public:
 
     void DestroyAllDamageableParts();
 
+    void RepairAllDamageableParts();
+
     void execDestroyAllDamageableParts(FFrame& Stack, void* const Z_Param__Result);
 
     void SetupToggleableShapeCollision();

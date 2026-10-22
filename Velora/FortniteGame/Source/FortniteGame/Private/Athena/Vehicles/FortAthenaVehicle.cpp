@@ -222,6 +222,49 @@ void AFortAthenaVehicle::execDestroyAllDamageableParts(FFrame& Stack, void* cons
     DestroyAllDamageableParts();
 }
 
+void AFortAthenaVehicle::RepairAllDamageableParts()
+{
+    DETOUR(AFortAthenaVehicle, RepairAllDamageableParts, Anchor::Hook()
+        .If(Anchor::Address()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+            .Find("jmp [*+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaVehicle"))
+            .Is("ret*")
+            .Get() != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+        .Find("jmp [*+0x*]")
+        .LogSlot(TEXT("AFortAthenaVehicle::RepairAllDamageableParts"))
+        .InChildVTables(AFortAthenaVehicle::StaticClass()), Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+        .Find("jmp [*+0x*]")
+        .Entry(TEXT("/Script/ValetRuntime.Default__FortDagwoodVehicle"))
+        .Find("call 0x*")
+        .IsTarget("ret*")
+        .Optional()
+        .AtCall());
+
+    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+
+    auto VehicleInterface = HasAuthority() ? (IFortVehicleInterface*)GetInterfaceAddress(FortVehicleInterface) : nullptr;
+    auto VehicleConfigs = VehicleInterface ? VehicleInterface->GetVehicleConfigs() : nullptr;
+
+    if (!VehicleConfigs)
+        return;
+
+    auto& DamageableParts = GetDamageableParts();
+    const auto& PartConfigs = VehicleConfigs->GetDamageableParts();
+    const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+
+    for (auto& Part : DamageableParts)
+    {
+        if (PartConfigs.IsValidIndex(Part.ConfigIndex))
+            Part.Health = PartConfigs[Part.ConfigIndex].MaxHealth;
+    }
+
+    OnRep_DamageableParts(PrevDamageableParts);
+    ForceNetUpdate();
+}
+
 void AFortAthenaVehicle::SetupToggleableShapeCollision()
 {
     DETOUR(AFortAthenaVehicle, SetupToggleableShapeCollision, Anchor::Hook()
