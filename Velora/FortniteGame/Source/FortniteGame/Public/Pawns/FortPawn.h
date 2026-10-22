@@ -53,9 +53,11 @@ public:
 
     FMulticastScriptDelegate& GetOnWeaponUnEquippedDelegate();
 
+    UFortItemDefinition* GetLastReplicatedEmoteExecuted() const;
+
     void SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplicatedEmoteExecuted);
 
-    void OnRep_LastReplicatedEmoteExecuted();
+    void OnRep_LastReplicatedEmoteExecuted(const UFortItemDefinition* PreviousValue = nullptr);
 
     UFortHealthSet* GetHealthSet() const;
 

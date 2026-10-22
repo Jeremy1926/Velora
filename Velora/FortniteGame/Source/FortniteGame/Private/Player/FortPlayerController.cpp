@@ -438,8 +438,10 @@ void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemD
 
     AbilitySystemComponent->GiveAbilityAndActivateOnce(FGameplayAbilitySpec(EmoteGameplayAbility->GetDefaultObject<UFortGameplayAbility>(), 1, INDEX_NONE, EmoteAsset));
 
+    auto PreviousEmote = MyFortPawn->GetLastReplicatedEmoteExecuted();
+
     MyFortPawn->SetLastReplicatedEmoteExecuted(EmoteAsset);
-    MyFortPawn->OnRep_LastReplicatedEmoteExecuted();
+    MyFortPawn->OnRep_LastReplicatedEmoteExecuted(PreviousEmote);
 
     static auto bHasMovingEmote = AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmote"))) != nullptr;
 

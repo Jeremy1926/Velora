@@ -172,6 +172,13 @@ FMulticastScriptDelegate& AFortPawn::GetOnWeaponUnEquippedDelegate()
     return *OnWeaponUnEquippedDelegate->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
+UFortItemDefinition* AFortPawn::GetLastReplicatedEmoteExecuted() const
+{
+    static auto LastReplicatedEmoteExecuted = GetClass()->FindPropertyByName(FName(TEXT("LastReplicatedEmoteExecuted")));
+
+    return LastReplicatedEmoteExecuted ? *LastReplicatedEmoteExecuted->ContainerPtrToValuePtr<UFortItemDefinition*>(this) : nullptr;
+}
+
 void AFortPawn::SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplicatedEmoteExecuted)
 {
     static auto LastReplicatedEmoteExecuted = GetClass()->FindPropertyByName(FName(TEXT("LastReplicatedEmoteExecuted")));
@@ -180,8 +187,25 @@ void AFortPawn::SetLastReplicatedEmoteExecuted(UFortItemDefinition* InLastReplic
         *LastReplicatedEmoteExecuted->ContainerPtrToValuePtr<UFortItemDefinition*>(this) = InLastReplicatedEmoteExecuted;
 }
 
-void AFortPawn::OnRep_LastReplicatedEmoteExecuted()
+void AFortPawn::OnRep_LastReplicatedEmoteExecuted(const UFortItemDefinition* PreviousValue)
 {
+    static auto OnRepFunction = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"));
+    static auto bTakesPreviousValue = OnRepFunction && OnRepFunction->FindPropertyByName(FName(TEXT("PreviousValue")));
+
+    if (bTakesPreviousValue)
+    {
+        static auto OnRepWithPreviousValue = Anchor::VirtualFunction<void (*)(AFortPawn*, const UFortItemDefinition*)>(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted previous value"))
+            .Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]")
+            .Get();
+
+        OnRepWithPreviousValue(this, PreviousValue);
+
+        return;
+    }
+
     static auto OnRep_LastReplicatedEmoteExecuted = Anchor::Optional<void (*)(AFortPawn*)>(TEXT("AFortPawn::OnRep_LastReplicatedEmoteExecuted"))
         .Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"))
         .Find("mov [*+0x20], *")
