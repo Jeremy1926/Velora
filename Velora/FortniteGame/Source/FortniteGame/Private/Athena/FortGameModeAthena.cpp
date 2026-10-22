@@ -29,8 +29,6 @@
 #include "FortniteGame.h"
 #include "FortGameData.h"
 #include "FortGameFeatureData.h"
-#include "FortGameFeaturePluginManager.h"
-#include "GameFeaturesSubsystem.h"
 #include "Engine/DataTable.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Abilities/FortAbilitySystemComponent.h"
@@ -852,29 +850,12 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
 {
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
-    auto GameFeaturePluginManager = UFortGameFeaturePluginManager::Get();
-    auto GameFeaturesSubsystem = GameFeaturePluginManager ? nullptr : UGameFeaturesSubsystem::Get();
 
-    if (!GameState || (!GameFeaturePluginManager && !GameFeaturesSubsystem))
+    if (!GameState)
         return;
 
     TArray<UFortGameFeatureData*> GameFeatureDatas;
-
-    if (GameFeaturePluginManager)
-    {
-        GameFeaturePluginManager->GetGameFeatureDataForActivePlugins(GameFeatureDatas);
-    }
-    else
-    {
-        TArray<const UGameFeatureData*> ActivePluginFeatureDatas;
-        GameFeaturesSubsystem->GetGameFeatureDataForActivePlugins(ActivePluginFeatureDatas);
-
-        for (auto GameFeatureData : ActivePluginFeatureDatas)
-        {
-            if (auto FortGameFeatureData = Cast<UFortGameFeatureData>((UObject*)GameFeatureData))
-                GameFeatureDatas.Add(FortGameFeatureData);
-        }
-    }
+    UFortGameFeatureData::GetActiveGameFeatureDatas(GameFeatureDatas);
 
     if (!GameFeatureDatas.Num())
         return;

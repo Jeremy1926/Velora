@@ -10,6 +10,7 @@ class UConversationInstance;
 class UDataTable;
 class UFortItemDefinition;
 class UFortQuestItemDefinition;
+class UFortConversationGiftTypeDefinitions;
 
 class UFortNPCConversationParticipantComponent : public UFortNonPlayerConversationParticipantComponent
 {
@@ -29,6 +30,12 @@ public:
     FGameplayTag GetNPCTag() const;
 
     TArray<const uint8*> GetSupportedSaleRows() const;
+
+    TArray<const uint8*> GetSupportedGiftRows() const;
+
+    TArray<const uint8*> GetSupportedGiftItemRows() const;
+
+    UFortConversationGiftTypeDefinitions* GetGiftTypeDefinitions() const;
 
     AFortPlayerPawn* GetPlayerPawnOwner() const;
 

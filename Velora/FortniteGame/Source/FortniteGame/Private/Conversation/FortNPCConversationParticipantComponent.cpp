@@ -3,6 +3,7 @@
 #include "AI/FortAthenaAIBotController.h"
 #include "Quests/FortQuestItemDefinition.h"
 #include "Engine/DataTable.h"
+#include "FortGameFeatureData.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/ScriptDelegates.h"
@@ -65,13 +66,16 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     if (Quests && !*Quests)
         *Quests = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCQuests.NPCQuests"));
 
-    if (!Services)
+    auto ServicesTable = UFortGameFeatureData::GetPlaylistDataTable(this, Services);
+    auto QuestsTable = Quests ? UFortGameFeatureData::GetPlaylistDataTable(this, *Quests) : UFortGameFeatureData::FindPlaylistDataTable(this, NPCQuestRow);
+
+    if (!ServicesTable)
         return;
 
     const FGameplayTag NPCTag = GetNPCTag();
     std::vector<const uint8*> RolledServices;
 
-    for (auto& RowPair : Services->RowMap)
+    for (auto& RowPair : ServicesTable->RowMap)
     {
         const uint8* Row = RowPair.Value;
 
@@ -89,12 +93,12 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     for (size_t Index = 0; Index < RolledServices.size() && (ServiceLimit <= 0 || Index < (size_t)ServiceLimit); Index++)
         GetSupportedServices().AddTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(RolledServices[Index]));
 
-    if (!Quests || !*Quests)
+    if (!QuestsTable)
         return;
 
     std::vector<const uint8*> QuestRows;
 
-    for (auto& RowPair : (*Quests)->RowMap)
+    for (auto& RowPair : QuestsTable->RowMap)
     {
         if (*QuestNPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value) == NPCTag && *Weight->ContainerPtrToValuePtr<float>(RowPair.Value) > 0.0f)
             QuestRows.push_back(RowPair.Value);
@@ -163,7 +167,7 @@ TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedSaleR
     static auto Priority = NPCSaleInventoryRow->FindPropertyByName(FName(TEXT("Priority")));
 
     TArray<const uint8*> SaleRows;
-    auto SalesInventory = GetSalesInventory();
+    auto SalesInventory = UFortGameFeatureData::GetPlaylistDataTable(this, GetSalesInventory());
 
     if (!SalesInventory)
         return SaleRows;
@@ -186,6 +190,63 @@ TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedSaleR
         SaleRows.Add(Row);
 
     return SaleRows;
+}
+
+TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedGiftRows() const
+{
+    static auto Gifts = StaticClass()->FindPropertyByName(FName(TEXT("Gifts")));
+    static auto NPCConversationGiftRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCConversationGiftRow"));
+    static auto NPC = NPCConversationGiftRow ? NPCConversationGiftRow->FindPropertyByName(FName(TEXT("NPC"))) : nullptr;
+
+    TArray<const uint8*> GiftRows;
+    auto GiftsTable = Gifts ? UFortGameFeatureData::GetPlaylistDataTable(this, *Gifts->ContainerPtrToValuePtr<UDataTable*>(this)) : nullptr;
+
+    if (!GiftsTable || !NPC)
+        return GiftRows;
+
+    const FGameplayTag NPCTag = GetNPCTag();
+
+    for (auto& RowPair : GiftsTable->RowMap)
+    {
+        const FGameplayTag& RowNPC = *NPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value);
+
+        if (!RowNPC.IsValid() || RowNPC == NPCTag)
+            GiftRows.Add(RowPair.Value);
+    }
+
+    return GiftRows;
+}
+
+TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedGiftItemRows() const
+{
+    static auto GiftItemInventory = StaticClass()->FindPropertyByName(FName(TEXT("GiftItemInventory")));
+    static auto NPCGiftItemInventoryRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCGiftItemInventoryRow"));
+    static auto NPC = NPCGiftItemInventoryRow ? NPCGiftItemInventoryRow->FindPropertyByName(FName(TEXT("NPC"))) : nullptr;
+
+    TArray<const uint8*> GiftItemRows;
+    auto GiftItemTable = GiftItemInventory ? UFortGameFeatureData::GetPlaylistDataTable(this, *GiftItemInventory->ContainerPtrToValuePtr<UDataTable*>(this)) : nullptr;
+
+    if (!GiftItemTable || !NPC)
+        return GiftItemRows;
+
+    const FGameplayTag NPCTag = GetNPCTag();
+
+    for (auto& RowPair : GiftItemTable->RowMap)
+    {
+        const FGameplayTag& RowNPC = *NPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value);
+
+        if (!RowNPC.IsValid() || RowNPC == NPCTag)
+            GiftItemRows.Add(RowPair.Value);
+    }
+
+    return GiftItemRows;
+}
+
+UFortConversationGiftTypeDefinitions* UFortNPCConversationParticipantComponent::GetGiftTypeDefinitions() const
+{
+    static auto GiftTypeDefinitions = StaticClass()->FindPropertyByName(FName(TEXT("GiftTypeDefinitions")));
+
+    return GiftTypeDefinitions ? *GiftTypeDefinitions->ContainerPtrToValuePtr<UFortConversationGiftTypeDefinitions*>(this) : nullptr;
 }
 
 AFortPlayerPawn* UFortNPCConversationParticipantComponent::GetPlayerPawnOwner() const

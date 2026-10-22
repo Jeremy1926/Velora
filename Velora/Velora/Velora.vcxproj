@@ -525,6 +525,10 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortNonPlayerConversationParticipantComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_SellItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_UpgradeItem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_GiveGift.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationGiftTypeDefinitions.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortControllerEffect.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortControllerRequirement.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawnComponent_Convert.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_HireNPC.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h" />
@@ -838,6 +842,10 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantStaticQuest.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_SellItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_UpgradeItem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GiveGift.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationGiftTypeDefinitions.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortControllerEffect.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortControllerRequirement.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Pawns\FortPawnComponent_Convert.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_HireNPC.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DuelNPC.cpp" />

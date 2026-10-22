@@ -26,4 +26,6 @@ private:
 struct FGameplayEffectSpec
 {
     void SetSetByCallerMagnitude(FName DataName, float Magnitude);
+
+    void SetSetByCallerMagnitude(FGameplayTag DataTag, float Magnitude);
 };

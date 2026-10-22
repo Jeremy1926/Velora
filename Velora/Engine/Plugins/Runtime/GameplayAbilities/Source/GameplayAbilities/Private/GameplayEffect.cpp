@@ -21,3 +21,13 @@ void FGameplayEffectSpec::SetSetByCallerMagnitude(FName DataName, float Magnitud
 
     SetSetByCallerMagnitude(this, DataName, Magnitude);
 }
+
+void FGameplayEffectSpec::SetSetByCallerMagnitude(FGameplayTag DataTag, float Magnitude)
+{
+    static auto SetSetByCallerMagnitude = Anchor::Function<void (*)(FGameplayEffectSpec*, FGameplayTag, float)>(TEXT("FGameplayEffectSpec::SetSetByCallerMagnitude(FGameplayTag)"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignTagSetByCallerMagnitude"))
+        .Call()
+        .Get();
+
+    SetSetByCallerMagnitude(this, DataTag, Magnitude);
+}
