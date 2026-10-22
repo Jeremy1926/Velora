@@ -16,5 +16,5 @@ struct FFortAthenaLivingWorldCategory : public FTableRowBase
 
     bool GetbExcludeFromGlobalAIBudget();
 
-    FGameplayTagContainer& GetRequirePlaylistTags();
+    bool IsRequiredByPlaylist(const FGameplayTagContainer& PlaylistContextTags);
 };

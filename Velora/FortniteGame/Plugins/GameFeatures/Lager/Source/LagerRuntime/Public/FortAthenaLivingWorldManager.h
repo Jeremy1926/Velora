@@ -30,6 +30,7 @@ public:
     {
         int32 RequestID = INDEX_NONE;
         TWeakObjectPtr<AActor> PointProvider;
+        FVector Location = FVector(ForceInit);
     };
 
     struct FLivingWorldEventInstance
@@ -38,9 +39,19 @@ public:
 
         static int32 GetRespawnTimeOffset();
 
+        static int32 GetSpawnedActorsOffset();
+
+        static int32 GetSpawnedActorPointProvidersOffset();
+
+        static int32 GetPendingSpawnRequestsOffset();
+
         ~FLivingWorldEventInstance();
 
         TArray<TWeakObjectPtr<AActor>>& GetSpawnedActors();
+
+        TArray<FScriptInterface>* GetSpawnedActorPointProviders();
+
+        TArray<FLivingWorldPendingSpawnRequest>& GetPendingSpawnRequests();
 
         float& GetRespawnTime();
 
@@ -49,7 +60,6 @@ public:
         FFortAthenaLivingWorldCategory* Category;
         FFortAthenaLivingWorldEvent* Event;
         TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
-        TArray<FLivingWorldPendingSpawnRequest> PendingSpawnRequests;
     };
 
     struct FLivingWorldEventRequest
@@ -113,7 +123,7 @@ public:
 
     void OnActorSpawned(AActor* SpawnedActor, int32 RequestID);
 
-    void OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider);
+    void OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider);
 
     void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight);
 
