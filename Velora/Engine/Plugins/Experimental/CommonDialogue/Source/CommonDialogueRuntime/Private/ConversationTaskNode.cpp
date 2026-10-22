@@ -8,6 +8,7 @@
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
+#include "Conversation/FortConversationTaskNode_HireNPC.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
@@ -122,6 +123,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto UpgradeItem = Cast<UFortConversationTaskNode_UpgradeItem>(this))
         return UpgradeItem->ExecuteTaskNode_Implementation(Context);
+
+    if (auto HireNPC = Cast<UFortConversationTaskNode_HireNPC>(this))
+        return HireNPC->ExecuteTaskNode_Implementation(Context);
 
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);
