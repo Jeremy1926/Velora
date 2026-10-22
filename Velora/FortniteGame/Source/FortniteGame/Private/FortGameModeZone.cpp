@@ -52,7 +52,7 @@ void AFortGameModeZone::CreateAIDirector()
         .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
         .Optional()
         .Start()
-        .Find("call 0x*")
+        .Find("call 0x*; mov rax, [rbx+0x*]")
         .AtCall());
 
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
