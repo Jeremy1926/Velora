@@ -95,6 +95,30 @@ namespace Scanner
         return FCode();
     }
 
+    inline FCode StubExec(const TCHAR* FunctionPath)
+    {
+        auto Exec = Scanner::Exec(FunctionPath);
+
+        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *" })
+        {
+            auto Finish = Exec.Find(Pattern);
+
+            if (!Finish.Get())
+                continue;
+
+            for (auto Next = Finish.Find("*"); Next.Get(); Next = Next.Find("*"))
+            {
+                if (Next.Is("ret*"))
+                    return Finish;
+
+                if ((Next.Is("jmp 0x*") && Anchor::FCode(Next.Target()).Start().Get() != Exec.Get()) || Next.Is("jmp [*") || Next.Is("call [*") || (Next.Is("call 0x*") && !Anchor::At(Next.Target()).Is("cmp rcx, [0x*]")))
+                    return FCode();
+            }
+        }
+
+        return FCode();
+    }
+
     inline uint64 NullFunction()
     {
         return 0;
@@ -160,6 +184,13 @@ namespace Anchor
             auto& Chain = static_cast<ChainType&>(*this);
 
             return Chain.IsActive() ? Chain.At(Scanner::Native(FunctionPath)) : Chain;
+        }
+
+        ChainType& StubExec(const TCHAR* FunctionPath)
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() ? Chain.At(Scanner::StubExec(FunctionPath)) : Chain;
         }
 
         ChainType& Event(const TCHAR* FunctionName)

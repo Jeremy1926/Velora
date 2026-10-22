@@ -58,11 +58,24 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
         .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Last("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
         .DispValue();
 
     static auto Mask = (uint8_t)Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
         .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
         .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Last("test byte ptr [*+0x*], 0x*")
         .Value();
@@ -87,12 +100,35 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     OnRep_DynamicFoundationRepData();
 }
 
+void ABuildingFoundation::execSetDynamicFoundationTransform(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(ABuildingFoundation, execSetDynamicFoundationTransform, Anchor::Hook()
+        .StubExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform")));
+
+    FTransform NewTransform;
+
+    Stack.StepCompiledIn(&NewTransform);
+    Stack.Code += !!Stack.Code;
+
+    SetDynamicFoundationTransform(NewTransform);
+}
+
 void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues)
 {
     DETOUR(ABuildingFoundation, PostUpdate, Anchor::Hook()
-        .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform))
+        .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform) || DETOUR_ORIGINAL(ABuildingFoundation, execSetDynamicFoundationTransform))
         .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
         .Start()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Start()
+        .Or()
+        .If(DETOUR_ORIGINAL(ABuildingFoundation, SetDynamicFoundationTransform) || DETOUR_ORIGINAL(ABuildingFoundation, execSetDynamicFoundationTransform))
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
         .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Start()
@@ -121,11 +157,24 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
         .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Find("or byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Mask = (uint8_t)Anchor::Offset(TEXT("ABuildingFoundation::bPostUpdateCalled"))
         .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
         .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Find("or byte ptr [*+0x*], 0x*")
         .Value();
@@ -175,6 +224,8 @@ void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* c
     DETOUR(ABuildingFoundation, execSetDynamicFoundationEnabled, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"))
         .Is("ret*")
+        .Or()
+        .StubExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationEnabled")));
 
@@ -191,6 +242,12 @@ void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* Re
     static auto SelectAndStreamInLevel = Anchor::Function<void (*)(ABuildingFoundation*, const FReservedRandomValues*)>(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
         .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
         .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Target()
         .Get();
@@ -283,11 +340,24 @@ bool ABuildingFoundation::TransformIsSet() const
         .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Last("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
+        .Log(TEXT("ABuildingFoundation::SelectAndStreamInLevel"))
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("ABuildingFoundation::TransformIsSet"))
         .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
         .Start()
+        .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
+        .Last("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("ABuildingFoundation::SelectAndSetupMyBuildingLevel - Cannot get WorldManager!!"))
+        .Start()
+        .Caller()
         .Reference("call 0x*; or byte ptr [*+0x*], 0x*")
         .Last("test byte ptr [*+0x*], 0x*")
         .Value();

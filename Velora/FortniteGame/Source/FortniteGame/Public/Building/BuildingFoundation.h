@@ -42,6 +42,8 @@ public:
 
     void SetDynamicFoundationTransform(const FTransform& NewTransform);
 
+    void execSetDynamicFoundationTransform(FFrame& Stack, void* const Z_Param__Result);
+
     void SetDynamicFoundationEnabled(bool bEnabled);
 
     void execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result);
