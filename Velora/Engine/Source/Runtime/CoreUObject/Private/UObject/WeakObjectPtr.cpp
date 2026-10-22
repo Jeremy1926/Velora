@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "UObject/WeakObjectPtr.h"
+#include "UObject/UObjectArray.h"
+#include "UObject/Object.h"
 #include "Scanner.h"
 
 void FWeakObjectPtr::operator=(const UObject* Object)
@@ -22,9 +24,43 @@ void FWeakObjectPtr::operator=(const UObject* Object)
         .Last("call 0x*")
         .Call()
         .Call()
+        .Optional()
         .Get();
 
-    Assign(this, Object);
+    if (Assign)
+    {
+        Assign(this, Object);
+
+        return;
+    }
+
+    if (!Object)
+    {
+        ObjectIndex = -1;
+        ObjectSerialNumber = 0;
+
+        return;
+    }
+
+    static auto MasterSerialNumber = Anchor::Data<volatile long*>(TEXT("FUObjectArray::MasterSerialNumber"))
+        .Pattern("F0 0F C1 0D ? ? ? ? FF C1 89 4D ? 81 F9 E8 03 00 00")
+        .Target()
+        .Get();
+
+    ObjectIndex = (int32)Object->GetUniqueID();
+
+    auto ObjectItem = GUObjectArray.IndexToObject(ObjectIndex);
+    auto SerialNumber = ObjectItem->SerialNumber;
+
+    if (!SerialNumber && MasterSerialNumber)
+    {
+        SerialNumber = _InterlockedIncrement(MasterSerialNumber);
+
+        if (auto ValueWas = _InterlockedCompareExchange((volatile long*)&ObjectItem->SerialNumber, SerialNumber, 0))
+            SerialNumber = ValueWas;
+    }
+
+    ObjectSerialNumber = SerialNumber;
 }
 
 UObject* FWeakObjectPtr::Get() const

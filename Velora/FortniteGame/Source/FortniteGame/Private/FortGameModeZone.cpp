@@ -68,6 +68,9 @@ void AFortGameModeZone::CreateAIDirector()
     static auto execGetAIDirector = THook(TEXT("UFortKismetLibrary::execGetAIDirector"), &UFortKismetLibrary::execGetAIDirector)
         .At(GameGetAIDirector)
         .Is("xor eax, eax; ret")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
+        .Find("setnz *; add [*+0x20], *; and qword ptr [*], 0x0")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"));
 
