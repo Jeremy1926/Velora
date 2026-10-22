@@ -17,6 +17,8 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+static FWeaponUpgradeItemRow* UpgradeItemRowBeingConsumed = nullptr;
+
 UClass* ABuildingItemWeaponUpgradeActor::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingItemWeaponUpgradeActor"));
@@ -84,6 +86,13 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
             .Get())
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")));
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(Player);
@@ -91,6 +100,20 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
 
     if (!HasAuthority() || !WorldInventory || !Item)
         return;
+
+    if (!AreConsumedItemsRemovedByGame())
+    {
+        auto UpgradeItemRow = UpgradeItemRowBeingConsumed;
+        UpgradeItemRowBeingConsumed = nullptr;
+
+        if (!UpgradeItemRow || UpgradeItemRow->GetUpgradedWeaponDef() != Item)
+            return;
+
+        UFortKismetLibrary::K2_RemoveItemFromPlayer(Player, (UFortWorldItemDefinition*)GetWoodItem(), GetCostForRessource(UpgradeItemRow->GetWoodCost()), false);
+        UFortKismetLibrary::K2_RemoveItemFromPlayer(Player, (UFortWorldItemDefinition*)GetMetalItem(), GetCostForRessource(UpgradeItemRow->GetMetalCost()), false);
+        UFortKismetLibrary::K2_RemoveItemFromPlayer(Player, (UFortWorldItemDefinition*)GetBrickItem(), GetCostForRessource(UpgradeItemRow->GetBrickCost()), false);
+        UFortKismetLibrary::K2_RemoveItemFromPlayer(Player, (UFortWorldItemDefinition*)UpgradeItemRow->GetCurrentWeaponDef(), 1, false);
+    }
 
     auto& Inventory = WorldInventory->GetInventory();
     auto ItemEntry = new(Inventory.GetReplicatedEntries()) FFortItemEntry(Item, 1, Item->GetMinLevel());
@@ -129,6 +152,12 @@ FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponIt
         .Find("setz dl; inc dl; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz dl; add dl, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (StaticGetItemRow)
@@ -145,11 +174,91 @@ FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponIt
     return GetItemRow(this, WeaponDefinition, Direction);
 }
 
+int32 ABuildingItemWeaponUpgradeActor::GetCostForRessource(const uint8* UpgradeCost) const
+{
+    DETOUR(ABuildingItemWeaponUpgradeActor, GetCostForRessource, Anchor::Hook()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Inline());
+
+    static auto BrickCost = FWeaponUpgradeItemRow::StaticStruct()->FindPropertyByName(FName(TEXT("BrickCost")));
+
+    UpgradeItemRowBeingConsumed = (FWeaponUpgradeItemRow*)(UpgradeCost - BrickCost->GetOffset_ForInternal());
+
+    return Original(UpgradeCost);
+}
+
+bool ABuildingItemWeaponUpgradeActor::AreConsumedItemsRemovedByGame()
+{
+    static auto bRemovesItems = !::Anchor::Exists()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
+        .Find("call *", 2)
+        .Is("call [*]")
+        .Get();
+
+    return bRemovesItems;
+}
+
+UFortResourceItemDefinition* ABuildingItemWeaponUpgradeActor::GetWoodItem() const
+{
+    static auto WoodItem = GetClass()->FindPropertyByName(FName(TEXT("WoodItem")));
+
+    return *WoodItem->ContainerPtrToValuePtr<UFortResourceItemDefinition*>(this);
+}
+
+UFortResourceItemDefinition* ABuildingItemWeaponUpgradeActor::GetMetalItem() const
+{
+    static auto MetalItem = GetClass()->FindPropertyByName(FName(TEXT("MetalItem")));
+
+    return *MetalItem->ContainerPtrToValuePtr<UFortResourceItemDefinition*>(this);
+}
+
+UFortResourceItemDefinition* ABuildingItemWeaponUpgradeActor::GetBrickItem() const
+{
+    static auto BrickItem = GetClass()->FindPropertyByName(FName(TEXT("BrickItem")));
+
+    return *BrickItem->ContainerPtrToValuePtr<UFortResourceItemDefinition*>(this);
+}
+
 UScriptStruct* FWeaponUpgradeItemRow::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.WeaponUpgradeItemRow"));
 
     return Struct;
+}
+
+UFortWeaponItemDefinition* FWeaponUpgradeItemRow::GetCurrentWeaponDef() const
+{
+    static auto CurrentWeaponDef = StaticStruct()->FindPropertyByName(FName(TEXT("CurrentWeaponDef")));
+
+    return *CurrentWeaponDef->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this);
+}
+
+const uint8* FWeaponUpgradeItemRow::GetWoodCost() const
+{
+    static auto WoodCost = StaticStruct()->FindPropertyByName(FName(TEXT("WoodCost")));
+
+    return WoodCost->ContainerPtrToValuePtr<uint8>(this);
+}
+
+const uint8* FWeaponUpgradeItemRow::GetMetalCost() const
+{
+    static auto MetalCost = StaticStruct()->FindPropertyByName(FName(TEXT("MetalCost")));
+
+    return MetalCost->ContainerPtrToValuePtr<uint8>(this);
+}
+
+const uint8* FWeaponUpgradeItemRow::GetBrickCost() const
+{
+    static auto BrickCost = StaticStruct()->FindPropertyByName(FName(TEXT("BrickCost")));
+
+    return BrickCost->ContainerPtrToValuePtr<uint8>(this);
 }
 
 UFortWeaponItemDefinition* FWeaponUpgradeItemRow::GetUpgradedWeaponDef() const
