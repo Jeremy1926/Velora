@@ -8,7 +8,7 @@
 
 UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
 {
-    static auto Get = Anchor::Function<UGameFeaturesSubsystem* (*)()>(TEXT("UGameFeaturesSubsystem::Get"))
+    static auto Get = Anchor::Optional<UGameFeaturesSubsystem* (*)()>(TEXT("UGameFeaturesSubsystem::Get"))
         .String(TEXT(" - Adding preload object: '%s'"))
         .Caller()
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")

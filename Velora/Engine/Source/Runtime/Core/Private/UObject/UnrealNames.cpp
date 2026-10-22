@@ -46,7 +46,7 @@ FName::FName(EName N)
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
-    static auto MakeDetectNumber = Anchor::Function<FName* (*)(FName*, const void*, EFindName)>(TEXT("FNameHelper::MakeDetectNumber"))
+    static auto MakeDetectNumber = Anchor::Optional<FName* (*)(FName*, const void*, EFindName)>(TEXT("FNameHelper::MakeDetectNumber"))
         .String(TEXT("OnlineSubsystemUtils"), "lea rcx, [0x*]; lea rdx, [rsp+0x*]; mov [rsp+0x20], rcx; call 0x*; mov [rsp+0x28], eax")
         .Find("mov r8d, 0x1; movdqa [*], xmm0; call 0x*")
         .Find("call 0x*")

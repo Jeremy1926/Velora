@@ -31,7 +31,7 @@ void FMemory::Free(void* Original)
 
 SIZE_T FMemory::QuantizeSize(SIZE_T Count, uint32 Alignment)
 {
-    static auto QuantizeSize = Anchor::Function<SIZE_T (*)(SIZE_T, uint32)>(TEXT("FMemory::QuantizeSize"))
+    static auto QuantizeSize = Anchor::Optional<SIZE_T (*)(SIZE_T, uint32)>(TEXT("FMemory::QuantizeSize"))
         .Pattern("4C 8B 0D ? ? ? ? 4D 85 C9 75 04 48 8B C1 C3 49 8B 01 44 8B C2 48 8B D1 49 8B C9 48 FF 60 28")
         .Or()
         .Pattern("4C 8B 0D ? ? ? ? 4D 85 C9 75 04 48 8B C1 C3 49 8B 01 44 8B C2 48 8B D1 49 8B C9 48 FF 60 38")

@@ -48,7 +48,7 @@ UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, co
 
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
 {
-    static auto StaticConstructObject_InternalWithParams = Anchor::Function<UObject* (*)(const void*)>(TEXT("StaticConstructObject_Internal(FStaticConstructObjectParameters)"))
+    static auto StaticConstructObject_InternalWithParams = Anchor::Optional<UObject* (*)(const void*)>(TEXT("StaticConstructObject_Internal(FStaticConstructObjectParameters)"))
         .String(TEXT("STAT_ConstructObject"))
         .Start()
         .Find("mov *, [rcx]; lea rax, [0x*]; mov *, [rcx+0x8]")

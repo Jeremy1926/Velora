@@ -6,7 +6,7 @@
 
 void FWeakObjectPtr::operator=(const UObject* Object)
 {
-    static auto Assign = Anchor::Function<void (*)(FWeakObjectPtr*, const UObject*)>(TEXT("FWeakObjectPtr::operator="))
+    static auto Assign = Anchor::Optional<void (*)(FWeakObjectPtr*, const UObject*)>(TEXT("FWeakObjectPtr::operator="))
         .String(TEXT("UActorChannel::Close: ChIndex: %d, Actor: %s*"))
         .Start()
         .Find("add rcx, 0x*")

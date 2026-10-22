@@ -135,7 +135,7 @@ FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCo
 
 FFortItemEntry::FFortItemEntry(const FFortItemEntry& Other)
 {
-    static auto Constructor = Anchor::Function<void (*)(FFortItemEntry*, const FFortItemEntry&)>(TEXT("FFortItemEntry::FFortItemEntry(const FFortItemEntry&)"))
+    static auto Constructor = Anchor::Optional<void (*)(FFortItemEntry*, const FFortItemEntry&)>(TEXT("FFortItemEntry::FFortItemEntry(const FFortItemEntry&)"))
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]; call 0x*; mov rdx, rax")
         .Call(2)
