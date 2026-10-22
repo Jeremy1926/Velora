@@ -21,7 +21,6 @@ float UAbilitySystemBlueprintLibrary::EvaluateAttributeValueWithTagsAndBase(UAbi
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
         .Find("movss [rsp+0x20], xmm*")
         .Call()
-        .Optional()
         .Get();
 
     if (EvaluateAttributeValueWithTagsAndBase)
