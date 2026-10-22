@@ -85,7 +85,11 @@ public:
 
     static int32 K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval);
 
+    void execK2_RemoveItemFromPlayer(FFrame& Stack, void* const Z_Param__Result);
+
     static int32 K2_RemoveItemFromPlayerByGuid(AFortPlayerController* PlayerController, const FGuid& ItemGuid, int32 AmountToRemove, bool bForceRemoval);
+
+    void execK2_RemoveItemFromPlayerByGuid(FFrame& Stack, void* const Z_Param__Result);
 
     static int32 K2_RemoveFortItemFromPlayer(AFortPlayerController* PlayerController, UFortItem* Item, int32 AmountToRemove, bool bForceRemoval);
 
@@ -101,6 +105,8 @@ public:
 
     static bool PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FName TierGroupName, int32 WorldLevel, int32 ForcedLootTier);
 
+    void execPickLootDrops(FFrame& Stack, void* const Z_Param__Result);
+
     static FActiveGameplayEffectHandle ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags);
 
     static AFortAIDirector* GetAIDirector(const UObject* WorldContextObject);
@@ -109,7 +115,11 @@ public:
 
     static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
 
+    void execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_Param__Result);
+
     static AFortPickup* K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
+
+    void execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void* const Z_Param__Result);
 
     static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
 

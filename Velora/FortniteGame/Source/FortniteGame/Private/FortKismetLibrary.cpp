@@ -775,3 +775,164 @@ void UFortKismetLibrary::execGetAIDirector(FFrame& Stack, void* const Z_Param__R
 
     *(AFortAIDirector**)Z_Param__Result = GetAIDirector(WorldContextObject);
 }
+
+void UFortKismetLibrary::execK2_RemoveItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_RemoveItemFromPlayer, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+        .Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")));
+
+    AFortPlayerController* PlayerController = nullptr;
+    UFortWorldItemDefinition* ItemDefinition = nullptr;
+    int32 AmountToRemove = 0;
+    uint32 bForceRemoval = 0;
+
+    Stack.StepCompiledIn(&PlayerController);
+    Stack.StepCompiledIn(&ItemDefinition);
+    Stack.StepCompiledIn(&AmountToRemove);
+    Stack.StepCompiledIn(&bForceRemoval);
+    Stack.Code += !!Stack.Code;
+
+    *(int32*)Z_Param__Result = K2_RemoveItemFromPlayer(PlayerController, ItemDefinition, AmountToRemove, !!bForceRemoval);
+}
+
+void UFortKismetLibrary::execK2_RemoveItemFromPlayerByGuid(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_RemoveItemFromPlayerByGuid, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")));
+
+    AFortPlayerController* PlayerController = nullptr;
+    FGuid ItemGuid;
+    int32 AmountToRemove = 0;
+    uint32 bForceRemoval = 0;
+
+    Stack.StepCompiledIn(&PlayerController);
+    Stack.StepCompiledIn(&ItemGuid);
+    Stack.StepCompiledIn(&AmountToRemove);
+    Stack.StepCompiledIn(&bForceRemoval);
+    Stack.Code += !!Stack.Code;
+
+    *(int32*)Z_Param__Result = K2_RemoveItemFromPlayerByGuid(PlayerController, ItemGuid, AmountToRemove, !!bForceRemoval);
+}
+
+void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execPickLootDrops, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+        .Find("setnz *; add [*+0x20], *; mov byte ptr [*], 0x0")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")));
+
+    static auto WorldContextObjectParam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("WorldContextObject")));
+
+    UObject* WorldContextObject = nullptr;
+    TArray<FFortItemEntry> LootToDropTemp;
+    FName TierGroupName;
+    int32 WorldLevel = 0;
+    int32 ForcedLootTier = 0;
+
+    if (WorldContextObjectParam)
+        Stack.StepCompiledIn(&WorldContextObject);
+
+    auto& OutLootToDrop = Stack.StepCompiledInRef<TArray<FFortItemEntry>>(&LootToDropTemp);
+    Stack.StepCompiledIn(&TierGroupName);
+    Stack.StepCompiledIn(&WorldLevel);
+    Stack.StepCompiledIn(&ForcedLootTier);
+    Stack.Code += !!Stack.Code;
+
+    *(bool*)Z_Param__Result = PickLootDrops(&OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
+}
+
+void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_SpawnPickupInWorld, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
+        .Find("xor esi, esi")
+        .Find("setnz *; add [*+0x20], *; mov [*], rsi")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")));
+
+    UObject* WorldContextObject = nullptr;
+    UFortWorldItemDefinition* ItemDefinition = nullptr;
+    int32 NumberToSpawn = 0;
+    FVector Position(ForceInit);
+    FVector Direction(ForceInit);
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    uint32 bRandomRotation = 0;
+    uint32 bBlockedFromAutoPickup = 0;
+    int32 PickupInstigatorHandle = 0;
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+    AFortPlayerController* OptionalOwnerPC = nullptr;
+    uint32 bPickupOnlyRelevantToOwner = 0;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+    Stack.StepCompiledIn(&ItemDefinition);
+    Stack.StepCompiledIn(&NumberToSpawn);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&Direction);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+    Stack.StepCompiledIn(&bRandomRotation);
+    Stack.StepCompiledIn(&bBlockedFromAutoPickup);
+    Stack.StepCompiledIn(&PickupInstigatorHandle);
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.StepCompiledIn(&OptionalOwnerPC);
+    Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
+    Stack.Code += !!Stack.Code;
+
+    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, ItemDefinition, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
+}
+
+void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_SpawnPickupInWorldWithClass, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
+        .Find("xor esi, esi")
+        .Find("setnz *; add [*+0x20], *; mov [*], rsi")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")));
+
+    UObject* WorldContextObject = nullptr;
+    UFortWorldItemDefinition* ItemDefinition = nullptr;
+    TSubclassOf<AFortPickup> PickupClass;
+    int32 NumberToSpawn = 0;
+    FVector Position(ForceInit);
+    FVector Direction(ForceInit);
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    uint32 bRandomRotation = 0;
+    uint32 bBlockedFromAutoPickup = 0;
+    int32 PickupInstigatorHandle = 0;
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+    AFortPlayerController* OptionalOwnerPC = nullptr;
+    uint32 bPickupOnlyRelevantToOwner = 0;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+    Stack.StepCompiledIn(&ItemDefinition);
+    Stack.StepCompiledIn(&PickupClass);
+    Stack.StepCompiledIn(&NumberToSpawn);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&Direction);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+    Stack.StepCompiledIn(&bRandomRotation);
+    Stack.StepCompiledIn(&bBlockedFromAutoPickup);
+    Stack.StepCompiledIn(&PickupInstigatorHandle);
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.StepCompiledIn(&OptionalOwnerPC);
+    Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
+    Stack.Code += !!Stack.Code;
+
+    *(AFortPickup**)Z_Param__Result = K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, PickupClass, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss);
+}

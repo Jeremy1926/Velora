@@ -8,6 +8,7 @@
 #include "Math/Rotator.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -47,4 +48,29 @@ AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDe
         Pickup->TossPickup(Position, nullptr, 0, true, true, EFortPickupSourceTypeFlag::Tossed, EFortPickupSpawnSource::Unset);
 
     return Pickup;
+}
+
+void AFortAthenaSupplyDrop::execSpawnPickup(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAthenaSupplyDrop, execSpawnPickup, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; and qword ptr [*], 0x0")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")));
+
+    UFortWorldItemDefinition* ItemDefinition = nullptr;
+    int32 NumberToSpawn = 0;
+    AFortPawn* TriggeringPawn = nullptr;
+    FVector Position(ForceInit);
+    FVector Direction(ForceInit);
+
+    Stack.StepCompiledIn(&ItemDefinition);
+    Stack.StepCompiledIn(&NumberToSpawn);
+    Stack.StepCompiledIn(&TriggeringPawn);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&Direction);
+    Stack.Code += !!Stack.Code;
+
+    *(AFortPickup**)Z_Param__Result = SpawnPickup(ItemDefinition, NumberToSpawn, TriggeringPawn, Position, Direction);
 }
