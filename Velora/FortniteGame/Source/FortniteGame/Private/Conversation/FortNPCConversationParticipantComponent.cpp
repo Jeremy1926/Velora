@@ -60,8 +60,10 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     if (!GetSalesInventory())
         GetSalesInventory() = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCSales.NPCSales"));
 
-    if (!GetQuests())
-        GetQuests() = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCQuests.NPCQuests"));
+    auto Quests = GetQuests();
+
+    if (Quests && !*Quests)
+        *Quests = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCQuests.NPCQuests"));
 
     if (!Services)
         return;
@@ -87,12 +89,12 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     for (size_t Index = 0; Index < RolledServices.size() && (ServiceLimit <= 0 || Index < (size_t)ServiceLimit); Index++)
         GetSupportedServices().AddTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(RolledServices[Index]));
 
-    if (!GetQuests())
+    if (!Quests || !*Quests)
         return;
 
     std::vector<const uint8*> QuestRows;
 
-    for (auto& RowPair : GetQuests()->RowMap)
+    for (auto& RowPair : (*Quests)->RowMap)
     {
         if (*QuestNPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value) == NPCTag && *Weight->ContainerPtrToValuePtr<float>(RowPair.Value) > 0.0f)
             QuestRows.push_back(RowPair.Value);
@@ -228,11 +230,11 @@ UDataTable*& UFortNPCConversationParticipantComponent::GetSalesInventory() const
     return *SalesInventory->ContainerPtrToValuePtr<UDataTable*>((void*)this);
 }
 
-UDataTable*& UFortNPCConversationParticipantComponent::GetQuests() const
+UDataTable** UFortNPCConversationParticipantComponent::GetQuests() const
 {
     static auto Quests = StaticClass()->FindPropertyByName(FName(TEXT("Quests")));
 
-    return *Quests->ContainerPtrToValuePtr<UDataTable*>((void*)this);
+    return Quests ? Quests->ContainerPtrToValuePtr<UDataTable*>((void*)this) : nullptr;
 }
 
 void UFortNPCConversationParticipantComponent::SetConversationModeActive(bool bInConversationModeActive)

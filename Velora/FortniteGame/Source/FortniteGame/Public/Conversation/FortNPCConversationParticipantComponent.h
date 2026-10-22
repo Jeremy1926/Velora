@@ -42,7 +42,7 @@ public:
 
     UDataTable*& GetSalesInventory() const;
 
-    UDataTable*& GetQuests() const;
+    UDataTable** GetQuests() const;
 
     void SetConversationModeActive(bool bInConversationModeActive);
 };
