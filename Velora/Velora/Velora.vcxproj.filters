@@ -1543,6 +1543,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortPlayerConversationComponent.h">
       <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
     </ClInclude>
@@ -2358,6 +2361,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortPlayerConversationComponent.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>

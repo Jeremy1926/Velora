@@ -37,6 +37,8 @@ public:
 
     void CheckForBotBrainActivation();
 
+    void AssignTeam(AFortAthenaAIBotController* BotController, const uint8* CustomSquadId);
+
     TArray<FFortServerBotInfo>* GetPlayerBots();
 
     TArray<FFortServerBotInfo>* GetNoneAthenaParticipantBots();

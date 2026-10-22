@@ -75,6 +75,17 @@ UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UW
     return GameMode ? GameMode->GetServerBotManager() : nullptr;
 }
 
+void UFortServerBotManagerAthena::AssignTeam(AFortAthenaAIBotController* BotController, const uint8* CustomSquadId)
+{
+    static auto AssignTeam = Anchor::Function<void (*)(UFortServerBotManagerAthena*, AFortAthenaAIBotController*, const uint8*)>(TEXT("UFortServerBotManagerAthena::AssignTeam"))
+        .String(TEXT("Can't configure player bots if no GameMode set"))
+        .Start()
+        .Get();
+
+    if (AssignTeam)
+        AssignTeam(this, BotController, CustomSquadId);
+}
+
 void UFortServerBotManagerAthena::SetBotBrainActivationTimer()
 {
     PendingBotBrainActivations.Add(FPendingBotBrainActivation{ this, GetWorld()->GetTimeSeconds() + 1.0f });

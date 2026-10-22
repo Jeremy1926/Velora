@@ -498,6 +498,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetTextLibrary.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortConversationContextConditionHelpers.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortPlayerConversationComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationChoiceWithPreviewNode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationContextLibrary.h" />
@@ -793,6 +794,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetTextLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortConversationContextConditionHelpers.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortPlayerConversationComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationChoiceWithPreviewNode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationContextLibrary.cpp" />
