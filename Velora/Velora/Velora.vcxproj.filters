@@ -292,6 +292,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public">
       <UniqueIdentifier>{6A1C3E8F-9B5D-4E4A-87CA-3D5F7B9C1E84}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Nevada">
+      <UniqueIdentifier>{7B2D4F6A-1C3E-4A5B-9D7F-2E4A6C8B0D19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Nevada\Source">
+      <UniqueIdentifier>{9D4F6B8C-3E5A-4C7D-8F1B-4A6C8E0D2F2A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime">
+      <UniqueIdentifier>{1F6B8D0E-5A7C-4E9F-A3D5-6C8E0A2F4B3B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Private">
+      <UniqueIdentifier>{3B8D0F2A-7C9E-4A1B-B5F7-8E0A2C4B6D4C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Public">
+      <UniqueIdentifier>{5D0F2B4C-9E1A-4C3D-87B9-0A2C4E6D8F5D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Lager">
       <UniqueIdentifier>{A81EF23A-9918-43F0-90D8-B5D6C8E83C08}</UniqueIdentifier>
     </Filter>
@@ -1258,6 +1273,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public\FriendChestNative.h">
       <Filter>FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Public\FortNevadaVehicle.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpProfile.h">
       <Filter>FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public</Filter>
     </ClInclude>
@@ -1523,6 +1541,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortPawnComponent_Disguise.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_SpawnedVehicle.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h">
@@ -2251,6 +2272,9 @@
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Private\FriendChestNative.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Private\FortNevadaVehicle.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Nevada\Source\NevadaRuntime\Private</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortMcpProfile.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
     </ClCompile>
@@ -2474,6 +2498,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortPawnComponent_Disguise.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_SpawnedVehicle.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp">

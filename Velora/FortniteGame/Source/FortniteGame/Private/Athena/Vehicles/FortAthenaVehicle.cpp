@@ -152,6 +152,16 @@ AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
     return GetPawnAtSeat(this, SeatIdx);
 }
 
+bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Seat, bool bIgnoreDBNOCheck)
+{
+    static auto ForceEnterDriverSeat = Anchor::Optional<bool (*)(AFortAthenaVehicle*, AFortPlayerPawn*)>(TEXT("AFortAthenaVehicle::ForceEnterSeat"))
+        .Pattern("48 89 5C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 40 48 8B 01 48 8B FA 4C 8B F1 FF 90 ? ? ? ?")
+        .Has("lea rdx, [rax+0x*]; call [rbx+0x*]; test al, al; jz 0x*; mov rax, [rsi]; xor r8d, r8d; mov rdx, rdi; mov rcx, rsi; call [rax+0x*]")
+        .Get();
+
+    return Seat == EVehicleSeats::Driver && ForceEnterDriverSeat && ForceEnterDriverSeat(this, Pawn);
+}
+
 float AFortAthenaVehicle::ModifyIncomingDamage(float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
 {
     DETOUR(AFortAthenaVehicle, ModifyIncomingDamage, Anchor::Hook()

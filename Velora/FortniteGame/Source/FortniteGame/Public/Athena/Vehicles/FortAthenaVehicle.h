@@ -21,6 +21,17 @@ struct FVehicleDamageablePart
     float Health;
 };
 
+enum class EVehicleSeats : uint8
+{
+    Driver,
+    Passenger1,
+    Passenger2,
+    Passenger3,
+    Passenger4,
+    Passenger5,
+    MaxCount
+};
+
 struct FFrame;
 struct FGameplayEffectContextHandle;
 struct FGameplayTagContainer;
@@ -45,6 +56,8 @@ public:
     void WakeUp();
 
     AFortPlayerPawn* GetPawnAtSeat(int32 SeatIdx) const;
+
+    bool ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Seat, bool bIgnoreDBNOCheck);
 
     float ModifyIncomingDamage(float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser);
 
