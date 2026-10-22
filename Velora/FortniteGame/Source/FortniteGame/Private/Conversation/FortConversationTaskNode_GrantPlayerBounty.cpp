@@ -15,6 +15,8 @@
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 #include "Engine/World.h"
+#include "GameFramework/Controller.h"
+#include "Templates/Sorting.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -38,6 +40,7 @@ FConversationTaskResult UFortConversationTaskNode_GrantPlayerBounty::ExecuteTask
     static auto TargetFilter = StaticClass()->FindPropertyByName(FName(TEXT("TargetFilter")));
     static auto Price = StaticClass()->FindPropertyByName(FName(TEXT("Price")));
     static auto ChanceToBeHuman = StaticClass()->FindPropertyByName(FName(TEXT("ChanceToBeHuman")));
+    static auto NumberOfPlayersToSelectFrom = StaticClass()->FindPropertyByName(FName(TEXT("NumberOfPlayersToSelectFrom")));
     static auto MediumThreatRange = StaticClass()->FindPropertyByName(FName(TEXT("MediumThreatRange")));
     static auto HighThreatRange = StaticClass()->FindPropertyByName(FName(TEXT("HighThreatRange")));
     static auto ThreatRefreshRate = StaticClass()->FindPropertyByName(FName(TEXT("ThreatRefreshRate")));
@@ -56,8 +59,49 @@ FConversationTaskResult UFortConversationTaskNode_GrantPlayerBounty::ExecuteTask
 
     UFortControllerComponent_TransientQuests::GetPlayerBountyTargets(HunterController, *TargetFilter->ContainerPtrToValuePtr<FGameplayTagQuery>(this), HumanTargets, BotTargets);
 
-    const bool bHumanTarget = HumanTargets.Num() && (!BotTargets.Num() || FMath::FRand() * 100.0f < ChanceToBeHuman->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f));
-    auto& Targets = bHumanTarget ? HumanTargets : BotTargets;
+    TArray<AFortPlayerStateAthena*> Targets;
+
+    if (ChanceToBeHuman)
+    {
+        const bool bHumanTarget = HumanTargets.Num() && (!BotTargets.Num() || FMath::FRand() * 100.0f < ChanceToBeHuman->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f));
+
+        Targets = bHumanTarget ? HumanTargets : BotTargets;
+    }
+    else
+    {
+        Targets = HumanTargets;
+        Targets.Append(BotTargets);
+
+        auto HunterPawn = HunterController->GetPawn();
+        const int32 SelectCount = NumberOfPlayersToSelectFrom ? FMath::TruncToInt(NumberOfPlayersToSelectFrom->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f)) : 0;
+
+        if (HunterPawn && SelectCount > 0 && Targets.Num() > SelectCount)
+        {
+            const FVector HunterLocation = HunterPawn->GetActorLocation();
+
+            auto GetDistanceSquared = [&HunterLocation](AFortPlayerStateAthena& PlayerState)
+            {
+                auto Controller = Cast<AController>(PlayerState.GetOwner());
+                auto Pawn = Controller ? Controller->GetPawn() : nullptr;
+
+                if (!Pawn)
+                    return 3.4e38f;
+
+                const FVector Location = Pawn->GetActorLocation();
+
+                return (Location.X - HunterLocation.X) * (Location.X - HunterLocation.X) + (Location.Y - HunterLocation.Y) * (Location.Y - HunterLocation.Y) + (Location.Z - HunterLocation.Z) * (Location.Z - HunterLocation.Z);
+            };
+
+            Sort(Targets.GetData(), Targets.Num(), [&GetDistanceSquared](AFortPlayerStateAthena& A, AFortPlayerStateAthena& B) { return GetDistanceSquared(A) < GetDistanceSquared(B); });
+
+            TArray<AFortPlayerStateAthena*> ClosestTargets;
+
+            for (int32 Index = 0; Index < SelectCount; Index++)
+                ClosestTargets.Add(Targets[Index]);
+
+            Targets = ClosestTargets;
+        }
+    }
 
     if (!Targets.Num())
         return FConversationTaskResult::AbortConversation();
