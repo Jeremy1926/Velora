@@ -53,6 +53,12 @@ void FGameplayTagContainer::AppendTags(FGameplayTagContainer const& Other)
 void FGameplayTagContainer::AddTag(const FGameplayTag& TagToAdd)
 {
     static auto AddTag = Anchor::Function<void (*)(FGameplayTagContainer*, const FGameplayTag&)>(TEXT("FGameplayTagContainer::AddTag"))
+        .Exec(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag"))
         .Call()
         .Get();

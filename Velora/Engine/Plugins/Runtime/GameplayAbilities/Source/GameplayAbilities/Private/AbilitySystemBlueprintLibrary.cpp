@@ -6,11 +6,11 @@
 
 UAbilitySystemComponent* UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(AActor* Actor)
 {
-    static auto GetAbilitySystemComponent = Anchor::Function<UAbilitySystemComponent* (*)(AActor*)>(TEXT("UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent"))
+    static auto GetAbilitySystemComponent = Anchor::Function<UAbilitySystemComponent* (*)(AActor*, bool)>(TEXT("UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
         .Get();
 
-    return GetAbilitySystemComponent(Actor);
+    return GetAbilitySystemComponent(Actor, false);
 }
 
 float UAbilitySystemBlueprintLibrary::EvaluateAttributeValueWithTagsAndBase(UAbilitySystemComponent* AbilitySystem, FGameplayAttribute Attribute, const FGameplayTagContainer& SourceTags, const FGameplayTagContainer& TargetTags, float BaseValue, bool& bSuccess)
