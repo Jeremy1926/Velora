@@ -949,6 +949,8 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Find("call [*+0x*]", 2)
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("mov *[rsp+0x40], *")
+        .Or()
+        .At(DETOUR_ORIGINAL(AFortDecoTool, ServerCreateBuildingAndSpawnDeco_Implementation))
         .Get();
 
     bForceOverrideInteractBuildCheck = bHasBuildChecks && bForceOverrideInteractBuildCheck;
