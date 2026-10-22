@@ -494,6 +494,11 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Optional()
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupInfo_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHandlePickupInfo"))
+        .Find("call r*; test al, al")
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHandlePickupInfo_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
     static auto ServerReviveFromDBNO = THook(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation)
