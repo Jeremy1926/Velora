@@ -12,6 +12,7 @@
 #include "GameplayEffectTypes.h"
 
 class UGameplayEffect;
+struct FGameplayEffectAttributeCaptureSpec;
 struct FActiveGameplayCueContainer;
 struct FGameplayEffectSpec;
 
@@ -34,6 +35,10 @@ class UAbilitySystemComponent : public UGameplayTasksComponent
 {
 public:
     FGameplayEffectContextHandle MakeEffectContext() const;
+
+    bool HasAttributeSetForAttribute(FGameplayAttribute Attribute) const;
+
+    void CaptureAttributeForGameplayEffect(FGameplayEffectAttributeCaptureSpec& OutCaptureSpec);
 
     FGameplayEffectSpecHandle MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const;
 

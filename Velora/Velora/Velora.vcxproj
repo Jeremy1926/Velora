@@ -365,6 +365,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameDeathPenalty.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\StatManager.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffect.h" />
+    <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\GameplayEffectAggregator.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortWeaponItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortWeaponMeleeItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaCosmeticItemDefinition.h" />

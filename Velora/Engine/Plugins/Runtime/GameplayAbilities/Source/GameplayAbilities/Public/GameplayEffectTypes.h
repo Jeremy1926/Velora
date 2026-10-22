@@ -5,6 +5,7 @@
 #include "Containers/UnrealString.h"
 #include "Templates/SharedPointer.h"
 #include "GameplayTagContainer.h"
+#include "AttributeSet.h"
 
 class UScriptStruct;
 struct FGameplayEffectSpec;
@@ -21,6 +22,36 @@ struct FActiveGameplayEffectHandle
 private:
     int32 Handle;
     bool bPassedFiltersAndWasExecuted;
+};
+
+enum class EGameplayEffectAttributeCaptureSource : uint8
+{
+    Source,
+    Target
+};
+
+struct FGameplayEffectAttributeCaptureDefinition
+{
+    FGameplayEffectAttributeCaptureDefinition(FGameplayAttribute InAttribute, EGameplayEffectAttributeCaptureSource InSource, bool InSnapshot)
+        : AttributeToCapture(InAttribute)
+        , AttributeSource(InSource)
+        , bSnapshot(InSnapshot)
+    {
+    }
+
+    FGameplayAttribute AttributeToCapture;
+    EGameplayEffectAttributeCaptureSource AttributeSource;
+    bool bSnapshot;
+};
+
+struct FAggregatorEvaluateParameters
+{
+    const FGameplayTagContainer* SourceTags = nullptr;
+    const FGameplayTagContainer* TargetTags = nullptr;
+    FGameplayTagContainer AppliedSourceTagFilter;
+    FGameplayTagContainer AppliedTargetTagFilter;
+    TArray<FActiveGameplayEffectHandle> IgnoreHandles;
+    bool bIncludePredictiveMods = false;
 };
 
 struct FGameplayEffectContext

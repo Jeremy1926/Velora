@@ -6,6 +6,28 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+bool UAbilitySystemComponent::HasAttributeSetForAttribute(FGameplayAttribute Attribute) const
+{
+    static auto HasAttributeSetForAttribute = Anchor::Function<bool (*)(const UAbilitySystemComponent*, FGameplayAttribute)>(TEXT("UAbilitySystemComponent::HasAttributeSetForAttribute"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("call 0x*; test al, al; jz 0x*")
+        .Call()
+        .Get();
+
+    return HasAttributeSetForAttribute(this, Attribute);
+}
+
+void UAbilitySystemComponent::CaptureAttributeForGameplayEffect(FGameplayEffectAttributeCaptureSpec& OutCaptureSpec)
+{
+    static auto CaptureAttributeForGameplayEffect = Anchor::Function<void (*)(UAbilitySystemComponent*, FGameplayEffectAttributeCaptureSpec&)>(TEXT("UAbilitySystemComponent::CaptureAttributeForGameplayEffect"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("movdqa [*], xmm0; call 0x*")
+        .Call()
+        .Get();
+
+    CaptureAttributeForGameplayEffect(this, OutCaptureSpec);
+}
+
 FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
 {
     static auto VirtualMakeEffectContext = Anchor::VirtualFunction<FGameplayEffectContextHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectContextHandle*)>(TEXT("UAbilitySystemComponent::MakeEffectContext"))
