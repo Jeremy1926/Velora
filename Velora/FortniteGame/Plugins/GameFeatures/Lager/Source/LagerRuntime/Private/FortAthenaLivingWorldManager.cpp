@@ -319,18 +319,19 @@ void UFortAthenaLivingWorldManager::ProcessEQSRequests()
         if (PendingEQSSpawn.LivingWorldManager.Get() != this)
             continue;
 
-        if (PendingEQSSpawn.QueryID != INDEX_NONE)
+        if (PendingEQSSpawn.QueryID != INDEX_NONE && GetWorld()->GetTimeSeconds() < PendingEQSSpawn.QueryStartTime + 5.0f)
             return;
 
         auto EQSHelper = GetEQSHelper();
         auto RootComponent = EQSHelper ? EQSHelper->GetRootComponent() : nullptr;
         auto SpawnAroundEnvironmentQuery = (UEnvQuery*)PendingEQSSpawn.SpawnAroundEnvironmentQuery.Get();
 
-        if (RootComponent && SpawnAroundEnvironmentQuery)
+        if (PendingEQSSpawn.QueryID == INDEX_NONE && RootComponent && SpawnAroundEnvironmentQuery)
         {
             RootComponent->K2_SetWorldLocationAndRotation(PendingEQSSpawn.DefaultPosition, PendingEQSSpawn.DefaultRotation, false, true);
 
             FEnvQueryRequest QueryRequest(SpawnAroundEnvironmentQuery, EQSHelper);
+            PendingEQSSpawn.QueryStartTime = GetWorld()->GetTimeSeconds();
             PendingEQSSpawn.QueryID = QueryRequest.Execute(EEnvQueryRunMode::AllMatching, FQueryFinishedSignature::CreateUObject(this, &UFortAthenaLivingWorldManager::OnEQSRequestFinished));
 
             if (PendingEQSSpawn.QueryID != INDEX_NONE)
@@ -349,13 +350,13 @@ void UFortAthenaLivingWorldManager::OnEQSRequestFinished(TSharedPtr<FEnvQueryRes
 {
     for (int32 Index = 0; Index < PendingEQSSpawns.Num(); Index++)
     {
-        if (PendingEQSSpawns[Index].LivingWorldManager.Get() != this || PendingEQSSpawns[Index].QueryID == INDEX_NONE)
+        if (!Result.IsValid() || PendingEQSSpawns[Index].LivingWorldManager.Get() != this || PendingEQSSpawns[Index].QueryID != Result->QueryID)
             continue;
 
         const FLivingWorldPendingEQSSpawn PendingEQSSpawn = PendingEQSSpawns[Index];
         PendingEQSSpawns.RemoveAt(Index);
 
-        const int32 ItemCount = Result.IsValid() ? Result->Items.Num() : 0;
+        const int32 ItemCount = Result->Items.Num();
         const FVector Location = ItemCount > 0 ? Result->GetItemAsLocation(FMath::RandHelper(ItemCount)) : FVector(ForceInit);
 
         SpawnFromEQSRequest(PendingEQSSpawn, ItemCount > 0 ? &Location : nullptr);

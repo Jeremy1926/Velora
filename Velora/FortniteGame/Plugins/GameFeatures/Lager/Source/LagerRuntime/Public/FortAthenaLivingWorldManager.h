@@ -72,6 +72,7 @@ public:
         FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
         int32 RequestID = INDEX_NONE;
         int32 QueryID = INDEX_NONE;
+        float QueryStartTime = 0.0f;
     };
 
     struct FLivingWorldEventRuntimeData

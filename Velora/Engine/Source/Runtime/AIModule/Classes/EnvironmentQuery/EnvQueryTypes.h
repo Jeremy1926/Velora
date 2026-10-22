@@ -7,6 +7,7 @@
 #include "Templates/SharedPointer.h"
 #include "UObject/NameTypes.h"
 
+class UClass;
 class UScriptStruct;
 class UEnvQuery;
 class UObject;
@@ -44,6 +45,11 @@ struct FEnvQueryResult
     FVector GetItemAsLocation(int32 Index) const;
 
     TArray<FEnvQueryItem> Items;
+    UClass* ItemType;
+    TArray<uint8> RawData;
+    uint8 Status;
+    int32 OptionIndex;
+    int32 QueryID;
 };
 
 typedef TDelegate<void(TSharedPtr<FEnvQueryResult>)> FQueryFinishedSignature;
