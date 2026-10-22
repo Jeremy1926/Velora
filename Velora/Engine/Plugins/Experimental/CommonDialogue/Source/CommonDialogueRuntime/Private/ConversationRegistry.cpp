@@ -129,12 +129,20 @@ void UConversationRegistry::BuildDependenciesGraph() const
 
 const TMap<FGameplayTag, TArray<FGuid>>& UConversationRegistry::GetEntryTagToEntryList() const
 {
-    static auto EntryTagToEntryList = Anchor::Offset(TEXT("UConversationRegistry::EntryTagToEntryList"))
+    static auto EntryTagToEntryListAdd = Anchor::Offset(TEXT("UConversationRegistry::EntryTagToEntryList"))
         .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
         .Start()
+        .Optional()
         .Find("mov rax, [rbp+0x*]; add rax, 0x*; mov [rbp-0x*], rax")
         .Find("add rax, 0x*")
         .Imm();
+
+    static auto EntryTagToEntryList = EntryTagToEntryListAdd > 0 ? EntryTagToEntryListAdd : Anchor::Offset(TEXT("UConversationRegistry::EntryTagToEntryList"))
+        .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
+        .Start()
+        .Find("mov rax, [rbx]; lea r12, [r13+0x*]; movzx edx, ax")
+        .Find("lea r12, [r13+0x*]")
+        .Disp();
 
     return *(const TMap<FGameplayTag, TArray<FGuid>>*)((const uint8*)this + EntryTagToEntryList);
 }
