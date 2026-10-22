@@ -41,6 +41,13 @@ void AFortDagwoodVehicle::AddSpawningFuel()
         .Native(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:OnVehicleSpawned"))
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/ValetRuntime.FortDagwoodVehicleManager:OnVehicleSpawned"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     AddSpawningFuel(this);

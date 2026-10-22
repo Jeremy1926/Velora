@@ -268,6 +268,11 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("mov eax, [rcx+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov r8d, [rcx+0x*]")
             .Disp();
 
         if (!CachedInstigator || !WeakInstigator)

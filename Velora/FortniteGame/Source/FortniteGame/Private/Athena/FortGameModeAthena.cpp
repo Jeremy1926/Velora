@@ -622,6 +622,12 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
         .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
         .Last("call 0x*; mov rcx, [*]; mov *, [rcx+0x*]")
         .Target()
+        .Or()
+        .If(!DETOUR_ORIGINAL(AFortSafeZoneIndicator, OffsetShrinkTimesFromServerTime) && !DETOUR_ORIGINAL(AFortSafeZoneIndicator, SetShrinkDuration) && AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("mov rcx, rsi; call 0x*; mov edx, [0x*]")
+        .Find("call 0x*")
+        .Target()
         .Optional()
         .Inline());
 
@@ -636,6 +642,13 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
         .Last("call 0x*; mov rcx, [*]; mov *, [rcx+0x*]")
         .Target()
         .Find("mov rax, [rdi+0x*]; movsxd rcx, ecx; movss xmm0, dword ptr [rax+rcx*4]")
+        .Or()
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("mov rcx, rsi; call 0x*; mov edx, [0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp r15d, [rsi+0x*]; jnl 0x*; mov rax, [rsi+0x*]")
+        .Find("mov rax, [rsi+0x*]")
         .Disp();
 
     Original();
