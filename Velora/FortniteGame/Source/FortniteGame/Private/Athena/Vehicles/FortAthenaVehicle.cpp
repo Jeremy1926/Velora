@@ -327,7 +327,7 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
             Part.ConfigIndex = ConfigIndex;
             Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].BoneName) : INDEX_NONE;
             Part.ShapeIndex = ShapeIndex;
-            Part.Health = PartConfigs[ConfigIndex].MaxHealth;
+            Part.Health = PartConfigs[ConfigIndex].GetbStartsDisabled() ? 0.0f : PartConfigs[ConfigIndex].MaxHealth;
 
             DamageableParts.Add(Part);
         }

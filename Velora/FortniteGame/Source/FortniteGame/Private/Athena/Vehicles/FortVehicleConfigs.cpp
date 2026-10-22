@@ -25,6 +25,13 @@ UScriptStruct* FVehicleDamageablePartConfig::StaticStruct()
     return Struct;
 }
 
+bool FVehicleDamageablePartConfig::GetbStartsDisabled() const
+{
+    static auto bStartsDisabled = StaticStruct()->FindPropertyByName(FName(TEXT("bStartsDisabled")));
+
+    return bStartsDisabled && *bStartsDisabled->ContainerPtrToValuePtr<bool>(this);
+}
+
 int32 FVehicleDamageablePartConfig::GetTypeSize()
 {
     static auto TypeSize = StaticStruct()->GetPropertiesSize();
