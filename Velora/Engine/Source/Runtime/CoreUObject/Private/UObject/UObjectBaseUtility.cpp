@@ -18,6 +18,12 @@ void* UObjectBaseUtility::GetInterfaceAddress(UClass* InterfaceClass)
         .Find("jmp 0x*")
         .Target()
         .Call(2)
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("ret")
+        .Last("call 0x*")
+        .Call()
+        .Call(2)
         .Get();
 
     return GetInterfaceAddress(this, InterfaceClass);

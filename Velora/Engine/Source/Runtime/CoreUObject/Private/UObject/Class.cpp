@@ -101,6 +101,13 @@ UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
         .Start()
         .Find("call [rax+0x*]; mov *, [*+0x*]")
         .Find("mov *, [*+0x*]")
+        .Or()
+        .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
+        .Start()
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov *, [*+0x*]")
         .Disp();
 
     if (*(UObject**)((uint8_t*)this + ClassDefaultObject) == nullptr && bCreateIfNeeded)
@@ -117,6 +124,13 @@ UObject* UClass::InternalCreateDefaultObjectWrapper() const
         .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
         .Start()
         .Find("call [rax+0x*]; mov *, [*+0x*]")
+        .Or()
+        .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
+        .Start()
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]")
         .Get();
 
     return CreateDefaultObject(this);

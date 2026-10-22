@@ -21,6 +21,8 @@ FName::FName(EName N)
             .Last("mov edx, 0x11e")
             .Find("call 0x*")
             .Target()
+            .Or()
+            .Pattern("48 89 5C 24 08 57 48 83 EC 20 48 63 DA 48 8B F9 E8 ? ? ? ? 8B 84 98 ? ? ? ? 48 8B 5C 24 30 89 07 48 8B C7")
             .Get();
 
         ComparisonIndex = NAME_None;
@@ -44,6 +46,35 @@ FName::FName(EName N)
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
+    static auto MakeDetectNumber = Anchor::Function<FName* (*)(FName*, const void*, EFindName)>(TEXT("FNameHelper::MakeDetectNumber"))
+        .String(TEXT("OnlineSubsystemUtils"), "lea rcx, [0x*]; lea rdx, [rsp+0x*]; mov [rsp+0x20], rcx; call 0x*; mov [rsp+0x28], eax")
+        .Find("mov r8d, 0x1; movdqa [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (MakeDetectNumber)
+    {
+        struct
+        {
+            const WIDECHAR* Data;
+            int32 Len;
+            bool bIsWide;
+        } View { Name, 0, false };
+
+        uint32 Chars = 0;
+
+        while (Name && Name[View.Len])
+            Chars |= Name[View.Len++];
+
+        View.bIsWide = (Chars & 0xFFFFFF80) != 0;
+
+        MakeDetectNumber(this, &View, FindType);
+
+        return;
+    }
+
     static auto Constructor = Anchor::Function<void (*)(FName*, const WIDECHAR*, EFindName)>(TEXT("FName::FName"))
         .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
         .Start()
@@ -70,6 +101,11 @@ uint32 GetTypeHash(const FName N)
 FString FName::ToString() const
 {
     static auto ToString = Anchor::Function<void (*)(const FName*, FString&)>(TEXT("FName::ToString"))
+        .String(TEXT("Failed to find function %s in %s"))
+        .Is("call 0x*")
+        .Last("call 0x*")
+        .Target()
+        .Or()
         .String(TEXT("Failed to find function %s in %s"))
         .Start()
         .Call(3)

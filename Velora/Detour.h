@@ -369,6 +369,14 @@ public:
         return Anchor::PatchBranch(Name, Code.Get(), Code.Last(Instructions).Target());
     }
 
+    const uint8_t* BranchToNext(std::string_view Instructions, int32_t Index) const
+    {
+        if (bSkipped)
+            return nullptr;
+
+        return Anchor::PatchBranch(Name, Code.Get(), Code.Find(Instructions, Index).Target());
+    }
+
 private:
     bool bSkipped = false;
 };
