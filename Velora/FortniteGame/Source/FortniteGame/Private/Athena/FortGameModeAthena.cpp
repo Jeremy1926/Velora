@@ -3,6 +3,8 @@
 #include "Athena/FortGameStateAthena.h"
 #include "FortGameStateZone.h"
 #include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortSafeZoneIndicator.h"
+#include "Athena/FortSafeZoneIndicatorFuture.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
@@ -566,6 +568,59 @@ bool AFortGameModeAthena::IsMapInfoInitialized() const
     static auto bMapInfoInitialized = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMapInfoInitialized")));
 
     return bMapInfoInitialized->GetPropertyValue_InContainer(this);
+}
+
+void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
+{
+    DETOUR(AFortGameModeAthena, StartNewSafeZonePhase, Anchor::Hook()
+        .If(AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("FutureReplicator"))) != nullptr)
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Start()
+        .Optional()
+        .Inline());
+
+    Original(NewSafeZonePhase);
+
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+    auto FutureReplicator = SafeZoneIndicator ? SafeZoneIndicator->GetFutureReplicator() : nullptr;
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+    auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
+    auto& SafeZoneLocations = GetSafeZoneLocations();
+
+    if (!FutureReplicator || !SafeZoneRadius || !SafeZoneLocations.Num())
+        return;
+
+    const int32 NextSafeZoneIndex = NewSafeZonePhase < 0 ? GetSafeZonePhase() : GetSafeZonePhase() + 1;
+    const int32 NextNextSafeZoneIndex = FMath::Clamp(NextSafeZoneIndex + 1, 0, SafeZoneLocations.Num() - 1);
+
+    SafeZoneIndicator->GetNextNextCenter() = SafeZoneLocations[NextNextSafeZoneIndex];
+    SafeZoneIndicator->GetNextNextRadius() = SafeZoneRadius->GetValueAtLevel((float)NextNextSafeZoneIndex);
+
+    FutureReplicator->GetNextNextCenter() = SafeZoneIndicator->GetNextNextCenter();
+    FutureReplicator->GetNextNextRadius() = SafeZoneIndicator->GetNextNextRadius();
+    FutureReplicator->ForceNetUpdate();
+}
+
+int32 AFortGameModeAthena::GetSafeZonePhase() const
+{
+    static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
+
+    return *SafeZonePhase->ContainerPtrToValuePtr<int32>(this);
+}
+
+AFortSafeZoneIndicator* AFortGameModeAthena::GetSafeZoneIndicator() const
+{
+    static auto SafeZoneIndicator = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
+
+    return *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this);
+}
+
+TArray<FVector>& AFortGameModeAthena::GetSafeZoneLocations()
+{
+    static auto SafeZoneLocations = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneLocations")));
+
+    return *SafeZoneLocations->ContainerPtrToValuePtr<TArray<FVector>>(this);
 }
 
 void AFortGameModeAthena::OverrideAISettings(UAthenaAISettings* InAISettings)

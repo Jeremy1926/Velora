@@ -15,6 +15,7 @@
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Athena/FortSafeZoneIndicatorFuture.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 #include "Containers/Map.h"
@@ -729,6 +730,32 @@ void UFortKismetLibrary::GetCalendarEventInformation(UObject* WorldContextObject
         .Get();
 
     GetCalendarEventInformation(WorldContextObject, EventName, bIsEventActive, TimeSinceBegin, TimeUntilEnd, TimespanRatio);
+}
+
+void UFortKismetLibrary::SetExtendedSafeZoneInfo(const AActor* ControllerOrPawn, bool bEnable)
+{
+    auto Pawn = Cast<AFortPawn>(ControllerOrPawn);
+
+    if (auto PlayerController = Cast<AFortPlayerController>(Pawn ? (const AActor*)Pawn->GetController() : ControllerOrPawn))
+        AFortSafeZoneIndicatorFuture::SetWhitelistedPlayer(PlayerController, bEnable);
+}
+
+void UFortKismetLibrary::execSetExtendedSafeZoneInfo(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execSetExtendedSafeZoneInfo, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:SetExtendedSafeZoneInfo"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SetExtendedSafeZoneInfo")));
+
+    AActor* ControllerOrPawn = nullptr;
+    uint32 bEnable = 0;
+
+    Stack.StepCompiledIn(&ControllerOrPawn);
+    Stack.StepCompiledIn(&bEnable);
+    Stack.Code += !!Stack.Code;
+
+    SetExtendedSafeZoneInfo(ControllerOrPawn, !!bEnable);
 }
 
 AFortAIDirector* UFortKismetLibrary::GetAIDirector(const UObject* WorldContextObject)

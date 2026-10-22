@@ -127,3 +127,24 @@ float& AFortSafeZoneIndicator::GetTimeRemainingWhenPhasePaused()
 
     return *TimeRemainingWhenPhasePaused->ContainerPtrToValuePtr<float>(this);
 }
+
+float& AFortSafeZoneIndicator::GetNextNextRadius()
+{
+    static auto NextNextRadius = GetClass()->FindPropertyByName(FName(TEXT("NextNextRadius")));
+
+    return *NextNextRadius->ContainerPtrToValuePtr<float>(this);
+}
+
+FVector& AFortSafeZoneIndicator::GetNextNextCenter()
+{
+    static auto NextNextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextNextCenter")));
+
+    return *NextNextCenter->ContainerPtrToValuePtr<FVector>(this);
+}
+
+AFortSafeZoneIndicatorFuture* AFortSafeZoneIndicator::GetFutureReplicator() const
+{
+    static auto FutureReplicator = GetClass()->FindPropertyByName(FName(TEXT("FutureReplicator")));
+
+    return FutureReplicator ? *FutureReplicator->ContainerPtrToValuePtr<AFortSafeZoneIndicatorFuture*>(this) : nullptr;
+}

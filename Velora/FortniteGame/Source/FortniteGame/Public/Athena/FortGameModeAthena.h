@@ -6,6 +6,7 @@
 
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
+class AFortSafeZoneIndicator;
 class APlayerState;
 class UFortServerBotManagerAthena;
 class UFortWeaponItemDefinition;
@@ -64,4 +65,12 @@ public:
     bool ShouldSpawnVehicle(TSubclassOf<AFortAthenaVehicle> VehicleClass);
 
     bool IsMapInfoInitialized() const;
+
+    void StartNewSafeZonePhase(int32 NewSafeZonePhase);
+
+    int32 GetSafeZonePhase() const;
+
+    AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
+
+    TArray<FVector>& GetSafeZoneLocations();
 };

@@ -231,6 +231,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\NetworkGuid.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\WeakObjectPtrTemplates.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\WeakObjectPtr.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectKey.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNet.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreOnline.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Actor.h" />
@@ -299,6 +300,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaMapInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaSupplyDrop.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortSafeZoneIndicator.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortSafeZoneIndicatorFuture.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPoiVolume.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h" />
@@ -571,6 +573,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaSupplyDrop.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicator.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicatorFuture.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiVolume.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp" />

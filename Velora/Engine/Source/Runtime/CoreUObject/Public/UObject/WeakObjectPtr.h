@@ -47,6 +47,8 @@ public:
     }
 
 private:
+    friend struct FObjectKey;
+
     FORCEINLINE bool SerialNumbersMatch(FUObjectItem* ObjectItem) const
     {
         const int32 ActualSerialNumber = ObjectItem->GetSerialNumber();

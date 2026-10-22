@@ -206,6 +206,41 @@ public:
         }
     }
 
+    void RemoveAtSwap(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
+    {
+        if (Count)
+        {
+            DestructItems(GetData() + Index, Count);
+
+            const int32 NumElementsAfterHole = ArrayNum - (Index + Count);
+            const int32 NumElementsToMoveIntoHole = Count < NumElementsAfterHole ? Count : NumElementsAfterHole;
+
+            if (NumElementsToMoveIntoHole)
+            {
+                memcpy(GetData() + Index, GetData() + (ArrayNum - NumElementsToMoveIntoHole), NumElementsToMoveIntoHole * sizeof(ElementType));
+            }
+
+            ArrayNum -= Count;
+
+            if (bAllowShrinking)
+            {
+                ResizeShrink();
+            }
+        }
+    }
+
+    int32 RemoveSingleSwap(const ElementType& Item, bool bAllowShrinking = true)
+    {
+        int32 Index;
+
+        if (!Find(Item, Index))
+            return 0;
+
+        RemoveAtSwap(Index, 1, bAllowShrinking);
+
+        return 1;
+    }
+
     FORCEINLINE bool Contains(const ElementType& Item) const
     {
         for (const ElementType* Data = GetData(), *DataEnd = Data + ArrayNum; Data != DataEnd; ++Data)

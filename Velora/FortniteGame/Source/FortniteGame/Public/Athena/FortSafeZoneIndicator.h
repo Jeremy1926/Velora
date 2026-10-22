@@ -2,6 +2,8 @@
 
 #include "GameFramework/Actor.h"
 
+class AFortSafeZoneIndicatorFuture;
+
 class AFortSafeZoneIndicator : public AActor
 {
 public:
@@ -20,4 +22,10 @@ public:
     float& GetSafeZoneFinishShrinkTime();
 
     float& GetTimeRemainingWhenPhasePaused();
+
+    float& GetNextNextRadius();
+
+    FVector& GetNextNextCenter();
+
+    AFortSafeZoneIndicatorFuture* GetFutureReplicator() const;
 };

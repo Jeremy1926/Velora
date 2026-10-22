@@ -126,4 +126,8 @@ public:
     void execUpgradeAllWeaponsVerticalToRarity(FFrame& Stack, void* const Z_Param__Result);
 
     static void GetCalendarEventInformation(UObject* WorldContextObject, const FString& EventName, bool& bIsEventActive, FTimespan& TimeSinceBegin, FTimespan& TimeUntilEnd, float& TimespanRatio);
+
+    static void SetExtendedSafeZoneInfo(const AActor* ControllerOrPawn, bool bEnable);
+
+    void execSetExtendedSafeZoneInfo(FFrame& Stack, void* const Z_Param__Result);
 };
