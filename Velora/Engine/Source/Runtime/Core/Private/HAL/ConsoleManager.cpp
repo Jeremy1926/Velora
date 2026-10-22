@@ -50,14 +50,14 @@ IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
 TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
 {
     static auto AsVariableInt = Anchor::VirtualFunction<TConsoleVariableData<int32>* (*)(IConsoleObject*)>(TEXT("IConsoleObject::AsVariableInt"))
-        .String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms"))
-        .Start()
-        .Find("mov rcx, [0x*]; test rcx, rcx")
-        .Find("call [*+0x*]", 2)
-        .Or()
         .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; call 0x*; lea rcx, [0x*]; mov [0x*], rax")
         .Find("call 0x*")
         .Target()
+        .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms"))
+        .Start()
+        .Find("mov rcx, [0x*]; test rcx, rcx")
         .Find("call [*+0x*]", 2)
         .Get();
 
