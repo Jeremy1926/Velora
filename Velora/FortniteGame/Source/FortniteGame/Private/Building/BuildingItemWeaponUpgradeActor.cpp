@@ -93,6 +93,13 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
         .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov *, eax; mov rcx, *; call 0x*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")));
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(Player);
@@ -158,6 +165,12 @@ FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponIt
         .Find("setz dl; add dl, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz dl; mov rcx, *; add dl, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (StaticGetItemRow)
@@ -183,6 +196,13 @@ int32 ABuildingItemWeaponUpgradeActor::GetCostForRessource(const uint8* UpgradeC
         .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov *, eax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Inline());
 
     static auto BrickCost = FWeaponUpgradeItemRow::StaticStruct()->FindPropertyByName(FName(TEXT("BrickCost")));
@@ -198,6 +218,12 @@ bool ABuildingItemWeaponUpgradeActor::AreConsumedItemsRemovedByGame()
         .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
         .Start()
         .Find("lea rdx, [*+0x1a]; mov rcx, *; mov *, eax; call 0x*")
+        .Find("call *", 2)
+        .Is("call [*]")
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov *, eax; mov rcx, *; call 0x*")
         .Find("call *", 2)
         .Is("call [*]")
         .Get();

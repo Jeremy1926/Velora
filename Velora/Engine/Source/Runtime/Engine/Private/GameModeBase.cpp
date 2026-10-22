@@ -9,6 +9,12 @@ UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InControlle
 {
     static auto GetDefaultPawnClassForController = Anchor::Function<UClass* (*)(AGameModeBase*, AController*)>(TEXT("AGameModeBase::GetDefaultPawnClassForController"))
         .String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot"))
+        .Is("call 0x*")
+        .Find("mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("SpawnDefaultPawnFor: Failed due to no start spot"))
         .Call()
         .Get();
 

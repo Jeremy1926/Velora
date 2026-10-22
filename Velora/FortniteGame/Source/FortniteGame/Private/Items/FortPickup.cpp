@@ -47,6 +47,18 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]; call 0x*")
         .Find("call 0x*; mov rcx, rax; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]")
+        .Find("call 0x*; mov rcx, rax; call 0x*")
+        .Get();
+
+    static auto bWeakOwners = Anchor::Exists()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]")
+        .Find("call 0x*", 2)
+        .Target()
+        .Has("mov rax, [rbp+0x38]; test rax, rax; jz *; mov eax, [rax+0xc]")
         .Get();
 
     static auto CreateFromData = Anchor::Function<const void*>(TEXT("AFortPickup::CreateFromData"))
@@ -58,6 +70,11 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .If(!bArguments && bItemEntryByValue)
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]")
+        .Call(3)
+        .Or()
+        .If(!bArguments && bItemEntryByValue)
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]")
         .Call(3)
         .Or()
         .If(!bArguments && !bItemEntryByValue)
@@ -88,6 +105,13 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         *(UWorld**)CreationData.GetData() = World;
         auto ItemEntryCopy = new(CreationData.GetData() + sizeof(UWorld*)) FFortItemEntry(ItemEntry);
         memcpy(CreationData.GetData() + sizeof(UWorld*) + FFortItemEntry::GetTypeSize(), &AfterItemEntry, sizeof(AfterItemEntry));
+
+        if (bWeakOwners)
+        {
+            auto CreationAfterItemEntry = (decltype(&AfterItemEntry))(CreationData.GetData() + sizeof(UWorld*) + FFortItemEntry::GetTypeSize());
+            *(FWeakObjectPtr*)&CreationAfterItemEntry->OptionalOwnerPC = OptionalOwnerPC;
+            *(FWeakObjectPtr*)&CreationAfterItemEntry->Owner = Owner;
+        }
 
         auto Pickup = ((AFortPickup* (*)(const uint8*))CreateFromData)(CreationData.GetData());
         ItemEntryCopy->~FFortItemEntry();
@@ -444,6 +468,11 @@ void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, co
         .Last("mov byte ptr [rsp+0x20], 0x1")
         .Find("call *")
         .Is("call [*]")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("ret")
+        .Last("mov byte ptr [rsp+0x20], 0x1")
+        .Last("mov r*, [rax+0x*]")
         .Optional()
         .Get();
 
@@ -470,6 +499,14 @@ float AFortPickup::GetFlyTime() const
         .Last("mov byte ptr [rsp+0x20], 0x1")
         .Find("call *")
         .Is("call [*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPickup"))
+        .Find("comiss *")
+        .Call()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("ret")
+        .Last("mov byte ptr [rsp+0x20], 0x1")
+        .Last("mov r*, [rax+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortPickup"))
         .Find("comiss *")
         .Call()

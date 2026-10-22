@@ -324,6 +324,9 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
         static auto InventoryOwner = Anchor::Offset(TEXT("AFortPlayerController::BP_FindExistingItemForDefinition inventory owner"))
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
             .Find("lea rcx, [*+0x*]; mov rdx, *; setnz r8b")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("lea rcx, [*+0x*]; movups xmm0, [*]; setnz r8b")
             .Disp();
 
         static auto FindExistingItemForDefinition = Anchor::VirtualFunction<UFortItem* (*)(const void*, const UFortItemDefinition*, bool)>(TEXT("IFortInventoryOwnerInterface::FindExistingItemForDefinition"))
@@ -331,9 +334,30 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov r9, [rax+0x*]")
             .Get();
 
-        return InventoryOwner ? FindExistingItemForDefinition((const uint8*)this + InventoryOwner, ItemDefinition, bInStorageVault) : nullptr;
+        static auto bItemVariantGuid = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition")))->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr;
+
+        if (!InventoryOwner)
+            return nullptr;
+
+        if (bItemVariantGuid)
+        {
+            struct
+            {
+                const UFortItemDefinition* ItemDefinition;
+                FGuid ItemVariantGuid;
+            } const ItemAndVariant{ ItemDefinition, FGuid() };
+
+            return FindExistingItemForDefinition.As<UFortItem* (*)(const void*, const void*, bool)>()((const uint8*)this + InventoryOwner, &ItemAndVariant, bInStorageVault);
+        }
+
+        return FindExistingItemForDefinition((const uint8*)this + InventoryOwner, ItemDefinition, bInStorageVault);
     }
 
     static auto K2_FindExistingItemForDefinition = Anchor::Function<UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool)>(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition"))
@@ -1349,6 +1373,10 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
         .Start()
         .Find("call [r10+0x*]")
         .Or()
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov r10, [rax+0x*]; mov al, [*]; mov [rsp+0x28], rcx")
+        .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("*, 0xffffffff")
@@ -1492,6 +1520,11 @@ bool AFortPlayerController::IsPlayerAlive()
         .Start()
         .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; test al, al")
         .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("mov rax, [r14]; mov rcx, r14; call [rax+0x*]; test al, al")
+        .Find("call [rax+0x*]")
         .Get();
 
     return IsPlayerAlive(this);
@@ -1506,15 +1539,21 @@ TAssetPtr<UObject>& AFortPlayerController::GetStartRepairSound()
 
 void AFortPlayerController::ResetQuickBarToPrimary()
 {
-    static auto ResetQuickBarToPrimary = Anchor::Function<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::ResetQuickBarToPrimary"))
+    static auto ResetQuickBarToPrimary = Anchor::Function<void (*)(AFortPlayerController*, bool)>(TEXT("AFortPlayerController::ResetQuickBarToPrimary"))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied"))
         .Find("call [*+0x*]")
         .LogSlot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Call(2)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied"))
+        .Find("mov rbx, [rax+0x*]; call 0x*; mov rdx, rax; mov rcx, *; call rbx")
+        .LogSlot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Call(2)
         .Get();
 
-    ResetQuickBarToPrimary(this);
+    ResetQuickBarToPrimary(this, false);
 }
 
 bool AFortPlayerController::ForceEquipValidWeapon()

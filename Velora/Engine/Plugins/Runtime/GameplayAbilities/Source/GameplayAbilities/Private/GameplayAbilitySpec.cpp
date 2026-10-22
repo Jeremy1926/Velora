@@ -59,6 +59,11 @@ void FGameplayAbilitySpecHandle::GenerateNewHandle()
         .Start()
         .Find("mov eax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("FGameplayAbilitySpec::FGameplayAbilitySpec for %s from %s"))
+        .Start()
+        .Find("mov edx, [0x*]")
+        .Target()
         .Get();
 
     Handle = GHandle++;

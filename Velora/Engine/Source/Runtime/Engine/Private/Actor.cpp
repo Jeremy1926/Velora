@@ -128,6 +128,13 @@ void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule Ro
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("call [*+0x*]")
             .Get();
 
         const FDetachmentTransformRules DetachmentRules(LocationRule, RotationRule, ScaleRule, true);
@@ -220,6 +227,12 @@ bool AActor::IsPendingKillPending() const
         .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
         .Start()
         .Find("or byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Find("test byte ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
@@ -232,6 +245,12 @@ bool AActor::IsPendingKillPending() const
         .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
         .Start()
         .Find("or byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Find("test byte ptr [*+0x*], 0x*")
         .Value();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();

@@ -255,6 +255,22 @@ void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverr
 
 void AFortPawn::SetGravityMultiplier(float NewGravityVal)
 {
+    static auto VirtualSetGravityMultiplier = Anchor::VirtualFunction<void (*)(AFortPawn*, float)>(TEXT("AFortPawn::SetGravityMultiplier"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call *")
+        .Is("call [rax+0x*]")
+        .Optional()
+        .Get();
+
+    if (VirtualSetGravityMultiplier)
+    {
+        VirtualSetGravityMultiplier(this, NewGravityVal);
+
+        return;
+    }
+
     static auto SetGravityMultiplier = Anchor::Function<void (*)(AFortPawn*, float)>(TEXT("AFortPawn::SetGravityMultiplier"))
         .Native(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier"))
         .Get();
