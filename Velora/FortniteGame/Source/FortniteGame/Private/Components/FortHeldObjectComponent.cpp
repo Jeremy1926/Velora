@@ -8,6 +8,7 @@
 #include "Weapons/FortProjectileMovementComponent.h"
 #include "Weapons/FortWeapon.h"
 #include "Engine/EngineTypes.h"
+#include "GameplayEffectTypes.h"
 #include "Engine/World.h"
 #include "WorldCollision.h"
 #include "Math/Quat.h"
@@ -220,6 +221,24 @@ void UFortHeldObjectComponent::OnRep_OwningPawn(AFortPlayerPawn* LastOwningPawn)
 
 float UFortHeldObjectComponent::GetGravityScale() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto HeldObjectThrownData = GetClass()->FindPropertyByName(FName(TEXT("HeldObjectThrownData")));
+        static auto ThrownDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.HeldObjectThrownData"));
+        static auto GravityScale = ThrownDataStruct ? ThrownDataStruct->FindPropertyByName(FName(TEXT("GravityScale"))) : nullptr;
+
+        if (!HeldObjectThrownData || !GravityScale)
+            return 0.0f;
+
+        return GravityScale->ContainerPtrToValuePtr<FScalableFloat>(HeldObjectThrownData->ContainerPtrToValuePtr<uint8>(this))->GetValueAtLevel(0.0f);
+    }
+
     static auto GetGravityScale = Anchor::Function<float (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetGravityScale"))
         .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
         .Get();
@@ -269,6 +288,24 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
 
 float UFortHeldObjectComponent::GetMaxSpeed() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto HeldObjectThrownData = GetClass()->FindPropertyByName(FName(TEXT("HeldObjectThrownData")));
+        static auto ThrownDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.HeldObjectThrownData"));
+        static auto MaxSpeed = ThrownDataStruct ? ThrownDataStruct->FindPropertyByName(FName(TEXT("MaxSpeed"))) : nullptr;
+
+        if (!HeldObjectThrownData || !MaxSpeed)
+            return 0.0f;
+
+        return MaxSpeed->ContainerPtrToValuePtr<FScalableFloat>(HeldObjectThrownData->ContainerPtrToValuePtr<uint8>(this))->GetValueAtLevel(0.0f);
+    }
+
     static auto GetMaxSpeed = Anchor::Function<float (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetMaxSpeed"))
         .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
         .Get();
