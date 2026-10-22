@@ -26,7 +26,7 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
 
     static auto InternalServerTryActiveAbility = Anchor::Hook(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), &UAbilitySystemComponent::InternalServerTryActiveAbility)
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerTryActivateAbility"))
-        .Find("call [*]", 2)
+        .Find("call [rax+0x*]", 2)
         .LogSlot(TEXT("UAbilitySystemComponent::ServerTryActivateAbility_Implementation"))
         .Entry(TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"))
         .Find("call [*]")
