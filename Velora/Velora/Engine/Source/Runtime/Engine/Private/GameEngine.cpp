@@ -20,6 +20,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "ContentStreaming.h"
+#include "HAL/IConsoleManager.h"
 #include "Interfaces/IAnalyticsProvider.h"
 #include "HAL/PlatformProperties.h"
 #include "Misc/EngineVersion.h"
@@ -58,6 +59,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         extern bool& GIsAllowingParticles;
         GIsAllowingParticles = false;
+
+        if (auto DisableGameplayCues = IConsoleManager::Get().FindConsoleVariable(TEXT("AbilitySystem.DisableGameplayCues")))
+            DisableGameplayCues->Set(TEXT("1"), ECVF_SetByCode);
 
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
