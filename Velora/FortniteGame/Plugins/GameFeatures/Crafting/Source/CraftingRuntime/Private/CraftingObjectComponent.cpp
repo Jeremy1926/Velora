@@ -2,12 +2,14 @@
 #include "CraftingObjectComponent.h"
 #include "FortKismetLibrary.h"
 #include "GameFramework/Actor.h"
+#include "Items/FortPickup.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Items/InventoryManagementLibrary.h"
 #include "Player/FortPlayerController.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/ScriptInterface.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -30,6 +32,29 @@ void UCraftingObjectComponent::StartCrafting(AFortPlayerController* Instigator, 
         .Get();
 
     StartCrafting(this, Instigator, &FormulaRow);
+}
+
+void UCraftingObjectComponent::PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow)
+{
+    auto Owner = GetOwner();
+
+    if (!Owner || !Owner->HasAuthority() || !Pickup || GetCraftingObjectState() != ECraftingObjectState::Idle)
+        return;
+
+    static auto PendingPickupCraftingItem = StaticClass()->FindPropertyByName(FName(TEXT("PendingPickupCraftingItem")));
+    static auto PendingPickupCraftingFormula = StaticClass()->FindPropertyByName(FName(TEXT("PendingPickupCraftingFormula")));
+    static auto OnPickup = Pickup->GetClass()->FindPropertyByName(FName(TEXT("OnPickup")));
+
+    if (!PendingPickupCraftingItem || !PendingPickupCraftingFormula || !OnPickup)
+        return;
+
+    *PendingPickupCraftingItem->ContainerPtrToValuePtr<AFortPickup*>(this) = Pickup;
+    *PendingPickupCraftingFormula->ContainerPtrToValuePtr<FName>(this) = FormulaRow;
+
+    FScriptDelegate Delegate;
+    Delegate.BindUFunction(this, FName(TEXT("HandlePickupCraftingItemPickedUp")));
+
+    OnPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(Pickup)->AddUnique(Delegate);
 }
 
 void UCraftingObjectComponent::CancelCrafting()

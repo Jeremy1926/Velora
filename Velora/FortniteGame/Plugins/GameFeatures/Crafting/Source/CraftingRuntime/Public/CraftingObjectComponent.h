@@ -7,6 +7,7 @@
 #include "Math/Vector.h"
 #include "UObject/NameTypes.h"
 
+class AFortPickup;
 class AFortPlayerController;
 
 enum class ECraftingObjectState : uint8
@@ -26,6 +27,8 @@ public:
     static UClass* StaticClass();
 
     void StartCrafting(AFortPlayerController* Instigator, const FName& FormulaRow);
+
+    void PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow);
 
     void CancelCrafting();
 
