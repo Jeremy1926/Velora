@@ -82,7 +82,7 @@ bool FText::IsEmpty() const
 
 FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
 {
-    static auto Format = Anchor::Function<FText (*)(FTextFormat, FFormatOrderedArguments&&)>(TEXT("FText::Format"))
+    static auto Format = Anchor::Optional<FText (*)(FTextFormat, FFormatOrderedArguments&&)>(TEXT("FText::Format"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
@@ -99,6 +99,9 @@ FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
         .Find("* r8, *; lea rdx, *; lea rcx, *; call 0x*")
         .Call()
         .Get();
+
+    if (!Format)
+        return FText();
 
     return Format(Fmt, MoveTemp(InArguments));
 }
@@ -150,6 +153,8 @@ FTextFormat::FTextFormat(const FText& InText)
         .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
         .Find("lea rdx, [0x*]")
         .Call()
+        .Or()
+        .Pattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 50 48 8B DA 48 8B F9 33 F6 33 D2 B9 B0 00 00 00")
         .Get();
 
     Constructor(this, InText);
