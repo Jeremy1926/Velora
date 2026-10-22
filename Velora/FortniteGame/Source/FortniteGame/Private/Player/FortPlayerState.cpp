@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Player/FortPlayerState.h"
+#include "Pawns/FortPlayerPawn.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -59,11 +61,17 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 
 APawn* AFortPlayerState::GetCurrentPawn() const
 {
-    static auto GetCurrentPawn = Anchor::Function<APawn* (*)(const AFortPlayerState*)>(TEXT("AFortPlayerState::GetCurrentPawn"))
+    static auto GetCurrentPawn = Anchor::Optional<APawn* (*)(const AFortPlayerState*)>(TEXT("AFortPlayerState::GetCurrentPawn"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn"))
+        .Is("push rbx; sub rsp, 0x20; mov rbx, [rcx+0x*]")
         .Get();
 
-    return GetCurrentPawn(this);
+    if (GetCurrentPawn)
+        return GetCurrentPawn(this);
+
+    static auto PawnPrivate = GetClass()->FindPropertyByName(FName(TEXT("PawnPrivate")));
+
+    return PawnPrivate ? Cast<AFortPlayerPawn>(*PawnPrivate->ContainerPtrToValuePtr<APawn*>(this)) : nullptr;
 }
 
 int32 AFortPlayerState::GetWorldPlayerId() const
