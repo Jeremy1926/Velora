@@ -266,6 +266,13 @@ void AFortAthenaVehicle::RepairAllDamageableParts(float NewHealth)
         .Entry(TEXT("/Script/ValetRuntime.Default__FortDagwoodVehicle"))
         .Find("call 0x*")
         .IsTarget("ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+        .Find("setnz *; add [*+0x20], *; mov rax, [*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/ValetRuntime.Default__FortDagwoodVehicle"))
+        .Find("call 0x*")
+        .IsTarget("ret*")
         .Optional()
         .AtCall());
 
