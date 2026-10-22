@@ -51,7 +51,6 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
         .Find("mov r8d, 0x1; movdqa [*], xmm0; call 0x*")
         .Find("call 0x*")
         .Target()
-        .Optional()
         .Get();
 
     if (MakeDetectNumber)

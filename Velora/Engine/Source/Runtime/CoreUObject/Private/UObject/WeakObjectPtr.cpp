@@ -24,7 +24,6 @@ void FWeakObjectPtr::operator=(const UObject* Object)
         .Last("call 0x*")
         .Call()
         .Call()
-        .Optional()
         .Get();
 
     if (Assign)

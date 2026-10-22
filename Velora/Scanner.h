@@ -83,7 +83,12 @@ namespace Scanner
         for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *" })
         {
             if (auto Finish = Exec.Find(Pattern); Finish.Get())
-                return Finish.Call();
+            {
+                auto Body = Finish.Find("call 0x*");
+                auto Return = Finish.Find("ret*");
+
+                return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
+            }
         }
 
         for (auto Finish = Exec.Find("mov [*+0x20], *"); Finish.Get(); Finish = Finish.Find("mov [*+0x20], *"))

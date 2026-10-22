@@ -53,7 +53,6 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Start()
         .Find("mov *, [rcx]; lea rax, [0x*]; mov *, [rcx+0x8]")
         .Start()
-        .Optional()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)

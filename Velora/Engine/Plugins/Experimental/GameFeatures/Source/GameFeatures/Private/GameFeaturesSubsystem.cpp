@@ -13,7 +13,6 @@ UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
         .Caller()
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
         .Call()
-        .Optional()
         .Get();
 
     return Get ? Get() : nullptr;

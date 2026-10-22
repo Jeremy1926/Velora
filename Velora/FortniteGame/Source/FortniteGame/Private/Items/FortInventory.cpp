@@ -139,7 +139,6 @@ FFortItemEntry::FFortItemEntry(const FFortItemEntry& Other)
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]; call 0x*; mov rdx, rax")
         .Call(2)
-        .Optional()
         .Get();
 
     if (Constructor)

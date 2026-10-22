@@ -35,7 +35,6 @@ SIZE_T FMemory::QuantizeSize(SIZE_T Count, uint32 Alignment)
         .Pattern("4C 8B 0D ? ? ? ? 4D 85 C9 75 04 48 8B C1 C3 49 8B 01 44 8B C2 48 8B D1 49 8B C9 48 FF 60 28")
         .Or()
         .Pattern("4C 8B 0D ? ? ? ? 4D 85 C9 75 04 48 8B C1 C3 49 8B 01 44 8B C2 48 8B D1 49 8B C9 48 FF 60 38")
-        .Optional()
         .Get();
 
     return QuantizeSize ? QuantizeSize(Count, Alignment) : Count;
