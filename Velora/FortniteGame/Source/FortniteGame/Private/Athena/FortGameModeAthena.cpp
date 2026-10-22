@@ -279,6 +279,9 @@ void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerC
     static auto AddToAlivePlayers = Anchor::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*)>(TEXT("AFortGameModeAthena::AddToAlivePlayers"))
         .String(TEXT("FortGameModeAthena: Player [%s] added to alive players list (Team [%d]).  Player count is now [%d].  Team count is now [%d]. "))
         .Start()
+        .Or()
+        .String(TEXT("FortGameModeAthena::AddToAlivePlayers: Player [%s] PC [%s] added to alive players list*"))
+        .Start()
         .Get();
 
     AddToAlivePlayers(this, PlayerController);
@@ -288,6 +291,9 @@ void AFortGameModeAthena::RemoveFromAlivePlayers(AFortPlayerControllerAthena* PC
 {
     static auto RemoveFromAlivePlayers = Anchor::Function<void (*)(AFortGameModeAthena*, AFortPlayerControllerAthena*, APlayerState*, APawn*, UFortWeaponItemDefinition*, EDeathCause, bool)>(TEXT("AFortGameModeAthena::RemoveFromAlivePlayers"))
         .String(TEXT("FortGameModeAthena: Player [%s] removed from alive players list*"))
+        .Start()
+        .Or()
+        .String(TEXT("FortGameModeAthena::RemoveFromAlivePlayers: Player [%s] PC [%s] removed from alive players list*"))
         .Start()
         .Get();
 
@@ -625,6 +631,11 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
         .Target()
         .Find("cmp eax, [rdi+0x*]; jnl 0x*; movsxd rcx, eax; mov rax, [rdi+0x*]; movss xmm0, dword ptr [rax+rcx*4]")
         .Find("mov rax, [rdi+0x*]")
+        .Or()
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("call 0x*; mov rcx, [*]; mov *, [rcx+0x*]")
+        .Target()
+        .Find("mov rax, [rdi+0x*]; movsxd rcx, ecx; movss xmm0, dword ptr [rax+rcx*4]")
         .Disp();
 
     Original();

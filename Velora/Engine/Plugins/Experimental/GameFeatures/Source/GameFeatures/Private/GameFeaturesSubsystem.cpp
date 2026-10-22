@@ -42,8 +42,17 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
         .Call(2)
         .Find("cmp dword ptr [*+0x*], 0x*")
+        .Is("cmp dword ptr [*+0x*], 0x*; jz *")
         .Find("jz 0x*")
         .Target()
+        .Find("mov *, [*+0x*]")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
+        .Call(2)
+        .Find("cmp dword ptr [*+0x*], 0x*")
+        .Is("cmp dword ptr [*+0x*], 0x*; jnz *; mov *, [*+0x*]")
         .Find("mov *, [*+0x*]")
         .Disp();
 

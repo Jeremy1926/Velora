@@ -12,6 +12,12 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
         .Find("call 0x*", 2)
         .Target()
         .Find("call [rax+0x*]", 2)
+        .Or()
+        .String(TEXT("AFortGameSessionDedicatedAthena: Removing navigation locks"))
+        .Is("call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]", 2)
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__AthenaNavSystem")));
 

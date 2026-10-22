@@ -128,6 +128,10 @@ void AFortWeapon::ModAmmo(int32 AmountToUse)
         .Find("setnz *")
         .Find("neg edx")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeapon:ModAmmo"))
+        .Find("setnz *")
+        .Find("call [rax+0x*]")
         .Get();
 
     ModAmmo(this, AmountToUse);

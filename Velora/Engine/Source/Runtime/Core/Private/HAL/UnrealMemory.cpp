@@ -24,6 +24,14 @@ void FMemory::Free(void* Original)
         .Start()
         .Find("test rcx, rcx; jz *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
+        .Start()
+        .Find("test rcx, rcx; jnz *; xor eax, eax")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("call 0x*")
+        .Call()
         .Get();
 
     Free(Original);
