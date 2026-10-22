@@ -436,6 +436,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAISystem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAISystem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIPerceptionManager.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIServiceManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIPopulationTracker.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIDirector.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h" />
@@ -740,6 +741,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIPerceptionManager.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIServiceManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIPopulationTracker.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Launch\Private\Windows\LaunchWindows.cpp" />
