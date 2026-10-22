@@ -48,6 +48,8 @@ public:
     void Set(const TCHAR* InValue, EConsoleVariableFlags SetBy);
 
     int32 GetInt() const;
+
+    float GetFloat() const;
 };
 
 class IConsoleManager

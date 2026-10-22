@@ -185,6 +185,23 @@ void AAbandonedCampsiteManager::DeferredCampsiteSpawnLoop()
     }
 }
 
+bool AAbandonedCampsiteManager::IsFarEnoughFromSpawns(const FVector& Location, float MinimumDistanceSquared)
+{
+    for (auto PreplacedCampsiteSpawn : GetDeferredPreplacedCampsiteSpawns())
+    {
+        if (PreplacedCampsiteSpawn && (PreplacedCampsiteSpawn->GetActorLocation() - Location).SizeSquared() < MinimumDistanceSquared)
+            return false;
+    }
+
+    for (auto& SpawnLocation : DeferredSpawnLocations)
+    {
+        if ((SpawnLocation - Location).SizeSquared() < MinimumDistanceSquared)
+            return false;
+    }
+
+    return true;
+}
+
 void AAbandonedCampsiteManager::TickDeferredCampsiteSpawns()
 {
     auto Manager = SpawningManager.Get();
@@ -200,12 +217,21 @@ void AAbandonedCampsiteManager::TickDeferredCampsiteSpawns()
         if (!Locations.Num() && QueryInstance && ++QueryTicksWaited < 300)
             return;
 
-        for (; NumQueryCampsites > 0 && Locations.Num(); NumQueryCampsites--)
+        static auto MinimumDistance = IConsoleManager::Get().FindConsoleVariable(TEXT("Campsite.MinimumDistance"));
+        const float MinimumDistanceValue = MinimumDistance ? MinimumDistance->GetFloat() : 0.0f;
+
+        while (NumQueryCampsites > 0 && Locations.Num())
         {
             const int32 LocationIndex = FMath::RandHelper(Locations.Num());
+            const FVector Location = Locations[LocationIndex];
 
-            DeferredSpawnLocations.Add(Locations[LocationIndex]);
             Locations.RemoveAt(LocationIndex);
+
+            if (!Manager->IsFarEnoughFromSpawns(Location, MinimumDistanceValue * MinimumDistanceValue))
+                continue;
+
+            DeferredSpawnLocations.Add(Location);
+            NumQueryCampsites--;
         }
 
         NumQueryCampsites = 0;

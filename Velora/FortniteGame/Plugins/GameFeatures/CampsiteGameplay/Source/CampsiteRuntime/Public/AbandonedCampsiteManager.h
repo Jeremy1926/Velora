@@ -2,6 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Containers/Array.h"
+#include "Math/Vector.h"
 
 struct FFrame;
 struct FScalableFloat;
@@ -34,6 +35,8 @@ public:
     void StartEnvironmentalQuerySpawns(int32 NumCampsites);
 
     void DeferredCampsiteSpawnLoop();
+
+    bool IsFarEnoughFromSpawns(const FVector& Location, float MinimumDistanceSquared);
 
     static void TickDeferredCampsiteSpawns();
 
