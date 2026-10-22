@@ -798,8 +798,7 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Find("call [*+0x*]", 2)
         .LogSlot(TEXT("AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
-        .Find("mov *[rsp+0x40], *")
-        .Find("mov rcx, *; movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
+        .Find("movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
         .Find("call 0x*")
         .IsTarget("xor eax, eax; ret*")
         .Optional()
@@ -808,12 +807,22 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
         .Find("call [*+0x*]", 2)
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
-        .Find("mov *[rsp+0x40], *")
-        .Find("mov rcx, *; movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
+        .Find("movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
         .Find("call 0x*")
         .IsTarget("xor eax, eax; ret*")
         .Optional()
         .AtCall());
+
+    static auto bHasBuildChecks = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call [*+0x*]", 2)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("mov *[rsp+0x40], *")
+        .Get();
+
+    bForceOverrideInteractBuildCheck = bHasBuildChecks && bForceOverrideInteractBuildCheck;
+    bIgnoreCostCheck = bHasBuildChecks && bIgnoreCostCheck;
+    bIgnoreBuildingValidityCheck = bHasBuildChecks && bIgnoreBuildingValidityCheck;
 
     static auto UpgradeLevel = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingClassData")))->FindPropertyByName(FName(TEXT("UpgradeLevel")));
     int32 BuildingLevel = 0;
