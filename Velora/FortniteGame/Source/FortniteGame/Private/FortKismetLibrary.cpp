@@ -832,7 +832,7 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
 
     UObject* WorldContextObject = nullptr;
     TArray<FFortItemEntry> LootToDropTemp;
-    FName TierGroupName;
+    FName TierGroupName = NAME_None;
     int32 WorldLevel = 0;
     int32 ForcedLootTier = 0;
 

@@ -154,6 +154,12 @@ bool UFortGameData::HasLootPackageData() const
 UFortResourceItemDefinition* UFortGameData::GetResourceItemDefinition(EFortResourceType ResourceType) const
 {
     static auto GetResourceItemDefinition = Anchor::Function<UFortResourceItemDefinition* (*)(const UFortGameData*, EFortResourceType)>(TEXT("UFortGameData::GetResourceItemDefinition"))
+        .Exec(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; mov rcx, rax; call 0x*; mov edx, *; mov rcx, rax; call 0x*")
+        .Call(3)
+        .Or()
         .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
         .Call(2)
         .Or()
