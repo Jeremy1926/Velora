@@ -418,6 +418,24 @@
     <Filter Include="Engine\Source\Runtime\NavigationSystem\Public\NavMesh">
       <UniqueIdentifier>{640C7C73-082E-42C5-ADD3-1DD6235EA6AE}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Experimental">
+      <UniqueIdentifier>{7815EA55-8CE4-472B-B3A3-BBD2EC94DEB1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\CommonDialogue">
+      <UniqueIdentifier>{A78B2D32-08D7-4EE8-8984-8F5D528EEFE5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\CommonDialogue\Source">
+      <UniqueIdentifier>{90F3ED74-5E3B-41DF-85F6-215818930307}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime">
+      <UniqueIdentifier>{1CB8C52D-99DB-413A-B169-8F0BD573C579}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public">
+      <UniqueIdentifier>{3C1248DD-F7D1-4C3D-9B78-911E7420CB5F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Conversation">
+      <UniqueIdentifier>{2DACBEA3-A77B-4E39-B4DD-A2820CD92E65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -1383,6 +1401,63 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameFeaturePluginManager.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationChoiceNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationContext.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationInstance.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationLibrary.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationLinkNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationParticipantComponent.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationRegistry.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationRequirementNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationSideEffectNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationSubNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationTaskNode.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationTypes.h">
+      <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\RandomStream.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_GrantPlayerBounty.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_GrantQuest.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_GrantStaticQuest.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_Service.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
