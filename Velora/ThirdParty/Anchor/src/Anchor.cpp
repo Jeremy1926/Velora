@@ -750,7 +750,7 @@ namespace Anchor
             bClearsFile |= Match(Instruction.Text, "xor ecx, ecx");
             bClearsLine |= Match(Instruction.Text, "xor edx, edx");
             bPassesFile |= Match(Instruction.Text, "lea rcx, [0x*]");
-            bPassesLine |= Match(Instruction.Text, "mov edx, 0x*");
+            bPassesLine |= Match(Instruction.Text, "mov edx, 0x*") || Match(Instruction.Text, "lea edx, [*]");
             bPassesVerbosity |= Match(Instruction.Text, "mov r9d, 0x*");
 
             if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_CALL && Address > Reference && ((bClearsFile && bClearsLine) || (bPassesFile && bPassesLine && bPassesVerbosity)))

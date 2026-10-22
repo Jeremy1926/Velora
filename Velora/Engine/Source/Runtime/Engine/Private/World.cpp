@@ -101,6 +101,11 @@ ENetMode UWorld::InternalGetNetMode() const
         .Start()
         .Find("mov rcx, rax; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, *; call 0x*; mov ebx, eax; lea eax, [rbx-0x1]")
+        .Call()
         .Inline());
 
     if (GetNetDriver() != nullptr)

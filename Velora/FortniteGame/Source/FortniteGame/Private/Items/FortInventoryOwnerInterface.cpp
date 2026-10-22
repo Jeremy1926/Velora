@@ -40,6 +40,9 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
         .Optional()
         .Is("test rdx, rdx; jz *; mov [rcx+0x*], rdx; jmp *")
         .Find("jmp [rax+0x*]")
+        .Or()
+        .FieldPattern("48 83 EC 28 48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Find("call [rax+0x*]")
         .LogSlot(TEXT("IFortInventoryOwnerInterface::InitializeInventory"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface")));
 
