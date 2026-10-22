@@ -12,6 +12,8 @@ struct FVehicleDamageablePartConfig
 
     static int32 GetTypeSize();
 
+    bool GetbStartsDisabled() const;
+
     FName ShapeName;
     FName BoneName;
     float MaxHealth;
