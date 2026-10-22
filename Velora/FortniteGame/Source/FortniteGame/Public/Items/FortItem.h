@@ -11,4 +11,6 @@ public:
     UFortItemDefinition* GetItemDefinitionBP() const;
 
     FGuid GetItemGuid() const;
+
+    FGuid GetTrackerGuid() const;
 };

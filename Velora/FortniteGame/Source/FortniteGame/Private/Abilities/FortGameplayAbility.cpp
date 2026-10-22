@@ -42,13 +42,18 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
 
     WorldInventory->HandleInventoryLocalUpdate();
 
+    FGuid TrackerGuid;
+
     for (auto Item : Inventory.GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
+        {
             GetAbilityWeaponItem() = Item;
+            TrackerGuid = Item->GetTrackerGuid();
+        }
     }
 
-    GetAbilityWeapon() = Pawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid);
+    GetAbilityWeapon() = Pawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid, TrackerGuid);
 }
 
 void UFortGameplayAbility::execEquipAbilityWeapon(FFrame& Stack, void* const Z_Param__Result)

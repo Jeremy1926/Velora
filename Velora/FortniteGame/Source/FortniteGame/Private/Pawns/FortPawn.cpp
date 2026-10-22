@@ -22,13 +22,13 @@ AFortWeapon* AFortPawn::GetCurrentWeapon() const
     return *CurrentWeapon->ContainerPtrToValuePtr<AFortWeapon*>(this);
 }
 
-AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid)
+AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid)
 {
-    static auto EquipWeaponDefinition = Anchor::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&)>(TEXT("AFortPawn::EquipWeaponDefinition"))
+    static auto EquipWeaponDefinition = Anchor::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&, const FGuid&)>(TEXT("AFortPawn::EquipWeaponDefinition"))
         .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
         .Get();
 
-    return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid);
+    return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid, TrackerGuid);
 }
 
 bool AFortPawn::EquipBestWeapon()

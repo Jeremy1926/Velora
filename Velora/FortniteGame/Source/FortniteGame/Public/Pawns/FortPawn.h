@@ -2,6 +2,7 @@
 
 #include "GameFramework/Character.h"
 #include "Math/Vector.h"
+#include "Misc/Guid.h"
 #include "UObject/ScriptDelegates.h"
 
 class AFortWeapon;
@@ -20,7 +21,7 @@ public:
 
     AFortWeapon* GetCurrentWeapon() const;
 
-    AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid);
+    AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid = FGuid());
 
     bool EquipBestWeapon();
 

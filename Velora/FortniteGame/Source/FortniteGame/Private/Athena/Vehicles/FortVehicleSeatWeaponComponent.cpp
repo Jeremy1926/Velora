@@ -149,15 +149,20 @@ void UFortVehicleSeatWeaponComponent::EquipVehicleWeapon(AFortPawn* FortPawn, FW
 
     WorldInventory->HandleInventoryLocalUpdate();
 
+    FGuid TrackerGuid;
+
     for (auto Item : Inventory.GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
+        {
             WeaponSeatDefinition.GetVehicleGrantedWeaponItem() = Item;
+            TrackerGuid = Item->GetTrackerGuid();
+        }
     }
 
     WeaponSeatDefinition.GetLastEquippedVehicleWeapon() = VehicleWeapon;
 
-    auto Weapon = FortPawn->EquipWeaponDefinition(VehicleWeapon, ItemGuid);
+    auto Weapon = FortPawn->EquipWeaponDefinition(VehicleWeapon, ItemGuid, TrackerGuid);
 
     WeaponSeatDefinition.GetVehicleGrantedWeapon() = Weapon;
 

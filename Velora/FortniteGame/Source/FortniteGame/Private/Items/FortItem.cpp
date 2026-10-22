@@ -26,3 +26,21 @@ FGuid UFortItem::GetItemGuid() const
 
     return Result;
 }
+
+FGuid UFortItem::GetTrackerGuid() const
+{
+    static auto bHasTrackerGuid = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItem:GetTrackerGuid")) != nullptr;
+
+    if (!bHasTrackerGuid)
+        return FGuid();
+
+    static auto GetTrackerGuid = Anchor::VirtualFunction<FGuid* (*)(const UFortItem*, FGuid*)>(TEXT("UFortItem::GetTrackerGuid"))
+        .Exec(TEXT("/Script/FortniteGame.FortItem:GetTrackerGuid"))
+        .Find("call [*]")
+        .Get();
+
+    FGuid Result;
+    GetTrackerGuid(this, &Result);
+
+    return Result;
+}

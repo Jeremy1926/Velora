@@ -293,13 +293,18 @@ void UFortHeldObjectComponent::EquipBackingWeapon()
 
     WorldInventory->HandleInventoryLocalUpdate();
 
+    FGuid TrackerGuid;
+
     for (auto Item : Inventory.GetItemInstances())
     {
         if (Item->GetItemGuid() == ItemGuid)
+        {
             GetGrantedWeaponItem() = Item;
+            TrackerGuid = Item->GetTrackerGuid();
+        }
     }
 
-    GetGrantedWeapon() = PlayerPawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid);
+    GetGrantedWeapon() = PlayerPawn->EquipWeaponDefinition(WeaponDefinition, ItemGuid, TrackerGuid);
 
     FScriptDelegate WeaponUnequippedDelegate;
     WeaponUnequippedDelegate.BindUFunction(this, FName(TEXT("OnWeaponUnequipped")));
