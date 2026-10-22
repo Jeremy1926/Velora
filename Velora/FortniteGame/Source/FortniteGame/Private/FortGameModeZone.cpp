@@ -153,6 +153,9 @@ void AFortGameModeZone::CreateAIDirector()
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Last("call 0x*; test al, al")
         .AtCall();
+
+    if (!CanCreateInCurrentContext)
+        UObject::PatchCanCreateInCurrentContext();
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;

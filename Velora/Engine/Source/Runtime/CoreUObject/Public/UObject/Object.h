@@ -18,6 +18,8 @@ public:
 
     static bool CanCreateInCurrentContext(UObject* Template);
 
+    static void PatchCanCreateInCurrentContext();
+
     FORCEINLINE UObject* GetArchetype() const
     {
         return GetArchetypeFromRequiredInfo(GetClass(), GetOuter(), GetFName(), GetFlags());

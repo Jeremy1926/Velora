@@ -42,6 +42,19 @@ bool UObject::CanCreateInCurrentContext(UObject* Template)
     return Template->NeedsLoadForServer();
 }
 
+void UObject::PatchCanCreateInCurrentContext()
+{
+    static auto NeedsLoadForClientCall = Anchor::Address()
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Start()
+        .Find("call [rax+0x*]; test al, al")
+        .Get();
+
+    static auto bPatched = NeedsLoadForClientCall && Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), NeedsLoadForClientCall + 2, { (uint8_t)(NeedsLoadForClientCall[2] + sizeof(void*)) });
+
+    (void)bPatched;
+}
+
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
 {
     static auto GetArchetypeFromRequiredInfoImpl = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, bool)>(TEXT("GetArchetypeFromRequiredInfoImpl"))

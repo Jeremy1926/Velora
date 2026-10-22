@@ -27,6 +27,9 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
                 .Last("call 0x*; test al, al")
                 .AtCall();
 
+            if (!CanCreateInCurrentContext)
+                UObject::PatchCanCreateInCurrentContext();
+
             SpawnMissingNavigationData();
             ProcessRegistrationCandidates();
 
