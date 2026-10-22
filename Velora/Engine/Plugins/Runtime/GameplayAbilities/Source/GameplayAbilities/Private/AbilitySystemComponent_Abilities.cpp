@@ -21,6 +21,13 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
         .Call()
         .Or()
         .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Start()
+        .Is("sub rsp, *; mov rax, [r9]; lea r8, [0x*]")
+        .Caller()
+        .Find("lea rdx, [rbp+0x*]; mov r8, *; mov rcx, *; call 0x*")
+        .Call()
+        .Or()
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Call()
         .Get();
 
