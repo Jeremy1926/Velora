@@ -17,6 +17,13 @@ public:
     {
     }
 
+    FDelegateBase(FDelegateBase&& Other)
+    {
+        DelegateAllocator.MoveToEmpty(Other.DelegateAllocator);
+        DelegateSize = Other.DelegateSize;
+        Other.DelegateSize = 0;
+    }
+
     ~FDelegateBase()
     {
         Unbind();
@@ -39,6 +46,9 @@ protected:
     }
 
 private:
+    template<typename ObjectPtrType>
+    friend class FMulticastDelegateBase;
+
     friend void* operator new(size_t Size, FDelegateBase& Base);
 
     void* Allocate(int32 Size)

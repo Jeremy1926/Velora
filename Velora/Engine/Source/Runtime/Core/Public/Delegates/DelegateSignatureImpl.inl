@@ -60,9 +60,6 @@ public:
     }
 };
 
-template<typename WrappedRetValType, typename... ParamTypes>
-class TBaseDelegate;
-
 template<typename RetValType, typename... ParamTypes>
 class TBaseMulticastDelegate;
 
@@ -70,7 +67,13 @@ template<typename... ParamTypes>
 class TBaseMulticastDelegate<void, ParamTypes...> : public FMulticastDelegateBase<FWeakObjectPtr>
 {
 public:
-    typedef TBaseDelegate<void, ParamTypes...> FDelegate;
+    typedef TDelegate<void(ParamTypes...)> FDelegate;
+
+    template<class UserClass>
+    FDelegateHandle AddUObject(UserClass* InUserObject, void (UserClass::*InFunc)(ParamTypes...))
+    {
+        return AddDelegateInstance(FDelegate::CreateUObject(InUserObject, InFunc));
+    }
 };
 
 template<typename RetValType, typename... ParamTypes>

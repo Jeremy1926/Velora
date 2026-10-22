@@ -249,3 +249,21 @@ void UFortServerBotManagerAthena::SetCachedAIPopulationTracker(UAthenaAIPopulati
     if (CachedAIPopulationTracker)
         *CachedAIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) = InCachedAIPopulationTracker;
 }
+
+FSimpleMulticastDelegate* UFortServerBotManagerAthena::GetOnNoAIAlive()
+{
+    static auto OnNoAIAlive = Anchor::Offset(TEXT("UFortServerBotManagerAthena::OnNoAIAlive"))
+        .String(TEXT("Can't update bot count if no GameMode set..."))
+        .Find("add eax, [rcx+0x*]")
+        .Find("lea rcx, [*+0x*]; call 0x*")
+        .Disp();
+
+    return OnNoAIAlive > 0 ? (FSimpleMulticastDelegate*)((uint8*)this + OnNoAIAlive) : nullptr;
+}
+
+TMulticastDelegate<void, AFortAthenaAIBotController*>* UFortServerBotManagerAthena::GetOnBotController()
+{
+    auto OnNoAIAlive = GetOnNoAIAlive();
+
+    return OnNoAIAlive ? (TMulticastDelegate<void, AFortAthenaAIBotController*>*)(OnNoAIAlive + 1) : nullptr;
+}
