@@ -4,6 +4,10 @@
 #include "Scanner.h"
 
 UEngine*& GEngine = *Anchor::Data<UEngine**>(TEXT("GEngine"))
+    .String(TEXT("STAT_WorldTickTime"))
+    .Find("mov rcx, [0x*]")
+    .Target()
+    .Or()
     .String(TEXT("RecordReplay: failed to create demo net driver!"))
     .Last("mov rcx, [0x*]")
     .Target()

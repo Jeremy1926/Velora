@@ -28,6 +28,9 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Or()
         .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; lea r8, [0x*]; mov [rsp+0x20], rax; mov edx, 0x*; lea rcx, [0x*]; call 0x*; call 0x*; cmp *, 0xffffffffffffffff")
         .Start()
+        .Or()
+        .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
+        .Start()
         .Get();
 
     return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);

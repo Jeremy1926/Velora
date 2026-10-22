@@ -4,12 +4,21 @@
 
 bool& GIsClient = *Anchor::Data<bool*>(TEXT("GIsClient"))
     .String(TEXT("Cannot run editor commandlet %s with game executable."))
+    .Last("mov [0x*], ?l; test byte ptr [*], 0x4; mov [0x*], ?l")
+    .Find("mov [0x*], ?l")
+    .Target()
+    .Or()
+    .String(TEXT("Cannot run editor commandlet %s with game executable."))
     .Last("mov [0x*], ?l")
     .Last("mov [0x*], ?l")
     .Target()
     .Get();
 
 bool& GIsServer = *Anchor::Data<bool*>(TEXT("GIsServer"))
+    .String(TEXT("Cannot run editor commandlet %s with game executable."))
+    .Last("mov [0x*], ?l; test byte ptr [*], 0x4; mov [0x*], ?l")
+    .Target()
+    .Or()
     .String(TEXT("Cannot run editor commandlet %s with game executable."))
     .Last("mov [0x*], ?l")
     .Target()
@@ -20,6 +29,11 @@ bool& GIsGameThreadIdInitialized = *Anchor::Data<bool*>(TEXT("GIsGameThreadIdIni
     .Start()
     .Find("cmp byte ptr [0x*], 0x0")
     .Target()
+    .Or()
+    .String(TEXT("UpdateMapTexture() failed.  FogMask or FogMask->Resource is null."))
+    .Start()
+    .Find("cmp byte ptr [0x*], 0x0; jz *; call [0x*]; cmp eax, [0x*]")
+    .Target()
     .Get();
 
 uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
@@ -27,6 +41,12 @@ uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
     .Start()
     .Find("cmp byte ptr [0x*], 0x0")
     .Find("cmp *, [0x*]")
+    .Target()
+    .Or()
+    .String(TEXT("UpdateMapTexture() failed.  FogMask or FogMask->Resource is null."))
+    .Start()
+    .Find("cmp byte ptr [0x*], 0x0; jz *; call [0x*]; cmp eax, [0x*]")
+    .Find("cmp eax, [0x*]")
     .Target()
     .Get();
 
