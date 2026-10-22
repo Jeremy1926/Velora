@@ -52,7 +52,7 @@ public:
 
     void DestroyAllDamageableParts();
 
-    void RepairAllDamageableParts();
+    void RepairAllDamageableParts(float NewHealth);
 
     void execDestroyAllDamageableParts(FFrame& Stack, void* const Z_Param__Result);
 

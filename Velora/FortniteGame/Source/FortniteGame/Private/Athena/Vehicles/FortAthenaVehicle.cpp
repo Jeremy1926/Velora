@@ -230,7 +230,7 @@ void AFortAthenaVehicle::execDestroyAllDamageableParts(FFrame& Stack, void* cons
     DestroyAllDamageableParts();
 }
 
-void AFortAthenaVehicle::RepairAllDamageableParts()
+void AFortAthenaVehicle::RepairAllDamageableParts(float NewHealth)
 {
     DETOUR(AFortAthenaVehicle, RepairAllDamageableParts, Anchor::Hook()
         .If(Anchor::Address()
@@ -242,6 +242,18 @@ void AFortAthenaVehicle::RepairAllDamageableParts()
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
         .Find("jmp [*+0x*]")
         .LogSlot(TEXT("AFortAthenaVehicle::RepairAllDamageableParts"))
+        .Or()
+        .If(Anchor::Address()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+            .Find("setnz *; add [*+0x20], *; mov rax, [*]; call [rax+0x*]")
+            .Find("call [rax+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaVehicle"))
+            .Is("ret*")
+            .Get() != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
+        .Find("setnz *; add [*+0x20], *; mov rax, [*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortAthenaVehicle::RepairAllDamageableParts"))
         .InChildVTables(AFortAthenaVehicle::StaticClass()), Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"))
         .Find("jmp [*+0x*]")
@@ -252,6 +264,8 @@ void AFortAthenaVehicle::RepairAllDamageableParts()
         .AtCall());
 
     static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+    static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicle:RepairAllDamageableParts"));
+    static auto bHasNewHealth = Function && Function->FindPropertyByName(FName(TEXT("NewHealth"))) != nullptr;
 
     auto VehicleInterface = HasAuthority() ? (IFortVehicleInterface*)GetInterfaceAddress(FortVehicleInterface) : nullptr;
     auto VehicleConfigs = VehicleInterface ? VehicleInterface->GetVehicleConfigs() : nullptr;
@@ -266,7 +280,7 @@ void AFortAthenaVehicle::RepairAllDamageableParts()
     for (auto& Part : DamageableParts)
     {
         if (PartConfigs.IsValidIndex(Part.ConfigIndex))
-            Part.Health = PartConfigs[Part.ConfigIndex].MaxHealth;
+            Part.Health = bHasNewHealth ? FMath::Min(NewHealth, PartConfigs[Part.ConfigIndex].MaxHealth) : PartConfigs[Part.ConfigIndex].MaxHealth;
     }
 
     OnRep_DamageableParts(PrevDamageableParts);
