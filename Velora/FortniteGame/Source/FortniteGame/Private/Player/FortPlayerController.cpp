@@ -1045,6 +1045,15 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
         .Find("lea rdx, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rbp-0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; lea rdx, *; mov r8d, *; call 0x*")
+        .Find("lea rdx, [0x*]")
+        .Target()
         .Get();
 
     FText Message;
@@ -1263,6 +1272,12 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("call 0x*; mov rcx, *; lea rdx, [rax+0x*]; call [*]")
+        .Find("call [*]")
+        .SlotOrLastImm(this, "add *, 0x*")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("call 0x*; mov *, 0x*; mov rcx, *; lea rdx, [*+rax*1]; call [*]")
         .Find("call [*]")
         .SlotOrLastImm(this, "add *, 0x*")
         .Get();
