@@ -455,6 +455,9 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
     const int32 ActorCount = EventData ? EventData->GetActorDescriptions().Num() : 0;
     const auto SpawnedCallback = TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned);
+    auto Config = GetConfig();
+    auto DensityComputationDistance = Config ? Config->GetDensityComputationDistance() : nullptr;
+    const float ActorDensityComputationRadius = DensityComputationDistance ? DensityComputationDistance->GetValueAtLevel(0.0f) : 0.0f;
     TArray<FLivingWorldPendingSpawnRequest> PendingSpawnRequests;
     TArray<AActor*> SpawnedActors;
 
@@ -466,7 +469,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
         FVector Location;
         FRotator Rotation;
 
-        if ((SpawnerDataClass ? !AISpawner : !ActorClass || !ActorClass->IsChildOf(AActor::StaticClass())) || !PointProviderInterface->GetValidLocation(PointFilter, Location, Rotation))
+        if ((SpawnerDataClass ? !AISpawner : !ActorClass || !ActorClass->IsChildOf(AActor::StaticClass())) || !PointProviderInterface->GetValidLocation(PointFilter, ActorDensityComputationRadius, Location, Rotation))
         {
             PointProviderInterface->OnSpawnedActorFailed();
             continue;

@@ -129,10 +129,10 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
     return GameState->GetSafeZoneRadius() >= FMath::Max(FMath::Sqrt(DeltaX * DeltaX + DeltaY * DeltaY) - FMath::Sqrt(PointsRadiusSquared), 0.0f);
 }
 
-bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const
+bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const
 {
     DETOUR(AFortAthenaLivingWorldVolume, GetValidLocation, Anchor::Hook()
-        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))

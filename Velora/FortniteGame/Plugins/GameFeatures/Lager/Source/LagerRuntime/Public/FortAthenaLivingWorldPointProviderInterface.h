@@ -18,7 +18,9 @@ class IFortAthenaLivingWorldPointProviderInterface
 public:
     static UClass* StaticClass();
 
-    bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const;
+    static bool HasActorDensityComputationRadius();
+
+    bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const;
 
     void GetFiltersTags(FGameplayTagContainer& FilterTags) const;
 

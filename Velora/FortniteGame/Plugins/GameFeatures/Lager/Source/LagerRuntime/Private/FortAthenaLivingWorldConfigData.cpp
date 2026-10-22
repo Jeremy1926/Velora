@@ -39,6 +39,13 @@ FScalableFloat& UFortAthenaLivingWorldConfigData::GetMinimumEventGenerationInter
     return *MinimumEventGenerationInterval->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetDensityComputationDistance()
+{
+    static auto DensityComputationDistance = GetClass()->FindPropertyByName(FName(TEXT("DensityComputationDistance")));
+
+    return DensityComputationDistance ? DensityComputationDistance->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensity()
 {
     static auto MaxActorDensity = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDensity")));

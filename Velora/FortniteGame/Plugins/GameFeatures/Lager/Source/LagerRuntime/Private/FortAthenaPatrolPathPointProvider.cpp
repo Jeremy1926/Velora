@@ -68,7 +68,8 @@ bool AFortAthenaPatrolPathPointProvider::IsEnabled(const FFortAthenaLivingWorldP
 
 bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const
 {
-    DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook()
+    DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook(static_cast<bool (AFortAthenaPatrolPathPointProvider::*)(const FFortAthenaLivingWorldPointProviderFilterRules&, FVector&, FRotator&) const>(&AFortAthenaPatrolPathPointProvider::GetValidLocation))
+        .If(!IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
@@ -93,6 +94,36 @@ bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivin
     auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
 
     return LivingWorldManager && LivingWorldManager->GetActorDensityBudget(OutPosition, 0.0f) > 0;
+}
+
+bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const
+{
+    DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook(static_cast<bool (AFortAthenaPatrolPathPointProvider::*)(const FFortAthenaLivingWorldPointProviderFilterRules&, float, FVector&, FRotator&) const>(&AFortAthenaPatrolPathPointProvider::GetValidLocation))
+        .If(IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("cmp byte ptr [*+0x1], 0x0; jz 0x*; lea rcx, [*-0x*]; mov rax, [rcx]; call [rax+0x*]")
+        .Optional()
+        .Inline());
+
+    if (!PointFilter.bCheckForActorDensity)
+        return Original(PointFilter, ActorDensityComputationRadius, OutPosition, OutRotation);
+
+    auto LocationFilter = PointFilter;
+    LocationFilter.bCheckForActorDensity = false;
+
+    if (!Original(LocationFilter, ActorDensityComputationRadius, OutPosition, OutRotation))
+        return false;
+
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+
+    auto PointProvider = (const AFortAthenaPatrolPathPointProvider*)((const uint8*)this - PointerOffset);
+    auto GameState = PointProvider->GetCachedGameState();
+    auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
+
+    return LivingWorldManager && LivingWorldManager->GetActorDensityBudget(OutPosition, ActorDensityComputationRadius) > 0;
 }
 
 void AFortAthenaPatrolPathPointProvider::OnSpawnedActor(AActor* SpawnedActor)

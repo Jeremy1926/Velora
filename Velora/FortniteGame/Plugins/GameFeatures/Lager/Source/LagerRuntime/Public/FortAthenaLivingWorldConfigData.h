@@ -19,4 +19,6 @@ public:
     FScalableFloat& GetMinimumEventGenerationInterval();
 
     FScalableFloat* GetMaxActorDensity();
+
+    FScalableFloat* GetDensityComputationDistance();
 };

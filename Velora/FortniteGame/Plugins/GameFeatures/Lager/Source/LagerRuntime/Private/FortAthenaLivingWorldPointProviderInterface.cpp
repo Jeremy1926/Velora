@@ -2,6 +2,7 @@
 #include "FortAthenaLivingWorldPointProviderInterface.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 UClass* IFortAthenaLivingWorldPointProviderInterface::StaticClass()
@@ -11,8 +12,26 @@ UClass* IFortAthenaLivingWorldPointProviderInterface::StaticClass()
     return Class;
 }
 
-bool IFortAthenaLivingWorldPointProviderInterface::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const
+bool IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius()
 {
+    static auto GetValidLocation = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"));
+    static auto bHasActorDensityComputationRadius = GetValidLocation && GetValidLocation->FindPropertyByName(FName(TEXT("ActorDensityComputationRadius")));
+
+    return bHasActorDensityComputationRadius;
+}
+
+bool IFortAthenaLivingWorldPointProviderInterface::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const
+{
+    if (HasActorDensityComputationRadius())
+    {
+        static auto GetValidLocationWithRadius = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, float, FVector&, FRotator&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
+            .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+            .Find("call [rax+0x*]")
+            .Get();
+
+        return GetValidLocationWithRadius(this, PointFilter, ActorDensityComputationRadius, OutPosition, OutRotation);
+    }
+
     static auto GetValidLocation = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, FVector&, FRotator&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
