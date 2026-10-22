@@ -427,3 +427,10 @@ FGameplayTagContainer& UFortAthenaLivingWorldManager::GetPlaylistContextTags()
 
     return *(FGameplayTagContainer*)((uint8*)this + PlaylistContextTags);
 }
+
+UWorld** UFortAthenaLivingWorldManager::GetCachedWorld()
+{
+    static auto CachedWorld = GetClass()->FindPropertyByName(FName(TEXT("CachedWorld")));
+
+    return CachedWorld ? CachedWorld->ContainerPtrToValuePtr<UWorld*>(this) : nullptr;
+}

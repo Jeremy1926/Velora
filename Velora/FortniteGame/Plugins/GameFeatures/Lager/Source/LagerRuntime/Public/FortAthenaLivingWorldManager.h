@@ -11,6 +11,7 @@ class AFortGameStateAthena;
 class UDataTable;
 class UFortAthenaLivingWorldConfigData;
 class UFortAthenaLivingWorldEventData;
+class UWorld;
 struct FFortAthenaLivingWorldCategory;
 struct FFortAthenaLivingWorldEvent;
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription;
@@ -83,6 +84,8 @@ public:
     float& GetNextEventGenerationTime();
 
     FGameplayTagContainer& GetPlaylistContextTags();
+
+    UWorld** GetCachedWorld();
 
 private:
     static TArray<FLivingWorldEventRuntimeData> EventRuntimeData;

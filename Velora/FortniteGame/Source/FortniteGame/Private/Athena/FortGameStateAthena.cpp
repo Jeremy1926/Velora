@@ -123,6 +123,9 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         {
             LivingWorldManager->GetCachedGameState() = this;
 
+            if (auto CachedWorld = LivingWorldManager->GetCachedWorld())
+                *CachedWorld = GetWorld();
+
             FScriptDelegate OnCurrentPlaylistLoadedDelegate;
             OnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldManager, FName(TEXT("OnCurrentPlaylistLoaded")));
             GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);
