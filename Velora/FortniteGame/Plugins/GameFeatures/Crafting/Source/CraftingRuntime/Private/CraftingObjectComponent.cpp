@@ -2,6 +2,7 @@
 #include "CraftingObjectComponent.h"
 #include "FortKismetLibrary.h"
 #include "GameFramework/Actor.h"
+#include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Items/InventoryManagementLibrary.h"
 #include "Player/FortPlayerController.h"
@@ -52,6 +53,44 @@ void UCraftingObjectComponent::ClaimCraftingResults()
 
     HandleCratingObjectResetting();
     SetCraftingObjectState(ECraftingObjectState::Resetting);
+}
+
+void UCraftingObjectComponent::EjectItems()
+{
+    auto Owner = GetOwner();
+
+    if (!Owner || !Owner->HasAuthority())
+        return;
+
+    static auto FortInventoryOwnerInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryOwnerInterface"));
+
+    auto OwnerInterface = Owner->GetInterfaceAddress(FortInventoryOwnerInterface);
+    auto OwnerController = Cast<AFortPlayerController>(Owner);
+    auto OwnerInventoryProperty = OwnerController ? nullptr : Owner->GetClass()->FindPropertyByName(FName(TEXT("Inventory")));
+    auto OwnerInventory = OwnerController ? OwnerController->GetWorldInventory() : OwnerInventoryProperty ? *OwnerInventoryProperty->ContainerPtrToValuePtr<AFortInventory*>(Owner) : nullptr;
+
+    if (!OwnerInterface || !OwnerInventory)
+        return;
+
+    TScriptInterface<IFortInventoryOwnerInterface> OwnerInventoryOwner;
+    OwnerInventoryOwner.SetObject(Owner);
+    OwnerInventoryOwner.SetInterface(OwnerInterface);
+
+    auto OwnerPawn = OwnerController ? (AActor*)OwnerController->GetPawn() : nullptr;
+    auto SpawnSource = OwnerPawn ? OwnerPawn : Owner;
+    const TArray<UFortWorldItem*> Items = OwnerInventory->GetItemInstances();
+
+    for (auto Item : Items)
+    {
+        if (!Item)
+            continue;
+
+        auto& ItemEntry = Item->GetItemEntry();
+        const int32 Count = ItemEntry.GetCount();
+
+        UFortKismetLibrary::K2_SpawnPickupInWorld(SpawnSource, Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()), Count, SpawnSource->GetActorLocation(), SpawnSource->GetActorRotation().Vector(), 0, true);
+        UInventoryManagementLibrary::RemoveItem(OwnerInventoryOwner, ItemEntry.GetItemGuid(), Count);
+    }
 }
 
 void UCraftingObjectComponent::GiveCraftingResults()

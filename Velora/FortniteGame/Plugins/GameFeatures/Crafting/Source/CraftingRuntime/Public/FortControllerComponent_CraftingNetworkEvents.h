@@ -15,4 +15,6 @@ public:
     void ServerCancelCrafting_Implementation(AActor* CraftingObject);
 
     void ServerClaimCraftingResults_Implementation(AActor* CraftingObject);
+
+    void ServerEjectItems_Implementation(AActor* CraftingObject);
 };

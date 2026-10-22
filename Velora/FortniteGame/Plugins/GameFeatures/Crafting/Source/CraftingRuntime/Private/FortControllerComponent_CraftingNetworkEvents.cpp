@@ -66,3 +66,18 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_
     if (PlayerController && PlayerController->HasAuthority() && CraftingObjectComponent)
         CraftingObjectComponent->ClaimCraftingResults();
 }
+
+void UFortControllerComponent_CraftingNetworkEvents::ServerEjectItems_Implementation(AActor* CraftingObject)
+{
+    DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerEjectItems_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerEjectItems"))
+        .Find("call [rax+0x*]", 2)
+        .Optional()
+        .InVTable(TEXT("/Script/CraftingRuntime.Default__FortControllerComponent_CraftingNetworkEvents")));
+
+    auto PlayerController = Cast<AFortPlayerController>(GetOwner());
+    auto CraftingObjectComponent = CraftingObject ? CraftingObject->FindComponentByClass<UCraftingObjectComponent>() : nullptr;
+
+    if (PlayerController && PlayerController->HasAuthority() && CraftingObjectComponent)
+        CraftingObjectComponent->EjectItems();
+}

@@ -31,6 +31,8 @@ public:
 
     void ClaimCraftingResults();
 
+    void EjectItems();
+
     void GiveCraftingResults();
 
     void GiveCraftingIngredients();
