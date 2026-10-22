@@ -56,7 +56,7 @@ public:
     {
         auto Instance = (TDelegateInstanceInterface*)GetDelegateInstanceProtected();
 
-        return Instance && Instance->ExecuteIfSafe(Params...);
+        return Instance && Instance->ExecuteIfSafe(Forward<ParamTypes>(Params)...);
     }
 };
 

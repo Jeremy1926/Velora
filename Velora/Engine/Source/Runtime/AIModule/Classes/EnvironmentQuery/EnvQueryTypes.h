@@ -2,6 +2,9 @@
 
 #include "Containers/Array.h"
 #include "Containers/Map.h"
+#include "Delegates/Delegate.h"
+#include "Math/Vector.h"
+#include "Templates/SharedPointer.h"
 #include "UObject/NameTypes.h"
 
 class UScriptStruct;
@@ -29,6 +32,22 @@ enum class EAIParamType : uint8
     MAX
 };
 
+struct FEnvQueryItem
+{
+    float Score;
+    int32 DataOffset;
+    uint8 bIsValid : 1;
+};
+
+struct FEnvQueryResult
+{
+    FVector GetItemAsLocation(int32 Index) const;
+
+    TArray<FEnvQueryItem> Items;
+};
+
+typedef TDelegate<void(TSharedPtr<FEnvQueryResult>)> FQueryFinishedSignature;
+
 struct FEnvQueryRequest
 {
     FEnvQueryRequest(UEnvQuery* Query, UObject* RequestOwner)
@@ -37,6 +56,10 @@ struct FEnvQueryRequest
         , World(nullptr)
     {
     }
+
+    FEnvQueryRequest& SetFloatParam(FName ParamName, float Value);
+
+    int32 Execute(EEnvQueryRunMode::Type RunMode, const FQueryFinishedSignature& FinishDelegate);
 
     UEnvQuery* QueryTemplate;
     UObject* Owner;

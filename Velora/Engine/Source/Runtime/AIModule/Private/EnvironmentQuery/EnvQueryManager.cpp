@@ -9,6 +9,22 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+int32 FEnvQueryRequest::Execute(EEnvQueryRunMode::Type RunMode, const FQueryFinishedSignature& FinishDelegate)
+{
+    static auto Execute = Anchor::Function<int32 (*)(FEnvQueryRequest*, EEnvQueryRunMode::Type, const FQueryFinishedSignature*)>(TEXT("FEnvQueryRequest::Execute"))
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; lea rcx, [*]; call 0x*")
+        .Target()
+        .Find("lea r8, [*]; mov edx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return Execute(this, RunMode, &FinishDelegate);
+}
+
 UEnvQueryManager* UEnvQueryManager::GetCurrent(UObject* WorldContextObject)
 {
     static auto GetCurrent = Anchor::Function<UEnvQueryManager* (*)(UObject*)>(TEXT("UEnvQueryManager::GetCurrent"))

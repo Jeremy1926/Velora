@@ -2,6 +2,7 @@
 
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateInstanceInterface.h"
+#include "Templates/UnrealTemplate.h"
 #include "UObject/WeakObjectPtrTemplates.h"
 
 template<bool bConst, class UserClass, typename FuncType>
@@ -57,14 +58,14 @@ public:
 
     void Execute(ParamTypes... Params) const override
     {
-        (UserObject.Get()->*MethodPtr)(Params...);
+        (UserObject.Get()->*MethodPtr)(Forward<ParamTypes>(Params)...);
     }
 
     bool ExecuteIfSafe(ParamTypes... Params) const override
     {
         if (auto ActualUserObject = UserObject.Get())
         {
-            (ActualUserObject->*MethodPtr)(Params...);
+            (ActualUserObject->*MethodPtr)(Forward<ParamTypes>(Params)...);
 
             return true;
         }

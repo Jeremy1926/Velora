@@ -442,6 +442,21 @@
     <Filter Include="Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Private">
       <UniqueIdentifier>{1A8FCDA2-5DA6-46DD-B5D8-7F3D20BAC7F1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Experimental\Water">
+      <UniqueIdentifier>{A2AF7AB6-92F3-4453-8EEB-67A30AF409BB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\Water\Source">
+      <UniqueIdentifier>{D6A05C64-AAA0-42E6-B6B2-B18303438438}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\Water\Source\Runtime">
+      <UniqueIdentifier>{ADE77510-9E75-404C-8FF3-F96FD74BD4A0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\Water\Source\Runtime\Public">
+      <UniqueIdentifier>{DC60220E-DFEE-44A6-9179-35C6800668E4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\Water\Source\Runtime\Private">
+      <UniqueIdentifier>{47046DCF-DE5A-4A04-98A3-5B8B4FB7896F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Plugins\Experimental">
       <UniqueIdentifier>{7815EA55-8CE4-472B-B3A3-BBD2EC94DEB1}</UniqueIdentifier>
     </Filter>
@@ -861,6 +876,9 @@
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h">
       <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\Water\Source\Runtime\Public\WaterSubsystem.h">
+      <Filter>Engine\Plugins\Experimental\Water\Source\Runtime\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\IDelegateInstance.h">
       <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
@@ -1647,6 +1665,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\Water\Source\Runtime\Private\WaterSubsystem.cpp">
+      <Filter>Engine\Plugins\Experimental\Water\Source\Runtime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Delegates\IDelegateInstance.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Delegates</Filter>
