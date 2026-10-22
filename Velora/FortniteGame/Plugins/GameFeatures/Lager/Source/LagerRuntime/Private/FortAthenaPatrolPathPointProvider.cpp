@@ -147,6 +147,17 @@ void AFortAthenaPatrolPathPointProvider::EnablePointProvider()
 
 void AFortAthenaPatrolPathPointProvider::DisablePointProvider()
 {
+    DETOUR(AFortAthenaPatrolPathPointProvider, DisablePointProvider, Anchor::Hook()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("test byte ptr [*+0x*], 0x4; jz 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Is("sub rsp, 0x28; test rcx, rcx; jz 0x*; mov rax, [rcx]; call [rax+0x*]")
+        .Optional()
+        .Inline());
+
     UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(this);
 }
 
@@ -157,6 +168,9 @@ void AFortAthenaPatrolPathPointProvider::execDisablePointProvider(FFrame& Stack,
         .Find("jmp 0x*")
         .Target()
         .Is("test rcx, rcx; jz 0x*; mov rax, [rcx]; jmp [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:DisablePointProvider"))
+        .Is("sub rsp, 0x28; xor eax, eax; cmp [rdx+0x20], rax; setnz al; add [rdx+0x20], rax; test rcx, rcx; jz 0x*; mov rax, [rcx]; call [rax+0x*]")
         .Optional()
         .InExec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:DisablePointProvider")));
 
@@ -206,6 +220,14 @@ float AFortAthenaPatrolPathPointProvider::GetRadius() const
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnPatrolPathAdded"))
         .Find("jmp 0x*")
         .Target()
+        .Find("mov r8b, 0x1; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("sqrtss xmm0, *; movss [*+0x*], xmm0")
+        .Find("movss [*+0x*], xmm0")
+        .Disp()
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnPatrolPathAdded"))
         .Find("mov r8b, 0x1; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
