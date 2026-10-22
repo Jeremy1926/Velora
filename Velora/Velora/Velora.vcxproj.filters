@@ -112,6 +112,9 @@
     <Filter Include="Engine\Source\Runtime\Core\Private">
       <UniqueIdentifier>{BC4D6890-A8AB-46D5-9CE8-DBE6A04E3778}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Delegates">
+      <UniqueIdentifier>{F1852D8E-9E63-43D5-8712-9AD2ECD1D1CA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\HAL">
       <UniqueIdentifier>{D31DEFC6-B5CE-4B2C-8ECF-8046B6DD4F34}</UniqueIdentifier>
     </Filter>
@@ -857,6 +860,15 @@
       <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\IDelegateInstance.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateInstanceInterface.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateInstancesImpl.h">
       <Filter>Engine\Source\Runtime\Core\Public\Delegates</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h">
@@ -1635,6 +1647,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Delegates\IDelegateInstance.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Delegates</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>

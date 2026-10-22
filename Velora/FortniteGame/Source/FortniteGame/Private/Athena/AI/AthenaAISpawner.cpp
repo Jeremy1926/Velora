@@ -33,7 +33,7 @@ void FOnPawnSpawnedDynamicEvent::ProcessMulticastDelegate(void* Parameters) cons
     Original(Parameters);
 }
 
-int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISpawnerComponentList, const FTransform& SpawnTransform)
+int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISpawnerComponentList, const FTransform& SpawnTransform, const TDelegate<void(AActor*, int32)>& SpawnedCallback)
 {
     static auto bInlined = Anchor::Exists()
         .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
@@ -43,7 +43,7 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
 
     if (bInlined)
     {
-        static auto RequestSpawnWithInfo = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const FTransform*, const void*)>(TEXT("UAthenaAISpawner::RequestSpawn spawn info"))
+        static auto RequestSpawnWithCallback = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const FTransform*, const TDelegate<void(AActor*, int32)>*)>(TEXT("UAthenaAISpawner::RequestSpawn spawned callback"))
             .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
@@ -54,9 +54,7 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
         if (!AISpawnerComponentList)
             return -1;
 
-        const uint32 SpawnInfo[3] = { 0, 0, 0 };
-
-        return RequestSpawnWithInfo(this, AISpawnerComponentList, &SpawnTransform, SpawnInfo);
+        return RequestSpawnWithCallback(this, AISpawnerComponentList, &SpawnTransform, &SpawnedCallback);
     }
 
     static auto RequestSpawn = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const FTransform&)>(TEXT("UAthenaAISpawner::RequestSpawn"))

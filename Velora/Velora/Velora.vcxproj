@@ -268,6 +268,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\MulticastDelegateBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateSignatureImpl.inl" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\Delegate.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\IDelegateInstance.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateInstanceInterface.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Delegates\DelegateInstancesImpl.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\Templates\SubclassOf.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\AssetPtr.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SoftObjectPtr.h" />
@@ -551,6 +554,7 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Delegates\IDelegateInstance.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
