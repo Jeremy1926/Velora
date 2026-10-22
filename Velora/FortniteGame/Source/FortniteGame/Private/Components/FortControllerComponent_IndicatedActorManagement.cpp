@@ -248,13 +248,13 @@ void UFortControllerComponent_IndicatedActorManagement::AddActorsToIndicatedList
     auto PlayerController = Cast<AFortPlayerControllerAthena>(GetOwner());
     auto PlayerState = PlayerController ? Cast<AFortPlayerStateAthena>(PlayerController->GetPlayerState()) : nullptr;
 
-    if (PlayerState && Data.GetShareActorWith() == EShareActorWith::SquadOnTeam)
+    if (PlayerState && Data.GetShareActorWith() != EShareActorWith::None)
     {
         for (auto OtherPlayerState : GetWorld()->GetGameState()->GetPlayerArray())
         {
             auto SquadMember = Cast<AFortPlayerStateAthena>(OtherPlayerState);
 
-            if (!SquadMember || SquadMember == PlayerState || SquadMember->GetSquadId() != PlayerState->GetSquadId())
+            if (!SquadMember || SquadMember == PlayerState || (Data.GetShareActorWith() == EShareActorWith::AllTeam ? SquadMember->GetTeamIndex() != PlayerState->GetTeamIndex() : SquadMember->GetSquadId() != PlayerState->GetSquadId()))
                 continue;
 
             auto OtherPlayerController = Cast<AFortPlayerControllerAthena>(SquadMember->GetOwner());
@@ -302,13 +302,13 @@ void UFortControllerComponent_IndicatedActorManagement::AddActorsToStenciledList
     auto PlayerController = Cast<AFortPlayerControllerAthena>(GetOwner());
     auto PlayerState = PlayerController ? Cast<AFortPlayerStateAthena>(PlayerController->GetPlayerState()) : nullptr;
 
-    if (PlayerState && Data.GetShareActorWith() == EShareActorWith::SquadOnTeam)
+    if (PlayerState && Data.GetShareActorWith() != EShareActorWith::None)
     {
         for (auto OtherPlayerState : GetWorld()->GetGameState()->GetPlayerArray())
         {
             auto SquadMember = Cast<AFortPlayerStateAthena>(OtherPlayerState);
 
-            if (!SquadMember || SquadMember == PlayerState || SquadMember->GetSquadId() != PlayerState->GetSquadId())
+            if (!SquadMember || SquadMember == PlayerState || (Data.GetShareActorWith() == EShareActorWith::AllTeam ? SquadMember->GetTeamIndex() != PlayerState->GetTeamIndex() : SquadMember->GetSquadId() != PlayerState->GetSquadId()))
                 continue;
 
             auto OtherPlayerController = Cast<AFortPlayerControllerAthena>(SquadMember->GetOwner());
