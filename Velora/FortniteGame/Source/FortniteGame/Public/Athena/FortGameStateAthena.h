@@ -90,6 +90,8 @@ public:
 
     FMulticastScriptDelegate& GetOnCurrentPlaylistLoaded();
 
+    FMulticastScriptDelegate& GetGamePhaseStepChanged();
+
     FGameMemberInfoArray& GetGameMemberInfoArray();
 
     bool GetPlaylistDataIsLoaded() const;

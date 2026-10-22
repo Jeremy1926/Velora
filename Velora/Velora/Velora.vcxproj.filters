@@ -247,6 +247,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\Valet">
       <UniqueIdentifier>{BB6C2C08-B5C3-4047-8E2B-6D766580E995}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay">
+      <UniqueIdentifier>{43B724EF-B8FD-4E82-98C8-BBD45D0268CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source">
+      <UniqueIdentifier>{3563698B-1F5C-4FB6-B5E9-B1DAB773EB81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime">
+      <UniqueIdentifier>{94175A47-A9A7-462B-B19A-A635A7E5CA67}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private">
+      <UniqueIdentifier>{AAEF1116-99CC-4577-9279-6931085614E2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public">
+      <UniqueIdentifier>{E20DC464-C3A6-4DE1-A5B4-FB2DA0557D6F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Lager">
       <UniqueIdentifier>{A81EF23A-9918-43F0-90D8-B5D6C8E83C08}</UniqueIdentifier>
     </Filter>
@@ -1198,6 +1213,15 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public\FortControllerComponent_CraftingNetworkEvents.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\AbandonedCampsiteManager.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\AbandonedCampsitePlacedSpawner.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortGameStateComponent_Campsite.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public\FortGameStateComponent_Crafting.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public</Filter>
     </ClInclude>
@@ -2121,6 +2145,15 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private\FortControllerComponent_CraftingNetworkEvents.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\AbandonedCampsiteManager.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\AbandonedCampsitePlacedSpawner.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortGameStateComponent_Campsite.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private\FortGameStateComponent_Crafting.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private</Filter>

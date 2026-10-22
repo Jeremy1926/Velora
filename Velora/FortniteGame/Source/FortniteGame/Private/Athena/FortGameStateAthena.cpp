@@ -51,6 +51,14 @@ PATCH(AFortGameStateAthena, UpdateGamePhaseStep, Anchor::Patch()
     .Find("test al, al")
     .JumpOver("j*z 0x*"))
 
+template<>
+UEnum* StaticEnum<EAthenaGamePhaseStep>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EAthenaGamePhaseStep"));
+
+    return Enum;
+}
+
 UClass* AFortGameStateAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameStateAthena"));
@@ -383,6 +391,13 @@ FMulticastScriptDelegate& AFortGameStateAthena::GetOnCurrentPlaylistLoaded()
     static auto OnCurrentPlaylistLoaded = GetClass()->FindPropertyByName(FName(TEXT("OnCurrentPlaylistLoaded")));
 
     return *OnCurrentPlaylistLoaded->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
+FMulticastScriptDelegate& AFortGameStateAthena::GetGamePhaseStepChanged()
+{
+    static auto GamePhaseStepChanged = GetClass()->FindPropertyByName(FName(TEXT("GamePhaseStepChanged")));
+
+    return *GamePhaseStepChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()
