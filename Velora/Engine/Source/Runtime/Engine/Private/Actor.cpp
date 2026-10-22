@@ -281,6 +281,11 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
     static auto FindComponentByClass = Anchor::VirtualFunction<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(TEXT("AActor::FindComponentByClass"))
         .Native(TEXT("/Script/Engine.Actor:GetComponentByClass"))
         .Find("jmp [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
         .Get();
 
     return FindComponentByClass(this, ComponentClass);
