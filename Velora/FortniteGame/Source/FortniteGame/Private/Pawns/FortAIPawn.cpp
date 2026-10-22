@@ -99,6 +99,65 @@ void AFortAIPawn::execGiveAmmo(FFrame& Stack, void* const Z_Param__Result)
     GiveAmmo(AmmoQuantity);
 }
 
+void AFortAIPawn::DropAllItems(bool bSpawnPickups)
+{
+    auto WorldInventory = GetWorldInventory();
+
+    if (!WorldInventory || !HasAuthority())
+        return;
+
+    auto& Inventory = WorldInventory->GetInventory();
+    auto& ReplicatedEntries = Inventory.GetReplicatedEntries();
+
+    if (!ReplicatedEntries.Num())
+        return;
+
+    const FVector Location = GetActorLocation();
+
+    for (auto& ItemEntry : ReplicatedEntries)
+    {
+        auto ItemDefinition = Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition());
+
+        if (!bSpawnPickups || !ItemDefinition || ItemEntry.GetCount() <= 0)
+            continue;
+
+        FFortItemEntry DropItemEntry(ItemDefinition, ItemEntry.GetCount(), ItemEntry.GetLevel());
+        DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
+        DropItemEntry.GetDurability() = ItemEntry.GetDurability();
+
+        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
+            Pickup->TossPickup(Location, this, 0, true);
+    }
+
+    ReplicatedEntries.RemoveAt(0, ReplicatedEntries.Num());
+    Inventory.MarkArrayDirty();
+    WorldInventory->ForceNetUpdate();
+    WorldInventory->HandleInventoryLocalUpdate();
+}
+
+void AFortAIPawn::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAIPawn, execDropAllItems, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortAIPawn:DropAllItems"))
+        .Is("ret*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortAIPawn:DropAllItems")));
+
+    uint32 bSpawnPickups = 0;
+
+    Stack.StepCompiledIn(&bSpawnPickups);
+    Stack.Code += !!Stack.Code;
+
+    DropAllItems(!!bSpawnPickups);
+}
+
+AFortInventory* AFortAIPawn::GetWorldInventory() const
+{
+    static auto Inventory = StaticClass()->FindPropertyByName(FName(TEXT("Inventory")));
+
+    return *Inventory->ContainerPtrToValuePtr<AFortInventory*>(this);
+}
+
 bool AFortAIPawn::GetHasDroppedLoot() const
 {
     static auto bHasDroppedLoot = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bHasDroppedLoot")));

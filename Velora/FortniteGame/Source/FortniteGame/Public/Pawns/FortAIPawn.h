@@ -2,6 +2,7 @@
 
 #include "Pawns/FortPawn.h"
 
+class AFortInventory;
 struct FFrame;
 
 class AFortAIPawn : public AFortPawn
@@ -18,6 +19,12 @@ public:
     void GiveAmmo(const int32 AmmoQuantity);
 
     void execGiveAmmo(FFrame& Stack, void* const Z_Param__Result);
+
+    void DropAllItems(bool bSpawnPickups);
+
+    void execDropAllItems(FFrame& Stack, void* const Z_Param__Result);
+
+    AFortInventory* GetWorldInventory() const;
 
     bool GetHasDroppedLoot() const;
 
