@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortNPCConversationParticipantComponent.h"
 #include "AI/FortAthenaAIBotController.h"
+#include "Quests/FortQuestItemDefinition.h"
 #include "Engine/DataTable.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
@@ -46,6 +47,10 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     static auto ServiceTag = NPCDynamicServiceRow->FindPropertyByName(FName(TEXT("ServiceTag")));
     static auto Priority = NPCDynamicServiceRow->FindPropertyByName(FName(TEXT("Priority")));
     static auto MaxServices = StaticClass()->FindPropertyByName(FName(TEXT("MaxServices")));
+    static auto NPCQuestRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCQuestRow"));
+    static auto QuestNPC = NPCQuestRow->FindPropertyByName(FName(TEXT("NPC")));
+    static auto Quest = NPCQuestRow->FindPropertyByName(FName(TEXT("Quest")));
+    static auto Weight = NPCQuestRow->FindPropertyByName(FName(TEXT("Weight")));
 
     auto& Services = GetServices();
 
@@ -81,6 +86,42 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
 
     for (size_t Index = 0; Index < RolledServices.size() && (ServiceLimit <= 0 || Index < (size_t)ServiceLimit); Index++)
         GetSupportedServices().AddTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(RolledServices[Index]));
+
+    if (!GetQuests())
+        return;
+
+    std::vector<const uint8*> QuestRows;
+
+    for (auto& RowPair : GetQuests()->RowMap)
+    {
+        if (*QuestNPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value) == NPCTag && *Weight->ContainerPtrToValuePtr<float>(RowPair.Value) > 0.0f)
+            QuestRows.push_back(RowPair.Value);
+    }
+
+    while (!QuestRows.empty())
+    {
+        float TotalWeight = 0.0f;
+
+        for (auto Row : QuestRows)
+            TotalWeight += *Weight->ContainerPtrToValuePtr<float>(Row);
+
+        float Roll = FMath::FRand() * TotalWeight;
+        size_t Picked = QuestRows.size() - 1;
+
+        for (size_t Index = 0; Index < QuestRows.size(); Index++)
+        {
+            Roll -= *Weight->ContainerPtrToValuePtr<float>(QuestRows[Index]);
+
+            if (Roll <= 0.0f)
+            {
+                Picked = Index;
+                break;
+            }
+        }
+
+        GetSupportedQuests().Add(*Quest->ContainerPtrToValuePtr<TSoftObjectPtr<UFortQuestItemDefinition>>(QuestRows[Picked]));
+        QuestRows.erase(QuestRows.begin() + Picked);
+    }
 }
 
 void UFortNPCConversationParticipantComponent::UpdateCanStartConversation()
@@ -157,6 +198,13 @@ AFortAthenaAIBotController*& UFortNPCConversationParticipantComponent::GetBotCon
     static auto BotControllerOwner = StaticClass()->FindPropertyByName(FName(TEXT("BotControllerOwner")));
 
     return *BotControllerOwner->ContainerPtrToValuePtr<AFortAthenaAIBotController*>((void*)this);
+}
+
+TArray<TSoftObjectPtr<UFortQuestItemDefinition>>& UFortNPCConversationParticipantComponent::GetSupportedQuests() const
+{
+    static auto SupportedQuests = StaticClass()->FindPropertyByName(FName(TEXT("SupportedQuests")));
+
+    return *SupportedQuests->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UFortQuestItemDefinition>>>((void*)this);
 }
 
 FGameplayTagContainer& UFortNPCConversationParticipantComponent::GetSupportedServices() const

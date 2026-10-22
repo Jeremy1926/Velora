@@ -9,6 +9,7 @@
 #include "ConversationSideEffectNode.h"
 #include "Conversation/FortConversationTaskNode_DuelNPC.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
+#include "Conversation/FortConversationTaskNode_GrantQuest.h"
 #include "Conversation/FortConversationTaskNode_HireNPC.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
@@ -136,6 +137,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);
+
+    if (auto GrantQuest = Cast<UFortConversationTaskNode_GrantQuest>(this))
+        return GrantQuest->ExecuteTaskNode_Implementation(Context);
 
     TAlignedBytes<sizeof(FConversationTaskResult), alignof(FConversationTaskResult)> ResultBytes;
     auto NativeResult = (FConversationTaskResult*)&ResultBytes;

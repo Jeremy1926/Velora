@@ -15,6 +15,7 @@ class AFortPlayerPawn;
 class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
+class UFortQuestManager;
 class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
 class UFortWorldItem;
@@ -23,6 +24,13 @@ struct FFrame;
 struct FTransform;
 enum class EFortQuickBars : uint8;
 enum class EFortResourceType : uint8;
+
+enum class ESubGame : uint8
+{
+    Campaign,
+    Athena,
+    Invalid,
+};
 
 enum class EFortStructuralGridQueryResults : uint8
 {
@@ -99,6 +107,8 @@ public:
     void TriggerUIFeedbackEvent(FName EventName);
 
     AFortPlayerPawn* GetMyFortPawn() const;
+
+    UFortQuestManager* GetQuestManager(ESubGame SubGame) const;
 
     bool IsPlayerAlive();
 
