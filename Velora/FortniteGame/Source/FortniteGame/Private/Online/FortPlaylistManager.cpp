@@ -24,6 +24,9 @@ UObject* UFortPlaylistManager::GetAthenaPlaylist(FName PlaylistName)
     static auto GetAthenaPlaylist = Anchor::Function<UObject* (*)(UFortPlaylistManager*, FName)>(TEXT("UFortPlaylistManager::GetAthenaPlaylist"))
         .Smallest(TEXT("UFortPlaylistManager::GetAthenaPlaylist: Unable to find playlist %s"))
         .Start()
+        .Or()
+        .Smallest(TEXT("UFortPlaylistManager::GetPlaylist: Unable to find playlist %s"))
+        .Start()
         .Get();
 
     return GetAthenaPlaylist(this, PlaylistName);

@@ -18,6 +18,7 @@ void UFortProjectileMovementComponent::SetVelocity(const FVector& InReplicatedVe
         .Exec(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Find("inc [*+0x*]")
         .Get();
 
     if (bInlined)

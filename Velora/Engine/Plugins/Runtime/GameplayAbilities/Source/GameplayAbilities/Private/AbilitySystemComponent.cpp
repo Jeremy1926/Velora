@@ -143,6 +143,31 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSe
 
 FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GameplayEffectClass, UAbilitySystemComponent* Target, float Level, FGameplayEffectContextHandle Context)
 {
+    static auto ApplyGameplayEffectToTarget = Anchor::Optional<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UGameplayEffect*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle, FPredictionKey)>(TEXT("UAbilitySystemComponent::ApplyGameplayEffectToTarget"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("movss [rsp+0x20], xmm*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (ApplyGameplayEffectToTarget)
+    {
+        FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+
+        if (!Target || !GameplayEffectClass)
+            return ActiveGameplayEffectHandle;
+
+        if (!Context.IsValid())
+            Context = MakeEffectContext();
+
+        ApplyGameplayEffectToTarget(this, &ActiveGameplayEffectHandle, GameplayEffectClass.GetDefaultObject(), Target, Level, MoveTemp(Context), FPredictionKey());
+
+        return ActiveGameplayEffectHandle;
+    }
+
     static auto BP_ApplyGameplayEffectToTarget = Anchor::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
         .Get();
@@ -224,6 +249,9 @@ FGameplayTagCountContainer& UAbilitySystemComponent::GetGameplayTagCountContaine
         .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
         .Start()
         .FindEither("lea rcx, [*+0x*]; * r8d, 0xffffffff", "lea rcx, [*+0x*]; mov *, *; lea rdx, [*+0x*]; lea r8d, [r9-0x1]")
+        .Or()
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Find("lea rcx, [*+0x*]; or r8d, 0xffffffff")
         .Disp();
 
     return *(FGameplayTagCountContainer*)((uint8_t*)this + GameplayTagCountContainer);

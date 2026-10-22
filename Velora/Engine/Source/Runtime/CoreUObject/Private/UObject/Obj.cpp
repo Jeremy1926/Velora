@@ -15,7 +15,14 @@ UWorld* UObject::GetWorld() const
     static auto GetWorld = Anchor::VirtualFunction<UWorld* (*)(const UObject*)>(TEXT("UObject::GetWorld"))
         .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
         .Start()
-        .Find("call [*+0x*]")
+        .Find("call *")
+        .Is("call [*+0x*]")
+        .Or()
+        .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
+        .Start()
+        .Find("call *")
+        .Target()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameSession"))
         .Get();
 
     return GetWorld(this);

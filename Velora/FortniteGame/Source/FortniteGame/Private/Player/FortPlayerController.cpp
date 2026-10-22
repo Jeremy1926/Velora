@@ -1138,6 +1138,11 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Caller()
         .Find("lea rdx, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Caller()
+        .Find("mov rax, [0x*]; mov [rsp+0x*], rax; mov rax, [0x*]")
+        .Target()
         .Get();
 
     static auto BuildingLocked = Anchor::Data<const FText*>(TEXT("BuildingLocked"))
@@ -1145,12 +1150,22 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Caller()
         .Find("lea rdx, [0x*]", 2)
         .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Caller()
+        .Find("mov rax, [0x*]; mov [rsp+0x*], rax; mov rax, [0x*]", 2)
+        .Target()
         .Get();
 
     static auto UnableToAffordRepair = Anchor::Data<const FText*>(TEXT("UnableToAffordRepair"))
         .Event(TEXT("ServerRepairBuildingActor"))
         .Caller()
         .Find("lea rdx, [0x*]", 3)
+        .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Caller()
+        .Find("mov rax, [0x*]; mov [rsp+0x*], rax; mov rax, [0x*]", 3)
         .Target()
         .Get();
 

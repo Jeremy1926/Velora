@@ -15,6 +15,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
+#include "UObject/ScriptDelegates.h"
 #include "Scanner.h"
 
 struct FPendingSwap
@@ -149,6 +150,25 @@ void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, boo
     if (HasAuthority() && InventoryOwner)
     {
         GivePickupItemsToInventoryOwner(InventoryOwner);
+
+        static auto OnPickup = GetClass()->FindPropertyByName(FName(TEXT("OnPickup")));
+        static auto Signature = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PickupOnPickup__DelegateSignature"));
+        static auto SelfActor = Signature ? Signature->FindPropertyByName(FName(TEXT("SelfActor"))) : nullptr;
+        static auto InteractingPawn = Signature ? Signature->FindPropertyByName(FName(TEXT("InteractingPawn"))) : nullptr;
+        static auto WorldItemDefinition = Signature ? Signature->FindPropertyByName(FName(TEXT("WorldItemDefinition"))) : nullptr;
+        static auto PickupLocation = Signature ? Signature->FindPropertyByName(FName(TEXT("PickupLocation"))) : nullptr;
+
+        if (bStripped && OnPickup && SelfActor && InteractingPawn && WorldItemDefinition && PickupLocation)
+        {
+            alignas(16) uint8 Parms[0x40] = {};
+
+            *SelfActor->ContainerPtrToValuePtr<AFortPickup*>(Parms) = this;
+            *InteractingPawn->ContainerPtrToValuePtr<AFortPawn*>(Parms) = GetPickupLocationData().PickupTarget;
+            *WorldItemDefinition->ContainerPtrToValuePtr<UFortWorldItemDefinition*>(Parms) = Cast<UFortWorldItemDefinition>(GetPrimaryPickupItemEntry().GetItemDefinition());
+            *PickupLocation->ContainerPtrToValuePtr<FVector>(Parms) = GetActorLocation();
+
+            OnPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(Parms);
+        }
 
         if (bStripped)
             Destroy();
