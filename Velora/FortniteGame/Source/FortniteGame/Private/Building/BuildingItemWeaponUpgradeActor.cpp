@@ -123,6 +123,17 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
 
 FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponItemDefinition* WeaponDefinition, EFortWeaponUpgradeDirection Direction) const
 {
+    static auto StaticGetItemRow = Anchor::Optional<FWeaponUpgradeItemRow* (*)(UFortWeaponItemDefinition*, EFortWeaponUpgradeDirection)>(TEXT("ABuildingItemWeaponUpgradeActor::GetItemRow"))
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz dl; inc dl; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (StaticGetItemRow)
+        return StaticGetItemRow(WeaponDefinition, Direction);
+
     static auto GetItemRow = Anchor::Function<FWeaponUpgradeItemRow* (*)(const ABuildingItemWeaponUpgradeActor*, UFortWeaponItemDefinition*, EFortWeaponUpgradeDirection)>(TEXT("ABuildingItemWeaponUpgradeActor::GetItemRow"))
         .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
         .Start()
