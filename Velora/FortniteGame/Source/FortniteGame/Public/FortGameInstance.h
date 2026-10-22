@@ -11,7 +11,7 @@ class UFortGameInstance : public UGameInstance
 public:
     UFortPlaylistManager* GetPlaylistManager() const;
 
-    TSharedPtr<IAnalyticsProvider>& GetServerAnalyticsProvider();
+    TSharedPtr<IAnalyticsProvider>* GetServerAnalyticsProvider();
 
     TSharedPtr<IAnalyticsProvider>* GetServerEsportsAnalyticsProvider();
 };

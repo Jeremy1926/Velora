@@ -18,9 +18,13 @@ void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
     static auto RunAsDedicated = Anchor::Offset(TEXT("FWorldContext::RunAsDedicated"))
         .Pattern("48 8B 41 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 C3")
         .Find("movzx *, byte ptr [*+0x*]")
+        .Or()
+        .Pattern("48 8B 51 30 33 C0 48 85 D2 74 ? 8A 82 ? ? 00 00 C3")
+        .Find("mov al, [*+0x*]")
         .Disp();
 
-    *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
+    if (RunAsDedicated > 0)
+        *(bool*)((uint8_t*)this + RunAsDedicated) = bInRunAsDedicated;
 }
 
 float UEngine::GetNetClientTicksPerSecond() const

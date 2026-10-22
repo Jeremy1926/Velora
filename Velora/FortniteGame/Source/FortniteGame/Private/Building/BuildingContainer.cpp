@@ -230,6 +230,11 @@ bool ABuildingContainer::ShouldDestroyContainerOnSearch() const
         .Last("test al, al")
         .Last("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Container %s (%s) has an empty SearchedMesh in its tier mesh set, and is not destroyed on search."))
+        .Start()
+        .Find("call 0x*; test al, al")
+        .Target()
         .Get();
 
     return ShouldDestroyContainerOnSearch(this);

@@ -80,13 +80,13 @@ namespace Scanner
     {
         auto Exec = Scanner::Exec(FunctionPath);
 
-        for (auto Pattern : { "mov [*+0x20], *", "add [*+0x20], *" })
+        if (auto Finish = Exec.Find("setnz *; add [*+0x20], *"); Finish.Get())
+            return Finish.Call();
+
+        for (auto Finish = Exec.Find("mov [*+0x20], *"); Finish.Get(); Finish = Finish.Find("mov [*+0x20], *"))
         {
-            for (auto Finish = Exec.Find(Pattern); Finish.Get(); Finish = Finish.Find(Pattern))
-            {
-                if (!Finish.Is("mov [rsp*") && !Finish.Is("add [rsp*"))
-                    return Finish.Call();
-            }
+            if (!Finish.Is("mov [rsp*"))
+                return Finish.Call();
         }
 
         return FCode();
@@ -173,10 +173,10 @@ namespace Anchor
             if (!Chain.IsActive())
                 return Chain;
 
-            auto Finish = Scanner::Exec(FunctionPath).Find("mov [*+0x20], *; jmp 0x*");
+            auto Finish = Scanner::Exec(FunctionPath).Find("setnz *; add [*+0x20], *; jmp 0x*");
 
             if (!Finish.Get())
-                Finish = Scanner::Exec(FunctionPath).Find("add [*+0x20], *; jmp 0x*");
+                Finish = Scanner::Exec(FunctionPath).Find("mov [*+0x20], *; jmp 0x*");
 
             return Chain.At(Finish.Get() ? Anchor::At(Finish.Find("jmp 0x*").Target()) : Scanner::Native(FunctionPath));
         }

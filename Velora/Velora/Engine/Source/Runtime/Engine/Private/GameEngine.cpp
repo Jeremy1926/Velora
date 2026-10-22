@@ -62,11 +62,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 
-        GameInstance->GetWorldContext()->SetRunAsDedicated(true);
+        if (auto WorldContext = GameInstance->GetWorldContext())
+            WorldContext->SetRunAsDedicated(true);
 
         auto FortGameInstance = static_cast<UFortGameInstance*>(GameInstance);
-        FortGameInstance->GetServerAnalyticsProvider() = UFortAnalytics::CreateAnalyticsProvider(FString(), FString(), FString(FPlatformProperties::IniPlatformName()), EAnalyticsProviderType::ServerGameInstance, FString());
-        FortGameInstance->GetServerAnalyticsProvider()->StartSession();
+        if (auto ServerAnalyticsProvider = FortGameInstance->GetServerAnalyticsProvider())
+        {
+            *ServerAnalyticsProvider = UFortAnalytics::CreateAnalyticsProvider(FString(), FString(), FString(FPlatformProperties::IniPlatformName()), EAnalyticsProviderType::ServerGameInstance, FString());
+            (*ServerAnalyticsProvider)->StartSession();
+        }
 
         if (auto ServerEsportsAnalyticsProvider = FortGameInstance->GetServerEsportsAnalyticsProvider())
         {

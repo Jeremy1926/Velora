@@ -47,6 +47,7 @@ void AActor::CallPreReplication(UNetDriver* NetDriver)
 {
     static auto CallPreReplication = Anchor::Function<void (*)(AActor*, UNetDriver*)>(TEXT("AActor::CallPreReplication"))
         .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
+        .Is("lea *, [0x*]")
         .Last("xor r9d, r9d")
         .Last("call 0x*")
         .Target()

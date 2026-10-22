@@ -18,6 +18,8 @@ void IStreamingManager::RemoveStreamingViews(ERemoveStreamingViews RemovalType)
 {
     static auto RemoveStreamingViews = Anchor::Function<void (*)(IStreamingManager*, ERemoveStreamingViews)>(TEXT("IStreamingManager::RemoveStreamingViews"))
         .Pattern("40 53 48 83 EC 20 83 3D ? ? ? ? 00 8B DA C7 05 ? ? ? ? 00 00 00 00")
+        .Or()
+        .Pattern("40 53 48 83 EC 20 83 25 ? ? ? ? 00 8B DA 83 3D ? ? ? ? 00")
         .Get();
 
     RemoveStreamingViews(this, RemovalType);
