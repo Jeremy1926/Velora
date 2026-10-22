@@ -16,6 +16,7 @@
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -228,6 +229,37 @@ float UFortHeldObjectComponent::GetGravityScale() const
 
 AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto CachedInstigator = Anchor::Offset(TEXT("UFortHeldObjectComponent::GetInstigator cached pawn"))
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rax, [rcx+0x*]")
+            .Disp();
+
+        static auto WeakInstigator = Anchor::Offset(TEXT("UFortHeldObjectComponent::GetInstigator weak pawn"))
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov eax, [rcx+0x*]")
+            .Disp();
+
+        if (!CachedInstigator || !WeakInstigator)
+            return nullptr;
+
+        if (auto Instigator = *(AFortPlayerPawn**)((uint8*)this + CachedInstigator))
+            return Instigator;
+
+        return (AFortPlayerPawn*)((const FWeakObjectPtr*)((uint8*)this + WeakInstigator))->Get();
+    }
+
     static auto GetInstigator = Anchor::Function<AFortPlayerPawn* (*)(const UFortHeldObjectComponent*)>(TEXT("UFortHeldObjectComponent::GetInstigator"))
         .Native(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
         .Get();

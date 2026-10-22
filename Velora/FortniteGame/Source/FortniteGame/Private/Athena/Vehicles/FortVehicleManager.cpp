@@ -3,8 +3,11 @@
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Items/FortVehicleItemDefinition.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "GameFramework/WorldSettings.h"
 #include "Misc/CoreMiscDefines.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
@@ -24,6 +27,25 @@ UClass* AFortVehicleManager::StaticClass()
 
 bool AFortVehicleManager::GetVehicleManager(const UObject* WorldContextObject, AFortVehicleManager*& VehicleManager)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleManager:GetVehicleManager"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto FortWorldSettingsClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWorldSettings"));
+        static auto VehicleManagerProperty = FortWorldSettingsClass ? FortWorldSettingsClass->FindPropertyByName(FName(TEXT("VehicleManager"))) : nullptr;
+
+        auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+        auto WorldSettings = World ? (UObject*)World->GetWorldSettings() : nullptr;
+
+        VehicleManager = WorldSettings && VehicleManagerProperty && WorldSettings->IsA(FortWorldSettingsClass) ? *VehicleManagerProperty->ContainerPtrToValuePtr<AFortVehicleManager*>(WorldSettings) : nullptr;
+
+        return VehicleManager != nullptr;
+    }
+
     static auto GetVehicleManager = Anchor::Optional<bool (*)(const UObject*, AFortVehicleManager**)>(TEXT("AFortVehicleManager::GetVehicleManager"))
         .Native(TEXT("/Script/FortniteGame.FortVehicleManager:GetVehicleManager"))
         .Get();

@@ -41,6 +41,15 @@ UFortResourceItemDefinition* UFortControllerComponent_InventoryService::GetDefau
 
 UFortControllerComponent_InventoryService* UFortControllerComponent_InventoryService::GetInventoryServiceComponent(AFortPlayerController* FortPC)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+        return FortPC ? (UFortControllerComponent_InventoryService*)FortPC->FindComponentByClass(StaticClass()) : nullptr;
+
     static auto GetInventoryServiceComponent = Anchor::Optional<UFortControllerComponent_InventoryService* (*)(AFortPlayerController*)>(TEXT("UFortControllerComponent_InventoryService::GetInventoryServiceComponent"))
         .Native(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent"))
         .Get();
