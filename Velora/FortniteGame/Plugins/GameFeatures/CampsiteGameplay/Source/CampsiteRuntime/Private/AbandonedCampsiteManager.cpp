@@ -2,6 +2,11 @@
 #include "AbandonedCampsiteManager.h"
 #include "AbandonedCampsitePlacedSpawner.h"
 #include "FortGameStateComponent_Campsite.h"
+#include "FortControllerComponent_CampsiteAccountItem.h"
+#include "Items/FortCampsiteAccountItem.h"
+#include "Player/FortPlayerController.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 #include "Athena/FortGameStateAthena.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
@@ -115,24 +120,52 @@ void AAbandonedCampsiteManager::SpawnCampsites()
             PreplacedCampsiteSpawnPoints.Add(PlacedCampsiteSpawnPoint);
     }
 
+    TArray<FVector> ProfileCampsiteLocations;
+
+    for (auto PlayerState : GetWorld()->GetGameState()->GetPlayerArray())
+    {
+        auto PlayerController = PlayerState ? Cast<AFortPlayerController>(PlayerState->GetOwner()) : nullptr;
+        auto AccountItemComponent = PlayerController ? PlayerController->FindComponentByClass<UFortControllerComponent_CampsiteAccountItem>() : nullptr;
+
+        if (!AccountItemComponent)
+            continue;
+
+        auto& CampSpawnLocations = AccountItemComponent->GetCampsiteAccountData().GetCampSpawnLocations();
+
+        for (int32 Index = 0; Index < CampSpawnLocations.Num(); Index++)
+            ProfileCampsiteLocations.Add(CampSpawnLocations[Index].GetWorldSpawnLocation());
+    }
+
     auto PlacedInLevelWeight = FindSpawnTypeWeight(EAbandonedCampsiteSpawnType::PlacedInLevel);
+    auto FromPlayerProfileWeight = FindSpawnTypeWeight(EAbandonedCampsiteSpawnType::FromPlayerProfile);
     auto EnvironmentalQueryWeight = FindSpawnTypeWeight(EAbandonedCampsiteSpawnType::EnvironmentalQuery);
     const float PlacedWeight = PlacedInLevelWeight ? FMath::Max(PlacedInLevelWeight->GetValueAtLevel(0.0f), 0.0f) : 0.0f;
+    const float ProfileWeight = FromPlayerProfileWeight ? FMath::Max(FromPlayerProfileWeight->GetValueAtLevel(0.0f), 0.0f) : 0.0f;
     const float QueryWeight = EnvironmentalQueryWeight && GetSpawnEnvironmentalQuery() ? FMath::Max(EnvironmentalQueryWeight->GetValueAtLevel(0.0f), 0.0f) : 0.0f;
     const int32 NumCampsites = FMath::RandRange(FMath::RoundToInt(GetMinNumAbandonedCampsites().GetValueAtLevel(0.0f)), FMath::RoundToInt(GetMaxNumAbandonedCampsites().GetValueAtLevel(0.0f)));
     int32 NumEnvironmentalQueryCampsites = 0;
+    int32 NumProfileCampsites = 0;
 
     for (int32 Index = 0; Index < NumCampsites; Index++)
     {
         const float AvailablePlacedWeight = PreplacedCampsiteSpawnPoints.Num() ? PlacedWeight : 0.0f;
-        const float TotalWeight = AvailablePlacedWeight + QueryWeight;
+        const float AvailableProfileWeight = ProfileCampsiteLocations.Num() > NumProfileCampsites ? ProfileWeight : 0.0f;
+        const float TotalWeight = AvailablePlacedWeight + AvailableProfileWeight + QueryWeight;
 
         if (TotalWeight <= 0.0f)
             break;
 
-        if (FMath::FRand() * TotalWeight >= AvailablePlacedWeight)
+        const float Roll = FMath::FRand() * TotalWeight;
+
+        if (Roll >= AvailablePlacedWeight + AvailableProfileWeight)
         {
             NumEnvironmentalQueryCampsites++;
+            continue;
+        }
+
+        if (Roll >= AvailablePlacedWeight)
+        {
+            NumProfileCampsites++;
             continue;
         }
 
@@ -143,6 +176,30 @@ void AAbandonedCampsiteManager::SpawnCampsites()
     }
 
     StartEnvironmentalQuerySpawns(NumEnvironmentalQueryCampsites);
+
+    for (; NumProfileCampsites > 0; NumProfileCampsites--)
+        SpawnRandomCampsiteFromProfiles(ProfileCampsiteLocations);
+}
+
+void AAbandonedCampsiteManager::SpawnRandomCampsiteFromProfiles(TArray<FVector>& ProfileCampsiteLocations)
+{
+    static auto MinimumDistance = IConsoleManager::Get().FindConsoleVariable(TEXT("Campsite.MinimumDistance"));
+
+    const float MinimumDistanceValue = MinimumDistance ? MinimumDistance->GetFloat() : 0.0f;
+
+    while (ProfileCampsiteLocations.Num())
+    {
+        const int32 LocationIndex = FMath::RandHelper(ProfileCampsiteLocations.Num());
+        const FVector Location = ProfileCampsiteLocations[LocationIndex];
+
+        ProfileCampsiteLocations.RemoveAt(LocationIndex);
+
+        if (IsFarEnoughFromSpawns(Location, MinimumDistanceValue * MinimumDistanceValue))
+        {
+            DeferredSpawnLocations.Add(Location);
+            return;
+        }
+    }
 }
 
 void AAbandonedCampsiteManager::StartEnvironmentalQuerySpawns(int32 NumCampsites)

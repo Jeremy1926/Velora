@@ -317,8 +317,10 @@ void UFortControllerComponent_CampsiteAccountItem::CacheAccountItemData()
     if (!AccountItem)
         return;
 
-    auto& CampsiteAccountData = AccountItem->GetCampsiteAccountData();
+    auto& CampsiteAccountData = GetCampsiteAccountData();
     auto& CurrentlyStashedItemEntries = GetCurrentlyStashedItemEntries();
+
+    FCampsiteAccountData::StaticStruct()->CopyScriptStruct(&CampsiteAccountData, &AccountItem->GetCampsiteAccountData());
 
     while (CurrentlyStashedItemEntries.Num() < CampsiteAccountData.GetStashedItems().Num())
         new (CurrentlyStashedItemEntries) FFortItemEntry(nullptr, 0, 0);
@@ -383,4 +385,11 @@ TArray<FFortItemEntry>& UFortControllerComponent_CampsiteAccountItem::GetCurrent
     static auto CurrentlyStashedItemEntries = StaticClass()->FindPropertyByName(FName(TEXT("CurrentlyStashedItemEntries")));
 
     return *CurrentlyStashedItemEntries->ContainerPtrToValuePtr<TArray<FFortItemEntry>>(this);
+}
+
+FCampsiteAccountData& UFortControllerComponent_CampsiteAccountItem::GetCampsiteAccountData()
+{
+    static auto CampsiteAccountData = StaticClass()->FindPropertyByName(FName(TEXT("CampsiteAccountData")));
+
+    return *CampsiteAccountData->ContainerPtrToValuePtr<FCampsiteAccountData>(this);
 }

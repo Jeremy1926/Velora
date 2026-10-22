@@ -8,6 +8,7 @@ struct FFrame;
 class AActor;
 class AFortPlayerController;
 class UFortWorldItem;
+struct FCampsiteAccountData;
 
 class UFortControllerComponent_CampsiteAccountItem : public UActorComponent
 {
@@ -61,4 +62,6 @@ public:
     AFortPlayerController* GetPlayerController() const;
 
     TArray<FFortItemEntry>& GetCurrentlyStashedItemEntries();
+
+    FCampsiteAccountData& GetCampsiteAccountData();
 };

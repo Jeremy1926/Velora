@@ -53,6 +53,29 @@ int32 FCachedItemData::GetItemLoadedAmmo() const
     return *ItemLoadedAmmo->ContainerPtrToValuePtr<int32>(this);
 }
 
+UScriptStruct* FCachedCampSpawnLocation::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.CachedCampSpawnLocation"));
+
+    return Struct;
+}
+
+int32 FCachedCampSpawnLocation::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FVector FCachedCampSpawnLocation::GetWorldSpawnLocation() const
+{
+    static auto WorldSpawnLocation = StaticStruct()->FindPropertyByName(FName(TEXT("world_spawn_location")));
+
+    auto Location = WorldSpawnLocation->ContainerPtrToValuePtr<double>(this);
+
+    return FVector((float)Location[0], (float)Location[1], (float)Location[2]);
+}
+
 UScriptStruct* FCampsiteAccountData::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.CampsiteAccountData"));
@@ -65,6 +88,13 @@ TRuntimeSizedArray<FCachedItemData>& FCampsiteAccountData::GetStashedItems()
     static auto StashedItems = StaticStruct()->FindPropertyByName(FName(TEXT("stashed_items")));
 
     return *StashedItems->ContainerPtrToValuePtr<TRuntimeSizedArray<FCachedItemData>>(this);
+}
+
+TRuntimeSizedArray<FCachedCampSpawnLocation>& FCampsiteAccountData::GetCampSpawnLocations()
+{
+    static auto CampSpawnLocations = StaticStruct()->FindPropertyByName(FName(TEXT("camp_spawn_locations")));
+
+    return *CampSpawnLocations->ContainerPtrToValuePtr<TRuntimeSizedArray<FCachedCampSpawnLocation>>(this);
 }
 
 void FCampsiteAccountData::CopyFromMCPData(TArray<FFortItemEntry>& ItemEntriesOut)

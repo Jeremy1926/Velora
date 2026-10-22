@@ -34,6 +34,8 @@ public:
 
     void StartEnvironmentalQuerySpawns(int32 NumCampsites);
 
+    void SpawnRandomCampsiteFromProfiles(TArray<FVector>& ProfileCampsiteLocations);
+
     void DeferredCampsiteSpawnLoop();
 
     bool IsFarEnoughFromSpawns(const FVector& Location, float MinimumDistanceSquared);
