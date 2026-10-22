@@ -101,6 +101,11 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
         .String(TEXT("FortMarkableActorInterface"))
         .Start()
         .Caller()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:MarkActorOnClient"))
+        .Find("lea r8, [rsp+0x*]; mov rdx, *; mov rcx, *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
         .Get();
     static auto MarkerID = MarkerDataStruct->FindPropertyByName(FName(TEXT("MarkerID")));
     static auto Owner = MarkerDataStruct->FindPropertyByName(FName(TEXT("Owner")));
