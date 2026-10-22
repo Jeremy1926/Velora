@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Player/FortPlayerControllerGameplay.h"
+#include "Delegates/Delegate.h"
 
 class AActor;
 class AController;
@@ -30,6 +31,8 @@ public:
     typedef AFortPlayerControllerGameplay Super;
 
     static UClass* StaticClass();
+
+    FSimpleMulticastDelegate& GetOnPlayerPlaceChanged();
 
     void ServerAcknowledgePossession_Implementation(APawn* P);
 

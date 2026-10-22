@@ -70,6 +70,8 @@ public:
 
     uint8 GetTeamIndex() const;
 
+    int32 GetPlace() const;
+
     void PlayerPawnRebooted();
 
     int32& GetRebootCounter();

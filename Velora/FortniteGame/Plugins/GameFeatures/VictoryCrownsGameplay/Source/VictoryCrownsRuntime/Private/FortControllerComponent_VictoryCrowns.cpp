@@ -2,6 +2,8 @@
 #include "FortControllerComponent_VictoryCrowns.h"
 #include "FortGameStateComponent_VictoryCrowns.h"
 #include "Player/FortPlayerController.h"
+#include "Player/FortPlayerControllerZone.h"
+#include "Athena/FortPlayerControllerAthena.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
@@ -48,6 +50,9 @@ void UFortControllerComponent_VictoryCrowns::BeginPlay()
     Delegate.BindUFunction(this, FName(TEXT("HandlePawnChanged")));
 
     PlayerController->GetOnPossessedPawnChanged().AddUnique(Delegate);
+
+    if (auto PlayerControllerZone = Cast<AFortPlayerControllerZone>(PlayerController))
+        PlayerControllerZone->GetOnPlayerPlaceChanged().AddUObject(this, &UFortControllerComponent_VictoryCrowns::HandlePlayerPlaceChanged);
 
     if (auto Pawn = PlayerController->GetPawn())
         HandlePawnChanged(nullptr, Pawn);
@@ -119,6 +124,55 @@ void UFortControllerComponent_VictoryCrowns::HandlePawnChanged(APawn* OldPawn, A
         GrantVictoryCrownItem();
 }
 
+void UFortControllerComponent_VictoryCrowns::HandlePlayerPlaceChanged()
+{
+    auto PlayerController = Cast<AFortPlayerControllerAthena>(GetOwner());
+
+    if (!PlayerController)
+        return;
+
+    if (PlayerController->HasAuthority() && !GetWonCrownInMatch() && CurrentPlaylistSupportsVictoryCrowns() && WasOwnerQualifyingWinner())
+    {
+        auto& VictoryCrownAccountData = GetVictoryCrownAccountData();
+        const bool bWonRoyalRoyale = GetCrownInPlayerInventory() != nullptr;
+
+        VictoryCrownAccountData.has_victory_crown = true;
+        VictoryCrownAccountData.total_victory_crowns_bestowed_count++;
+
+        if (bWonRoyalRoyale)
+            VictoryCrownAccountData.total_royal_royales_achieved_count++;
+
+        SetWonCrownInMatch(true);
+        SetWonRoyalRoyale(bWonRoyalRoyale);
+    }
+
+    PlayerController->ForceNetUpdate();
+}
+
+bool UFortControllerComponent_VictoryCrowns::WasOwnerQualifyingWinner() const
+{
+    static auto MaxRankingForCrownAward = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/VictoryCrownsRuntime.VictoryCrownPlaylistData")))->FindPropertyByName(FName(TEXT("MaxRankingForCrownAward")));
+
+    auto PlayerController = Cast<AFortPlayerController>(GetOwner());
+    auto PlayerState = PlayerController ? Cast<AFortPlayerStateAthena>(PlayerController->GetPlayerState()) : nullptr;
+    auto RowData = PlayerState ? FindCurrentPlaylistRow() : nullptr;
+    const int32 Place = PlayerState ? PlayerState->GetPlace() : 0;
+
+    return RowData && Place > 0 && Place <= *MaxRankingForCrownAward->ContainerPtrToValuePtr<int32>(RowData);
+}
+
+void UFortControllerComponent_VictoryCrowns::SetWonCrownInMatch(bool bNewWonCrownInMatch)
+{
+    if (bNewWonCrownInMatch != GetWonCrownInMatch())
+        GetWonCrownInMatch() = bNewWonCrownInMatch;
+}
+
+void UFortControllerComponent_VictoryCrowns::SetWonRoyalRoyale(bool bNewWonRoyalRoyale)
+{
+    if (bNewWonRoyalRoyale != GetWonRoyalRoyale())
+        GetWonRoyalRoyale() = bNewWonRoyalRoyale;
+}
+
 void UFortControllerComponent_VictoryCrowns::BindOnAthenaProfileInitialized()
 {
     auto PlayerController = GetPlayerController();
@@ -178,6 +232,11 @@ void UFortControllerComponent_VictoryCrowns::SetCrownAccountData(const FVictoryC
 
 bool UFortControllerComponent_VictoryCrowns::CurrentPlaylistSupportsVictoryCrowns() const
 {
+    return FindCurrentPlaylistRow() != nullptr;
+}
+
+uint8* UFortControllerComponent_VictoryCrowns::FindCurrentPlaylistRow() const
+{
     static auto VictoryCrownPlaylistData = StaticClass()->FindPropertyByName(FName(TEXT("VictoryCrownPlaylistData")));
     static auto PlaylistName = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("PlaylistName")));
 
@@ -187,12 +246,12 @@ bool UFortControllerComponent_VictoryCrowns::CurrentPlaylistSupportsVictoryCrown
     auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
 
     if (!DataTable || !DataTable->RowStruct || !Playlist)
-        return false;
+        return nullptr;
 
     auto RowName = *PlaylistName->ContainerPtrToValuePtr<FName>(Playlist);
     auto RowData = RowName != NAME_None ? DataTable->RowMap.Find(RowName) : nullptr;
 
-    return RowData && *RowData;
+    return RowData ? *RowData : nullptr;
 }
 
 void UFortControllerComponent_VictoryCrowns::GrantVictoryCrownItem()
@@ -243,6 +302,20 @@ FVictoryCrownAccountData& UFortControllerComponent_VictoryCrowns::GetVictoryCrow
     static auto VictoryCrownAccountData = StaticClass()->FindPropertyByName(FName(TEXT("VictoryCrownAccountData")));
 
     return *VictoryCrownAccountData->ContainerPtrToValuePtr<FVictoryCrownAccountData>(this);
+}
+
+bool& UFortControllerComponent_VictoryCrowns::GetWonCrownInMatch()
+{
+    static auto bWonCrownInMatch = StaticClass()->FindPropertyByName(FName(TEXT("bWonCrownInMatch")));
+
+    return *bWonCrownInMatch->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool& UFortControllerComponent_VictoryCrowns::GetWonRoyalRoyale()
+{
+    static auto bWonRoyalRoyale = StaticClass()->FindPropertyByName(FName(TEXT("bWonRoyalRoyale")));
+
+    return *bWonRoyalRoyale->ContainerPtrToValuePtr<bool>(this);
 }
 
 FMulticastScriptDelegate& UFortControllerComponent_VictoryCrowns::GetOnVictoryCrownStatusChanged()

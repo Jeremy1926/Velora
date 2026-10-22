@@ -48,6 +48,21 @@ UClass* AFortPlayerControllerZone::StaticClass()
     return Class;
 }
 
+FSimpleMulticastDelegate& AFortPlayerControllerZone::GetOnPlayerPlaceChanged()
+{
+    static auto OnPlayerPlaceChanged = Anchor::Offset(TEXT("AFortPlayerControllerZone::OnPlayerPlaceChanged"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateAthena:OnRep_Place"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov *, [*+0x*]; test *, *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("lea rcx, [*+0x*]; call 0x*")
+        .Disp();
+
+    return *(FSimpleMulticastDelegate*)((uint8*)this + OnPlayerPlaceChanged);
+}
+
 void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn* P)
 {
     Super::ServerAcknowledgePossession_Implementation(P);

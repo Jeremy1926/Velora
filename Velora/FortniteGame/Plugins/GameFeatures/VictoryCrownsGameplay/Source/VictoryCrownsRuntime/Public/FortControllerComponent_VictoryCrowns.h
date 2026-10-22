@@ -24,6 +24,14 @@ public:
 
     void HandlePawnChanged(APawn* OldPawn, APawn* NewPawn);
 
+    void HandlePlayerPlaceChanged();
+
+    bool WasOwnerQualifyingWinner() const;
+
+    void SetWonCrownInMatch(bool bNewWonCrownInMatch);
+
+    void SetWonRoyalRoyale(bool bNewWonRoyalRoyale);
+
     void BindOnAthenaProfileInitialized();
 
     void OnAthenaProfileInitialized();
@@ -34,6 +42,8 @@ public:
 
     bool CurrentPlaylistSupportsVictoryCrowns() const;
 
+    uint8* FindCurrentPlaylistRow() const;
+
     void GrantVictoryCrownItem();
 
     const UFortWorldItem* GetCrownInPlayerInventory() const;
@@ -43,6 +53,10 @@ public:
     bool& GetShouldGrantCrownOnSpawn();
 
     FVictoryCrownAccountData& GetVictoryCrownAccountData();
+
+    bool& GetWonCrownInMatch();
+
+    bool& GetWonRoyalRoyale();
 
     FMulticastScriptDelegate& GetOnVictoryCrownStatusChanged();
 };

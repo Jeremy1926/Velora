@@ -242,6 +242,13 @@ uint8 AFortPlayerStateAthena::GetTeamIndex() const
     return *TeamIndex->ContainerPtrToValuePtr<uint8>(this);
 }
 
+int32 AFortPlayerStateAthena::GetPlace() const
+{
+    static auto Place = GetClass()->FindPropertyByName(FName(TEXT("Place")));
+
+    return *Place->ContainerPtrToValuePtr<int32>(this);
+}
+
 void AFortPlayerStateAthena::PlayerPawnRebooted()
 {
     if (HasAuthority())
