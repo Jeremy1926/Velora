@@ -77,6 +77,11 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."))
         .Call(2)
         .Call()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"), "lea rax, [0x*]; mov *, [rcx+0x8]")
+        .Start()
+        .Find("call 0x*; cmp rbx, rax")
+        .Call()
         .Get();
 
     return GetArchetypeFromRequiredInfoImpl(Class, Outer, Name, ObjectFlags, false);

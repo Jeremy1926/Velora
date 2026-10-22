@@ -12,6 +12,9 @@ void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* Erro
         .Or()
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."))
+        .Start()
         .Get();
 
     AssertIfInConstructor(Outer, ErrorMessage);
@@ -30,6 +33,9 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Start()
         .Or()
         .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
+        .Start()
+        .Or()
+        .Pattern("45 33 F6 4C 8B E1 45 0F B6 E9 49 8B F8 41 8B C6 41 8B CE 48 83 FA FF 0F 84")
         .Start()
         .Get();
 
@@ -53,6 +59,9 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Start()
         .Find("mov *, [rcx]; lea rax, [0x*]; mov *, [rcx+0x8]")
         .Start()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"), "lea rax, [0x*]; mov *, [rcx+0x8]")
+        .Start()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
@@ -69,6 +78,8 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
             UObject* Template;
             FObjectInstancingGraph* InstanceGraph;
             void* ExternalPackage;
+            uint8 PropertyInitCallback[0x40];
+            void* SubobjectOverrides;
         } Params { Class, InOuter, Name, SetFlags, InternalSetFlags, bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype, Template, InstanceGraph, nullptr };
 
         return StaticConstructObject_InternalWithParams(&Params);

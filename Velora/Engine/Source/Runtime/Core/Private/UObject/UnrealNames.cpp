@@ -23,6 +23,8 @@ FName::FName(EName N)
             .Target()
             .Or()
             .Pattern("48 89 5C 24 08 57 48 83 EC 20 48 63 DA 48 8B F9 E8 ? ? ? ? 8B 84 98 ? ? ? ? 48 8B 5C 24 30 89 07 48 8B C7")
+            .Or()
+            .Pattern("48 89 5C 24 08 57 48 83 EC 20 8B DA 48 8B F9 E8 ? ? ? ? 8B 84 98 ? ? ? ? 48 8B 5C 24 30 89 07 48 8B C7")
             .Get();
 
         ComparisonIndex = NAME_None;
@@ -79,6 +81,10 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
         .Start()
         .Find("mov r8d, 0x1")
         .Call()
+        .Or()
+        .String(TEXT("OnlineSubsystemUtils"), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Constructor(this, Name, FindType);
