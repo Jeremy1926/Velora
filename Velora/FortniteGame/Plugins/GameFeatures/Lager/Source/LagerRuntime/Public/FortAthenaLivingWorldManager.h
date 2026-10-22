@@ -56,6 +56,7 @@ public:
         FFortAthenaLivingWorldEvent* Event = nullptr;
         TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
         TWeakObjectPtr<AActor> PointProvider;
+        int32 ActorCountToSpawn = 0;
     };
 
     struct FLivingWorldEventRuntimeData

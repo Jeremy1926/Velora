@@ -4,7 +4,10 @@
 #include "UObject/Class.h"
 #include "Containers/Array.h"
 #include "GameplayTagContainer.h"
+#include "GameplayEffectTypes.h"
 #include "UObject/SoftObjectPtr.h"
+
+class UEnvQuery;
 
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription
 {
@@ -17,6 +20,10 @@ struct FFortAthenaLivingWorldEventDataActorSpawnDescription
     TSoftClassPtr<UClass>& GetSpawnerData();
 
     FGameplayTagQuery& GetSpawnerDataTagQuery();
+
+    bool GetbSpawnAroundDefaultPoint();
+
+    UEnvQuery* GetSpawnAroundEnvironmentQuery();
 };
 
 class UFortAthenaLivingWorldEventData : public UDataAsset
@@ -25,6 +32,10 @@ public:
     static UClass* StaticClass();
 
     FGameplayTagQuery& GetProviderFiltersTagQuery();
+
+    FScalableFloat* GetMinActorCountToSpawn();
+
+    FScalableFloat* GetMaxActorCountToSpawn();
 
     TRuntimeSizedArray<FFortAthenaLivingWorldEventDataActorSpawnDescription>& GetActorDescriptions();
 };
