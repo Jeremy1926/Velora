@@ -12,7 +12,7 @@ public:
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
 
-    void GiveGift(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController) const;
+    static void GiveGift(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController);
 
-    void GiveGiftItems(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController) const;
+    static void GiveGiftItems(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController);
 };

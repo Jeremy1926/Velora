@@ -1522,6 +1522,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortPawnComponent_Disguise.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Components</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics</Filter>
     </ClInclude>
@@ -1745,6 +1748,15 @@
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ShowFutureStormCircle.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DataDrivenService.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_RevealDisguise.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_ApplyDataDrivenEffect.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_UpgradeItem.h">
@@ -2458,6 +2470,9 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortPawnComponent_Disguise.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Components</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>
     </ClCompile>
@@ -2654,6 +2669,15 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ShowFutureStormCircle.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DataDrivenService.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_RevealDisguise.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_ApplyDataDrivenEffect.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_UpgradeItem.cpp">

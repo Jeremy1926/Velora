@@ -58,7 +58,7 @@ FConversationTaskResult UFortConversationTaskNode_GiveGift::ExecuteTaskNode_Impl
     return FConversationTaskResult::AdvanceConversation();
 }
 
-void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController) const
+void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController)
 {
     static auto NPCConversationGiftRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCConversationGiftRow"));
     static auto GiftTag = NPCConversationGiftRow ? NPCConversationGiftRow->FindPropertyByName(FName(TEXT("GiftTag"))) : nullptr;
@@ -135,20 +135,14 @@ void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipan
             continue;
         }
 
-        if (auto ApplyGameplayEffect = Cast<UFortControllerEffect_ApplyGameplayEffect>(Effect))
-        {
-            ApplyGameplayEffect->ApplyGameplayEffect(PlayerController);
-            continue;
-        }
-
         FEffectRequestContext RequestContext;
-        RequestContext.InstigatingController = NPCComponent->GetBotControllerOwner();
+        RequestContext.GetInstigatingController() = NPCComponent->GetBotControllerOwner();
 
         Effect->ApplyEffect(PlayerController, RequestContext);
     }
 }
 
-void UFortConversationTaskNode_GiveGift::GiveGiftItems(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController) const
+void UFortConversationTaskNode_GiveGift::GiveGiftItems(UFortNPCConversationParticipantComponent* NPCComponent, AFortPlayerController* PlayerController)
 {
     static auto NPCGiftItemInventoryRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCGiftItemInventoryRow"));
     static auto LootTier = NPCGiftItemInventoryRow ? NPCGiftItemInventoryRow->FindPropertyByName(FName(TEXT("LootTier"))) : nullptr;

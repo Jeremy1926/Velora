@@ -7,16 +7,21 @@
 #include "ConversationRegistry.h"
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
+#include "Conversation/FortConversationContextLibrary.h"
 #include "Conversation/FortConversationTaskNode_ApplyAbility.h"
+#include "Conversation/FortConversationTaskNode_ApplyDataDrivenEffect.h"
+#include "Conversation/FortConversationTaskNode_DataDrivenService.h"
 #include "Conversation/FortConversationTaskNode_DuelNPC.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_GiveGift.h"
 #include "Conversation/FortConversationTaskNode_GrantQuest.h"
 #include "Conversation/FortConversationTaskNode_HireNPC.h"
+#include "Conversation/FortConversationTaskNode_RevealDisguise.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
 #include "Conversation/FortConversationTaskNode_ShowFutureStormCircle.h"
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
+#include "Components/FortPawnComponent_Disguise.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
 #include "Templates/TypeCompatibleBytes.h"
@@ -124,6 +129,17 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
         if (ClassName == FName(TEXT("ChallengeNPC_C")))
             return ((const UFortConversationTaskNode_DuelNPC*)this)->ExecuteChallengeTaskNode(Context);
+
+        if (ClassName == FName(TEXT("DisguiseNPC_C")))
+        {
+            auto NPCActor = UFortConversationContextLibrary::GetParticipantActorNPC(Context);
+            auto Disguise = NPCActor ? NPCActor->FindComponentByClass<UFortPawnComponent_Disguise>() : nullptr;
+
+            if (Disguise)
+                Disguise->RevealDisguise(nullptr);
+
+            break;
+        }
     }
 
     if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
@@ -152,6 +168,15 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto ShowFutureStormCircle = Cast<UFortConversationTaskNode_ShowFutureStormCircle>(this))
         return ShowFutureStormCircle->ExecuteTaskNode_Implementation(Context);
+
+    if (auto DataDrivenService = Cast<UFortConversationTaskNode_DataDrivenService>(this))
+        return DataDrivenService->ExecuteTaskNode_Implementation(Context);
+
+    if (auto RevealDisguise = Cast<UFortConversationTaskNode_RevealDisguise>(this))
+        return RevealDisguise->ExecuteTaskNode_Implementation(Context);
+
+    if (auto ApplyDataDrivenEffect = Cast<UFortConversationTaskNode_ApplyDataDrivenEffect>(this))
+        return ApplyDataDrivenEffect->ExecuteTaskNode_Implementation(Context);
 
     TAlignedBytes<sizeof(FConversationTaskResult), alignof(FConversationTaskResult)> ResultBytes;
     auto NativeResult = (FConversationTaskResult*)&ResultBytes;
