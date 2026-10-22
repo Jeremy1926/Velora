@@ -28,4 +28,8 @@ public:
     static UObject* GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags);
 
     bool CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack);
+
+    UFunction* FindFunctionChecked(FName InName) const;
+
+    void ProcessEvent(UFunction* Function, void* Parms);
 };

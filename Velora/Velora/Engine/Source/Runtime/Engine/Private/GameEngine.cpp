@@ -16,6 +16,7 @@
 #include "Building/BuildingGameplayActorSpawnMachine.h"
 #include "FortAthenaLivingWorldManager.h"
 #include "AbandonedCampsiteManager.h"
+#include "FriendChestNative.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
@@ -171,6 +172,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
         ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
+        AFriendChestNative::TickActivationTimers();
 
         if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && World->GetGameState())
         {

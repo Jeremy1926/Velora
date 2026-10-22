@@ -57,3 +57,32 @@ void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>
 
     ProcessMulticastDelegate(this, Parameters);
 }
+
+UFunction* UObject::FindFunctionChecked(FName InName) const
+{
+    static auto FindFunctionChecked = Anchor::Function<UFunction* (*)(const UObject*, FName)>(TEXT("UObject::FindFunctionChecked"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov rdx, *")
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return FindFunctionChecked(this, InName);
+}
+
+void UObject::ProcessEvent(UFunction* Function, void* Parms)
+{
+    static auto ProcessEvent = Anchor::VirtualFunction<void (*)(UObject*, UFunction*, void*)>(TEXT("UObject::ProcessEvent"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov rdx, *")
+        .Start()
+        .Find("mov r*, [r*+0x*]")
+        .Get();
+
+    ProcessEvent(this, Function, Parms);
+}

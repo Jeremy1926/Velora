@@ -277,6 +277,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public">
       <UniqueIdentifier>{01B76CE1-EA9C-4C51-87E2-8703AC10491D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese">
+      <UniqueIdentifier>{6F0B2C1E-3A4D-4E8B-9C21-7D5E8A1B2F40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese\Source">
+      <UniqueIdentifier>{8A3C5D2F-1B6E-4F7A-A2D3-9E4B6C8D0F51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime">
+      <UniqueIdentifier>{2C7E9A4B-5D1F-4A8C-B3E6-0F2A4C6E8B62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Private">
+      <UniqueIdentifier>{4E9A1C6D-7F3B-4C2E-95A8-1B3D5F7A9C73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public">
+      <UniqueIdentifier>{6A1C3E8F-9B5D-4E4A-87CA-3D5F7B9C1E84}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Lager">
       <UniqueIdentifier>{A81EF23A-9918-43F0-90D8-B5D6C8E83C08}</UniqueIdentifier>
     </Filter>
@@ -1239,6 +1254,9 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortControllerComponent_CampsiteAccountItem.h">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public\FriendChestNative.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpProfile.h">
       <Filter>FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public</Filter>
@@ -2208,6 +2226,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortControllerComponent_CampsiteAccountItem.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Private\FriendChestNative.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\FreshCheese\Source\FreshCheeseRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortMcpProfile.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
