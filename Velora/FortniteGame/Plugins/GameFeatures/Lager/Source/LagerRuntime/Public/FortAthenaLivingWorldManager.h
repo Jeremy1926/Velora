@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
+#include "Math/Rotator.h"
 #include "Math/Vector.h"
 #include "Misc/CoreMiscDefines.h"
 #include "UObject/ScriptInterface.h"
@@ -59,6 +61,19 @@ public:
         int32 ActorCountToSpawn = 0;
     };
 
+    struct FLivingWorldPendingEQSSpawn
+    {
+        TWeakObjectPtr<UFortAthenaLivingWorldManager> LivingWorldManager;
+        TWeakObjectPtr<AActor> PointProvider;
+        TWeakObjectPtr<UClass> SpawnerDataClass;
+        TWeakObjectPtr<UClass> ActorClass;
+        TWeakObjectPtr<UObject> SpawnAroundEnvironmentQuery;
+        FVector DefaultPosition = FVector(ForceInit);
+        FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
+        int32 RequestID = INDEX_NONE;
+        int32 QueryID = INDEX_NONE;
+    };
+
     struct FLivingWorldEventRuntimeData
     {
         float ActivationTime = -1.0f;
@@ -87,6 +102,12 @@ public:
     void GenerateEvents();
 
     void ProcessEventRequests();
+
+    void ProcessEQSRequests();
+
+    void OnEQSRequestFinished(TSharedPtr<FEnvQueryResult> Result);
+
+    void SpawnFromEQSRequest(const FLivingWorldPendingEQSSpawn& PendingEQSSpawn, const FVector* Location);
 
     void OnActorSpawned(AActor* SpawnedActor, int32 RequestID);
 
@@ -138,6 +159,8 @@ public:
 
     UWorld** GetCachedWorld();
 
+    AActor* GetEQSHelper();
+
     TArray<AActor*>* GetSpawnedPawns();
 
     float GetActorDensity(const FVector& Location, float Radius);
@@ -148,4 +171,8 @@ private:
     static TArray<FLivingWorldEventRuntimeDataEntry> EventRuntimeData;
 
     static TArray<FLivingWorldEventRequest> PendingEventRequests;
+
+    static TArray<FLivingWorldPendingEQSSpawn> PendingEQSSpawns;
+
+    static int32 NextEQSSpawnRequestID;
 };
