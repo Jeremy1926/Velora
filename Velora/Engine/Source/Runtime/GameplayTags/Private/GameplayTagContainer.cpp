@@ -94,6 +94,14 @@ FGameplayTagQuery FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression& Roo
 
 bool FGameplayTagQuery::Matches(const FGameplayTagContainer& Tags) const
 {
+    static auto QueryMatches = Anchor::Optional<bool (*)(const FGameplayTagQuery*, const FGameplayTagContainer&)>(TEXT("FGameplayTagQuery::Matches"))
+        .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
+        .Is("mov rax, rsp; mov [rax+0x*], rbx; push rdi; sub rsp, 0x*; mov [rax-0x*], rcx*")
+        .Get();
+
+    if (QueryMatches)
+        return QueryMatches(this, Tags);
+
     static auto DoesContainerMatchTagQuery = Anchor::Function<bool (*)(const FGameplayTagContainer&, const FGameplayTagQuery&)>(TEXT("UBlueprintGameplayTagLibrary::DoesContainerMatchTagQuery"))
         .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
         .Get();

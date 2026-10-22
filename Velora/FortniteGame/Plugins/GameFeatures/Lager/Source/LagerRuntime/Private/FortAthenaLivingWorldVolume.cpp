@@ -72,6 +72,7 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
         .Find("lea rax, [0x*]; mov [rsp+0x*], *; xor ecx, ecx")
+        .Optional()
         .Target()
         .Inline());
 
