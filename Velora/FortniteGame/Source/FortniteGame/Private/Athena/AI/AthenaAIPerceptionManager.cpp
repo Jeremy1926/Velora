@@ -14,6 +14,10 @@ void UAthenaAIPerceptionManager::OnAISettingsUpdated(UAthenaAISettings* AISettin
         .FieldFind("mov rdx, [*+%x]", AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("AISettings"))))
         .Find("call 0x*")
         .Target()
+        .Or()
+        .FieldPattern("48 8B ? %o 48 85 D2 74 ? 48 8B ? E8", AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("AISettings"))))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (OnAISettingsUpdated)
@@ -29,6 +33,9 @@ void UAthenaAIPerceptionManager::StartPlay()
         .LogSlot(TEXT("UAthenaAISystem::StartPlay"))
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .FieldPattern("48 8B ? %o 48 85 D2 74 ? 48 8B ? E8", AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("AISettings"))))
+        .Start()
         .Get();
 
     StartPlay(this);
