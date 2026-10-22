@@ -784,16 +784,51 @@ UFortRegisteredPlayerInfo*& AFortPlayerController::GetMyPlayerInfo()
 
 void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored)
 {
+    ServerCreateBuildingActorInternal(BuildingClassData, BuildLoc, BuildRot, bMirrored, 0.0f, false, false, false);
+}
+
+ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck)
+{
+    DETOUR(AFortPlayerController, ServerCreateBuildingActorInternal, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco")))
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("mov *[rsp+0x40], *")
+        .Find("mov rcx, *; movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .IsTarget("xor eax, eax; ret*")
+        .Optional()
+        .AtCall(), Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap")))
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call [*+0x*]", 2)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Find("mov *[rsp+0x40], *")
+        .Find("mov rcx, *; movss [rsp+0x28], xmm0; mov byte ptr [rsp+0x20], 0x0; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .IsTarget("xor eax, eax; ret*")
+        .Optional()
+        .AtCall());
+
+    static auto UpgradeLevel = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingClassData")))->FindPropertyByName(FName(TEXT("UpgradeLevel")));
+    int32 BuildingLevel = 0;
+
+    memcpy(&BuildingLevel, UpgradeLevel->ContainerPtrToValuePtr<void>(&BuildingClassData), UpgradeLevel->GetSize());
+
+    BuildingClassData.UpgradeLevel = BuildingLevel;
+
     if (!ValidateBuildingClassData(BuildingClassData) || !BuildingClassData.BuildingClass)
-        return;
+        return nullptr;
 
     auto BuildingClass = BuildingClassData.BuildingClass;
 
     if (!BuildingClass->IsChildOf(ABuildingSMActor::StaticClass()))
-        return;
+        return nullptr;
 
-    if (!CanPerformNativeAction(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Action.Player.InteractBuild")))))
-        return;
+    if (!bForceOverrideInteractBuildCheck && !CanPerformNativeAction(FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Action.Player.InteractBuild")))))
+        return nullptr;
 
     const bool bBuildingRestricted = IsBuildingRestricted(BuildingClassData, BuildLoc, BuildRot);
     TArray<ABuildingActor*> ExistingBuildings;
@@ -803,7 +838,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
 
     if (!bBuildingRestricted)
     {
-        bCanAfford = CanAffordToPlaceBuildableClass(BuildingClassData);
+        bCanAfford = bIgnoreCostCheck || CanAffordToPlaceBuildableClass(BuildingClassData);
 
         const bool bHasRequiredBuildingLevel = HasRequiredBuildingLevel(BuildingClassData);
         const FVector OldBuildLoc = BuildLoc;
@@ -848,7 +883,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
             }
 
             if (!BuildingActor)
-                return;
+                return nullptr;
 
             BuildingActor->SetCurrentBuildingLevel(BuildingClassData.UpgradeLevel);
             BuildingActor->SetMirrored(bMirrored);
@@ -858,7 +893,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
             if (bDeferConstruction)
                 UGameplayStatics::FinishSpawningActor(BuildingActor, SpawnTransform);
 
-            UFortAnalytics::FireEvent_BuildingAction(this, TEXT("Create"), BuildingActor, PayBuildableClassPlacementCost(BuildingClassData));
+            UFortAnalytics::FireEvent_BuildingAction(this, TEXT("Create"), BuildingActor, bIgnoreCostCheck ? 0 : PayBuildableClassPlacementCost(BuildingClassData));
 
             if (auto GameMode = Cast<AFortGameMode>(GetWorld()->GetAuthGameMode()))
                 GameMode->OnPlayerCreatedBuilding(this, BuildingActor);
@@ -873,7 +908,7 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
                     BuildingTool->PlayWeaponFireFX(false);
             }
 
-            return;
+            return BuildingActor;
         }
     }
 
@@ -911,6 +946,8 @@ void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingCl
         ClientSendMessage(Message);
 
     TriggerUIFeedbackEvent(!bBuildingRestricted && !bCanAfford ? FName(TEXT("BuildPreviewUnableToAfford")) : FName(TEXT("BuildPreviewUnableToPlace")));
+
+    return nullptr;
 }
 
 void AFortPlayerController::ServerCreateBuildingActor_Implementation(FCreateBuildingActorData CreateBuildingData)

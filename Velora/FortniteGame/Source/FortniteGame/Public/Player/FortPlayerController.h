@@ -56,6 +56,8 @@ public:
 
     void ServerCreateBuildingActor_Implementation(FCreateBuildingActorData CreateBuildingData);
 
+    ABuildingSMActor* ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck);
+
     void ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit);
 
     void ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, int32 RotationIterations, bool bMirrored);
