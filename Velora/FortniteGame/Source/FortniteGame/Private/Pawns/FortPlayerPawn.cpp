@@ -162,6 +162,14 @@ void AFortPlayerPawn::OnBlueprintPlace()
         .TryCall("lea rdx, [rsp+0x*]; call 0x*; test al, al")
         .Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*")
         .Call()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rbp-0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*")
+        .Call()
         .Get();
 
     OnBlueprintPlace(this);
