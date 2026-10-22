@@ -16,6 +16,7 @@ UGameDataBR* UGameDataBR::Get()
 UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
 {
     static auto GetPlayerAbilitySetBR = Anchor::Optional<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
+        .If(!Anchor::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov rcx, rax; call 0x*; lea rcx, [rax+0x*]").Get())
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
         .Start()
         .Find("call 0x*; mov rcx, rax; call 0x*")
