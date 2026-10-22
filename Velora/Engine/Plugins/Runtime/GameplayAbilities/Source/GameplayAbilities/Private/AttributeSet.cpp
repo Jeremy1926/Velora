@@ -12,6 +12,12 @@ FGameplayAttribute::FGameplayAttribute(UProperty* NewProperty)
             .String(TEXT("IncomingDuration"))
             .Find("mov rdx, [0x*]; lea rcx, *; call 0x*")
             .Call()
+            .Or()
+            .String(TEXT("IncomingDuration"))
+            .Start()
+            .CallSite()
+            .Find("mov rdx, rax; lea rcx, *; call 0x*")
+            .Call()
             .Get();
 
         GameplayAttribute(this, NewProperty);
