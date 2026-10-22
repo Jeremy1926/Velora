@@ -225,7 +225,6 @@ float AFortAthenaPatrolPathPointProvider::GetRadius() const
         .Target()
         .Find("sqrtss xmm0, *; movss [*+0x*], xmm0")
         .Find("movss [*+0x*], xmm0")
-        .Disp()
         .Or()
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnPatrolPathAdded"))
         .Find("mov r8b, 0x1; mov rdx, *; mov rcx, *; call 0x*")
