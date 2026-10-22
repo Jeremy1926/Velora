@@ -6,6 +6,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
 
 UClass* UFortConversationTaskNode_Speech::StaticClass()
 {
@@ -39,13 +40,26 @@ FText UFortConversationTaskNode_Speech::GetParticipantNameStyled(const FConversa
 
 FText UFortConversationTaskNode_Speech::GetMessage(const FConversationContext& Context) const
 {
+    auto SpeakerTag = GetClass()->FindPropertyByName(FName(TEXT("SpeakerTag")));
     auto ConditionalMessageContainer = GetClass()->FindPropertyByName(FName(TEXT("ConditionalMessageContainer")));
     auto Message = GetClass()->FindPropertyByName(FName(TEXT("Message")));
 
     FText OutText;
 
+    if (SpeakerTag && ResolveMessageForContext(*SpeakerTag->ContainerPtrToValuePtr<FGameplayTag>(this), Context, OutText))
+        return OutText;
+
     if (ConditionalMessageContainer && UFortConversationContextConditionHelpers::GetMessageForContext(ConditionalMessageContainer->ContainerPtrToValuePtr<void>(this), Context, OutText))
         return OutText;
 
     return Message ? *Message->ContainerPtrToValuePtr<FText>(this) : OutText;
+}
+
+bool UFortConversationTaskNode_Speech::ResolveMessageForContext(const FGameplayTag& SpeakerParticipantTag, const FConversationContext& ConversationContext, FText& OutText) const
+{
+    static auto ResolveMessageForContext = Anchor::Optional<bool (*)(const UFortConversationTaskNode_Speech*, const FGameplayTag&, const FConversationContext&, FText&)>(TEXT("UFortConversationTaskNode_Speech::ResolveMessageForContext"))
+        .Native(TEXT("/Script/FortniteGame.FortConversationTaskNode_Speech:ResolveMessageForContext"))
+        .Get();
+
+    return ResolveMessageForContext && ResolveMessageForContext(this, SpeakerParticipantTag, ConversationContext, OutText);
 }

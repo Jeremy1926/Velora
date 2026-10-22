@@ -12,4 +12,6 @@ public:
     FText GetParticipantNameStyled(const FConversationContext& Context, FGameplayTag ParticipantTag) const;
 
     FText GetMessage(const FConversationContext& Context) const;
+
+    bool ResolveMessageForContext(const FGameplayTag& SpeakerParticipantTag, const FConversationContext& ConversationContext, FText& OutText) const;
 };
