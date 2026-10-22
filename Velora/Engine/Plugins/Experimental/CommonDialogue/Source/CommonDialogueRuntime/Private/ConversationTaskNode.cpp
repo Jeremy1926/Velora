@@ -7,6 +7,7 @@
 #include "ConversationRegistry.h"
 #include "ConversationRequirementNode.h"
 #include "ConversationSideEffectNode.h"
+#include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
@@ -81,6 +82,9 @@ EConversationRequirementResult UConversationTaskNode::IsRequirementSatisfied(con
         .Find("call [*+0x*]")
         .Get();
 
+    if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
+        return GrantPlayerBounty->IsRequirementSatisfied_Implementation(Context);
+
     return IsRequirementSatisfied_Implementation(this, Context);
 }
 
@@ -107,6 +111,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
         if (ClassName == FName(TEXT("Continue_C")))
             return UConversationContextHelpers::AdvanceConversation(Context);
     }
+
+    if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
+        return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);
 
     TAlignedBytes<sizeof(FConversationTaskResult), alignof(FConversationTaskResult)> ResultBytes;
     auto NativeResult = (FConversationTaskResult*)&ResultBytes;
