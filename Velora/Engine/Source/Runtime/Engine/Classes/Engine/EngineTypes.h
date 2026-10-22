@@ -144,6 +144,38 @@ enum class EDetachmentRule : uint8
     KeepWorld,
 };
 
+struct FAttachmentTransformRules
+{
+    FAttachmentTransformRules(EAttachmentRule InLocationRule, EAttachmentRule InRotationRule, EAttachmentRule InScaleRule, bool bInWeldSimulatedBodies)
+        : LocationRule(InLocationRule)
+        , RotationRule(InRotationRule)
+        , ScaleRule(InScaleRule)
+        , bWeldSimulatedBodies(bInWeldSimulatedBodies)
+    {
+    }
+
+    EAttachmentRule LocationRule;
+    EAttachmentRule RotationRule;
+    EAttachmentRule ScaleRule;
+    bool bWeldSimulatedBodies;
+};
+
+struct FDetachmentTransformRules
+{
+    FDetachmentTransformRules(EDetachmentRule InLocationRule, EDetachmentRule InRotationRule, EDetachmentRule InScaleRule, bool bInCallModify)
+        : LocationRule(InLocationRule)
+        , RotationRule(InRotationRule)
+        , ScaleRule(InScaleRule)
+        , bCallModify(bInCallModify)
+    {
+    }
+
+    EDetachmentRule LocationRule;
+    EDetachmentRule RotationRule;
+    EDetachmentRule ScaleRule;
+    bool bCallModify;
+};
+
 enum EObjectTypeQuery
 {
     ObjectTypeQuery1,

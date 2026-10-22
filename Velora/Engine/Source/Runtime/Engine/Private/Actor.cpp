@@ -70,6 +70,42 @@ void AActor::SetLifeSpan(float InLifespan)
 
 void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto GetDefaultAttachComponent = Anchor::VirtualFunction<USceneComponent* (*)(const AActor*)>(TEXT("AActor::GetDefaultAttachComponent"))
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [*+0x*]")
+            .Get();
+
+        static auto AttachToComponent = Anchor::Function<bool (*)(USceneComponent*, USceneComponent*, const FAttachmentTransformRules*, FName)>(TEXT("USceneComponent::AttachToComponent"))
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [*+0x*]")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        const FAttachmentTransformRules AttachmentRules(LocationRule, RotationRule, ScaleRule, bWeldSimulatedBodies);
+        auto RootComponent = GetRootComponent();
+
+        if (RootComponent && ParentActor)
+        {
+            if (auto ParentDefaultAttachComponent = GetDefaultAttachComponent(ParentActor))
+                AttachToComponent(RootComponent, ParentDefaultAttachComponent, &AttachmentRules, SocketName);
+        }
+
+        return;
+    }
+
     static auto K2_AttachToActor = Anchor::Function<void (*)(AActor*, AActor*, FName, EAttachmentRule, EAttachmentRule, EAttachmentRule, bool)>(TEXT("AActor::K2_AttachToActor"))
         .Native(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
         .Get();
@@ -79,6 +115,29 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
 
 void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule RotationRule, EDetachmentRule ScaleRule)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto DetachFromComponent = Anchor::VirtualFunction<void (*)(USceneComponent*, const FDetachmentTransformRules*)>(TEXT("USceneComponent::DetachFromComponent"))
+            .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [*+0x*]")
+            .Get();
+
+        const FDetachmentTransformRules DetachmentRules(LocationRule, RotationRule, ScaleRule, true);
+
+        if (auto RootComponent = GetRootComponent())
+            DetachFromComponent(RootComponent, &DetachmentRules);
+
+        return;
+    }
+
     static auto K2_DetachFromActor = Anchor::Function<void (*)(AActor*, EDetachmentRule, EDetachmentRule, EDetachmentRule)>(TEXT("AActor::K2_DetachFromActor"))
         .Native(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
         .Get();
