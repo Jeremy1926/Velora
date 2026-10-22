@@ -130,6 +130,22 @@ TEnumAsByte<EFortItemEntryState::Type>& FFortItemEntryStateValue::GetStateType()
 
 FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
 {
+    static auto VariantGuidConstructor = Anchor::Optional<void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const FGuid&)>(TEXT("FFortItemEntry::FFortItemEntry(ItemVariantGuid)"))
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov rax, [rsp+0x50]; movups xmm0, [rax]")
+        .Get();
+
+    if (VariantGuidConstructor)
+    {
+        VariantGuidConstructor(this, InItemDefinition, InCount, InLevel, FGuid());
+
+        return;
+    }
+
     static auto Constructor = Anchor::Function<void (*)(FFortItemEntry*, UFortItemDefinition*, int32, int32, const TArray<UObject*>*)>(TEXT("FFortItemEntry::FFortItemEntry"))
         .String(TEXT("%s HostUpgradeLevel: %i"))
         .Start()
@@ -166,6 +182,14 @@ FFortItemEntry::~FFortItemEntry()
         .String(TEXT("%s HostUpgradeLevel: %i"))
         .Start()
         .Find("mov rdx, rax; call 0x*")
+        .Find("add rcx, [*]")
+        .Find("lea rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
         .Find("add rcx, [*]")
         .Find("lea rcx, [*]; call 0x*")
         .Find("call 0x*")

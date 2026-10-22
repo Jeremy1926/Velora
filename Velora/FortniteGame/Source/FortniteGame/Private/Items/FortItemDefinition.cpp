@@ -56,6 +56,13 @@ int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
         .Find("call 0x*")
         .Call()
         .Find("call [*]")
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Call()
+        .Find("call [*]")
         .Get();
 
     return ClampItemLevel(this, ItemLevel);
