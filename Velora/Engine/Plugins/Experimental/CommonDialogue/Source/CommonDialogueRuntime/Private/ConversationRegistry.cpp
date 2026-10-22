@@ -16,6 +16,33 @@ UClass* UConversationRegistry::StaticClass()
 
 UConversationRegistry* UConversationRegistry::GetFromWorld(const UWorld* World)
 {
+    static auto WorldSubsystemClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.WorldSubsystem"));
+    static auto bWorldSubsystem = WorldSubsystemClass && StaticClass()->IsChildOf(WorldSubsystemClass);
+
+    if (bWorldSubsystem)
+    {
+        static auto SubsystemCollection = Anchor::Offset(TEXT("UWorld::SubsystemCollection"))
+            .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientExecuteTaskAndSideEffects"))
+            .Find("call [*+0x*]")
+            .Entry(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"))
+            .Find("call 0x*", 2)
+            .Target()
+            .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+            .Disp();
+        static auto GetSubsystemInternal = Anchor::Function<UObject* (*)(void*, UClass*)>(TEXT("FSubsystemCollectionBase::GetSubsystemInternal"))
+            .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientExecuteTaskAndSideEffects"))
+            .Find("call [*+0x*]")
+            .Entry(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"))
+            .Find("call 0x*", 2)
+            .Target()
+            .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        return World ? (UConversationRegistry*)GetSubsystemInternal((uint8*)World + SubsystemCollection, StaticClass()) : nullptr;
+    }
+
     static auto GetFromWorld = Anchor::Function<UConversationRegistry* (*)(const UWorld*)>(TEXT("UConversationRegistry::GetFromWorld"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientExecuteTaskAndSideEffects"))
         .Find("call [*+0x*]")
@@ -69,7 +96,17 @@ TArray<FGuid> UConversationRegistry::GetEntryPointGUIDs(FGameplayTag EntryPoint)
     static auto EntryMap = StaticClass()->FindPropertyByName(FName(TEXT("EntryMap")));
 
     if (!EntryMap)
+    {
+        BuildDependenciesGraph();
+
+        for (const auto& Pair : GetEntryTagToEntryList())
+        {
+            if (Pair.Key == EntryPoint)
+                return Pair.Value;
+        }
+
         return TArray<FGuid>();
+    }
 
     for (const auto& Pair : GetEntryMap())
     {
@@ -78,6 +115,28 @@ TArray<FGuid> UConversationRegistry::GetEntryPointGUIDs(FGameplayTag EntryPoint)
     }
 
     return TArray<FGuid>();
+}
+
+void UConversationRegistry::BuildDependenciesGraph() const
+{
+    static auto BuildDependenciesGraph = Anchor::Function<void (*)(const UConversationRegistry*)>(TEXT("UConversationRegistry::BuildDependenciesGraph"))
+        .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
+        .Start()
+        .Get();
+
+    BuildDependenciesGraph(this);
+}
+
+const TMap<FGameplayTag, TArray<FGuid>>& UConversationRegistry::GetEntryTagToEntryList() const
+{
+    static auto EntryTagToEntryList = Anchor::Offset(TEXT("UConversationRegistry::EntryTagToEntryList"))
+        .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
+        .Start()
+        .Find("mov rax, [rbp+0x*]; add rax, 0x*; mov [rbp-0x*], rax")
+        .Find("add rax, 0x*")
+        .Imm();
+
+    return *(const TMap<FGameplayTag, TArray<FGuid>>*)((const uint8*)this + EntryTagToEntryList);
 }
 
 TArray<FGuid> UConversationRegistry::GetOutputLinkGUIDs(FGameplayTag EntryPoint) const

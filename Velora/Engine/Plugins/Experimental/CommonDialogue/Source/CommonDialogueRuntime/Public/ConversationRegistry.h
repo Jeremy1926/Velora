@@ -30,4 +30,8 @@ public:
     const TMap<FGameplayTag, FConversationEntryList>& GetEntryMap() const;
 
     const TMap<FGuid, UConversationNode*>& GetReachableNodeMap() const;
+
+    void BuildDependenciesGraph() const;
+
+    const TMap<FGameplayTag, TArray<FGuid>>& GetEntryTagToEntryList() const;
 };
