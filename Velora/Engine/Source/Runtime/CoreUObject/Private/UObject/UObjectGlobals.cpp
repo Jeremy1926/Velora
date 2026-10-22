@@ -48,6 +48,33 @@ UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, co
 
 UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName Name, EObjectFlags SetFlags, EInternalObjectFlags InternalSetFlags, UObject* Template, bool bCopyTransientsFromClassDefaults, FObjectInstancingGraph* InstanceGraph, bool bAssumeTemplateIsArchetype)
 {
+    static auto StaticConstructObject_InternalWithParams = Anchor::Function<UObject* (*)(const void*)>(TEXT("StaticConstructObject_Internal(FStaticConstructObjectParameters)"))
+        .String(TEXT("STAT_ConstructObject"))
+        .Start()
+        .Find("mov *, [rcx]; lea rax, [0x*]; mov *, [rcx+0x8]")
+        .Start()
+        .Optional()
+        .Get();
+
+    if (StaticConstructObject_InternalWithParams)
+    {
+        struct
+        {
+            UClass* Class;
+            UObject* Outer;
+            FName Name;
+            EObjectFlags SetFlags;
+            EInternalObjectFlags InternalSetFlags;
+            bool bCopyTransientsFromClassDefaults;
+            bool bAssumeTemplateIsArchetype;
+            UObject* Template;
+            FObjectInstancingGraph* InstanceGraph;
+            void* ExternalPackage;
+        } Params { Class, InOuter, Name, SetFlags, InternalSetFlags, bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype, Template, InstanceGraph, nullptr };
+
+        return StaticConstructObject_InternalWithParams(&Params);
+    }
+
     static auto StaticConstructObject_Internal = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool)>(TEXT("StaticConstructObject_Internal"))
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."))
         .FirstOf("call 0x*", "jmp 0x*")
