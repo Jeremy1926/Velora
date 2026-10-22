@@ -18,6 +18,13 @@ int32 FFortAthenaLivingWorldEventDataActorSpawnDescription::GetTypeSize()
     return TypeSize;
 }
 
+TSoftClassPtr<UClass>& FFortAthenaLivingWorldEventDataActorSpawnDescription::GetActorClass()
+{
+    static auto ActorClass = StaticStruct()->FindPropertyByName(FName(TEXT("ActorClass")));
+
+    return *ActorClass->ContainerPtrToValuePtr<TSoftClassPtr<UClass>>(this);
+}
+
 TSoftClassPtr<UClass>& FFortAthenaLivingWorldEventDataActorSpawnDescription::GetSpawnerData()
 {
     static auto SpawnerData = StaticStruct()->FindPropertyByName(FName(TEXT("SpawnerData")));

@@ -12,6 +12,8 @@ struct FFortAthenaLivingWorldEventDataActorSpawnDescription
 
     static int32 GetTypeSize();
 
+    TSoftClassPtr<UClass>& GetActorClass();
+
     TSoftClassPtr<UClass>& GetSpawnerData();
 
     FGameplayTagQuery& GetSpawnerDataTagQuery();

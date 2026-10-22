@@ -23,7 +23,9 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
-TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData> UFortAthenaLivingWorldManager::EventRuntimeData;
+TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeDataEntry> UFortAthenaLivingWorldManager::EventRuntimeData;
+
+TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRequest> UFortAthenaLivingWorldManager::PendingEventRequests;
 
 UClass* UFortAthenaLivingWorldManager::StaticClass()
 {
@@ -66,18 +68,19 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
 {
     auto World = GetWorld();
     auto& NextEventGenerationTime = GetNextEventGenerationTime();
-
-    if (!World || NextEventGenerationTime < 0.0f || World->GetTimeSeconds() < NextEventGenerationTime)
-        return;
-
     auto LagerConfig = GetLagerConfig().LoadSynchronous();
 
-    if (!LagerConfig)
+    if (!World || !LagerConfig || NextEventGenerationTime < 0.0f)
         return;
 
-    NextEventGenerationTime = World->GetTimeSeconds() + LagerConfig->GetMinimumEventGenerationInterval().GetValueAtLevel(0.0f);
+    if (World->GetTimeSeconds() >= NextEventGenerationTime)
+    {
+        NextEventGenerationTime = World->GetTimeSeconds() + LagerConfig->GetMinimumEventGenerationInterval().GetValueAtLevel(0.0f);
 
-    GenerateEvents();
+        GenerateEvents();
+    }
+
+    ProcessEventRequests();
 }
 
 void UFortAthenaLivingWorldManager::GenerateEvents()
@@ -93,16 +96,15 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
 
     for (int32 Index = EventInstances.Num() - 1; Index >= 0; Index--)
     {
-        if (!EventInstances[Index].SpawnedActors.Num() && !EventInstances[Index].PendingRequestIDs.Num() && TimeSeconds >= EventInstances[Index].RespawnTime)
+        if (!EventInstances[Index].SpawnedActors.Num() && !EventInstances[Index].PendingSpawnRequests.Num() && TimeSeconds >= EventInstances[Index].RespawnTime)
             EventInstances.RemoveAt(Index);
     }
 
     int32 ActorBudget = (int32)LagerConfig->GetMaxActorCount().GetValueAtLevel(0.0f) - GetActorCount(nullptr, nullptr);
-    int32 EventSpawnBudget = (int32)LagerConfig->GetMaxEventSpawnPerTick().GetValueAtLevel(0.0f);
 
     for (auto& CategoryPair : CategoryTable->RowMap)
     {
-        if (ActorBudget <= 0 || EventSpawnBudget <= 0)
+        if (ActorBudget <= 0)
             break;
 
         auto Category = (FFortAthenaLivingWorldCategory*)CategoryPair.Value;
@@ -121,7 +123,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
 
         ComputeActiveEvents(EventTable, ActiveEvents, TotalWeight);
 
-        while (CategoryBudget > 0 && EventSpawnBudget > 0 && TotalWeight > 0.0f)
+        for (int32 Attempt = CategoryBudget; Attempt > 0 && CategoryBudget > 0 && TotalWeight > 0.0f; Attempt--)
         {
             const float Pick = FMath::FRand() * TotalWeight;
             float Weight = 0.0f;
@@ -144,19 +146,62 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             if (!Event)
                 break;
 
-            ActiveEvents.RemoveSingle(Event);
-            TotalWeight -= Event->GetWeight();
-
             auto EventData = Event->GetEventData().LoadSynchronous();
             const int32 ActorCount = EventData ? EventData->GetActorDescriptions().Num() : 0;
+            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
+            auto PointProvider = ActorCount && ActorCount <= FMath::Min(CategoryBudget, GetEventBudget(Event)) ? GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter) : nullptr;
 
-            if (!ActorCount || ActorCount > FMath::Min(CategoryBudget, GetEventBudget(Event)) || !RequestSpawnToAISpawnerSystem(Category, Event, EventData))
+            if (!PointProvider)
+            {
+                ActiveEvents.RemoveSingle(Event);
+                TotalWeight -= Event->GetWeight();
                 continue;
+            }
+
+            auto PointProviderInterface = (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass());
+
+            for (int32 Index = 0; Index < ActorCount; Index++)
+                PointProviderInterface->OnEventRequested();
+
+            FLivingWorldEventRequest EventRequest;
+            EventRequest.LivingWorldManager = this;
+            EventRequest.Category = Category;
+            EventRequest.Event = Event;
+            EventRequest.EventData = EventData;
+            EventRequest.PointProvider = PointProvider;
+
+            PendingEventRequests.Add(EventRequest);
+            FindOrCreateEventRuntimeData(Event).SpawnedCount += ActorCount;
 
             CategoryBudget -= ActorCount;
             ActorBudget -= ActorCount;
-            EventSpawnBudget--;
         }
+    }
+}
+
+void UFortAthenaLivingWorldManager::ProcessEventRequests()
+{
+    auto LagerConfig = GetLagerConfig().LoadSynchronous();
+    int32 EventSpawnBudget = LagerConfig ? (int32)LagerConfig->GetMaxEventSpawnPerTick().GetValueAtLevel(0.0f) : 0;
+
+    for (int32 Index = 0; Index < PendingEventRequests.Num() && EventSpawnBudget > 0;)
+    {
+        auto LivingWorldManager = PendingEventRequests[Index].LivingWorldManager.Get();
+
+        if (LivingWorldManager && LivingWorldManager != this)
+        {
+            Index++;
+            continue;
+        }
+
+        const FLivingWorldEventRequest EventRequest = PendingEventRequests[Index];
+        PendingEventRequests.RemoveAt(Index);
+
+        if (!LivingWorldManager)
+            continue;
+
+        RequestSpawnToAISpawnerSystem(EventRequest);
+        EventSpawnBudget--;
     }
 }
 
@@ -164,31 +209,43 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(AActor* SpawnedActor, int32 R
 {
     for (auto& EventInstance : GetEventInstances())
     {
-        if (!EventInstance.PendingRequestIDs.RemoveSingle(RequestID))
-            continue;
-
-        auto PointProvider = EventInstance.PointProvider.Get();
-        auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
-
-        if (!SpawnedActor)
+        for (int32 Index = 0; Index < EventInstance.PendingSpawnRequests.Num(); Index++)
         {
-            if (PointProviderInterface)
+            if (EventInstance.PendingSpawnRequests[Index].RequestID != RequestID)
+                continue;
+
+            auto PointProvider = EventInstance.PendingSpawnRequests[Index].PointProvider.Get();
+            EventInstance.PendingSpawnRequests.RemoveAt(Index);
+
+            if (SpawnedActor)
+            {
+                OnActorSpawned(EventInstance, SpawnedActor, PointProvider);
+            }
+            else if (auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr)
+            {
                 PointProviderInterface->OnSpawnedActorFailed();
+            }
 
             return;
         }
-
-        EventInstance.SpawnedActors.Add(SpawnedActor);
-
-        FScriptDelegate OnSpawnedActorDestroyDelegate;
-        OnSpawnedActorDestroyDelegate.BindUFunction(this, FName(TEXT("OnSpawnedActorDestroy")));
-        SpawnedActor->GetOnDestroyed().bIsBound |= FSparseDelegateStorage::Add(SpawnedActor, FName(TEXT("OnDestroyed")), OnSpawnedActorDestroyDelegate);
-
-        if (PointProviderInterface)
-            PointProviderInterface->OnSpawnedActor(SpawnedActor);
-
-        return;
     }
+}
+
+void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider)
+{
+    auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
+
+    EventInstance.SpawnedActors.Add(SpawnedActor);
+
+    FScriptDelegate OnSpawnedActorDestroyDelegate;
+    OnSpawnedActorDestroyDelegate.BindUFunction(this, FName(TEXT("OnSpawnedActorDestroy")));
+    SpawnedActor->GetOnDestroyed().bIsBound |= FSparseDelegateStorage::Add(SpawnedActor, FName(TEXT("OnDestroyed")), OnSpawnedActorDestroyDelegate);
+
+    if (auto SpawnedPawns = GetSpawnedPawns())
+        SpawnedPawns->Add(SpawnedActor);
+
+    if (PointProviderInterface)
+        PointProviderInterface->OnSpawnedActor(SpawnedActor);
 }
 
 void UFortAthenaLivingWorldManager::ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight)
@@ -243,6 +300,14 @@ int32 UFortAthenaLivingWorldManager::GetActorCount(const FFortAthenaLivingWorldC
             ActorCount += EventInstance.ActorCount;
     }
 
+    for (auto& EventRequest : PendingEventRequests)
+    {
+        auto EventData = EventRequest.EventData.Get();
+
+        if (EventData && EventRequest.LivingWorldManager.Get() == this && (!Category || EventRequest.Category == Category) && (!Event || EventRequest.Event == Event))
+            ActorCount += EventData->GetActorDescriptions().Num();
+    }
+
     return ActorCount;
 }
 
@@ -251,7 +316,8 @@ AActor* UFortAthenaLivingWorldManager::GetRandomPointProvider(const FGameplayTag
     TArray<AActor*> PointProviders = GetPointProviders();
     TArray<AActor*> ValidPointProviders;
 
-    PointProviders.Append(GetRuntimePointProviderList());
+    for (auto RuntimePointProvider : GetRuntimePointProviderList())
+        PointProviders.AddUnique(RuntimePointProvider);
 
     for (auto PointProvider : PointProviders)
     {
@@ -273,36 +339,56 @@ AActor* UFortAthenaLivingWorldManager::GetRandomPointProvider(const FGameplayTag
     return ValidPointProviders.Num() ? ValidPointProviders[FMath::RandHelper(ValidPointProviders.Num())] : nullptr;
 }
 
-bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(FFortAthenaLivingWorldCategory* Category, FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEventData* EventData)
+bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingWorldEventRequest& EventRequest)
 {
     auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem());
     auto AISpawner = AISystem ? AISystem->GetAISpawner() : nullptr;
+    auto Event = EventRequest.Event;
+    auto EventData = EventRequest.EventData.Get();
+    auto PointProvider = EventRequest.PointProvider.Get();
+    auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
     const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
-    auto PointProvider = AISpawner ? GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter) : nullptr;
-
-    if (!PointProvider)
-        return false;
-
-    auto PointProviderInterface = (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass());
+    const int32 ActorCount = EventData ? EventData->GetActorDescriptions().Num() : 0;
     FLivingWorldEventInstance EventInstance;
 
-    EventInstance.Category = Category;
+    EventInstance.Category = EventRequest.Category;
     EventInstance.Event = Event;
-    EventInstance.PointProvider = PointProvider;
+    EventInstance.EventData = EventData;
 
-    for (auto& ActorDescription : EventData->GetActorDescriptions())
+    for (int32 Index = 0; PointProviderInterface && Index < ActorCount; Index++)
     {
+        auto& ActorDescription = EventData->GetActorDescriptions()[Index];
         auto SpawnerDataClass = GetSpawnerDataClass(ActorDescription);
-        auto ComponentList = SpawnerDataClass ? UFortAthenaAISpawnerData::CreateComponentListFromClass(SpawnerDataClass, this) : nullptr;
+        auto ActorClass = SpawnerDataClass ? nullptr : ActorDescription.GetActorClass().LoadSynchronous();
         FVector Location;
         FRotator Rotation;
 
-        if (!ComponentList || !PointProviderInterface->GetValidLocation(PointFilter, Location, Rotation))
+        if ((SpawnerDataClass ? !AISpawner : !ActorClass || !ActorClass->IsChildOf(AActor::StaticClass())) || !PointProviderInterface->GetValidLocation(PointFilter, Location, Rotation))
+        {
+            PointProviderInterface->OnSpawnedActorFailed();
             continue;
+        }
 
-        PointProviderInterface->OnEventRequested();
+        const FTransform SpawnTransform(Rotation, Location, FVector(1.0f, 1.0f, 1.0f));
 
-        const int32 RequestID = AISpawner->RequestSpawn(ComponentList, FTransform(Rotation, Location, FVector(1.0f, 1.0f, 1.0f)));
+        if (!SpawnerDataClass)
+        {
+            auto SpawnedActor = GetWorld()->SpawnActor(ActorClass, &SpawnTransform);
+
+            if (!SpawnedActor)
+            {
+                PointProviderInterface->OnSpawnedActorFailed();
+                continue;
+            }
+
+            EventInstance.ActorCount++;
+
+            OnActorSpawned(EventInstance, SpawnedActor, PointProvider);
+            continue;
+        }
+
+        auto ComponentList = UFortAthenaAISpawnerData::CreateComponentListFromClass(SpawnerDataClass, this);
+        const int32 RequestID = ComponentList ? AISpawner->RequestSpawn(ComponentList, SpawnTransform) : INDEX_NONE;
 
         if (RequestID == INDEX_NONE)
         {
@@ -310,14 +396,19 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(FFortAthenaLiv
             continue;
         }
 
-        EventInstance.PendingRequestIDs.Add(RequestID);
+        FLivingWorldPendingSpawnRequest PendingSpawnRequest;
+        PendingSpawnRequest.RequestID = RequestID;
+        PendingSpawnRequest.PointProvider = PointProvider;
+
+        EventInstance.PendingSpawnRequests.Add(PendingSpawnRequest);
         EventInstance.ActorCount++;
     }
+
+    FindOrCreateEventRuntimeData(Event).SpawnedCount -= ActorCount - EventInstance.ActorCount;
 
     if (!EventInstance.ActorCount)
         return false;
 
-    FindOrCreateEventRuntimeData(Event).SpawnedCount += EventInstance.ActorCount;
     GetEventInstances().Add(EventInstance);
 
     return true;
@@ -343,19 +434,33 @@ UClass* UFortAthenaLivingWorldManager::GetSpawnerDataClass(FFortAthenaLivingWorl
 
 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData& UFortAthenaLivingWorldManager::FindOrCreateEventRuntimeData(const FFortAthenaLivingWorldEvent* Event)
 {
+    static auto NativeFindOrCreateEventRuntimeData = Anchor::Optional<FLivingWorldEventRuntimeData* (*)(UFortAthenaLivingWorldManager*, const FFortAthenaLivingWorldEvent*)>(TEXT("UFortAthenaLivingWorldManager::FindOrCreateEventRuntimeData"))
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("mov rcx, *; call 0x*; mov rbx, [rsp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, *; mov rcx, *; mov *, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (NativeFindOrCreateEventRuntimeData)
+        return *NativeFindOrCreateEventRuntimeData(this, Event);
+
     for (int32 Index = EventRuntimeData.Num() - 1; Index >= 0; Index--)
     {
         if (EventRuntimeData[Index].LivingWorldManager.Get() != this)
             EventRuntimeData.RemoveAt(Index);
         else if (EventRuntimeData[Index].Event == Event)
-            return EventRuntimeData[Index];
+            return EventRuntimeData[Index].RuntimeData;
     }
 
-    FLivingWorldEventRuntimeData RuntimeData;
-    RuntimeData.LivingWorldManager = this;
-    RuntimeData.Event = Event;
+    FLivingWorldEventRuntimeDataEntry RuntimeDataEntry;
+    RuntimeDataEntry.LivingWorldManager = this;
+    RuntimeDataEntry.Event = Event;
 
-    return EventRuntimeData[EventRuntimeData.Add(RuntimeData)];
+    return EventRuntimeData[EventRuntimeData.Add(RuntimeDataEntry)].RuntimeData;
 }
 
 TSoftObjectPtr<UFortAthenaLivingWorldConfigData>& UFortAthenaLivingWorldManager::GetLagerConfig()
@@ -433,4 +538,11 @@ UWorld** UFortAthenaLivingWorldManager::GetCachedWorld()
     static auto CachedWorld = GetClass()->FindPropertyByName(FName(TEXT("CachedWorld")));
 
     return CachedWorld ? CachedWorld->ContainerPtrToValuePtr<UWorld*>(this) : nullptr;
+}
+
+TArray<AActor*>* UFortAthenaLivingWorldManager::GetSpawnedPawns()
+{
+    static auto SpawnedPawns = GetClass()->FindPropertyByName(FName(TEXT("SpawnedPawns")));
+
+    return SpawnedPawns ? SpawnedPawns->ContainerPtrToValuePtr<TArray<AActor*>>(this) : nullptr;
 }
