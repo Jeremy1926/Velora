@@ -40,9 +40,9 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
     return Handle;
 }
 
-FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(const FGameplayAbilitySpec& Spec)
+FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(const FGameplayAbilitySpec& Spec, const FGameplayEventData* GameplayEventData)
 {
-    static auto GiveAbilityAndActivateOnce = Anchor::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(TEXT("UAbilitySystemComponent::GiveAbilityAndActivateOnce"))
+    static auto GiveAbilityAndActivateOnce = Anchor::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&, const FGameplayEventData*)>(TEXT("UAbilitySystemComponent::GiveAbilityAndActivateOnce"))
         .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Start()
         .Is("sub rsp, *; mov rax, [r9]; lea r8, [0x*]")
@@ -54,7 +54,7 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(c
 
     FGameplayAbilitySpecHandle Handle;
 
-    GiveAbilityAndActivateOnce(this, &Handle, Spec);
+    GiveAbilityAndActivateOnce(this, &Handle, Spec, GameplayEventData);
 
     return Handle;
 }
