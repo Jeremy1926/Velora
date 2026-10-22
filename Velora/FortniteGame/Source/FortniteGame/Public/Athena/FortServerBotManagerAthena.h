@@ -2,6 +2,7 @@
 
 #include "UObject/Object.h"
 #include "Containers/Array.h"
+#include "Delegates/Delegate.h"
 #include "Math/Rotator.h"
 #include "Math/Vector.h"
 
@@ -61,4 +62,8 @@ public:
     UAthenaAIPopulationTracker* GetCachedAIPopulationTracker();
 
     void SetCachedAIPopulationTracker(UAthenaAIPopulationTracker* InCachedAIPopulationTracker);
+
+    FSimpleMulticastDelegate* GetOnNoAIAlive();
+
+    TMulticastDelegate<void, AFortAthenaAIBotController*>* GetOnBotController();
 };
