@@ -187,6 +187,25 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
 
 bool AFortAthenaVehicleSpawner::GetForceSpawnAlways() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto bForceSpawnAlways = GetClass()->FindPropertyByName(FName(TEXT("bForceSpawnAlways")));
+        static auto ForceSpawnAlways = Anchor::Data<const int32*>(TEXT("AFortAthenaVehicleSpawner::GetForceSpawnAlways global"))
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
+            .Find("add [*+0x20], *")
+            .Find("cmp [0x*], r9d")
+            .Target()
+            .Get();
+
+        return (bForceSpawnAlways && *bForceSpawnAlways->ContainerPtrToValuePtr<bool>(this)) || (ForceSpawnAlways && *ForceSpawnAlways != 0);
+    }
+
     static auto GetForceSpawnAlways = Anchor::Function<bool (*)(const AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::GetForceSpawnAlways"))
         .Native(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
         .Get();

@@ -242,6 +242,37 @@ UObject* AFortGameStateAthena::GetCurrentPlaylist() const
 
 int32 AFortGameStateAthena::GetAvgPlayerMMR() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto DefaultMMR = (int32)Anchor::Offset(TEXT("AFortGameStateAthena::GetAvgPlayerMMR default"))
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("add [*+0x20], *")
+            .Find("mov eax, 0x*")
+            .Imm();
+
+        static auto bOverrideMMR = Anchor::Data<const uint8*>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR override"))
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("add [*+0x20], *")
+            .Find("cmp byte ptr [0x*], 0x0")
+            .Target()
+            .Get();
+
+        static auto OverrideMMR = Anchor::Data<const int32*>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR value"))
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("add [*+0x20], *")
+            .Find("cmovnz eax, [0x*]")
+            .Target()
+            .Get();
+
+        return bOverrideMMR && OverrideMMR && *bOverrideMMR ? *OverrideMMR : DefaultMMR;
+    }
+
     static auto GetAvgPlayerMMR = Anchor::Function<int32 (*)(const AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR"))
         .Native(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
         .Get();

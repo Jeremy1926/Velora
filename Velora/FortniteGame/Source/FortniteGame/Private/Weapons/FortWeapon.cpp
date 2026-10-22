@@ -123,6 +123,11 @@ void AFortWeapon::ModAmmo(int32 AmountToUse)
         .Native(TEXT("/Script/FortniteGame.FortWeapon:K2_ConsumeAmmo"))
         .Is("mov rax, [rcx]; neg edx; jmp [rax+0x*]")
         .Find("jmp [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeapon:K2_ConsumeAmmo"))
+        .Find("setnz *")
+        .Find("neg edx")
+        .Find("call [rax+0x*]")
         .Get();
 
     ModAmmo(this, AmountToUse);

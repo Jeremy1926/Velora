@@ -172,6 +172,30 @@ void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn
 
 bool ABuildingGameplayActorSpawnMachine::RebootPlayersInAir() const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto RebootInAir = Anchor::Data<const int32*>(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir value"))
+            .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+            .Find("add [*+0x20], *")
+            .Find("cmp dword ptr [0x*], 0x*")
+            .Target()
+            .Get();
+
+        static auto RebootInAirValue = (int32)Anchor::Offset(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir compare"))
+            .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+            .Find("add [*+0x20], *")
+            .Find("cmp dword ptr [0x*], 0x*")
+            .Imm();
+
+        return RebootInAir && *RebootInAir == RebootInAirValue;
+    }
+
     static auto RebootPlayersInAir = Anchor::Function<bool (*)(const ABuildingGameplayActorSpawnMachine*)>(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir"))
         .Native(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
         .Get();

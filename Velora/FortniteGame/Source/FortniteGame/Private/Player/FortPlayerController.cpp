@@ -296,6 +296,29 @@ void AFortPlayerController::ActivateSlot(EFortQuickBars InQuickBar, int32 Slot, 
 
 UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortItemDefinition* ItemDefinition, bool bInStorageVault) const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto InventoryOwner = Anchor::Offset(TEXT("AFortPlayerController::BP_FindExistingItemForDefinition inventory owner"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("lea rcx, [*+0x*]; mov rdx, *; setnz r8b")
+            .Disp();
+
+        static auto FindExistingItemForDefinition = Anchor::VirtualFunction<UFortItem* (*)(const void*, const UFortItemDefinition*, bool)>(TEXT("IFortInventoryOwnerInterface::FindExistingItemForDefinition"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]")
+            .Get();
+
+        return InventoryOwner ? FindExistingItemForDefinition((const uint8*)this + InventoryOwner, ItemDefinition, bInStorageVault) : nullptr;
+    }
+
     static auto K2_FindExistingItemForDefinition = Anchor::Function<UFortItem* (*)(const AFortPlayerController*, const UFortItemDefinition*, bool)>(TEXT("AFortPlayerController::K2_FindExistingItemForDefinition"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:K2_FindExistingItemForDefinition"))
         .Or()
