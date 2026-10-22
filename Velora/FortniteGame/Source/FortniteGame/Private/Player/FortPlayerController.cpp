@@ -1522,6 +1522,20 @@ AFortPlayerPawn* AFortPlayerController::GetMyFortPawn() const
     return *MyFortPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
 }
 
+UFortMcpProfile* AFortPlayerController::GetAthenaProfile() const
+{
+    static auto AthenaProfile = StaticClass()->FindPropertyByName(FName(TEXT("AthenaProfile")));
+
+    return AthenaProfile ? *AthenaProfile->ContainerPtrToValuePtr<UFortMcpProfile*>(this) : nullptr;
+}
+
+FMulticastScriptDelegate& AFortPlayerController::GetOnMcpProfilesInitializedEvent()
+{
+    static auto OnMcpProfilesInitializedEvent = StaticClass()->FindPropertyByName(FName(TEXT("OnMcpProfilesInitializedEvent")));
+
+    return *OnMcpProfilesInitializedEvent->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
 UFortQuestManager* AFortPlayerController::GetQuestManager(ESubGame SubGame) const
 {
     static auto GetQuestManager = Anchor::VirtualFunction<UFortQuestManager* (*)(const AFortPlayerController*, ESubGame)>(TEXT("AFortPlayerController::GetQuestManager"))

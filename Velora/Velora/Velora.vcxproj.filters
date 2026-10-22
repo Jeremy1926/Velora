@@ -262,6 +262,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public">
       <UniqueIdentifier>{E20DC464-C3A6-4DE1-A5B4-FB2DA0557D6F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay">
+      <UniqueIdentifier>{CA2B1AE9-4234-4650-B6D6-EA5BDA1189DE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source">
+      <UniqueIdentifier>{FB989A82-9EF1-40E1-AC7B-F375EAA0093D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime">
+      <UniqueIdentifier>{F6BCBFDD-769A-4888-B477-4D7DF31A6E5B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private">
+      <UniqueIdentifier>{DDD07C60-4477-4095-B314-1F9FC15BDEAB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public">
+      <UniqueIdentifier>{01B76CE1-EA9C-4C51-87E2-8703AC10491D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Lager">
       <UniqueIdentifier>{A81EF23A-9918-43F0-90D8-B5D6C8E83C08}</UniqueIdentifier>
     </Filter>
@@ -1225,6 +1240,21 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortControllerComponent_CampsiteAccountItem.h">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public\McpProfile.h">
+      <Filter>FortniteGame\Plugins\OnlineGameplayFramework\Source\McpProfileSys\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortVictoryCrownAccountItem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortMcpProfile.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortControllerComponent_VictoryCrowns.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public\FortGameStateComponent_Crafting.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public</Filter>
     </ClInclude>
@@ -2172,6 +2202,15 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortControllerComponent_CampsiteAccountItem.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortMcpProfile.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortVictoryCrownAccountItem.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortControllerComponent_VictoryCrowns.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private\FortGameStateComponent_Crafting.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private</Filter>

@@ -15,6 +15,7 @@ class AFortPlayerPawn;
 class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
+class UFortMcpProfile;
 class UFortQuestManager;
 class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
@@ -107,6 +108,10 @@ public:
     void TriggerUIFeedbackEvent(FName EventName);
 
     AFortPlayerPawn* GetMyFortPawn() const;
+
+    UFortMcpProfile* GetAthenaProfile() const;
+
+    FMulticastScriptDelegate& GetOnMcpProfilesInitializedEvent();
 
     UFortQuestManager* GetQuestManager(ESubGame SubGame) const;
 

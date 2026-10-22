@@ -2,6 +2,7 @@
 
 #include "McpItemDefinitionBase.h"
 #include "Internationalization/Text.h"
+#include "Containers/UnrealString.h"
 #include "UObject/Class.h"
 
 class UAbilitySystemComponent;
@@ -113,4 +114,6 @@ public:
     bool DoesAllowMultipleStacks() const;
 
     int32 GetMaxStackSize(const UAbilitySystemComponent* AbilitySystemComponent = nullptr) const;
+
+    FString GetPersistentName() const;
 };

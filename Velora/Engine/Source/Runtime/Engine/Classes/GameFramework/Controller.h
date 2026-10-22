@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
 #include "Math/Rotator.h"
+#include "UObject/ScriptDelegates.h"
 
 class APlayerState;
 
@@ -14,6 +15,8 @@ public:
     APawn* GetPawn() const;
 
     APlayerState* GetPlayerState() const;
+
+    FMulticastScriptDelegate& GetOnPossessedPawnChanged();
 
     AActor* GetViewTarget() const;
 

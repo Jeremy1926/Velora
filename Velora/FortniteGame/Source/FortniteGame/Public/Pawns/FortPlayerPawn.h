@@ -56,6 +56,8 @@ public:
 
     static FMulticastScriptDelegate* GetOnVehicleSpawnedEvent();
 
+    FMulticastScriptDelegate& GetOnEnteredAircraft();
+
     AFortAthenaVehicle* GetVehicle() const;
 
     AActor* GetHeldObject() const;

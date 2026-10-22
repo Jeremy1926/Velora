@@ -25,6 +25,13 @@ APlayerState* AController::GetPlayerState() const
     return *PlayerState->ContainerPtrToValuePtr<APlayerState*>(this);
 }
 
+FMulticastScriptDelegate& AController::GetOnPossessedPawnChanged()
+{
+    static auto OnPossessedPawnChanged = StaticClass()->FindPropertyByName(FName(TEXT("OnPossessedPawnChanged")));
+
+    return *OnPossessedPawnChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
 AActor* AController::GetViewTarget() const
 {
     static auto GetViewTarget = Anchor::VirtualFunction<AActor* (*)(const AController*)>(TEXT("AController::GetViewTarget"))

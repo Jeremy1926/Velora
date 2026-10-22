@@ -67,6 +67,13 @@ FMulticastScriptDelegate* AFortPlayerPawn::GetOnVehicleSpawnedEvent()
     return OnVehicleSpawnedEvent;
 }
 
+FMulticastScriptDelegate& AFortPlayerPawn::GetOnEnteredAircraft()
+{
+    static auto OnEnteredAircraft = StaticClass()->FindPropertyByName(FName(TEXT("OnEnteredAircraft")));
+
+    return *OnEnteredAircraft->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
 AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
 {
     return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());

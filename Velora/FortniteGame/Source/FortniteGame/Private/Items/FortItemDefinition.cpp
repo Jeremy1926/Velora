@@ -13,6 +13,19 @@ UEnum* StaticEnum<EFortItemType>()
     return Enum;
 }
 
+FString UFortItemDefinition::GetPersistentName() const
+{
+    static auto GetPersistentName = Anchor::VirtualFunction<FString* (*)(const UFortItemDefinition*, FString*)>(TEXT("UFortItemDefinition::GetPersistentName"))
+        .Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetPersistentName"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    FString PersistentName;
+    GetPersistentName(this, &PersistentName);
+
+    return PersistentName;
+}
+
 int32 UFortItemDefinition::GetMinLevel() const
 {
     static auto MinLevel = GetClass()->FindPropertyByName(FName(TEXT("MinLevel")));
