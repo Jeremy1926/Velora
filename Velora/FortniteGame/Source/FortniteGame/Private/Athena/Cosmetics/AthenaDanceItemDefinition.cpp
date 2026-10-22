@@ -25,6 +25,27 @@ bool UAthenaDanceItemDefinition::GetMoveForwardOnly() const
     return bMoveForwardOnly && bMoveForwardOnly->GetPropertyValue_InContainer(this);
 }
 
+bool UAthenaDanceItemDefinition::GetMoveFollowingOnly() const
+{
+    static auto bMoveFollowingOnly = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bMoveFollowingOnly")));
+
+    return bMoveFollowingOnly && bMoveFollowingOnly->GetPropertyValue_InContainer(this);
+}
+
+bool UAthenaDanceItemDefinition::GetMovingEmoteSkipLandingFX() const
+{
+    static auto bMovingEmoteSkipLandingFX = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bMovingEmoteSkipLandingFX")));
+
+    return bMovingEmoteSkipLandingFX && bMovingEmoteSkipLandingFX->GetPropertyValue_InContainer(this);
+}
+
+float UAthenaDanceItemDefinition::GetWalkForwardSpeed() const
+{
+    static auto WalkForwardSpeed = StaticClass()->FindPropertyByName(FName(TEXT("WalkForwardSpeed")));
+
+    return *WalkForwardSpeed->ContainerPtrToValuePtr<float>(this);
+}
+
 const TAssetPtr<UClass>* UAthenaDanceItemDefinition::GetCustomDanceAbility() const
 {
     static auto CustomDanceAbility = StaticClass()->FindPropertyByName(FName(TEXT("CustomDanceAbility")));

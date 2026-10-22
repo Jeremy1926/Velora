@@ -40,6 +40,12 @@ public:
 
     void SetMovingEmoteForwardOnly(bool bInMovingEmoteForwardOnly);
 
+    void SetMovingEmoteFollowingOnly(bool bInMovingEmoteFollowingOnly);
+
+    void SetMovingEmoteSkipLandingFX(bool bInMovingEmoteSkipLandingFX);
+
+    void SetEmoteWalkSpeed(float InEmoteWalkSpeed);
+
     void MovingEmoteStopped();
 
     void execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result);

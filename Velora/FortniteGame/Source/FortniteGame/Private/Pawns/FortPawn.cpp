@@ -114,10 +114,35 @@ void AFortPawn::SetMovingEmoteForwardOnly(bool bInMovingEmoteForwardOnly)
     bMovingEmoteForwardOnly->SetPropertyValue_InContainer(this, bInMovingEmoteForwardOnly);
 }
 
+void AFortPawn::SetMovingEmoteFollowingOnly(bool bInMovingEmoteFollowingOnly)
+{
+    static auto bMovingEmoteFollowingOnly = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMovingEmoteFollowingOnly")));
+
+    if (bMovingEmoteFollowingOnly)
+        bMovingEmoteFollowingOnly->SetPropertyValue_InContainer(this, bInMovingEmoteFollowingOnly);
+}
+
+void AFortPawn::SetMovingEmoteSkipLandingFX(bool bInMovingEmoteSkipLandingFX)
+{
+    static auto bMovingEmoteSkipLandingFX = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bMovingEmoteSkipLandingFX")));
+
+    if (bMovingEmoteSkipLandingFX)
+        bMovingEmoteSkipLandingFX->SetPropertyValue_InContainer(this, bInMovingEmoteSkipLandingFX);
+}
+
+void AFortPawn::SetEmoteWalkSpeed(float InEmoteWalkSpeed)
+{
+    static auto EmoteWalkSpeed = GetClass()->FindPropertyByName(FName(TEXT("EmoteWalkSpeed")));
+
+    *EmoteWalkSpeed->ContainerPtrToValuePtr<float>(this) = InEmoteWalkSpeed;
+}
+
 void AFortPawn::MovingEmoteStopped()
 {
     SetMovingEmote(false);
     SetMovingEmoteForwardOnly(false);
+    SetMovingEmoteFollowingOnly(false);
+    SetMovingEmoteSkipLandingFX(false);
 }
 
 void AFortPawn::execMovingEmoteStopped(FFrame& Stack, void* const Z_Param__Result)

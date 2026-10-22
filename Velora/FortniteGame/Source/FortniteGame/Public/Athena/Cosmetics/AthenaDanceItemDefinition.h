@@ -12,5 +12,11 @@ public:
 
     bool GetMoveForwardOnly() const;
 
+    bool GetMoveFollowingOnly() const;
+
+    bool GetMovingEmoteSkipLandingFX() const;
+
+    float GetWalkForwardSpeed() const;
+
     const TAssetPtr<UClass>* GetCustomDanceAbility() const;
 };

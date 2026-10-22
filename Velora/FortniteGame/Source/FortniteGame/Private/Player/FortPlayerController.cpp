@@ -420,6 +420,9 @@ void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemD
     {
         MyFortPawn->SetMovingEmote(DanceAsset->GetMovingEmote());
         MyFortPawn->SetMovingEmoteForwardOnly(DanceAsset->GetMoveForwardOnly());
+        MyFortPawn->SetMovingEmoteFollowingOnly(DanceAsset->GetMoveFollowingOnly());
+        MyFortPawn->SetMovingEmoteSkipLandingFX(DanceAsset->GetMovingEmoteSkipLandingFX());
+        MyFortPawn->SetEmoteWalkSpeed(DanceAsset->GetWalkForwardSpeed());
     }
 }
 
