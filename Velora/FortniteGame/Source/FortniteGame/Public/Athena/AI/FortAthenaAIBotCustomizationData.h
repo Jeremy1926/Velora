@@ -5,6 +5,7 @@
 
 class AFortPlayerPawnAthena;
 class UFortAthenaAIBotCosmeticLibraryData;
+class UScriptStruct;
 struct FFortAthenaLoadout;
 struct FGameplayTag;
 
@@ -12,6 +13,13 @@ enum class EBotDataOverrideCosmeticMode : uint8
 {
     SpecificLoadout,
     CosmeticLibrary
+};
+
+struct FFortAthenaAIBotRunTimeCustomizationData
+{
+    static UScriptStruct* StaticStruct();
+
+    const FGameplayTag& GetPredefinedCosmeticSetTag() const;
 };
 
 class UFortAthenaAIBotCharacterCustomization : public UObject
@@ -24,6 +32,8 @@ class UFortAthenaAIBotCustomizationData : public UDataAsset
 {
 public:
     void GetOverrideCosmeticLoadout(AFortPlayerPawnAthena* Pawn, FFortAthenaLoadout& OutLoadout, const FGameplayTag& PredefinedCosmeticSetTag);
+
+    bool GetbOverrideCharacterCustomization() const;
 
     EBotDataOverrideCosmeticMode GetOverrideCosmeticMode() const;
 

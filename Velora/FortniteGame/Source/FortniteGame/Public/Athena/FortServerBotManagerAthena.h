@@ -2,10 +2,15 @@
 
 #include "UObject/Object.h"
 #include "Containers/Array.h"
+#include "Math/Rotator.h"
+#include "Math/Vector.h"
 
 class AFortAthenaAIBotController;
 class AFortGameModeAthena;
 class AFortGameStateAthena;
+class AFortPlayerPawnAthena;
+class UFortAthenaAIBotCustomizationData;
+struct FFortAthenaAIBotRunTimeCustomizationData;
 class UAthenaAIPopulationTracker;
 class UWorld;
 class UScriptStruct;
@@ -30,6 +35,12 @@ public:
     static UClass* StaticClass();
 
     static UFortServerBotManagerAthena* GetServerBotManager(UWorld* World);
+
+    AFortPlayerPawnAthena* SpawnBot(const FVector& InSpawnLocation, const FRotator& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData);
+
+    static const UFortAthenaAIBotCustomizationData* SpawningBotData;
+
+    static const FFortAthenaAIBotRunTimeCustomizationData* SpawningRuntimeBotData;
 
     void SetBotBrainActivationTimer();
 

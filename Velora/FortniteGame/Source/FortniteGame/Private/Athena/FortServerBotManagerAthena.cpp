@@ -21,6 +21,10 @@ struct FPendingBotBrainActivation
 
 static TArray<FPendingBotBrainActivation> PendingBotBrainActivations;
 
+const UFortAthenaAIBotCustomizationData* UFortServerBotManagerAthena::SpawningBotData = nullptr;
+
+const FFortAthenaAIBotRunTimeCustomizationData* UFortServerBotManagerAthena::SpawningRuntimeBotData = nullptr;
+
 UScriptStruct* FFortServerBotInfo::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortServerBotInfo"));
@@ -73,6 +77,31 @@ UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UW
     auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
 
     return GameMode ? GameMode->GetServerBotManager() : nullptr;
+}
+
+AFortPlayerPawnAthena* UFortServerBotManagerAthena::SpawnBot(const FVector& InSpawnLocation, const FRotator& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData)
+{
+    DETOUR(UFortServerBotManagerAthena, SpawnBot, Anchor::Hook()
+        .If(!::Anchor::Exists()
+            .String(TEXT("UFortServerBotManagerAthena::SpawnBot error occured during the actor spawning"))
+            .Start()
+            .Find("test *, 0x*; jz *; mov r9, *; lea r8, [*]; mov rdx, *; mov rcx, *; call 0x*")
+            .Get())
+        .String(TEXT("UFortServerBotManagerAthena::SpawnBot error occured during the actor spawning"))
+        .Start()
+        .Has("test byte ptr [*+0x3b], 0x8; cmovz *, *")
+        .Optional()
+        .Inline());
+
+    SpawningBotData = InBotData;
+    SpawningRuntimeBotData = &InRuntimeBotData;
+
+    auto Pawn = Original(InSpawnLocation, InSpawnRotation, InBotData, InRuntimeBotData);
+
+    SpawningBotData = nullptr;
+    SpawningRuntimeBotData = nullptr;
+
+    return Pawn;
 }
 
 void UFortServerBotManagerAthena::AssignTeam(AFortAthenaAIBotController* BotController, const uint8* CustomSquadId)

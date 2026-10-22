@@ -11,6 +11,20 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UScriptStruct* FFortAthenaAIBotRunTimeCustomizationData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotRunTimeCustomizationData"));
+
+    return Struct;
+}
+
+const FGameplayTag& FFortAthenaAIBotRunTimeCustomizationData::GetPredefinedCosmeticSetTag() const
+{
+    static auto PredefinedCosmeticSetTag = StaticStruct()->FindPropertyByName(FName(TEXT("PredefinedCosmeticSetTag")));
+
+    return *PredefinedCosmeticSetTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+}
+
 FFortAthenaLoadout& UFortAthenaAIBotCharacterCustomization::GetCustomizationLoadout()
 {
     static auto CustomizationLoadout = GetClass()->FindPropertyByName(FName(TEXT("CustomizationLoadout")));
@@ -79,6 +93,13 @@ void UFortAthenaAIBotCustomizationData::GetOverrideCosmeticLoadout(AFortPlayerPa
     OutLoadout.GetSkyDiveContrail() = (UAthenaSkyDiveContrailItemDefinition*)UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(CosmeticSet->GetSkyDiveContrailAssetId()).LoadSynchronous();
     OutLoadout.GetBackpack() = (UAthenaBackpackItemDefinition*)UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(CosmeticSet->GetBackpackAssetId()).LoadSynchronous();
     OutLoadout.GetPickaxe() = (UAthenaPickaxeItemDefinition*)UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(CosmeticSet->GetPickaxeAssetId()).LoadSynchronous();
+}
+
+bool UFortAthenaAIBotCustomizationData::GetbOverrideCharacterCustomization() const
+{
+    static auto bOverrideCharacterCustomization = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bOverrideCharacterCustomization")));
+
+    return bOverrideCharacterCustomization->GetPropertyValue_InContainer(this);
 }
 
 EBotDataOverrideCosmeticMode UFortAthenaAIBotCustomizationData::GetOverrideCosmeticMode() const

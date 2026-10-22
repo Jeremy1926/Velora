@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "AI/FortAthenaAIBotController.h"
+#include "Athena/AI/FortAthenaAIBotCustomizationData.h"
 #include "Athena/AI/FortAthenaAIBotInventoryItems.h"
+#include "Athena/FortServerBotManagerAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Items/FortInventory.h"
@@ -276,6 +279,13 @@ void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLo
         .Start()
         .Optional()
         .Inline());
+
+    auto BotData = UFortServerBotManagerAthena::SpawningBotData;
+    auto RuntimeBotData = UFortServerBotManagerAthena::SpawningRuntimeBotData;
+    auto BotPawn = Cast<AFortPlayerPawnAthena>(GetPawn());
+
+    if (InCustomizationLoadout && BotData && RuntimeBotData && BotPawn && BotData->GetbOverrideCharacterCustomization())
+        ((UFortAthenaAIBotCustomizationData*)BotData)->GetOverrideCosmeticLoadout(BotPawn, *(FFortAthenaLoadout*)InCustomizationLoadout, RuntimeBotData->GetPredefinedCosmeticSetTag());
 
     Original(InCustomizationLoadout, InBotNameSettings, bRequiresUniqueNetId);
 
