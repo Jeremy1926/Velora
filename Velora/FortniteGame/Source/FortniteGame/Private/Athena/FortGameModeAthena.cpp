@@ -57,6 +57,28 @@ UClass* AFortGameModeAthena::StaticClass()
     return Class;
 }
 
+void AFortGameModeAthena::FinishWorldInitialization()
+{
+    DETOUR(AFortGameModeAthena, FinishWorldInitialization, Anchor::Hook()
+        .If(!::Anchor::Exists()
+            .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+            .Start()
+            .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+            .Entry(TEXT("/Script/FortniteGame.Default__FortGamePvPBase"))
+            .CallIn(::Anchor::Address()
+                .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+                .Start()
+                .Get())
+            .Get())
+        .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
+        .Start()
+        .Inline());
+
+    AFortGameModeZone::FinishWorldInitialization();
+
+    Original();
+}
+
 void AFortGameModeAthena::InitGameState()
 {
     DETOUR(AFortGameModeAthena, InitGameState, Anchor::Hook()

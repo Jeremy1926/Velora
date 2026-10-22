@@ -23,6 +23,8 @@ public:
 
     void InitGameState();
 
+    void FinishWorldInitialization();
+
     bool ReadyToStartMatch_Implementation();
 
     int32 CountReadyPlayers();
