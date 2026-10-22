@@ -405,13 +405,14 @@ namespace Anchor
             return Chain.IsActive() ? Chain.Virtual(VTableName, [&](const FCode& Entry) { return Entry.Is(Text); }) : Chain;
         }
 
-        ChainType& VirtualSlotCaller(const TCHAR* VTableName)
+        ChainType& VirtualSlotCaller(const TCHAR* VTableName, std::string_view Before = "")
         {
             auto& Chain = static_cast<ChainType&>(*this);
             char Call[48];
             snprintf(Call, sizeof(Call), "call [rax+0x%llx]", (unsigned long long)(Chain.*(&Scanner::TChainAccess<ChainType>::SlotValue))());
+            auto Text = std::string(Before) + Call;
 
-            return Chain.IsActive() ? Chain.Virtual(VTableName, [&](const FCode& Entry) { return Entry.Start().Has(Call); }) : Chain;
+            return Chain.IsActive() ? Chain.Virtual(VTableName, [&](const FCode& Entry) { return Entry.Start().Has(Text); }) : Chain;
         }
 
         template<typename PropertyType>
