@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Components/FortControllerComponent_InventoryService.h"
 #include "FortKismetLibrary.h"
+#include "GameDataBR.h"
+#include "FortAssetManager.h"
 #include "GameplayEffectTypes.h"
 #include "Items/FortResourceItemDefinition.h"
 #include "Pawns/FortPawn.h"
@@ -23,6 +25,20 @@ UClass* UFortControllerComponent_InventoryService::StaticClass()
 
 UCurveTable* UFortControllerComponent_InventoryService::GetDefaultCurrencyPayoutTable()
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        auto GameDataBR = UFortAssetManager::Get().GetGameDataBR();
+        static auto DefaultCurrencyPayoutTable = GameDataBR ? GameDataBR->GetClass()->FindPropertyByName(FName(TEXT("DefaultCurrencyPayoutTable"))) : nullptr;
+
+        return GameDataBR && DefaultCurrencyPayoutTable ? DefaultCurrencyPayoutTable->ContainerPtrToValuePtr<TSoftObjectPtr<UCurveTable>>(GameDataBR)->LoadSynchronous() : nullptr;
+    }
+
     static auto GetDefaultCurrencyPayoutTable = Anchor::Optional<UCurveTable* (*)()>(TEXT("UFortControllerComponent_InventoryService::GetDefaultCurrencyPayoutTable"))
         .Native(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable"))
         .Get();
