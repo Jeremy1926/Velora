@@ -2,6 +2,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Items/FortVictoryCrownAccountItem.h"
+#include "UObject/ScriptDelegates.h"
 
 struct FFrame;
 class APawn;
@@ -42,4 +43,6 @@ public:
     bool& GetShouldGrantCrownOnSpawn();
 
     FVictoryCrownAccountData& GetVictoryCrownAccountData();
+
+    FMulticastScriptDelegate& GetOnVictoryCrownStatusChanged();
 };

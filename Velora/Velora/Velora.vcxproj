@@ -392,6 +392,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortVictoryCrownAccountItem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortMcpProfile.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortControllerComponent_VictoryCrowns.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortGameStateComponent_VictoryCrowns.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicle.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicleManager.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortValetGameFeatureData.h" />
@@ -711,6 +712,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortMcpProfile.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortVictoryCrownAccountItem.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortControllerComponent_VictoryCrowns.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortGameStateComponent_VictoryCrowns.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicleManager.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortValetGameFeatureData.cpp" />

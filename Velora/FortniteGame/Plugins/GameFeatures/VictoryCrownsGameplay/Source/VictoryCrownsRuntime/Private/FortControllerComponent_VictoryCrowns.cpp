@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "FortControllerComponent_VictoryCrowns.h"
+#include "FortGameStateComponent_VictoryCrowns.h"
 #include "Player/FortPlayerController.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Online/FortMcpProfile.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
 #include "FortKismetLibrary.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
@@ -49,6 +51,9 @@ void UFortControllerComponent_VictoryCrowns::BeginPlay()
 
     if (auto Pawn = PlayerController->GetPawn())
         HandlePawnChanged(nullptr, Pawn);
+
+    if (auto GameStateComponent = UFortGameStateComponent_VictoryCrowns::Get(this))
+        GameStateComponent->AddPlayerState(Cast<AFortPlayerStateAthena>(PlayerController->GetPlayerState()));
 
     BindOnAthenaProfileInitialized();
 }
@@ -238,4 +243,11 @@ FVictoryCrownAccountData& UFortControllerComponent_VictoryCrowns::GetVictoryCrow
     static auto VictoryCrownAccountData = StaticClass()->FindPropertyByName(FName(TEXT("VictoryCrownAccountData")));
 
     return *VictoryCrownAccountData->ContainerPtrToValuePtr<FVictoryCrownAccountData>(this);
+}
+
+FMulticastScriptDelegate& UFortControllerComponent_VictoryCrowns::GetOnVictoryCrownStatusChanged()
+{
+    static auto OnVictoryCrownStatusChanged = StaticClass()->FindPropertyByName(FName(TEXT("OnVictoryCrownStatusChanged")));
+
+    return *OnVictoryCrownStatusChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }

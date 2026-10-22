@@ -1273,6 +1273,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortControllerComponent_VictoryCrowns.h">
       <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortGameStateComponent_VictoryCrowns.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public\FortGameStateComponent_Crafting.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Public</Filter>
     </ClInclude>
@@ -2237,6 +2240,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Items</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortControllerComponent_VictoryCrowns.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortGameStateComponent_VictoryCrowns.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Crafting\Source\CraftingRuntime\Private\FortGameStateComponent_Crafting.cpp">
