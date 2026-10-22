@@ -45,6 +45,11 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbilityAndActivateOnce(c
     static auto GiveAbilityAndActivateOnce = Anchor::Function<FGameplayAbilitySpecHandle* (*)(UAbilitySystemComponent*, FGameplayAbilitySpecHandle*, const FGameplayAbilitySpec&)>(TEXT("UAbilitySystemComponent::GiveAbilityAndActivateOnce"))
         .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
         .Start()
+        .Is("sub rsp, *; mov rax, [r9]; lea r8, [0x*]")
+        .Caller()
+        .Or()
+        .Smallest(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Start()
         .Get();
 
     FGameplayAbilitySpecHandle Handle;
@@ -226,6 +231,11 @@ void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithT
         .Target()
         .Find("xor r9d, r9d; lea rdx, *; mov rcx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Last("xor r9d, r9d; lea rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     CancelAbilities(this, WithTags, WithoutTags, Ignore);
@@ -238,6 +248,12 @@ int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const 
         .Find("mov rcx, [rsp+0x*]; call 0x*")
         .Call()
         .Find("call [*+0x*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor"))
+        .Find("mov rcx, [rsp+0x*]; call 0x*")
+        .Call()
+        .Find("mov r9, [*]; mov r8, *; mov rdx, *; mov rcx, *; call [r9+0x*]")
+        .Find("call [r9+0x*]")
         .Get();
 
     return HandleGameplayEvent(this, EventTag, Payload);

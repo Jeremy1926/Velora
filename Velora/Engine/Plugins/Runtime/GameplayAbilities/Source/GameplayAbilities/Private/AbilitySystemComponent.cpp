@@ -80,6 +80,11 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
         .Find("mov [*+0x20], *")
         .Find("call *")
         .Is("call [*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov r9, [rax+0x*]")
         .Optional()
         .Get();
 
