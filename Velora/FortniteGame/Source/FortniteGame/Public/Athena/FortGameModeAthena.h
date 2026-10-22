@@ -4,6 +4,7 @@
 #include "Templates/SubclassOf.h"
 #include "UObject/SoftObjectPtr.h"
 
+class AFortAthenaAIBotController;
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
 class AFortSafeZoneIndicator;
@@ -49,6 +50,8 @@ public:
     int32& GetWarmupRequiredPlayerCount();
 
     TArray<AFortPlayerControllerAthena*>& GetAlivePlayers();
+
+    TArray<AFortAthenaAIBotController*>& GetAliveBots();
 
     bool GetDisableGCOnServerDuringMatch() const;
 

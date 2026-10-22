@@ -4,6 +4,13 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+UClass* AController::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Controller"));
+
+    return Class;
+}
+
 APawn* AController::GetPawn() const
 {
     static auto Pawn = GetClass()->FindPropertyByName(FName(TEXT("Pawn")));

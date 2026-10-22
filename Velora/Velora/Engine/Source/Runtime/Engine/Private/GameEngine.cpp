@@ -9,7 +9,9 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortServerBotManagerAthena.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
+#include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
 #include "Building/BGAConsumableSpawner.h"
+#include "Building/BuildingGameplayActorTransientQuest.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingGameplayActorSpawnMachine.h"
 #include "FortAthenaLivingWorldManager.h"
@@ -157,6 +159,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
         UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
         UFortServerBotManagerAthena::TickBotBrainActivationTimers();
+        UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
+        ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
 
         if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && World->GetGameState())
         {

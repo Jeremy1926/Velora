@@ -301,6 +301,8 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaSupplyDrop.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortSafeZoneIndicator.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortSafeZoneIndicatorFuture.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents\FortControllerComponent_TransientQuests.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPoiVolume.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h" />
@@ -426,6 +428,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorTransientQuest.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\ScriptDelegates.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\WorldCollision.h" />
@@ -605,6 +608,9 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaSupplyDrop.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicator.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicatorFuture.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantPlayerBounty.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents\FortControllerComponent_TransientQuests.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiVolume.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp" />
@@ -715,6 +721,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorTransientQuest.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataTable.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Collision\Collision.cpp" />

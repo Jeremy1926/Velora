@@ -74,3 +74,13 @@ FBodyInstance* UPrimitiveComponent::GetBodyInstance(FName BoneName, bool bGetWel
 
     return GetBodyInstance(this, BoneName, bGetWelded);
 }
+
+void UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::Type NewType)
+{
+    static auto SetCollisionEnabled = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, ECollisionEnabled::Type)>(TEXT("UPrimitiveComponent::SetCollisionEnabled"))
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetCollisionEnabled"))
+        .Find("call [*+0x*]")
+        .Get();
+
+    SetCollisionEnabled(this, NewType);
+}

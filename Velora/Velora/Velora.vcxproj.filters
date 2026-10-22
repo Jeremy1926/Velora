@@ -454,6 +454,18 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public">
       <UniqueIdentifier>{1C0C617C-390A-4346-A2FE-C23AF22C829C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Quests">
+      <UniqueIdentifier>{3302248B-6F67-43F6-BC9D-4E49C52F7319}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Quests">
+      <UniqueIdentifier>{D478E172-FEA4-453B-9D8B-DDF163B76D99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents">
+      <UniqueIdentifier>{27A874A9-809C-41F7-99CF-66391BE369FA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents">
+      <UniqueIdentifier>{C24A7E4B-80C2-4B9E-B730-4CDCF3F7C2CC}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Conversation">
       <UniqueIdentifier>{021B0BFB-8F7F-4D26-8272-C85C131812F9}</UniqueIdentifier>
     </Filter>
@@ -970,6 +982,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortSafeZoneIndicatorFuture.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents\FortControllerComponent_TransientQuests.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestItemDefinition.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Quests</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortResourceItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
@@ -1298,6 +1316,9 @@
       <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Building</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorTransientQuest.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Building</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h">
@@ -1825,6 +1846,15 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortSafeZoneIndicatorFuture.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_GrantPlayerBounty.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents\FortControllerComponent_TransientQuests.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestItemDefinition.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Quests</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Building</Filter>
     </ClCompile>
@@ -2102,6 +2132,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Building</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorTransientQuest.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Building</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp">

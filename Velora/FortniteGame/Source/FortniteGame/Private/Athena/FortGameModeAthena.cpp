@@ -678,6 +678,13 @@ TArray<AFortPlayerControllerAthena*>& AFortGameModeAthena::GetAlivePlayers()
     return *AlivePlayers->ContainerPtrToValuePtr<TArray<AFortPlayerControllerAthena*>>(this);
 }
 
+TArray<AFortAthenaAIBotController*>& AFortGameModeAthena::GetAliveBots()
+{
+    static auto AliveBots = GetClass()->FindPropertyByName(FName(TEXT("AliveBots")));
+
+    return *AliveBots->ContainerPtrToValuePtr<TArray<AFortAthenaAIBotController*>>(this);
+}
+
 FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
 {
     static auto RedirectAthenaLootTierGroups = GetClass()->FindPropertyByName(FName(TEXT("RedirectAthenaLootTierGroups")));

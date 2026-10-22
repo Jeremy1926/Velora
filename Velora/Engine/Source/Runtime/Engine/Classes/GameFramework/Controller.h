@@ -9,6 +9,8 @@ class APlayerState;
 class AController : public AActor
 {
 public:
+    static UClass* StaticClass();
+
     APawn* GetPawn() const;
 
     APlayerState* GetPlayerState() const;

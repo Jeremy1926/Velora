@@ -26,6 +26,17 @@ enum ENetRole
     ROLE_MAX,
 };
 
+namespace ECollisionEnabled
+{
+    enum Type
+    {
+        NoCollision,
+        QueryOnly,
+        PhysicsOnly,
+        QueryAndPhysics
+    };
+}
+
 enum class ESpawnActorCollisionHandlingMethod : uint8
 {
     Undefined,

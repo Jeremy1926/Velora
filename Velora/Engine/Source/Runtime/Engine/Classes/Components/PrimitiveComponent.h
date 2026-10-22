@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/SceneComponent.h"
+#include "Engine/EngineTypes.h"
 #include "Math/Vector.h"
 #include "UObject/NameTypes.h"
 #include "Containers/Array.h"
@@ -23,4 +24,6 @@ public:
     void GetOverlappingActors(TArray<AActor*>& OverlappingActors, TSubclassOf<AActor> ClassFilter) const;
 
     FBodyInstance* GetBodyInstance(FName BoneName, bool bGetWelded) const;
+
+    void SetCollisionEnabled(ECollisionEnabled::Type NewType);
 };
