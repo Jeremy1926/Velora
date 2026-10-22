@@ -49,6 +49,9 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
 
 void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AActor* PointProvider)
 {
+    if (GetEventInstancesOffset() <= 0)
+        return;
+
     auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
     auto GameState = World ? World->GetGameState() : nullptr;
     auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(StaticClass()) : nullptr;
@@ -61,6 +64,9 @@ void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AAct
 
 void UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(AActor* PointProvider)
 {
+    if (GetEventInstancesOffset() <= 0)
+        return;
+
     auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
     auto GameState = World ? World->GetGameState() : nullptr;
     auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(StaticClass()) : nullptr;
