@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Athena/Vehicles/FortVehicleManager.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
@@ -79,6 +80,81 @@ int32 AFortGameStateAthena::GetSafeZonePhase() const
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
     return *SafeZonePhase->ContainerPtrToValuePtr<uint8>(this);
+}
+
+AFortSafeZoneIndicator* AFortGameStateAthena::GetSafeZoneIndicator() const
+{
+    static auto SafeZoneIndicator = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
+
+    return SafeZoneIndicator ? *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this) : nullptr;
+}
+
+float AFortGameStateAthena::GetSafeZonePauseTime() const
+{
+    static auto SafeZonePauseTime = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));
+
+    return SafeZonePauseTime ? *SafeZonePauseTime->ContainerPtrToValuePtr<float>(this) : -1.0f;
+}
+
+bool AFortGameStateAthena::IsSafeZoneTimerPaused() const
+{
+    static auto IsSafeZoneTimerPaused = Anchor::VirtualFunction<bool (*)(const AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::IsSafeZoneTimerPaused"))
+        .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
+        .Start()
+        .Find("call [rax+0x*]; test al, al")
+        .Get();
+
+    return IsSafeZoneTimerPaused(this);
+}
+
+void AFortGameStateAthena::SetSafeZoneTimerPaused(bool bPaused)
+{
+    DETOUR(AFortGameStateAthena, SetSafeZoneTimerPaused, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortSafeZoneIndicator, OnSafeZoneTimerPauseChanged))
+        .String(TEXT("PAUSESAFEZONE"))
+        .Find("setz dl; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov dl, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    const bool bWasPaused = IsSafeZoneTimerPaused();
+
+    Original(bPaused);
+
+    if (bWasPaused == bPaused)
+        return;
+
+    if (auto SafeZoneIndicator = GetSafeZoneIndicator())
+        SafeZoneIndicator->OnSafeZoneTimerPauseChanged(bPaused && GetSafeZonePauseTime() >= 0.0f);
+}
+
+void AFortGameStateAthena::StartPlaylistTimer(float Seconds, bool bOption)
+{
+    DETOUR(AFortGameStateAthena, StartPlaylistTimer, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortSafeZoneIndicator, OnSafeZoneTimerPauseChanged))
+        .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
+        .Start()
+        .Optional()
+        .Inline());
+
+    static auto PlaylistSecondsRemainingCount = (int32)Anchor::Offset(TEXT("AFortGameStateAthena::PlaylistSecondsRemainingCount"))
+        .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
+        .Start()
+        .Find("cvttss2si eax, xmm0")
+        .Find("*")
+        .Disp();
+
+    Original(Seconds, bOption);
+
+    if (PlaylistSecondsRemainingCount <= 0 || *(int32*)((uint8_t*)this + PlaylistSecondsRemainingCount) <= 0 || !IsSafeZoneTimerPaused())
+        return;
+
+    if (auto SafeZoneIndicator = GetSafeZoneIndicator())
+        SafeZoneIndicator->OnSafeZoneTimerPauseChanged(GetSafeZonePauseTime() >= 0.0f);
 }
 
 const void* AFortGameStateAthena::GetSafeZoneInterface() const

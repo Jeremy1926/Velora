@@ -9,6 +9,7 @@
 
 class AFortAthenaMapInfo;
 class AFortPawn;
+class AFortSafeZoneIndicator;
 class AFortVolumeManager;
 class UScriptStruct;
 
@@ -58,6 +59,16 @@ public:
     EAthenaGamePhaseStep GetGamePhaseStep() const;
 
     int32 GetSafeZonePhase() const;
+
+    AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
+
+    float GetSafeZonePauseTime() const;
+
+    bool IsSafeZoneTimerPaused() const;
+
+    void SetSafeZoneTimerPaused(bool bPaused);
+
+    void StartPlaylistTimer(float Seconds, bool bOption);
 
     const void* GetSafeZoneInterface() const;
 
