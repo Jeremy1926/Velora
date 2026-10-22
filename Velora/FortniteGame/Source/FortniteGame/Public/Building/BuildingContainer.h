@@ -6,9 +6,15 @@
 #include "UObject/NameTypes.h"
 
 class AFortPawn;
+class AFortPlayerPawn;
+class UScriptStruct;
 
 struct FFortSearchBounceData
 {
+    static UScriptStruct* StaticStruct();
+
+    void SetSearchingPawn(AFortPlayerPawn* InSearchingPawn);
+
     FVector BounceNormal;
     uint32 SearchAnimationCount;
 };

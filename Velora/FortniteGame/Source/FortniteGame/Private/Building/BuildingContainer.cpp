@@ -10,6 +10,7 @@
 #include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Pawns/FortPawn.h"
+#include "Pawns/FortPlayerPawn.h"
 #include "FortKismetLibrary.h"
 #include "FortniteGame.h"
 #include "Engine/World.h"
@@ -169,6 +170,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
     }
 
     ++SearchBounceData.SearchAnimationCount;
+    SearchBounceData.SetSearchingPawn(Cast<AFortPlayerPawn>(Searcher));
     BounceContainer();
 
     return bSpawnedLoot;
@@ -245,6 +247,21 @@ float ABuildingContainer::GetLootedWeaponsDurabilityModifier() const
     static auto LootedWeaponsDurabilityModifier = GetClass()->FindPropertyByName(FName(TEXT("LootedWeaponsDurabilityModifier")));
 
     return *LootedWeaponsDurabilityModifier->ContainerPtrToValuePtr<float>(this);
+}
+
+UScriptStruct* FFortSearchBounceData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSearchBounceData"));
+
+    return Struct;
+}
+
+void FFortSearchBounceData::SetSearchingPawn(AFortPlayerPawn* InSearchingPawn)
+{
+    static auto SearchingPawn = StaticStruct()->FindPropertyByName(FName(TEXT("SearchingPawn")));
+
+    if (SearchingPawn)
+        *SearchingPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this) = InSearchingPawn;
 }
 
 FFortSearchBounceData& ABuildingContainer::GetSearchBounceData()
