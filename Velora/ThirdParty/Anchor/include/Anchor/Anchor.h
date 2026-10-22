@@ -5,6 +5,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <string_view>
+#include <utility>
 
 namespace Anchor
 {
@@ -25,6 +26,8 @@ namespace Anchor
     uint8_t* Base();
 
     bool IsCode(const void* Address);
+
+    std::pair<const uint8_t*, const uint8_t*> Range(const void* Address);
 
     inline bool IsSlot(int64_t Value)
     {

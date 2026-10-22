@@ -468,6 +468,11 @@ namespace Anchor
         return { Begin, End };
     }
 
+    std::pair<const uint8_t*, const uint8_t*> Range(const void* Address)
+    {
+        return FindRange(Address);
+    }
+
     struct FInstruction
     {
         ZydisDecodedInstruction Info;

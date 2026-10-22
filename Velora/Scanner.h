@@ -1,11 +1,13 @@
 #pragma once
 
+#include <algorithm>
 #include <bit>
 #include <format>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <vector>
 #include <Anchor/Anchor.h>
 #include "Logging/LogMacros.h"
 #include "UObject/Class.h"
@@ -79,15 +81,31 @@ namespace Scanner
     inline FCode Native(const TCHAR* FunctionPath)
     {
         auto Exec = Scanner::Exec(FunctionPath);
+        std::vector<const uint8_t*> Chunks = { Exec.Get() };
 
-        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *" })
+        for (size_t Index = 0; Exec.Get() && Index < Chunks.size() && Index < 64; Index++)
         {
-            if (auto Finish = Exec.Find(Pattern); Finish.Get())
-            {
-                auto Body = Finish.Find("call 0x*");
-                auto Return = Finish.Find("ret*");
+            auto Chunk = Anchor::At(Chunks[Index]);
 
-                return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
+            for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *" })
+            {
+                if (auto Finish = Chunk.Find(Pattern); Finish.Get())
+                {
+                    auto Body = Finish.Find("call 0x*");
+                    auto Return = Finish.Find("ret*");
+
+                    return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
+                }
+            }
+
+            auto [Begin, End] = Anchor::Range(Chunks[Index]);
+
+            for (auto Jump = Chunk.Find("j* 0x*"); Jump.Get(); Jump = Jump.Find("j* 0x*"))
+            {
+                auto Target = Jump.Target();
+
+                if (Target && (Target < Begin || Target >= End) && Anchor::At(Target).Start().Get() == Exec.Get() && std::find(Chunks.begin(), Chunks.end(), Target) == Chunks.end())
+                    Chunks.push_back(Target);
             }
         }
 
