@@ -879,6 +879,9 @@ void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
 
     for (auto& LootPackageData : GetGameFeatureLootPackageData())
         LootPackageData.LoadSynchronous();
+
+    if (auto OnPlaylistLootTablesAppliedDelegate = GetOnPlaylistLootTablesAppliedDelegate())
+        OnPlaylistLootTablesAppliedDelegate->Broadcast();
 }
 
 TArray<TSoftObjectPtr<UDataTable>>& AFortGameModeAthena::GetGameFeatureLootTierData()
@@ -893,4 +896,11 @@ TArray<TSoftObjectPtr<UDataTable>>& AFortGameModeAthena::GetGameFeatureLootPacka
     static auto GameFeatureLootPackageData = StaticClass()->FindPropertyByName(FName(TEXT("GameFeatureLootPackageData")));
 
     return *GameFeatureLootPackageData->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UDataTable>>>(this);
+}
+
+FSimpleMulticastDelegate* AFortGameModeAthena::GetOnPlaylistLootTablesAppliedDelegate()
+{
+    static auto GameFeaturesStreamingRangedWeaponData = StaticClass()->FindPropertyByName(FName(TEXT("GameFeaturesStreamingRangedWeaponData")));
+
+    return GameFeaturesStreamingRangedWeaponData ? (FSimpleMulticastDelegate*)((uint8*)this + GameFeaturesStreamingRangedWeaponData->GetOffset_ForInternal() + 0x20) : nullptr;
 }

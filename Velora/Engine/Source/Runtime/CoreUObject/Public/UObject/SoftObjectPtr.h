@@ -18,6 +18,11 @@ public:
         return Cast<T>(SoftObjectPtr.LoadSynchronous());
     }
 
+    FString ToString() const
+    {
+        return SoftObjectPtr.GetUniqueID().ToString();
+    }
+
 private:
     FSoftObjectPtr SoftObjectPtr;
 };

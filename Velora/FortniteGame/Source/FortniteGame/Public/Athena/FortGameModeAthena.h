@@ -3,6 +3,7 @@
 #include "FortGamePvPBase.h"
 #include "Templates/SubclassOf.h"
 #include "UObject/SoftObjectPtr.h"
+#include "Delegates/Delegate.h"
 
 class AFortAthenaAIBotController;
 class AFortAthenaVehicle;
@@ -64,6 +65,8 @@ public:
     TArray<TSoftObjectPtr<UDataTable>>& GetGameFeatureLootTierData();
 
     TArray<TSoftObjectPtr<UDataTable>>& GetGameFeatureLootPackageData();
+
+    FSimpleMulticastDelegate* GetOnPlaylistLootTablesAppliedDelegate();
 
     TSubclassOf<AActor> GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const;
 

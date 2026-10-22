@@ -74,6 +74,28 @@ public:
     {
         return AddDelegateInstance(FDelegate::CreateUObject(InUserObject, InFunc));
     }
+
+    void Broadcast(ParamTypes... Params) const
+    {
+        bool NeedsCompaction = false;
+
+        this->LockInvocationList();
+
+        const auto& LocalInvocationList = this->GetInvocationList();
+
+        for (int32 InvocationListIndex = LocalInvocationList.Num() - 1; InvocationListIndex >= 0; --InvocationListIndex)
+        {
+            auto DelegateInstanceInterface = (typename FDelegate::TDelegateInstanceInterface*)this->GetDelegateInstanceProtectedHelper(LocalInvocationList[InvocationListIndex]);
+
+            if (!DelegateInstanceInterface || !DelegateInstanceInterface->ExecuteIfSafe(Params...))
+                NeedsCompaction = true;
+        }
+
+        this->UnlockInvocationList();
+
+        if (NeedsCompaction)
+            const_cast<TBaseMulticastDelegate*>(this)->CompactInvocationList();
+    }
 };
 
 template<typename RetValType, typename... ParamTypes>

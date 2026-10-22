@@ -4,6 +4,10 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
+#include "Athena/FortGameModeAthena.h"
+#include "Items/FortItemDefinition.h"
+#include "Items/FortLootPackage.h"
+#include "Templates/Casts.h"
 #include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
@@ -29,6 +33,56 @@ UFortGameStateComponent_Campsite* UFortGameStateComponent_Campsite::Get(const UO
     auto GameState = World ? (AActor*)World->GetGameState() : nullptr;
 
     return GameState ? (UFortGameStateComponent_Campsite*)GameState->FindComponentByClass(StaticClass()) : nullptr;
+}
+
+void UFortGameStateComponent_Campsite::BeginPlay()
+{
+    DETOUR(UFortGameStateComponent_Campsite, BeginPlay, Anchor::Hook()
+        .If(StaticClass())
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx+0x10]; mov rdi, rcx; mov ecx, [rax+0x*]; bt ecx, 0x12")
+        .LogSlot(TEXT("UActorComponent::BeginPlay"))
+        .InVTable(TEXT("/Script/CampsiteRuntime.Default__FortGameStateComponent_Campsite")));
+
+    Original();
+
+    auto World = GetWorld();
+    auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
+    auto OnPlaylistLootTablesAppliedDelegate = GameMode ? GameMode->GetOnPlaylistLootTablesAppliedDelegate() : nullptr;
+
+    if (OnPlaylistLootTablesAppliedDelegate)
+        OnPlaylistLootTablesAppliedDelegate->AddUObject(this, &UFortGameStateComponent_Campsite::CacheAllowedItemDefinitions);
+
+    CacheAllowedItemDefinitions();
+}
+
+void UFortGameStateComponent_Campsite::CacheAllowedItemDefinitions()
+{
+    auto World = GetWorld();
+
+    if (auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr)
+    {
+        TArray<UDataTable*> LootPackageTables;
+        GameMode->GetLootPackageDataTables(LootPackageTables);
+
+        for (auto LootPackageTable : LootPackageTables)
+        {
+            if (!LootPackageTable)
+                continue;
+
+            for (auto& PackageRow : LootPackageTable->RowMap)
+            {
+                auto LootPackageData = (const FFortLootPackageData*)PackageRow.Value;
+
+                if (!LootPackageData || LootPackageData->Weight <= 0.0f || LootPackageData->GetCount() <= 0)
+                    continue;
+
+                GetAllowedItemDefinitions().Add(LootPackageData->GetItemDefinition().LoadSynchronous());
+            }
+        }
+    }
+
+    for (auto& BlacklistedItemDefinition : GetBlacklistedItemDefinitions())
+        GetBlacklistedItemPaths().AddUnique(BlacklistedItemDefinition.ToString());
 }
 
 void UFortGameStateComponent_Campsite::execClaimUnusedBotName(FFrame& Stack, void* const Z_Param__Result)
@@ -97,4 +151,25 @@ TArray<AAbandonedCampsitePlacedSpawner*>& UFortGameStateComponent_Campsite::GetP
     static auto PlacedCampsiteSpawnPoints = StaticClass()->FindPropertyByName(FName(TEXT("PlacedCampsiteSpawnPoints")));
 
     return *PlacedCampsiteSpawnPoints->ContainerPtrToValuePtr<TArray<AAbandonedCampsitePlacedSpawner*>>(this);
+}
+
+TSet<UFortItemDefinition*>& UFortGameStateComponent_Campsite::GetAllowedItemDefinitions()
+{
+    static auto AllowedItemDefinitions = StaticClass()->FindPropertyByName(FName(TEXT("AllowedItemDefinitions")));
+
+    return *AllowedItemDefinitions->ContainerPtrToValuePtr<TSet<UFortItemDefinition*>>(this);
+}
+
+TArray<TSoftObjectPtr<UFortItemDefinition>>& UFortGameStateComponent_Campsite::GetBlacklistedItemDefinitions()
+{
+    static auto BlacklistedItemDefinitions = StaticClass()->FindPropertyByName(FName(TEXT("BlacklistedItemDefinitions")));
+
+    return *BlacklistedItemDefinitions->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UFortItemDefinition>>>(this);
+}
+
+TArray<FString>& UFortGameStateComponent_Campsite::GetBlacklistedItemPaths()
+{
+    static auto BlacklistedItemPaths = StaticClass()->FindPropertyByName(FName(TEXT("BlacklistedItemPaths")));
+
+    return *BlacklistedItemPaths->ContainerPtrToValuePtr<TArray<FString>>(this);
 }

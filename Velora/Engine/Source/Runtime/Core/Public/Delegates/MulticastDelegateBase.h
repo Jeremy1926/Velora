@@ -55,6 +55,26 @@ protected:
         CompactionThreshold = FMath::Max(2, 2 * InvocationList.Num());
     }
 
+    inline const TInvocationList& GetInvocationList() const
+    {
+        return InvocationList;
+    }
+
+    inline void LockInvocationList() const
+    {
+        ++InvocationListLockCount;
+    }
+
+    inline void UnlockInvocationList() const
+    {
+        --InvocationListLockCount;
+    }
+
+    static inline IDelegateInstance* GetDelegateInstanceProtectedHelper(const FDelegateBase& Base)
+    {
+        return Base.GetDelegateInstanceProtected();
+    }
+
 private:
     TInvocationList InvocationList;
     int32 CompactionThreshold;
