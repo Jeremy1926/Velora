@@ -42,6 +42,10 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
     static auto bItemEntryByValue = Anchor::Exists()
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]; call 0x*; mov rdx, rax")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r9+0x1]; call 0x*")
+        .Find("call 0x*; mov rcx, rax; call 0x*")
         .Get();
 
     static auto CreateFromData = Anchor::Function<const void*>(TEXT("AFortPickup::CreateFromData"))
