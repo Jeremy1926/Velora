@@ -130,9 +130,14 @@ void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
         .Start()
         .Find("subss *")
         .Find("movss [*], xmm*")
+        .Or()
+        .String(TEXT("Server switch level: %s"))
+        .Last("subss *")
+        .Find("movss [*], xmm*")
         .Disp();
 
-    *(float*)((uint8_t*)this + NextSwitchCountdown) = InNextSwitchCountdown;
+    if (NextSwitchCountdown > 0)
+        *(float*)((uint8_t*)this + NextSwitchCountdown) = InNextSwitchCountdown;
 }
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)

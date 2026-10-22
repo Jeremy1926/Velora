@@ -61,17 +61,24 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 
 APawn* AFortPlayerState::GetCurrentPawn() const
 {
-    static auto GetCurrentPawn = Anchor::Optional<APawn* (*)(const AFortPlayerState*)>(TEXT("AFortPlayerState::GetCurrentPawn"))
-        .Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn"))
-        .Is("push rbx; sub rsp, 0x20; mov rbx, [rcx+0x*]")
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
         .Get();
 
-    if (GetCurrentPawn)
-        return GetCurrentPawn(this);
+    if (bInlined)
+    {
+        static auto PawnPrivate = GetClass()->FindPropertyByName(FName(TEXT("PawnPrivate")));
 
-    static auto PawnPrivate = GetClass()->FindPropertyByName(FName(TEXT("PawnPrivate")));
+        return PawnPrivate ? Cast<AFortPlayerPawn>(*PawnPrivate->ContainerPtrToValuePtr<APawn*>(this)) : nullptr;
+    }
 
-    return PawnPrivate ? Cast<AFortPlayerPawn>(*PawnPrivate->ContainerPtrToValuePtr<APawn*>(this)) : nullptr;
+    static auto GetCurrentPawn = Anchor::Function<APawn* (*)(const AFortPlayerState*)>(TEXT("AFortPlayerState::GetCurrentPawn"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerState:GetCurrentPawn"))
+        .Get();
+
+    return GetCurrentPawn(this);
 }
 
 int32 AFortPlayerState::GetWorldPlayerId() const

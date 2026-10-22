@@ -656,13 +656,20 @@ void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(U
 
 bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
 {
-    static auto AreAthenaVehiclesEnabled = Anchor::Optional<bool (*)()>(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled"))
-        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
-        .Is("sub rsp, *; call 0x*; cmp byte ptr [rax+0x*], 0x0")
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
         .Get();
 
-    if (AreAthenaVehiclesEnabled)
+    if (!bInlined)
+    {
+        static auto AreAthenaVehiclesEnabled = Anchor::Function<bool (*)()>(TEXT("UFortKismetLibrary::AreAthenaVehiclesEnabled"))
+            .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
+            .Get();
+
         return AreAthenaVehiclesEnabled();
+    }
 
     auto Globals = UFortGlobals::Get();
 

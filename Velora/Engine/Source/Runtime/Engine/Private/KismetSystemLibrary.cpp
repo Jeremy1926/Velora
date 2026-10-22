@@ -51,6 +51,33 @@ FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FP
 
 FString UKismetSystemLibrary::GetPathName(const UObject* Object)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto ObjectGetPathName = Anchor::Function<FString* (*)(const UObject*, FString*, const UObject*)>(TEXT("UObjectBaseUtility::GetPathName"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("xor r8d, r8d; lea rdx, [*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        if (!Object)
+            return FString(TEXT("None"));
+
+        FString PathName;
+
+        ObjectGetPathName(Object, &PathName, nullptr);
+
+        return PathName;
+    }
+
     static auto GetPathName = Anchor::Function<FString (*)(const UObject*)>(TEXT("UKismetSystemLibrary::GetPathName"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
         .Get();
