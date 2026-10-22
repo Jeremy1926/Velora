@@ -265,7 +265,7 @@ void AFortAthenaVehicle::RepairAllDamageableParts()
 
     for (auto& Part : DamageableParts)
     {
-        if (PartConfigs.IsValidIndex(Part.ConfigIndex))
+        if (Part.ConfigIndex >= 0 && Part.ConfigIndex < PartConfigs.Num())
             Part.Health = PartConfigs[Part.ConfigIndex].MaxHealth;
     }
 

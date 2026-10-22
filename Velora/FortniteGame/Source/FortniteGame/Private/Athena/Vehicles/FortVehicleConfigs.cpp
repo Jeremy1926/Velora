@@ -11,9 +11,23 @@ UClass* UFortVehicleConfigs::StaticClass()
     return Class;
 }
 
-const TArray<FVehicleDamageablePartConfig>& UFortVehicleConfigs::GetDamageableParts() const
+const TRuntimeSizedArray<FVehicleDamageablePartConfig>& UFortVehicleConfigs::GetDamageableParts() const
 {
     static auto DamageableParts = StaticClass()->FindPropertyByName(FName(TEXT("DamageableParts")));
 
-    return *DamageableParts->ContainerPtrToValuePtr<TArray<FVehicleDamageablePartConfig>>(this);
+    return *DamageableParts->ContainerPtrToValuePtr<TRuntimeSizedArray<FVehicleDamageablePartConfig>>(this);
+}
+
+UScriptStruct* FVehicleDamageablePartConfig::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehicleDamageablePartConfig"));
+
+    return Struct;
+}
+
+int32 FVehicleDamageablePartConfig::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
 }
