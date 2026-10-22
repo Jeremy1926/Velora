@@ -418,6 +418,21 @@
     <Filter Include="Engine\Source\Runtime\NavigationSystem\Public\NavMesh">
       <UniqueIdentifier>{640C7C73-082E-42C5-ADD3-1DD6235EA6AE}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Experimental\GameFeatures">
+      <UniqueIdentifier>{70050A02-8965-487E-B917-079E2F3C36BC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\GameFeatures\Source">
+      <UniqueIdentifier>{AF95A076-61B6-4C81-88FB-BAFB173F0DE9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures">
+      <UniqueIdentifier>{A13D0A08-5D19-4C5E-8D60-7F605A9B59DB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Public">
+      <UniqueIdentifier>{F7CB4238-36B0-4B4F-A5D2-790795CE60C2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Private">
+      <UniqueIdentifier>{1A8FCDA2-5DA6-46DD-B5D8-7F3D20BAC7F1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Plugins\Experimental">
       <UniqueIdentifier>{7815EA55-8CE4-472B-B3A3-BBD2EC94DEB1}</UniqueIdentifier>
     </Filter>
@@ -1465,6 +1480,9 @@
     <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationInstance.h">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Public\GameFeaturesSubsystem.h">
+      <Filter>Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationLibrary.h">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
     </ClInclude>
@@ -2298,6 +2316,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationInstance.cpp">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Private\GameFeaturesSubsystem.cpp">
+      <Filter>Engine\Plugins\Experimental\GameFeatures\Source\GameFeatures\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationLibrary.cpp">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>

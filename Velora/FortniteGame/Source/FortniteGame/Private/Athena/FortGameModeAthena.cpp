@@ -30,6 +30,7 @@
 #include "FortGameData.h"
 #include "FortGameFeatureData.h"
 #include "FortGameFeaturePluginManager.h"
+#include "GameFeaturesSubsystem.h"
 #include "Engine/DataTable.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Abilities/FortAbilitySystemComponent.h"
@@ -706,12 +707,28 @@ void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
 {
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
     auto GameFeaturePluginManager = UFortGameFeaturePluginManager::Get();
+    auto GameFeaturesSubsystem = GameFeaturePluginManager ? nullptr : UGameFeaturesSubsystem::Get();
 
-    if (!GameState || !GameFeaturePluginManager)
+    if (!GameState || (!GameFeaturePluginManager && !GameFeaturesSubsystem))
         return;
 
     TArray<UFortGameFeatureData*> GameFeatureDatas;
-    GameFeaturePluginManager->GetGameFeatureDataForActivePlugins(GameFeatureDatas);
+
+    if (GameFeaturePluginManager)
+    {
+        GameFeaturePluginManager->GetGameFeatureDataForActivePlugins(GameFeatureDatas);
+    }
+    else
+    {
+        TArray<const UGameFeatureData*> ActivePluginFeatureDatas;
+        GameFeaturesSubsystem->GetGameFeatureDataForActivePlugins(ActivePluginFeatureDatas);
+
+        for (auto GameFeatureData : ActivePluginFeatureDatas)
+        {
+            if (auto FortGameFeatureData = Cast<UFortGameFeatureData>((UObject*)GameFeatureData))
+                GameFeatureDatas.Add(FortGameFeatureData);
+        }
+    }
 
     if (!GameFeatureDatas.Num())
         return;
