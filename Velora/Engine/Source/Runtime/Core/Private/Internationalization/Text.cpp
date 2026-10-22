@@ -6,11 +6,25 @@
 
 FText::FText()
 {
-    static auto Constructor = Anchor::Function<void (*)(FText*)>(TEXT("FText::FText"))
+    static auto Constructor = Anchor::Optional<void (*)(FText*)>(TEXT("FText::FText"))
         .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 10 48 89 13 48 8B 48 08 48 8B C3 48 89 4B 08 48 85 C9 74 04 F0 FF 41 08 C7 43 10 00 00 00 00 48 83 C4 20 5B C3")
         .Get();
 
-    Constructor(this);
+    if (Constructor)
+    {
+        Constructor(this);
+
+        return;
+    }
+
+    static auto GetEmpty = Anchor::Function<const FText& (*)()>(TEXT("FText::GetEmpty"))
+        .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 10 48 89 13 48 8B 48 08")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    *this = GetEmpty();
+    Flags = 0;
 }
 
 FText::FText(const FText& Source)
