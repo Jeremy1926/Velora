@@ -756,6 +756,65 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
 
 void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDefinition)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto GetItemType = Anchor::VirtualFunction<uint8 (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::GetItemType"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]")
+            .Get();
+
+        static auto IsQuickbarItemType = Anchor::Function<bool (*)(uint8)>(TEXT("AFortPlayerController::RemoveItemFromQuickBars item type check"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto InventoryOwner = Anchor::Offset(TEXT("AFortPlayerController::RemoveItemFromQuickBars inventory owner"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rcx, [rsi+0x*]")
+            .Disp();
+
+        static auto FindItemInstancesFromDefinition = Anchor::VirtualFunction<int32 (*)(void*, UFortItemDefinition*, TArray<UFortItem*>*)>(TEXT("IFortInventoryOwnerInterface::FindItemInstancesFromDefinition"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]", 2)
+            .Get();
+
+        static auto RemoveItemFromQuickBar = Anchor::VirtualFunction<void (*)(AFortPlayerController*, bool, UFortItem*, uint8, int32)>(TEXT("AFortPlayerController::RemoveItemFromQuickBars remove item"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]", 3)
+            .Get();
+
+        if (!ItemDefinition || !InventoryOwner || !IsQuickbarItemType(GetItemType(ItemDefinition)))
+            return;
+
+        TArray<UFortItem*> Items;
+
+        if (FindItemInstancesFromDefinition((uint8*)this + InventoryOwner, ItemDefinition, &Items) <= 0)
+            return;
+
+        for (auto Item : Items)
+            RemoveItemFromQuickBar(this, true, Item, 3, -2);
+
+        return;
+    }
+
     static auto RemoveItemFromQuickBars = Anchor::Function<void (*)(AFortPlayerController*, UFortItemDefinition*)>(TEXT("AFortPlayerController::RemoveItemFromQuickBars"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
         .Get();
