@@ -110,8 +110,6 @@ AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVect
         .Or()
         .String(TEXT("AFortAthenaMutator_SupplyDrop::FortGameModeAthena_SpawnItemDeliverySupplyDrop found no locations in safe zone index %i. Locking spawning for %f seconds"))
         .Start()
-        .CallSite()
-        .Start()
         .Find("movss [rsp+0x20], xmm*; mov r9, [r9+0x38]; call 0x*")
         .Call()
         .Get();
