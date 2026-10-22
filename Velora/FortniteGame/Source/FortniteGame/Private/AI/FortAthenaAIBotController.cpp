@@ -299,6 +299,13 @@ bool AFortAthenaAIBotController::GetbAllowUnsupportedItemsInDefaultInventory() c
     return bAllowUnsupportedItemsInDefaultInventory->GetPropertyValue_InContainer(this);
 }
 
+UFortAthenaAIRuntimeParametersComponent* AFortAthenaAIBotController::GetCachedAIRuntimeParametersComponent() const
+{
+    static auto CachedAIRuntimeParametersComponent = GetClass()->FindPropertyByName(FName(TEXT("CachedAIRuntimeParametersComponent")));
+
+    return CachedAIRuntimeParametersComponent ? *CachedAIRuntimeParametersComponent->ContainerPtrToValuePtr<UFortAthenaAIRuntimeParametersComponent*>(this) : nullptr;
+}
+
 AFortInventory*& AFortAthenaAIBotController::GetInventory()
 {
     static auto Inventory = GetClass()->FindPropertyByName(FName(TEXT("Inventory")));

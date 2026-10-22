@@ -1,5 +1,10 @@
 #include "pch.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "AI/FortAthenaAIBotController.h"
+#include "AI/FortAthenaAIRuntimeParameters_Inventory.h"
+#include "AI/FortAthenaAIRuntimeParametersComponent.h"
+#include "Components/FortControllerComponent_InventoryService.h"
+#include "HAL/IConsoleManager.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
 #include "GameFramework/Controller.h"
@@ -22,6 +27,28 @@ UClass* AFortPlayerPawnAthena::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena"));
 
     return Class;
+}
+
+void AFortPlayerPawnAthena::HandleDeath(float Damage, const FGameplayTagContainer& DamageTags, const FGameplayEffectContextHandle& EffectContext, AController* InstigatedBy, AActor* DamageCauser)
+{
+    DETOUR(AFortPlayerPawnAthena, HandleDeath, Anchor::Hook()
+        .String(TEXT("Player State is null"))
+        .Optional()
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+        .Inline());
+
+    static auto DropCurrencyOnPawnDeath = IConsoleManager::Get().FindConsoleVariable(TEXT("Athena.DropCurrencyOnPawnDeath"));
+
+    auto BotController = DropCurrencyOnPawnDeath ? Cast<AFortAthenaAIBotController>(GetController()) : nullptr;
+
+    Original(Damage, DamageTags, EffectContext, InstigatedBy, DamageCauser);
+
+    auto RuntimeParametersComponent = BotController ? BotController->GetCachedAIRuntimeParametersComponent() : nullptr;
+    auto InventoryParameters = RuntimeParametersComponent && UFortAthenaAIRuntimeParameters_Inventory::StaticClass() ? Cast<UFortAthenaAIRuntimeParameters_Inventory>(RuntimeParametersComponent->GetOrCreateAIRuntimeParameters(UFortAthenaAIRuntimeParameters_Inventory::StaticClass(), 0, 2)) : nullptr;
+
+    if (InventoryParameters && InventoryParameters->GetbShouldDropCurrencyOnDeath())
+        UFortControllerComponent_InventoryService::GenerateCurrencyOnPawnDeath(this, InstigatedBy, InventoryParameters->GetCurrencyPayoutRowName());
 }
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()

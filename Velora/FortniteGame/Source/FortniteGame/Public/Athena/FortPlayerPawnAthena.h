@@ -3,6 +3,7 @@
 #include "Pawns/FortPlayerPawn.h"
 
 struct FFortPickupRequestInfo;
+struct FGameplayEffectContextHandle;
 struct FGameplayTagContainer;
 struct FGuid;
 enum class EDeathCause : uint8;
@@ -31,6 +32,8 @@ public:
     EDeathCause ToDeathCause(const FGameplayTagContainer& InTags, bool bWasDBNO);
 
     void InitializeDeathInfoOnPawnDeath(const FGameplayTagContainer& InTags, AController* EventInstigator, AController* DBNOFinisher, AActor* DamageCauser);
+
+    void HandleDeath(float Damage, const FGameplayTagContainer& DamageTags, const FGameplayEffectContextHandle& EffectContext, AController* InstigatedBy, AActor* DamageCauser);
 
     float GetPickupSpeedMultiplier() const;
 

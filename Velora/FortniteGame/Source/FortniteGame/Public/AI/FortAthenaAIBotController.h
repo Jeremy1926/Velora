@@ -6,6 +6,7 @@
 class AFortInventory;
 class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
+class UFortAthenaAIRuntimeParametersComponent;
 class UFortBotNameSettings;
 class UFortItemDefinition;
 class UFortWorldItem;
@@ -52,6 +53,8 @@ public:
     bool GetbAllowUnsupportedItemsInDefaultInventory() const;
 
     AFortInventory*& GetInventory();
+
+    UFortAthenaAIRuntimeParametersComponent* GetCachedAIRuntimeParametersComponent() const;
 
     UFortAthenaAIBotInventoryItems* GetStartupInventory() const;
 

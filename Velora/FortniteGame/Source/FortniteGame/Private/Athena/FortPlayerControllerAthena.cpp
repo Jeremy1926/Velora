@@ -4,7 +4,10 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
+#include "Components/FortControllerComponent_InventoryService.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "GameplayEffectTypes.h"
+#include "HAL/IConsoleManager.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -123,6 +126,13 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
         if (KillerPlayerState != PlayerState && KillerPlayerState->GetTeamIndex() != PlayerState->GetTeamIndex() && GetMarkedAlive())
         {
             KillerPlayerState->GetKillScore()++;
+
+            static auto GenerateCurrencyOnPawnDeath = IConsoleManager::Get().FindConsoleVariable(TEXT("Athena.GenerateCurrencyOnPawnDeath"));
+
+            auto InventoryService = GenerateCurrencyOnPawnDeath && GenerateCurrencyOnPawnDeath->GetInt() ? UFortControllerComponent_InventoryService::GetInventoryServiceComponent(this) : nullptr;
+
+            if (InventoryService && InventoryService->GetShouldDropCurrencyOnDeath().GetValueAtLevel(0.0f) > 0.0f)
+                UFortControllerComponent_InventoryService::GenerateCurrencyOnPawnDeath(KilledPawn, EventInstigator, FName(TEXT("PlayerKill")));
 
             for (auto OtherPlayerState : GetWorld()->GetGameState()->GetPlayerArray())
             {
