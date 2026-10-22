@@ -106,6 +106,10 @@ FMulticastScriptDelegate* AFortVehicleManager::GetOnVehicleSpawnsUpdated()
         .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated"))
         .Optional()
         .FindEither("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*", "add rdi, 0x*")
+        .Or()
+        .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated"))
+        .Start()
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
         .Get();
 
     return OnVehicleSpawnsUpdated > 0 ? (FMulticastScriptDelegate*)((uint8*)this + OnVehicleSpawnsUpdated) : nullptr;
