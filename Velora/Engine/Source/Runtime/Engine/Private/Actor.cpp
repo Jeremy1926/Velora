@@ -157,6 +157,10 @@ bool AActor::IsPendingKillPending() const
         .Or()
         .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
         .Find("cmp byte ptr [*], 0x80")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("or byte ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
@@ -165,6 +169,10 @@ bool AActor::IsPendingKillPending() const
         .Or()
         .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
         .Find("cmp byte ptr [*], 0x80")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("or byte ptr [*+0x*], 0x*")
         .Value();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
@@ -175,11 +183,21 @@ bool AActor::IsActorInitialized() const
     static auto Offset = Anchor::Offset(TEXT("AActor::bActorInitialized"))
         .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
         .Last("test byte ptr [*], 0x*")
+        .Or()
+        .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
+        .Start()
+        .Find("test [*+0x8], *; jnz *; test byte ptr [*], 0x*")
+        .Find("test byte ptr [*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorInitialized"))
         .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
         .Last("test byte ptr [*], 0x*")
+        .Or()
+        .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
+        .Start()
+        .Find("test [*+0x8], *; jnz *; test byte ptr [*], 0x*")
+        .Find("test byte ptr [*], 0x*")
         .Value();
 
     return *((uint8_t*)this + Offset) & Mask;
