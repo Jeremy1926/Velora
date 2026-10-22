@@ -190,9 +190,18 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
         .Start()
         .Log(TEXT("AFortPlayerController::TryAddToQuickBar"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+        .Optional()
         .Get();
 
-    TryAddToQuickBar(this, Item);
+    if (TryAddToQuickBar)
+        return TryAddToQuickBar(this, Item);
+
+    static auto NativeTryAddToQuickBar = Anchor::Function<void (*)(AFortPlayerController*, UFortItem*)>(TEXT("AFortPlayerController::TryAddToQuickBar"))
+        .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Get();
+
+    NativeTryAddToQuickBar(this, Item);
 }
 
 bool AFortPlayerController::CanServerTryAddToQuickBar() const

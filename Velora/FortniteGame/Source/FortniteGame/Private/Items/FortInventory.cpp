@@ -80,6 +80,13 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
         .Call()
         .Find("mov rcx, rax; mov rdx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("UFortWorldItem::UpdateQuantity: Got mcp request to change quantity on item %s*"))
+        .Find("mov edx, *; call 0x*")
+        .Call()
+        .Call()
+        .Find("mov rdx, rbx; mov rcx, r9; call 0x*")
+        .Call()
         .Get();
 
     SetItemRequiresUpdate(this, ItemEntry);
