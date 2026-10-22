@@ -21,6 +21,7 @@ class UNetDriver;
 struct FCollisionShape;
 struct FHitResult;
 struct FQuat;
+struct FRegisterComponentContext;
 struct FRotator;
 struct FTransform;
 struct FURL;
@@ -99,6 +100,8 @@ public:
     void SetNextSwitchCountdown(float InNextSwitchCountdown);
 
     FLevelCollection* FindCollectionByType(const ELevelCollectionType InType);
+
+    void InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context);
 
     bool Listen(FURL& InURL);
 };
