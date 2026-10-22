@@ -10,7 +10,7 @@
 void UFortAthenaAISpawnerDataComponent_AIBotAffiliation::OnSpawned(APawn* SpawnedPawn)
 {
     DETOUR(UFortAthenaAISpawnerDataComponent_AIBotAffiliation, OnSpawned, Anchor::Hook()
-        .If(!Anchor::String(TEXT("UFortAthenaAISpawnerDataComponent_AIBotAffiliation::OnSpawned Assigning Affiliation to Pawn=%s Controller=%s with CustomSquadId=%d")).Get())
+        .If(!::Anchor::Exists().String(TEXT("UFortAthenaAISpawnerDataComponent_AIBotAffiliation::OnSpawned Assigning Affiliation to Pawn=%s Controller=%s with CustomSquadId=%d")).Get())
         .String(TEXT("UFortAthenaAISpawnerDataComponent_AIBotAffiliation::OnSpawned Can't set team Pawn=%s Controller=%s as can't retrieve AIBotController on pawn!"))
         .Optional()
         .Start()
