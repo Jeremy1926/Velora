@@ -219,9 +219,27 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
                 break;
 
             auto EventData = Event->GetEventData().LoadSynchronous();
-            const int32 ActorCount = EventData ? EventData->GetActorDescriptions().Num() : 0;
+            const int32 EventBudget = FMath::Min(CategoryBudget, GetEventBudget(Event));
+            const int32 NumActorDescriptions = EventData ? EventData->GetActorDescriptions().Num() : 0;
+            auto MinActorCountToSpawn = EventData ? EventData->GetMinActorCountToSpawn() : nullptr;
+            auto MaxActorCountToSpawn = EventData ? EventData->GetMaxActorCountToSpawn() : nullptr;
+            const int32 MinActorCount = MinActorCountToSpawn ? (int32)MinActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
+            const int32 MaxActorCount = MaxActorCountToSpawn ? (int32)MaxActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
+
+            if (!NumActorDescriptions || MinActorCount > EventBudget)
+            {
+                ActiveEvents.RemoveSingle(Event);
+                TotalWeight -= Event->GetWeight();
+                continue;
+            }
+
+            const int32 ActorCount = FMath::Min(FMath::Min(FMath::RandRange(MinActorCount, MaxActorCount), NumActorDescriptions), EventBudget);
+
+            if (ActorCount <= 0)
+                continue;
+
             const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
-            auto PointProvider = ActorCount && ActorCount <= FMath::Min(CategoryBudget, GetEventBudget(Event)) ? GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter) : nullptr;
+            auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter);
 
             if (!PointProvider)
             {
@@ -241,6 +259,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             EventRequest.Event = Event;
             EventRequest.EventData = EventData;
             EventRequest.PointProvider = PointProvider;
+            EventRequest.ActorCountToSpawn = ActorCount;
 
             PendingEventRequests.Add(EventRequest);
             FindOrCreateEventRuntimeData(Event).SpawnedCount += ActorCount;
@@ -400,7 +419,7 @@ int32 UFortAthenaLivingWorldManager::GetActorCount(const FFortAthenaLivingWorldC
             continue;
 
         if (EventData && EventRequest.LivingWorldManager.Get() == this && (!Category || EventRequest.Category == Category) && (!Event || EventRequest.Event == Event))
-            ActorCount += EventData->GetActorDescriptions().Num();
+            ActorCount += EventRequest.ActorCountToSpawn;
     }
 
     return ActorCount;
@@ -453,23 +472,46 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     auto PointProvider = EventRequest.PointProvider.Get();
     auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
     const FFortAthenaLivingWorldPointProviderFilterRules PointFilter{ Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity() };
-    const int32 ActorCount = EventData ? EventData->GetActorDescriptions().Num() : 0;
+    const int32 ActorCount = EventData ? FMath::Min(EventRequest.ActorCountToSpawn, EventData->GetActorDescriptions().Num()) : 0;
     const auto SpawnedCallback = TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned);
     auto Config = GetConfig();
     auto DensityComputationDistance = Config ? Config->GetDensityComputationDistance() : nullptr;
     const float ActorDensityComputationRadius = DensityComputationDistance ? DensityComputationDistance->GetValueAtLevel(0.0f) : 0.0f;
     TArray<FLivingWorldPendingSpawnRequest> PendingSpawnRequests;
     TArray<AActor*> SpawnedActors;
+    bool bHasDefaultPosition = false;
+    FVector DefaultPosition(ForceInit);
+    FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
 
     for (int32 Index = 0; PointProviderInterface && Index < ActorCount; Index++)
     {
         auto& ActorDescription = EventData->GetActorDescriptions()[Index];
         auto SpawnerDataClass = GetSpawnerDataClass(ActorDescription);
         auto ActorClass = SpawnerDataClass ? nullptr : ActorDescription.GetActorClass().LoadSynchronous();
-        FVector Location;
-        FRotator Rotation;
+        FVector Location(ForceInit);
+        FRotator Rotation{ 0.0f, 0.0f, 0.0f };
 
-        if ((SpawnerDataClass ? !AISpawner : !ActorClass || !ActorClass->IsChildOf(AActor::StaticClass())) || !PointProviderInterface->GetValidLocation(PointFilter, ActorDensityComputationRadius, Location, Rotation))
+        if (SpawnerDataClass ? !AISpawner : !ActorClass || !ActorClass->IsChildOf(AActor::StaticClass()))
+        {
+            PointProviderInterface->OnSpawnedActorFailed();
+            continue;
+        }
+
+        if (ActorDescription.GetbSpawnAroundDefaultPoint() && bHasDefaultPosition)
+        {
+            Location = DefaultPosition;
+            Rotation = DefaultRotation;
+        }
+        else if (PointProviderInterface->GetValidLocation(PointFilter, ActorDensityComputationRadius, Location, Rotation))
+        {
+            if (!bHasDefaultPosition)
+            {
+                DefaultPosition = Location;
+                DefaultRotation = Rotation;
+                bHasDefaultPosition = true;
+            }
+        }
+        else
         {
             PointProviderInterface->OnSpawnedActorFailed();
             continue;

@@ -39,6 +39,20 @@ FGameplayTagQuery& FFortAthenaLivingWorldEventDataActorSpawnDescription::GetSpaw
     return *SpawnerDataTagQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(this);
 }
 
+bool FFortAthenaLivingWorldEventDataActorSpawnDescription::GetbSpawnAroundDefaultPoint()
+{
+    static auto bSpawnAroundDefaultPoint = StaticStruct()->FindPropertyByName(FName(TEXT("bSpawnAroundDefaultPoint")));
+
+    return bSpawnAroundDefaultPoint && *bSpawnAroundDefaultPoint->ContainerPtrToValuePtr<bool>(this);
+}
+
+UEnvQuery* FFortAthenaLivingWorldEventDataActorSpawnDescription::GetSpawnAroundEnvironmentQuery()
+{
+    static auto SpawnAroundEnvironmentQuery = StaticStruct()->FindPropertyByName(FName(TEXT("SpawnAroundEnvironmentQuery")));
+
+    return SpawnAroundEnvironmentQuery ? *SpawnAroundEnvironmentQuery->ContainerPtrToValuePtr<UEnvQuery*>(this) : nullptr;
+}
+
 UClass* UFortAthenaLivingWorldEventData::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEventData"));
@@ -51,6 +65,20 @@ FGameplayTagQuery& UFortAthenaLivingWorldEventData::GetProviderFiltersTagQuery()
     static auto ProviderFiltersTagQuery = GetClass()->FindPropertyByName(FName(TEXT("ProviderFiltersTagQuery")));
 
     return *ProviderFiltersTagQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(this);
+}
+
+FScalableFloat* UFortAthenaLivingWorldEventData::GetMinActorCountToSpawn()
+{
+    static auto MinActorCountToSpawn = GetClass()->FindPropertyByName(FName(TEXT("MinActorCountToSpawn")));
+
+    return MinActorCountToSpawn ? MinActorCountToSpawn->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
+FScalableFloat* UFortAthenaLivingWorldEventData::GetMaxActorCountToSpawn()
+{
+    static auto MaxActorCountToSpawn = GetClass()->FindPropertyByName(FName(TEXT("MaxActorCountToSpawn")));
+
+    return MaxActorCountToSpawn ? MaxActorCountToSpawn->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
 TRuntimeSizedArray<FFortAthenaLivingWorldEventDataActorSpawnDescription>& UFortAthenaLivingWorldEventData::GetActorDescriptions()
