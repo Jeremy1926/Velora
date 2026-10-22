@@ -70,6 +70,18 @@ bool AFortPawn::GetIsDBNO() const
 void AFortPawn::SetIsDBNO(bool bInIsDBNO)
 {
     static auto bIsDBNO = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO")));
+    static auto SetIsDBNO = Anchor::VirtualFunction<void (*)(AFortPawn*, bool)>(TEXT("AFortPawn::SetIsDBNO"))
+        .FieldPattern("44 88 81 %b 41 F6 C0 %m", bIsDBNO)
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPawn"))
+        .Optional()
+        .Get();
+
+    if (SetIsDBNO)
+    {
+        SetIsDBNO(this, bInIsDBNO);
+        return;
+    }
 
     bIsDBNO->SetPropertyValue_InContainer(this, bInIsDBNO);
 }
