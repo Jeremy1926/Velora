@@ -160,7 +160,7 @@ FConversationTaskResult UFortConversationTaskNode_SellItem::ExecuteTaskNode_Impl
 
     const TOptional<int32> LootCost = GetLootCost(*SellingData);
 
-    if (!LootCost.IsSet() || !PayPrice(PlayerController, LootCost.GetValue()))
+    if (!PayPrice(Context, LootCost))
         return FConversationTaskResult::ReturnToCurrentClientChoice();
 
     UFortKismetLibrary::K2_GiveItemToPlayer(PlayerController, ItemDefinition, FMath::Max(SellingData->LootForSaleStackSize, 1));
@@ -178,7 +178,7 @@ EConversationRequirementResult UFortConversationTaskNode_SellItem::IsRequirement
 
     const TOptional<int32> LootCost = GetLootCost(*SellingData);
 
-    if (SellingData->LootRemainingForSale <= 0 || !LootCost.IsSet() || !CanPlayerAffordPrice(UFortConversationContextLibrary::GetParticipantPlayerController(Context), LootCost.GetValue()))
+    if (SellingData->LootRemainingForSale <= 0 || !CanPlayerAffordPrice(Context, LootCost))
         return EConversationRequirementResult::FailedButVisible;
 
     return EConversationRequirementResult::Passed;

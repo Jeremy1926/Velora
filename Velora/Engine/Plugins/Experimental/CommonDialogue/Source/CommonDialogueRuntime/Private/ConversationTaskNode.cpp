@@ -9,6 +9,7 @@
 #include "ConversationSideEffectNode.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
+#include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationTaskNode_Speech.h"
 #include "GameFramework/Actor.h"
 #include "Templates/Casts.h"
@@ -118,6 +119,9 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
 
     if (auto SellItem = Cast<UFortConversationTaskNode_SellItem>(this))
         return SellItem->ExecuteTaskNode_Implementation(Context);
+
+    if (auto UpgradeItem = Cast<UFortConversationTaskNode_UpgradeItem>(this))
+        return UpgradeItem->ExecuteTaskNode_Implementation(Context);
 
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);

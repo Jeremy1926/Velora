@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortConversationTaskNode_Service.h"
+#include "Conversation/FortConversationContextLibrary.h"
 #include "FortKismetLibrary.h"
-#include "Items/FortInventory.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Player/FortPlayerController.h"
 #include "UObject/Class.h"
@@ -43,36 +43,27 @@ TOptional<int32> UFortConversationTaskNode_Service::FindServicePrice(FName Prici
     return Price;
 }
 
-int32 UFortConversationTaskNode_Service::GetCurrencyCount(AFortPlayerController* PlayerController) const
+bool UFortConversationTaskNode_Service::CanPlayerAffordPrice(const FConversationContext& Context, const TOptional<int32>& Price) const
 {
-    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
-    auto ResourceCurrency = GetResourceCurrency();
-    int32 Count = 0;
+    static auto CanPlayerAffordPrice = Anchor::Function<bool (*)(const UFortConversationTaskNode_Service*, const FConversationContext&, TOptional<int32>*)>(TEXT("UFortConversationTaskNode_Service::CanPlayerAffordPrice"))
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
+        .Call(3)
+        .Get();
 
-    if (!WorldInventory || !ResourceCurrency)
-        return Count;
+    TOptional<int32> InPrice = Price;
 
-    for (auto& ItemEntry : WorldInventory->GetInventory().GetReplicatedEntries())
-    {
-        if (ItemEntry.GetItemDefinition() == ResourceCurrency)
-            Count += ItemEntry.GetCount();
-    }
-
-    return Count;
+    return CanPlayerAffordPrice(this, Context, &InPrice);
 }
 
-bool UFortConversationTaskNode_Service::CanPlayerAffordPrice(AFortPlayerController* PlayerController, int32 Price) const
+bool UFortConversationTaskNode_Service::PayPrice(const FConversationContext& Context, const TOptional<int32>& Price) const
 {
-    return Price <= 0 || GetCurrencyCount(PlayerController) >= Price;
-}
-
-bool UFortConversationTaskNode_Service::PayPrice(AFortPlayerController* PlayerController, int32 Price) const
-{
-    if (!CanPlayerAffordPrice(PlayerController, Price))
+    if (!CanPlayerAffordPrice(Context, Price))
         return false;
 
-    if (Price > 0)
-        UFortKismetLibrary::K2_RemoveItemFromPlayer(PlayerController, GetResourceCurrency(), Price, true);
+    if (Price.GetValue() > 0)
+        UFortKismetLibrary::K2_RemoveItemFromPlayer(UFortConversationContextLibrary::GetParticipantPlayerController(Context), GetResourceCurrency(), Price.GetValue(), true);
 
     return true;
 }
