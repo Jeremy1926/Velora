@@ -431,6 +431,43 @@ namespace Anchor
         return End;
     }
 
+    static std::pair<const uint8_t*, const uint8_t*> FindRange(const void* Address)
+    {
+        auto Entry = Address ? FindFunction(Address) : nullptr;
+
+        if (!Entry)
+            return { nullptr, nullptr };
+
+        auto Begin = Base() + Entry->BeginAddress;
+        auto End = FindFunctionEnd(Entry);
+
+        if (Address >= Begin && Address < End)
+            return { Begin, End };
+
+        DWORD64 ImageBase = 0;
+        auto Chunk = RtlLookupFunctionEntry((DWORD64)Address, &ImageBase, nullptr);
+        Begin = Base() + Chunk->BeginAddress;
+        End = Base() + Chunk->EndAddress;
+
+        while (auto Previous = RtlLookupFunctionEntry((DWORD64)(Begin - 1), &ImageBase, nullptr))
+        {
+            if (FindFunction(Begin - 1)->BeginAddress != Entry->BeginAddress)
+                break;
+
+            Begin = Base() + Previous->BeginAddress;
+        }
+
+        while (auto Next = RtlLookupFunctionEntry((DWORD64)End, &ImageBase, nullptr))
+        {
+            if (FindFunction(End)->BeginAddress != Entry->BeginAddress)
+                break;
+
+            End = Base() + Next->EndAddress;
+        }
+
+        return { Begin, End };
+    }
+
     struct FInstruction
     {
         ZydisDecodedInstruction Info;
@@ -529,8 +566,7 @@ namespace Anchor
         if (!Address)
             return nullptr;
 
-        auto Entry = FindFunction(Address);
-        auto End = Entry ? FindFunctionEnd(Entry) : nullptr;
+        auto End = FindRange(Address).second;
         FInstruction Instruction;
 
         for (Instruction.Address = Address; !End || Instruction.Address < End; Instruction.Address += Instruction.Info.length)
@@ -566,7 +602,7 @@ namespace Anchor
     {
         const uint8_t* Found = nullptr;
 
-        Walk(Start().Address, true, [&](const FInstruction& Instruction)
+        Walk(FindRange(Address).first, true, [&](const FInstruction& Instruction)
         {
             if (Matches(Instruction.Address, Instructions))
                 Found = Instruction.Address;
@@ -691,6 +727,43 @@ namespace Anchor
         return Address;
     }
 
+    static const uint8_t* FindLogCaller(const uint8_t* Reference)
+    {
+        auto Entry = Reference ? FindFunction(Reference) : nullptr;
+
+        if (!Entry || Reference < Base() + Entry->BeginAddress)
+            return Reference;
+
+        auto Begin = Base() + Entry->BeginAddress;
+        bool bClearsFile = false;
+        bool bClearsLine = false;
+        bool bPassesFile = false;
+        bool bPassesLine = false;
+        bool bPassesVerbosity = false;
+        FInstruction Instruction;
+
+        for (auto Address = Begin; Address < Base() + Entry->EndAddress && Decode(Address, Instruction); Address += Instruction.Info.length)
+        {
+            if (Instruction.Info.meta.category == ZYDIS_CATEGORY_COND_BR || Instruction.Info.meta.category == ZYDIS_CATEGORY_UNCOND_BR || Instruction.Info.mnemonic == ZYDIS_MNEMONIC_RET)
+                break;
+
+            bClearsFile |= Match(Instruction.Text, "xor ecx, ecx");
+            bClearsLine |= Match(Instruction.Text, "xor edx, edx");
+            bPassesFile |= Match(Instruction.Text, "lea rcx, [0x*]");
+            bPassesLine |= Match(Instruction.Text, "mov edx, 0x*");
+            bPassesVerbosity |= Match(Instruction.Text, "mov r9d, 0x*");
+
+            if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_CALL && Address > Reference && ((bClearsFile && bClearsLine) || (bPassesFile && bPassesLine && bPassesVerbosity)))
+            {
+                auto Caller = FindCallReference(Begin);
+
+                return Caller ? Caller : Reference;
+            }
+        }
+
+        return Reference;
+    }
+
     FCode String(const wchar_t* Text)
     {
         auto Reference = FindStringReference(Text);
@@ -698,7 +771,7 @@ namespace Anchor
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
 
-        return FCode(Reference);
+        return FCode(FindLogCaller(Reference));
     }
 
     FCode String(const char* Text)
@@ -708,7 +781,7 @@ namespace Anchor
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
 
-        return FCode(Reference);
+        return FCode(FindLogCaller(Reference));
     }
 
     FCode Smallest(const wchar_t* Text)
