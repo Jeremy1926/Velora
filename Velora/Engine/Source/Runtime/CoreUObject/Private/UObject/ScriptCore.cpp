@@ -44,15 +44,15 @@ void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>
         .Find("jmp [rax+0x*]")
         .LogSlot(TEXT("UActorComponent::Deactivate"))
         .Entry(TEXT("/Script/Engine.Default__ActorComponent"))
-        .Call(2)
-        .Or()
-        .Exec(TEXT("/Script/Engine.ActorComponent:Deactivate"))
-        .Find("jmp [rax+0x*]")
-        .Entry(TEXT("/Script/Engine.Default__ActorComponent"))
         .Find("mov rcx, [rsp+0x*]; test rcx, rcx; jnz 0x*")
         .Find("jnz 0x*")
         .Target()
         .Call()
+        .Or()
+        .Exec(TEXT("/Script/Engine.ActorComponent:Deactivate"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__ActorComponent"))
+        .Call(2)
         .Get();
 
     ProcessMulticastDelegate(this, Parameters);
