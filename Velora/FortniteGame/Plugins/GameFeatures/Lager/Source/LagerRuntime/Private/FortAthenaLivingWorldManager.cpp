@@ -536,6 +536,9 @@ void UFortAthenaLivingWorldManager::UpdateActorsInfo()
 
         ActorUpdates++;
 
+        if (auto ActorDensityGrid = GetActorDensityGrid())
+            ActorDensityGrid->UpdateActor(Actor);
+
         if (ActorToUpdateInfo.Event)
         {
             auto DespawnCondition = ActorToUpdateInfo.Event->GetDespawnCondition();
@@ -1732,6 +1735,10 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea r14, [rcx+0x*]; movaps [rsp+0x*], xmm6; mov rbp, rcx")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea rbx, [rcx+0x*]; movaps [rax-0x*], xmm6; mov rsi, rcx")
         .Optional()
         .Disp();
 

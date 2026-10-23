@@ -38,6 +38,10 @@ struct FFortAthenaLivingWorldDensityGrid
 
     void UpdateActorDensityValue(AActor* InActor, float DensityValue);
 
+    float* GetActorDataDensityRange(AActor* InActor);
+
+    void UpdateActor(AActor* InActor);
+
     void UpdateActors(int32 MaxActorUpdates);
 
     TMap<FIntVector, TArray<int32>>& GetCellToActorDataIndices();
