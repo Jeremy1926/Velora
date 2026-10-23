@@ -68,7 +68,7 @@ public:
 
     void ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit);
 
-    void ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, int32 RotationIterations, bool bMirrored);
+    void ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, uint8 RotationIterations, bool bMirrored);
 
     void ServerEndEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToStopEditing);
 

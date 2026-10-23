@@ -1181,7 +1181,7 @@ void AFortPlayerController::ServerBeginEditingBuildingActor_Implementation(ABuil
     }
 }
 
-void AFortPlayerController::ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, int32 RotationIterations, bool bMirrored)
+void AFortPlayerController::ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, uint8 RotationIterations, bool bMirrored)
 {
     if (!BuildingActorToEdit || !BuildingActorToEdit->GetWorld() || (APlayerState*)BuildingActorToEdit->GetEditingPlayer() != GetPlayerState() || BuildingActorToEdit->GetDestroyed())
         return;
