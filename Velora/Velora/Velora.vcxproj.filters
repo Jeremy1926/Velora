@@ -1486,6 +1486,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool_ContextTrap.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\AISystemBase.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\AI</Filter>
     </ClInclude>
@@ -2480,6 +2483,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool_ContextTrap.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp">

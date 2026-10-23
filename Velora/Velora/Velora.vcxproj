@@ -446,6 +446,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortMountedWeaponInterface.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool_ContextTrap.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\AI\AISystemBase.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISystem.h" />
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\AISubsystem.h" />
@@ -799,6 +800,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortMountedWeaponInterface.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool_ContextTrap.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
