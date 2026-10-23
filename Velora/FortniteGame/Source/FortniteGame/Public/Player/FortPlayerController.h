@@ -180,5 +180,5 @@ public:
 
     UStatManager* GetStatManager() const;
 
-    FRotator& GetAirSpawnControlRotation();
+    void SetAirSpawnControlRotation(const FRotator& InAirSpawnControlRotation);
 };

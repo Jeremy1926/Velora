@@ -1674,14 +1674,14 @@ UStatManager* AFortPlayerController::GetStatManager() const
     return *StatManager->ContainerPtrToValuePtr<UStatManager*>(this);
 }
 
-FRotator& AFortPlayerController::GetAirSpawnControlRotation()
+void AFortPlayerController::SetAirSpawnControlRotation(const FRotator& InAirSpawnControlRotation)
 {
     static auto AirSpawnControlRotation = Anchor::Offset(TEXT("AFortPlayerController::AirSpawnControlRotation"))
         .String(TEXT("FortGameModeAthena::FinishRestartPlayer -- Found potential teleport spot. Retrying."))
         .Start()
         .Find("cmp [rax+0x*], *")
-        .Find("movsd xmm*, qword ptr [r*+0x*]")
+        .FirstOf("movups xmm*, [r*+0x*]", "movsd xmm*, qword ptr [r*+0x*]")
         .Disp();
 
-    return *(FRotator*)((uint8_t*)this + AirSpawnControlRotation);
+    TGameLayout<FRotator>::Store((uint8*)this + AirSpawnControlRotation, InAirSpawnControlRotation);
 }

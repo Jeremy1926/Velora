@@ -25,7 +25,9 @@ public:
 
     float& GetNextNextRadius();
 
-    FVector& GetNextNextCenter();
+    FVector GetNextNextCenter();
+
+    void SetNextNextCenter(const FVector& InNextNextCenter);
 
     AFortSafeZoneIndicatorFuture* GetFutureReplicator() const;
 };

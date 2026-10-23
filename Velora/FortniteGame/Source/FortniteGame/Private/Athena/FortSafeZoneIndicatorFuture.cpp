@@ -42,11 +42,18 @@ TArray<FObjectKey>* AFortSafeZoneIndicatorFuture::GetWhitelistedPlayers()
     return WhitelistedPlayers;
 }
 
-FVector& AFortSafeZoneIndicatorFuture::GetNextNextCenter()
+FVector AFortSafeZoneIndicatorFuture::GetNextNextCenter()
 {
     static auto NextNextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextNextCenter")));
 
-    return *NextNextCenter->ContainerPtrToValuePtr<FVector>(this);
+    return NextNextCenter->GetPropertyValue_InContainer<FVector>(this);
+}
+
+void AFortSafeZoneIndicatorFuture::SetNextNextCenter(const FVector& InNextNextCenter)
+{
+    static auto NextNextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextNextCenter")));
+
+    NextNextCenter->SetPropertyValue_InContainer<FVector>(this, InNextNextCenter);
 }
 
 float& AFortSafeZoneIndicatorFuture::GetNextNextRadius()

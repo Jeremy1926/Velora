@@ -38,7 +38,7 @@ bool& UFortControllerComponent_Aircraft::GetIsAttemptingAircraftJump()
     return *(bool*)((uint8_t*)this + bIsAttemptingAircraftJump);
 }
 
-void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation(FRotator ClientRotation)
+void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation(TGameValue<FRotator> GameClientRotation)
 {
     DETOUR(UFortControllerComponent_Aircraft, ServerAttemptAircraftJump_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump"))
@@ -52,6 +52,7 @@ void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft")));
 
+    const FRotator ClientRotation = GameClientRotation.Get();
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
 
     if (!PlayerController)
@@ -62,7 +63,7 @@ void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation
     if (IsInAircraft())
     {
         PlayerController->SetStateName(NAME_Inactive);
-        PlayerController->GetAirSpawnControlRotation() = ClientRotation;
+        PlayerController->SetAirSpawnControlRotation(ClientRotation);
         PlayerController->ServerRestartPlayer_Implementation();
         PlayerController->SetControlRotation(ClientRotation);
     }

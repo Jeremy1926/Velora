@@ -746,10 +746,10 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
     const int32 NextSafeZoneIndex = NewSafeZonePhase < 0 ? GetSafeZonePhase() : GetSafeZonePhase() + 1;
     const int32 NextNextSafeZoneIndex = FMath::Clamp(NextSafeZoneIndex + 1, 0, SafeZoneLocations.Num() - 1);
 
-    SafeZoneIndicator->GetNextNextCenter() = SafeZoneLocations[NextNextSafeZoneIndex];
+    SafeZoneIndicator->SetNextNextCenter(TGameLayout<FVector>::Load((uint8*)SafeZoneLocations.GetData() + NextNextSafeZoneIndex * TGameLayout<FVector>::Size()));
     SafeZoneIndicator->GetNextNextRadius() = SafeZoneRadius->GetValueAtLevel((float)NextNextSafeZoneIndex);
 
-    FutureReplicator->GetNextNextCenter() = SafeZoneIndicator->GetNextNextCenter();
+    FutureReplicator->SetNextNextCenter(SafeZoneIndicator->GetNextNextCenter());
     FutureReplicator->GetNextNextRadius() = SafeZoneIndicator->GetNextNextRadius();
     FutureReplicator->ForceNetUpdate();
 }

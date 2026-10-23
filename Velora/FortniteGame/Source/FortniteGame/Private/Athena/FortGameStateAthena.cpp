@@ -202,7 +202,7 @@ EFortSafeZoneState AFortGameStateAthena::GetSafeZoneState() const
 
 FVector AFortGameStateAthena::GetSafeZoneCenter() const
 {
-    static auto GetSafeZoneCenter = Anchor::VirtualFunction<FVector* (*)(const void*, FVector*)>(TEXT("AFortGameStateAthena::GetSafeZoneCenter"))
+    static auto GetSafeZoneCenter = Anchor::VirtualFunction<TGameValue<FVector>* (*)(const void*, TGameValue<FVector>*)>(TEXT("AFortGameStateAthena::GetSafeZoneCenter"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
@@ -211,12 +211,12 @@ FVector AFortGameStateAthena::GetSafeZoneCenter() const
         .Find("call [rax+0x*]", 2)
         .Get();
 
-    FVector SafeZoneCenter(0.0f, 0.0f, 0.0f);
+    TGameValue<FVector> SafeZoneCenter;
 
     if (auto SafeZoneInterface = GetSafeZoneInterface())
         GetSafeZoneCenter(SafeZoneInterface, &SafeZoneCenter);
 
-    return SafeZoneCenter;
+    return SafeZoneCenter.Get();
 }
 
 float AFortGameStateAthena::GetSafeZoneRadius() const

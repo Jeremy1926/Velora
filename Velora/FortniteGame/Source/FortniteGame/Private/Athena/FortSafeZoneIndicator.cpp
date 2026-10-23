@@ -135,11 +135,18 @@ float& AFortSafeZoneIndicator::GetNextNextRadius()
     return *NextNextRadius->ContainerPtrToValuePtr<float>(this);
 }
 
-FVector& AFortSafeZoneIndicator::GetNextNextCenter()
+FVector AFortSafeZoneIndicator::GetNextNextCenter()
 {
     static auto NextNextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextNextCenter")));
 
-    return *NextNextCenter->ContainerPtrToValuePtr<FVector>(this);
+    return NextNextCenter->GetPropertyValue_InContainer<FVector>(this);
+}
+
+void AFortSafeZoneIndicator::SetNextNextCenter(const FVector& InNextNextCenter)
+{
+    static auto NextNextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextNextCenter")));
+
+    NextNextCenter->SetPropertyValue_InContainer<FVector>(this, InNextNextCenter);
 }
 
 AFortSafeZoneIndicatorFuture* AFortSafeZoneIndicator::GetFutureReplicator() const

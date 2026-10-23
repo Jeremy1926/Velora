@@ -12,5 +12,5 @@ public:
 
     bool& GetIsAttemptingAircraftJump();
 
-    void ServerAttemptAircraftJump_Implementation(FRotator ClientRotation);
+    void ServerAttemptAircraftJump_Implementation(TGameValue<FRotator> GameClientRotation);
 };

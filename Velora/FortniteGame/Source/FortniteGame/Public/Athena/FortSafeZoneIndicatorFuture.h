@@ -16,7 +16,9 @@ public:
 
     static TArray<FObjectKey>* GetWhitelistedPlayers();
 
-    FVector& GetNextNextCenter();
+    FVector GetNextNextCenter();
+
+    void SetNextNextCenter(const FVector& InNextNextCenter);
 
     float& GetNextNextRadius();
 };
