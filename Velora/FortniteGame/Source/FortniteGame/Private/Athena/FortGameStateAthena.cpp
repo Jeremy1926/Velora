@@ -311,7 +311,7 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
     {
         if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
         {
-            LivingWorldManager->GetCachedGameState() = this;
+            LivingWorldManager->SetCachedGameState(this);
 
             if (auto CachedWorld = LivingWorldManager->GetCachedWorld())
                 *CachedWorld = GetWorld();

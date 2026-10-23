@@ -236,7 +236,9 @@ public:
 
     TArray<UClass*>& GetLoadedSpawnerDataClass();
 
-    AFortGameStateAthena*& GetCachedGameState();
+    AFortGameStateAthena* GetCachedGameState();
+
+    void SetCachedGameState(AFortGameStateAthena* GameState);
 
     FFortAthenaLivingWorldPlayerTracker* GetPlayerTracker();
 

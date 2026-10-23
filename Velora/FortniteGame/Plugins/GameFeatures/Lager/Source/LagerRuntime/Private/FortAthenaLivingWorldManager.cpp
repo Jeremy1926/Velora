@@ -1621,11 +1621,24 @@ TArray<UClass*>& UFortAthenaLivingWorldManager::GetLoadedSpawnerDataClass()
     return *LoadedSpawnerDataClass->ContainerPtrToValuePtr<TArray<UClass*>>(this);
 }
 
-AFortGameStateAthena*& UFortAthenaLivingWorldManager::GetCachedGameState()
+AFortGameStateAthena* UFortAthenaLivingWorldManager::GetCachedGameState()
 {
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
-    return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this);
+    if (CachedGameState)
+        return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this);
+
+    auto CachedWorld = GetCachedWorld();
+
+    return CachedWorld && *CachedWorld ? Cast<AFortGameStateAthena>((*CachedWorld)->GetGameState()) : nullptr;
+}
+
+void UFortAthenaLivingWorldManager::SetCachedGameState(AFortGameStateAthena* GameState)
+{
+    static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
+
+    if (CachedGameState)
+        *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this) = GameState;
 }
 
 FFortAthenaLivingWorldPlayerTracker* UFortAthenaLivingWorldManager::GetPlayerTracker()
