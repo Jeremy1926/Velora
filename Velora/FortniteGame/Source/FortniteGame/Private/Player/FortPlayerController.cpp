@@ -762,9 +762,16 @@ void AFortPlayerController::execDropSpecificItem(FFrame& Stack, void* const Z_Pa
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")));
 
+    static auto bHasSpawnPickups = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropSpecificItem")))->FindPropertyByName(FName(TEXT("bSpawnPickups"))) != nullptr;
+
     UFortItemDefinition* DropItemDef = nullptr;
+    uint32 bSpawnPickups = 0;
 
     Stack.StepCompiledIn(&DropItemDef);
+
+    if (bHasSpawnPickups)
+        Stack.StepCompiledIn(&bSpawnPickups);
+
     Stack.Code += !!Stack.Code;
 
     DropSpecificItem(DropItemDef);
