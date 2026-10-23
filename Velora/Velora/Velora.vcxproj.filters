@@ -1138,6 +1138,9 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Components</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaExitCraft.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
     </ClInclude>
@@ -2217,6 +2220,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaExitCraft.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicle.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>

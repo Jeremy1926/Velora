@@ -207,6 +207,8 @@ struct FGlobalActorReplicationInfo
 
     FGlobalActorReplicationEvents& GetEvents();
 
+    void SetCullDistanceSquared(float InCullDistanceSquared);
+
 private:
     const uint8* GetSettings() const;
 };
@@ -269,6 +271,8 @@ struct FConnectionReplicationActorInfo
 struct FPerConnectionActorInfoMap
 {
     FConnectionReplicationActorInfo& FindOrAdd(AActor* const& Actor);
+
+    FConnectionReplicationActorInfo* Find(AActor* const& Actor);
 
     void AddChannel(AActor* const& Actor, UActorChannel* Channel);
 

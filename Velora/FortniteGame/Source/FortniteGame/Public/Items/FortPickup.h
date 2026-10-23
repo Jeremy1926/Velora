@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Delegates/Delegate.h"
 #include "Engine/NetSerialization.h"
 #include "Containers/Array.h"
 #include "Misc/Guid.h"
@@ -83,6 +84,8 @@ class AFortPickup : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, AFortPickup*, float>& GetNotifyPickupCullDistanceChange();
 
     static AFortPickup* CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC = nullptr, UClass* OverrideClass = nullptr, AActor* Owner = nullptr, EFortPickupSourceTypeFlag SourceTypeFlags = EFortPickupSourceTypeFlag::Other, bool bRandomRotation = true, bool bPickupOnlyRelevantToOwner = false, EFortPickupSpawnSource PickupSpawnSource = EFortPickupSpawnSource::Unset);
 

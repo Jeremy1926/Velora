@@ -1278,6 +1278,18 @@ void UReplicationGraphNode_GridSpatialization2D::AddActor_Dormancy(const FNewRep
     AddActor_Dormancy(this, ActorInfo, ActorRepInfo);
 }
 
+void UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo, float OldDist)
+{
+    static auto NotifyActorCullDistChange = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_GridSpatialization2D*, AActor*, FGlobalActorReplicationInfo&, float)>(TEXT("UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x18)
+        .Get();
+
+    NotifyActorCullDistChange(this, Actor, GlobalInfo, OldDist);
+}
+
 void UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Dynamic(const FNewReplicatedActorInfo& ActorInfo)
 {
     static auto AddActorInternal_Dynamic = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_GridSpatialization2D*, const FNewReplicatedActorInfo&)>(TEXT("UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Dynamic"))

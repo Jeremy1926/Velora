@@ -12,6 +12,19 @@ UClass* ABuildingActor::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, ABuildingActor*, float>& ABuildingActor::GetNotifyBuildingNetCullDistChange()
+{
+    static auto NotifyBuildingNetCullDistChange = Anchor::Data<TMulticastDelegate<void, ABuildingActor*, float>*>(TEXT("ABuildingActor::NotifyBuildingNetCullDistChange"))
+        .Pattern("0F 57 D2 F3 0F 11 89 ? ? ? ? F3 0F 51 D1 48 8D 91 ? ? ? ? E8")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyBuildingNetCullDistChange;
+}
+
 void ABuildingActor::BeginPlay()
 {
     static auto BeginPlay = Anchor::VirtualFunction<void (*)(ABuildingActor*)>(TEXT("AActor::BeginPlay"))

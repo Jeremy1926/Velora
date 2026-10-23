@@ -7,6 +7,9 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Athena/Vehicles/FortAthenaExitCraft.h"
+#include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Building/BuildingActor.h"
 #include "Building/BuildingContainer.h"
 #include "Building/BuildingGameplayActorSpawnChip.h"
 #include "Containers/Set.h"
@@ -22,6 +25,7 @@
 #include "Containers/BitArray.h"
 #include "GameFramework/PlayerState.h"
 #include "Items/FortInventory.h"
+#include "Items/FortPickup.h"
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Athena/FortPlayerPawnAthena.h"
@@ -573,6 +577,11 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortPlayerPawn::GetNotifyPetStateChange().AddUObject(this, &UFortReplicationGraph::OnPetStateChange);
     AFortPlayerPawn::GetNotifyBalloonStateChange().AddUObject(this, &UFortReplicationGraph::OnBalloonStateChange);
     AFortPlayerPawn::GetNotifyPossessedPropStateChange().AddUObject(this, &UFortReplicationGraph::OnPossessedPropStateChange);
+    AFortPawn::GetNotifyPawnNetCullDistanceChanged().AddUObject(this, &UFortReplicationGraph::OnPawnCullDistSqChange);
+    AFortAthenaExitCraft::GetOnExitVehicleCullDistChange().AddUObject(this, &UFortReplicationGraph::OnExitVehicleCullDistChange);
+    AFortPickup::GetNotifyPickupCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnPickupCullDistanceChanged);
+    ABuildingActor::GetNotifyBuildingNetCullDistChange().AddUObject(this, &UFortReplicationGraph::OnBuildingDistSqChange);
+    AFortAthenaVehicle::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
     AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
     AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
@@ -1180,6 +1189,64 @@ void UFortReplicationGraph::OnPossessedPropStateChange(AFortPlayerPawn* Pawn, AA
         for (auto AttachedActor : AttachedActors)
             GlobalActorReplicationInfoMap.AddDependentActor(Pawn, AttachedActor);
     }
+}
+
+void UFortReplicationGraph::OnCullDistSqChange(AActor* Actor, float DistSq)
+{
+    if (!Actor || !IsActorValidForReplicationGather(Actor))
+        return;
+
+    if (GetMappingPolicy(Actor->GetClass(), Actor) < EClassRepNodeMapping::Spatialize_Static)
+        return;
+
+    auto& GlobalActorReplicationInfoMap = GetGlobalActorReplicationInfoMap();
+    const bool bWasCreated = !GlobalActorReplicationInfoMap.Find(Actor);
+    auto& GlobalInfo = GlobalActorReplicationInfoMap.Get(Actor);
+
+    if (FMath::Abs(GlobalInfo.GetCullDistanceSquared() - DistSq) <= 1.e-8f)
+        return;
+
+    const float OldDist = GlobalInfo.GetCullDistance();
+    auto GridNode = GetRootGridNode();
+
+    GlobalInfo.SetCullDistanceSquared(DistSq);
+
+    if (bWasCreated)
+        return;
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (auto ActorInfo = ConnectionManager->GetActorInfoMap().Find(Actor))
+            ActorInfo->SetCullDistanceSquared(DistSq);
+    }
+
+    GridNode->NotifyActorCullDistChange(Actor, GlobalInfo, OldDist);
+}
+
+void UFortReplicationGraph::OnPawnCullDistSqChange(AFortPawn* Pawn, float DistSq)
+{
+    OnCullDistSqChange(Pawn, DistSq);
+}
+
+void UFortReplicationGraph::OnExitVehicleCullDistChange(AFortAthenaExitCraft* Craft, float DistSq)
+{
+    OnCullDistSqChange(Craft, DistSq);
+}
+
+void UFortReplicationGraph::OnPickupCullDistanceChanged(AFortPickup* Pickup, float Dist)
+{
+    OnCullDistSqChange(Pickup, Dist);
+}
+
+void UFortReplicationGraph::OnBuildingDistSqChange(ABuildingActor* Building, float Dist)
+{
+    OnCullDistSqChange(Building, (Dist + 1000.f) * (Dist + 1000.f));
+}
+
+void UFortReplicationGraph::OnActorNetCullDistanceChange(AActor* Actor)
+{
+    if (Actor)
+        OnCullDistSqChange(Actor, Actor->GetNetCullDistanceSquared());
 }
 
 void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)

@@ -108,6 +108,14 @@ uint8* FGlobalActorReplicationInfo::GetFastSharedReplicationFunc()
     return (uint8*)GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFunc);
 }
 
+void FGlobalActorReplicationInfo::SetCullDistanceSquared(float InCullDistanceSquared)
+{
+    auto Settings = (uint8*)GetSettings();
+
+    *(float*)(Settings + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistanceSquared) : offsetof(TClassReplicationInfoLayout<FName>, CullDistanceSquared))) = InCullDistanceSquared;
+    *(float*)(Settings + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistance) : offsetof(TClassReplicationInfoLayout<FName>, CullDistance))) = FMath::Sqrt(InCullDistanceSquared);
+}
+
 FGlobalActorReplicationEvents& FGlobalActorReplicationInfo::GetEvents()
 {
     static auto DormancyFlush = Anchor::Offset(TEXT("FGlobalActorReplicationEvents::DormancyFlush"))
@@ -245,6 +253,13 @@ void FGlobalActorReplicationInfoMap::ResetActorMap()
         DestructItem((void*)&Pair);
 
     ActorMap.Reset();
+}
+
+FConnectionReplicationActorInfo* FPerConnectionActorInfoMap::Find(AActor* const& Actor)
+{
+    auto ValuePtr = ActorMap.Find(Actor);
+
+    return ValuePtr ? ValuePtr->Get() : nullptr;
 }
 
 FConnectionReplicationActorInfo& FPerConnectionActorInfoMap::FindOrAdd(AActor* const& Actor)

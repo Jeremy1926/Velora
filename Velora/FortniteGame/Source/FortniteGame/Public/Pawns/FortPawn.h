@@ -22,6 +22,8 @@ public:
 
     static TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>& GetNotifyWeaponChange();
 
+    static TMulticastDelegate<void, AFortPawn*, float>& GetNotifyPawnNetCullDistanceChanged();
+
     AFortWeapon* GetCurrentWeapon() const;
 
     AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid = FGuid());

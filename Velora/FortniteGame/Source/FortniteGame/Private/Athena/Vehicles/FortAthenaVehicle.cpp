@@ -30,6 +30,17 @@ UClass* AFortAthenaVehicle::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, AActor*>& AFortAthenaVehicle::GetNotifyNetCullDistanceChange()
+{
+    static auto NotifyNetCullDistanceChange = Anchor::Data<TMulticastDelegate<void, AActor*>*>(TEXT("AFortAthenaVehicle::NotifyNetCullDistanceChange"))
+        .FieldPattern("F3 0F 59 C0 48 8D 0D ? ? ? ? 48 8B D3 F3 0F 11 83 %o", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyNetCullDistanceChange;
+}
+
 void AFortAthenaVehicle::InitializeServerImplementations()
 {
     static auto ServerUpdatePhysicsParams = (UFunction*)StaticFindObject(nullptr, nullptr, GetServerFunctionPath(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPhysicsPawn:ServerMove")) ? TEXT("ServerMove") : TEXT("ServerUpdatePhysicsParams")));

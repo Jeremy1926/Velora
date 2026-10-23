@@ -10,13 +10,16 @@
 #include "Templates/SubclassOf.h"
 #include "UObject/WeakObjectPtr.h"
 
+class ABuildingActor;
 class ABuildingContainer;
 class ABuildingGameplayActor;
 class ABuildingGameplayActorSpawnChip;
+class AFortAthenaExitCraft;
 class AFortGameModeAthena;
 class AFortInventory;
 class AFortLiveSpectatorController;
 class AFortPawn;
+class AFortPickup;
 class AFortPlayerPawn;
 class AFortPlayerPetRepState;
 class AFortPlayerState;
@@ -158,6 +161,18 @@ public:
     void OnBalloonStateChange(AFortPlayerPawn* Pawn, ABuildingGameplayActor* NewBalloon, ABuildingGameplayActor* OldBalloon);
 
     void OnPossessedPropStateChange(AFortPlayerPawn* Pawn, AActor* NewPossessedProp, AActor* OldPossessedProp);
+
+    void OnCullDistSqChange(AActor* Actor, float DistSq);
+
+    void OnPawnCullDistSqChange(AFortPawn* Pawn, float DistSq);
+
+    void OnExitVehicleCullDistChange(AFortAthenaExitCraft* Craft, float DistSq);
+
+    void OnPickupCullDistanceChanged(AFortPickup* Pickup, float Dist);
+
+    void OnBuildingDistSqChange(ABuildingActor* Building, float Dist);
+
+    void OnActorNetCullDistanceChange(AActor* Actor);
 
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);

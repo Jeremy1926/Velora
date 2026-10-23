@@ -29,6 +29,17 @@ TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>& AFortPawn::Get
     return *NotifyWeaponChange;
 }
 
+TMulticastDelegate<void, AFortPawn*, float>& AFortPawn::GetNotifyPawnNetCullDistanceChanged()
+{
+    static auto NotifyPawnNetCullDistanceChanged = Anchor::Data<TMulticastDelegate<void, AFortPawn*, float>*>(TEXT("AFortPawn::NotifyPawnNetCullDistanceChanged"))
+        .FieldPattern("F3 0F 11 83 %o F3 0F 10 93 %o 48 8D 0D", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPawnNetCullDistanceChanged;
+}
+
 AFortWeapon* AFortPawn::GetCurrentWeapon() const
 {
     static auto CurrentWeapon = GetClass()->FindPropertyByName(FName(TEXT("CurrentWeapon")));

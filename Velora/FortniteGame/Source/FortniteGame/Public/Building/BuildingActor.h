@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Delegates/Delegate.h"
 #include "Engine/NetSerialization.h"
 #include "GameplayTagContainer.h"
 
@@ -62,6 +63,8 @@ class ABuildingActor : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, ABuildingActor*, float>& GetNotifyBuildingNetCullDistChange();
 
     void BeginPlay();
 

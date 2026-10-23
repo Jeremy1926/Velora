@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Delegates/Delegate.h"
 #include "Containers/Array.h"
 #include "Math/Vector.h"
 #include "Math/Quat.h"
@@ -44,6 +45,8 @@ class AFortAthenaVehicle : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, AActor*>& GetNotifyNetCullDistanceChange();
 
     static void InitializeServerImplementations();
 

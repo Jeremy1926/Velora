@@ -33,6 +33,21 @@ UClass* AFortPickup::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, AFortPickup*, float>& AFortPickup::GetNotifyPickupCullDistanceChange()
+{
+    static auto NotifyPickupCullDistanceChange = Anchor::Data<TMulticastDelegate<void, AFortPickup*, float>*>(TEXT("AFortPickup::NotifyPickupCullDistanceChange"))
+        .Pattern("48 8D 8B ? ? ? ? 45 33 C0 0F 57 C9 E8 ? ? ? ? 0F 2F 05 ? ? ? ? 0F 87")
+        .Find("jnbe 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPickupCullDistanceChange;
+}
+
 AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner, EFortPickupSourceTypeFlag SourceTypeFlags, bool bRandomRotation, bool bPickupOnlyRelevantToOwner, EFortPickupSpawnSource PickupSpawnSource)
 {
     static auto bArguments = Anchor::Exists()

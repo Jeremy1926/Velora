@@ -317,6 +317,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPoiVolume.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaExitCraft.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortOctopusVehicle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicleSpawner.h" />
@@ -698,6 +699,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiVolume.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaExitCraft.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortOctopusVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaVehicleSpawner.cpp" />
