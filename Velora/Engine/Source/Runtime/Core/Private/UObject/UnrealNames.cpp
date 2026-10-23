@@ -50,6 +50,8 @@ FName::FName(EName N)
 
 FName::FName(const WIDECHAR* Name, EFindName FindType)
 {
+    CompositeComparisonValue = 0;
+
     static auto MakeDetectNumber = Anchor::Optional<FName* (*)(FName*, const void*, EFindName)>(TEXT("FNameHelper::MakeDetectNumber"))
         .String(TEXT("OnlineSubsystemUtils"), "lea rcx, [0x*]; lea rdx, [rsp+0x*]; mov [rsp+0x20], rcx; call 0x*; mov [rsp+0x28], eax")
         .Find("mov r8d, 0x1; movdqa [*], xmm0; call 0x*")
@@ -154,7 +156,7 @@ uint32 GetTypeHash(const FName N)
     const uint32 Block = N.ComparisonIndex >> 16;
     const uint32 Offset = N.ComparisonIndex & 0xFFFF;
 
-    return (Block << 19) + Block + (Offset << 16) + Offset + (Offset >> 4) + N.Number;
+    return (Block << 19) + Block + (Offset << 16) + Offset + (Offset >> 4) + (FName::IsOutlineNumber() ? 0 : N.Number);
 }
 
 FString FName::ToString() const

@@ -26,6 +26,8 @@ class FField
 public:
     static FFieldClass* StaticClass();
 
+    static int32 GetFieldSize();
+
     virtual ~FField();
 
     FFieldVariant Owner;

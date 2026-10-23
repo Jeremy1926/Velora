@@ -53,7 +53,7 @@ public:
 protected:
     FORCEINLINE const UProperty* GetProperty() const
     {
-        return FField::StaticClass() ? (const UProperty*)((const uint8*)this + sizeof(FField) - sizeof(UField)) : this;
+        return FField::StaticClass() ? (const UProperty*)((const uint8*)this + FField::GetFieldSize() - sizeof(UField)) : this;
     }
 
 private:

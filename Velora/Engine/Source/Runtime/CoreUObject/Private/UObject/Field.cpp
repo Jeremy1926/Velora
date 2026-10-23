@@ -15,3 +15,18 @@ FFieldClass* FField::StaticClass()
 
     return StaticClass ? StaticClass() : nullptr;
 }
+
+int32 FField::GetFieldSize()
+{
+    struct FOutlineNumberField
+    {
+        void* VTable;
+        FFieldClass* ClassPrivate;
+        FFieldVariant Owner;
+        FField* Next;
+        NAME_INDEX NamePrivate;
+        EObjectFlags FlagsPrivate;
+    };
+
+    return FName::IsOutlineNumber() ? (int32)sizeof(FOutlineNumberField) : (int32)sizeof(FField);
+}

@@ -17,6 +17,9 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .If(FField::StaticClass())
         .Pattern("48 8B 41 70 EB ? 48 39 50 28 74 ? 48 8B 40 58 48 85 C0 75 ? C3")
         .Or()
+        .If(FField::StaticClass())
+        .Pattern("48 8B 41 70 48 85 C0 74 ? 39 50 28 74 ? 48 8B 40 50 EB ? C3")
+        .Or()
         .If(!FField::StaticClass() && Version.GetMajor() <= 4 && Version.GetMinor() >= 22)
         .Pattern("48 8B 41 68 48 89 54 24 10 48 85 C0 74 ? 44 8B 54 24 14")
         .Or()
@@ -87,7 +90,7 @@ int64 UEnum::GetValueByName(FName InName) const
 {
     for (auto& Kvp : Names)
     {
-        if (Kvp.Key == InName)
+        if (TGameLayout<FName>::Load(&Kvp.Key) == InName)
             return Kvp.Value;
     }
 

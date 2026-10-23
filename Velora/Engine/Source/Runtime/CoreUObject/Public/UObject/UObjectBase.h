@@ -29,7 +29,7 @@ public:
 
     FORCEINLINE FName GetFName() const
     {
-        return NamePrivate;
+        return TGameLayout<FName>::Load(&NamePrivate);
     }
 
     FORCEINLINE EObjectFlags GetFlags() const

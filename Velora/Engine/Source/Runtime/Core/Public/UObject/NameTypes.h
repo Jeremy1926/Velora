@@ -19,7 +19,7 @@ class FName
 public:
     FORCEINLINE bool operator==(const FName& Other) const
     {
-        return CompositeComparisonValue == Other.CompositeComparisonValue;
+        return IsOutlineNumber() ? ComparisonIndex == Other.ComparisonIndex : CompositeComparisonValue == Other.CompositeComparisonValue;
     }
 
     FORCEINLINE bool operator!=(const FName& Other) const

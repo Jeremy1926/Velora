@@ -28,6 +28,25 @@ public:
         return Object == Other.Object && FunctionName == Other.FunctionName;
     }
 
+    struct FOutlineNumberLayout
+    {
+        TWeakPtr Object;
+        NAME_INDEX FunctionName;
+
+        bool operator==(const FOutlineNumberLayout& Other) const
+        {
+            return Object == Other.Object && FunctionName == Other.FunctionName;
+        }
+    };
+
+    FOutlineNumberLayout ToOutlineNumberLayout() const
+    {
+        FOutlineNumberLayout Layout{ Object, 0 };
+        TGameLayout<FName>::Store(&Layout.FunctionName, FunctionName);
+
+        return Layout;
+    }
+
 protected:
     TWeakPtr Object;
 
@@ -40,12 +59,18 @@ class TMulticastScriptDelegate
 public:
     void AddUnique(const TScriptDelegate<TWeakPtr>& InDelegate)
     {
-        InvocationList.AddUnique(InDelegate);
+        if (FName::IsOutlineNumber())
+            ((TArray<typename TScriptDelegate<TWeakPtr>::FOutlineNumberLayout>&)InvocationList).AddUnique(InDelegate.ToOutlineNumberLayout());
+        else
+            InvocationList.AddUnique(InDelegate);
     }
 
     void Remove(const TScriptDelegate<TWeakPtr>& InDelegate)
     {
-        InvocationList.RemoveSingle(InDelegate);
+        if (FName::IsOutlineNumber())
+            ((TArray<typename TScriptDelegate<TWeakPtr>::FOutlineNumberLayout>&)InvocationList).RemoveSingle(InDelegate.ToOutlineNumberLayout());
+        else
+            InvocationList.RemoveSingle(InDelegate);
     }
 
     template<class UObjectTemplate>
