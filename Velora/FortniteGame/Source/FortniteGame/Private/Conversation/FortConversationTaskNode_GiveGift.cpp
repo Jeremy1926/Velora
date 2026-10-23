@@ -81,30 +81,27 @@ void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipan
         if (GiftWeight <= 0.0f)
             continue;
 
-        for (auto& DefinitionPair : GiftTypeDefinitions->GetGiftDefinitionsByGiftTag())
+        auto Definition = GiftTypeDefinitions->GetGiftDefinitionsByGiftTag().Find(RowGiftTag);
+
+        if (!Definition)
+            continue;
+
+        bool bAllMet = true;
+        bool bAnyMet = false;
+
+        for (auto Requirement : Definition->GetRequirements())
         {
-            if (!(DefinitionPair.Key == RowGiftTag))
-                continue;
+            const bool bMet = Requirement && Requirement->IsRequirementMet(PlayerController);
 
-            const auto& Definition = DefinitionPair.Value;
-            bool bAllMet = true;
-            bool bAnyMet = false;
-
-            for (auto Requirement : Definition.Requirements)
-            {
-                const bool bMet = Requirement && Requirement->IsRequirementMet(PlayerController);
-
-                bAllMet &= bMet;
-                bAnyMet |= bMet;
-            }
-
-            if (Definition.Requirements.Num() && !(Definition.RequirementMatchPolicy ? bAnyMet : bAllMet))
-                break;
-
-            Candidates.push_back({ GiftWeight, &Definition });
-            TotalWeight += GiftWeight;
-            break;
+            bAllMet &= bMet;
+            bAnyMet |= bMet;
         }
+
+        if (Definition->GetRequirements().Num() && !(Definition->GetRequirementMatchPolicy() ? bAnyMet : bAllMet))
+            continue;
+
+        Candidates.push_back({ GiftWeight, Definition });
+        TotalWeight += GiftWeight;
     }
 
     if (Candidates.empty())
@@ -124,7 +121,7 @@ void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipan
         }
     }
 
-    for (auto Effect : Picked->Effects)
+    for (auto Effect : Picked->GetEffects())
     {
         if (!Effect)
             continue;
