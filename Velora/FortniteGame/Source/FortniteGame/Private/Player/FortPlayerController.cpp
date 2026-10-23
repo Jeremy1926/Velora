@@ -1479,6 +1479,10 @@ int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData B
     static auto PayBuildableClassPlacementCost = Anchor::VirtualFunction<int32 (*)(AFortPlayerController*, FBuildingClassData)>(TEXT("AFortPlayerController::PayBuildableClassPlacementCost"))
         .String(TEXT("Failed to remove item %s during pay building costs, item duplicated!"))
         .VirtualLoading(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+        .Or()
+        .String(TEXT("Failed to remove item %s during pay building costs, item duplicated!"))
+        .Target()
+        .InVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), TEXT("AFortPlayerController::PayBuildableClassPlacementCost"))
         .Get();
 
     return PayBuildableClassPlacementCost(this, BuildingClassData);
