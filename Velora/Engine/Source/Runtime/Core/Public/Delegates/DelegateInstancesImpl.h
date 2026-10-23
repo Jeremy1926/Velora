@@ -5,11 +5,11 @@
 #include "Templates/UnrealTemplate.h"
 #include "UObject/WeakObjectPtr.h"
 
-template<bool bConst, class UserClass, typename FuncType>
+template<bool bConst, class UserClass, typename FuncType, bool bDestructorFirst>
 class TBaseUObjectMethodDelegateInstance;
 
-template<class UserClass, typename... ParamTypes>
-class TBaseUObjectMethodDelegateInstance<false, UserClass, void(ParamTypes...)> : public IBaseDelegateInstance<void(ParamTypes...)>
+template<class UserClass, bool bDestructorFirst, typename... ParamTypes>
+class TBaseUObjectMethodDelegateInstance<false, UserClass, void(ParamTypes...), bDestructorFirst> : public IBaseDelegateInstance<void(ParamTypes...), bDestructorFirst>
 {
 public:
     typedef void (UserClass::*FMethodPtr)(ParamTypes...);

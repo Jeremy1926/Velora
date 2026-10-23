@@ -11,8 +11,6 @@ template<typename... ParamTypes>
 class TDelegate<void(ParamTypes...)> : public FDelegateBase
 {
 public:
-    typedef IBaseDelegateInstance<void(ParamTypes...)> TDelegateInstanceInterface;
-
     TDelegate()
     {
     }
@@ -26,8 +24,8 @@ public:
     {
         if (&Other != this)
         {
-            if (auto OtherInstance = (TDelegateInstanceInterface*)Other.GetDelegateInstanceProtected())
-                OtherInstance->CreateCopy(*this);
+            if (auto OtherInstance = Other.GetDelegateInstanceProtected())
+                IDelegateInstance::WithLayout(OtherInstance, [&](auto, auto bDestructorFirst) { ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)OtherInstance)->CreateCopy(*this); });
             else
                 Unbind();
         }
@@ -40,7 +38,7 @@ public:
     {
         TDelegate Result;
 
-        new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, void(ParamTypes...)>(InUserObject, InFunc);
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, void(ParamTypes...), decltype(bDestructorFirst)::value>(InUserObject, InFunc); });
 
         return Result;
     }
@@ -49,14 +47,14 @@ public:
     {
         auto Instance = GetDelegateInstanceProtected();
 
-        return Instance && Instance->IsSafeToExecute();
+        return Instance && IDelegateInstance::IsSafeToExecute(Instance);
     }
 
     bool ExecuteIfBound(ParamTypes... Params) const
     {
-        auto Instance = (TDelegateInstanceInterface*)GetDelegateInstanceProtected();
+        auto Instance = GetDelegateInstanceProtected();
 
-        return Instance && Instance->ExecuteIfSafe(Forward<ParamTypes>(Params)...);
+        return Instance && IDelegateInstance::WithLayout(Instance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)Instance)->ExecuteIfSafe(Forward<ParamTypes>(Params)...); });
     }
 };
 
@@ -85,9 +83,9 @@ public:
 
         for (int32 InvocationListIndex = LocalInvocationList.Num() - 1; InvocationListIndex >= 0; --InvocationListIndex)
         {
-            auto DelegateInstanceInterface = (typename FDelegate::TDelegateInstanceInterface*)this->GetDelegateInstanceProtectedHelper(LocalInvocationList[InvocationListIndex]);
+            auto DelegateInstance = this->GetDelegateInstanceProtectedHelper(LocalInvocationList[InvocationListIndex]);
 
-            if (!DelegateInstanceInterface || !DelegateInstanceInterface->ExecuteIfSafe(Params...))
+            if (!DelegateInstance || !IDelegateInstance::WithLayout(DelegateInstance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)DelegateInstance)->ExecuteIfSafe(Params...); }))
                 NeedsCompaction = true;
         }
 

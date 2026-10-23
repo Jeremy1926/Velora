@@ -33,16 +33,16 @@ public:
     {
         if (auto Instance = GetDelegateInstanceProtected())
         {
-            Instance->~IDelegateInstance();
+            IDelegateInstance::Destroy(Instance);
             DelegateAllocator.ResizeAllocation(0, 0, sizeof(AlignedInlineDelegateType));
             DelegateSize = 0;
         }
     }
 
 protected:
-    IDelegateInstance* GetDelegateInstanceProtected() const
+    void* GetDelegateInstanceProtected() const
     {
-        return DelegateSize ? (IDelegateInstance*)DelegateAllocator.GetAllocation() : nullptr;
+        return DelegateSize ? DelegateAllocator.GetAllocation() : nullptr;
     }
 
 private:
@@ -54,7 +54,7 @@ private:
     void* Allocate(int32 Size)
     {
         if (auto CurrentInstance = GetDelegateInstanceProtected())
-            CurrentInstance->~IDelegateInstance();
+            IDelegateInstance::Destroy(CurrentInstance);
 
         const int32 NewDelegateSize = FMath::DivideAndRoundUp(Size, (int32)sizeof(AlignedInlineDelegateType));
 

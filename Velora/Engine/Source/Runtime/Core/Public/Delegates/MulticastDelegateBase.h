@@ -27,7 +27,7 @@ protected:
         {
             CompactInvocationList(true);
 
-            Result = DelegateInstance->GetHandle();
+            Result = IDelegateInstance::GetHandle(DelegateInstance);
             new (InvocationList) FDelegateBase(MoveTemp(NewDelegateBaseRef));
         }
 
@@ -46,7 +46,7 @@ protected:
         {
             auto DelegateInstance = InvocationList[Index].GetDelegateInstanceProtected();
 
-            if (!DelegateInstance || DelegateInstance->IsCompactable())
+            if (!DelegateInstance || IDelegateInstance::IsCompactable(DelegateInstance))
                 InvocationList.RemoveAtSwap(Index, 1, false);
             else
                 Index++;
@@ -70,7 +70,7 @@ protected:
         --InvocationListLockCount;
     }
 
-    static inline IDelegateInstance* GetDelegateInstanceProtectedHelper(const FDelegateBase& Base)
+    static inline void* GetDelegateInstanceProtectedHelper(const FDelegateBase& Base)
     {
         return Base.GetDelegateInstanceProtected();
     }

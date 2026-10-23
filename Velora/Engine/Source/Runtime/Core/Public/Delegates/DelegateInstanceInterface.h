@@ -4,11 +4,11 @@
 
 class FDelegateBase;
 
-template<typename FuncType>
+template<typename FuncType, bool bDestructorFirst>
 struct IBaseDelegateInstance;
 
-template<typename... ParamTypes>
-struct IBaseDelegateInstance<void(ParamTypes...)> : public IDelegateInstance
+template<bool bDestructorFirst, typename... ParamTypes>
+struct IBaseDelegateInstance<void(ParamTypes...), bDestructorFirst> : public TDelegateInstanceLayout<bDestructorFirst>
 {
     virtual void CreateCopy(FDelegateBase& Base) = 0;
 
