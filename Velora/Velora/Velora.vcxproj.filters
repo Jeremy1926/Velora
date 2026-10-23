@@ -1855,18 +1855,6 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_FindActorByClass.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestManager.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Quests</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_HasNoActiveQuests.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_SlottedQuestNotCompletedThisMatch.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_AllSlottedQuestPrerequisitesCompleted.h">
-      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -2813,18 +2801,6 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_FindActorByClass.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestManager.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private\Quests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_HasNoActiveQuests.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_SlottedQuestNotCompletedThisMatch.cpp">
-      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_AllSlottedQuestPrerequisitesCompleted.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1552,16 +1552,6 @@ FMulticastScriptDelegate& AFortPlayerController::GetOnMcpProfilesInitializedEven
     return *OnMcpProfilesInitializedEvent->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
-UFortQuestManager* AFortPlayerController::GetQuestManager(ESubGame SubGame) const
-{
-    static auto GetQuestManager = Anchor::VirtualFunction<UFortQuestManager* (*)(const AFortPlayerController*, ESubGame)>(TEXT("AFortPlayerController::GetQuestManager"))
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:GetQuestManager"))
-        .Find("call [*+0x*]")
-        .Get();
-
-    return GetQuestManager(this, SubGame);
-}
-
 bool AFortPlayerController::IsPlayerAlive()
 {
     static auto IsPlayerAlive = Anchor::VirtualFunction<bool (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::IsPlayerAlive"))

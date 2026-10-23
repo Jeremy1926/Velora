@@ -562,10 +562,6 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_HireNPC.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_FindActorByClass.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestManager.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_HasNoActiveQuests.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_SlottedQuestNotCompletedThisMatch.h" />
-    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_AllSlottedQuestPrerequisitesCompleted.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -905,10 +901,6 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_HireNPC.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DuelNPC.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_FindActorByClass.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestManager.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_HasNoActiveQuests.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_SlottedQuestNotCompletedThisMatch.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_AllSlottedQuestPrerequisitesCompleted.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

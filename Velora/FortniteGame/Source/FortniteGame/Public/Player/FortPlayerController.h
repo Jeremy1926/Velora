@@ -16,7 +16,6 @@ class AFortQuickBars;
 class UFortItem;
 class UFortItemDefinition;
 class UFortMcpProfile;
-class UFortQuestManager;
 class UFortMontageItemDefinitionBase;
 class UFortRegisteredPlayerInfo;
 class UFortWorldItem;
@@ -112,8 +111,6 @@ public:
     UFortMcpProfile* GetAthenaProfile() const;
 
     FMulticastScriptDelegate& GetOnMcpProfilesInitializedEvent();
-
-    UFortQuestManager* GetQuestManager(ESubGame SubGame) const;
 
     bool IsPlayerAlive();
 
