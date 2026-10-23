@@ -3,6 +3,9 @@
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
+#include "Pawns/FortPawn.h"
+#include "UObject/UObjectArray.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "Athena/FortGameModeAthena.h"
@@ -180,6 +183,64 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         {
             if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
                 LivingWorldManager->TickComponent(DeltaSeconds);
+        }
+
+        static float DiagStormTime = 0.0f;
+        static int32 DiagStormPhase = -1;
+
+        if (FEngineVersion::Current().GetChangelist() == 18335626 && GameMode && Cast<AFortGameStateAthena>(World->GetGameState()) && World->GetTimeSeconds() >= DiagStormTime)
+        {
+            DiagStormTime = World->GetTimeSeconds() + 2.0f;
+
+            static auto DiagMutatorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayMutator"));
+            static auto DiagStormDamagePaused = (UBoolProperty*)GameMode->GetClass()->FindPropertyByName(FName(TEXT("bStormDamagePaused")));
+            static auto DiagIsInsideSafeZone = (UBoolProperty*)((UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena")))->FindPropertyByName(FName(TEXT("bIsInsideSafeZone")));
+            auto DiagGetSafeZoneMaxZ = (float (*)(AFortGameModeAthena*))(Anchor::Base() + 0x5F1C31C);
+            auto DiagIsInCurrentSafeZoneInternal = (bool (*)(AFortGameModeAthena*, const float*, float))(Anchor::Base() + 0x5F2202C);
+            auto DiagGetPawnTickSubsystem = (const uint8* (*)(UWorld*))(Anchor::Base() + 0x1057AEC);
+            auto DiagGameState = Cast<AFortGameStateAthena>(World->GetGameState());
+            auto DiagSubsystem = DiagGetPawnTickSubsystem(World);
+            auto DiagPawns = DiagSubsystem ? *(AActor* const* const*)(DiagSubsystem + 0x58) : nullptr;
+            const int32 DiagPawnCount = DiagSubsystem ? *(const int32*)(DiagSubsystem + 0x60) : -1;
+            const float DiagMaxZ = DiagGetSafeZoneMaxZ(GameMode);
+            const int32 DiagPhase = (int32)DiagGameState->GetGamePhase();
+
+            UE_LOG(LogVelora, Display, TEXT("diag storm phase %d paused %d maxz %f subsystem %p pawns %d indicator %p"), DiagPhase, DiagStormDamagePaused ? (int32)DiagStormDamagePaused->GetPropertyValue_InContainer(GameMode) : -1, DiagMaxZ, DiagSubsystem, DiagPawnCount, GameMode->GetSafeZoneIndicator());
+
+            if (DiagPhase != DiagStormPhase)
+            {
+                DiagStormPhase = DiagPhase;
+
+                for (int32 Index = 0; DiagMutatorClass && Index < GUObjectArray.GetObjectArrayNum(); Index++)
+                {
+                    auto ObjectItem = GUObjectArray.IndexToObject(Index);
+                    auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+                    if (Object && Object->IsA(DiagMutatorClass) && wcsncmp(*GetNameSafe(Object), TEXT("Default__"), 9) != 0)
+                        UE_LOG(LogVelora, Display, TEXT("diag storm mutator %s %s"), *GetNameSafe(Object), *GetNameSafe(Object->GetClass()));
+                }
+            }
+
+            for (auto DiagPlayerState : World->GetGameState()->GetPlayerArray())
+            {
+                auto DiagController = DiagPlayerState ? Cast<APlayerController>(DiagPlayerState->GetOwner()) : nullptr;
+                auto DiagPawn = DiagController ? Cast<AFortPawn>(DiagController->GetPawn()) : nullptr;
+
+                if (!DiagPawn)
+                    continue;
+
+                bool bDiagRegistered = false;
+
+                for (int32 Index = 0; DiagPawns && Index < DiagPawnCount; Index++)
+                    bDiagRegistered |= DiagPawns[Index] == DiagPawn;
+
+                const FVector DiagLocation = DiagPawn->GetActorLocation();
+                const float DiagPoint[3] = { (float)DiagLocation.X, (float)DiagLocation.Y, (float)DiagLocation.Z };
+                auto DiagHealthSet = (const uint8*)DiagPawn->GetHealthSet();
+                static auto DiagHealth = DiagHealthSet ? ((UObject*)DiagHealthSet)->GetClass()->FindPropertyByName(FName(TEXT("Health"))) : nullptr;
+
+                UE_LOG(LogVelora, Display, TEXT("diag storm pawn %s z %f inside check %d inside flag %d registered %d health %f"), *GetNameSafe(DiagPawn), DiagPoint[2], (int32)DiagIsInCurrentSafeZoneInternal(GameMode, DiagPoint, DiagMaxZ), DiagIsInsideSafeZone ? (int32)DiagIsInsideSafeZone->GetPropertyValue_InContainer(DiagPawn) : -1, (int32)bDiagRegistered, DiagHealthSet && DiagHealth ? *(const float*)(DiagHealthSet + DiagHealth->GetOffset_ForInternal() + 0xC) : -1.0f);
+            }
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
