@@ -257,6 +257,27 @@ void AFortAthenaAIBotController::InitializeSkills(const float* InSkill, const TA
     InitializeSkills(this, InSkill, InSkillSets);
 }
 
+void AFortAthenaAIBotController::SetVehicleSkillSets(const TArray<UClass*>& InVehicleSkillSetClasses)
+{
+    static auto BotSkillSetClasses = GetClass()->FindPropertyByName(FName(TEXT("BotSkillSetClasses")));
+
+    auto SkillSetClasses = BotSkillSetClasses->ContainerPtrToValuePtr<TArray<UClass*>>(this);
+
+    SkillSetClasses[2] = InVehicleSkillSetClasses;
+    SkillSetClasses[1] = SkillSetClasses[0];
+}
+
+void AFortAthenaAIBotController::SetHaveInfiniteFuelOnVehicle(bool bInSetInfiniteFuel)
+{
+    static auto bNeutralBecomeHostileOnBump = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNeutralBecomeHostileOnBump")));
+    static auto LastFlag = bNeutralBecomeHostileOnBump ? bNeutralBecomeHostileOnBump : (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsAnAthenaGameParticipant")));
+
+    auto Flags = LastFlag->ContainerPtrToValuePtr<uint8>(this) + LastFlag->GetByteOffset();
+    const uint8 Mask = LastFlag->GetFieldMask() << 1;
+
+    *Flags = (*Flags & ~Mask) | (bInSetInfiniteFuel ? Mask : 0);
+}
+
 bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported)
 {
     static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&, bool&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))

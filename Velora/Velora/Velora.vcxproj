@@ -505,6 +505,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\SparseDelegate.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_SkillsetBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotSkillset.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_Vehicle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventoryOwnerInterface.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameFeatureData.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameFeaturePluginManager.h" />
@@ -847,6 +848,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\SparseDelegate.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_SkillsetBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotSkillset.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_Vehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventoryOwnerInterface.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameFeatureData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameFeaturePluginManager.cpp" />

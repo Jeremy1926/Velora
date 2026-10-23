@@ -1663,6 +1663,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotSkillset.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_Vehicle.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortInventoryOwnerInterface.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
@@ -2618,6 +2621,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotSkillset.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_Vehicle.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventoryOwnerInterface.cpp">
