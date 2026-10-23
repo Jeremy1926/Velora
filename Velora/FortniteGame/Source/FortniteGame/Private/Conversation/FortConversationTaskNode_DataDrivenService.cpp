@@ -141,14 +141,14 @@ UObject* UFortConversationTaskNode_DataDrivenService::GetServiceBriefConfigColle
 {
     static auto ServiceBriefConfigCollection = StaticClass()->FindPropertyByName(FName(TEXT("ServiceBriefConfigCollection")));
 
-    return *ServiceBriefConfigCollection->ContainerPtrToValuePtr<UObject*>(this);
+    return ServiceBriefConfigCollection ? *ServiceBriefConfigCollection->ContainerPtrToValuePtr<UObject*>(this) : nullptr;
 }
 
 FName UFortConversationTaskNode_DataDrivenService::GetServiceBriefCollectionKeyOveride() const
 {
     static auto ServiceBriefCollectionKeyOveride = StaticClass()->FindPropertyByName(FName(TEXT("ServiceBriefCollectionKeyOveride")));
 
-    return *ServiceBriefCollectionKeyOveride->ContainerPtrToValuePtr<FName>(this);
+    return ServiceBriefCollectionKeyOveride ? *ServiceBriefCollectionKeyOveride->ContainerPtrToValuePtr<FName>(this) : NAME_None;
 }
 
 void UFortConversationTaskNode_DataDrivenService::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
