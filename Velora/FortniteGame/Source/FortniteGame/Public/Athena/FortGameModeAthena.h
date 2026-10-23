@@ -42,6 +42,8 @@ public:
 
     void OnGivenMatchAssignment(const TMap<FString, FString>& MatchOptions);
 
+    void SetStormDamagePaused(bool bPause);
+
     void OnPlaylistDataLoaded();
 
     void OverrideAISettings(UAthenaAISettings* InAISettings);
