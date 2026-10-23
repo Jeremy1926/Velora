@@ -212,3 +212,34 @@ void UNetConnection::FlushDormancy(AActor* Actor)
 
     FlushDormancy(this, Actor);
 }
+
+UChildConnection* UNetConnection::GetUChildConnection()
+{
+    static auto GetUChildConnection = Anchor::VirtualFunction<UChildConnection* (*)(UNetConnection*)>(TEXT("UNetConnection::GetUChildConnection"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetUChildConnection(this);
+}
+
+UReplicationConnectionDriver*& UNetConnection::GetReplicationConnectionDriver()
+{
+    static auto ReplicationConnectionDriver = Anchor::Offset(TEXT("UNetConnection::ReplicationConnectionDriver"))
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .CallSite()
+        .Find("call 0x*")
+        .Target()
+        .Find("jnz 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rcx+0x*]")
+        .Disp();
+
+    return *(UReplicationConnectionDriver**)((uint8*)this + ReplicationConnectionDriver);
+}

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Engine/Level.h"
+#include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -40,4 +41,14 @@ bool ULevel::IsAssociatingLevel() const
 bool ULevel::HasVisibilityChangeRequestPending() const
 {
     return (GetOwningWorld() && (this == GetOwningWorld()->GetCurrentLevelPendingVisibility() || this == GetOwningWorld()->GetCurrentLevelPendingInvisibility()));
+}
+
+bool ULevel::IsNetActor(const AActor* Actor)
+{
+    if (!Actor)
+        return false;
+
+    const auto NetRole = !Actor->IsNetMode(NM_Client) ? Actor->GetRemoteRole() : Actor->GetLocalRole();
+
+    return NetRole != ROLE_None;
 }

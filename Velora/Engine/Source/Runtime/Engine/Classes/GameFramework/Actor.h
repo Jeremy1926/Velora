@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UObject/Object.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Engine/EngineTypes.h"
 #include "Components/SceneComponent.h"
 #include "Math/Vector.h"
@@ -29,6 +30,8 @@ public:
     bool IsNetStartupActor() const;
 
     ENetRole GetRemoteRole() const;
+
+    ENetRole GetLocalRole() const;
 
     bool HasAuthority() const;
 
@@ -59,6 +62,12 @@ public:
     void SetNetTag(int32 InNetTag);
 
     FName GetNetDriverName() const;
+
+    UNetDriver* GetNetDriver() const;
+
+    ENetMode InternalGetNetMode() const;
+
+    bool IsNetMode(ENetMode Mode) const;
 
     USceneComponent* GetRootComponent() const;
 

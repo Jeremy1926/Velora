@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "GameFramework/Actor.h"
+#include "Engine/Engine.h"
+#include "Engine/NetDriver.h"
+#include "Engine/World.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -37,6 +40,13 @@ ENetRole AActor::GetRemoteRole() const
     static auto RemoteRole = GetClass()->FindPropertyByName(FName(TEXT("RemoteRole")));
 
     return (ENetRole)*RemoteRole->ContainerPtrToValuePtr<uint8>(this);
+}
+
+ENetRole AActor::GetLocalRole() const
+{
+    static auto Role = GetClass()->FindPropertyByName(FName(TEXT("Role")));
+
+    return (ENetRole)*Role->ContainerPtrToValuePtr<uint8>(this);
 }
 
 bool AActor::HasAuthority() const
@@ -218,6 +228,37 @@ FName AActor::GetNetDriverName() const
     static auto NetDriverName = GetClass()->FindPropertyByName(FName(TEXT("NetDriverName")));
 
     return *NetDriverName->ContainerPtrToValuePtr<FName>(this);
+}
+
+UNetDriver* AActor::GetNetDriver() const
+{
+    auto World = GetWorld();
+
+    if (GetNetDriverName() == NAME_GameNetDriver)
+        return World ? World->GetNetDriver() : nullptr;
+
+    return GEngine->FindNamedNetDriver(World, GetNetDriverName());
+}
+
+ENetMode AActor::InternalGetNetMode() const
+{
+    if (auto NetDriver = GetNetDriver())
+        return NetDriver->GetNetMode();
+
+    auto World = GetWorld();
+
+    if (World && World->GetDemoNetDriver())
+        return World->GetDemoNetDriver()->GetNetMode();
+
+    return NM_Standalone;
+}
+
+bool AActor::IsNetMode(ENetMode Mode) const
+{
+    if (Mode == NM_DedicatedServer)
+        return false;
+
+    return InternalGetNetMode() == Mode;
 }
 
 USceneComponent* AActor::GetRootComponent() const

@@ -95,6 +95,13 @@ UNetDriver* UWorld::GetNetDriver() const
     return *NetDriver->ContainerPtrToValuePtr<UNetDriver*>(this);
 }
 
+UNetDriver* UWorld::GetDemoNetDriver() const
+{
+    static auto DemoNetDriver = GetClass()->FindPropertyByName(FName(TEXT("DemoNetDriver")));
+
+    return *DemoNetDriver->ContainerPtrToValuePtr<UNetDriver*>(this);
+}
+
 ENetMode UWorld::InternalGetNetMode() const
 {
     DETOUR(UWorld, InternalGetNetMode, Anchor::Hook()
@@ -240,4 +247,23 @@ bool UWorld::Listen(FURL& InURL)
     SetNextSwitchCountdown(GetNetDriver()->GetServerTravelPause());
 
     return true;
+}
+
+bool UWorld::AreActorsInitialized() const
+{
+    static auto AreActorsInitialized = Anchor::Function<bool (*)(const UWorld*)>(TEXT("UWorld::AreActorsInitialized"))
+        .Pattern("33 C0 38 81 ? ? 00 00 7D ? 48 8B 49 30 48 85 C9 74 ? 39 81 ? ? 00 00 74 ? B0 01 C3")
+        .Get();
+
+    return AreActorsInitialized(this);
+}
+
+UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
+{
+    static auto OnActorsInitialized = Anchor::Offset(TEXT("UWorld::OnActorsInitialized"))
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; lea rdx, [*]; mov [*], *; mov [*], *; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
+        .Disp();
+
+    return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
 }

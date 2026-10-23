@@ -43,6 +43,16 @@ public:
         return Result;
     }
 
+    template<typename FunctorType>
+    static TDelegate CreateLambda(FunctorType&& InFunctor)
+    {
+        TDelegate Result;
+
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseFunctorDelegateInstance<void(ParamTypes...), std::remove_reference_t<FunctorType>, decltype(bDestructorFirst)::value>(InFunctor); });
+
+        return Result;
+    }
+
     bool IsBound() const
     {
         auto Instance = GetDelegateInstanceProtected();
@@ -71,6 +81,12 @@ public:
     FDelegateHandle AddUObject(UserClass* InUserObject, void (UserClass::*InFunc)(ParamTypes...))
     {
         return AddDelegateInstance(FDelegate::CreateUObject(InUserObject, InFunc));
+    }
+
+    template<typename FunctorType>
+    FDelegateHandle AddLambda(FunctorType&& InFunctor)
+    {
+        return AddDelegateInstance(FDelegate::CreateLambda(Forward<FunctorType>(InFunctor)));
     }
 
     void Broadcast(ParamTypes... Params) const

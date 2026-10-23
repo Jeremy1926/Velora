@@ -78,3 +78,68 @@ private:
     TWeakObjectPtr<UserClass> UserObject;
     FMethodPtr MethodPtr;
 };
+
+template<typename FuncType, typename FunctorType, bool bDestructorFirst>
+class TBaseFunctorDelegateInstance;
+
+template<typename FunctorType, bool bDestructorFirst, typename... ParamTypes>
+class TBaseFunctorDelegateInstance<void(ParamTypes...), FunctorType, bDestructorFirst> : public IBaseDelegateInstance<void(ParamTypes...), bDestructorFirst>
+{
+public:
+    explicit TBaseFunctorDelegateInstance(const FunctorType& InFunctor)
+        : Handle(FDelegateHandle::GenerateNewHandle)
+        , Functor(InFunctor)
+    {
+    }
+
+    UObject* GetUObject() const override
+    {
+        return nullptr;
+    }
+
+    const void* GetObjectForTimerManager() const override
+    {
+        return nullptr;
+    }
+
+    uint64 GetBoundProgramCounterForTimerManager() const override
+    {
+        return 0;
+    }
+
+    bool HasSameObject(const void* InUserObject) const override
+    {
+        return false;
+    }
+
+    bool IsSafeToExecute() const override
+    {
+        return true;
+    }
+
+    FDelegateHandle GetHandle() const override
+    {
+        return Handle;
+    }
+
+    void CreateCopy(FDelegateBase& Base) override
+    {
+        new (Base) TBaseFunctorDelegateInstance(*this);
+    }
+
+    void Execute(ParamTypes... Params) const override
+    {
+        Functor(Forward<ParamTypes>(Params)...);
+    }
+
+    bool ExecuteIfSafe(ParamTypes... Params) const override
+    {
+        Functor(Forward<ParamTypes>(Params)...);
+
+        return true;
+    }
+
+private:
+    FDelegateHandle Handle;
+    mutable FunctorType Functor;
+};

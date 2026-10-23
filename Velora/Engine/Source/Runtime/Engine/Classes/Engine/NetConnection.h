@@ -13,6 +13,7 @@ class UActorChannel;
 class UChildConnection;
 class UNetDriver;
 class UPackageMap;
+class UReplicationConnectionDriver;
 
 enum EConnectionState
 {
@@ -64,6 +65,10 @@ public:
     UChannel* CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex = -1);
 
     void FlushDormancy(AActor* Actor);
+
+    UChildConnection* GetUChildConnection();
+
+    UReplicationConnectionDriver*& GetReplicationConnectionDriver();
 };
 
 class UChildConnection : public UNetConnection

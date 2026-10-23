@@ -11,3 +11,7 @@ public:
 
     int32 ServerReplicateActors(float DeltaSeconds);
 };
+
+class UReplicationConnectionDriver : public UObject
+{
+};

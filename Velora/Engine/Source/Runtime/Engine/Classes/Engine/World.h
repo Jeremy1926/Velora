@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Delegates/Delegate.h"
 #include "UObject/Object.h"
 #include "UObject/ObjectMacros.h"
 #include "Engine/EngineBaseTypes.h"
@@ -65,6 +66,14 @@ private:
 class UWorld final : public UObject, public FNetworkNotify
 {
 public:
+    struct FActorsInitializedParams
+    {
+        UWorld* World;
+        bool ResetTime;
+    };
+
+    DECLARE_MULTICAST_DELEGATE_OneParam(FOnActorsInitialized, const FActorsInitializedParams&);
+
     AActor* SpawnActor(UClass* InClass, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
 
     AActor* SpawnActor(UClass* Class, FVector const* Location = nullptr, FRotator const* Rotation = nullptr, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters());
@@ -93,6 +102,8 @@ public:
 
     UNetDriver* GetNetDriver() const;
 
+    UNetDriver* GetDemoNetDriver() const;
+
     void SetNetDriver(UNetDriver* NewDriver);
 
     ENetMode InternalGetNetMode() const;
@@ -104,4 +115,8 @@ public:
     void InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context);
 
     bool Listen(FURL& InURL);
+
+    bool AreActorsInitialized() const;
+
+    FOnActorsInitialized& GetOnActorsInitialized();
 };

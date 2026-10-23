@@ -574,6 +574,18 @@
     <Filter Include="Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private">
       <UniqueIdentifier>{4A496ECC-DE77-43DF-A964-0AE848A3DAC0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Runtime\ReplicationGraph">
+      <UniqueIdentifier>{A58DE120-15F5-4E15-AFF5-FD59DC57FE51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\ReplicationGraph\Source">
+      <UniqueIdentifier>{9FD78C3D-4AEC-4A84-BA33-BE45B91D98A2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\ReplicationGraph\Source\Private">
+      <UniqueIdentifier>{B57434F5-05D5-4F21-BDFB-41D26F37FBBF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\ReplicationGraph\Source\Public">
+      <UniqueIdentifier>{B00AFC16-5387-400A-9584-807605A77692}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\FortniteConversation">
       <UniqueIdentifier>{3E49EF8F-E8F4-4EF1-ABDC-CB0C62A557A9}</UniqueIdentifier>
     </Filter>
@@ -1753,6 +1765,12 @@
     <ClInclude Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public\ConversationTypes.h">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\ReplicationGraph\Source\Public\ReplicationGraph.h">
+      <Filter>Engine\Plugins\Runtime\ReplicationGraph\Source\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Runtime\ReplicationGraph\Source\Public\ReplicationGraphTypes.h">
+      <Filter>Engine\Plugins\Runtime\ReplicationGraph\Source\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\RandomStream.h">
       <Filter>Engine\Source\Runtime\Core\Public\Math</Filter>
     </ClInclude>
@@ -2709,6 +2727,12 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private\ConversationTypes.cpp">
       <Filter>Engine\Plugins\Experimental\CommonDialogue\Source\CommonDialogueRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\ReplicationGraph\Source\Private\ReplicationGraph.cpp">
+      <Filter>Engine\Plugins\Runtime\ReplicationGraph\Source\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Runtime\ReplicationGraph\Source\Private\ReplicationGraphTypes.cpp">
+      <Filter>Engine\Plugins\Runtime\ReplicationGraph\Source\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\KismetTextLibrary.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
