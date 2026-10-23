@@ -11,6 +11,8 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
+class UClass;
+class UNetConnection;
 struct FNetViewer;
 class UActorChannel;
 class ULevel;
@@ -51,6 +53,8 @@ struct FGlobalActorReplicationInfo
 
     float GetCullDistanceSquared() const;
 
+    FVector GetWorldLocation() const;
+
 private:
     const uint8* GetSettings() const;
 };
@@ -59,6 +63,8 @@ struct FGlobalActorReplicationInfoMap
 {
 public:
     FGlobalActorReplicationInfo& Get(AActor* const& Actor);
+
+    FGlobalActorReplicationInfo* Find(AActor* const& Actor);
 
     void ResetActorMap();
 
@@ -145,6 +151,58 @@ struct FCachedDormantDestructInfo
 struct FActorRepListRefView
 {
     TArray<AActor*> RepList;
+};
+
+struct FNewReplicatedActorInfo
+{
+    static FName GetStreamingLevelNameOfActor(const AActor* Actor);
+
+    AActor* Actor;
+    FName StreamingLevelName;
+    UClass* Class;
+};
+
+struct FLastLocationGatherInfo
+{
+    static FORCEINLINE int32 GetTypeSize()
+    {
+        return (int32)((sizeof(UNetConnection*) + 2 * TGameLayout<FVector>::Size() + 7) & ~7);
+    }
+
+    FLastLocationGatherInfo(UNetConnection* InConnection, const FVector& InLastLocation)
+        : Connection(InConnection)
+    {
+        TGameLayout<FVector>::Store(this + 1, InLastLocation);
+        TGameLayout<FVector>::Store((uint8*)(this + 1) + TGameLayout<FVector>::Size(), InLastLocation);
+    }
+
+    FVector GetLastLocation() const
+    {
+        return TGameLayout<FVector>::Load(this + 1);
+    }
+
+    UNetConnection* Connection;
+};
+
+template<>
+class TArray<FLastLocationGatherInfo, FDefaultAllocator> : public TRuntimeSizedArray<FLastLocationGatherInfo>
+{
+public:
+    FLastLocationGatherInfo* FindByKey(UNetConnection* Connection)
+    {
+        for (auto& GatherInfo : *this)
+        {
+            if (GatherInfo.Connection == Connection)
+                return &GatherInfo;
+        }
+
+        return nullptr;
+    }
+
+    FLastLocationGatherInfo& Emplace(UNetConnection* InConnection, const FVector& InLastLocation)
+    {
+        return *new(&TRuntimeSizedArray::operator[](AddUninitialized(1))) FLastLocationGatherInfo(InConnection, InLastLocation);
+    }
 };
 
 enum class EActorRepListTypeFlags : uint8

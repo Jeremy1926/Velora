@@ -4,6 +4,28 @@
 
 struct FBox
 {
+    FORCEINLINE FVector GetClosestPointTo(const FVector& Point) const
+    {
+        FVector ClosestPoint = Point;
+
+        if (Point.X < Min.X)
+            ClosestPoint.X = Min.X;
+        else if (Point.X > Max.X)
+            ClosestPoint.X = Max.X;
+
+        if (Point.Y < Min.Y)
+            ClosestPoint.Y = Min.Y;
+        else if (Point.Y > Max.Y)
+            ClosestPoint.Y = Max.Y;
+
+        if (Point.Z < Min.Z)
+            ClosestPoint.Z = Min.Z;
+        else if (Point.Z > Max.Z)
+            ClosestPoint.Z = Max.Z;
+
+        return ClosestPoint;
+    }
+
     FVector Min;
     FVector Max;
     uint8 IsValid;

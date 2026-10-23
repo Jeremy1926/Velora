@@ -7,6 +7,8 @@ class AActor;
 class ULevel : public UObject
 {
 public:
+    static UClass* StaticClass();
+
     UWorld* GetOwningWorld() const;
 
     bool IsPersistentLevel() const;

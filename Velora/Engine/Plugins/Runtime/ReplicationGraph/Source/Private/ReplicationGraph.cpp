@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "HAL/IConsoleManager.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -112,6 +113,19 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
         .Disp();
 
     return *(TMap<FName, TMulticastDelegate<void, FName, UWorld*>>*)((uint8*)this + OnClientVisibleLevelNameAddMap);
+}
+
+TArray<FLastLocationGatherInfo>& UNetReplicationGraphConnection::GetLastGatherLocations()
+{
+    return *(TArray<FLastLocationGatherInfo>*)(((uintptr_t)&GetConnectionId() + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+}
+
+FActorRepListRefView& UNetReplicationGraphConnection::GetPrevDormantActorListForNode(const UReplicationGraphNode* GridNode)
+{
+    auto QueuedBitsForActorDiscovery = (uintptr_t)&GetLastGatherLocations() + sizeof(TArray<FLastLocationGatherInfo>);
+    auto& PrevDormantActorListPerNode = *(TMap<FObjectKey, FActorRepListRefView>*)((QueuedBitsForActorDiscovery + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+
+    return PrevDormantActorListPerNode.FindOrAdd(FObjectKey(GridNode));
 }
 
 TArray<FCachedDormantDestructInfo>& UNetReplicationGraphConnection::GetPendingDormantDestructList()
@@ -220,6 +234,18 @@ void UNetReplicationGraphConnection::NotifyAddDormantDestructionInfo(AActor* Act
     Info.Level = Level;
     Info.ObjOuter = Actor->GetOuter();
     Info.PathName = Actor->GetName();
+}
+
+void UReplicationGraphNode::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    static auto GatherActorListsForConnection = Anchor::VirtualFunction<void (*)(UReplicationGraphNode*, const FConnectionGatherActorListParameters&)>(TEXT("UReplicationGraphNode::GatherActorListsForConnection"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Get();
+
+    GatherActorListsForConnection(this, Params);
 }
 
 TArray<UReplicationGraphNode*>& UReplicationGraphNode::GetAllChildNodes()
@@ -388,6 +414,46 @@ void UReplicationGraphNode_ConnectionDormancyNode::ConditionalGatherDormantActor
     }
 }
 
+bool ContainsReverse(const FActorRepListRefView& List, AActor* Actor)
+{
+    for (int32 idx = List.RepList.Num() - 1; idx >= 0; --idx)
+    {
+        if (List.RepList[idx] == Actor)
+            return true;
+    }
+
+    return false;
+}
+
+void UReplicationGraphNode_ConnectionDormancyNode::NotifyActorDormancyFlush(AActor* Actor)
+{
+    const FName StreamingLevelName = FNewReplicatedActorInfo::GetStreamingLevelNameOfActor(Actor);
+
+    if (StreamingLevelName == FName(NAME_None))
+    {
+        if (!ContainsReverse(GetReplicationActorList(), Actor))
+            GetReplicationActorList().RepList.Add(Actor);
+    }
+    else
+    {
+        auto& StreamingLevelLists = GetStreamingLevelCollection().StreamingLevelLists;
+        auto Item = StreamingLevelLists.FindByKey(StreamingLevelName);
+
+        if (!Item)
+        {
+            Item = new(StreamingLevelLists) FStreamingLevelActorListCollection::FStreamingLevelActors(StreamingLevelName);
+            Item->ReplicationActorList.RepList.Add(Actor);
+        }
+        else if (!ContainsReverse(Item->ReplicationActorList, Actor))
+        {
+            Item->ReplicationActorList.RepList.Add(Actor);
+        }
+
+        if (auto RemoveList = GetRemovedStreamingLevelActorListCollection().StreamingLevelLists.FindByKey(StreamingLevelName))
+            RemoveList->ReplicationActorList.RepList.RemoveSwap(Actor);
+    }
+}
+
 void UReplicationGraphNode_ConnectionDormancyNode::OnClientVisibleLevelNameAdd(FName LevelName, UWorld* World)
 {
     auto RemoveList = GetRemovedStreamingLevelActorListCollection().StreamingLevelLists.FindByKey(LevelName);
@@ -465,6 +531,48 @@ UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode
     return Start < ConnectionNodes.Num() && !(RepGraphConnection < ConnectionNodes[Start].Key) ? ConnectionNodes[Start].Value : nullptr;
 }
 
+void UReplicationGraphNode_DormancyNode::ConditionalGatherDormantDynamicActors(FActorRepListRefView& RepList, const FConnectionGatherActorListParameters& Params, FActorRepListRefView* RemovedList, bool bEnforceReplistUniqueness, FActorRepListRefView* RemoveFromList)
+{
+    auto GatherDormantDynamicActorsForList = [&](const FActorRepListRefView& InReplicationActorList)
+    {
+        for (AActor* Actor : InReplicationActorList.RepList)
+        {
+            if (!Actor || Actor->IsNetStartupActor())
+                continue;
+
+            auto InfoPtr = Params.GetConnectionManager()->GetActorInfoMap().ActorMap.Find(Actor);
+            auto Info = InfoPtr ? InfoPtr->Get() : nullptr;
+
+            if (!Info || (!Info->bDormantOnConnection && !Info->Channel))
+                continue;
+
+            if (RemovedList && RemovedList->RepList.Contains(Actor))
+                continue;
+
+            if (RemoveFromList && RemoveFromList->RepList.RemoveSwap(Actor) > 0)
+                Info->bGridSpatilization_AlreadyDormant = false;
+
+            if (bEnforceReplistUniqueness)
+            {
+                if (Info->bGridSpatilization_AlreadyDormant)
+                    continue;
+
+                Info->bGridSpatilization_AlreadyDormant = true;
+            }
+
+            RepList.RepList.AddUnique(Actor);
+        }
+    };
+
+    GatherDormantDynamicActorsForList(GetReplicationActorList());
+
+    for (const auto& StreamingList : GetStreamingLevelCollection().StreamingLevelLists)
+    {
+        if (Params.CheckClientVisibilityForLevel(StreamingList.StreamingLevelName))
+            GatherDormantDynamicActorsForList(StreamingList.ReplicationActorList);
+    }
+}
+
 UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode::CreateConnectionNode(const FConnectionGatherActorListParameters& Params)
 {
     const FObjectKey RepGraphConnection(Params.GetConnectionManager());
@@ -498,6 +606,334 @@ UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode
     ConnectionNode->GetLastGatheredFrame() = Params.GetReplicationFrameNum();
 
     return ConnectionNode;
+}
+
+UReplicationGraphNode_DormancyNode* UReplicationGraphNode_GridCell::GetDormancyNode()
+{
+    static auto GetDormancyNode = Anchor::Function<UReplicationGraphNode_DormancyNode* (*)(UReplicationGraphNode_GridCell*)>(TEXT("UReplicationGraphNode_GridCell::GetDormancyNode"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetDormancyNode(this);
+}
+
+UClass* UReplicationGraphNode_GridSpatialization2D::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_GridSpatialization2D"));
+
+    return Class;
+}
+
+UReplicationGraphNode_GridSpatialization2D::FActorCellInfo UReplicationGraphNode_GridSpatialization2D::GetCellInfoForActor(AActor* Actor, const FVector& Location3D, float CullDistance)
+{
+    static auto GetCellInfoForActor = Anchor::Function<FActorCellInfo* (*)(UReplicationGraphNode_GridSpatialization2D*, FActorCellInfo*, AActor*, const TGameValue<FVector>&, float)>(TEXT("UReplicationGraphNode_GridSpatialization2D::GetCellInfoForActor"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    FActorCellInfo CellInfo;
+
+    return *GetCellInfoForActor(this, &CellInfo, Actor, TGameValue<FVector>(Location3D), CullDistance);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::GetGridNodesForActor(AActor* Actor, const FActorCellInfo& CellInfo, TArray<UReplicationGraphNode_GridCell*>& OutNodes)
+{
+    static auto GetGridNodesForActor = Anchor::Function<void (*)(UReplicationGraphNode_GridSpatialization2D*, AActor*, const FActorCellInfo&, TArray<UReplicationGraphNode_GridCell*>&)>(TEXT("UReplicationGraphNode_GridSpatialization2D::GetGridNodesForActor"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    GetGridNodesForActor(this, Actor, CellInfo, OutNodes);
+}
+
+float& UReplicationGraphNode_GridSpatialization2D::GetCellSize()
+{
+    static auto CellSize = Anchor::Offset(TEXT("UReplicationGraphNode_GridSpatialization2D::CellSize"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov cl, [rbx+0x*]")
+        .Find("movss xmm0, dword ptr [rbx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov cl, [rbx+0x*]")
+        .Find("movss xmm0, dword ptr [rbx+0x*]")
+        .Disp();
+
+    return *(float*)((uint8*)this + CellSize);
+}
+
+uint8* UReplicationGraphNode_GridSpatialization2D::GetSpatialBias()
+{
+    return (uint8*)&GetCellSize() + TLWCGameLayout<float, double>::Size();
+}
+
+float& UReplicationGraphNode_GridSpatialization2D::GetConnectionMaxZ()
+{
+    return *(float*)(GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size());
+}
+
+uint8* UReplicationGraphNode_GridSpatialization2D::GetGridBounds()
+{
+    static auto IsValid = Anchor::Offset(TEXT("UReplicationGraphNode_GridSpatialization2D::GridBounds::IsValid"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp [rcx+0x*], al")
+        .Disp();
+
+    return (uint8*)this + IsValid - 2 * TGameLayout<FVector>::Size();
+}
+
+bool& UReplicationGraphNode_GridSpatialization2D::GetDestroyDormantDynamicActors()
+{
+    return *(bool*)(GetGridBounds() - TLWCGameLayout<float, double>::Size());
+}
+
+TArray<TArray<UReplicationGraphNode_GridCell*>>& UReplicationGraphNode_GridSpatialization2D::GetGrid()
+{
+    static auto Grid = Anchor::Offset(TEXT("UReplicationGraphNode_GridSpatialization2D::Grid"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rcx, [r14+0x*]; call 0x*")
+        .Disp();
+
+    return *(TArray<TArray<UReplicationGraphNode_GridCell*>>*)((uint8*)this + Grid);
+}
+
+TArray<UReplicationGraphNode_GridCell*>& UReplicationGraphNode_GridSpatialization2D::GetGatheredNodes()
+{
+    static auto GatheredNodes = Anchor::Offset(TEXT("UReplicationGraphNode_GridSpatialization2D::GatheredNodes"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rbx, [rcx+0x*]")
+        .Disp();
+
+    return *(TArray<UReplicationGraphNode_GridCell*>*)((uint8*)this + GatheredNodes);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_GridSpatialization2D, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_GridSpatialization2D::StaticClass()));
+
+    static auto DormantDynamicActorsDestruction = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.DormantDynamicActorsDestruction"));
+    static auto ReplicatedDormantDestructionInfosPerFrame = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.ReplicatedDormantDestructionInfosPerFrame"));
+
+    auto ConnectionManager = Params.GetConnectionManager();
+    auto& LastLocationArray = ConnectionManager->GetLastGatherLocations();
+    TArray<FIntPoint> UniqueCurrentLocations;
+    TArray<FPlayerGridCellInformation> ActiveGridCells;
+
+    const float CellSize = GetCellSize();
+    const float SpatialBiasX = TLWCGameLayout<float, double>::Load(GetSpatialBias());
+    const float SpatialBiasY = TLWCGameLayout<float, double>::Load(GetSpatialBias() + TLWCGameLayout<float, double>::Size());
+    const FBox GridBounds = TGameLayout<FBox>::Load(GetGridBounds());
+    const float HalfWorldMax = UE::LWC::IsEnabled() ? 4398046511104.0f : 1048576.0f;
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        auto& CurViewer = Params.GetViewer(Index);
+        const FVector ViewLocation = CurViewer.GetViewLocation();
+
+        if (ViewLocation.Z > GetConnectionMaxZ())
+            continue;
+
+        const FVector ClampedViewLoc = GridBounds.IsValid ? GridBounds.GetClosestPointTo(ViewLocation) : ViewLocation.BoundToCube(HalfWorldMax);
+
+        int32 CellX = (int32)((ClampedViewLoc.X - SpatialBiasX) / CellSize);
+
+        if (CellX < 0)
+            CellX = 0;
+
+        int32 CellY = (int32)((ClampedViewLoc.Y - SpatialBiasY) / CellSize);
+
+        if (CellY < 0)
+            CellY = 0;
+
+        FPlayerGridCellInformation NewPlayerCell{ { CellX, CellY }, { 0, 0 } };
+        FLastLocationGatherInfo* GatherInfoForConnection = nullptr;
+
+        if (CurViewer.Connection)
+        {
+            GatherInfoForConnection = LastLocationArray.FindByKey(CurViewer.Connection);
+
+            if (!GatherInfoForConnection)
+                GatherInfoForConnection = &LastLocationArray.Emplace(CurViewer.Connection, FVector(ForceInitToZero));
+        }
+
+        FVector LastLocationForConnection = GatherInfoForConnection ? GatherInfoForConnection->GetLastLocation() : ClampedViewLoc;
+        LastLocationForConnection = GridBounds.IsValid ? GridBounds.GetClosestPointTo(LastLocationForConnection) : LastLocationForConnection.BoundToCube(HalfWorldMax);
+
+        NewPlayerCell.PrevLocation.X = FMath::Max(0, (int32)((LastLocationForConnection.X - SpatialBiasX) / CellSize));
+        NewPlayerCell.PrevLocation.Y = FMath::Max(0, (int32)((LastLocationForConnection.Y - SpatialBiasY) / CellSize));
+
+        if (!UniqueCurrentLocations.Contains(NewPlayerCell.CurLocation))
+        {
+            auto& GridX = GetGridX(CellX);
+
+            if (GridX.Num() <= CellY)
+                GridX.SetNum(CellY + 1);
+
+            if (auto CellNode = GridX[CellY])
+                CellNode->GatherActorListsForConnection(Params);
+
+            UniqueCurrentLocations.Add(NewPlayerCell.CurLocation);
+        }
+
+        ActiveGridCells.Add(NewPlayerCell);
+    }
+
+    if (!GetDestroyDormantDynamicActors() || DormantDynamicActorsDestruction->GetInt() <= 0)
+        return;
+
+    auto& PrevDormantActorList = ConnectionManager->GetPrevDormantActorListForNode(this);
+
+    for (const auto& CellInfo : ActiveGridCells)
+    {
+        const int32 CellX = CellInfo.CurLocation.X;
+        const int32 CellY = CellInfo.CurLocation.Y;
+        const int32 PrevX = CellInfo.PrevLocation.X;
+        const int32 PrevY = CellInfo.PrevLocation.Y;
+
+        if ((CellX != PrevX || CellY != PrevY) && !UniqueCurrentLocations.Contains(CellInfo.PrevLocation))
+        {
+            FActorRepListRefView DormantActorList;
+            auto& GridX = GetGridX(CellX);
+
+            if (auto CellNode = GridX[CellY])
+            {
+                if (auto DormancyNode = CellNode->GetDormancyNode())
+                    DormancyNode->ConditionalGatherDormantDynamicActors(DormantActorList, Params, nullptr, false, &PrevDormantActorList);
+            }
+
+            if (auto PrevCell = GetCell(GetGridX(PrevX), PrevY))
+            {
+                if (auto DormancyNode = PrevCell->GetDormancyNode())
+                    DormancyNode->ConditionalGatherDormantDynamicActors(PrevDormantActorList, Params, &DormantActorList, true);
+            }
+        }
+    }
+
+    if (PrevDormantActorList.RepList.Num() <= 0)
+        return;
+
+    int32 NumActorsToRemove = ReplicatedDormantDestructionInfosPerFrame->GetInt();
+    auto GlobalRepMap = GetGraphGlobals().IsValid() ? GetGraphGlobals()->GlobalActorReplicationInfoMap : nullptr;
+
+    for (int32 i = 0; i < PrevDormantActorList.RepList.Num() && NumActorsToRemove > 0; i++)
+    {
+        AActor* Actor = PrevDormantActorList.RepList[i];
+        auto GlobalActorInfo = GlobalRepMap ? GlobalRepMap->Find(Actor) : nullptr;
+        auto ActorInfoPtr = ConnectionManager->GetActorInfoMap().ActorMap.Find(Actor);
+        auto ActorInfo = ActorInfoPtr ? ActorInfoPtr->Get() : nullptr;
+
+        if (!ActorInfo)
+            continue;
+
+        if (ActorInfo->bDormantOnConnection)
+        {
+            ConnectionManager->NotifyAddDormantDestructionInfo(Actor);
+            ActorInfo->bDormantOnConnection = false;
+            ActorInfo->bGridSpatilization_AlreadyDormant = false;
+
+            const FVector ActorLocation = GlobalActorInfo ? GlobalActorInfo->GetWorldLocation() : Actor->GetActorLocation();
+            const FActorCellInfo ActorCellInfo = GetCellInfoForActor(Actor, ActorLocation, ActorInfo->CullDistance);
+            auto& GatheredNodes = GetGatheredNodes();
+            GetGridNodesForActor(Actor, ActorCellInfo, GatheredNodes);
+
+            for (auto Node : GatheredNodes)
+            {
+                if (auto DormancyNode = Node->GetDormancyNode())
+                {
+                    if (auto ConnectionDormancyNode = DormancyNode->GetExistingConnectionNode(Params))
+                        ConnectionDormancyNode->NotifyActorDormancyFlush(Actor);
+                }
+            }
+
+            NumActorsToRemove--;
+            PrevDormantActorList.RepList.RemoveAtSwap(i--);
+        }
+        else if (!ActorInfo->Channel)
+        {
+            ActorInfo->bGridSpatilization_AlreadyDormant = false;
+            PrevDormantActorList.RepList.RemoveAtSwap(i--);
+        }
+    }
 }
 
 UClass* UReplicationGraphNode_ActorListFrequencyBuckets::StaticClass()

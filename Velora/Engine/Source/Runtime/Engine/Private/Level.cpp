@@ -5,6 +5,13 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
+UClass* ULevel::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Level"));
+
+    return Class;
+}
+
 UWorld* ULevel::GetOwningWorld() const
 {
     static auto OwningWorld = GetClass()->FindPropertyByName(FName(TEXT("OwningWorld")));

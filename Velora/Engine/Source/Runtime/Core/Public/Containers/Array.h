@@ -241,6 +241,42 @@ public:
         }
     }
 
+    int32 RemoveSwap(const ElementType& Item, bool bAllowShrinking = true)
+    {
+        const int32 OriginalNum = ArrayNum;
+        bool bRemoved = false;
+
+        for (int32 Index = 0; Index < ArrayNum; Index++)
+        {
+            if (GetData()[Index] == Item)
+            {
+                bRemoved = true;
+                RemoveAtSwap(Index--, 1, false);
+            }
+        }
+
+        if (bRemoved && bAllowShrinking)
+            ResizeShrink();
+
+        return OriginalNum - ArrayNum;
+    }
+
+    void SetNum(int32 NewNum, bool bAllowShrinking = true)
+    {
+        if (NewNum > ArrayNum)
+        {
+            const int32 Diff = NewNum - ArrayNum;
+            const int32 Index = AddUninitialized(Diff);
+
+            for (int32 Offset = 0; Offset < Diff; Offset++)
+                new(GetData() + Index + Offset) ElementType();
+        }
+        else if (NewNum < ArrayNum)
+        {
+            RemoveAt(NewNum, ArrayNum - NewNum, bAllowShrinking);
+        }
+    }
+
     int32 RemoveSingleSwap(const ElementType& Item, bool bAllowShrinking = true)
     {
         int32 Index;

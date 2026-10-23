@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "ReplicationGraphTypes.h"
 #include "Engine/NetDriver.h"
+#include "Engine/Level.h"
 #include "GameFramework/Actor.h"
+#include "Templates/Casts.h"
 #include "GameFramework/WorldSettings.h"
 #include "HAL/UnrealMemory.h"
 #include "Scanner.h"
@@ -24,6 +26,18 @@ uint16 FGlobalActorReplicationInfo::GetFastPathReplicationPeriodFrame() const
 float FGlobalActorReplicationInfo::GetCullDistanceSquared() const
 {
     return *(const float*)(GetSettings() + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistanceSquared) : offsetof(TClassReplicationInfoLayout<FName>, CullDistanceSquared)));
+}
+
+FVector FGlobalActorReplicationInfo::GetWorldLocation() const
+{
+    return TGameLayout<FVector>::Load((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, WorldLocation) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, WorldLocation)));
+}
+
+FGlobalActorReplicationInfo* FGlobalActorReplicationInfoMap::Find(AActor* const& Actor)
+{
+    auto InfoPtr = ActorMap.Find(Actor);
+
+    return InfoPtr ? *InfoPtr : nullptr;
 }
 
 FGlobalActorReplicationInfo& FGlobalActorReplicationInfoMap::Get(AActor* const& Actor)
@@ -185,4 +199,11 @@ void FStreamingLevelActorListCollection::DeepCopyFrom(const FStreamingLevelActor
             NewStreamingLevel->ReplicationActorList.RepList = StreamingLevel.ReplicationActorList.RepList;
         }
     }
+}
+
+FName FNewReplicatedActorInfo::GetStreamingLevelNameOfActor(const AActor* Actor)
+{
+    ULevel* Level = Actor ? Cast<ULevel>(Actor->GetOuter()) : nullptr;
+
+    return (Level && !Level->IsPersistentLevel()) ? Level->GetOutermost()->GetFName() : FName(NAME_None);
 }

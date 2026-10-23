@@ -5,6 +5,8 @@
 #include "Containers/Map.h"
 #include "Containers/Set.h"
 #include "Delegates/Delegate.h"
+#include "Math/Box.h"
+#include "Math/IntVector.h"
 #include "Templates/SharedPointer.h"
 #include "UObject/ObjectKey.h"
 #include "UObject/UObjectGlobals.h"
@@ -26,6 +28,8 @@ class UReplicationGraphNode : public UObject
 {
 public:
     void NotifyResetAllNetworkActors();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
 
     TArray<UReplicationGraphNode*>& GetAllChildNodes();
 
@@ -65,6 +69,8 @@ public:
 
     void OnClientVisibleLevelNameAdd(FName LevelName, UWorld* World);
 
+    void NotifyActorDormancyFlush(AActor* Actor);
+
 private:
     void ConditionalGatherDormantActorsForConnection(FActorRepListRefView& ConnectionList, const FConnectionGatherActorListParameters& Params, FActorRepListRefView* RemovedList);
 
@@ -80,10 +86,74 @@ public:
 
     UReplicationGraphNode_ConnectionDormancyNode* GetExistingConnectionNode(const FConnectionGatherActorListParameters& Params);
 
+    void ConditionalGatherDormantDynamicActors(FActorRepListRefView& RepList, const FConnectionGatherActorListParameters& Params, FActorRepListRefView* RemovedList, bool bEnforceReplistUniqueness = false, FActorRepListRefView* RemoveFromList = nullptr);
+
 private:
     UReplicationGraphNode_ConnectionDormancyNode* CreateConnectionNode(const FConnectionGatherActorListParameters& Params);
 
     TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>& GetConnectionNodes();
+};
+
+class UReplicationGraphNode_GridCell : public UReplicationGraphNode_ActorList
+{
+public:
+    UReplicationGraphNode_DormancyNode* GetDormancyNode();
+};
+
+class UReplicationGraphNode_GridSpatialization2D : public UReplicationGraphNode
+{
+public:
+    struct FActorCellInfo
+    {
+        int32 StartX;
+        int32 StartY;
+        int32 EndX;
+        int32 EndY;
+    };
+
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    FActorCellInfo GetCellInfoForActor(AActor* Actor, const FVector& Location3D, float CullDistance);
+
+    void GetGridNodesForActor(AActor* Actor, const FActorCellInfo& CellInfo, TArray<UReplicationGraphNode_GridCell*>& OutNodes);
+
+private:
+    struct FPlayerGridCellInformation
+    {
+        FIntPoint CurLocation;
+        FIntPoint PrevLocation;
+    };
+
+    float& GetCellSize();
+
+    uint8* GetSpatialBias();
+
+    float& GetConnectionMaxZ();
+
+    bool& GetDestroyDormantDynamicActors();
+
+    uint8* GetGridBounds();
+
+    TArray<TArray<UReplicationGraphNode_GridCell*>>& GetGrid();
+
+    TArray<UReplicationGraphNode_GridCell*>& GetGatheredNodes();
+
+    TArray<UReplicationGraphNode_GridCell*>& GetGridX(int32 X)
+    {
+        auto& Grid = GetGrid();
+
+        if (Grid.Num() <= X)
+            Grid.SetNum(X + 1);
+
+        return Grid[X];
+    }
+
+    UReplicationGraphNode_GridCell* GetCell(TArray<UReplicationGraphNode_GridCell*>& GridX, int32 Y)
+    {
+        return GridX.IsValidIndex(Y) ? GridX[Y] : nullptr;
+    }
 };
 
 class UReplicationGraphNode_ActorListFrequencyBuckets : public UReplicationGraphNode
@@ -153,6 +223,10 @@ public:
     TSet<FNetworkGUID>& GetTrackedDormantDestructionInfos();
 
     TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& GetOnClientVisibleLevelNameAddMap();
+
+    TArray<FLastLocationGatherInfo>& GetLastGatherLocations();
+
+    FActorRepListRefView& GetPrevDormantActorListForNode(const UReplicationGraphNode* GridNode);
 
     void NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel);
 

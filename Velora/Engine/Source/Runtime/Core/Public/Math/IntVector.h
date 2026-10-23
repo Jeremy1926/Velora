@@ -3,6 +3,22 @@
 #include "HAL/Platform.h"
 #include "Misc/Crc.h"
 
+struct FIntPoint
+{
+    int32 X;
+    int32 Y;
+
+    FORCEINLINE bool operator==(const FIntPoint& Other) const
+    {
+        return X == Other.X && Y == Other.Y;
+    }
+
+    FORCEINLINE bool operator!=(const FIntPoint& Other) const
+    {
+        return X != Other.X || Y != Other.Y;
+    }
+};
+
 struct FIntVector
 {
     int32 X;

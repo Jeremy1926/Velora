@@ -37,6 +37,11 @@ struct FVector
 
     FRotator ToOrientationRotator() const;
 
+    FORCEINLINE FVector BoundToCube(float Radius) const
+    {
+        return FVector(FMath::Clamp(X, -Radius, Radius), FMath::Clamp(Y, -Radius, Radius), FMath::Clamp(Z, -Radius, Radius));
+    }
+
     FORCEINLINE FVector operator+(const FVector& V) const
     {
         return FVector(X + V.X, Y + V.Y, Z + V.Z);
