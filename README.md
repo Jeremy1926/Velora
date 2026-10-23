@@ -23,6 +23,9 @@ Universal gameserver for Fortnite.
 | Season X | 10.00 to 10.40 |
 | Chapter 2 Season 1 | 11.00 to 11.50 |
 | Chapter 2 Season 2 | 12.61 |
+| Chapter 2 Season 3 | 13.00 to 13.40 |
+| Chapter 2 Season 4 | 14.00 to 14.60 |
+| Chapter 2 Season 5 | 15.00 to 15.50 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
@@ -37,6 +40,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 - Chests, floor loot, ammo boxes, supply drops
 - Picking up, dropping, swapping
 - Traps, jump pads
+- NPCs and bosses
 - Emotes (1.8+)
 - Locker cosmetics (1.8+)
 - Spectating, Victory Royale
@@ -45,7 +49,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 ## To-do
 
 - XP and challenges
-- Chapter 2
+- Chapter 2 Season 6 and newer
 
 ## Configuration
 
