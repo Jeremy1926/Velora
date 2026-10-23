@@ -62,6 +62,10 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetSpawnedActors
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("mov r9b, 0x1; lea rcx, [rdi+0x*]; mov edx, ebp; call 0x*")
         .Find("lea rcx, [rdi+0x*]")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea rcx, [rbx+0x*]; mov r9b, 0x1; mov edx, r15d; call 0x*")
         .Disp();
 
     return SpawnedActors;
@@ -75,6 +79,11 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetSpawnedActorP
         .Optional()
         .Find("mov r14d, ebp; lea r15, [rdi+0x*]")
         .Find("lea r15, [rdi+0x*]")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActorDestroyed")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov r14d, r15d; lea r12, [rbx+0x*]")
+        .Find("lea r12, [rbx+0x*]")
         .Disp();
 
     return SpawnedActorPointProviders;
@@ -153,6 +162,11 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("test ecx, ecx; jle 0x*; lea r14, [rsi+0x*]")
         .Find("lea r14, [rsi+0x*]")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() <= 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("test ecx, ecx; jle 0x*; lea rsi, [rbp+0x*]")
+        .Find("lea rsi, [rbp+0x*]")
         .Disp();
 
     return EventInstances;
@@ -944,6 +958,18 @@ UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData& UFortAthenaLivingWo
         .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(!NativeFindOrCreateEventRuntimeData && StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto EventRuntimeDataMap = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::EventRuntimeDataMap"))
@@ -965,6 +991,16 @@ UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData& UFortAthenaLivingWo
         .Target()
         .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
         .Find("call 0x*", 3)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
+        .Or()
+        .If(NativeFindOrAddEventRuntimeData != nullptr)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
         .Target()
         .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
         .Disp();
