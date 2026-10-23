@@ -16,6 +16,13 @@ UClass* AFortGameMode::StaticClass()
     return Class;
 }
 
+bool AFortGameMode::GetEnableReplicationGraph() const
+{
+    static auto bEnableReplicationGraph = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bEnableReplicationGraph")));
+
+    return bEnableReplicationGraph->GetPropertyValue_InContainer(this);
+}
+
 void AFortGameMode::OnPlayerCreatedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor)
 {
     static auto OnPlayerCreatedBuilding = Anchor::VirtualFunction<void (*)(AFortGameMode*, AFortPlayerController*, ABuildingActor*)>(TEXT("AFortGameMode::OnPlayerCreatedBuilding"))

@@ -22,3 +22,10 @@ float UFortRuntimeOptions::GetBRServerMaxTickRate() const
 
     return *BRServerMaxTickRate->ContainerPtrToValuePtr<float>(this);
 }
+
+bool UFortRuntimeOptions::GetDisableReplicationGraph() const
+{
+    static auto bDisableReplicationGraph = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bDisableReplicationGraph")));
+
+    return bDisableReplicationGraph->GetPropertyValue_InContainer(this);
+}

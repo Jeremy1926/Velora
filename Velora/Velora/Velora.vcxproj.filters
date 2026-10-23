@@ -1258,6 +1258,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRuntimeOptions.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Public\UpdateManager.h">
+      <Filter>Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Items</Filter>
     </ClInclude>
@@ -2367,6 +2370,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRuntimeOptions.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Private\UpdateManager.cpp">
+      <Filter>Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaDanceItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics</Filter>

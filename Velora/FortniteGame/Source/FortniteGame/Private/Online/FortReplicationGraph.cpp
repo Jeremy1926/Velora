@@ -22,7 +22,12 @@
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "FortGameInstance.h"
+#include "FortGameMode.h"
 #include "FortRuntimeOptions.h"
+#include "Engine/EngineBaseTypes.h"
+#include "Engine/ReplicationDriver.h"
+#include "UpdateManager.h"
 #include "Pawns/FortAIPawn.h"
 #include "Pawns/FortPawn.h"
 #include "Pawns/FortPlayerPawn.h"
@@ -44,6 +49,80 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UReplicationDriver* ConditionalCreateReplicationDriver(UNetDriver* ForNetDriver, UWorld* World)
+{
+    if (ForNetDriver->GetNetDriverName() != NAME_GameNetDriver)
+        return nullptr;
+
+    auto FortGameMode = Cast<AFortGameMode>(World->GetAuthGameMode());
+
+    if (!FortGameMode || !FortGameMode->GetEnableReplicationGraph())
+        return nullptr;
+
+    if (UFortRuntimeOptions::Get().GetDisableReplicationGraph())
+        return nullptr;
+
+    return NewObject<UFortReplicationGraph>(GetTransientPackage(), UFortReplicationGraph::StaticClass());
+}
+
+void ForceRecreateReplicationGraph(UNetDriver* NetDriver)
+{
+    NetDriver->SetReplicationDriver(nullptr);
+    NetDriver->SetReplicationDriver(ConditionalCreateReplicationDriver(NetDriver, NetDriver->GetWorld()));
+}
+
+void FortRepGraphOnHotFixApplied(EUpdateCompletionStatus Status)
+{
+    if (Status != EUpdateCompletionStatus::UpdateSuccess)
+        return;
+
+    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+    {
+        auto ObjectItem = GUObjectArray.IndexToValidObject(Index, true);
+        auto NetDriver = ObjectItem ? Cast<UNetDriver>((UObject*)ObjectItem->Object) : nullptr;
+
+        if (!NetDriver || (NetDriver->GetFlags() & (RF_ClassDefaultObject | 0x60000000)))
+            continue;
+
+        if (NetDriver->GetNetDriverName() != NAME_GameNetDriver || NetDriver->GetClientConnections().Num() > 0 || !NetDriver->GetWorld())
+            continue;
+
+        ForceRecreateReplicationGraph(NetDriver);
+    }
+}
+
+void FortRepGraphOnPlaylistDataLoaded(AFortGameModeAthena* GameMode)
+{
+    auto NetDriver = GameMode->GetNetDriver();
+
+    if (!NetDriver)
+        return;
+
+    if (auto FortReplicationGraph = Cast<UFortReplicationGraph>(NetDriver->GetReplicationDriver()))
+        FortReplicationGraph->InitForPlaylist(GameMode);
+}
+
+void BindCreateReplicationDriverDelegate()
+{
+    if (!UFortReplicationGraph::StaticClass() || UReplicationDriver::CreateReplicationDriverDelegate().IsBound())
+        return;
+
+    UReplicationDriver::CreateReplicationDriverDelegate().BindLambda([](UNetDriver* ForNetDriver, const FURL& URL, UWorld* World) -> UReplicationDriver*
+    {
+        if (World)
+        {
+            if (auto UpdateManager = ((UFortGameInstance*)World->GetGameInstance())->GetUpdateManager())
+            {
+                [[maybe_unused]] static auto UpdateCheckCompleteHandle = UpdateManager->OnUpdateCheckComplete().AddStatic(&FortRepGraphOnHotFixApplied);
+            }
+        }
+
+        [[maybe_unused]] static auto NotifyPlaylistDataLoadedHandle = AFortGameModeAthena::GetNotifyPlaylistDataLoaded().AddStatic(&FortRepGraphOnPlaylistDataLoaded);
+
+        return ConditionalCreateReplicationDriver(ForNetDriver, World);
+    });
+}
 
 UScriptStruct* FRepGraphActorSettingsBase::StaticStruct()
 {

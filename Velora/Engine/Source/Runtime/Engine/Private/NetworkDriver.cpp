@@ -81,6 +81,20 @@ UReplicationDriver* UNetDriver::GetReplicationDriver() const
     return ReplicationDriver ? *ReplicationDriver->ContainerPtrToValuePtr<UReplicationDriver*>(this) : nullptr;
 }
 
+void UNetDriver::SetReplicationDriver(UReplicationDriver* NewReplicationDriver)
+{
+    static auto SetReplicationDriver = Anchor::Function<void (*)(UNetDriver*, UReplicationDriver*)>(TEXT("UNetDriver::SetReplicationDriver"))
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .CallSite()
+        .Find("mov rdx, rax; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SetReplicationDriver(this, NewReplicationDriver);
+}
+
 FName UNetDriver::GetNetDriverName() const
 {
     static auto NetDriverName = GetClass()->FindPropertyByName(FName(TEXT("NetDriverName")));

@@ -30,6 +30,8 @@ class AFortGameModeAthena : public AFortGamePvPBase
 public:
     static UClass* StaticClass();
 
+    static TMulticastDelegate<void, AFortGameModeAthena*>& GetNotifyPlaylistDataLoaded();
+
     void InitGameState();
 
     void FinishWorldInitialization();

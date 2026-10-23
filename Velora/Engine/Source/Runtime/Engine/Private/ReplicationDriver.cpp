@@ -1,6 +1,35 @@
 #include "pch.h"
 #include "Engine/ReplicationDriver.h"
+#include "Engine/EngineBaseTypes.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
+#include "Detour.h"
+
+UReplicationDriver* UReplicationDriver::CreateReplicationDriver(UNetDriver* NetDriver, const FURL& URL, UWorld* World)
+{
+    DETOUR(UReplicationDriver, CreateReplicationDriver, Anchor::Hook()
+        .If(FEngineVersion::Current().GetChangelist() >= 19458861)
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Optional()
+        .Start()
+        .Inline());
+
+    BindCreateReplicationDriverDelegate();
+
+    return DetourAs<DetourType>(DETOUR_ORIGINAL(UReplicationDriver, CreateReplicationDriver))(NetDriver, URL, World);
+}
+
+FCreateReplicationDriver& UReplicationDriver::CreateReplicationDriverDelegate()
+{
+    static auto CreateReplicationDriverDelegate = Anchor::Function<FCreateReplicationDriver& (*)()>(TEXT("UReplicationDriver::CreateReplicationDriverDelegate"))
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return CreateReplicationDriverDelegate();
+}
 
 void UReplicationDriver::FlushNetDormancy(AActor* Actor, bool bWasDormInitial)
 {

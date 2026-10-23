@@ -58,6 +58,22 @@ UClass* AFortGameModeAthena::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, AFortGameModeAthena*>& AFortGameModeAthena::GetNotifyPlaylistDataLoaded()
+{
+    static auto NotifyPlaylistDataLoaded = Anchor::Data<TMulticastDelegate<void, AFortGameModeAthena*>*>(TEXT("AFortGameModeAthena::NotifyPlaylistDataLoaded"))
+        .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
+        .Start()
+        .Find("lea rcx, [0x*]; call 0x*; mov rdx, rdi; call 0x*")
+        .Find("mov rdx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPlaylistDataLoaded;
+}
+
 void AFortGameModeAthena::FinishWorldInitialization()
 {
     DETOUR(AFortGameModeAthena, FinishWorldInitialization, Anchor::Hook()

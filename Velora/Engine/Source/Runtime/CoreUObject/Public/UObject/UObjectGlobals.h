@@ -14,6 +14,8 @@ public:
     static void AssertIfInConstructor(UObject* Outer, const TCHAR* ErrorMessage);
 };
 
+UObject* GetTransientPackage();
+
 UObject* StaticFindObject(UClass* Class, UObject* InOuter, const TCHAR* Name, bool ExactClass = false);
 
 UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename = nullptr, uint32 LoadFlags = LOAD_None, UPackageMap* Sandbox = nullptr, bool bAllowObjectReconciliation = true, struct FUObjectSerializeContext* InSerializeContext = nullptr);

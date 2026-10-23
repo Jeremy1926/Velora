@@ -17,6 +17,8 @@ class AFortGameMode : public AGameMode
 public:
     static UClass* StaticClass();
 
+    bool GetEnableReplicationGraph() const;
+
     void OnPlayerCreatedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor);
 
     void OnPlayerRepairedBuilding(AFortPlayerController* PlayerController, ABuildingActor* BuildingActor);

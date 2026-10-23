@@ -20,6 +20,17 @@ void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* Erro
     AssertIfInConstructor(Outer, ErrorMessage);
 }
 
+UObject* GetTransientPackage()
+{
+    static auto GObjTransientPkg = Anchor::Data<UObject**>(TEXT("GObjTransientPkg"))
+        .String(TEXT("/Engine/Transient"))
+        .Find("mov [0x*], rax")
+        .Target()
+        .Get();
+
+    return *GObjTransientPkg;
+}
+
 UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const TCHAR* OrigInName, bool ExactClass)
 {
     static auto StaticFindObject = Anchor::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, bool)>(TEXT("StaticFindObject"))

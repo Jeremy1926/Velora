@@ -11,6 +11,13 @@ UFortPlaylistManager* UFortGameInstance::GetPlaylistManager() const
     return *PlaylistManager->ContainerPtrToValuePtr<UFortPlaylistManager*>(this);
 }
 
+UUpdateManager* UFortGameInstance::GetUpdateManager() const
+{
+    static auto UpdateManager = GetClass()->FindPropertyByName(FName(TEXT("UpdateManager")));
+
+    return *UpdateManager->ContainerPtrToValuePtr<UUpdateManager*>(this);
+}
+
 TSharedPtr<IAnalyticsProvider>* UFortGameInstance::GetServerAnalyticsProvider()
 {
     static auto ServerAnalyticsProvider = Anchor::Offset(TEXT("UFortGameInstance::ServerAnalyticsProvider"))

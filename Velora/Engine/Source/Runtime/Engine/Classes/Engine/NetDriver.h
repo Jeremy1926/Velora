@@ -161,6 +161,8 @@ public:
 
     UReplicationDriver* GetReplicationDriver() const;
 
+    void SetReplicationDriver(UReplicationDriver* NewReplicationDriver);
+
     FName GetNetDriverName() const;
 
     float GetTime() const;

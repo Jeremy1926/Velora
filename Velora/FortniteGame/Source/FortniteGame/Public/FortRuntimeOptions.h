@@ -10,4 +10,6 @@ public:
     static const UFortRuntimeOptions& Get();
 
     float GetBRServerMaxTickRate() const;
+
+    bool GetDisableReplicationGraph() const;
 };

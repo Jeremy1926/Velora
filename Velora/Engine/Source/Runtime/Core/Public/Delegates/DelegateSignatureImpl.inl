@@ -7,8 +7,8 @@ struct FWeakObjectPtr;
 template<typename FuncType>
 class TDelegate;
 
-template<typename... ParamTypes>
-class TDelegate<void(ParamTypes...)> : public FDelegateBase
+template<typename RetValType, typename... ParamTypes>
+class TDelegate<RetValType(ParamTypes...)> : public FDelegateBase
 {
 public:
     TDelegate()
@@ -25,7 +25,7 @@ public:
         if (&Other != this)
         {
             if (auto OtherInstance = Other.GetDelegateInstanceProtected())
-                IDelegateInstance::WithLayout(OtherInstance, [&](auto, auto bDestructorFirst) { ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)OtherInstance)->CreateCopy(*this); });
+                IDelegateInstance::WithLayout(OtherInstance, [&](auto, auto bDestructorFirst) { ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>*)OtherInstance)->CreateCopy(*this); });
             else
                 Unbind();
         }
@@ -33,12 +33,21 @@ public:
         return *this;
     }
 
-    template<class UserClass>
-    static TDelegate CreateUObject(UserClass* InUserObject, void (UserClass::*InFunc)(ParamTypes...))
+    static TDelegate CreateStatic(RetValType (*InFunc)(ParamTypes...))
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, void(ParamTypes...), decltype(bDestructorFirst)::value>(InUserObject, InFunc); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseStaticDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>(InFunc); });
+
+        return Result;
+    }
+
+    template<class UserClass>
+    static TDelegate CreateUObject(UserClass* InUserObject, RetValType (UserClass::*InFunc)(ParamTypes...))
+    {
+        TDelegate Result;
+
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), decltype(bDestructorFirst)::value>(InUserObject, InFunc); });
 
         return Result;
     }
@@ -48,9 +57,15 @@ public:
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseFunctorDelegateInstance<void(ParamTypes...), std::remove_reference_t<FunctorType>, decltype(bDestructorFirst)::value>(InFunctor); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseFunctorDelegateInstance<RetValType(ParamTypes...), std::remove_reference_t<FunctorType>, decltype(bDestructorFirst)::value>(InFunctor); });
 
         return Result;
+    }
+
+    template<typename FunctorType>
+    void BindLambda(FunctorType&& InFunctor)
+    {
+        *this = CreateLambda(Forward<FunctorType>(InFunctor));
     }
 
     bool IsBound() const
@@ -64,7 +79,7 @@ public:
     {
         auto Instance = GetDelegateInstanceProtected();
 
-        return Instance && IDelegateInstance::WithLayout(Instance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)Instance)->ExecuteIfSafe(Forward<ParamTypes>(Params)...); });
+        return Instance && IDelegateInstance::WithLayout(Instance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>*)Instance)->ExecuteIfSafe(Forward<ParamTypes>(Params)...); });
     }
 };
 
@@ -76,6 +91,11 @@ class TBaseMulticastDelegate<void, ParamTypes...> : public FMulticastDelegateBas
 {
 public:
     typedef TDelegate<void(ParamTypes...)> FDelegate;
+
+    FDelegateHandle AddStatic(void (*InFunc)(ParamTypes...))
+    {
+        return AddDelegateInstance(FDelegate::CreateStatic(InFunc));
+    }
 
     template<class UserClass>
     FDelegateHandle AddUObject(UserClass* InUserObject, void (UserClass::*InFunc)(ParamTypes...))
