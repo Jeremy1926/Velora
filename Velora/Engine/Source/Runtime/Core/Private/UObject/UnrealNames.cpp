@@ -77,14 +77,14 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
     }
 
     static auto Constructor = Anchor::Function<void (*)(FName*, const WIDECHAR*, EFindName)>(TEXT("FName::FName"))
+        .String(TEXT("OnlineSubsystemUtils"), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"))
         .Start()
         .Find("mov r8d, 0x1")
         .Call()
-        .Or()
-        .String(TEXT("OnlineSubsystemUtils"), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*")
-        .Find("call 0x*")
-        .Target()
         .Get();
 
     Constructor(this, Name, FindType);
