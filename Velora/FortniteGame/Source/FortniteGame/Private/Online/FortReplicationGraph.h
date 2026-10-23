@@ -4,7 +4,9 @@
 #include "Containers/Map.h"
 #include "GameplayTagContainer.h"
 #include "ReplicationGraphTypes.h"
+#include "Containers/Array.h"
 #include "UObject/NameTypes.h"
+#include "UObject/Object.h"
 #include "UObject/WeakObjectPtr.h"
 
 class AFortGameModeAthena;
@@ -12,6 +14,7 @@ class AFortTeamHealthInfo;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
 class UNetConnection;
+class UScriptStruct;
 struct FFrame;
 
 enum class EClassRepNodeMapping : uint32
@@ -24,6 +27,53 @@ enum class EClassRepNodeMapping : uint32
     Spatialize_Dynamic,
     Spatialize_Dormancy,
     Instance_Dynamic,
+};
+
+struct FRepGraphActorSettingsBase
+{
+    static UScriptStruct* StaticStruct();
+
+    bool GetAddClassRepInfoToMap() const;
+
+    bool GetUseCustomClassRepInfo() const;
+
+    bool GetAddToRPC_Multicast_OpenChannelForClassMap() const;
+
+    bool GetRPC_Multicast_OpenChannelForClass() const;
+
+    EClassRepNodeMapping GetClassNodeMapping() const;
+
+    FClassReplicationInfo& GetClassRepInfo();
+};
+
+struct FRepGraphActorClassSettings : public FRepGraphActorSettingsBase
+{
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FName GetActorClassName() const;
+
+    UClass* GetStaticActorClass() const;
+};
+
+template<>
+class TArray<FRepGraphActorClassSettings, FDefaultAllocator> : public TRuntimeSizedArray<FRepGraphActorClassSettings>
+{
+};
+
+class UGlobalRepGraphActorClassSettings : public UObject
+{
+public:
+    static UClass* StaticClass();
+
+    TArray<FRepGraphActorClassSettings>& GetClassSettings();
+};
+
+class UFortReplicationGraphConnection : public UNetReplicationGraphConnection
+{
+public:
+    static UClass* StaticClass();
 };
 
 class UFortReplicationGraph : public UReplicationGraph
@@ -47,6 +97,8 @@ public:
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
 
+    void InitGlobalActorClassSettings();
+
     void InitGlobalGraphNodes();
 
     void InitDynamicSpatializationSettings();
@@ -62,6 +114,14 @@ private:
 
     void AddClassRepInfo(UClass* Class, EClassRepNodeMapping Mapping);
 
+    EClassRepNodeMapping GetClassNodeMapping(UClass* Class);
+
+    void RegisterClassRepNodeMapping(UClass* Class);
+
+    bool ConditionalInitClassReplicationInfo(UClass* ReplicatedClass, FClassReplicationInfo& ClassInfo);
+
+    void InitClassReplicationInfo(FClassReplicationInfo& Info, UClass* Class, bool bSpatialize);
+
     void SetAllSquadNodesEnabled(bool bEnabled);
 
     TMap<UClass*, UReplicationGraphNode*>& GetClassToNodetoRouteTo();
@@ -73,6 +133,10 @@ private:
     TClassMap<EClassRepNodeMapping>& GetClassRepNodePolicies();
 
     TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& GetSquadMap();
+
+    TArray<UClass*>& GetExplicitlySetClasses();
+
+    UGlobalRepGraphActorClassSettings*& GetGlobalActorClassSettings();
 };
 
 struct FFortAlwaysRelevantActorInfo

@@ -30,6 +30,12 @@ public:
 
     bool GetIsReplicated() const;
 
+    bool GetAlwaysRelevant() const;
+
+    bool GetNetUseOwnerRelevancy() const;
+
+    bool IsReplicatingMovement() const;
+
     bool IsNetStartupActor() const;
 
     ENetRole GetRemoteRole() const;

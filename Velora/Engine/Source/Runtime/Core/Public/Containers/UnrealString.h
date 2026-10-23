@@ -3,6 +3,7 @@
 #include "HAL/Platform.h"
 #include "Containers/Array.h"
 #include "Misc/Crc.h"
+#include <cwchar>
 #include <cwctype>
 
 class FString
@@ -54,6 +55,11 @@ public:
     FORCEINLINE int32 Len() const
     {
         return Data.Num() ? Data.Num() - 1 : 0;
+    }
+
+    FORCEINLINE bool StartsWith(const TCHAR* InPrefix) const
+    {
+        return InPrefix && *InPrefix && !_wcsnicmp(**this, InPrefix, wcslen(InPrefix));
     }
 
     FORCEINLINE void AppendChars(const TCHAR* Array, int32 Count)

@@ -2,6 +2,14 @@
 #include "GameFramework/Pawn.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
+
+UClass* APawn::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.Pawn"));
+
+    return Class;
+}
 
 AController* APawn::GetController() const
 {

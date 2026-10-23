@@ -483,7 +483,7 @@ public:
 
     static UClass* StaticClass();
 
-    UClass* GetReplicationConnectionManagerClass();
+    UClass*& GetReplicationConnectionManagerClass();
 
     UNetDriver*& GetNetDriver();
 
@@ -559,6 +559,8 @@ public:
     int32& GetActorDiscoveryMaxBitsPerFrame();
 
     void SetActorDiscoveryBudget(int32 ActorDiscoveryBudgetInKBytesPerSec);
+
+    uint16 GetReplicationPeriodFrameForFrequency(float NetUpdateFrequency);
 
     TArray<UNetConnection*>& GetConnectionsNeedingsPostTickDispatchFlush();
 

@@ -70,4 +70,6 @@ public:
     TArray<AFortWeapon*>& GetCurrentWeaponList();
 
     void UpdateCullDistance();
+
+    bool UpdateSharedReplication();
 };

@@ -303,3 +303,18 @@ void AFortPawn::UpdateCullDistance()
 
     UpdateCullDistance(this);
 }
+
+bool AFortPawn::UpdateSharedReplication()
+{
+    static auto UpdateSharedReplication = Anchor::VirtualFunction<bool (*)(AFortPawn*)>(TEXT("AFortPawn::UpdateSharedReplication"))
+        .Event(TEXT("FastSharedReplication"))
+        .Caller()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortAIPawn"))
+        .Or()
+        .Event(TEXT("FastSharedReplication"))
+        .Caller()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+        .Get();
+
+    return UpdateSharedReplication(this);
+}

@@ -7,11 +7,13 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Containers/UnrealString.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
 #include "Containers/BitArray.h"
@@ -19,7 +21,9 @@
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "FortRuntimeOptions.h"
 #include "Pawns/FortAIPawn.h"
+#include "Pawns/FortPawn.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortLiveBroadcastController.h"
 #include "Player/FortLiveSpectatorController.h"
@@ -31,11 +35,115 @@
 #include "Templates/Casts.h"
 #include "Templates/Function.h"
 #include "UObject/ScriptDelegates.h"
+#include "UObject/Class.h"
+#include "UObject/ObjectMacros.h"
 #include "UObject/Stack.h"
+#include "UObject/UObjectArray.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UScriptStruct* FRepGraphActorSettingsBase::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.RepGraphActorSettingsBase"));
+
+    return Struct;
+}
+
+bool FRepGraphActorSettingsBase::GetAddClassRepInfoToMap() const
+{
+    static auto bAddClassRepInfoToMap = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bAddClassRepInfoToMap")));
+
+    return bAddClassRepInfoToMap->GetPropertyValue_InContainer(this);
+}
+
+bool FRepGraphActorSettingsBase::GetUseCustomClassRepInfo() const
+{
+    static auto bUseCustomClassRepInfo = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bUseCustomClassRepInfo")));
+
+    return bUseCustomClassRepInfo->GetPropertyValue_InContainer(this);
+}
+
+bool FRepGraphActorSettingsBase::GetAddToRPC_Multicast_OpenChannelForClassMap() const
+{
+    static auto bAddToRPC_Multicast_OpenChannelForClassMap = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bAddToRPC_Multicast_OpenChannelForClassMap")));
+
+    return bAddToRPC_Multicast_OpenChannelForClassMap->GetPropertyValue_InContainer(this);
+}
+
+bool FRepGraphActorSettingsBase::GetRPC_Multicast_OpenChannelForClass() const
+{
+    static auto bRPC_Multicast_OpenChannelForClass = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bRPC_Multicast_OpenChannelForClass")));
+
+    return bRPC_Multicast_OpenChannelForClass->GetPropertyValue_InContainer(this);
+}
+
+EClassRepNodeMapping FRepGraphActorSettingsBase::GetClassNodeMapping() const
+{
+    static auto ClassNodeMapping = StaticStruct()->FindPropertyByName(FName(TEXT("ClassNodeMapping")));
+
+    return (EClassRepNodeMapping)*ClassNodeMapping->ContainerPtrToValuePtr<uint8>(this);
+}
+
+FClassReplicationInfo& FRepGraphActorSettingsBase::GetClassRepInfo()
+{
+    static auto ClassRepInfo = StaticStruct()->FindPropertyByName(FName(TEXT("ClassRepInfo")));
+
+    return *ClassRepInfo->ContainerPtrToValuePtr<FClassReplicationInfo>(this);
+}
+
+UScriptStruct* FRepGraphActorClassSettings::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.RepGraphActorClassSettings"));
+
+    return Struct;
+}
+
+int32 FRepGraphActorClassSettings::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FName FRepGraphActorClassSettings::GetActorClassName() const
+{
+    static auto ActorClassName = StaticStruct()->FindPropertyByName(FName(TEXT("ActorClassName")));
+
+    return ActorClassName->GetPropertyValue_InContainer<FName>(this);
+}
+
+UClass* FRepGraphActorClassSettings::GetStaticActorClass() const
+{
+    auto ActorClassNameString = GetActorClassName().ToString();
+
+    if (ActorClassNameString.StartsWith(TEXT("/Script/")))
+        return (UClass*)StaticFindObject(UClass::StaticClass(), (UObject*)-1, *ActorClassNameString, true);
+
+    return LoadObject<UClass>(nullptr, *ActorClassNameString);
+}
+
+UClass* UGlobalRepGraphActorClassSettings::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.GlobalRepGraphActorClassSettings"));
+
+    return Class;
+}
+
+TArray<FRepGraphActorClassSettings>& UGlobalRepGraphActorClassSettings::GetClassSettings()
+{
+    static auto ClassSettings = StaticClass()->FindPropertyByName(FName(TEXT("ClassSettings")));
+
+    return *ClassSettings->ContainerPtrToValuePtr<TArray<FRepGraphActorClassSettings>>(this);
+}
+
+UClass* UFortReplicationGraphConnection::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphConnection"));
+
+    return Class;
+}
 
 UClass* UFortReplicationGraph::StaticClass()
 {
@@ -109,6 +217,24 @@ TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplication
     return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)(&GetClassRepNodePolicies() + 1) + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
 }
 
+TArray<UClass*>& UFortReplicationGraph::GetExplicitlySetClasses()
+{
+    return *((TArray<UClass*>*)&GetGlobalActorClassSettings() - 1);
+}
+
+UGlobalRepGraphActorClassSettings*& UFortReplicationGraph::GetGlobalActorClassSettings()
+{
+    static auto GlobalActorClassSettings = Anchor::Offset(TEXT("UFortReplicationGraph::GlobalActorClassSettings"))
+        .String(TEXT("GlobalRepGraphActorClassSettings"))
+        .Start()
+        .Caller()
+        .CallSite()
+        .Find("mov [*+0x*], rax")
+        .Disp();
+
+    return *(UGlobalRepGraphActorClassSettings**)((uint8*)this + GlobalActorClassSettings);
+}
+
 UReplicationGraphNode_ActorList*& UFortReplicationGraph::GetAlwaysRelevantNode()
 {
     static auto AlwaysRelevantNode = StaticClass()->FindPropertyByName(FName(TEXT("AlwaysRelevantNode")));
@@ -166,6 +292,149 @@ void UFortReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnect
 
     AddConnectionGraphNode(AlwaysRelevantConnectionNode, ConnectionManager);
     AddConnectionGraphNode(ConnectionManager->GetNetConnection()->IsReplay() ? GetReplayPlayerStateLimiterNode() : GetPlayerStateLimiterNode(), ConnectionManager);
+}
+
+void UFortReplicationGraph::InitGlobalActorClassSettings()
+{
+    DETOUR(UFortReplicationGraph, InitGlobalActorClassSettings, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x90)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "jmp 0x*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    static auto TargetKBitsSecFastSharedPath = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.TargetKBitsSecFastSharedPath"));
+    static auto FastSharedPathCullDistPct = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.FastSharedPathCullDistPct"));
+    static auto MinigamePriorityBias = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.MinigamePriorityBias"));
+    static auto PropertyOverridePriorityBias = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.PropertyOverridePriorityBias"));
+    static auto DestructInfoMaxDist = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DestructInfo.MaxDist"));
+
+    Original();
+
+    UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses().Reset();
+
+    GetReplicationConnectionManagerClass() = UFortReplicationGraphConnection::StaticClass();
+
+    if (UFortRuntimeOptions::Get().GetBRServerMaxTickRate() > 0.f)
+        GetNetDriver()->SetNetServerMaxTickRate((int32)UFortRuntimeOptions::Get().GetBRServerMaxTickRate());
+
+    GetGlobalActorReplicationInfoMap().SetInitClassInfoFunc([this](UClass* Class, FClassReplicationInfo& ClassInfo) -> bool
+    {
+        RegisterClassRepNodeMapping(Class);
+
+        return ConditionalInitClassReplicationInfo(Class, ClassInfo);
+    });
+
+    GetClassRepNodePolicies().InitNewElement = [this](UClass* ReplicatedClass, EClassRepNodeMapping& OutMapping) -> bool
+    {
+        OutMapping = GetClassNodeMapping(ReplicatedClass);
+
+        return true;
+    };
+
+    auto& ClassSettings = GetGlobalActorClassSettings()->GetClassSettings();
+
+    for (auto& ActorClassSettings : ClassSettings)
+    {
+        if (!ActorClassSettings.GetAddClassRepInfoToMap())
+            continue;
+
+        if (auto StaticActorClass = ActorClassSettings.GetStaticActorClass())
+            AddClassRepInfo(StaticActorClass, ActorClassSettings.GetClassNodeMapping());
+    }
+
+    AddClassRepInfo(AFortSafeZoneIndicatorFuture::StaticClass(), EClassRepNodeMapping::NotRouted);
+
+    TArray<UClass*> AllReplicatedClasses;
+
+    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+    {
+        auto ObjectItem = GUObjectArray.IndexToValidObject(Index, true);
+        auto Class = ObjectItem ? Cast<UClass>((UObject*)ObjectItem->Object) : nullptr;
+
+        if (!Class || (Class->GetFlags() & RF_ClassDefaultObject))
+            continue;
+
+        auto ActorCDO = Cast<AActor>(Class->GetDefaultObject(true));
+
+        if (!ActorCDO || !ActorCDO->GetIsReplicated())
+            continue;
+
+        auto ClassName = Class->GetFName().ToString();
+
+        if (ClassName.StartsWith(TEXT("SKEL_")) || ClassName.StartsWith(TEXT("REINST_")))
+            continue;
+
+        AllReplicatedClasses.Add(Class);
+        RegisterClassRepNodeMapping(Class);
+    }
+
+    GetExplicitlySetClasses().Reset();
+
+    auto SetClassInfo = [&](UClass* Class, const FClassReplicationInfo& Info)
+    {
+        GetGlobalActorReplicationInfoMap().SetClassInfo(Class, Info);
+        GetExplicitlySetClasses().Add(Class);
+    };
+
+    FClassReplicationInfo PawnClassRepInfo;
+    PawnClassRepInfo.SetCullDistanceSquared(15000.f * 15000.f);
+    SetClassInfo(APawn::StaticClass(), PawnClassRepInfo);
+
+    PawnClassRepInfo.FastSharedReplicationFunc = [](AActor* Actor) -> bool
+    {
+        auto FortPawn = Cast<AFortPawn>(Actor);
+
+        return FortPawn ? FortPawn->UpdateSharedReplication() : false;
+    };
+    PawnClassRepInfo.SetFastSharedReplicationFuncName(FName(TEXT("FastSharedReplication")));
+
+    GetFastSharedPathConstants().MaxBitsPerFrame = (int32)((float)TargetKBitsSecFastSharedPath->GetInt() / (float)GetNetDriver()->GetNetServerMaxTickRate());
+    GetFastSharedPathConstants().DistanceRequirementPct = FastSharedPathCullDistPct->GetFloat();
+
+    SetClassInfo(AFortPlayerPawnAthena::StaticClass(), PawnClassRepInfo);
+    SetClassInfo(AFortAIPawn::StaticClass(), PawnClassRepInfo);
+
+    for (auto& ActorClassSettings : ClassSettings)
+    {
+        if (!ActorClassSettings.GetUseCustomClassRepInfo())
+            continue;
+
+        auto ActorClassName = ActorClassSettings.GetActorClassName().ToString();
+
+        if (ActorClassName == TEXT("/Script/FortniteGame.FortMinigame"))
+            ActorClassSettings.GetClassRepInfo().AccumulatedNetPriorityBias = MinigamePriorityBias->GetFloat();
+        else if (ActorClassName == TEXT("/Script/FortniteGame.FortPropertyOverrideReplShared"))
+            ActorClassSettings.GetClassRepInfo().AccumulatedNetPriorityBias = PropertyOverridePriorityBias->GetFloat();
+
+        if (auto StaticActorClass = ActorClassSettings.GetStaticActorClass())
+            SetClassInfo(StaticActorClass, ActorClassSettings.GetClassRepInfo());
+    }
+
+    UReplicationGraphNode_ActorListFrequencyBuckets::GetDefaultSettings().ListSize = 12;
+
+    for (auto ReplicatedClass : AllReplicatedClasses)
+    {
+        FClassReplicationInfo ClassInfo;
+
+        if (ConditionalInitClassReplicationInfo(ReplicatedClass, ClassInfo))
+            GetGlobalActorReplicationInfoMap().SetClassInfo(ReplicatedClass, ClassInfo);
+    }
+
+    GetDestructInfoMaxDistanceSquared() = DestructInfoMaxDist->GetFloat() * DestructInfoMaxDist->GetFloat();
+
+    GetRPC_Multicast_OpenChannelForClass().Reset();
+
+    for (auto& ActorClassSettings : ClassSettings)
+    {
+        if (!ActorClassSettings.GetAddToRPC_Multicast_OpenChannelForClassMap())
+            continue;
+
+        if (auto StaticActorClass = ActorClassSettings.GetStaticActorClass())
+            GetRPC_Multicast_OpenChannelForClass().Set(StaticActorClass, ActorClassSettings.GetRPC_Multicast_OpenChannelForClass());
+    }
 }
 
 void UFortReplicationGraph::InitGlobalGraphNodes()
@@ -431,6 +700,64 @@ void UFortReplicationGraph::AddClassRepInfo(UClass* Class, EClassRepNodeMapping 
         Class->GetDefaultObject(true);
 
     GetClassRepNodePolicies().Set(Class, Mapping);
+}
+
+EClassRepNodeMapping UFortReplicationGraph::GetClassNodeMapping(UClass* Class)
+{
+    if (!Class)
+        return EClassRepNodeMapping::NotRouted;
+
+    if (auto Ptr = GetClassRepNodePolicies().FindWithoutClassRecursion(Class))
+        return *Ptr;
+
+    auto ActorCDO = Cast<AActor>(Class->GetDefaultObject(true));
+
+    if (!ActorCDO)
+        return EClassRepNodeMapping::NotRouted;
+
+    auto SuperClass = (UClass*)Class->GetSuperStruct();
+
+    if (auto SuperCDO = Cast<AActor>(SuperClass->GetDefaultObject(true)))
+    {
+        if (SuperCDO->GetIsReplicated() == ActorCDO->GetIsReplicated() && SuperCDO->GetAlwaysRelevant() == ActorCDO->GetAlwaysRelevant() && SuperCDO->GetOnlyRelevantToOwner() == ActorCDO->GetOnlyRelevantToOwner() && SuperCDO->GetNetUseOwnerRelevancy() == ActorCDO->GetNetUseOwnerRelevancy())
+            return GetClassNodeMapping(SuperClass);
+    }
+
+    if (ActorCDO->GetIsReplicated() && !(ActorCDO->GetAlwaysRelevant() || ActorCDO->GetOnlyRelevantToOwner() || ActorCDO->GetNetUseOwnerRelevancy()))
+        return ActorCDO->IsReplicatingMovement() ? EClassRepNodeMapping::Spatialize_Dynamic : EClassRepNodeMapping::Spatialize_Static;
+
+    if (ActorCDO->GetAlwaysRelevant() && !ActorCDO->GetOnlyRelevantToOwner())
+        return EClassRepNodeMapping::RelevantAllConnections;
+
+    return EClassRepNodeMapping::NotRouted;
+}
+
+void UFortReplicationGraph::RegisterClassRepNodeMapping(UClass* Class)
+{
+    GetClassRepNodePolicies().Set(Class, GetClassNodeMapping(Class));
+}
+
+bool UFortReplicationGraph::ConditionalInitClassReplicationInfo(UClass* ReplicatedClass, FClassReplicationInfo& ClassInfo)
+{
+    for (auto ExplicitlySetClass : GetExplicitlySetClasses())
+    {
+        if (ReplicatedClass->IsChildOf(ExplicitlySetClass))
+            return false;
+    }
+
+    InitClassReplicationInfo(ClassInfo, ReplicatedClass, GetClassRepNodePolicies().GetChecked(ReplicatedClass) >= EClassRepNodeMapping::Spatialize_Static);
+
+    return true;
+}
+
+void UFortReplicationGraph::InitClassReplicationInfo(FClassReplicationInfo& Info, UClass* Class, bool bSpatialize)
+{
+    auto ActorCDO = Class->GetDefaultObject<AActor>();
+
+    if (bSpatialize)
+        Info.SetCullDistanceSquared(ActorCDO->GetNetCullDistanceSquared());
+
+    Info.ReplicationPeriodFrame = GetReplicationPeriodFrameForFrequency(ActorCDO->GetNetUpdateFrequency());
 }
 
 void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)

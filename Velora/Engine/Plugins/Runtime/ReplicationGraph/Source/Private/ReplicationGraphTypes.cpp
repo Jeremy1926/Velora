@@ -132,6 +132,27 @@ FFastSharedReplicationInfo*& FGlobalActorReplicationInfo::GetFastSharedReplicati
     return *(FFastSharedReplicationInfo**)((uint8*)this + FastSharedReplicationInfo);
 }
 
+void FClassReplicationInfo::SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName)
+{
+    TGameLayout<FName>::Store((uint8*)this + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, FastSharedReplicationFuncName) : offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFuncName)), InFastSharedReplicationFuncName);
+}
+
+void FClassReplicationInfo::SetCullDistanceSquared(float InCullDistanceSquared)
+{
+    *(float*)((uint8*)this + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistanceSquared) : offsetof(TClassReplicationInfoLayout<FName>, CullDistanceSquared))) = InCullDistanceSquared;
+    *(float*)((uint8*)this + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistance) : offsetof(TClassReplicationInfoLayout<FName>, CullDistance))) = FMath::Sqrt(InCullDistanceSquared);
+}
+
+void FGlobalActorReplicationInfoMap::SetInitClassInfoFunc(TFunction<bool(UClass*, FClassReplicationInfo&)> Func)
+{
+    ClassMap.InitNewElement = MoveTemp(Func);
+}
+
+void FGlobalActorReplicationInfoMap::SetClassInfo(UClass* InClass, const FClassReplicationInfo& Info)
+{
+    ClassMap.Set(InClass, Info);
+}
+
 FGlobalActorReplicationInfo* FGlobalActorReplicationInfoMap::Find(AActor* const& Actor)
 {
     auto InfoPtr = ActorMap.Find(Actor);

@@ -77,7 +77,19 @@ public:
         Callable = &Call<std::decay_t<FunctorType>>;
     }
 
-    TFunction(const TFunction&) = delete;
+    TFunction(const TFunction& Other)
+        : Callable(Other.Callable)
+    {
+        if (Callable)
+            Other.Storage.GetBoundObject()->CloneToEmptyStorage(&Storage);
+    }
+
+    TFunction(TFunction&& Other)
+        : Callable(Other.Callable)
+        , Storage(Other.Storage)
+    {
+        Other.Callable = nullptr;
+    }
 
     ~TFunction()
     {

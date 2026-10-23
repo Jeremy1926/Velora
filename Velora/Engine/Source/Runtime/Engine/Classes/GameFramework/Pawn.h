@@ -8,6 +8,8 @@ class APlayerState;
 class APawn : public AActor
 {
 public:
+    static UClass* StaticClass();
+
     AController* GetController() const;
 
     APlayerState* GetPlayerState() const;

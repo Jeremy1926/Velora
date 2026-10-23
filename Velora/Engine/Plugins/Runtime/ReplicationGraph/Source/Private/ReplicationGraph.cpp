@@ -2426,7 +2426,7 @@ UClass* UReplicationGraph::StaticClass()
     return Class;
 }
 
-UClass* UReplicationGraph::GetReplicationConnectionManagerClass()
+UClass*& UReplicationGraph::GetReplicationConnectionManagerClass()
 {
     static auto ReplicationConnectionManagerClass = StaticClass()->FindPropertyByName(FName(TEXT("ReplicationConnectionManagerClass")));
 
@@ -3590,6 +3590,13 @@ void UReplicationGraph::SetActorDiscoveryBudget(int32 ActorDiscoveryBudgetInKByt
         return;
 
     GetActorDiscoveryMaxBitsPerFrame() = (ActorDiscoveryBudgetInKBytesPerSec * 8000) / GetNetDriver()->GetNetServerMaxTickRate();
+}
+
+uint16 UReplicationGraph::GetReplicationPeriodFrameForFrequency(float NetUpdateFrequency)
+{
+    auto FramesBetweenUpdates = (uint32)FMath::RoundToInt(GetNetDriver()->GetNetServerMaxTickRate() / NetUpdateFrequency);
+
+    return (uint16)FMath::Clamp<uint32>(FramesBetweenUpdates, 1, 0xFFFF);
 }
 
 void UReplicationGraph::AddGlobalGraphNode(UReplicationGraphNode* GraphNode)

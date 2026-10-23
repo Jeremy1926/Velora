@@ -35,6 +35,27 @@ bool AActor::GetIsReplicated() const
     return bReplicates->GetPropertyValue_InContainer(this);
 }
 
+bool AActor::GetAlwaysRelevant() const
+{
+    static auto bAlwaysRelevant = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bAlwaysRelevant")));
+
+    return bAlwaysRelevant->GetPropertyValue_InContainer(this);
+}
+
+bool AActor::GetNetUseOwnerRelevancy() const
+{
+    static auto bNetUseOwnerRelevancy = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetUseOwnerRelevancy")));
+
+    return bNetUseOwnerRelevancy->GetPropertyValue_InContainer(this);
+}
+
+bool AActor::IsReplicatingMovement() const
+{
+    static auto bReplicateMovement = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bReplicateMovement")));
+
+    return bReplicateMovement->GetPropertyValue_InContainer(this);
+}
+
 bool AActor::IsNetStartupActor() const
 {
     static auto bNetStartup = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetStartup")));

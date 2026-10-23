@@ -6,6 +6,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "Math/Vector.h"
 #include "Misc/NetworkGuid.h"
+#include "Templates/Function.h"
 #include "Templates/SharedPointer.h"
 #include "Templates/UnrealTemplate.h"
 #include "UObject/Class.h"
@@ -49,6 +50,26 @@ struct TGlobalActorReplicationInfoLayout
     alignas(16) uint8 Settings[0x10];
 };
 
+struct FClassReplicationInfo
+{
+    float DistancePriorityScale = 1.f;
+    float StarvationPriorityScale = 1.f;
+    float AccumulatedNetPriorityBias = 0.f;
+    uint16 ReplicationPeriodFrame = 1;
+    uint16 FastPath_ReplicationPeriodFrame = 1;
+    uint16 ActorChannelFrameTimeout = 4;
+    TFunction<bool(AActor*)> FastSharedReplicationFunc;
+
+    void SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName);
+
+    void SetCullDistanceSquared(float InCullDistanceSquared);
+
+private:
+    uint8 FastSharedReplicationFuncNameAndCullDistance[0x10] = {};
+};
+
+static_assert(sizeof(FClassReplicationInfo) == sizeof(TClassReplicationInfoLayout<FName>));
+
 struct FRPCSendPolicyInfo
 {
     uint8 bSendImmediately : 1;
@@ -69,20 +90,20 @@ struct TClassMap
         if (ValueType* Ptr = Map.Find(ObjKey))
             return Ptr;
 
-        auto Callable = *(bool (**)(void*, UClass*&, ValueType&))InitNewElement;
-
-        if (Callable)
+        if (InitNewElement)
         {
-            auto Storage = InitNewElement + 0x10;
-            auto OwnedObject = *(uint8**)Storage ? *(uint8**)Storage : Storage + 0x10;
-            auto GetAddress = (*(void* (***)(void*))OwnedObject)[1];
             ValueType NewValue{};
 
-            if (Callable(GetAddress(OwnedObject), Class, NewValue))
+            if (InitNewElement(Class, NewValue))
                 return &Map.Add(ObjKey, MoveTemp(NewValue));
         }
 
         return GetClassInfoForNewClass_r(ObjKey, Class);
+    }
+
+    ValueType* FindWithoutClassRecursion(UClass* Class)
+    {
+        return Map.Find(FObjectKey(Class));
     }
 
     void Set(UClass* Class, const ValueType& Value)
@@ -90,7 +111,12 @@ struct TClassMap
         Map.Add(FObjectKey(Class), Value);
     }
 
-    alignas(16) uint8 InitNewElement[0x40];
+    void Reset()
+    {
+        Map.Reset();
+    }
+
+    TFunction<bool(UClass*, ValueType&)> InitNewElement;
 
 private:
     ValueType* GetClassInfoForNewClass_r(FObjectKey OriginalObjKey, const UClass* OriginalClass)
@@ -177,8 +203,13 @@ public:
 
     void ResetActorMap();
 
+    void SetInitClassInfoFunc(TFunction<bool(UClass*, FClassReplicationInfo&)> Func);
+
+    void SetClassInfo(UClass* InClass, const FClassReplicationInfo& Info);
+
 private:
     TMap<AActor*, FGlobalActorReplicationInfo*> ActorMap;
+    TClassMap<FClassReplicationInfo> ClassMap;
 };
 
 struct FConnectionReplicationActorInfo
