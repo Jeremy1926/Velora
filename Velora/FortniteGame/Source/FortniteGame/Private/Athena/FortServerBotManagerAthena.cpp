@@ -76,7 +76,9 @@ UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UW
 
     auto GameMode = World ? Cast<AFortGameModeAthena>(World->GetAuthGameMode()) : nullptr;
 
-    return GameMode ? GameMode->GetServerBotManager() : nullptr;
+    auto ServerBotManager = GameMode ? GameMode->GetServerBotManager() : nullptr;
+
+    return ServerBotManager ? *ServerBotManager : nullptr;
 }
 
 AFortPlayerPawnAthena* UFortServerBotManagerAthena::SpawnBot(const FVector& InSpawnLocation, const FRotator& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData)

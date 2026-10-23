@@ -34,11 +34,11 @@ UAthenaAISpawner* UAthenaAISystem::GetAISpawner() const
     return *AISpawner->ContainerPtrToValuePtr<UAthenaAISpawner*>(this);
 }
 
-UFortServerBotManagerAthena*& UAthenaAISystem::GetPlayerBotManager()
+UFortServerBotManagerAthena** UAthenaAISystem::GetPlayerBotManager()
 {
     static auto PlayerBotManager = GetClass()->FindPropertyByName(FName(TEXT("PlayerBotManager")));
 
-    return *PlayerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this);
+    return PlayerBotManager ? PlayerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this) : nullptr;
 }
 
 void UAthenaAISystem::OnNavigationReady()
@@ -60,9 +60,11 @@ void UAthenaAISystem::OnNavigationReady()
         .Optional()
         .AtCall());
 
-    auto& PlayerBotManager = GetPlayerBotManager();
+    auto PlayerBotManagerField = GetPlayerBotManager();
+    auto PlayerBotManager = UFortServerBotManagerAthena::GetServerBotManager(GetWorld());
 
-    PlayerBotManager = UFortServerBotManagerAthena::GetServerBotManager(GetWorld());
+    if (PlayerBotManagerField)
+        *PlayerBotManagerField = PlayerBotManager;
 
     if (PlayerBotManager)
     {

@@ -48,7 +48,7 @@ public:
 
     UAthenaAISettings*& GetAISettings();
 
-    UFortServerBotManagerAthena*& GetServerBotManager();
+    UFortServerBotManagerAthena** GetServerBotManager();
 
     TSubclassOf<UFortServerBotManagerAthena> GetServerBotManagerClass() const;
 

@@ -115,7 +115,8 @@ void AFortGameModeAthena::InitGameState()
     if (auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem()))
         ServerBotManager->SetCachedAIPopulationTracker(AISystem->GetAIPopulationTracker());
 
-    GetServerBotManager() = ServerBotManager;
+    if (auto ServerBotManagerField = GetServerBotManager())
+        *ServerBotManagerField = ServerBotManager;
 
     ServerBotManager->SetBotBrainActivationTimer();
 
@@ -789,18 +790,18 @@ UAthenaAISettings*& AFortGameModeAthena::GetAISettings()
     return *AISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(this);
 }
 
-UFortServerBotManagerAthena*& AFortGameModeAthena::GetServerBotManager()
+UFortServerBotManagerAthena** AFortGameModeAthena::GetServerBotManager()
 {
     static auto ServerBotManager = GetClass()->FindPropertyByName(FName(TEXT("ServerBotManager")));
 
-    return *ServerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this);
+    return ServerBotManager ? ServerBotManager->ContainerPtrToValuePtr<UFortServerBotManagerAthena*>(this) : nullptr;
 }
 
 TSubclassOf<UFortServerBotManagerAthena> AFortGameModeAthena::GetServerBotManagerClass() const
 {
     static auto ServerBotManagerClass = GetClass()->FindPropertyByName(FName(TEXT("ServerBotManagerClass")));
 
-    return *ServerBotManagerClass->ContainerPtrToValuePtr<TSubclassOf<UFortServerBotManagerAthena>>(this);
+    return ServerBotManagerClass ? *ServerBotManagerClass->ContainerPtrToValuePtr<TSubclassOf<UFortServerBotManagerAthena>>(this) : TSubclassOf<UFortServerBotManagerAthena>();
 }
 
 bool AFortGameModeAthena::GetDisableGCOnServerDuringMatch() const

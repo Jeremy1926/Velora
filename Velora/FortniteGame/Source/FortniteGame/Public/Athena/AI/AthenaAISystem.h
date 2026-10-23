@@ -19,7 +19,7 @@ public:
 
     UAthenaAISpawner* GetAISpawner() const;
 
-    UFortServerBotManagerAthena*& GetPlayerBotManager();
+    UFortServerBotManagerAthena** GetPlayerBotManager();
 
     void OnNavigationReady();
 
