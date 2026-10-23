@@ -875,9 +875,13 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
         if (!ItemDefinition || !InventoryOwner || !IsQuickbarItemType(GetItemType(ItemDefinition)))
             return;
 
-        TArray<UFortItem*> Items;
+        static auto ItemVariantHandleStruct = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ItemVariantHandle"));
 
-        if (FindItemInstancesFromDefinition((uint8*)this + InventoryOwner, ItemDefinition, &Items) <= 0)
+        TArray<UFortItem*> Items;
+        alignas(8) uint8 ItemVariantHandle[0x18] = {};
+        *(UFortItemDefinition**)ItemVariantHandle = ItemDefinition;
+
+        if (FindItemInstancesFromDefinition((uint8*)this + InventoryOwner, ItemVariantHandleStruct ? (UFortItemDefinition*)ItemVariantHandle : ItemDefinition, &Items) <= 0)
             return;
 
         for (auto Item : Items)
