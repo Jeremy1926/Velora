@@ -325,7 +325,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             if (ActorCount <= 0)
                 continue;
 
-            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasEventRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
+            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
             auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter);
 
             if (!PointProvider)
@@ -721,7 +721,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     auto PointProvider = EventRequest.PointProvider.Get();
     auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
     const int32 ActorCount = EventData ? FMath::Min(EventRequest.ActorCountToSpawn, EventData->GetActorDescriptions().Num()) : 0;
-    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasEventRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
+    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
     const auto SpawnedCallback = TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned);
     auto Config = GetConfig();
     auto DensityComputationDistance = Config ? Config->GetDensityComputationDistance() : nullptr;

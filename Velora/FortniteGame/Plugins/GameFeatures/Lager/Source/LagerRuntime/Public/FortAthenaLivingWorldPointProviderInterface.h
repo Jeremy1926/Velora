@@ -22,6 +22,10 @@ struct FFortAthenaLivingWorldPointProviderFilterRules
 
     static bool HasEventRules();
 
+    static bool HasDensityRules();
+
+    static int32 GetPlayerDistanceOffset();
+
     int32 GetExpectedSpawnCount() const;
 
     bool GetbOnlyInSafeZone() const;

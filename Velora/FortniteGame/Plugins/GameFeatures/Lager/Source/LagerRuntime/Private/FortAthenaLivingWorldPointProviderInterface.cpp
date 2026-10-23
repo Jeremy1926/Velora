@@ -18,18 +18,19 @@ FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProvi
     else if (GetFlagsOffset())
         *(int32*)Data = ExpectedSpawnCount;
 
-    Data[HasEventRules() ? 0x29 : GetFlagsOffset()] = bOnlyInSafeZone;
-    Data[HasEventRules() ? 0x2C : GetFlagsOffset() + 1] = bCheckForActorDensity;
+    Data[HasDensityRules() ? GetPlayerDistanceOffset() + 0x9 : GetFlagsOffset()] = bOnlyInSafeZone;
+    Data[HasDensityRules() ? GetPlayerDistanceOffset() + 0xC : GetFlagsOffset() + 1] = bCheckForActorDensity;
 }
 
 FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProviderFilterRules(FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEventData* EventData, int32 ExpectedSpawnCount, float DensityComputationRange, float MaxActorDensity)
     : FFortAthenaLivingWorldPointProviderFilterRules(Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity(), ExpectedSpawnCount)
 {
-    if (!HasEventRules())
+    if (!HasDensityRules())
         return;
 
-    auto TagDensityConditions = Event->GetTagDensityConditions();
     const int32 NumActorDescriptions = EventData ? FMath::Min(ExpectedSpawnCount, EventData->GetActorDescriptions().Num()) : 0;
+    auto DensityRules = Data + (HasEventRules() ? 0x10 : 0x0);
+    auto PlayerDistanceRules = Data + GetPlayerDistanceOffset();
     float DensityCostOfEvent = 0.0f;
 
     for (int32 Index = 0; Index < NumActorDescriptions; Index++)
@@ -39,16 +40,22 @@ FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProvi
         DensityCostOfEvent += ActorDensityValue ? ActorDensityValue->GetValueAtLevel(0.0f) : 0.0f;
     }
 
+    *(float*)(DensityRules + 0x4) = DensityCostOfEvent;
+    *(float*)(DensityRules + 0x8) = DensityComputationRange;
+    *(float*)PlayerDistanceRules = Event->GetMinDistanceToPlayer();
+    *(float*)(PlayerDistanceRules + 0x4) = Event->GetMaxDistanceToPlayer();
+    PlayerDistanceRules[0x8] = Event->GetbCanSpawnWithoutMatchingPlayerDistance();
+    PlayerDistanceRules[0xA] = Event->GetbOnlyInNextSafeZone();
+    PlayerDistanceRules[0xB] = Event->GetbOnlyInNextSafeZoneIfStormShrinking();
+
+    if (!HasEventRules())
+        return;
+
+    auto TagDensityConditions = Event->GetTagDensityConditions();
+
     *(void**)Data = TagDensityConditions ? TagDensityConditions->GetData() : nullptr;
     *(int32*)(Data + 0x8) = TagDensityConditions ? TagDensityConditions->Num() : 0;
-    *(float*)(Data + 0x14) = DensityCostOfEvent;
-    *(float*)(Data + 0x18) = DensityComputationRange;
     *(float*)(Data + 0x1C) = Event->GetMaxActorDensityOverride() < 0.0f ? MaxActorDensity : FMath::Min(Event->GetMaxActorDensityOverride(), MaxActorDensity);
-    *(float*)(Data + 0x20) = Event->GetMinDistanceToPlayer();
-    *(float*)(Data + 0x24) = Event->GetMaxDistanceToPlayer();
-    Data[0x28] = Event->GetbCanSpawnWithoutMatchingPlayerDistance();
-    Data[0x2A] = Event->GetbOnlyInNextSafeZone();
-    Data[0x2B] = Event->GetbOnlyInNextSafeZoneIfStormShrinking();
 }
 
 UScriptStruct* FFortAthenaLivingWorldPointProviderFilterRules::StaticStruct()
@@ -72,6 +79,18 @@ bool FFortAthenaLivingWorldPointProviderFilterRules::HasEventRules()
     return bHasEventRules;
 }
 
+bool FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules()
+{
+    static auto bHasDensityRules = StaticStruct() && StaticStruct()->GetPropertiesSize() >= 0x1C;
+
+    return bHasDensityRules;
+}
+
+int32 FFortAthenaLivingWorldPointProviderFilterRules::GetPlayerDistanceOffset()
+{
+    return HasEventRules() ? 0x20 : 0xC;
+}
+
 int32 FFortAthenaLivingWorldPointProviderFilterRules::GetExpectedSpawnCount() const
 {
     if (HasEventRules())
@@ -82,17 +101,17 @@ int32 FFortAthenaLivingWorldPointProviderFilterRules::GetExpectedSpawnCount() co
 
 bool FFortAthenaLivingWorldPointProviderFilterRules::GetbOnlyInSafeZone() const
 {
-    return Data[HasEventRules() ? 0x29 : GetFlagsOffset()] != 0;
+    return Data[HasDensityRules() ? GetPlayerDistanceOffset() + 0x9 : GetFlagsOffset()] != 0;
 }
 
 bool FFortAthenaLivingWorldPointProviderFilterRules::GetbCheckForActorDensity() const
 {
-    return Data[HasEventRules() ? 0x2C : GetFlagsOffset() + 1] != 0;
+    return Data[HasDensityRules() ? GetPlayerDistanceOffset() + 0xC : GetFlagsOffset() + 1] != 0;
 }
 
 void FFortAthenaLivingWorldPointProviderFilterRules::SetbCheckForActorDensity(bool bCheckForActorDensity)
 {
-    Data[HasEventRules() ? 0x2C : GetFlagsOffset() + 1] = bCheckForActorDensity;
+    Data[HasDensityRules() ? GetPlayerDistanceOffset() + 0xC : GetFlagsOffset() + 1] = bCheckForActorDensity;
 }
 
 UScriptStruct* FFortAthenaLivingWorldPointProviderSpawnLimiter::StaticStruct()
