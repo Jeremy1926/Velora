@@ -1423,6 +1423,15 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerGameplay.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortLiveBroadcastController.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortLiveSpectatorController.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerSpectating.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerControllerZone.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
     </ClInclude>
@@ -2288,6 +2297,15 @@
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerZone.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortLiveBroadcastController.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortLiveSpectatorController.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerSpectating.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\StatManager.cpp">

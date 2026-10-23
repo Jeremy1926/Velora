@@ -13,8 +13,11 @@
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Pawns/FortAIPawn.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Player/FortLiveBroadcastController.h"
+#include "Player/FortLiveSpectatorController.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortTeamHealthInfo.h"
+#include "HAL/IConsoleManager.h"
 #include "Templates/Casts.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
@@ -338,6 +341,118 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
         if (PlayerController && WhitelistedPlayers->Contains(FObjectKey(PlayerController)))
             ReplicationActorList.ConditionalAdd((AActor*)FutureReplicator);
     }
+}
+
+UClass* UFortReplicationGraphNode_LiveSpectator::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_LiveSpectator"));
+
+    return Class;
+}
+
+FActorRepListRefView& UFortReplicationGraphNode_LiveSpectator::GetBroadcasterRelevancyActorList()
+{
+    static auto BroadcasterRelevancyActorList = Anchor::Offset(TEXT("UFortReplicationGraphNode_LiveSpectator::BroadcasterRelevancyActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_LiveSpectator"))
+        .Find("lea rcx, [rbx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + BroadcasterRelevancyActorList);
+}
+
+TArray<FFortAlwaysRelevantActorInfo>& UFortReplicationGraphNode_LiveSpectator::GetPastViewedTargets()
+{
+    return *(TArray<FFortAlwaysRelevantActorInfo>*)(&GetBroadcasterRelevancyActorList() + 1);
+}
+
+void UFortReplicationGraphNode_LiveSpectator::GatherBroadcasterActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    static auto RelevancyClassesFrameSpread = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.Broadcast.RelevancyClassesFrameSpread"));
+
+    auto& BroadcasterRelevancyActorList = GetBroadcasterRelevancyActorList();
+    const int32 NumActors = BroadcasterRelevancyActorList.RepList.Num();
+
+    for (int32 Idx = Params.GetReplicationFrameNum() % (uint32)RelevancyClassesFrameSpread->GetInt(); Idx < NumActors; Idx += RelevancyClassesFrameSpread->GetInt())
+        GetReplicationActorList().ConditionalAdd(BroadcasterRelevancyActorList.RepList[Idx]);
+}
+
+void UFortReplicationGraphNode_LiveSpectator::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UFortReplicationGraphNode_LiveSpectator, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_LiveSpectator"), "ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraphNode_LiveSpectator::StaticClass()));
+
+    auto& ReplicationActorList = GetReplicationActorList();
+    ReplicationActorList.RepList.Reset();
+
+    bool bIsBroadcaster = false;
+    TArray<AActor*> ProcessedViewTargets;
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        const FNetViewer& CurViewer = Params.GetViewer(Index);
+        auto SpectatorController = Cast<AFortLiveSpectatorController>(CurViewer.InViewer);
+
+        if (!SpectatorController)
+            continue;
+
+        bIsBroadcaster = SpectatorController->IsA(AFortLiveBroadcastController::StaticClass());
+
+        ReplicationActorList.ConditionalAdd((AActor*)SpectatorController->GetFollowedPlayerRemoteClientInfo());
+
+        if (auto FollowedPlayerState = SpectatorController->GetFollowedPlayerState())
+            ReplicationActorList.ConditionalAdd((AActor*)FollowedPlayerState->GetPlayerTeamPrivate());
+
+        TArray<AFortBroadcastRemoteClientInfo*> RemoteClientInfos;
+        SpectatorController->GetRemoteClientInfos(RemoteClientInfos);
+
+        for (auto RemoteClientInfo : RemoteClientInfos)
+            ReplicationActorList.ConditionalAdd((AActor*)RemoteClientInfo);
+
+        ReplicationActorList.ConditionalAdd((AActor*)SpectatorController->GetViewTargetInventory());
+
+        auto& PastViewedTargets = GetPastViewedTargets();
+        auto LastData = PastViewedTargets.FindByKey(CurViewer.Connection);
+
+        if (!LastData)
+        {
+            FFortAlwaysRelevantActorInfo NewActorInfo = { CurViewer.Connection, nullptr, nullptr };
+            LastData = &PastViewedTargets[PastViewedTargets.Add(NewActorInfo)];
+        }
+
+        AActor* ViewTarget = SpectatorController->GetFollowedPlayerPawn(true);
+
+        if (Cast<AFortPlayerPawn>(ViewTarget))
+            LastData->LastPawn = ViewTarget;
+        else
+            ViewTarget = LastData->LastPawn;
+
+        if (!ViewTarget || !IsActorValidForReplication(ViewTarget) || ProcessedViewTargets.Contains(ViewTarget))
+            continue;
+
+        Params.GetConnectionManager()->GetActorInfoMap().FindOrAdd(ViewTarget).NextReplicationFrameNum = Params.GetReplicationFrameNum();
+        ReplicationActorList.ConditionalAdd(ViewTarget);
+        ProcessedViewTargets.Add(ViewTarget);
+    }
+
+    GetPastViewedTargets().RemoveAll([](const FFortAlwaysRelevantActorInfo& RelActorInfo)
+    {
+        return RelActorInfo.Connection == nullptr;
+    });
+
+    if (bIsBroadcaster)
+        GatherBroadcasterActorListsForConnection(Params);
+
+    Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ReplicationActorList);
 }
 
 UClass* UFortReplicationGraphNode_AlwaysRelevantHealthForTeam::StaticClass()

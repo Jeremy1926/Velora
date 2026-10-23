@@ -59,6 +59,21 @@ private:
     FActorRepListRefView& GetReplicationActorList();
 };
 
+class UFortReplicationGraphNode_LiveSpectator : public UReplicationGraphNode_ActorList
+{
+public:
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+private:
+    void GatherBroadcasterActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    FActorRepListRefView& GetBroadcasterRelevancyActorList();
+
+    TArray<FFortAlwaysRelevantActorInfo>& GetPastViewedTargets();
+};
+
 class UReplicationGraphNode_FortVolumeGrid : public UReplicationGraphNode
 {
 public:
