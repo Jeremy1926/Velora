@@ -181,6 +181,7 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
         return ApplyDataDrivenEffect->ExecuteTaskNode_Implementation(Context);
 
     TAlignedBytes<sizeof(FConversationTaskResult), alignof(FConversationTaskResult)> ResultBytes;
+    FMemory::Memzero(&ResultBytes, sizeof(ResultBytes));
     auto NativeResult = (FConversationTaskResult*)&ResultBytes;
     ExecuteTaskNode_Implementation(this, NativeResult, Context);
 

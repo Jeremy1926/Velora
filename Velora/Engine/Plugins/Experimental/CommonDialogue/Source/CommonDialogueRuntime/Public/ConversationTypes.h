@@ -9,6 +9,7 @@
 class AActor;
 class UConversationNode;
 class UConversationParticipantComponent;
+class UScriptStruct;
 struct FConversationContext;
 
 enum class EConversationTaskResultType : uint8
@@ -100,9 +101,18 @@ struct FAdvanceConversationRequest
 
 struct FClientConversationMessage
 {
+    FClientConversationMessage() = default;
+
+    FClientConversationMessage(const FClientConversationMessage& Other);
+
+    FClientConversationMessage& operator=(const FClientConversationMessage& Other);
+
+    static UScriptStruct* StaticStruct();
+
     FGameplayTag SpeakerID;
     FText ParticipantDisplayName;
     FText Text;
+    TArray<FConversationNodeParameterPair> MetadataParameters;
 };
 
 struct FClientConversationOptionEntry

@@ -146,9 +146,21 @@ void UConversationParticipantComponent::ClientUpdateConversation(const FClientCo
 {
     static auto ClientUpdateConversation = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientUpdateConversation"));
 
+    static auto MetadataParametersProperty = FClientConversationMessage::StaticStruct()->FindPropertyByName(FName(TEXT("MetadataParameters")));
+
     FClientConversationMessagePayload Parms = Message;
 
-    CallRemoteFunction(ClientUpdateConversation, &Parms, nullptr, nullptr);
+    if (MetadataParametersProperty)
+    {
+        CallRemoteFunction(ClientUpdateConversation, &Parms, nullptr, nullptr);
+        return;
+    }
+
+    alignas(FClientConversationMessagePayload) uint8 GameParms[0x68];
+    memcpy(GameParms, &Parms, 0x38);
+    memcpy(GameParms + 0x38, &Parms.Participants, 0x30);
+
+    CallRemoteFunction(ClientUpdateConversation, GameParms, nullptr, nullptr);
 }
 
 void UConversationParticipantComponent::ClientUpdateConversations(int32 InConversationsActive)

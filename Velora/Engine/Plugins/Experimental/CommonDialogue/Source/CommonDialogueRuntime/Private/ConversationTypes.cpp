@@ -5,10 +5,38 @@
 #include "ConversationRegistry.h"
 #include "ConversationTaskNode.h"
 #include "GameFramework/Actor.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 
 UConversationNode* FConversationNodeHandle::TryToResolve(const FConversationContext& Context) const
 {
     return Context.ConversationRegistry ? Context.ConversationRegistry->GetRuntimeNodeFromGUID(NodeGUID) : nullptr;
+}
+
+FClientConversationMessage::FClientConversationMessage(const FClientConversationMessage& Other)
+{
+    *this = Other;
+}
+
+FClientConversationMessage& FClientConversationMessage::operator=(const FClientConversationMessage& Other)
+{
+    static auto MetadataParametersProperty = StaticStruct()->FindPropertyByName(FName(TEXT("MetadataParameters")));
+
+    SpeakerID = Other.SpeakerID;
+    ParticipantDisplayName = Other.ParticipantDisplayName;
+    Text = Other.Text;
+
+    if (MetadataParametersProperty)
+        MetadataParameters = Other.MetadataParameters;
+
+    return *this;
+}
+
+UScriptStruct* FClientConversationMessage::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ClientConversationMessage"));
+
+    return Struct;
 }
 
 bool FConversationChoiceReference::operator==(const FConversationChoiceReference& Other) const
