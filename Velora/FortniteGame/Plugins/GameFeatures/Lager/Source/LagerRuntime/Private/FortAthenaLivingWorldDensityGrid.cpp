@@ -5,6 +5,19 @@
 
 int32 FFortAthenaLivingWorldDensityGrid::NextActorUpdateIndex = 0;
 
+TArray<FFortAthenaLivingWorldDensityGrid::FActorDensityRange> FFortAthenaLivingWorldDensityGrid::ActorDensityRanges;
+
+bool FFortAthenaLivingWorldDensityGrid::HasActorDensityValues()
+{
+    static auto bHasActorDensityValues = Anchor::Exists()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Optional()
+        .Find("mov rcx, r14; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
+        .Get();
+
+    return bHasActorDensityValues;
+}
+
 bool FFortAthenaLivingWorldDensityGrid::IsInitialized() const
 {
     static auto Flags = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
@@ -71,8 +84,35 @@ FIntVector FFortAthenaLivingWorldDensityGrid::GetCellCoordinates(const FVector& 
     return *GetCellCoordinates(this, &Cell, &Location);
 }
 
-bool FFortAthenaLivingWorldDensityGrid::AddActor(AActor* InActor)
+bool FFortAthenaLivingWorldDensityGrid::AddActor(AActor* InActor, float DensityValue, float DensityRange)
 {
+    static auto NativeAddActor = Anchor::Optional<bool (*)(FFortAthenaLivingWorldDensityGrid*, AActor*, float, float)>(TEXT("FFortAthenaLivingWorldDensityGrid::AddActor"))
+        .If(HasActorDensityValues())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov rdx, rax; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("sqrtss xmm3, [*+0x*]; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (HasActorDensityValues())
+    {
+        if (!InActor || !NativeAddActor || !NativeAddActor(this, InActor, DensityValue, DensityRange))
+            return false;
+
+        UpdateActorDensityValue(InActor, DensityValue);
+
+        FActorDensityRange ActorDensityRange;
+        ActorDensityRange.Actor = InActor;
+        ActorDensityRange.DensityRange = DensityRange;
+
+        ActorDensityRanges.Add(ActorDensityRange);
+
+        return true;
+    }
+
     if (!InActor || !IsInitialized())
         return false;
 
@@ -95,8 +135,67 @@ bool FFortAthenaLivingWorldDensityGrid::AddActor(AActor* InActor)
     return true;
 }
 
+void FFortAthenaLivingWorldDensityGrid::RemoveActor(AActor* InActor)
+{
+    static auto NativeRemoveActor = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, AActor*)>(TEXT("FFortAthenaLivingWorldDensityGrid::RemoveActor"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rdx, rdi; mov rcx, r14; movaps xmm6, xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    NativeRemoveActor(this, InActor);
+}
+
+float FFortAthenaLivingWorldDensityGrid::GetActorDensityValue(AActor* InActor)
+{
+    static auto NativeGetActorDensityValue = Anchor::Function<float (*)(FFortAthenaLivingWorldDensityGrid*, AActor*)>(TEXT("FFortAthenaLivingWorldDensityGrid::GetActorDensityValue"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, r14; mov rdi, rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return NativeGetActorDensityValue(this, InActor);
+}
+
+void FFortAthenaLivingWorldDensityGrid::UpdateActorDensityValue(AActor* InActor, float DensityValue)
+{
+    static auto NativeUpdateActorDensityValue = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, AActor*, float)>(TEXT("FFortAthenaLivingWorldDensityGrid::UpdateActorDensityValue"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, r14; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    NativeUpdateActorDensityValue(this, InActor, DensityValue);
+}
+
 void FFortAthenaLivingWorldDensityGrid::UpdateActors(int32 MaxActorUpdates)
 {
+    if (HasActorDensityValues())
+    {
+        for (int32 Count = ActorDensityRanges.Num(); Count > 0 && MaxActorUpdates > 0; Count--)
+        {
+            const int32 Index = NextActorUpdateIndex++ % ActorDensityRanges.Num();
+            auto Actor = (AActor*)ActorDensityRanges[Index].Actor.Get();
+            const float DensityRange = ActorDensityRanges[Index].DensityRange;
+
+            ActorDensityRanges.RemoveAtSwap(Index);
+
+            if (!Actor)
+                continue;
+
+            const float DensityValue = GetActorDensityValue(Actor);
+
+            RemoveActor(Actor);
+            AddActor(Actor, DensityValue, DensityRange);
+            MaxActorUpdates--;
+        }
+
+        return;
+    }
+
     auto& ActorDataArray = GetActorDataArray();
     const int32 MaxIndex = ActorDataArray.GetMaxIndex();
 

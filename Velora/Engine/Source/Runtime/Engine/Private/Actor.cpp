@@ -178,6 +178,13 @@ float AActor::GetNetUpdateFrequency() const
     return *NetUpdateFrequency->ContainerPtrToValuePtr<float>(this);
 }
 
+float AActor::GetNetCullDistanceSquared() const
+{
+    static auto NetCullDistanceSquared = GetClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared")));
+
+    return *NetCullDistanceSquared->ContainerPtrToValuePtr<float>(this);
+}
+
 float AActor::GetMinNetUpdateFrequency() const
 {
     static auto MinNetUpdateFrequency = GetClass()->FindPropertyByName(FName(TEXT("MinNetUpdateFrequency")));

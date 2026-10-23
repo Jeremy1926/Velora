@@ -546,11 +546,13 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(AActor* SpawnedActor, int32 R
 
             auto PointProvider = PendingSpawnRequests[Index].PointProvider.Get();
             const FVector PositionFromProvider = PendingSpawnRequests[Index].Location;
+            const float DensityValue = PendingSpawnRequests[Index].DensityValue;
+            const float DensityRange = PendingSpawnRequests[Index].DensityRange;
             PendingSpawnRequests.RemoveAt(Index);
 
             if (SpawnedActor)
             {
-                OnActorSpawned(EventInstance, SpawnedActor, PointProvider, PositionFromProvider);
+                OnActorSpawned(EventInstance, SpawnedActor, PointProvider, PositionFromProvider, DensityValue, DensityRange);
             }
             else if (auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr)
             {
@@ -562,7 +564,7 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(AActor* SpawnedActor, int32 R
     }
 }
 
-void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider)
+void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider, float DensityValue, float DensityRange)
 {
     auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
 
@@ -585,7 +587,7 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& Ev
         SpawnedPawns->Add(SpawnedActor);
 
     if (auto ActorDensityGrid = GetActorDensityGrid())
-        ActorDensityGrid->AddActor(SpawnedActor);
+        ActorDensityGrid->AddActor(SpawnedActor, DensityValue, DensityRange >= 0.0f ? DensityRange : FMath::Sqrt(SpawnedActor->GetNetCullDistanceSquared()));
 
     if (PointProviderInterface)
         PointProviderInterface->OnSpawnedActor(SpawnedActor, PositionFromProvider);
@@ -743,7 +745,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     const float ActorDensityComputationRadius = DensityComputationDistance ? DensityComputationDistance->GetValueAtLevel(0.0f) : 0.0f;
     TArray<FLivingWorldPendingSpawnRequest> PendingSpawnRequests;
     TArray<AActor*> SpawnedActors;
-    TArray<FVector> SpawnedActorPositions;
+    TArray<FLivingWorldPendingSpawnRequest> SpawnedActorRequests;
     bool bHasDefaultPosition = false;
     FVector DefaultPosition(ForceInit);
     FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
@@ -754,6 +756,14 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
         auto SpawnerDataClass = GetSpawnerDataClass(ActorDescription);
         auto ActorSpawnerData = SpawnerDataClass ? Cast<UFortAthenaActorSpawnerData>(SpawnerDataClass->GetDefaultObject()) : nullptr;
         auto ActorClass = ActorSpawnerData ? ActorSpawnerData->GetActorClass() : SpawnerDataClass ? nullptr : ActorDescription.GetActorClass().LoadSynchronous();
+
+        auto ActorDensityValue = ActorDescription.GetActorDensityValue();
+        auto DensityComputationRangeOverride = ActorDescription.GetDensityComputationRangeOverride();
+        FLivingWorldPendingSpawnRequest PendingSpawnRequest;
+
+        PendingSpawnRequest.PointProvider = PointProvider;
+        PendingSpawnRequest.DensityValue = ActorDensityValue ? ActorDensityValue->GetValueAtLevel(0.0f) : 0.0f;
+        PendingSpawnRequest.DensityRange = DensityComputationRangeOverride ? DensityComputationRangeOverride->GetValueAtLevel(0.0f) : -1.0f;
 
         if (ActorSpawnerData)
             SpawnerDataClass = nullptr;
@@ -802,9 +812,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
 
             PendingEQSSpawns.Add(PendingEQSSpawn);
 
-            FLivingWorldPendingSpawnRequest PendingSpawnRequest;
             PendingSpawnRequest.RequestID = PendingEQSSpawn.RequestID;
-            PendingSpawnRequest.PointProvider = PointProvider;
             PendingSpawnRequest.Location = DefaultPosition;
 
             PendingSpawnRequests.Add(PendingSpawnRequest);
@@ -823,8 +831,10 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
                 continue;
             }
 
+            PendingSpawnRequest.Location = Location;
+
             SpawnedActors.Add(SpawnedActor);
-            SpawnedActorPositions.Add(Location);
+            SpawnedActorRequests.Add(PendingSpawnRequest);
             continue;
         }
 
@@ -837,9 +847,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
             continue;
         }
 
-        FLivingWorldPendingSpawnRequest PendingSpawnRequest;
         PendingSpawnRequest.RequestID = RequestID;
-        PendingSpawnRequest.PointProvider = PointProvider;
         PendingSpawnRequest.Location = Location;
 
         PendingSpawnRequests.Add(PendingSpawnRequest);
@@ -866,7 +874,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
         {
             auto& RequestInfo = *new(PendingActorSpawnEventRequest.RequestInfos) FLivingWorldPendingActorSpawnEventRequest::FRequestInfo();
 
-            RequestInfo.Location = Index < PendingSpawnRequests.Num() ? PendingSpawnRequests[Index].Location : SpawnedActorPositions[Index - PendingSpawnRequests.Num()];
+            RequestInfo.Location = Index < PendingSpawnRequests.Num() ? PendingSpawnRequests[Index].Location : SpawnedActorRequests[Index - PendingSpawnRequests.Num()].Location;
             RequestInfo.RequestID = Index < PendingSpawnRequests.Num() ? PendingSpawnRequests[Index].RequestID : SpawnedActorRequestIDs[SpawnedActorRequestIDs.Add(--NextEQSSpawnRequestID)];
             RequestInfo.PreRegistrationHandle = INDEX_NONE;
             RequestInfo.PointProvider.SetObject(PointProvider);
@@ -891,7 +899,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     EventInstance.GetActorCount() = SpawnedCount;
 
     for (int32 Index = 0; Index < SpawnedActors.Num(); Index++)
-        OnActorSpawned(EventInstance, SpawnedActors[Index], PointProvider, SpawnedActorPositions[Index]);
+        OnActorSpawned(EventInstance, SpawnedActors[Index], PointProvider, SpawnedActorRequests[Index].Location, SpawnedActorRequests[Index].DensityValue, SpawnedActorRequests[Index].DensityRange);
 
     return true;
 }
@@ -1216,6 +1224,10 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea rcx, [rbx+0x*]; mov rdx, r12; call 0x*")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea r14, [rcx+0x*]; movaps [rsp+0x*], xmm6; mov rbp, rcx")
         .Optional()
         .Disp();
 
@@ -1251,10 +1263,21 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
         .Target()
         .Get();
 
+    static auto GetGridDensity = Anchor::Optional<float (*)(FFortAthenaLivingWorldDensityGrid*, const FVector&, float)>(TEXT("FFortAthenaLivingWorldDensityGrid::GetDensity"))
+        .If(!GetActorDensity && !GetGridActorDensity)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("lea rcx, [rbx+0x*]; mov eax, [rax+0x8]; lea rdx, [rsp+0x*]; movsd [rsp+0x*], xmm0; mov [rsp+0x*], eax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
     if (GetActorDensity)
         return GetActorDensity(this, Location, Radius);
 
     auto ActorDensityGrid = GetActorDensityGrid();
+
+    if (GetGridDensity && ActorDensityGrid)
+        return GetGridDensity(ActorDensityGrid, Location, Radius);
 
     return GetGridActorDensity && ActorDensityGrid ? (float)GetGridActorDensity(ActorDensityGrid, Location, Radius) : 0.0f;
 }

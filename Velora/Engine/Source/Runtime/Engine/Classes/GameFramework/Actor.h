@@ -50,6 +50,8 @@ public:
 
     float GetMinNetUpdateFrequency() const;
 
+    float GetNetCullDistanceSquared() const;
+
     void SetMinNetUpdateFrequency(float InMinNetUpdateFrequency);
 
     int32 GetNetTag() const;

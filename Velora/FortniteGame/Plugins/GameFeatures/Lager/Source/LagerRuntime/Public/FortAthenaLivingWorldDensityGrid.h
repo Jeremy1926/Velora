@@ -18,11 +18,25 @@ struct FFortAthenaLivingWorldDensityData
 
 struct FFortAthenaLivingWorldDensityGrid
 {
+    struct FActorDensityRange
+    {
+        FWeakObjectPtr Actor;
+        float DensityRange;
+    };
+
+    static bool HasActorDensityValues();
+
     bool IsInitialized() const;
 
     FIntVector GetCellCoordinates(const FVector& Location) const;
 
-    bool AddActor(AActor* InActor);
+    bool AddActor(AActor* InActor, float DensityValue, float DensityRange);
+
+    void RemoveActor(AActor* InActor);
+
+    float GetActorDensityValue(AActor* InActor);
+
+    void UpdateActorDensityValue(AActor* InActor, float DensityValue);
 
     void UpdateActors(int32 MaxActorUpdates);
 
@@ -36,4 +50,6 @@ private:
     void SetActorDataCell(int32 ActorDataIndex, const FIntVector& Cell);
 
     static int32 NextActorUpdateIndex;
+
+    static TArray<FActorDensityRange> ActorDensityRanges;
 };

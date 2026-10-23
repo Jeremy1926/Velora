@@ -60,6 +60,13 @@ FScalableFloat* FFortAthenaLivingWorldEventDataActorSpawnDescription::GetActorDe
     return ActorDensityValue ? ActorDensityValue->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
+FScalableFloat* FFortAthenaLivingWorldEventDataActorSpawnDescription::GetDensityComputationRangeOverride()
+{
+    static auto DensityComputationRangeOverride = StaticStruct()->FindPropertyByName(FName(TEXT("DensityComputationRangeOverride")));
+
+    return DensityComputationRangeOverride ? DensityComputationRangeOverride->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 UClass* UFortAthenaLivingWorldEventData::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEventData"));

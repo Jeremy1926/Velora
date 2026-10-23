@@ -32,6 +32,8 @@ public:
         int32 RequestID = INDEX_NONE;
         TWeakObjectPtr<AActor> PointProvider;
         FVector Location = FVector(ForceInit);
+        float DensityValue = 0.0f;
+        float DensityRange = -1.0f;
     };
 
     struct FLivingWorldEventInstance
@@ -160,7 +162,7 @@ public:
 
     void OnActorSpawned(AActor* SpawnedActor, int32 RequestID);
 
-    void OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider);
+    void OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider, float DensityValue, float DensityRange);
 
     void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight);
 
