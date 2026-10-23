@@ -11,39 +11,39 @@ UScriptStruct* FFortBotCosmeticItemSetDataTableRow::StaticStruct()
     return Struct;
 }
 
-FPrimaryAssetId& FFortBotCosmeticItemSetDataTableRow::GetCharacterAssetId()
+FPrimaryAssetId FFortBotCosmeticItemSetDataTableRow::GetCharacterAssetId()
 {
     static auto CharacterAssetId = StaticStruct()->FindPropertyByName(FName(TEXT("CharacterAssetId")));
 
-    return *CharacterAssetId->ContainerPtrToValuePtr<FPrimaryAssetId>(this);
+    return CharacterAssetId->GetPropertyValue_InContainer<FPrimaryAssetId>(this);
 }
 
-FPrimaryAssetId& FFortBotCosmeticItemSetDataTableRow::GetGliderAssetId()
+FPrimaryAssetId FFortBotCosmeticItemSetDataTableRow::GetGliderAssetId()
 {
     static auto GliderAssetId = StaticStruct()->FindPropertyByName(FName(TEXT("GliderAssetId")));
 
-    return *GliderAssetId->ContainerPtrToValuePtr<FPrimaryAssetId>(this);
+    return GliderAssetId->GetPropertyValue_InContainer<FPrimaryAssetId>(this);
 }
 
-FPrimaryAssetId& FFortBotCosmeticItemSetDataTableRow::GetSkyDiveContrailAssetId()
+FPrimaryAssetId FFortBotCosmeticItemSetDataTableRow::GetSkyDiveContrailAssetId()
 {
     static auto SkyDiveContrailAssetId = StaticStruct()->FindPropertyByName(FName(TEXT("SkyDiveContrailAssetId")));
 
-    return *SkyDiveContrailAssetId->ContainerPtrToValuePtr<FPrimaryAssetId>(this);
+    return SkyDiveContrailAssetId->GetPropertyValue_InContainer<FPrimaryAssetId>(this);
 }
 
-FPrimaryAssetId& FFortBotCosmeticItemSetDataTableRow::GetBackpackAssetId()
+FPrimaryAssetId FFortBotCosmeticItemSetDataTableRow::GetBackpackAssetId()
 {
     static auto BackpackAssetId = StaticStruct()->FindPropertyByName(FName(TEXT("BackpackAssetId")));
 
-    return *BackpackAssetId->ContainerPtrToValuePtr<FPrimaryAssetId>(this);
+    return BackpackAssetId->GetPropertyValue_InContainer<FPrimaryAssetId>(this);
 }
 
-FPrimaryAssetId& FFortBotCosmeticItemSetDataTableRow::GetPickaxeAssetId()
+FPrimaryAssetId FFortBotCosmeticItemSetDataTableRow::GetPickaxeAssetId()
 {
     static auto PickaxeAssetId = StaticStruct()->FindPropertyByName(FName(TEXT("PickaxeAssetId")));
 
-    return *PickaxeAssetId->ContainerPtrToValuePtr<FPrimaryAssetId>(this);
+    return PickaxeAssetId->GetPropertyValue_InContainer<FPrimaryAssetId>(this);
 }
 
 float& FFortBotCosmeticItemSetDataTableRow::GetWeight()

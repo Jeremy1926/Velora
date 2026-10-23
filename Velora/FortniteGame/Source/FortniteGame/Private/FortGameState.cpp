@@ -19,7 +19,28 @@ EFortGameplayState AFortGameState::GetGameplayState() const
     return *GameplayState->ContainerPtrToValuePtr<EFortGameplayState>(this);
 }
 
-const TArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditonalPlaylistLevels() const
+UScriptStruct* FPlaylistStreamedLevelData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.PlaylistStreamedLevelData"));
+
+    return Struct;
+}
+
+int32 FPlaylistStreamedLevelData::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+bool FPlaylistStreamedLevelData::GetbIsFinishedStreaming() const
+{
+    static auto bIsFinishedStreaming = StaticStruct()->FindPropertyByName(FName(TEXT("bIsFinishedStreaming")));
+
+    return *bIsFinishedStreaming->ContainerPtrToValuePtr<bool>(this);
+}
+
+const TRuntimeSizedArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditonalPlaylistLevels() const
 {
     static auto AdditonalPlaylistLevels = Anchor::Offset(TEXT("AFortGameState::AdditonalPlaylistLevels"))
         .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
@@ -35,14 +56,14 @@ const TArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditonalPlaylistLe
         .Find("mov *, [rbx+0x*]")
         .Disp();
 
-    return *(const TArray<FPlaylistStreamedLevelData>*)((const uint8*)this + AdditonalPlaylistLevels);
+    return *(const TRuntimeSizedArray<FPlaylistStreamedLevelData>*)((const uint8*)this + AdditonalPlaylistLevels);
 }
 
 bool AFortGameState::AreAllAdditionalPlaylistLevelsLoaded() const
 {
     for (auto& LevelData : GetAdditonalPlaylistLevels())
     {
-        if (LevelData.StreamingLevel && !LevelData.bIsFinishedStreaming)
+        if (LevelData.StreamingLevel && !LevelData.GetbIsFinishedStreaming())
             return false;
     }
 

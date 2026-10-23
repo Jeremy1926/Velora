@@ -21,6 +21,20 @@ UScriptStruct* FFortLootPackageData::StaticStruct()
     return Struct;
 }
 
+FName FFortLootPackageData::GetLootPackageID() const
+{
+    static auto LootPackageID = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageID")));
+
+    return LootPackageID->GetPropertyValue_InContainer<FName>(this);
+}
+
+float FFortLootPackageData::GetWeight() const
+{
+    static auto Weight = StaticStruct()->FindPropertyByName(FName(TEXT("Weight")));
+
+    return *Weight->ContainerPtrToValuePtr<float>(this);
+}
+
 int32 FFortLootPackageData::GetCount() const
 {
     static auto Count = StaticStruct()->FindPropertyByName(FName(TEXT("Count")));
@@ -72,7 +86,7 @@ int32 FFortLootPackageData::GetMaxWorldLevel() const
 
 static bool PackageMeetsCriteria(const FFortLootPackageData& LootPackageData, FName LootPackageName, int32 LootPackageCategory, const FGameplayTagContainer& GameplayTags, int32 WorldLevel)
 {
-    if (LootPackageName != LootPackageData.LootPackageID || (LootPackageCategory != -1 && LootPackageData.GetLootPackageCategory() != LootPackageCategory))
+    if (LootPackageName != LootPackageData.GetLootPackageID() || (LootPackageCategory != -1 && LootPackageData.GetLootPackageCategory() != LootPackageCategory))
         return false;
 
     if (LootPackageData.GetRequiredTag() != NAME_None)
@@ -199,9 +213,9 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
     {
         auto LootPackageData = LootPackage.Value;
 
-        if (RandomWeight <= LootPackageData->Weight)
+        if (RandomWeight <= LootPackageData->GetWeight())
         {
-            UE_LOG(LogFortLoot, Verbose, TEXT("PickLootDropsFromLootPackage selected package %s"), *LootPackageData->LootPackageID.ToString());
+            UE_LOG(LogFortLoot, Verbose, TEXT("PickLootDropsFromLootPackage selected package %s"), *LootPackageData->GetLootPackageID().ToString());
 
             if (LootPackageData->GetLootPackageCall().IsEmpty())
             {
@@ -228,12 +242,12 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
                     }
                     else
                     {
-                        UE_LOG(LogFortLoot, Warning, TEXT("Failed to load loot package %s."), *LootPackageData->LootPackageID.ToString());
+                        UE_LOG(LogFortLoot, Warning, TEXT("Failed to load loot package %s."), *LootPackageData->GetLootPackageID().ToString());
                     }
                 }
                 else
                 {
-                    UE_LOG(LogFortLoot, Warning, TEXT("Loot Package %s does not contain a LootPackageCall or ItemDefinition."), *LootPackageData->LootPackageID.ToString());
+                    UE_LOG(LogFortLoot, Warning, TEXT("Loot Package %s does not contain a LootPackageCall or ItemDefinition."), *LootPackageData->GetLootPackageID().ToString());
                 }
             }
             else
@@ -247,6 +261,6 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
             break;
         }
 
-        RandomWeight -= LootPackageData->Weight;
+        RandomWeight -= LootPackageData->GetWeight();
     }
 }

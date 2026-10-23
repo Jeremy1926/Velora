@@ -73,7 +73,7 @@ void UFortGameStateComponent_Campsite::CacheAllowedItemDefinitions()
             {
                 auto LootPackageData = (const FFortLootPackageData*)PackageRow.Value;
 
-                if (!LootPackageData || LootPackageData->Weight <= 0.0f || LootPackageData->GetCount() <= 0)
+                if (!LootPackageData || LootPackageData->GetWeight() <= 0.0f || LootPackageData->GetCount() <= 0)
                     continue;
 
                 GetAllowedItemDefinitions().Add(LootPackageData->GetItemDefinition().LoadSynchronous());

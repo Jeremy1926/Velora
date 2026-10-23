@@ -33,16 +33,17 @@ struct FFortLootTierData : public FTableRowBase
 {
     static UScriptStruct* StaticStruct();
 
-    FName TierGroup;
-    float Weight;
-    ELootQuotaLevel QuotaLevel;
-    int32 LootTier;
-    int32 MinWorldLevel;
-    int32 MaxWorldLevel;
-    FString StreakBreakerCurrency;
-    int32 StreakBreakerPointsMin;
-    int32 StreakBreakerPointsMax;
-    int32 StreakBreakerPointsSpend;
+    FName GetTierGroup() const;
+
+    float GetWeight() const;
+
+    ELootQuotaLevel GetQuotaLevel() const;
+
+    int32 GetLootTier() const;
+
+    int32 GetMinWorldLevel() const;
+
+    int32 GetMaxWorldLevel() const;
 
     FName GetLootPackage() const;
 

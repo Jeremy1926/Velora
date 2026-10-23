@@ -18,6 +18,23 @@ enum class EFortFeedbackBroadcastFilter : uint8
 
 struct FFortFeedbackHandle
 {
+    struct FOutlineNumberLayout
+    {
+        UFortFeedbackBank* FeedbackBank;
+        NAME_INDEX EventName;
+        bool bReadOnly;
+        bool bBankDefined;
+        EFortFeedbackBroadcastFilter BroadcastFilterOverride;
+    };
+
+    FOutlineNumberLayout ToOutlineNumberLayout() const
+    {
+        FOutlineNumberLayout Layout{ FeedbackBank, 0, bReadOnly, bBankDefined, BroadcastFilterOverride };
+        TGameLayout<FName>::Store(&Layout.EventName, EventName);
+
+        return Layout;
+    }
+
     UFortFeedbackBank* FeedbackBank;
     FName EventName;
     bool bReadOnly;

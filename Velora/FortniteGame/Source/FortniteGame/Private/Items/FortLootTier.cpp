@@ -15,6 +15,48 @@ UScriptStruct* FFortLootTierData::StaticStruct()
     return Struct;
 }
 
+FName FFortLootTierData::GetTierGroup() const
+{
+    static auto TierGroup = StaticStruct()->FindPropertyByName(FName(TEXT("TierGroup")));
+
+    return TierGroup->GetPropertyValue_InContainer<FName>(this);
+}
+
+float FFortLootTierData::GetWeight() const
+{
+    static auto Weight = StaticStruct()->FindPropertyByName(FName(TEXT("Weight")));
+
+    return *Weight->ContainerPtrToValuePtr<float>(this);
+}
+
+ELootQuotaLevel FFortLootTierData::GetQuotaLevel() const
+{
+    static auto QuotaLevel = StaticStruct()->FindPropertyByName(FName(TEXT("QuotaLevel")));
+
+    return *QuotaLevel->ContainerPtrToValuePtr<ELootQuotaLevel>(this);
+}
+
+int32 FFortLootTierData::GetLootTier() const
+{
+    static auto LootTier = StaticStruct()->FindPropertyByName(FName(TEXT("LootTier")));
+
+    return *LootTier->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootTierData::GetMinWorldLevel() const
+{
+    static auto MinWorldLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MinWorldLevel")));
+
+    return *MinWorldLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootTierData::GetMaxWorldLevel() const
+{
+    static auto MaxWorldLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MaxWorldLevel")));
+
+    return *MaxWorldLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
 FName FFortLootTierData::GetLootPackage() const
 {
     static auto LootPackage = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackage")));
@@ -78,13 +120,13 @@ bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& Out
 
     UFortGameData::Get()->FindLootTierDataByPredicate(ValidRows, TotalWeight, [&](const FFortLootTierData& LootTierData)
     {
-        if (TierGroupName != LootTierData.TierGroup)
+        if (TierGroupName != LootTierData.GetTierGroup())
             return false;
 
-        if (LootTierData.QuotaLevel != ELootQuotaLevel::Unlimited)
+        if (LootTierData.GetQuotaLevel() != ELootQuotaLevel::Unlimited)
             return false;
 
-        if (ForcedLootTier >= 0 && LootTierData.LootTier != ForcedLootTier)
+        if (ForcedLootTier >= 0 && LootTierData.GetLootTier() != ForcedLootTier)
             return false;
 
         if (LootTierData.GetRequiredGameplayTag().IsValid() && !GameplayTags.HasTag(LootTierData.GetRequiredGameplayTag()))
@@ -92,10 +134,10 @@ bool UFortLootTier::ChooseUnquotaedLootTierKey(FName& OutLootTierKey, int32& Out
 
         if (WorldLevel >= 0)
         {
-            if (LootTierData.MaxWorldLevel >= 0 && WorldLevel > LootTierData.MaxWorldLevel)
+            if (LootTierData.GetMaxWorldLevel() >= 0 && WorldLevel > LootTierData.GetMaxWorldLevel())
                 return false;
 
-            if (LootTierData.MinWorldLevel >= 0 && WorldLevel < LootTierData.MinWorldLevel)
+            if (LootTierData.GetMinWorldLevel() >= 0 && WorldLevel < LootTierData.GetMinWorldLevel())
                 return false;
         }
 
@@ -114,15 +156,15 @@ bool UFortLootTier::PickLootTierKeyFromValidRows(FName& OutLootTierKey, int32& O
 
     for (auto& ValidRow : ValidRows)
     {
-        if (RandomWeight <= ValidRow.Value->Weight)
+        if (RandomWeight <= ValidRow.Value->GetWeight())
         {
-            OutLootTier = ValidRow.Value->LootTier;
+            OutLootTier = ValidRow.Value->GetLootTier();
             OutLootTierKey = ValidRow.Key;
 
             return true;
         }
 
-        RandomWeight -= ValidRow.Value->Weight;
+        RandomWeight -= ValidRow.Value->GetWeight();
     }
 
     return false;
@@ -198,7 +240,7 @@ bool UFortLootTier::GetNumLootPackageDropsPerCategory(const FFortLootTierData* L
             {
                 if (CategoryNum > CategoryMax)
                 {
-                    UE_LOG(LogFort, Warning, TEXT("We have dropped %i items of category %i but the max is %i for tier group %s at tier %i."), CategoryNum, Category, CategoryMax, *LootTierData->TierGroup.ToString(), LootTierData->LootTier);
+                    UE_LOG(LogFort, Warning, TEXT("We have dropped %i items of category %i but the max is %i for tier group %s at tier %i."), CategoryNum, Category, CategoryMax, *LootTierData->GetTierGroup().ToString(), LootTierData->GetLootTier());
                 }
 
                 if (CategoryNum >= CategoryMax)

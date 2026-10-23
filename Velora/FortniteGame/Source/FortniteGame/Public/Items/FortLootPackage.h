@@ -13,8 +13,9 @@ struct FFortLootPackageData : public FTableRowBase
 {
     static UScriptStruct* StaticStruct();
 
-    FName LootPackageID;
-    float Weight;
+    FName GetLootPackageID() const;
+
+    float GetWeight() const;
 
     int32 GetCount() const;
 

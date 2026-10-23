@@ -4,12 +4,17 @@
 
 class AFortWorldManager;
 class ULevelStreamingDynamic;
+class UScriptStruct;
 
 struct FPlaylistStreamedLevelData
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    bool GetbIsFinishedStreaming() const;
+
     ULevelStreamingDynamic* StreamingLevel;
-    FName LevelAssetPathName;
-    bool bIsFinishedStreaming;
 };
 
 enum class EFortGameplayState : uint8
@@ -29,7 +34,7 @@ public:
 
     EFortGameplayState GetGameplayState() const;
 
-    const TArray<FPlaylistStreamedLevelData>& GetAdditonalPlaylistLevels() const;
+    const TRuntimeSizedArray<FPlaylistStreamedLevelData>& GetAdditonalPlaylistLevels() const;
 
     bool AreAllAdditionalPlaylistLevelsLoaded() const;
 

@@ -46,6 +46,9 @@ FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FP
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetSoftObjectReferenceFromPrimaryAssetId"))
         .Get();
 
+    if (FName::IsOutlineNumber())
+        return ((FSoftObjectPtr (*)(FPrimaryAssetId::FOutlineNumberLayout))GetSoftObjectReferenceFromPrimaryAssetId)(PrimaryAssetId.ToOutlineNumberLayout());
+
     return GetSoftObjectReferenceFromPrimaryAssetId(PrimaryAssetId);
 }
 
@@ -54,6 +57,9 @@ UObject* UKismetSystemLibrary::GetObjectFromPrimaryAssetId(FPrimaryAssetId Prima
     static auto GetObjectFromPrimaryAssetId = Anchor::Function<UObject* (*)(FPrimaryAssetId)>(TEXT("UKismetSystemLibrary::GetObjectFromPrimaryAssetId"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:GetObjectFromPrimaryAssetId"))
         .Get();
+
+    if (FName::IsOutlineNumber())
+        return ((UObject* (*)(FPrimaryAssetId::FOutlineNumberLayout))GetObjectFromPrimaryAssetId)(PrimaryAssetId.ToOutlineNumberLayout());
 
     return GetObjectFromPrimaryAssetId(PrimaryAssetId);
 }

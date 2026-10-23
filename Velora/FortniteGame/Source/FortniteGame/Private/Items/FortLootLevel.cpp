@@ -5,7 +5,38 @@
 #include "Containers/UnrealString.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CoreMiscDefines.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UScriptStruct* FFortLootLevelData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortLootLevelData"));
+
+    return Struct;
+}
+
+int32 FFortLootLevelData::GetLootLevel() const
+{
+    static auto LootLevel = StaticStruct()->FindPropertyByName(FName(TEXT("LootLevel")));
+
+    return *LootLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootLevelData::GetMinItemLevel() const
+{
+    static auto MinItemLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MinItemLevel")));
+
+    return *MinItemLevel->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32 FFortLootLevelData::GetMaxItemLevel() const
+{
+    static auto MaxItemLevel = StaticStruct()->FindPropertyByName(FName(TEXT("MaxItemLevel")));
+
+    return *MaxItemLevel->ContainerPtrToValuePtr<int32>(this);
+}
 
 int32 UFortLootLevel::GetItemLevel(const FDataTableCategoryHandle& LootLevelData, int32 WorldLevel)
 {
@@ -41,15 +72,15 @@ int32 UFortLootLevel::GetItemLevel(const FDataTableCategoryHandle& LootLevelData
 
         for (int32 Index = 0; Index < LootLevelDataRows.Num(); Index++)
         {
-            if (LootLevelDataRows[Index]->LootLevel <= WorldLevel && LootLevelDataRows[Index]->LootLevel > BestLootLevel)
+            if (LootLevelDataRows[Index]->GetLootLevel() <= WorldLevel && LootLevelDataRows[Index]->GetLootLevel() > BestLootLevel)
             {
-                BestLootLevel = LootLevelDataRows[Index]->LootLevel;
+                BestLootLevel = LootLevelDataRows[Index]->GetLootLevel();
                 BestIndex = Index;
             }
         }
 
         if (BestIndex != INDEX_NONE)
-            ItemLevel = FMath::RandRange(LootLevelDataRows[BestIndex]->MinItemLevel, LootLevelDataRows[BestIndex]->MaxItemLevel);
+            ItemLevel = FMath::RandRange(LootLevelDataRows[BestIndex]->GetMinItemLevel(), LootLevelDataRows[BestIndex]->GetMaxItemLevel());
     }
 
     return ItemLevel;

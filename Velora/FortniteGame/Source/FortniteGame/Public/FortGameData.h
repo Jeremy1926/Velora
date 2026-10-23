@@ -83,7 +83,7 @@ public:
                         if (Predicate(*Row))
                         {
                             OutLootData.Add(TPair<FName, DataType*>{ RowPair.Key, Row });
-                            OutTotalWeight += Row->Weight;
+                            OutTotalWeight += Row->GetWeight();
                         }
                     }
                 }

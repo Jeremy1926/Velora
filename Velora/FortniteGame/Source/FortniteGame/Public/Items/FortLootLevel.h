@@ -5,10 +5,13 @@
 
 struct FFortLootLevelData : public FTableRowBase
 {
-    FName Category;
-    int32 LootLevel;
-    int32 MinItemLevel;
-    int32 MaxItemLevel;
+    static UScriptStruct* StaticStruct();
+
+    int32 GetLootLevel() const;
+
+    int32 GetMinItemLevel() const;
+
+    int32 GetMaxItemLevel() const;
 };
 
 class UFortLootLevel

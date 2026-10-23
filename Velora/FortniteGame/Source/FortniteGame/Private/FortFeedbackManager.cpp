@@ -22,5 +22,8 @@ void AFortFeedbackManager::TriggerEvent(FFortFeedbackHandle Handle, AFortPawn* I
         .Call(3)
         .Get();
 
-    TriggerEvent(this, Handle, Instigator, Recipient, Delay, bOverriddenQueuing, bCanQue);
+    if (FName::IsOutlineNumber())
+        ((void (*)(AFortFeedbackManager*, FFortFeedbackHandle::FOutlineNumberLayout, AFortPawn*, AFortPawn*, float, bool, bool))TriggerEvent)(this, Handle.ToOutlineNumberLayout(), Instigator, Recipient, Delay, bOverriddenQueuing, bCanQue);
+    else
+        TriggerEvent(this, Handle, Instigator, Recipient, Delay, bOverriddenQueuing, bCanQue);
 }

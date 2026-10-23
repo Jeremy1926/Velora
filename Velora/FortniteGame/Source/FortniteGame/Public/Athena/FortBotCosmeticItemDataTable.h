@@ -8,15 +8,15 @@ struct FFortBotCosmeticItemSetDataTableRow : public FTableRowBase
 {
     static UScriptStruct* StaticStruct();
 
-    FPrimaryAssetId& GetCharacterAssetId();
+    FPrimaryAssetId GetCharacterAssetId();
 
-    FPrimaryAssetId& GetGliderAssetId();
+    FPrimaryAssetId GetGliderAssetId();
 
-    FPrimaryAssetId& GetSkyDiveContrailAssetId();
+    FPrimaryAssetId GetSkyDiveContrailAssetId();
 
-    FPrimaryAssetId& GetBackpackAssetId();
+    FPrimaryAssetId GetBackpackAssetId();
 
-    FPrimaryAssetId& GetPickaxeAssetId();
+    FPrimaryAssetId GetPickaxeAssetId();
 
     float& GetWeight();
 

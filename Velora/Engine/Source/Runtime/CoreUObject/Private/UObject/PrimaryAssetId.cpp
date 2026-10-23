@@ -4,7 +4,7 @@
 
 FPrimaryAssetId FPrimaryAssetId::ParseTypeAndName(const FString& TypeAndName)
 {
-    static auto ParseTypeAndName = Anchor::Function<FPrimaryAssetId (*)(const FString&)>(TEXT("FPrimaryAssetId::ParseTypeAndName"))
+    static auto ParseTypeAndName = Anchor::Function<TGameValue<FPrimaryAssetId>* (*)(TGameValue<FPrimaryAssetId>*, const FString&)>(TEXT("FPrimaryAssetId::ParseTypeAndName"))
         .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
         .Find("call 0x*; lea rdx, [rsp+0x*]; mov rcx, rax; call 0x*")
         .Find("call 0x*")
@@ -13,5 +13,8 @@ FPrimaryAssetId FPrimaryAssetId::ParseTypeAndName(const FString& TypeAndName)
         .Target()
         .Get();
 
-    return ParseTypeAndName(TypeAndName);
+    TGameValue<FPrimaryAssetId> Result;
+    ParseTypeAndName(&Result, TypeAndName);
+
+    return Result.Get();
 }
