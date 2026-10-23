@@ -33,6 +33,13 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
     return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);
 }
 
+AGameStateBase* AGameModeBase::GetGameState() const
+{
+    static auto GameState = GetClass()->FindPropertyByName(FName(TEXT("GameState")));
+
+    return *GameState->ContainerPtrToValuePtr<AGameStateBase*>(this);
+}
+
 FString& AGameModeBase::GetOptionsString()
 {
     static auto OptionsString = GetClass()->FindPropertyByName(FName(TEXT("OptionsString")));

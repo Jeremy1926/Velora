@@ -494,6 +494,8 @@ public:
 
     void AddNetworkActor(AActor* Actor);
 
+    void AddGlobalGraphNode(UReplicationGraphNode* GraphNode);
+
     void InitializeForWorld(UWorld* World);
 
     void InitGlobalActorClassSettings();

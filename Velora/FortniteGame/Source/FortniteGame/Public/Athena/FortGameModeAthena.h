@@ -17,6 +17,14 @@ enum class EDeathCause : uint8;
 
 class UAthenaAISettings;
 
+struct FFortCustomRepNodeClassMapping
+{
+    UClass* NodeClass;
+    TArray<UClass*> ClassesToRoute;
+    bool bShouldDisableSquadNodes;
+    bool bShouldDisableHighFrequencyPawnRouting;
+};
+
 class AFortGameModeAthena : public AFortGamePvPBase
 {
 public:
@@ -71,6 +79,8 @@ public:
     TArray<TSoftObjectPtr<UDataTable>>& GetGameFeatureLootPackageData();
 
     FSimpleMulticastDelegate* GetOnPlaylistLootTablesAppliedDelegate();
+
+    TArray<FFortCustomRepNodeClassMapping>& GetGlobalRepGraphNodeClassesToAdd();
 
     TSubclassOf<AActor> GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const;
 

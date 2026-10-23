@@ -71,6 +71,11 @@ UObject* FWeakObjectPtr::Get() const
     return Internal_Get(false);
 }
 
+UObject* FWeakObjectPtr::Get(bool bEvenIfPendingKill) const
+{
+    return Internal_Get(bEvenIfPendingKill);
+}
+
 bool FWeakObjectPtr::IsValid() const
 {
     return Internal_IsValid(false, false);

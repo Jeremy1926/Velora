@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortReplicationGraph.h"
 #include "FortTeamActorInterface.h"
+#include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
@@ -9,6 +10,7 @@
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "Engine/World.h"
+#include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
 #include "Containers/BitArray.h"
@@ -25,6 +27,7 @@
 #include "HAL/UnrealMemory.h"
 #include "Templates/Casts.h"
 #include "Templates/Function.h"
+#include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -56,6 +59,50 @@ UReplicationGraphNode_GridSpatialization2D*& UFortReplicationGraph::GetRootGridN
     static auto RootGridNode = StaticClass()->FindPropertyByName(FName(TEXT("RootGridNode")));
 
     return *RootGridNode->ContainerPtrToValuePtr<UReplicationGraphNode_GridSpatialization2D*>(this);
+}
+
+TMap<UClass*, UReplicationGraphNode*>& UFortReplicationGraph::GetClassToNodetoRouteTo()
+{
+    static auto ClassToNodetoRouteTo = StaticClass()->FindPropertyByName(FName(TEXT("ClassToNodetoRouteTo")));
+
+    return *ClassToNodetoRouteTo->ContainerPtrToValuePtr<TMap<UClass*, UReplicationGraphNode*>>(this);
+}
+
+bool& UFortReplicationGraph::GetDisableSquadNodes()
+{
+    return *(bool*)(&GetClassToNodetoRouteTo() + 1);
+}
+
+bool& UFortReplicationGraph::GetDisableHighFrequencyPawnRouting()
+{
+    return *(&GetDisableSquadNodes() + 1);
+}
+
+TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies()
+{
+    static auto ClassRepNodePolicies = Anchor::Offset(TEXT("UFortReplicationGraph::ClassRepNodePolicies"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("mov rbx, rcx; add rcx, 0x*")
+        .Find("add rcx, 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Find("add rcx, 0x*")
+        .Imm();
+
+    return *(TClassMap<EClassRepNodeMapping>*)((uint8*)this + ClassRepNodePolicies);
+}
+
+TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplicationGraph::GetSquadMap()
+{
+    return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)(&GetClassRepNodePolicies() + 1) + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
 }
 
 TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStreamingLevelActors()
@@ -186,6 +233,130 @@ void UFortReplicationGraph::InitDynamicSpatializationSettings()
     NodeSettings[(uint8)EFortDynamicNodeType::WorldStatic] = FSettings{ { AIZones.GetData(), AIZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, AIPawnMaxBitsPerFrame, MaxAIPerClient->GetInt() };
     NodeSettings[(uint8)EFortDynamicNodeType::WorldDynamic] = FSettings{ { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
     NodeSettings[(uint8)EFortDynamicNodeType::Pawn] = FSettings{ { VehicleZones.GetData(), VehicleZones.Num() }, { VehicleZones.GetData(), VehicleZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+}
+
+void UFortReplicationGraph::AddClassRepInfo(UClass* Class, EClassRepNodeMapping Mapping)
+{
+    if (Mapping >= EClassRepNodeMapping::Spatialize_Static)
+        Class->GetDefaultObject(true);
+
+    GetClassRepNodePolicies().Set(Class, Mapping);
+}
+
+void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)
+{
+    for (const auto& Pair : GetSquadMap())
+    {
+        if (auto SquadNode = Pair.Value)
+            SquadNode->GetSpecialRelevancyEnabled() = bEnabled;
+    }
+}
+
+void UFortReplicationGraph::OnGameStatePlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& GameplayTags)
+{
+    static auto InitializeForWorld = Anchor::VirtualFunction<void (*)(UReplicationGraph*, UWorld*)>(TEXT("UReplicationGraph::InitializeForWorld"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x80)
+        .Get();
+
+    auto World = GetNetDriver()->GetWorld();
+    auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
+    auto GameState = GameMode ? Cast<AFortGameStateAthena>(GameMode->GetGameState()) : nullptr;
+
+    if (!GameMode || !GameState)
+        return;
+
+    GameState->GetOnCurrentPlaylistLoaded().RemoveAll(this);
+    GetClassToNodetoRouteTo().Reset();
+    GetDisableSquadNodes() = false;
+    GetDisableHighFrequencyPawnRouting() = false;
+
+    auto& GlobalRepGraphNodeClassesToAdd = GameMode->GetGlobalRepGraphNodeClassesToAdd();
+
+    if (GlobalRepGraphNodeClassesToAdd.Num() <= 0)
+        return;
+
+    for (const auto& ClassMapping : GlobalRepGraphNodeClassesToAdd)
+    {
+        if (!ClassMapping.NodeClass || !ClassMapping.NodeClass->IsChildOf(UFortReplicationGraphNode_Custom::StaticClass()))
+            continue;
+
+        auto CustomNode = (UFortReplicationGraphNode_Custom*)NewObject<UReplicationGraphNode>(this, ClassMapping.NodeClass);
+
+        if (!CustomNode)
+            continue;
+
+        InitNode(CustomNode);
+        CustomNode->InitializeNode(World);
+        AddGlobalGraphNode(CustomNode);
+
+        GetDisableSquadNodes() |= ClassMapping.bShouldDisableSquadNodes;
+        GetDisableHighFrequencyPawnRouting() |= ClassMapping.bShouldDisableHighFrequencyPawnRouting;
+
+        for (auto Class : ClassMapping.ClassesToRoute)
+        {
+            AddClassRepInfo(Class, EClassRepNodeMapping::Custom);
+            GetClassToNodetoRouteTo().Add(Class, CustomNode);
+        }
+    }
+
+    if (GetDisableSquadNodes())
+        SetAllSquadNodesEnabled(false);
+
+    InitializeForWorld(this, World);
+}
+
+void UFortReplicationGraph::execOnGameStatePlaylistLoaded(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortReplicationGraph, execOnGameStatePlaylistLoaded, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded"))
+        .Has("setnz al; add [*+0x20], rax; test rcx, rcx; jz 0x*; call 0x*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded")));
+
+    FName PlaylistName = NAME_None;
+    FGameplayTagContainer GameplayTagsTemp;
+
+    Stack.StepCompiledIn(&PlaylistName);
+    const FGameplayTagContainer& GameplayTags = Stack.StepCompiledInRef<FGameplayTagContainer>(&GameplayTagsTemp);
+    Stack.Code += !!Stack.Code;
+
+    OnGameStatePlaylistLoaded(PlaylistName, GameplayTags);
+}
+
+bool& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabled()
+{
+    static auto SpecialRelevancyEnabled = Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForSquad::bSpecialRelevancyEnabled"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
+        .Find("cmp byte ptr [rbx+0x*], 0x0")
+        .Disp();
+
+    return *(bool*)((uint8*)this + SpecialRelevancyEnabled);
+}
+
+UClass* UFortReplicationGraphNode_Custom::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_Custom"));
+
+    return Class;
+}
+
+void UFortReplicationGraphNode_Custom::InitializeNode(UWorld* World)
+{
+    static auto InitializeNode = Anchor::VirtualFunction<void (*)(UFortReplicationGraphNode_Custom*, UWorld*)>(TEXT("UFortReplicationGraphNode_Custom::InitializeNode"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_Custom"), 0x18)
+        .Get();
+
+    InitializeNode(this, World);
 }
 
 UClass* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()

@@ -4,6 +4,7 @@
 #include "Containers/UnrealString.h"
 
 class AController;
+class AGameStateBase;
 class APawn;
 
 class AGameModeBase : public AInfo
@@ -14,4 +15,6 @@ public:
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
 
     FString& GetOptionsString();
+
+    AGameStateBase* GetGameState() const;
 };

@@ -3511,6 +3511,11 @@ void UReplicationGraph::AddNetworkActor(AActor* Actor)
     AddNetworkActor(this, Actor);
 }
 
+void UReplicationGraph::AddGlobalGraphNode(UReplicationGraphNode* GraphNode)
+{
+    GetGlobalGraphNodes().Add(GraphNode);
+}
+
 void UReplicationGraph::InitializeForWorld(UWorld* World)
 {
     DETOUR(UReplicationGraph, InitializeForWorld, Anchor::Hook()

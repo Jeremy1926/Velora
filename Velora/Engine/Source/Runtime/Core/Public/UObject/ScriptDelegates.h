@@ -28,6 +28,16 @@ public:
         return Object == Other.Object && FunctionName == Other.FunctionName;
     }
 
+    bool IsBoundToObject(const UObject* InUserObject) const
+    {
+        return InUserObject && InUserObject == Object.Get();
+    }
+
+    bool IsCompactable() const
+    {
+        return FunctionName == NAME_None || !Object.Get(true);
+    }
+
     struct FOutlineNumberLayout
     {
         TWeakPtr Object;
@@ -36,6 +46,16 @@ public:
         bool operator==(const FOutlineNumberLayout& Other) const
         {
             return Object == Other.Object && FunctionName == Other.FunctionName;
+        }
+
+        bool IsBoundToObject(const UObject* InUserObject) const
+        {
+            return InUserObject && InUserObject == Object.Get();
+        }
+
+        bool IsCompactable() const
+        {
+            return FunctionName == 0 || !Object.Get(true);
         }
     };
 
@@ -71,6 +91,25 @@ public:
             ((TArray<typename TScriptDelegate<TWeakPtr>::FOutlineNumberLayout>&)InvocationList).RemoveSingle(InDelegate.ToOutlineNumberLayout());
         else
             InvocationList.RemoveSingle(InDelegate);
+    }
+
+    void RemoveAll(const UObject* Object)
+    {
+        auto RemoveAllBindings = [Object](auto& Bindings)
+        {
+            for (int32 BindingIndex = Bindings.Num() - 1; BindingIndex >= 0; --BindingIndex)
+            {
+                const auto& Binding = Bindings[BindingIndex];
+
+                if (Binding.IsBoundToObject(Object) || Binding.IsCompactable())
+                    Bindings.RemoveAt(BindingIndex);
+            }
+        };
+
+        if (FName::IsOutlineNumber())
+            RemoveAllBindings((TArray<typename TScriptDelegate<TWeakPtr>::FOutlineNumberLayout>&)InvocationList);
+        else
+            RemoveAllBindings(InvocationList);
     }
 
     template<class UObjectTemplate>

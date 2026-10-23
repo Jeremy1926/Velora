@@ -2,12 +2,28 @@
 
 #include "ReplicationGraph.h"
 #include "Containers/Map.h"
+#include "GameplayTagContainer.h"
 #include "ReplicationGraphTypes.h"
+#include "UObject/NameTypes.h"
 #include "UObject/WeakObjectPtr.h"
 
 class AFortTeamHealthInfo;
 class APlayerState;
+class UFortReplicationGraphNode_AlwaysRelevantForSquad;
 class UNetConnection;
+struct FFrame;
+
+enum class EClassRepNodeMapping : uint32
+{
+    NotRouted,
+    RelevantAllConnections,
+    RelevantAllInsideFortVolume,
+    Custom,
+    Spatialize_Static,
+    Spatialize_Dynamic,
+    Spatialize_Dormancy,
+    Instance_Dynamic,
+};
 
 class UFortReplicationGraph : public UReplicationGraph
 {
@@ -28,8 +44,26 @@ public:
 
     void InitDynamicSpatializationSettings();
 
+    void OnGameStatePlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& GameplayTags);
+
+    void execOnGameStatePlaylistLoaded(FFrame& Stack, void* const Z_Param__Result);
+
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);
+
+    void AddClassRepInfo(UClass* Class, EClassRepNodeMapping Mapping);
+
+    void SetAllSquadNodesEnabled(bool bEnabled);
+
+    TMap<UClass*, UReplicationGraphNode*>& GetClassToNodetoRouteTo();
+
+    bool& GetDisableSquadNodes();
+
+    bool& GetDisableHighFrequencyPawnRouting();
+
+    TClassMap<EClassRepNodeMapping>& GetClassRepNodePolicies();
+
+    TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& GetSquadMap();
 };
 
 struct FFortAlwaysRelevantActorInfo
@@ -65,6 +99,20 @@ private:
     TArray<FFortAlwaysRelevantActorInfo>& GetPastRelevantActors();
 
     bool& GetInitializedPlayerState();
+};
+
+class UFortReplicationGraphNode_AlwaysRelevantForSquad : public UReplicationGraphNode
+{
+public:
+    bool& GetSpecialRelevancyEnabled();
+};
+
+class UFortReplicationGraphNode_Custom : public UReplicationGraphNode
+{
+public:
+    static UClass* StaticClass();
+
+    void InitializeNode(UWorld* World);
 };
 
 class UFortReplicationGraphNode_AlwaysRelevantHealthForTeam : public UReplicationGraphNode

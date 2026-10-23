@@ -39,6 +39,8 @@ public:
 
     UObject* Get() const;
 
+    UObject* Get(bool bEvenIfPendingKill) const;
+
     bool IsValid() const;
 
     friend uint32 GetTypeHash(const FWeakObjectPtr& WeakObjectPtr)
