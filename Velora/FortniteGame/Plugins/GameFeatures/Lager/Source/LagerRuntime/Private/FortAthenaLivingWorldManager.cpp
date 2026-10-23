@@ -936,7 +936,7 @@ bool UFortAthenaLivingWorldManager::IsEventActive(FFortAthenaLivingWorldEvent* E
     static auto NativeIsEventActive = Anchor::Optional<bool (*)(UFortAthenaLivingWorldManager*, FFortAthenaLivingWorldEvent*, UFortAthenaLivingWorldEventData*, bool, EAthenaGamePhaseStep, int32)>(TEXT("UFortAthenaLivingWorldManager::IsEventActive"))
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
-        .Find("mov [rsp+0x20], ?l")
+        .Find("mov [rsp+0x20], *l")
         .Find("call 0x*")
         .Target()
         .Get();
