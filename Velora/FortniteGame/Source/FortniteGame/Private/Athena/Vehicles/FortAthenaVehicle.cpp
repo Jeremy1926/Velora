@@ -251,12 +251,22 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; mov r9, [rbx]")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; mov rcx, rbx; cmp rax, rdi")
+        .Find("call [rax+0x*]")
         .Get();
 
     static auto SetMovementMode = Anchor::VirtualFunction<void (*)(UObject*, uint8, uint8)>(TEXT("UCharacterMovementComponent::SetMovementMode"))
         .At(ForceEnterSeatBody)
         .Find("mov edx, 0x6; mov rcx, rbx")
         .Find("call [r9+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp rax, rdi; jnz 0x*; call 0x*")
+        .Call()
+        .Is("mov rax, [rcx]; mov r8b, 0x1; mov edx, 0x6; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
         .Get();
 
     static auto SetBase = Anchor::VirtualFunction<void (*)(AFortPlayerPawn*, USceneComponent*, FName, bool)>(TEXT("ACharacter::SetBase"))
