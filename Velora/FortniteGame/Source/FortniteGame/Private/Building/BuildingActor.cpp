@@ -65,6 +65,11 @@ void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, A
         .FindEither("jmp [*+0x*]", "call [*+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Has("mov qword ptr [rsp+0x20], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .FindEither("jmp [*+0x*]", "call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Has("and qword ptr [rsp+0x20], 0x0*")
         .Get();
 
     if (bEffectContext)
