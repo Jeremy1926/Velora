@@ -5,6 +5,8 @@
 #include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
 #include "Items/FortPickup.h"
+#include "Items/FortWeaponItemDefinition.h"
+#include "Items/FortWorldItem.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
 #include "AI/FortAIPerceptionSystem.h"
@@ -127,6 +129,50 @@ void AFortPlayerPawn::OnRep_InVehicle()
     }
 
     Original();
+}
+
+FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()
+{
+    static auto LastEquippedWeaponOrGadgetGUID = Anchor::Offset(TEXT("AFortPlayerPawn::LastEquippedWeaponOrGadgetGUID"))
+        .If(::Anchor::Exists()
+            .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+            .Start()
+            .Find("mov rdx, [*+0x*]; test rdx, rdx; jz 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+            .Find("call [rax+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+            .Is("push rbx; sub rsp, 0x20; mov rbx, rcx; test rdx, rdx; jz 0x*; mov rax, [rdx]; mov rcx, rdx; call [rax+0x*]; mov qword ptr [rbx+0x*], 0x0; add rsp, 0x20; pop rbx; ret")
+            .Get())
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
+        .Find("call [rax+*]", 2)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+        .Find("call 0x*")
+        .Target()
+        .Find("or eax, [*+0x*]; or eax, [*+0x*]; or eax, [*+0x*]; jz 0x*; movups xmm0, [*+0x*]")
+        .Find("movups xmm0, [*+0x*]")
+        .Disp();
+
+    return LastEquippedWeaponOrGadgetGUID ? (FGuid*)((uint8*)this + LastEquippedWeaponOrGadgetGUID) : nullptr;
+}
+
+void AFortPlayerPawn::SetLastEquippedWeaponOrGadget(UFortWorldItem* Item)
+{
+    static auto FortGadgetItemDefinition = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGadgetItemDefinition"));
+
+    auto LastEquippedWeaponOrGadgetGUID = GetLastEquippedWeaponOrGadgetGUID();
+    auto ItemDefinition = Item ? Item->GetItemDefinitionBP() : nullptr;
+
+    if (LastEquippedWeaponOrGadgetGUID && ItemDefinition && (ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) || (FortGadgetItemDefinition && ItemDefinition->IsA(FortGadgetItemDefinition))))
+        *LastEquippedWeaponOrGadgetGUID = Item->GetItemGuid();
+}
+
+void AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation(bool bForce)
+{
+    static auto ServerEquipLastWeaponOrGadget = Anchor::VirtualFunction<void (*)(AFortPlayerPawn*, bool)>(TEXT("AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
+        .Find("call [rax+*]", 2)
+        .Get();
+
+    ServerEquipLastWeaponOrGadget(this, bForce);
 }
 
 void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)

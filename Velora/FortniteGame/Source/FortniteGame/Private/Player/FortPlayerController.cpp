@@ -389,6 +389,9 @@ void AFortPlayerController::ServerExecuteInventoryItem_Implementation(FGuid Item
     {
         if (Item->GetItemGuid() == ItemGuid)
         {
+            if (auto MyFortPawn = GetMyFortPawn())
+                MyFortPawn->SetLastEquippedWeaponOrGadget(Item);
+
             if (auto ItemDefinition = Cast<UFortWorldItemDefinition>(Item->GetItemDefinitionBP()))
                 ItemDefinition->ServerExecute(Item, this);
 
@@ -1679,6 +1682,13 @@ bool AFortPlayerController::ForceEquipValidWeapon()
         .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
     auto MyFortPawn = GetMyFortPawn();
+
+    if (MyFortPawn && MyFortPawn->GetLastEquippedWeaponOrGadgetGUID())
+    {
+        MyFortPawn->ServerEquipLastWeaponOrGadget_Implementation(true);
+
+        return true;
+    }
 
     return MyFortPawn && MyFortPawn->EquipBestWeapon();
 }

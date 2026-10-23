@@ -11,6 +11,7 @@ class AFortAthenaVehicle;
 class AFortPickup;
 class UAthenaGliderItemDefinition;
 class UFortMontageItemDefinitionBase;
+class UFortWorldItem;
 class UGameplayEffect;
 class UScriptStruct;
 class UStatManager;
@@ -68,6 +69,12 @@ public:
     AFortAthenaVehicle* ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior);
 
     void OnRep_InVehicle();
+
+    FGuid* GetLastEquippedWeaponOrGadgetGUID();
+
+    void SetLastEquippedWeaponOrGadget(UFortWorldItem* Item);
+
+    void ServerEquipLastWeaponOrGadget_Implementation(bool bForce);
 
     void AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration);
 
