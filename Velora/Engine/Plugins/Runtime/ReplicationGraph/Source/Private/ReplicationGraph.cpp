@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ReplicationGraph.h"
+#include "Containers/ArrayView.h"
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
@@ -1769,6 +1770,392 @@ void UReplicationGraphNode_ActorListFrequencyBuckets::GatherActorListsForConnect
     }
 
     GetStreamingLevelCollection().Gather(Params);
+}
+
+UClass* UReplicationGraphNode_DynamicSpatialFrequency::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_DynamicSpatialFrequency"));
+
+    return Class;
+}
+
+UReplicationGraphNode_DynamicSpatialFrequency::FSettings& UReplicationGraphNode_DynamicSpatialFrequency::GetDefaultSettings()
+{
+    static auto DefaultSettings = Anchor::Data<FSettings*>(TEXT("UReplicationGraphNode_DynamicSpatialFrequency::DefaultSettings"))
+        .Pattern("48 C7 05 ? ? ? ? AA 0A 00 00")
+        .Last("mov [0x*], rcx")
+        .Target()
+        .Get();
+
+    return *DefaultSettings;
+}
+
+UReplicationGraphNode_DynamicSpatialFrequency::FSettings& UReplicationGraphNode_DynamicSpatialFrequency::GetSettings()
+{
+    auto Settings = *((FSettings**)&GetSortedReplicationList() - 2);
+
+    return Settings ? *Settings : GetDefaultSettings();
+}
+
+TArray<UReplicationGraphNode_DynamicSpatialFrequency::FDynamicSpatialFrequency_SortedItem>& UReplicationGraphNode_DynamicSpatialFrequency::GetSortedReplicationList()
+{
+    static auto SortedReplicationList = Anchor::Offset(TEXT("UReplicationGraphNode_DynamicSpatialFrequency::SortedReplicationList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x20)
+        .Find("lea rcx, [rdi+0x*]")
+        .Disp();
+
+    return *(TArray<FDynamicSpatialFrequency_SortedItem>*)((uint8*)this + SortedReplicationList);
+}
+
+int32& UReplicationGraphNode_DynamicSpatialFrequency::GetNumExpectedReplicationsThisFrame()
+{
+    return *(int32*)(&GetSortedReplicationList() + 1);
+}
+
+int32& UReplicationGraphNode_DynamicSpatialFrequency::GetNumExpectedReplicationsNextFrame()
+{
+    return *(&GetNumExpectedReplicationsThisFrame() + 1);
+}
+
+bool& UReplicationGraphNode_DynamicSpatialFrequency::GetIgnoreCullDistance()
+{
+    return *(bool*)(&GetNumExpectedReplicationsNextFrame() + 1);
+}
+
+void UReplicationGraphNode_DynamicSpatialFrequency::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_DynamicSpatialFrequency, GatherActorListsForConnection, Anchor::Hook(TEXT("UReplicationGraphNode_DynamicSpatialFrequency::GatherActors"), &UReplicationGraphNode_DynamicSpatialFrequency::GatherActors)
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), "ret*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x30)
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_DynamicSpatialFrequency::StaticClass()), Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), "ret*")
+        .Optional()
+        .InVTable(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency")));
+
+    static auto GatherActors = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_DynamicSpatialFrequency*, const FActorRepListRefView&, FGlobalActorReplicationInfoMap&, FPerConnectionActorInfoMap&, const FConnectionGatherActorListParameters&, UNetConnection*)>(TEXT("UReplicationGraphNode_DynamicSpatialFrequency::GatherActors"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x18)
+        .Get();
+
+    static auto GatherActors_DistanceOnly = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_DynamicSpatialFrequency*, const FActorRepListRefView&, FGlobalActorReplicationInfoMap&, FPerConnectionActorInfoMap&, const FConnectionGatherActorListParameters&)>(TEXT("UReplicationGraphNode_DynamicSpatialFrequency::GatherActors_DistanceOnly"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x20)
+        .Get();
+
+    auto ReplicatesEveryFrame = [](const FConnectionReplicationActorInfo& ConnectionInfo, const bool CheckFastPath)
+    {
+        return !(ConnectionInfo.ReplicationPeriodFrame > 1 && (!CheckFastPath || ConnectionInfo.FastPath_ReplicationPeriodFrame > 1));
+    };
+
+    auto SortReplicationList = [](TArray<FDynamicSpatialFrequency_SortedItem>& List)
+    {
+        AlgoImpl::IntroSortInternal(List.GetData(), List.Num(), [](const FDynamicSpatialFrequency_SortedItem& A, const FDynamicSpatialFrequency_SortedItem& B)
+        {
+            return A < B;
+        });
+    };
+
+    auto RepGraph = GetGraphGlobals()->ReplicationGraph;
+    auto& GlobalMap = *GetGraphGlobals()->GlobalActorReplicationInfoMap;
+    auto ConnectionManager = Params.GetConnectionManager();
+    auto NetConnection = ConnectionManager->GetNetConnection();
+    auto& ConnectionActorInfoMap = ConnectionManager->GetActorInfoMap();
+    const uint32 FrameNum = Params.GetReplicationFrameNum();
+    auto& QueuedBits = NetConnection->GetQueuedBits();
+    auto& MySettings = GetSettings();
+    const int32 MaxNearestActors = MySettings.MaxNearestActors;
+    auto& SortedReplicationList = GetSortedReplicationList();
+
+    SortedReplicationList.Reset();
+    GetNumExpectedReplicationsThisFrame() = 0;
+    GetNumExpectedReplicationsNextFrame() = 0;
+
+    bool DoFullGather = true;
+
+    if (MaxNearestActors >= 0 && !NetConnection->IsReplay())
+    {
+        int32 PossibleNumActors = GetReplicationActorList().RepList.Num();
+
+        for (const auto& StreamingList : GetStreamingLevelCollection().StreamingLevelLists)
+        {
+            if (Params.CheckClientVisibilityForLevel(StreamingList.StreamingLevelName))
+                PossibleNumActors += StreamingList.ReplicationActorList.RepList.Num();
+        }
+
+        if (PossibleNumActors > MaxNearestActors)
+        {
+            DoFullGather = false;
+
+            GatherActors_DistanceOnly(this, GetReplicationActorList(), GlobalMap, ConnectionActorInfoMap, Params);
+
+            for (const auto& StreamingList : GetStreamingLevelCollection().StreamingLevelLists)
+            {
+                if (Params.CheckClientVisibilityForLevel(StreamingList.StreamingLevelName))
+                    GatherActors_DistanceOnly(this, StreamingList.ReplicationActorList, GlobalMap, ConnectionActorInfoMap, Params);
+            }
+
+            SortReplicationList(SortedReplicationList);
+            SortedReplicationList.SetNum(MaxNearestActors, false);
+
+            for (int32 idx = SortedReplicationList.Num() - 1; idx >= 0; --idx)
+            {
+                auto& Item = SortedReplicationList[idx];
+
+                CalcFrequencyForActor(Item.Actor, RepGraph, NetConnection, *Item.GlobalInfo, ConnectionActorInfoMap, MySettings, Params.GetViewers(), FrameNum, idx);
+            }
+
+            SortReplicationList(SortedReplicationList);
+        }
+    }
+
+    if (DoFullGather)
+    {
+        GatherActors(this, GetReplicationActorList(), GlobalMap, ConnectionActorInfoMap, Params, NetConnection);
+
+        for (const auto& StreamingList : GetStreamingLevelCollection().StreamingLevelLists)
+        {
+            if (Params.CheckClientVisibilityForLevel(StreamingList.StreamingLevelName))
+                GatherActors(this, StreamingList.ReplicationActorList, GlobalMap, ConnectionActorInfoMap, Params, NetConnection);
+        }
+
+        SortReplicationList(SortedReplicationList);
+    }
+
+    const int64 MaxBits = MySettings.MaxBitsPerFrame;
+    int64 BitsWritten = 0;
+    int32 OpportunisticLoadBalanceQuota = (GetNumExpectedReplicationsThisFrame() - GetNumExpectedReplicationsNextFrame()) >> 1;
+
+    for (const auto& Item : SortedReplicationList)
+    {
+        AActor* Actor = Item.Actor;
+        FGlobalActorReplicationInfo& GlobalInfo = *Item.GlobalInfo;
+        FConnectionReplicationActorInfo& ConnectionInfo = *Item.ConnectionInfo;
+
+        if (!Actor || !IsActorValidForReplication(Actor))
+            continue;
+
+        if (ConnectionInfo.bTearOff)
+            continue;
+
+        if (OpportunisticLoadBalanceQuota > 0 && Item.FramesTillReplicate == 0 && !ReplicatesEveryFrame(ConnectionInfo, Item.EnableFastPath))
+        {
+            OpportunisticLoadBalanceQuota--;
+            continue;
+        }
+
+        if (ConnectionInfo.NextReplicationFrameNum <= FrameNum || GlobalInfo.GetForceNetUpdateFrame() > ConnectionInfo.LastRepFrameNum)
+        {
+            BitsWritten += RepGraph->ReplicateSingleActor(Actor, ConnectionInfo, GlobalInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
+            ConnectionInfo.FastPath_LastRepFrameNum = FrameNum;
+        }
+        else if (Item.EnableFastPath && (ConnectionInfo.FastPath_NextReplicationFrameNum <= FrameNum || GlobalInfo.GetForceNetUpdateFrame() > ConnectionInfo.FastPath_LastRepFrameNum))
+        {
+            const int64 FastSharedBits = RepGraph->ReplicateSingleActor_FastShared(Actor, ConnectionInfo, GlobalInfo, *ConnectionManager, FrameNum);
+            QueuedBits -= (int32)FastSharedBits;
+            BitsWritten += FastSharedBits;
+        }
+
+        if (BitsWritten > MaxBits)
+        {
+            RepGraph->NotifyConnectionSaturated(*ConnectionManager);
+            break;
+        }
+    }
+}
+
+void UReplicationGraphNode_DynamicSpatialFrequency::GatherActors(const FActorRepListRefView& RepList, FGlobalActorReplicationInfoMap& GlobalMap, FPerConnectionActorInfoMap& ConnectionMap, const FConnectionGatherActorListParameters& Params, UNetConnection* NetConnection)
+{
+    auto RepGraph = GetGraphGlobals()->ReplicationGraph;
+    auto& MySettings = GetSettings();
+    const uint32 FrameNum = Params.GetReplicationFrameNum();
+    const bool bReplay = NetConnection->IsReplay();
+
+    for (AActor* Actor : RepList.RepList)
+    {
+        if (!bReplay)
+        {
+            bool bIsAViewTarget = false;
+
+            for (const FNetViewer& CurViewer : Params.GetViewers())
+            {
+                if (Actor == CurViewer.ViewTarget)
+                {
+                    bIsAViewTarget = true;
+                    break;
+                }
+            }
+
+            if (bIsAViewTarget)
+                continue;
+        }
+
+        CalcFrequencyForActor(Actor, RepGraph, NetConnection, GlobalMap.Get(Actor), ConnectionMap, MySettings, Params.GetViewers(), FrameNum, INDEX_NONE);
+    }
+}
+
+void UReplicationGraphNode_DynamicSpatialFrequency::CalcFrequencyForActor(AActor* Actor, UReplicationGraph* RepGraph, UNetConnection* NetConnection, FGlobalActorReplicationInfo& GlobalInfo, FPerConnectionActorInfoMap& ConnectionMap, FSettings& MySettings, const FNetViewerArray& Viewers, const uint32 FrameNum, int32 ExistingItemIndex)
+{
+    FConnectionReplicationActorInfo& ConnectionInfo = ConnectionMap.FindOrAdd(Actor);
+
+    auto RemoveExistingItem = [&ExistingItemIndex, this]()
+    {
+        if (ExistingItemIndex != INDEX_NONE)
+            GetSortedReplicationList().RemoveAtSwap(ExistingItemIndex, 1, false);
+    };
+
+    auto AddOrUpdateItem = [&ExistingItemIndex, &RepGraph, &FrameNum, &NetConnection, this](AActor* InActor, int32 InFramesTillReplicate, bool InEnableFastPath, FGlobalActorReplicationInfo* InGlobal, FConnectionReplicationActorInfo* InConnection)
+    {
+        RepGraph->UpdateActorChannelCloseFrameNum(InActor, *InConnection, *InGlobal, FrameNum, NetConnection);
+
+        auto& SortedReplicationList = GetSortedReplicationList();
+        auto Item = ExistingItemIndex == INDEX_NONE ? &SortedReplicationList[SortedReplicationList.AddUninitialized()] : &SortedReplicationList[ExistingItemIndex];
+
+        Item->Actor = InActor;
+        Item->FramesTillReplicate = InFramesTillReplicate;
+        Item->EnableFastPath = InEnableFastPath;
+        Item->GlobalInfo = InGlobal;
+        Item->ConnectionInfo = InConnection;
+    };
+
+    auto ReplicatesEveryFrame = [](const FConnectionReplicationActorInfo& Info, const bool CheckFastPath)
+    {
+        return !(Info.ReplicationPeriodFrame > 1 && (!CheckFastPath || Info.FastPath_ReplicationPeriodFrame > 1));
+    };
+
+    auto CalcDynamicReplicationPeriod = [](const float FinalPCT, const uint32 MinRepPeriod, const uint32 MaxRepPeriod, uint16& OutReplicationPeriodFrame, uint32& OutNextReplicationFrame, const uint32 LastRepFrameNum)
+    {
+        const float PeriodRange = (float)(MaxRepPeriod - MinRepPeriod);
+        const uint32 ExtraPeriod = (uint32)FMath::CeilToInt(PeriodRange * FinalPCT);
+        const uint32 FinalPeriod = MinRepPeriod + ExtraPeriod;
+
+        OutReplicationPeriodFrame = (uint16)FMath::Clamp<uint32>(FinalPeriod, 1, 0xFFFF);
+        OutNextReplicationFrame = LastRepFrameNum + OutReplicationPeriodFrame;
+    };
+
+    if (ConnectionInfo.bDormantOnConnection)
+    {
+        RemoveExistingItem();
+        return;
+    }
+
+    const FVector WorldLocation = GlobalInfo.GetWorldLocation();
+    float SmallestDistanceToActorSq = FLT_MAX;
+    const FNetViewer* LowestDistanceViewer = nullptr;
+
+    for (const FNetViewer& CurViewer : Viewers)
+    {
+        const FVector ViewLocation = CurViewer.GetViewLocation();
+        const float CurDistance = (WorldLocation.Y - ViewLocation.Y) * (WorldLocation.Y - ViewLocation.Y) + (WorldLocation.X - ViewLocation.X) * (WorldLocation.X - ViewLocation.X) + (WorldLocation.Z - ViewLocation.Z) * (WorldLocation.Z - ViewLocation.Z);
+
+        if (LowestDistanceViewer == nullptr || CurDistance < SmallestDistanceToActorSq)
+        {
+            LowestDistanceViewer = &CurViewer;
+            SmallestDistanceToActorSq = CurDistance;
+        }
+    }
+
+    if (!GetIgnoreCullDistance() && ConnectionInfo.CullDistanceSquared > 0.f && SmallestDistanceToActorSq > ConnectionInfo.CullDistanceSquared)
+    {
+        RemoveExistingItem();
+        return;
+    }
+
+    const FVector ViewLocation = LowestDistanceViewer->GetViewLocation();
+    const FVector ConnectionViewDir = LowestDistanceViewer->GetViewDir();
+    FVector DirToActor(WorldLocation.X - ViewLocation.X, WorldLocation.Y - ViewLocation.Y, WorldLocation.Z - ViewLocation.Z);
+    const float DistanceToActor = FMath::Sqrt(SmallestDistanceToActorSq);
+
+    if (DistanceToActor > 1.e-8f)
+    {
+        const float RScale = 1.f / DistanceToActor;
+        DirToActor = FVector(DirToActor.X * RScale, DirToActor.Y * RScale, DirToActor.Z * RScale);
+    }
+
+    const float DotP = FMath::Clamp(DirToActor.Y * ConnectionViewDir.Y + DirToActor.X * ConnectionViewDir.X + DirToActor.Z * ConnectionViewDir.Z, -1.f, 1.f);
+    const bool ActorSupportsFastShared = *(void**)GlobalInfo.GetFastSharedReplicationFunc() != nullptr;
+    TArrayView<FSpatializationZone>& ZoneList = ActorSupportsFastShared ? MySettings.ZoneSettings : MySettings.ZoneSettings_NonFastSharedActors;
+
+    for (int32 ZoneIdx = 0; ZoneIdx < ZoneList.Num(); ++ZoneIdx)
+    {
+        FSpatializationZone& ZoneInfo = ZoneList[ZoneIdx];
+
+        if (DotP <= ZoneInfo.MinDotProduct)
+        {
+            int32 FramesTillReplicate;
+            bool EnableFastPath = false;
+            const float CullDistSq = ConnectionInfo.CullDistanceSquared > 0.f ? ConnectionInfo.CullDistanceSquared : GlobalInfo.GetCullDistanceSquared();
+
+            if (CullDistSq <= 0.f)
+            {
+                RemoveExistingItem();
+                return;
+            }
+
+            const float DistPct = DistanceToActor / ConnectionInfo.CullDistance;
+            const float BiasDistPct = DistPct - ZoneInfo.MinDistPct;
+            const float FinalPCT = FMath::Clamp(BiasDistPct / (ZoneInfo.MaxDistPct - ZoneInfo.MinDistPct), 0.f, 1.f);
+
+            CalcDynamicReplicationPeriod(FinalPCT, ZoneInfo.MinRepPeriod, ZoneInfo.MaxRepPeriod, ConnectionInfo.ReplicationPeriodFrame, ConnectionInfo.NextReplicationFrameNum, ConnectionInfo.LastRepFrameNum);
+            FramesTillReplicate = (int32)ConnectionInfo.NextReplicationFrameNum - (int32)FrameNum;
+            ConnectionInfo.ActorChannelCloseFrameNum = FMath::Max<uint32>(ConnectionInfo.ActorChannelCloseFrameNum, ConnectionInfo.NextReplicationFrameNum + 1);
+
+            for (AActor* DependentActor : GlobalInfo.GetDependentActorList())
+            {
+                FConnectionReplicationActorInfo& DependentActorConnectionInfo = ConnectionMap.FindOrAdd(DependentActor);
+                DependentActorConnectionInfo.ActorChannelCloseFrameNum = FMath::Max<uint32>(ConnectionInfo.ActorChannelCloseFrameNum, ConnectionInfo.NextReplicationFrameNum + 1);
+            }
+
+            if (ActorSupportsFastShared && ZoneInfo.FastPath_MinRepPeriod > 0)
+            {
+                CalcDynamicReplicationPeriod(FinalPCT, ZoneInfo.FastPath_MinRepPeriod, ZoneInfo.FastPath_MaxRepPeriod, ConnectionInfo.FastPath_ReplicationPeriodFrame, ConnectionInfo.FastPath_NextReplicationFrameNum, ConnectionInfo.FastPath_LastRepFrameNum);
+                FramesTillReplicate = FMath::Min<int32>(FramesTillReplicate, (int32)ConnectionInfo.FastPath_NextReplicationFrameNum - (int32)FrameNum);
+                EnableFastPath = true;
+            }
+
+            if (FramesTillReplicate < 0)
+            {
+                AddOrUpdateItem(Actor, FramesTillReplicate, EnableFastPath, &GlobalInfo, &ConnectionInfo);
+            }
+            else if (FramesTillReplicate == 0)
+            {
+                if (!ReplicatesEveryFrame(ConnectionInfo, EnableFastPath))
+                    GetNumExpectedReplicationsThisFrame()++;
+
+                AddOrUpdateItem(Actor, FramesTillReplicate, EnableFastPath, &GlobalInfo, &ConnectionInfo);
+            }
+            else if (FramesTillReplicate == 1)
+            {
+                if (!ReplicatesEveryFrame(ConnectionInfo, EnableFastPath))
+                    GetNumExpectedReplicationsNextFrame()++;
+
+                RemoveExistingItem();
+            }
+            else
+            {
+                RemoveExistingItem();
+            }
+
+            return;
+        }
+    }
+
+    RemoveExistingItem();
 }
 
 UClass* UReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()

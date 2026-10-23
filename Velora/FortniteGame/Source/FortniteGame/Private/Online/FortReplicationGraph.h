@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ReplicationGraph.h"
+#include "Containers/Map.h"
+#include "UObject/WeakObjectPtr.h"
 
 class AFortTeamHealthInfo;
 class APlayerState;
@@ -93,6 +95,30 @@ private:
     int32& GetCurrentFrameListIndex();
 
     TBitArray<>& GetActiveLists();
+};
+
+enum class EFortDynamicNodeType : uint8
+{
+    WorldStatic,
+    WorldDynamic,
+    Pawn,
+    Visibility,
+};
+
+class UFortReplicationGraphNode_DynamicSpatialFrequency : public UReplicationGraphNode_DynamicSpatialFrequency
+{
+public:
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+protected:
+    void GatherActors(const FActorRepListRefView& RepList, FGlobalActorReplicationInfoMap& GlobalMap, FPerConnectionActorInfoMap& ConnectionMap, const FConnectionGatherActorListParameters& Params, UNetConnection* NetConnection);
+
+private:
+    EFortDynamicNodeType& GetCurrentDynamicNodeType();
+
+    TMap<EFortDynamicNodeType, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>>& GetDynamicTypeToNodeMap();
 };
 
 class UFortReplicationGraphNode_LiveSpectator : public UReplicationGraphNode_ActorList

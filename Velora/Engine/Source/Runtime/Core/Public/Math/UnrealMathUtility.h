@@ -105,6 +105,11 @@ struct FMath
         return _mm_cvt_ss2si(_mm_set_ss(F + F - 0.5f)) >> 1;
     }
 
+    static FORCEINLINE int32 CeilToInt(float F)
+    {
+        return -(_mm_cvt_ss2si(_mm_set_ss(-0.5f - (F + F))) >> 1);
+    }
+
     static FORCEINLINE float Sqrt(float Value)
     {
         return sqrtf(Value);

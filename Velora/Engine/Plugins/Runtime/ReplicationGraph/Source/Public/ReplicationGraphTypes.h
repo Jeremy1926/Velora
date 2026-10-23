@@ -462,6 +462,8 @@ struct FConnectionGatherActorListParameters
 
     const FNetViewer& GetViewer(int32 Index) const;
 
+    const FNetViewerArray& GetViewers() const;
+
     UNetReplicationGraphConnection* GetConnectionManager() const;
 
     uint32 GetReplicationFrameNum() const;

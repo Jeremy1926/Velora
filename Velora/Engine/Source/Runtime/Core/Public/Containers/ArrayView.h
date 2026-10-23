@@ -15,6 +15,21 @@ public:
     {
     }
 
+    FORCEINLINE ElementType* GetData() const
+    {
+        return DataPtr;
+    }
+
+    FORCEINLINE SizeType Num() const
+    {
+        return ArrayNum;
+    }
+
+    FORCEINLINE ElementType& operator[](SizeType Index) const
+    {
+        return DataPtr[Index];
+    }
+
 private:
     ElementType* DataPtr;
     SizeType ArrayNum;

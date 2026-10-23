@@ -2,6 +2,7 @@
 
 #include "Engine/ReplicationDriver.h"
 #include "Containers/Array.h"
+#include "Containers/ArrayView.h"
 #include "Containers/Map.h"
 #include "Containers/Set.h"
 #include "Delegates/Delegate.h"
@@ -27,6 +28,7 @@ struct FReplicationGraphGlobalData
 {
     FGlobalActorReplicationInfoMap* GlobalActorReplicationInfoMap;
     UWorld* World;
+    UReplicationGraph* ReplicationGraph;
 };
 
 class UReplicationGraphNode : public UObject
@@ -246,6 +248,64 @@ private:
     TArray<FActorRepListRefView, TInlineAllocator<2>>& GetNonStreamingCollection();
 
     FStreamingLevelActorListCollection& GetStreamingLevelCollection();
+};
+
+class UReplicationGraphNode_DynamicSpatialFrequency : public UReplicationGraphNode_ActorList
+{
+public:
+    struct FSpatializationZone
+    {
+        float MinDotProduct;
+        float MinDistPct;
+        float MaxDistPct;
+        uint32 MinRepPeriod;
+        uint32 MaxRepPeriod;
+        uint32 FastPath_MinRepPeriod;
+        uint32 FastPath_MaxRepPeriod;
+    };
+
+    struct FSettings
+    {
+        TArrayView<FSpatializationZone> ZoneSettings;
+        TArrayView<FSpatializationZone> ZoneSettings_NonFastSharedActors;
+        int64 MaxBitsPerFrame;
+        int32 MaxNearestActors;
+    };
+
+    static UClass* StaticClass();
+
+    static FSettings& GetDefaultSettings();
+
+    FSettings& GetSettings();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+protected:
+    struct FDynamicSpatialFrequency_SortedItem
+    {
+        bool operator<(const FDynamicSpatialFrequency_SortedItem& Other) const
+        {
+            return FramesTillReplicate < Other.FramesTillReplicate;
+        }
+
+        AActor* Actor;
+        int32 FramesTillReplicate;
+        bool EnableFastPath;
+        FGlobalActorReplicationInfo* GlobalInfo;
+        FConnectionReplicationActorInfo* ConnectionInfo;
+    };
+
+    TArray<FDynamicSpatialFrequency_SortedItem>& GetSortedReplicationList();
+
+    int32& GetNumExpectedReplicationsThisFrame();
+
+    int32& GetNumExpectedReplicationsNextFrame();
+
+    bool& GetIgnoreCullDistance();
+
+    void GatherActors(const FActorRepListRefView& RepList, FGlobalActorReplicationInfoMap& GlobalMap, FPerConnectionActorInfoMap& ConnectionMap, const FConnectionGatherActorListParameters& Params, UNetConnection* NetConnection);
+
+    void CalcFrequencyForActor(AActor* Actor, UReplicationGraph* RepGraph, UNetConnection* NetConnection, FGlobalActorReplicationInfo& GlobalInfo, FPerConnectionActorInfoMap& ConnectionMap, FSettings& MySettings, const FNetViewerArray& Viewers, const uint32 FrameNum, int32 ExistingItemIndex);
 };
 
 struct FAlwaysRelevantActorInfo

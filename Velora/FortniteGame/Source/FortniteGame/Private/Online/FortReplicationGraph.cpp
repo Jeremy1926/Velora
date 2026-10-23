@@ -581,6 +581,105 @@ void UFortReplicationGraphNode_PlayerStateFrequencyLimiter::OnPlayerStateRemoved
     GetActiveLists().SetBit(ListIdx, List.RepList.Num() > 0);
 }
 
+UClass* UFortReplicationGraphNode_DynamicSpatialFrequency::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_DynamicSpatialFrequency"));
+
+    return Class;
+}
+
+EFortDynamicNodeType& UFortReplicationGraphNode_DynamicSpatialFrequency::GetCurrentDynamicNodeType()
+{
+    static auto CurrentDynamicNodeType = Anchor::Offset(TEXT("UFortReplicationGraphNode_DynamicSpatialFrequency::CurrentDynamicNodeType"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rcx+0x*], bpl")
+        .Disp();
+
+    return *(EFortDynamicNodeType*)((uint8*)this + CurrentDynamicNodeType);
+}
+
+TMap<EFortDynamicNodeType, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>>& UFortReplicationGraphNode_DynamicSpatialFrequency::GetDynamicTypeToNodeMap()
+{
+    return *(TMap<EFortDynamicNodeType, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>>*)((uint8*)&GetCurrentDynamicNodeType() + sizeof(void*));
+}
+
+void UFortReplicationGraphNode_DynamicSpatialFrequency::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UFortReplicationGraphNode_DynamicSpatialFrequency, GatherActorListsForConnection, Anchor::Hook(TEXT("UFortReplicationGraphNode_DynamicSpatialFrequency::GatherActors"), &UFortReplicationGraphNode_DynamicSpatialFrequency::GatherActors)
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"), "ret*")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"), 0x30)
+        .Optional()
+        .InChildVTables(UFortReplicationGraphNode_DynamicSpatialFrequency::StaticClass()), Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"), "ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraphNode_DynamicSpatialFrequency::StaticClass()));
+
+    for (const auto& Pair : GetDynamicTypeToNodeMap())
+    {
+        if (UReplicationGraphNode* Node = Pair.Value.Get())
+            Node->GatherActorListsForConnection(Params);
+    }
+
+    UReplicationGraphNode_DynamicSpatialFrequency::GatherActorListsForConnection(Params);
+}
+
+void UFortReplicationGraphNode_DynamicSpatialFrequency::GatherActors(const FActorRepListRefView& RepList, FGlobalActorReplicationInfoMap& GlobalMap, FPerConnectionActorInfoMap& ConnectionMap, const FConnectionGatherActorListParameters& Params, UNetConnection* NetConnection)
+{
+    auto RepGraph = GetGraphGlobals()->ReplicationGraph;
+    auto& MySettings = GetSettings();
+    const uint32 FrameNum = Params.GetReplicationFrameNum();
+    TArray<AActor*> TetherPawns;
+
+    if (GetCurrentDynamicNodeType() == EFortDynamicNodeType::WorldStatic)
+    {
+        for (const FNetViewer& CurViewer : Params.GetViewers())
+        {
+            AActor* TetherPawn = nullptr;
+
+            if (auto PlayerPawn = Cast<AFortPlayerPawn>(CurViewer.ViewTarget))
+                TetherPawn = PlayerPawn->GetTetherPawn();
+            else if (auto AIPawn = Cast<AFortAIPawn>(CurViewer.ViewTarget))
+                TetherPawn = AIPawn->GetTetheredFollower();
+
+            if (TetherPawn)
+                TetherPawns.AddUnique(TetherPawn);
+        }
+    }
+
+    for (AActor* Actor : RepList.RepList)
+    {
+        bool bIsAViewTarget = false;
+
+        for (const FNetViewer& CurViewer : Params.GetViewers())
+        {
+            if (Actor == CurViewer.ViewTarget)
+            {
+                bIsAViewTarget = true;
+                break;
+            }
+        }
+
+        if (TetherPawns.Contains(Actor) || bIsAViewTarget)
+            continue;
+
+        CalcFrequencyForActor(Actor, RepGraph, NetConnection, GlobalMap.Get(Actor), ConnectionMap, MySettings, Params.GetViewers(), FrameNum, INDEX_NONE);
+    }
+}
+
 UClass* UFortReplicationGraphNode_LiveSpectator::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_LiveSpectator"));

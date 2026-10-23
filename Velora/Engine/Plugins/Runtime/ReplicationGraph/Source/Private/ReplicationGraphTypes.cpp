@@ -363,6 +363,11 @@ const FNetViewer& FConnectionGatherActorListParameters::GetViewer(int32 Index) c
     return *(const FNetViewer*)((SecondaryData ? SecondaryData : (const uint8*)this) + Index * FNetViewer::GetTypeSize());
 }
 
+const FNetViewerArray& FConnectionGatherActorListParameters::GetViewers() const
+{
+    return *(const FNetViewerArray*)this;
+}
+
 UNetReplicationGraphConnection* FConnectionGatherActorListParameters::GetConnectionManager() const
 {
     return *(UNetReplicationGraphConnection* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32));
