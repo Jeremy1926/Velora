@@ -12,6 +12,16 @@ public:
     {
     }
 
+    bool IsValid() const
+    {
+        return Value > 0;
+    }
+
+    bool IsDefault() const
+    {
+        return Value == 1;
+    }
+
     friend bool operator==(const FNetworkGUID& X, const FNetworkGUID& Y)
     {
         return X.Value == Y.Value;

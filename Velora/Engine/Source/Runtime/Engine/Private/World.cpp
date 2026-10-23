@@ -47,6 +47,13 @@ AGameNetworkManager* UWorld::GetNetworkManager() const
     return *NetworkManager->ContainerPtrToValuePtr<AGameNetworkManager*>(this);
 }
 
+ULevel* UWorld::GetPersistentLevel() const
+{
+    static auto PersistentLevel = GetClass()->FindPropertyByName(FName(TEXT("PersistentLevel")));
+
+    return *PersistentLevel->ContainerPtrToValuePtr<ULevel*>(this);
+}
+
 ULevel* UWorld::GetCurrentLevelPendingVisibility() const
 {
     static auto CurrentLevelPendingVisibility = GetClass()->FindPropertyByName(FName(TEXT("CurrentLevelPendingVisibility")));

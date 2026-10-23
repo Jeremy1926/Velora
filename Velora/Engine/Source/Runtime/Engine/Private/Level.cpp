@@ -12,6 +12,16 @@ UWorld* ULevel::GetOwningWorld() const
     return *OwningWorld->ContainerPtrToValuePtr<UWorld*>(this);
 }
 
+bool ULevel::IsPersistentLevel() const
+{
+    bool bIsPersistent = false;
+
+    if (GetOwningWorld())
+        bIsPersistent = (this == GetOwningWorld()->GetPersistentLevel());
+
+    return bIsPersistent;
+}
+
 bool ULevel::IsAssociatingLevel() const
 {
     static auto Offset = Anchor::Offset(TEXT("ULevel::bIsAssociatingLevel"))

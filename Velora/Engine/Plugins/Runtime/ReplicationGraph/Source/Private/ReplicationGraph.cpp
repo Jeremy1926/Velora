@@ -3,6 +3,7 @@
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "Engine/Level.h"
+#include "Engine/PackageMapClient.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
@@ -99,6 +100,16 @@ TSet<FActorDestructionInfo*>& UNetReplicationGraphConnection::GetTrackedDestruct
     return *(TSet<FActorDestructionInfo*>*)((uint8*)this + TrackedDestructionInfoPtrs);
 }
 
+TArray<FCachedDormantDestructInfo>& UNetReplicationGraphConnection::GetPendingDormantDestructList()
+{
+    return *(TArray<FCachedDormantDestructInfo>*)((uint8*)&GetTrackedDestructionInfoPtrs() + sizeof(TSet<FActorDestructionInfo*>));
+}
+
+TSet<FNetworkGUID>& UNetReplicationGraphConnection::GetTrackedDormantDestructionInfos()
+{
+    return *(TSet<FNetworkGUID>*)((uint8*)&GetPendingDormantDestructList() + sizeof(TArray<FCachedDormantDestructInfo>));
+}
+
 void UNetReplicationGraphConnection::NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel)
 {
     DETOUR(UNetReplicationGraphConnection, NotifyActorChannelAdded, Anchor::Hook()
@@ -148,6 +159,53 @@ void UNetReplicationGraphConnection::NotifyAddDestructionInfo(FActorDestructionI
 
     TrackedDestructionInfoPtrs.Add(DestructInfo);
     GetPendingDestructInfoList().Emplace(DestructInfo);
+}
+
+void UNetReplicationGraphConnection::NotifyAddDormantDestructionInfo(AActor* Actor)
+{
+    DETOUR(UNetReplicationGraphConnection, NotifyAddDormantDestructionInfo, Anchor::Hook()
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x10)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), "ret*")
+        .Optional()
+        .InChildVTables(UNetReplicationGraphConnection::StaticClass()));
+
+    auto NetConnection = GetNetConnection();
+
+    if (!Actor || !NetConnection || !NetConnection->GetDriver() || !NetConnection->GetDriver()->GetGuidCache().IsValid())
+        return;
+
+    ULevel* Level = Actor->GetLevel();
+
+    if (Level && Level->IsPersistentLevel())
+    {
+        const FName StreamingLevelName = Level->GetOutermost()->GetFName();
+        auto& ClientVisibleLevelNames = NetConnection->GetClientVisibleLevelNames();
+
+        if (!(FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)ClientVisibleLevelNames).Contains(StreamingLevelName.GetComparisonIndex()) : ClientVisibleLevelNames.Contains(StreamingLevelName)))
+            return;
+    }
+
+    const FNetworkGUID NetGUID = NetConnection->GetDriver()->GetGuidCache()->GetNetGUID(Actor);
+
+    if (!NetGUID.IsValid() || NetGUID.IsDefault())
+        return;
+
+    auto& TrackedDormantDestructionInfos = GetTrackedDormantDestructionInfos();
+
+    if (TrackedDormantDestructionInfos.Contains(NetGUID))
+        return;
+
+    TrackedDormantDestructionInfos.Add(NetGUID);
+
+    auto& Info = *new(GetPendingDormantDestructList()) FCachedDormantDestructInfo();
+
+    Info.NetGUID = NetGUID;
+    Info.Level = Level;
+    Info.ObjOuter = Actor->GetOuter();
+    Info.PathName = Actor->GetName();
 }
 
 void UReplicationGraphNode::NotifyResetAllNetworkActors()

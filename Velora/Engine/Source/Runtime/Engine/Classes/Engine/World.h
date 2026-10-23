@@ -90,6 +90,8 @@ public:
 
     AGameNetworkManager* GetNetworkManager() const;
 
+    ULevel* GetPersistentLevel() const;
+
     ULevel* GetCurrentLevelPendingVisibility() const;
 
     const TArray<ULevelStreaming*>& GetStreamingLevels() const;

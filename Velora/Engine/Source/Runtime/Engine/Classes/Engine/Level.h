@@ -9,6 +9,8 @@ class ULevel : public UObject
 public:
     UWorld* GetOwningWorld() const;
 
+    bool IsPersistentLevel() const;
+
     bool IsAssociatingLevel() const;
 
     bool HasVisibilityChangeRequestPending() const;

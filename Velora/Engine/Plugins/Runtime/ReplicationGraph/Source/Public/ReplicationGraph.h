@@ -43,9 +43,15 @@ public:
 
     TSet<FActorDestructionInfo*>& GetTrackedDestructionInfoPtrs();
 
+    TArray<FCachedDormantDestructInfo>& GetPendingDormantDestructList();
+
+    TSet<FNetworkGUID>& GetTrackedDormantDestructionInfos();
+
     void NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel);
 
     void NotifyAddDestructionInfo(FActorDestructionInfo* DestructInfo);
+
+    void NotifyAddDormantDestructionInfo(AActor* Actor);
 
     void NotifyResetAllNetworkActors();
 

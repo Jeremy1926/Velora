@@ -2,13 +2,18 @@
 
 #include "Containers/Map.h"
 #include "Containers/Set.h"
+#include "Containers/UnrealString.h"
 #include "Math/UnrealMathUtility.h"
 #include "Math/Vector.h"
+#include "Misc/NetworkGuid.h"
 #include "Templates/SharedPointer.h"
 #include "UObject/NameTypes.h"
+#include "UObject/WeakObjectPtr.h"
 
 class AActor;
 class UActorChannel;
+class ULevel;
+class UObject;
 struct FActorDestructionInfo;
 
 template<typename NameType>
@@ -126,4 +131,12 @@ public:
     {
         new(&TRuntimeSizedArray::operator[](AddUninitialized(1))) FCachedDestructInfo(DestructionInfo);
     }
+};
+
+struct FCachedDormantDestructInfo
+{
+    TWeakObjectPtr<ULevel> Level;
+    TWeakObjectPtr<UObject> ObjOuter;
+    FNetworkGUID NetGUID;
+    FString PathName;
 };
