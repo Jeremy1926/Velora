@@ -166,6 +166,14 @@ public:
             return SecondaryData.GetAllocation() ? SecondaryData.GetAllocation() : GetInlineElements();
         }
 
+        void MoveToEmpty(ForElementType& Other)
+        {
+            if (!Other.SecondaryData.GetAllocation())
+                memmove((void*)InlineData, (void*)Other.InlineData, sizeof(InlineData));
+
+            SecondaryData.MoveToEmpty(Other.SecondaryData);
+        }
+
         void ResizeAllocation(int32 PreviousNumElements, int32 NumElements, SIZE_T NumBytesPerElement)
         {
             if (NumElements <= NumInlineElements)
@@ -188,6 +196,16 @@ public:
                     SecondaryData.ResizeAllocation(PreviousNumElements, NumElements, NumBytesPerElement);
                 }
             }
+        }
+
+        FORCEINLINE int32 CalculateSlackReserve(int32 NumElements, SIZE_T NumBytesPerElement) const
+        {
+            return NumElements <= NumInlineElements ? NumInlineElements : SecondaryData.CalculateSlackReserve(NumElements, NumBytesPerElement);
+        }
+
+        FORCEINLINE int32 CalculateSlackShrink(int32 NumElements, int32 NumAllocatedElements, SIZE_T NumBytesPerElement) const
+        {
+            return NumElements <= NumInlineElements ? NumInlineElements : SecondaryData.CalculateSlackShrink(NumElements, NumAllocatedElements, NumBytesPerElement);
         }
 
         FORCEINLINE int32 CalculateSlackGrow(int32 NumElements, int32 NumAllocatedElements, SIZE_T NumBytesPerElement) const

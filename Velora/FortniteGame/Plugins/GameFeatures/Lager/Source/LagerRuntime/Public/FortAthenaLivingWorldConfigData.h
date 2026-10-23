@@ -24,5 +24,9 @@ public:
 
     FScalableFloat* GetMaxActorDensityUpdatesPerTick();
 
+    FScalableFloat* GetMaxActorUpdatesPerTick();
+
+    FScalableFloat* GetMaxActorDespawnPerTick();
+
     FScalableFloat* GetPointClusterSize();
 };

@@ -163,3 +163,17 @@ void FFortAthenaLivingWorldPlayerTracker::RefreshTree(UWorld* World, const AFort
 
     GetTrackedPlayerBVTree().RecreateTree(TreeElements);
 }
+
+void FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange(const FVector& Origin, float MaxRadius, const TArrayView<const float>& SquaredRadii, const TArrayView<int32>& OutNumberOfPlayerInRadius, TArray<FSimpleBVTreeElement>& ScratchPad)
+{
+    static auto GetNumberOfPlayerPawnInRange = Anchor::Function<void (*)(FFortAthenaLivingWorldPlayerTracker*, const FVector&, float, const TArrayView<const float>&, const TArrayView<int32>&, TArray<FSimpleBVTreeElement>&)>(TEXT("FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("movdqa [*], xmm*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    GetNumberOfPlayerPawnInRange(this, Origin, MaxRadius, SquaredRadii, OutNumberOfPlayerInRadius, ScratchPad);
+}

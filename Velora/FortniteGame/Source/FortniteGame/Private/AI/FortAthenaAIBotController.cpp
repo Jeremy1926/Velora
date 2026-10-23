@@ -331,6 +331,13 @@ bool AFortAthenaAIBotController::GetbAllowUnsupportedItemsInDefaultInventory() c
     return bAllowUnsupportedItemsInDefaultInventory->GetPropertyValue_InContainer(this);
 }
 
+bool AFortAthenaAIBotController::IsAnAthenaGameParticipant() const
+{
+    static auto bIsAnAthenaGameParticipant = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIsAnAthenaGameParticipant")));
+
+    return bIsAnAthenaGameParticipant->GetPropertyValue_InContainer(this);
+}
+
 UFortAthenaAIRuntimeParametersComponent* AFortAthenaAIBotController::GetCachedAIRuntimeParametersComponent() const
 {
     static auto CachedAIRuntimeParametersComponent = GetClass()->FindPropertyByName(FName(TEXT("CachedAIRuntimeParametersComponent")));

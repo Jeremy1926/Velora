@@ -634,7 +634,13 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ContainerAllocationPolicies.h">
       <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\Queue.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\Array.h">
+      <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ArrayView.h">
       <Filter>Engine\Source\Runtime\Core\Public\Containers</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Containers\ScriptArray.h">
@@ -1061,6 +1067,9 @@
       <Filter>Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\Perception\AISense_Hearing.h">
+      <Filter>Engine\Source\Runtime\AIModule\Classes\Perception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\Perception\AIPerceptionComponent.h">
       <Filter>Engine\Source\Runtime\AIModule\Classes\Perception</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\AIModule\Classes\EnvironmentQuery\EnvQueryInstanceBlueprintWrapper.h">
@@ -2078,6 +2087,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\Perception\AISense_Hearing.cpp">
+      <Filter>Engine\Source\Runtime\AIModule\Private\Perception</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\Perception\AIPerceptionComponent.cpp">
       <Filter>Engine\Source\Runtime\AIModule\Private\Perception</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\AIModule\Private\EnvironmentQuery\EnvQuery.cpp">

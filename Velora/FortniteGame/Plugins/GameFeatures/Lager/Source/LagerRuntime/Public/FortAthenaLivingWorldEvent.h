@@ -15,6 +15,25 @@ struct FFortAthenaLivingWorldEventTagDensityCondition
     float MaxDensity;
 };
 
+struct FFortAthenaLivingWorldEventDespawnCondition
+{
+    static UScriptStruct* StaticStruct();
+
+    bool GetbCanBeDespawned();
+
+    float GetMinDistanceToPlayer();
+
+    float GetTimeAsCandidateBeforeDespawn();
+
+    EAthenaGamePhaseStep GetCanStartDespawningPhaseStep();
+
+    int32* GetCanStartDespawningSafeZonePhase();
+
+    bool GetbCanDespawnWhenInCombatWithPlayer();
+
+    bool* GetbCanDespawnInTheStorm();
+};
+
 struct FFortAthenaLivingWorldEvent : public FTableRowBase
 {
     static UScriptStruct* StaticStruct();
@@ -60,4 +79,6 @@ struct FFortAthenaLivingWorldEvent : public FTableRowBase
     float GetMaxDistanceToPlayer();
 
     bool GetbCanSpawnWithoutMatchingPlayerDistance();
+
+    FFortAthenaLivingWorldEventDespawnCondition* GetDespawnCondition();
 };

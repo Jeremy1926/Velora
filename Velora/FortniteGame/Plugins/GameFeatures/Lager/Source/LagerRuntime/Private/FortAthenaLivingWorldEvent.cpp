@@ -5,6 +5,62 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
+UScriptStruct* FFortAthenaLivingWorldEventDespawnCondition::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEventDespawnCondition"));
+
+    return Struct;
+}
+
+bool FFortAthenaLivingWorldEventDespawnCondition::GetbCanBeDespawned()
+{
+    static auto bCanBeDespawned = StaticStruct()->FindPropertyByName(FName(TEXT("bCanBeDespawned")));
+
+    return *bCanBeDespawned->ContainerPtrToValuePtr<bool>(this);
+}
+
+float FFortAthenaLivingWorldEventDespawnCondition::GetMinDistanceToPlayer()
+{
+    static auto MinDistanceToPlayer = StaticStruct()->FindPropertyByName(FName(TEXT("MinDistanceToPlayer")));
+
+    return *MinDistanceToPlayer->ContainerPtrToValuePtr<float>(this);
+}
+
+float FFortAthenaLivingWorldEventDespawnCondition::GetTimeAsCandidateBeforeDespawn()
+{
+    static auto TimeAsCandidateBeforeDespawn = StaticStruct()->FindPropertyByName(FName(TEXT("TimeAsCandidateBeforeDespawn")));
+
+    return *TimeAsCandidateBeforeDespawn->ContainerPtrToValuePtr<float>(this);
+}
+
+EAthenaGamePhaseStep FFortAthenaLivingWorldEventDespawnCondition::GetCanStartDespawningPhaseStep()
+{
+    static auto CanStartDespawningPhaseStep = StaticStruct()->FindPropertyByName(FName(TEXT("CanStartDespawningPhaseStep")));
+
+    return *CanStartDespawningPhaseStep->ContainerPtrToValuePtr<EAthenaGamePhaseStep>(this);
+}
+
+int32* FFortAthenaLivingWorldEventDespawnCondition::GetCanStartDespawningSafeZonePhase()
+{
+    static auto CanStartDespawningSafeZonePhase = StaticStruct()->FindPropertyByName(FName(TEXT("CanStartDespawningSafeZonePhase")));
+
+    return CanStartDespawningSafeZonePhase ? CanStartDespawningSafeZonePhase->ContainerPtrToValuePtr<int32>(this) : nullptr;
+}
+
+bool FFortAthenaLivingWorldEventDespawnCondition::GetbCanDespawnWhenInCombatWithPlayer()
+{
+    static auto bCanDespawnWhenInCombatWithPlayer = StaticStruct()->FindPropertyByName(FName(TEXT("bCanDespawnWhenInCombatWithPlayer")));
+
+    return *bCanDespawnWhenInCombatWithPlayer->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool* FFortAthenaLivingWorldEventDespawnCondition::GetbCanDespawnInTheStorm()
+{
+    static auto bCanDespawnInTheStorm = StaticStruct()->FindPropertyByName(FName(TEXT("bCanDespawnInTheStorm")));
+
+    return bCanDespawnInTheStorm ? bCanDespawnInTheStorm->ContainerPtrToValuePtr<bool>(this) : nullptr;
+}
+
 UScriptStruct* FFortAthenaLivingWorldEvent::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEvent"));
@@ -161,4 +217,11 @@ bool FFortAthenaLivingWorldEvent::GetbCanSpawnWithoutMatchingPlayerDistance()
     static auto bCanSpawnWithoutMatchingPlayerDistance = StaticStruct()->FindPropertyByName(FName(TEXT("bCanSpawnWithoutMatchingPlayerDistance")));
 
     return bCanSpawnWithoutMatchingPlayerDistance ? *bCanSpawnWithoutMatchingPlayerDistance->ContainerPtrToValuePtr<bool>(this) : false;
+}
+
+FFortAthenaLivingWorldEventDespawnCondition* FFortAthenaLivingWorldEvent::GetDespawnCondition()
+{
+    static auto DespawnCondition = StaticStruct()->FindPropertyByName(FName(TEXT("DespawnCondition")));
+
+    return DespawnCondition ? DespawnCondition->ContainerPtrToValuePtr<FFortAthenaLivingWorldEventDespawnCondition>(this) : nullptr;
 }

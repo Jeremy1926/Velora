@@ -66,3 +66,17 @@ FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensity()
 
     return MaxActorDensity ? MaxActorDensity->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
+
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorUpdatesPerTick()
+{
+    static auto MaxActorUpdatesPerTick = GetClass()->FindPropertyByName(FName(TEXT("MaxActorUpdatesPerTick")));
+
+    return MaxActorUpdatesPerTick ? MaxActorUpdatesPerTick->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDespawnPerTick()
+{
+    static auto MaxActorDespawnPerTick = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDespawnPerTick")));
+
+    return MaxActorDespawnPerTick ? MaxActorDespawnPerTick->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}

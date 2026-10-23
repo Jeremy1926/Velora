@@ -64,4 +64,6 @@ public:
     void LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent);
 
     void SetGravityMultiplier(float NewGravityVal);
+
+    void Suicide();
 };

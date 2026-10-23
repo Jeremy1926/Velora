@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "Containers/Queue.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
@@ -21,6 +22,7 @@ class UWorld;
 struct FFortAthenaLivingWorldCategory;
 struct FFortAthenaLivingWorldDensityGrid;
 struct FFortAthenaLivingWorldEvent;
+struct FFortAthenaLivingWorldEventDespawnCondition;
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription;
 struct FFortAthenaLivingWorldPlayerTracker;
 struct FFortAthenaLivingWorldPointProviderFilterRules;
@@ -135,6 +137,14 @@ public:
         float DensityComputationRange = 0.0f;
     };
 
+    struct FLivingWorldActorUpdateInfo
+    {
+        TWeakObjectPtr<AActor> Actor;
+        FFortAthenaLivingWorldEvent* Event = nullptr;
+        float IsDespawnCandidateSinceTimestamp = -1.0f;
+        TArray<FName, TInlineAllocator<1>> TagDensityToUpdate;
+    };
+
     struct FLivingWorldCategoryRuntimeData
     {
         UDataTable* CurrentEventTable = nullptr;
@@ -171,6 +181,12 @@ public:
     int32 ComputeCategoryRemainingBudget(FFortAthenaLivingWorldCategory* Category);
 
     void ProcessEventRequests();
+
+    void UpdateActorsInfo();
+
+    void DespawnActors();
+
+    bool IsActorCandidateForDespawn(AActor* Actor, FFortAthenaLivingWorldEventDespawnCondition* DespawnCondition);
 
     void ProcessEQSRequests();
 
@@ -232,6 +248,8 @@ public:
 
     TArray<FLivingWorldPendingActorSpawnEventRequest>& GetPendingActorSpawnEventRequests();
 
+    TQueue<FLivingWorldActorUpdateInfo>* GetActorInfoUpdateQueue();
+
     float& GetNextEventGenerationTime();
 
     FGameplayTagContainer& GetPlaylistContextTags();
@@ -258,6 +276,8 @@ private:
     static TArray<FLivingWorldEventRequest> PendingEventRequests;
 
     static TArray<FLivingWorldPendingEQSSpawn> PendingEQSSpawns;
+
+    static TArray<FLivingWorldActorUpdateInfo> ActorToDespawnQueue;
 
     static int32 NextEQSSpawnRequestID;
 };

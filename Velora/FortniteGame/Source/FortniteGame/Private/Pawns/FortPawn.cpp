@@ -277,3 +277,12 @@ void AFortPawn::SetGravityMultiplier(float NewGravityVal)
 
     SetGravityMultiplier(this, NewGravityVal);
 }
+
+void AFortPawn::Suicide()
+{
+    static auto Suicide = Anchor::VirtualFunction<void (*)(AFortPawn*)>(TEXT("AFortPawn::Suicide"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortPawn"), "mov rax, [rcx]; mov rdx, rcx; jmp [rax+0x*]")
+        .Get();
+
+    Suicide(this);
+}

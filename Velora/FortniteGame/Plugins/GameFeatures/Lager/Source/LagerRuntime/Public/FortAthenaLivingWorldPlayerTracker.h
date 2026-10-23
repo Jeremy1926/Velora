@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Containers/Array.h"
+#include "Containers/ArrayView.h"
 #include "Containers/Set.h"
 #include "Math/Box.h"
 #include "Math/Vector.h"
@@ -51,4 +52,6 @@ struct FFortAthenaLivingWorldPlayerTracker
     void UpdateTimeSinceLastRefresh(float DeltaTime);
 
     void RefreshTree(UWorld* World, const AFortGameStateAthena* GameState);
+
+    void GetNumberOfPlayerPawnInRange(const FVector& Origin, float MaxRadius, const TArrayView<const float>& SquaredRadii, const TArrayView<int32>& OutNumberOfPlayerInRadius, TArray<FSimpleBVTreeElement>& ScratchPad);
 };

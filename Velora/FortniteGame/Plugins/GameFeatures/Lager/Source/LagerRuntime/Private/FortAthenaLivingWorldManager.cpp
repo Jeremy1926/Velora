@@ -13,6 +13,11 @@
 #include "Athena/AI/FortAthenaAISpawnerData.h"
 #include "Athena/FortAthenaActorSpawnerData.h"
 #include "Athena/FortGameStateAthena.h"
+#include "AI/FortAthenaAIBotController.h"
+#include "AIController.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Pawns/FortPawn.h"
+#include "Pawns/FortPlayerPawn.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
@@ -36,6 +41,8 @@ TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRequest> UFortAthenaLivin
 TArray<UFortAthenaLivingWorldManager::FLivingWorldPendingEQSSpawn> UFortAthenaLivingWorldManager::PendingEQSSpawns;
 
 int32 UFortAthenaLivingWorldManager::NextEQSSpawnRequestID = INDEX_NONE;
+
+TArray<UFortAthenaLivingWorldManager::FLivingWorldActorUpdateInfo> UFortAthenaLivingWorldManager::ActorToDespawnQueue;
 
 int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetTypeSize()
 {
@@ -271,6 +278,8 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
     UpdateEncounterInstances();
     ProcessEventRequests();
     ProcessEQSRequests();
+    UpdateActorsInfo();
+    DespawnActors();
 
     auto ActorDensityGrid = GetActorDensityGrid();
     auto MaxActorDensityUpdatesPerTick = Config->GetMaxActorDensityUpdatesPerTick();
@@ -501,6 +510,167 @@ void UFortAthenaLivingWorldManager::ProcessEventRequests()
     }
 }
 
+void UFortAthenaLivingWorldManager::UpdateActorsInfo()
+{
+    auto Config = GetConfig();
+    auto World = GetWorld();
+    auto ActorInfoUpdateQueue = GetActorInfoUpdateQueue();
+
+    if (!Config || !World || !ActorInfoUpdateQueue || ActorInfoUpdateQueue->IsEmpty())
+        return;
+
+    TArray<FLivingWorldActorUpdateInfo> ProcessedActorInfos;
+    const int32 MaxActorUpdatesPerTick = (int32)Config->GetMaxActorUpdatesPerTick()->GetValueAtLevel(0.0f);
+    const float TimeSeconds = World->GetTimeSeconds();
+    int32 ActorUpdates = 0;
+
+    while (!ActorInfoUpdateQueue->IsEmpty() && (MaxActorUpdatesPerTick <= -1 || ActorUpdates < MaxActorUpdatesPerTick))
+    {
+        FLivingWorldActorUpdateInfo ActorToUpdateInfo;
+        ActorInfoUpdateQueue->Dequeue(ActorToUpdateInfo);
+
+        auto Actor = ActorToUpdateInfo.Actor.Get();
+
+        if (!Actor || Actor->IsPendingKill())
+            continue;
+
+        ActorUpdates++;
+
+        if (ActorToUpdateInfo.Event)
+        {
+            auto DespawnCondition = ActorToUpdateInfo.Event->GetDespawnCondition();
+
+            if (IsActorCandidateForDespawn(Actor, DespawnCondition))
+            {
+                if (ActorToUpdateInfo.IsDespawnCandidateSinceTimestamp == -1.0f)
+                    ActorToUpdateInfo.IsDespawnCandidateSinceTimestamp = TimeSeconds;
+
+                if (ActorToUpdateInfo.IsDespawnCandidateSinceTimestamp + DespawnCondition->GetTimeAsCandidateBeforeDespawn() <= TimeSeconds)
+                {
+                    ActorToDespawnQueue.Add(ActorToUpdateInfo);
+                    continue;
+                }
+            }
+            else
+            {
+                ActorToUpdateInfo.IsDespawnCandidateSinceTimestamp = -1.0f;
+            }
+        }
+
+        ProcessedActorInfos.Add(ActorToUpdateInfo);
+    }
+
+    for (auto& ProcessedActorInfo : ProcessedActorInfos)
+        ActorInfoUpdateQueue->Enqueue(ProcessedActorInfo);
+}
+
+void UFortAthenaLivingWorldManager::DespawnActors()
+{
+    auto Config = GetConfig();
+    auto MaxActorDespawnPerTick = Config ? Config->GetMaxActorDespawnPerTick() : nullptr;
+    auto ActorInfoUpdateQueue = GetActorInfoUpdateQueue();
+
+    if (!MaxActorDespawnPerTick || !ActorInfoUpdateQueue)
+        return;
+
+    const int32 DespawnCount = FMath::Min((int32)MaxActorDespawnPerTick->GetValueAtLevel(0.0f), ActorToDespawnQueue.Num());
+
+    if (DespawnCount <= 0)
+        return;
+
+    for (int32 Index = 0; Index < DespawnCount; Index++)
+    {
+        auto& ActorToDespawnInfo = ActorToDespawnQueue[Index];
+        auto Actor = ActorToDespawnInfo.Actor.Get();
+
+        if (!Actor)
+            continue;
+
+        if (ActorToDespawnInfo.Event && !IsActorCandidateForDespawn(Actor, ActorToDespawnInfo.Event->GetDespawnCondition()))
+        {
+            ActorInfoUpdateQueue->Enqueue(ActorToDespawnInfo);
+            continue;
+        }
+
+        if (auto Pawn = Cast<AFortPawn>(Actor))
+            Pawn->Suicide();
+        else
+            Actor->Destroy();
+    }
+
+    ActorToDespawnQueue.RemoveAt(0, DespawnCount);
+}
+
+bool UFortAthenaLivingWorldManager::IsActorCandidateForDespawn(AActor* Actor, FFortAthenaLivingWorldEventDespawnCondition* DespawnCondition)
+{
+    if (!Actor || !DespawnCondition->GetbCanBeDespawned())
+        return false;
+
+    auto World = GetWorld();
+
+    if (auto GameState = World ? Cast<AFortGameStateAthena>(World->GetGameState()) : nullptr)
+    {
+        const FVector SafeZoneCenter = GameState->GetSafeZoneCenter();
+        const float SafeZoneRadius = GameState->GetSafeZoneRadius();
+        const FVector ActorLocation = Actor->GetActorLocation();
+        const float DeltaX = SafeZoneCenter.X - ActorLocation.X;
+        const float DeltaY = SafeZoneCenter.Y - ActorLocation.Y;
+        auto bCanDespawnInTheStorm = DespawnCondition->GetbCanDespawnInTheStorm();
+        auto CanStartDespawningSafeZonePhase = DespawnCondition->GetCanStartDespawningSafeZonePhase();
+
+        if (!bCanDespawnInTheStorm || !*bCanDespawnInTheStorm || DeltaX * DeltaX + DeltaY * DeltaY <= SafeZoneRadius * SafeZoneRadius)
+        {
+            if (GameState->GetGamePhaseStep() < DespawnCondition->GetCanStartDespawningPhaseStep())
+                return false;
+
+            if (CanStartDespawningSafeZonePhase && GameState->GetSafeZonePhase() < *CanStartDespawningSafeZonePhase)
+                return false;
+        }
+    }
+
+    const float MinDistanceToPlayer = DespawnCondition->GetMinDistanceToPlayer();
+
+    if (MinDistanceToPlayer > 0.0f)
+    {
+        const float SquaredMinDistanceToPlayer = MinDistanceToPlayer * MinDistanceToPlayer;
+        int32 NumberOfPlayerInRange = 0;
+        TArray<FSimpleBVTreeElement> ScratchPad;
+
+        GetPlayerTracker()->GetNumberOfPlayerPawnInRange(Actor->GetActorLocation(), MinDistanceToPlayer, TArrayView<const float>(&SquaredMinDistanceToPlayer, 1), TArrayView<int32>(&NumberOfPlayerInRange, 1), ScratchPad);
+
+        if (NumberOfPlayerInRange)
+            return false;
+    }
+
+    if (DespawnCondition->GetbCanDespawnWhenInCombatWithPlayer())
+        return true;
+
+    auto Pawn = Cast<AFortPawn>(Actor);
+    auto Controller = Pawn ? Cast<AAIController>(Pawn->GetController()) : nullptr;
+    auto PerceptionComponent = Controller ? Controller->GetPerceptionComponent() : nullptr;
+
+    if (!PerceptionComponent)
+        return true;
+
+    TArray<AActor*> HostileActors;
+    PerceptionComponent->GetPerceivedHostileActors(HostileActors);
+
+    for (auto HostileActor : HostileActors)
+    {
+        auto HostilePlayerPawn = Cast<AFortPlayerPawn>(HostileActor);
+
+        if (!HostilePlayerPawn)
+            continue;
+
+        auto HostileBotController = Cast<AFortAthenaAIBotController>(HostilePlayerPawn->GetController());
+
+        if (!HostileBotController || HostileBotController->IsAnAthenaGameParticipant())
+            return false;
+    }
+
+    return true;
+}
+
 void UFortAthenaLivingWorldManager::ProcessEQSRequests()
 {
     for (int32 Index = PendingEQSSpawns.Num() - 1; Index >= 0; Index--)
@@ -696,6 +866,15 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& Ev
 
         if (ActorDensityReservoir)
             ActorDensityGrid->UpdateActorDensityValue(ActorDensityReservoir, FMath::Max(0.0f, ActorDensityGrid->GetActorDensityValue(ActorDensityReservoir) - DensityValue));
+    }
+
+    if (auto ActorInfoUpdateQueue = GetActorInfoUpdateQueue())
+    {
+        FLivingWorldActorUpdateInfo ActorToUpdateInfo;
+        ActorToUpdateInfo.Actor = SpawnedActor;
+        ActorToUpdateInfo.Event = EventInstance.Event;
+
+        ActorInfoUpdateQueue->Enqueue(ActorToUpdateInfo);
     }
 
     if (PointProviderInterface)
@@ -1469,6 +1648,28 @@ TRuntimeSizedArray<UFortAthenaLivingWorldManager::FLivingWorldEventInstance>& UF
 TArray<UFortAthenaLivingWorldManager::FLivingWorldPendingActorSpawnEventRequest>& UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequests()
 {
     return *(TArray<FLivingWorldPendingActorSpawnEventRequest>*)((uint8*)this + GetPendingActorSpawnEventRequestsOffset());
+}
+
+TQueue<UFortAthenaLivingWorldManager::FLivingWorldActorUpdateInfo>* UFortAthenaLivingWorldManager::GetActorInfoUpdateQueue()
+{
+    static auto ActorInfoUpdateQueue = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::ActorInfoUpdateQueue"))
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r13+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+        .Optional()
+        .Disp();
+
+    if (ActorInfoUpdateQueue > 0)
+        return (TQueue<FLivingWorldActorUpdateInfo>*)((uint8*)this + ActorInfoUpdateQueue);
+
+    auto Config = GetConfig();
+
+    if (!Config || !Config->GetMaxActorUpdatesPerTick())
+        return nullptr;
+
+    static TQueue<FLivingWorldActorUpdateInfo> OwnActorInfoUpdateQueue;
+
+    return &OwnActorInfoUpdateQueue;
 }
 
 float& UFortAthenaLivingWorldManager::GetNextEventGenerationTime()

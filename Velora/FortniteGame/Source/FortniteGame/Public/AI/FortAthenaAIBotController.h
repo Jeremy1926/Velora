@@ -58,6 +58,8 @@ public:
 
     bool GetbAllowUnsupportedItemsInDefaultInventory() const;
 
+    bool IsAnAthenaGameParticipant() const;
+
     AFortInventory*& GetInventory();
 
     AFortPlayerPawn* GetPlayerBotPawn() const;
