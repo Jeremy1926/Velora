@@ -34,6 +34,11 @@ namespace SharedPointerInternals
     template<>
     struct FReferenceControllerOps<ESPMode::NotThreadSafe>
     {
+        static FORCEINLINE void AddSharedReference(FReferenceControllerBase* ReferenceController)
+        {
+            ++ReferenceController->SharedReferenceCount;
+        }
+
         static FORCEINLINE void ReleaseSharedReference(FReferenceControllerBase* ReferenceController)
         {
             if (--ReferenceController->SharedReferenceCount == 0)
@@ -53,6 +58,11 @@ namespace SharedPointerInternals
     template<>
     struct FReferenceControllerOps<ESPMode::ThreadSafe>
     {
+        static FORCEINLINE void AddSharedReference(FReferenceControllerBase* ReferenceController)
+        {
+            _InterlockedIncrement((volatile long*)&ReferenceController->SharedReferenceCount);
+        }
+
         static FORCEINLINE void ReleaseSharedReference(FReferenceControllerBase* ReferenceController)
         {
             if (_InterlockedDecrement((volatile long*)&ReferenceController->SharedReferenceCount) == 0)
@@ -80,6 +90,18 @@ namespace SharedPointerInternals
         {
         }
 
+        FORCEINLINE explicit FSharedReferencer(FReferenceControllerBase* InReferenceController)
+            : ReferenceController(InReferenceController)
+        {
+        }
+
+        FORCEINLINE FSharedReferencer(FSharedReferencer const& InSharedReference)
+            : ReferenceController(InSharedReference.ReferenceController)
+        {
+            if (ReferenceController != nullptr)
+                TOps::AddSharedReference(ReferenceController);
+        }
+
         FORCEINLINE FSharedReferencer(FSharedReferencer&& InSharedReference)
             : ReferenceController(InSharedReference.ReferenceController)
         {
@@ -90,6 +112,24 @@ namespace SharedPointerInternals
         {
             if (ReferenceController != nullptr)
                 TOps::ReleaseSharedReference(ReferenceController);
+        }
+
+        inline FSharedReferencer& operator=(FSharedReferencer const& InSharedReference)
+        {
+            auto NewReferenceController = InSharedReference.ReferenceController;
+
+            if (NewReferenceController != ReferenceController)
+            {
+                if (NewReferenceController != nullptr)
+                    TOps::AddSharedReference(NewReferenceController);
+
+                if (ReferenceController != nullptr)
+                    TOps::ReleaseSharedReference(ReferenceController);
+
+                ReferenceController = NewReferenceController;
+            }
+
+            return *this;
         }
 
         inline FSharedReferencer& operator=(FSharedReferencer&& InSharedReference)

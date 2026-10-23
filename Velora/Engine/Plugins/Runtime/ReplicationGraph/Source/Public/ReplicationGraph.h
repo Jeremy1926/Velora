@@ -7,6 +7,7 @@
 #include "ReplicationGraphTypes.h"
 
 class AActor;
+class UActorChannel;
 class UNetConnection;
 class UNetDriver;
 class UReplicationGraph;
@@ -35,6 +36,16 @@ public:
     int32& GetConnectionId();
 
     FGlobalActorReplicationInfoMap*& GetGlobalMap();
+
+    FPerConnectionActorInfoMap& GetActorInfoMap();
+
+    TArray<FCachedDestructInfo>& GetPendingDestructInfoList();
+
+    TSet<FActorDestructionInfo*>& GetTrackedDestructionInfoPtrs();
+
+    void NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel);
+
+    void NotifyAddDestructionInfo(FActorDestructionInfo* DestructInfo);
 
     void NotifyResetAllNetworkActors();
 

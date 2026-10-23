@@ -68,6 +68,88 @@ FGlobalActorReplicationInfoMap*& UNetReplicationGraphConnection::GetGlobalMap()
     return *(FGlobalActorReplicationInfoMap**)((uint8*)this + GlobalMap);
 }
 
+FPerConnectionActorInfoMap& UNetReplicationGraphConnection::GetActorInfoMap()
+{
+    return *(FPerConnectionActorInfoMap*)((uint8*)&GetGlobalMap() - offsetof(FPerConnectionActorInfoMap, GlobalMap));
+}
+
+TArray<FCachedDestructInfo>& UNetReplicationGraphConnection::GetPendingDestructInfoList()
+{
+    static auto PendingDestructInfoList = Anchor::Offset(TEXT("UNetReplicationGraphConnection::PendingDestructInfoList"))
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x20)
+        .Find("lea rcx, [rdi+0x*]")
+        .Disp();
+
+    return *(TArray<FCachedDestructInfo>*)((uint8*)this + PendingDestructInfoList);
+}
+
+TSet<FActorDestructionInfo*>& UNetReplicationGraphConnection::GetTrackedDestructionInfoPtrs()
+{
+    static auto TrackedDestructionInfoPtrs = Anchor::Offset(TEXT("UNetReplicationGraphConnection::TrackedDestructionInfoPtrs"))
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x20)
+        .Find("lea rbx, [rcx+0x*]")
+        .Disp();
+
+    return *(TSet<FActorDestructionInfo*>*)((uint8*)this + TrackedDestructionInfoPtrs);
+}
+
+void UNetReplicationGraphConnection::NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel)
+{
+    DETOUR(UNetReplicationGraphConnection, NotifyActorChannelAdded, Anchor::Hook()
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), -0x10)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), "ret*")
+        .Optional()
+        .InChildVTables(UNetReplicationGraphConnection::StaticClass()));
+
+    auto& ActorInfoMap = GetActorInfoMap();
+    auto& ActorInfo = ActorInfoMap.FindOrAdd(Actor);
+
+    if (ActorInfo.Channel && Channel != ActorInfo.Channel)
+        ActorInfoMap.RemoveChannel(ActorInfo.Channel);
+
+    ActorInfo.Channel = Channel;
+    ActorInfoMap.AddChannel(Actor, Channel);
+}
+
+void UNetReplicationGraphConnection::NotifyAddDestructionInfo(FActorDestructionInfo* DestructInfo)
+{
+    DETOUR(UNetReplicationGraphConnection, NotifyAddDestructionInfo, Anchor::Hook()
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x8)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), "ret*")
+        .Optional()
+        .InChildVTables(UNetReplicationGraphConnection::StaticClass()));
+
+    const FName StreamingLevelName = DestructInfo->GetStreamingLevelName();
+
+    if (StreamingLevelName != NAME_None)
+    {
+        auto& ClientVisibleLevelNames = GetNetConnection()->GetClientVisibleLevelNames();
+
+        if (!(FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)ClientVisibleLevelNames).Contains(StreamingLevelName.GetComparisonIndex()) : ClientVisibleLevelNames.Contains(StreamingLevelName)))
+            return;
+    }
+
+    auto& TrackedDestructionInfoPtrs = GetTrackedDestructionInfoPtrs();
+
+    if (TrackedDestructionInfoPtrs.Contains(DestructInfo))
+        return;
+
+    TrackedDestructionInfoPtrs.Add(DestructInfo);
+    GetPendingDestructInfoList().Emplace(DestructInfo);
+}
+
 void UReplicationGraphNode::NotifyResetAllNetworkActors()
 {
     static auto NotifyResetAllNetworkActors = Anchor::VirtualFunction<void (*)(UReplicationGraphNode*)>(TEXT("UReplicationGraphNode::NotifyResetAllNetworkActors"))

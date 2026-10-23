@@ -14,11 +14,31 @@ public:
     {
     }
 
+    FORCEINLINE TSharedPtr(ObjectType* InObject, SharedPointerInternals::FReferenceControllerBase* InReferenceController)
+        : Object(InObject)
+        , SharedReferenceCount(InReferenceController)
+    {
+    }
+
+    FORCEINLINE TSharedPtr(TSharedPtr const& InSharedPtr)
+        : Object(InSharedPtr.Object)
+        , SharedReferenceCount(InSharedPtr.SharedReferenceCount)
+    {
+    }
+
     FORCEINLINE TSharedPtr(TSharedPtr&& InSharedPtr)
         : Object(InSharedPtr.Object)
         , SharedReferenceCount(MoveTemp(InSharedPtr.SharedReferenceCount))
     {
         InSharedPtr.Object = nullptr;
+    }
+
+    FORCEINLINE TSharedPtr& operator=(TSharedPtr const& InSharedPtr)
+    {
+        SharedReferenceCount = InSharedPtr.SharedReferenceCount;
+        Object = InSharedPtr.Object;
+
+        return *this;
     }
 
     FORCEINLINE TSharedPtr& operator=(TSharedPtr&& InSharedPtr)

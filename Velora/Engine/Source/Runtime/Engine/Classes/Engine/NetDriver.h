@@ -59,27 +59,28 @@ public:
 
     TWeakObjectPtr<UObject>& GetObjOuter();
 
-    FVector& GetDestroyedPosition();
+    FVector GetDestroyedPosition();
 
     FNetworkGUID& GetNetGUID();
 
     FString& GetPathName();
 
-    FName& GetStreamingLevelName();
+    FName GetStreamingLevelName();
 
 private:
-    struct FFields
+    template<typename VectorType>
+    struct TFields
     {
         TWeakObjectPtr<UObject> ObjOuter;
-        FVector DestroyedPosition;
+        VectorType DestroyedPosition;
         FNetworkGUID NetGUID;
         FString PathName;
-        FName StreamingLevelName;
+        alignas(FName) uint8 StreamingLevelName[sizeof(FName)];
     };
 
     static int32 GetLevelSize();
 
-    FFields& GetFields();
+    uint8* GetFields();
 };
 
 template<>

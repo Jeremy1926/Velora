@@ -130,39 +130,39 @@ int32 FActorDestructionInfo::GetLevelSize()
     return Version.GetMajor() > 4 || Version.GetMinor() >= 19 ? (int32)sizeof(TWeakObjectPtr<UObject>) : 0;
 }
 
-FActorDestructionInfo::FFields& FActorDestructionInfo::GetFields()
+uint8* FActorDestructionInfo::GetFields()
 {
-    return *(FFields*)((uint8*)this + GetLevelSize());
+    return (uint8*)this + GetLevelSize();
 }
 
 int32 FActorDestructionInfo::GetTypeSize()
 {
-    return GetLevelSize() + (int32)sizeof(FFields);
+    return GetLevelSize() + (UE::LWC::IsEnabled() ? (int32)sizeof(TFields<FVector3d>) : (int32)sizeof(TFields<FVector>));
 }
 
 TWeakObjectPtr<UObject>& FActorDestructionInfo::GetObjOuter()
 {
-    return GetFields().ObjOuter;
+    return *(TWeakObjectPtr<UObject>*)(GetFields() + offsetof(TFields<FVector>, ObjOuter));
 }
 
-FVector& FActorDestructionInfo::GetDestroyedPosition()
+FVector FActorDestructionInfo::GetDestroyedPosition()
 {
-    return GetFields().DestroyedPosition;
+    return TGameLayout<FVector>::Load(GetFields() + offsetof(TFields<FVector>, DestroyedPosition));
 }
 
 FNetworkGUID& FActorDestructionInfo::GetNetGUID()
 {
-    return GetFields().NetGUID;
+    return *(FNetworkGUID*)(GetFields() + (UE::LWC::IsEnabled() ? offsetof(TFields<FVector3d>, NetGUID) : offsetof(TFields<FVector>, NetGUID)));
 }
 
 FString& FActorDestructionInfo::GetPathName()
 {
-    return GetFields().PathName;
+    return *(FString*)(GetFields() + (UE::LWC::IsEnabled() ? offsetof(TFields<FVector3d>, PathName) : offsetof(TFields<FVector>, PathName)));
 }
 
-FName& FActorDestructionInfo::GetStreamingLevelName()
+FName FActorDestructionInfo::GetStreamingLevelName()
 {
-    return GetFields().StreamingLevelName;
+    return TGameLayout<FName>::Load(GetFields() + (UE::LWC::IsEnabled() ? offsetof(TFields<FVector3d>, StreamingLevelName) : offsetof(TFields<FVector>, StreamingLevelName)));
 }
 
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
