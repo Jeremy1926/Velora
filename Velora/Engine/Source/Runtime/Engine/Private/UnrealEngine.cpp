@@ -108,3 +108,14 @@ UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
 
     return FindNamedNetDriver(this, InWorld, NetDriverName);
 }
+
+void UEngine::ForceGarbageCollection(bool bFullPurge)
+{
+    static auto ForceGarbageCollection = Anchor::Function<void (*)(UEngine*, bool)>(TEXT("UEngine::ForceGarbageCollection"))
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 40 8A FA 48 8B D9 E8 ? ? ? ? F3 0F 58 05 ? ? ? ? 32 C0 F3 0F 11 83 ? ? ? ? 38 83 ? ? ? ? 75 ? 40 84 FF 75 ? 88 83")
+        .Or()
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 40 8A FA 48 8B D9 E8 ? ? ? ? F3 0F 58 05 ? ? ? ? 32 C0 F3 0F 11 83 ? ? ? ? 38 83 ? ? ? ? 74 ? B0 01 88 83")
+        .Get();
+
+    ForceGarbageCollection(this, bFullPurge);
+}

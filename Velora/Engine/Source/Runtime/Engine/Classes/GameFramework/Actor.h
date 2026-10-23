@@ -27,6 +27,8 @@ public:
 
     bool GetTearOff() const;
 
+    bool GetIsReplicated() const;
+
     bool IsNetStartupActor() const;
 
     ENetRole GetRemoteRole() const;

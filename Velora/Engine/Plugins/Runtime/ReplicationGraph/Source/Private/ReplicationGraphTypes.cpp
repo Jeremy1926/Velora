@@ -33,6 +33,16 @@ FVector FGlobalActorReplicationInfo::GetWorldLocation() const
     return TGameLayout<FVector>::Load((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, WorldLocation) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, WorldLocation)));
 }
 
+void FGlobalActorReplicationInfo::SetWorldLocation(const FVector& InWorldLocation)
+{
+    TGameLayout<FVector>::Store((uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, WorldLocation) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, WorldLocation)), InWorldLocation);
+}
+
+float FGlobalActorReplicationInfo::GetCullDistance() const
+{
+    return *(const float*)(GetSettings() + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistance) : offsetof(TClassReplicationInfoLayout<FName>, CullDistance)));
+}
+
 FGlobalActorReplicationInfo* FGlobalActorReplicationInfoMap::Find(AActor* const& Actor)
 {
     auto InfoPtr = ActorMap.Find(Actor);
@@ -130,6 +140,11 @@ bool IsActorValidForReplication(const AActor* In)
     return !In->IsPendingKillPending() && !(In->GetFlags() & 0x60000000) && !GUObjectArray.IndexToObject((int32)In->GetUniqueID())->IsUnreachable();
 }
 
+bool IsActorValidForReplicationGather(const AActor* In)
+{
+    return In && IsActorValidForReplication(In) && In->GetIsReplicated() && !In->GetTearOff() && !(In->GetNetDormancy() == DORM_Initial && In->IsNetStartupActor());
+}
+
 int32 FConnectionGatherActorListParameters::GetNumViewers() const
 {
     return *(const int32*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*));
@@ -199,6 +214,14 @@ void FStreamingLevelActorListCollection::DeepCopyFrom(const FStreamingLevelActor
             NewStreamingLevel->ReplicationActorList.RepList = StreamingLevel.ReplicationActorList.RepList;
         }
     }
+}
+
+FNewReplicatedActorInfo::FNewReplicatedActorInfo(AActor* InActor)
+    : Actor(InActor)
+    , StreamingLevelName(NAME_None)
+    , Class(InActor->GetClass())
+{
+    TGameLayout<FName>::Store(&StreamingLevelName, GetStreamingLevelNameOfActor(InActor));
 }
 
 FName FNewReplicatedActorInfo::GetStreamingLevelNameOfActor(const AActor* Actor)

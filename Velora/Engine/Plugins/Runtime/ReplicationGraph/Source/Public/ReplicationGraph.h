@@ -31,6 +31,12 @@ public:
 
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
 
+    void NotifyAddNetworkActor(const FNewReplicatedActorInfo& ActorInfo);
+
+    void TearDown();
+
+    void CleanChildNodes();
+
     TArray<UReplicationGraphNode*>& GetAllChildNodes();
 
     TSharedPtr<FReplicationGraphGlobalData, ESPMode::ThreadSafe>& GetGraphGlobals();
@@ -97,7 +103,15 @@ private:
 class UReplicationGraphNode_GridCell : public UReplicationGraphNode_ActorList
 {
 public:
+    static UClass* StaticClass();
+
     UReplicationGraphNode_DormancyNode* GetDormancyNode();
+
+    UReplicationGraphNode* GetDynamicNode();
+
+    void AddDynamicActor(const FNewReplicatedActorInfo& ActorInfo);
+
+    void RemoveDynamicActor(const FNewReplicatedActorInfo& ActorInfo);
 };
 
 class UReplicationGraphNode_GridSpatialization2D : public UReplicationGraphNode
@@ -105,15 +119,46 @@ class UReplicationGraphNode_GridSpatialization2D : public UReplicationGraphNode
 public:
     struct FActorCellInfo
     {
+        bool IsValid() const
+        {
+            return StartX != -1;
+        }
+
         int32 StartX;
         int32 StartY;
         int32 EndX;
         int32 EndY;
     };
 
+    struct FCachedDynamicActorInfo
+    {
+        FNewReplicatedActorInfo ActorInfo;
+        FActorCellInfo CellInfo;
+    };
+
+    struct FCachedStaticActorInfo
+    {
+        FNewReplicatedActorInfo ActorInfo;
+        bool bDormancyDriven;
+    };
+
+    struct FPendingStaticActors
+    {
+        AActor* Actor;
+        bool DormancyDriven;
+    };
+
     static UClass* StaticClass();
 
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    void PrepareForReplication();
+
+    void AddActorInternal_Static_Implementation(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
+
+    void PutStaticActorIntoCell(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
+
+    void HandleActorOutOfSpatialBounds(AActor* Actor, const FVector& Location3D, const bool bStaticActor);
 
     FActorCellInfo GetCellInfoForActor(AActor* Actor, const FVector& Location3D, float CullDistance);
 
@@ -132,7 +177,21 @@ private:
 
     float& GetConnectionMaxZ();
 
+    uint8* GetCreateCellNodeOverride();
+
     bool& GetDestroyDormantDynamicActors();
+
+    TMap<AActor*, FCachedDynamicActorInfo>& GetDynamicSpatializedActors();
+
+    TMap<AActor*, FCachedStaticActorInfo>& GetStaticSpatializedActors();
+
+    TArray<FPendingStaticActors>& GetPendingStaticSpatializedActors();
+
+    bool& GetNeedsRebuild();
+
+    bool WillActorLocationGrowSpatialBounds(const FVector& Location);
+
+    UReplicationGraphNode_GridCell* GetCellNode(UReplicationGraphNode_GridCell*& NodePtr);
 
     uint8* GetGridBounds();
 
@@ -150,9 +209,12 @@ private:
         return Grid[X];
     }
 
-    UReplicationGraphNode_GridCell* GetCell(TArray<UReplicationGraphNode_GridCell*>& GridX, int32 Y)
+    UReplicationGraphNode_GridCell*& GetCell(TArray<UReplicationGraphNode_GridCell*>& GridX, int32 Y)
     {
-        return GridX.IsValidIndex(Y) ? GridX[Y] : nullptr;
+        if (GridX.Num() <= Y)
+            GridX.SetNum(Y + 1);
+
+        return GridX[Y];
     }
 };
 

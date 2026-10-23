@@ -55,6 +55,10 @@ struct FGlobalActorReplicationInfo
 
     FVector GetWorldLocation() const;
 
+    void SetWorldLocation(const FVector& InWorldLocation);
+
+    float GetCullDistance() const;
+
 private:
     const uint8* GetSettings() const;
 };
@@ -155,6 +159,8 @@ struct FActorRepListRefView
 
 struct FNewReplicatedActorInfo
 {
+    FNewReplicatedActorInfo(AActor* InActor);
+
     static FName GetStreamingLevelNameOfActor(const AActor* Actor);
 
     AActor* Actor;
@@ -228,6 +234,8 @@ struct FGatheredReplicationActorLists
 };
 
 bool IsActorValidForReplication(const AActor* In);
+
+bool IsActorValidForReplicationGather(const AActor* In);
 
 class UNetReplicationGraphConnection;
 

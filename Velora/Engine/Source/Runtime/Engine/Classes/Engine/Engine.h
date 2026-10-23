@@ -31,6 +31,8 @@ public:
     bool CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName NetDriverDefinition);
 
     UNetDriver* FindNamedNetDriver(UWorld* InWorld, FName NetDriverName);
+
+    void ForceGarbageCollection(bool bFullPurge = false);
 };
 
 extern UEngine*& GEngine;

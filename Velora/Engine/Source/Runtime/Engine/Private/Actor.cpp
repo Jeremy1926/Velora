@@ -28,6 +28,13 @@ bool AActor::GetTearOff() const
     return bTearOff->GetPropertyValue_InContainer(this);
 }
 
+bool AActor::GetIsReplicated() const
+{
+    static auto bReplicates = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bReplicates")));
+
+    return bReplicates->GetPropertyValue_InContainer(this);
+}
+
 bool AActor::IsNetStartupActor() const
 {
     static auto bNetStartup = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetStartup")));
