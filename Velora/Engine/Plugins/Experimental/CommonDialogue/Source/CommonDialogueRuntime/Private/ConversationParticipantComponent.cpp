@@ -57,6 +57,8 @@ void UConversationParticipantComponent::ServerNotifyConversationStarted(UConvers
 
     OnServerConversationStarted(Conversation, AsParticipant);
 
+    UE_LOG(LogVelora, Display, TEXT("diag conversation started %s owner %s %s remote role %d active %d participant %s"), *GetNameSafe(this), *GetNameSafe(Owner), *GetNameSafe(Owner->GetClass()), (int32)Owner->GetRemoteRole(), GetConversationsActive(), *AsParticipant.ToString());
+
     if (Owner->GetRemoteRole() == ROLE_AutonomousProxy)
         ClientUpdateConversations(GetConversationsActive());
 }
@@ -67,6 +69,8 @@ void UConversationParticipantComponent::ServerNotifyConversationEnded(UConversat
 
     if (!Owner || !Owner->HasAuthority() || !Conversation || GetAuth_CurrentConversation() != Conversation)
         return;
+
+    UE_LOG(LogVelora, Display, TEXT("diag conversation ended %s owner %s active %d"), *GetNameSafe(this), *GetNameSafe(Owner), GetConversationsActive());
 
     GetAuth_CurrentConversation() = nullptr;
     GetAuth_Conversations().RemoveSingle(Conversation);
@@ -104,6 +108,8 @@ void UConversationParticipantComponent::ServerAbortAllConversations()
 void UConversationParticipantComponent::SendClientConversationMessage(const FConversationContext& Context, const FClientConversationMessagePayload& Payload)
 {
     AActor* Owner = GetOwner();
+
+    UE_LOG(LogVelora, Display, TEXT("diag conversation message %s owner %s remote role %d participants %d options %d text %s"), *GetNameSafe(this), *GetNameSafe(Owner), Owner ? (int32)Owner->GetRemoteRole() : -1, Payload.Participants.List.Num(), Payload.Options.Num(), *Payload.Message.Text.ToString());
 
     if (Owner && Owner->GetRemoteRole() == ROLE_AutonomousProxy)
         ClientUpdateConversation(Payload);
