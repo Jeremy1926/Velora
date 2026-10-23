@@ -26,6 +26,7 @@ UClass* AFortGameModeZone::StaticClass()
 void AFortGameModeZone::FinishWorldInitialization()
 {
     DETOUR(AFortGameModeZone, FinishWorldInitialization, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortGameModeAthena, FinishWorldInitialization))
         .String(TEXT("Can't find a FortAthenaMapInfo placed in map.  Skipping warmup and aircraft phases."))
         .Start()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
