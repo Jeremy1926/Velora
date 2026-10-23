@@ -2,6 +2,8 @@
 #include "FortAthenaLivingWorldPointProviderInterface.h"
 #include "FortAthenaLivingWorldEvent.h"
 #include "FortAthenaLivingWorldEventData.h"
+#include "FortAthenaLivingWorldManager.h"
+#include "FortAthenaLivingWorldVolume.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
@@ -9,6 +11,7 @@
 #include "GameFramework/Actor.h"
 #include "GameplayEffectTypes.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProviderFilterRules(bool bOnlyInSafeZone, bool bCheckForActorDensity, int32 ExpectedSpawnCount)
     : Data{}
@@ -209,6 +212,36 @@ void IFortAthenaLivingWorldPointProviderInterface::OnEventRequested()
         .Get();
 
     OnEventRequested(this);
+}
+
+void IFortAthenaLivingWorldPointProviderInterface::EnablePointProvider()
+{
+    DETOUR(IFortAthenaLivingWorldPointProviderInterface, EnablePointProvider, Anchor::Hook()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:EnablePointProvider"))
+        .Find("jmp [rax+0x*]")
+        .Optional()
+        .InInterfaceVTables(AFortAthenaLivingWorldVolume::StaticClass(), StaticClass(), "ret*"));
+
+    static auto DefaultObject = AFortAthenaLivingWorldVolume::StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(StaticClass()) - (uint8*)DefaultObject;
+
+    ((AFortAthenaLivingWorldVolume*)((uint8*)this - PointerOffset))->EnablePointProvider();
+}
+
+void IFortAthenaLivingWorldPointProviderInterface::DisablePointProvider()
+{
+    DETOUR(IFortAthenaLivingWorldPointProviderInterface, DisablePointProvider, Anchor::Hook()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:DisablePointProvider"))
+        .Find("jmp [rax+0x*]")
+        .Optional()
+        .InInterfaceVTables(AFortAthenaLivingWorldVolume::StaticClass(), StaticClass(), "ret*"));
+
+    static auto DefaultObject = AFortAthenaLivingWorldVolume::StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(StaticClass()) - (uint8*)DefaultObject;
+
+    ((AFortAthenaLivingWorldVolume*)((uint8*)this - PointerOffset))->DisablePointProvider();
 }
 
 bool IFortAthenaLivingWorldPointProviderInterface::IsEnabled(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter) const

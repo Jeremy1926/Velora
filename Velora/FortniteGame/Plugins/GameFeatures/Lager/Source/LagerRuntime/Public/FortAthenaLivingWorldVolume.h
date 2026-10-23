@@ -24,6 +24,10 @@ public:
 
     void execOnCurrentPlaylistLoaded(FFrame& Stack, void* const Z_Param__Result);
 
+    void EnablePointProvider();
+
+    void DisablePointProvider();
+
     void OnEnvQueryFinished(TSharedPtr<FEnvQueryResult> Result);
 
     bool IsEnabled(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter) const;

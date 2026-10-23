@@ -66,5 +66,9 @@ public:
 
     void OnEventRequested();
 
+    void EnablePointProvider();
+
+    void DisablePointProvider();
+
     bool IsEnabled(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter) const;
 };

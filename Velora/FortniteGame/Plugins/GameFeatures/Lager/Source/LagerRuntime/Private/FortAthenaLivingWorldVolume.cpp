@@ -27,6 +27,11 @@ UClass* AFortAthenaLivingWorldVolume::StaticClass()
 
 void AFortAthenaLivingWorldVolume::OnCurrentPlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& PlaylistContextTags)
 {
+    EnablePointProvider();
+}
+
+void AFortAthenaLivingWorldVolume::EnablePointProvider()
+{
     auto WaterSubsystem = UWaterSubsystem::GetWaterSubsystem(GetWorld());
     const float WaterLevelIndex = WaterSubsystem ? WaterSubsystem->GetOceanFloodHeight() / 384.0f : -1.0f;
 
@@ -59,6 +64,14 @@ void AFortAthenaLivingWorldVolume::OnCurrentPlaylistLoaded(FName PlaylistName, c
     FEnvQueryRequest QueryRequest(EnvironmentQuery, this);
     QueryRequest.SetFloatParam(FName(TEXT("SimpleGrid.GridSize")), RootComponent->GetBounds().SphereRadius);
     QueryRequest.Execute(EEnvQueryRunMode::AllMatching, FQueryFinishedSignature::CreateUObject(this, &AFortAthenaLivingWorldVolume::OnEnvQueryFinished));
+}
+
+void AFortAthenaLivingWorldVolume::DisablePointProvider()
+{
+    if (auto bIsEnabled = GetbIsEnabled())
+        *bIsEnabled = false;
+
+    UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(this);
 }
 
 void AFortAthenaLivingWorldVolume::execOnCurrentPlaylistLoaded(FFrame& Stack, void* const Z_Param__Result)
@@ -106,6 +119,8 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
         auto CachedLivingWorldManager = GetCachedLivingWorldManager();
         const FVector Location = GetActorLocation();
 
+        Points.Empty();
+
         for (int32 Index = 0; Index < Result->Items.Num(); Index++)
         {
             const FVector Point = Result->GetItemAsLocation(Index);
@@ -120,7 +135,9 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
             (*CachedLivingWorldManager)->ClusterPoints(Points, *ClusteredEnvironmentQueryResults);
     }
 
-    if (GetPoints().Num() > 0 && GetWorld())
+    auto bIsEnabled = GetbIsEnabled();
+
+    if (GetPoints().Num() > 0 && GetWorld() && (!bIsEnabled || *bIsEnabled))
         UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
 }
 
