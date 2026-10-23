@@ -11,7 +11,7 @@ class UFortQuestManager : public UObject
 public:
     static UClass* StaticClass();
 
-    bool HasCompletedTransientQuest(const UFortQuestItemDefinition* Definition) const;
+    bool HasCompletedTransientQuest(const UFortQuestItemDefinition* Definition, bool bMineOnly) const;
 
     const TArray<UFortQuestItem*>& GetActiveTransientQuests() const;
 };

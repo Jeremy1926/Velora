@@ -38,7 +38,7 @@ EConversationRequirementResult UFortConversationRequirement_AllSlottedQuestPrere
     {
         auto PrerequisiteQuest = PrerequisiteQuestPtr.LoadSynchronous();
 
-        if (PrerequisiteQuest && !QuestManager->HasCompletedTransientQuest(PrerequisiteQuest))
+        if (PrerequisiteQuest && !QuestManager->HasCompletedTransientQuest(PrerequisiteQuest, false))
             return EConversationRequirementResult::FailedAndHidden;
     }
 

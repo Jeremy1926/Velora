@@ -12,13 +12,13 @@ UClass* UFortQuestManager::StaticClass()
     return Class;
 }
 
-bool UFortQuestManager::HasCompletedTransientQuest(const UFortQuestItemDefinition* Definition) const
+bool UFortQuestManager::HasCompletedTransientQuest(const UFortQuestItemDefinition* Definition, bool bMineOnly) const
 {
-    static auto HasCompletedTransientQuest = Anchor::Function<bool (*)(const UFortQuestManager*, const UFortQuestItemDefinition*)>(TEXT("UFortQuestManager::HasCompletedTransientQuest"))
+    static auto HasCompletedTransientQuest = Anchor::Function<bool (*)(const UFortQuestManager*, const UFortQuestItemDefinition*, bool)>(TEXT("UFortQuestManager::HasCompletedTransientQuest"))
         .Native(TEXT("/Script/FortniteGame.FortQuestManager:HasCompletedTransientQuest"))
         .Get();
 
-    return HasCompletedTransientQuest(this, Definition);
+    return HasCompletedTransientQuest(this, Definition, bMineOnly);
 }
 
 const TArray<UFortQuestItem*>& UFortQuestManager::GetActiveTransientQuests() const

@@ -31,7 +31,7 @@ EConversationRequirementResult UFortConversationRequirement_SlottedQuestNotCompl
 
     auto SlottedQuest = NPCComponent->GetSupportedQuests()[Slot - 1].LoadSynchronous();
 
-    if (!SlottedQuest || QuestManager->HasCompletedTransientQuest(SlottedQuest))
+    if (!SlottedQuest || QuestManager->HasCompletedTransientQuest(SlottedQuest, false))
         return EConversationRequirementResult::FailedAndHidden;
 
     return EConversationRequirementResult::Passed;
