@@ -1702,6 +1702,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaPatrolPathPointProvider.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaPointAroundPlayerProvider.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldCategory.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
     </ClInclude>
@@ -2690,6 +2693,9 @@
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaPatrolPathPointProvider.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaPointAroundPlayerProvider.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldCategory.cpp">

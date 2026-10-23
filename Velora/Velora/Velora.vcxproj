@@ -507,6 +507,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAIBotCustomizationData.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldVolume.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaPatrolPathPointProvider.h" />
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaPointAroundPlayerProvider.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldCategory.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldConfigData.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldDensityGrid.h" />
@@ -860,6 +861,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAIBotCustomizationData.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldVolume.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaPatrolPathPointProvider.cpp" />
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaPointAroundPlayerProvider.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldCategory.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldConfigData.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldDensityGrid.cpp" />
