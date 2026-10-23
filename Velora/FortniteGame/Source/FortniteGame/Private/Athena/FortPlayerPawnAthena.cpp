@@ -22,6 +22,16 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+PATCH(, PerformAntiCheatStandaloneCheckNDF, Anchor::Patch()
+    .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), [](const Anchor::FCode& Entry) { return Entry.Has("inc al; mov rcx, *; and al, 0x3; mov [0x*], al"); })
+    .Find("inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+    .Last("call 0x*")
+    .Target()
+    .Optional()
+    .Is("test rcx, rcx; jz 0x*")
+    .Find("jz 0x*")
+    .Jump())
+
 UClass* AFortPlayerPawnAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena"));
