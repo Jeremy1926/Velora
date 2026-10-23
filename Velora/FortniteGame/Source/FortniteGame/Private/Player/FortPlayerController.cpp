@@ -166,7 +166,6 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Start()
         .Find("jmp [r8+*]")
         .LogSlot(TEXT("UFortWorldItem::SetLoadedAmmo"))
-        .InVTable(TEXT("/Script/FortniteGame.Default__FortWorldItem"))
         .Or()
         .VirtualStartHas(*(const void* const* const*)((uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")) + InventoryOwnerOffset), "call [rax+0x18]; test rax, rax; jz *; mov r8, [rax]; mov edx, *; mov rcx, rax; call [r8+0x*]")
         .Start()
