@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Conversation/FortNPCConversationParticipantComponent.h"
 #include "AI/FortAthenaAIBotController.h"
-#include "Quests/FortQuestItemDefinition.h"
 #include "Engine/DataTable.h"
 #include "FortGameFeatureData.h"
 #include "Math/UnrealMathUtility.h"
@@ -48,10 +47,6 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     static auto ServiceTag = NPCDynamicServiceRow->FindPropertyByName(FName(TEXT("ServiceTag")));
     static auto Priority = NPCDynamicServiceRow->FindPropertyByName(FName(TEXT("Priority")));
     static auto MaxServices = StaticClass()->FindPropertyByName(FName(TEXT("MaxServices")));
-    static auto NPCQuestRow = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.NPCQuestRow"));
-    static auto QuestNPC = NPCQuestRow->FindPropertyByName(FName(TEXT("NPC")));
-    static auto Quest = NPCQuestRow->FindPropertyByName(FName(TEXT("Quest")));
-    static auto Weight = NPCQuestRow->FindPropertyByName(FName(TEXT("Weight")));
 
     auto& Services = GetServices();
 
@@ -61,13 +56,7 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     if (!GetSalesInventory())
         GetSalesInventory() = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCSales.NPCSales"));
 
-    auto Quests = GetQuests();
-
-    if (Quests && !*Quests)
-        *Quests = LoadObject<UDataTable>(nullptr, TEXT("/BattlepassS15/Balance/DataTables/NPCQuests.NPCQuests"));
-
     auto ServicesTable = UFortGameFeatureData::GetPlaylistDataTable(this, Services);
-    auto QuestsTable = Quests ? UFortGameFeatureData::GetPlaylistDataTable(this, *Quests) : UFortGameFeatureData::FindPlaylistDataTable(this, NPCQuestRow);
 
     if (!ServicesTable)
         return;
@@ -92,42 +81,6 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
 
     for (size_t Index = 0; Index < RolledServices.size() && (ServiceLimit <= 0 || Index < (size_t)ServiceLimit); Index++)
         GetSupportedServices().AddTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(RolledServices[Index]));
-
-    if (!QuestsTable)
-        return;
-
-    std::vector<const uint8*> QuestRows;
-
-    for (auto& RowPair : QuestsTable->RowMap)
-    {
-        if (*QuestNPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value) == NPCTag && *Weight->ContainerPtrToValuePtr<float>(RowPair.Value) > 0.0f)
-            QuestRows.push_back(RowPair.Value);
-    }
-
-    while (!QuestRows.empty())
-    {
-        float TotalWeight = 0.0f;
-
-        for (auto Row : QuestRows)
-            TotalWeight += *Weight->ContainerPtrToValuePtr<float>(Row);
-
-        float Roll = FMath::FRand() * TotalWeight;
-        size_t Picked = QuestRows.size() - 1;
-
-        for (size_t Index = 0; Index < QuestRows.size(); Index++)
-        {
-            Roll -= *Weight->ContainerPtrToValuePtr<float>(QuestRows[Index]);
-
-            if (Roll <= 0.0f)
-            {
-                Picked = Index;
-                break;
-            }
-        }
-
-        GetSupportedQuests().Add(*Quest->ContainerPtrToValuePtr<TSoftObjectPtr<UFortQuestItemDefinition>>(QuestRows[Picked]));
-        QuestRows.erase(QuestRows.begin() + Picked);
-    }
 }
 
 void UFortNPCConversationParticipantComponent::UpdateCanStartConversation()
@@ -263,13 +216,6 @@ AFortAthenaAIBotController*& UFortNPCConversationParticipantComponent::GetBotCon
     return *BotControllerOwner->ContainerPtrToValuePtr<AFortAthenaAIBotController*>((void*)this);
 }
 
-TArray<TSoftObjectPtr<UFortQuestItemDefinition>>& UFortNPCConversationParticipantComponent::GetSupportedQuests() const
-{
-    static auto SupportedQuests = StaticClass()->FindPropertyByName(FName(TEXT("SupportedQuests")));
-
-    return *SupportedQuests->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UFortQuestItemDefinition>>>((void*)this);
-}
-
 FGameplayTagContainer& UFortNPCConversationParticipantComponent::GetSupportedServices() const
 {
     static auto SupportedServices = StaticClass()->FindPropertyByName(FName(TEXT("SupportedServices")));
@@ -289,13 +235,6 @@ UDataTable*& UFortNPCConversationParticipantComponent::GetSalesInventory() const
     static auto SalesInventory = StaticClass()->FindPropertyByName(FName(TEXT("SalesInventory")));
 
     return *SalesInventory->ContainerPtrToValuePtr<UDataTable*>((void*)this);
-}
-
-UDataTable** UFortNPCConversationParticipantComponent::GetQuests() const
-{
-    static auto Quests = StaticClass()->FindPropertyByName(FName(TEXT("Quests")));
-
-    return Quests ? Quests->ContainerPtrToValuePtr<UDataTable*>((void*)this) : nullptr;
 }
 
 void UFortNPCConversationParticipantComponent::SetConversationModeActive(bool bInConversationModeActive)

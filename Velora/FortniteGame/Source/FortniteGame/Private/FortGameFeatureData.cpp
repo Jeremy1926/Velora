@@ -132,27 +132,3 @@ UDataTable* UFortGameFeatureData::GetPlaylistDataTable(const UObject* WorldConte
 
     return BaseTable;
 }
-
-UDataTable* UFortGameFeatureData::FindPlaylistDataTable(const UObject* WorldContextObject, const UScriptStruct* RowStruct)
-{
-    TArray<UFortGameFeatureData*> GameFeatureDatas;
-    GetActiveGameFeatureDatas(GameFeatureDatas);
-
-    for (auto GameFeatureData : GameFeatureDatas)
-    {
-        auto Overrides = GameFeatureData ? GameFeatureData->GetPlaylistBaseDataTableOverrides() : nullptr;
-
-        if (!Overrides)
-            continue;
-
-        for (auto& Override : *Overrides)
-        {
-            auto BaseTable = Override.BaseTable.LoadSynchronous();
-
-            if (BaseTable && BaseTable->RowStruct == RowStruct)
-                return GetPlaylistDataTable(WorldContextObject, BaseTable);
-        }
-    }
-
-    return nullptr;
-}

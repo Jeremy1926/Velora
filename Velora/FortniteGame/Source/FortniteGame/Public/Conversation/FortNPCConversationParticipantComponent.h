@@ -2,14 +2,12 @@
 
 #include "Conversation/FortNonPlayerConversationParticipantComponent.h"
 #include "GameplayTagContainer.h"
-#include "UObject/SoftObjectPtr.h"
 
 class AFortAthenaAIBotController;
 class AFortPlayerPawn;
 class UConversationInstance;
 class UDataTable;
 class UFortItemDefinition;
-class UFortQuestItemDefinition;
 class UFortConversationGiftTypeDefinitions;
 
 class UFortNPCConversationParticipantComponent : public UFortNonPlayerConversationParticipantComponent
@@ -41,15 +39,11 @@ public:
 
     AFortAthenaAIBotController*& GetBotControllerOwner() const;
 
-    TArray<TSoftObjectPtr<UFortQuestItemDefinition>>& GetSupportedQuests() const;
-
     FGameplayTagContainer& GetSupportedServices() const;
 
     UDataTable*& GetServices() const;
 
     UDataTable*& GetSalesInventory() const;
-
-    UDataTable** GetQuests() const;
 
     void SetConversationModeActive(bool bInConversationModeActive);
 };

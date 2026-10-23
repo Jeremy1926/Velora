@@ -1,8 +1,5 @@
 #include "pch.h"
 #include "Conversation/FortConversationTaskNode_GrantQuest.h"
-#include "Conversation/FortConversationContextLibrary.h"
-#include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
-#include "Player/FortPlayerController.h"
 #include "Quests/FortQuestItemDefinition.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -43,20 +40,6 @@ TSoftObjectPtr<UFortQuestItemDefinition> UFortConversationTaskNode_GrantQuest::G
     QuestToGrant->~TSoftObjectPtr();
 
     return Result;
-}
-
-FConversationTaskResult UFortConversationTaskNode_GrantQuest::ExecuteTaskNode_Implementation(const FConversationContext& Context) const
-{
-    auto PlayerController = UFortConversationContextLibrary::GetParticipantPlayerController(Context);
-    auto TransientQuests = PlayerController ? PlayerController->FindComponentByClass<UFortControllerComponent_TransientQuests>() : nullptr;
-    auto QuestToGrant = GetQuestToGrant(Context).LoadSynchronous();
-
-    if (!TransientQuests || !QuestToGrant)
-        return FConversationTaskResult::ReturnToCurrentClientChoice();
-
-    TransientQuests->GrantTransientQuest(QuestToGrant);
-
-    return FConversationTaskResult::AdvanceConversation();
 }
 
 void UFortConversationTaskNode_GrantQuest::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const

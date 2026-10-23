@@ -159,9 +159,6 @@ FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversati
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->ExecuteTaskNode_Implementation(Context);
 
-    if (auto GrantQuest = Cast<UFortConversationTaskNode_GrantQuest>(this))
-        return GrantQuest->ExecuteTaskNode_Implementation(Context);
-
     if (auto GiveGift = Cast<UFortConversationTaskNode_GiveGift>(this))
         return GiveGift->ExecuteTaskNode_Implementation(Context);
 

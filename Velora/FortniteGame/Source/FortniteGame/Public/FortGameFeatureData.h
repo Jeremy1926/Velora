@@ -7,7 +7,6 @@
 #include "UObject/SoftObjectPtr.h"
 
 class UDataTable;
-class UScriptStruct;
 
 struct FFortGameFeatureLootTableData
 {
@@ -39,6 +38,4 @@ public:
     static void GetActiveGameFeatureDatas(TArray<UFortGameFeatureData*>& OutGameFeatureDatas);
 
     static UDataTable* GetPlaylistDataTable(const UObject* WorldContextObject, UDataTable* BaseTable);
-
-    static UDataTable* FindPlaylistDataTable(const UObject* WorldContextObject, const UScriptStruct* RowStruct);
 };
