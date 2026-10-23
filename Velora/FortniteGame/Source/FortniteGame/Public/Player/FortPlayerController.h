@@ -140,7 +140,7 @@ public:
 
     void RemoveAllInventoryItems();
 
-    void DropAllItems(const UFortItemDefinition* IgnoreItemDef, bool bIgnoreBuildingMaterials);
+    void DropAllItems(const UFortItemDefinition* IgnoreItemDef, const UFortItemDefinition* AdditionalIgnoreItemDef, bool bIgnoreBuildingMaterials);
 
     void execDropAllItems(FFrame& Stack, void* const Z_Param__Result);
 

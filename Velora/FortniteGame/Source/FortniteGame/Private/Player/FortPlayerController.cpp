@@ -675,7 +675,7 @@ void AFortPlayerController::DropItemsAsPickups(const TArray<UFortWorldItem*>& It
     }
 }
 
-void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDef, bool bIgnoreBuildingMaterials)
+void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDef, const UFortItemDefinition* AdditionalIgnoreItemDef, bool bIgnoreBuildingMaterials)
 {
     static auto WorldResource = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WorldResource")));
     auto WorldInventory = GetWorldInventory();
@@ -689,7 +689,7 @@ void AFortPlayerController::DropAllItems(const UFortItemDefinition* IgnoreItemDe
     {
         auto ItemDefinition = ItemEntry.GetItemDefinition();
 
-        if (ItemDefinition && ItemDefinition != IgnoreItemDef && (!bIgnoreBuildingMaterials || ItemDefinition->GetItemType() != WorldResource))
+        if (ItemDefinition && ItemDefinition != IgnoreItemDef && ItemDefinition != AdditionalIgnoreItemDef && (!bIgnoreBuildingMaterials || ItemDefinition->GetItemType() != WorldResource))
             ItemsToDrop.Add({ ItemEntry.GetItemGuid(), ItemEntry.GetCount() });
     }
 
@@ -707,19 +707,30 @@ void AFortPlayerController::execDropAllItems(FFrame& Stack, void* const Z_Param_
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")));
 
-    static auto bHasIgnoreBuildingMaterials = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems")))->FindPropertyByName(FName(TEXT("bIgnoreBuildingMaterials"))) != nullptr;
+    static auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:DropAllItems"));
+    static auto bHasAdditionalIgnoreItemDef = Function->FindPropertyByName(FName(TEXT("AdditionalIgnoreItemDef"))) != nullptr;
+    static auto bHasIgnoreBuildingMaterials = Function->FindPropertyByName(FName(TEXT("bIgnoreBuildingMaterials"))) != nullptr;
+    static auto bHasSpawnPickups = Function->FindPropertyByName(FName(TEXT("bSpawnPickups"))) != nullptr;
 
     UFortItemDefinition* IgnoreItemDef = nullptr;
+    UFortItemDefinition* AdditionalIgnoreItemDef = nullptr;
     uint32 bIgnoreBuildingMaterials = 0;
+    uint32 bSpawnPickups = 0;
 
     Stack.StepCompiledIn(&IgnoreItemDef);
+
+    if (bHasAdditionalIgnoreItemDef)
+        Stack.StepCompiledIn(&AdditionalIgnoreItemDef);
 
     if (bHasIgnoreBuildingMaterials)
         Stack.StepCompiledIn(&bIgnoreBuildingMaterials);
 
+    if (bHasSpawnPickups)
+        Stack.StepCompiledIn(&bSpawnPickups);
+
     Stack.Code += !!Stack.Code;
 
-    DropAllItems(IgnoreItemDef, !!bIgnoreBuildingMaterials);
+    DropAllItems(IgnoreItemDef, AdditionalIgnoreItemDef, !!bIgnoreBuildingMaterials);
 }
 
 void AFortPlayerController::DropSpecificItem(const UFortItemDefinition* DropItemDef)
