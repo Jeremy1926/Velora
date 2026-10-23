@@ -6,6 +6,13 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+UClass* UAbilitySystemComponent::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemComponent"));
+
+    return Class;
+}
+
 bool UAbilitySystemComponent::HasAttributeSetForAttribute(FGameplayAttribute Attribute) const
 {
     static auto HasAttributeSetForAttribute = Anchor::Function<bool (*)(const UAbilitySystemComponent*, FGameplayAttribute)>(TEXT("UAbilitySystemComponent::HasAttributeSetForAttribute"))

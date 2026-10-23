@@ -53,8 +53,10 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
 
             FGameplayTagContainer OwnedTags;
 
-            if (auto AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(NoiseMaker))
-                ((IGameplayTagAssetInterface*)AbilitySystemComponent->GetInterfaceAddress(GameplayTagAssetInterface))->GetOwnedGameplayTags(OwnedTags);
+            auto AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(NoiseMaker);
+
+            if (auto TagAssetInterface = AbilitySystemComponent ? (IGameplayTagAssetInterface*)AbilitySystemComponent->GetInterfaceAddress(GameplayTagAssetInterface) : nullptr)
+                TagAssetInterface->GetOwnedGameplayTags(OwnedTags);
 
             if (NoiseMakerTag.IsValid() && OwnedTags.GetGameplayTagArray().Contains(NoiseMakerTag))
                 OnAthenaNoiseEvent(NoiseMaker->GetWorld(), FAINoiseEvent(NoiseMaker, NoiseLocation, 1.0f, MaxRange, FName(NAME_None)));

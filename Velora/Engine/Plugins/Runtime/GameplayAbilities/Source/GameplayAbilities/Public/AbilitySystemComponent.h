@@ -34,6 +34,8 @@ private:
 class UAbilitySystemComponent : public UGameplayTasksComponent
 {
 public:
+    static UClass* StaticClass();
+
     FGameplayEffectContextHandle MakeEffectContext() const;
 
     bool HasAttributeSetForAttribute(FGameplayAttribute Attribute) const;
