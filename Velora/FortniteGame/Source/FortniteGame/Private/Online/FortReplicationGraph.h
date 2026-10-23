@@ -132,7 +132,7 @@ private:
 
     void AddRelevantToAllInsideFortVolume(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo);
 
-    void OnAlwaysRelevantStreamingActorDormancyFlush(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo);
+    void OnAlwaysRelevantStreamingActorAdded(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo);
 
     void SetAllSquadNodesEnabled(bool bEnabled);
 
@@ -171,6 +171,8 @@ public:
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
 
     void OnClientLevelVisibilityAdd(FName LevelName, UWorld* StreamingWorld);
+
+    void FlushStreamingAlwaysRelevantList(const FNewReplicatedActorInfo& ActorInfo);
 
     void OnClientLevelVisibilityRemove(FName LevelName);
 

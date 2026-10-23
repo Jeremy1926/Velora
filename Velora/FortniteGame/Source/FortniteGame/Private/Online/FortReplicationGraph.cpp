@@ -920,12 +920,12 @@ void UFortReplicationGraph::AddRelevantToAllConnections(const FNewReplicatedActo
 
     GetAlwaysRelevantStreamingLevelActors().FindOrAdd(ActorInfo.StreamingLevelName).RepList.Add(ActorInfo.Actor);
 
-    OnAlwaysRelevantStreamingActorDormancyFlush(ActorInfo.Actor, GlobalInfo);
+    OnAlwaysRelevantStreamingActorAdded(ActorInfo.Actor, GlobalInfo);
 
     auto& DormancyFlush = GlobalInfo.GetEvents().DormancyFlush;
 
     if (!DormancyFlush.IsBoundToObject(this))
-        DormancyFlush.AddUObject(this, &UFortReplicationGraph::OnAlwaysRelevantStreamingActorDormancyFlush);
+        DormancyFlush.AddUObject(this, &UFortReplicationGraph::OnAlwaysRelevantStreamingActorAdded);
 }
 
 void UFortReplicationGraph::AddRelevantToAllInsideFortVolume(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo)
@@ -933,7 +933,7 @@ void UFortReplicationGraph::AddRelevantToAllInsideFortVolume(const FNewReplicate
     AddRelevantToAllConnections(ActorInfo, GlobalInfo);
 }
 
-void UFortReplicationGraph::OnAlwaysRelevantStreamingActorDormancyFlush(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo)
+void UFortReplicationGraph::OnAlwaysRelevantStreamingActorAdded(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo)
 {
     FNewReplicatedActorInfo ActorInfo(Actor);
 
@@ -954,7 +954,7 @@ void UFortReplicationGraph::OnAlwaysRelevantStreamingActorDormancyFlush(AActor* 
         for (auto Node : ConnectionManager->GetConnectionGraphNodes())
         {
             if (auto AlwaysRelevantNode = Cast<UFortReplicationGraphNode_AlwaysRelevant_ForConnection>(Node))
-                AlwaysRelevantNode->OnClientLevelVisibilityAdd(ActorInfo.StreamingLevelName, nullptr);
+                AlwaysRelevantNode->FlushStreamingAlwaysRelevantList(ActorInfo);
         }
     }
 }
@@ -1148,6 +1148,11 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibi
     }
 
     TGameLayout<FName>::Store(GetAlwaysRelevantStreamingLevelsNeedingReplication() + OldNum * NameSize, LevelName);
+}
+
+void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::FlushStreamingAlwaysRelevantList(const FNewReplicatedActorInfo& ActorInfo)
+{
+    OnClientLevelVisibilityAdd(ActorInfo.StreamingLevelName, nullptr);
 }
 
 void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibilityRemove(FName LevelName)
