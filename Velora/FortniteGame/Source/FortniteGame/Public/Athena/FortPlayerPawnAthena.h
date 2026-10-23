@@ -37,5 +37,5 @@ public:
 
     float GetPickupSpeedMultiplier() const;
 
-    uint8& GetDBNORevivalStacking();
+    uint8* GetDBNORevivalStacking();
 };

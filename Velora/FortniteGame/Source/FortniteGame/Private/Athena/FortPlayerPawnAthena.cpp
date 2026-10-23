@@ -175,7 +175,8 @@ void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* Eve
 
     if (!GetIsDBNO())
     {
-        GetDBNORevivalStacking() = 0;
+        if (auto DBNORevivalStacking = GetDBNORevivalStacking())
+            *DBNORevivalStacking = 0;
 
         static auto DBNOBeingRevivedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Status.DBNOBeingRevived")));
         static auto BeingRevivedFromDBNOCueTag = FGameplayTag::RequestGameplayTag(FName(TEXT("GameplayCue.Athena.Player.BeingRevivedFromDBNO")));
@@ -192,7 +193,8 @@ void AFortPlayerPawnAthena::ForceReviveFromDBNO(AController* EventInstigator)
 
     if (!GetIsDBNO())
     {
-        GetDBNORevivalStacking() = 0;
+        if (auto DBNORevivalStacking = GetDBNORevivalStacking())
+            *DBNORevivalStacking = 0;
 
         static auto DBNOBeingRevivedTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Gameplay.Status.DBNOBeingRevived")));
         static auto BeingRevivedFromDBNOCueTag = FGameplayTag::RequestGameplayTag(FName(TEXT("GameplayCue.Athena.Player.BeingRevivedFromDBNO")));
@@ -315,9 +317,11 @@ float AFortPlayerPawnAthena::GetPickupSpeedMultiplier() const
     return *PickupSpeedMultiplier->ContainerPtrToValuePtr<float>(this);
 }
 
-uint8& AFortPlayerPawnAthena::GetDBNORevivalStacking()
+uint8* AFortPlayerPawnAthena::GetDBNORevivalStacking()
 {
     static auto DBNORevivalStacking = GetClass()->FindPropertyByName(FName(TEXT("DBNORevivalStacking")));
+    static auto DBNORevivingActorsCount = GetClass()->FindPropertyByName(FName(TEXT("DBNORevivingActorsCount")));
+    auto RevivalStacking = DBNORevivalStacking ? DBNORevivalStacking : DBNORevivingActorsCount;
 
-    return *DBNORevivalStacking->ContainerPtrToValuePtr<uint8>(this);
+    return RevivalStacking ? RevivalStacking->ContainerPtrToValuePtr<uint8>(this) : nullptr;
 }
