@@ -5,7 +5,7 @@
 
 void* FOutBunch::operator new(size_t Size)
 {
-    static auto New = Anchor::Function<void* (*)(size_t)>(TEXT("operator new"))
+    static auto New = Anchor::Function<void* (*)(size_t, uint32)>(TEXT("operator new"))
         .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
         .Start()
         .Find("mov ecx, 0x*; call 0x*; test rax, rax")
@@ -27,7 +27,7 @@ void* FOutBunch::operator new(size_t Size)
         .Find("mov ecx, 0x*; inc [*]; call 0x*; test rax, rax")
         .Value();
 
-    return New(BunchSize);
+    return New(BunchSize, 0);
 }
 
 void FOutBunch::operator delete(void* Ptr)
