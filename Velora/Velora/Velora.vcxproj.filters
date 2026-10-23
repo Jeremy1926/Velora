@@ -22,6 +22,12 @@
     <Filter Include="Engine\Source\Runtime\AIModule\Private\EnvironmentQuery">
       <UniqueIdentifier>{1CB4B9AF-1EE4-4023-9C8A-216EA2D38C61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor">
+      <UniqueIdentifier>{ACBDD6ED-587C-4C44-A3AE-05ACF5D73ED3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor">
+      <UniqueIdentifier>{B6AE0AF7-6C2E-407E-B336-911273D463CD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\Vehicles">
       <UniqueIdentifier>{1FA8A3D5-D983-4AF4-801F-B59DF0D220A9}</UniqueIdentifier>
     </Filter>
@@ -1114,6 +1120,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortVehicleSeatWeaponComponent.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Vehicles</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaActorSpawnerData.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
@@ -2148,6 +2157,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortVehicleSeatWeaponComponent.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Vehicles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaActorSpawnerData.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
