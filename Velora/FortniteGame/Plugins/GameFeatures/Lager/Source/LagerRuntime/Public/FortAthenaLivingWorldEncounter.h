@@ -42,7 +42,13 @@ public:
 
     void execGetTotalActorCount(FFrame& Stack, void* const Z_Param__Result);
 
+    void TryAddActivePointProvider(const FScriptInterface& PointProvider);
+
+    void RemoveActivePointProvider(const FScriptInterface& PointProvider);
+
     TSoftObjectPtr<UFortAthenaLivingWorldEncounter>& GetEncounterDefinition();
+
+    TArray<FScriptInterface>& GetOriginalPointProviders();
 
     TArray<FScriptInterface>& GetRegisteredPointProviders();
 

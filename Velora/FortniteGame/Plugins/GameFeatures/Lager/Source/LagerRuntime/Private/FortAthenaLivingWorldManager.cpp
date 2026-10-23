@@ -1200,21 +1200,31 @@ void UFortAthenaLivingWorldManager::AddPointProvider(AActor* PointProvider)
     }
 
     auto& PointProviders = GetPointProviderInterfaces();
+    bool bRegistered = false;
 
     for (auto& RegisteredPointProvider : PointProviders)
-    {
-        if (RegisteredPointProvider.GetObject() == PointProvider)
-            return;
-    }
+        bRegistered |= RegisteredPointProvider.GetObject() == PointProvider;
 
     FScriptInterface NewPointProvider;
     NewPointProvider.SetObject(PointProvider);
     NewPointProvider.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
 
-    PointProviders.Add(NewPointProvider);
+    if (!bRegistered)
+    {
+        PointProviders.Add(NewPointProvider);
 
-    if (AddPointProviderToEventRuntimeData)
-        AddPointProviderToEventRuntimeData(this, &NewPointProvider);
+        if (AddPointProviderToEventRuntimeData)
+            AddPointProviderToEventRuntimeData(this, &NewPointProvider);
+    }
+
+    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
+        return;
+
+    for (auto EncounterInstance : GetRunningEncounterInstances())
+    {
+        if (EncounterInstance)
+            EncounterInstance->TryAddActivePointProvider(NewPointProvider);
+    }
 }
 
 void UFortAthenaLivingWorldManager::RemovePointProvider(AActor* PointProvider)
@@ -1232,8 +1242,20 @@ void UFortAthenaLivingWorldManager::RemovePointProvider(AActor* PointProvider)
         if (PointProviders[Index].GetObject() == PointProvider)
         {
             PointProviders.RemoveAt(Index);
-            return;
+            break;
         }
+    }
+
+    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
+        return;
+
+    FScriptInterface OldPointProvider;
+    OldPointProvider.SetObject(PointProvider);
+
+    for (auto EncounterInstance : GetRunningEncounterInstances())
+    {
+        if (EncounterInstance)
+            EncounterInstance->RemoveActivePointProvider(OldPointProvider);
     }
 }
 

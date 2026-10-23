@@ -88,11 +88,52 @@ void UFortAthenaLivingWorldEncounterInstance::execGetTotalActorCount(FFrame& Sta
     *(int32*)Z_Param__Result = GetTotalActorCount();
 }
 
+void UFortAthenaLivingWorldEncounterInstance::TryAddActivePointProvider(const FScriptInterface& PointProvider)
+{
+    auto& RegisteredPointProviders = GetRegisteredPointProviders();
+
+    for (auto& OriginalPointProvider : GetOriginalPointProviders())
+    {
+        if (OriginalPointProvider.GetObject() != PointProvider.GetObject())
+            continue;
+
+        for (auto& RegisteredPointProvider : RegisteredPointProviders)
+        {
+            if (RegisteredPointProvider.GetObject() == PointProvider.GetObject())
+                return;
+        }
+
+        RegisteredPointProviders.Add(PointProvider);
+        return;
+    }
+}
+
+void UFortAthenaLivingWorldEncounterInstance::RemoveActivePointProvider(const FScriptInterface& PointProvider)
+{
+    auto& RegisteredPointProviders = GetRegisteredPointProviders();
+
+    for (int32 Index = 0; Index < RegisteredPointProviders.Num(); Index++)
+    {
+        if (RegisteredPointProviders[Index].GetObject() == PointProvider.GetObject())
+        {
+            RegisteredPointProviders.RemoveAt(Index);
+            return;
+        }
+    }
+}
+
 TSoftObjectPtr<UFortAthenaLivingWorldEncounter>& UFortAthenaLivingWorldEncounterInstance::GetEncounterDefinition()
 {
     static auto EncounterDefinition = GetClass()->FindPropertyByName(FName(TEXT("EncounterDefinition")));
 
     return *EncounterDefinition->ContainerPtrToValuePtr<TSoftObjectPtr<UFortAthenaLivingWorldEncounter>>(this);
+}
+
+TArray<FScriptInterface>& UFortAthenaLivingWorldEncounterInstance::GetOriginalPointProviders()
+{
+    static auto OriginalPointProviders = GetClass()->FindPropertyByName(FName(TEXT("OriginalPointProviders")));
+
+    return *OriginalPointProviders->ContainerPtrToValuePtr<TArray<FScriptInterface>>(this);
 }
 
 TArray<FScriptInterface>& UFortAthenaLivingWorldEncounterInstance::GetRegisteredPointProviders()
