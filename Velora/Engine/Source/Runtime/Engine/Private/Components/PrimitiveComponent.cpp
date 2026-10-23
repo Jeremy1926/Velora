@@ -13,7 +13,7 @@ UClass* UPrimitiveComponent::StaticClass()
 
 void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCurrent, FName BoneName)
 {
-    static auto VirtualSetPhysicsLinearVelocity = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
+    static auto VirtualSetPhysicsLinearVelocity = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
         .Find("call [rax+0x*]")
         .Optional()
@@ -22,7 +22,7 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
     if (VirtualSetPhysicsLinearVelocity)
         return VirtualSetPhysicsLinearVelocity(this, NewVel, bAddToCurrent, BoneName);
 
-    static auto SetPhysicsLinearVelocity = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
+    static auto SetPhysicsLinearVelocity = Anchor::Function<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
         .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
         .Get();
 
@@ -31,7 +31,7 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
 
 void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, bool bAddToCurrent, FName BoneName)
 {
-    static auto VirtualSetPhysicsAngularVelocityInRadians = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
+    static auto VirtualSetPhysicsAngularVelocityInRadians = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
         .Find("call [rax+0x*]")
         .Optional()
@@ -40,7 +40,7 @@ void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, 
     if (VirtualSetPhysicsAngularVelocityInRadians)
         return VirtualSetPhysicsAngularVelocityInRadians(this, NewAngVel, bAddToCurrent, BoneName);
 
-    static auto SetPhysicsAngularVelocityInRadians = Anchor::Function<void (*)(UPrimitiveComponent*, FVector, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
+    static auto SetPhysicsAngularVelocityInRadians = Anchor::Function<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
         .Native(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
         .Get();
 

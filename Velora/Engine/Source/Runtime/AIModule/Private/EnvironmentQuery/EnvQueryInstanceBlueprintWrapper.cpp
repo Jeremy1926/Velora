@@ -37,7 +37,19 @@ TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
         .Get();
 
     TArray<FVector> Locations;
-    GetResultsAsLocations(this, &Locations);
+
+    if (!UE::LWC::IsEnabled())
+    {
+        GetResultsAsLocations(this, &Locations);
+
+        return Locations;
+    }
+
+    TArray<FVector3d> GameLocations;
+    ((TArray<FVector3d>* (*)(UEnvQueryInstanceBlueprintWrapper*, TArray<FVector3d>*))GetResultsAsLocations)(this, &GameLocations);
+
+    for (auto& GameLocation : GameLocations)
+        Locations.Add((FVector)GameLocation);
 
     return Locations;
 }

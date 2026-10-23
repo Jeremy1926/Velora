@@ -391,12 +391,14 @@ FNetViewer::FNetViewer(UNetConnection* InConnection, float DeltaSeconds)
     : Connection(InConnection)
     , InViewer(InConnection->GetPlayerController() ? (AActor*)InConnection->GetPlayerController() : InConnection->GetOwningActor())
     , ViewTarget(InConnection->GetViewTarget())
-    , ViewLocation(ForceInit)
-    , ViewDir(ForceInit)
 {
+    static auto ViewLocationProperty = StaticStruct()->FindPropertyByName(FName(TEXT("ViewLocation")));
+    static auto ViewDirProperty = StaticStruct()->FindPropertyByName(FName(TEXT("ViewDir")));
+
     APlayerController* ViewingController = InConnection->GetPlayerController();
 
-    ViewLocation = ViewTarget->GetActorLocation();
+    FVector ViewLocation = ViewTarget->GetActorLocation();
+    FVector ViewDir(ForceInit);
 
     if (ViewingController)
     {
@@ -404,6 +406,9 @@ FNetViewer::FNetViewer(UNetConnection* InConnection, float DeltaSeconds)
         ViewingController->GetPlayerViewPoint(ViewLocation, ViewRotation);
         ViewDir = ViewRotation.Vector();
     }
+
+    ViewLocationProperty->SetPropertyValue_InContainer<FVector>(this, ViewLocation);
+    ViewDirProperty->SetPropertyValue_InContainer<FVector>(this, ViewDir);
 }
 
 FActorPriority::FActorPriority(UNetConnection* InConnection, UActorChannel* InChannel, FNetworkObjectInfo* InActorInfo, const TArray<FNetViewer>& Viewers, bool bLowBandwidth)
@@ -417,7 +422,7 @@ FActorPriority::FActorPriority(UNetConnection* InConnection, UActorChannel* InCh
 
     for (int32 i = 0; i < Viewers.Num(); i++)
     {
-        Priority = FMath::Max<int32>(Priority, FMath::RoundToInt(65536.0f * ActorInfo->Actor->GetNetPriority(Viewers[i].ViewLocation, Viewers[i].ViewDir, Viewers[i].InViewer, Viewers[i].ViewTarget, InChannel, Time, bLowBandwidth)));
+        Priority = FMath::Max<int32>(Priority, FMath::RoundToInt(65536.0f * ActorInfo->Actor->GetNetPriority(Viewers[i].GetViewLocation(), Viewers[i].GetViewDir(), Viewers[i].InViewer, Viewers[i].ViewTarget, InChannel, Time, bLowBandwidth)));
     }
 }
 
@@ -432,10 +437,10 @@ FActorPriority::FActorPriority(UNetConnection* InConnection, FActorDestructionIn
     {
         float Time = InConnection->GetDriver()->GetSpawnPrioritySeconds();
 
-        FVector Dir = DestructionInfo->GetDestroyedPosition() - Viewers[i].ViewLocation;
+        FVector Dir = DestructionInfo->GetDestroyedPosition() - Viewers[i].GetViewLocation();
         float DistSq = Dir.SizeSquared();
 
-        if ((Viewers[i].ViewDir | Dir) < 0.f)
+        if ((Viewers[i].GetViewDir() | Dir) < 0.f)
         {
             if (DistSq > 2000.f * 2000.f)
                 Time *= 0.2f;
@@ -453,7 +458,7 @@ static FORCEINLINE bool IsActorRelevantToConnection(const AActor* Actor, const T
 {
     for (int32 viewerIdx = 0; viewerIdx < ConnectionViewers.Num(); viewerIdx++)
     {
-        if (Actor->IsNetRelevantFor(ConnectionViewers[viewerIdx].InViewer, ConnectionViewers[viewerIdx].ViewTarget, ConnectionViewers[viewerIdx].ViewLocation))
+        if (Actor->IsNetRelevantFor(ConnectionViewers[viewerIdx].InViewer, ConnectionViewers[viewerIdx].ViewTarget, ConnectionViewers[viewerIdx].GetViewLocation()))
         {
             return true;
         }
@@ -504,7 +509,7 @@ static FORCEINLINE bool ShouldActorGoDormant(AActor* Actor, const TArray<FNetVie
     {
         for (int32 viewerIdx = 0; viewerIdx < ConnectionViewers.Num(); viewerIdx++)
         {
-            if (!Actor->GetNetDormancy(ConnectionViewers[viewerIdx].ViewLocation, ConnectionViewers[viewerIdx].ViewDir, ConnectionViewers[viewerIdx].InViewer, ConnectionViewers[viewerIdx].ViewTarget, Channel, Time, bLowNetBandwidth))
+            if (!Actor->GetNetDormancy(ConnectionViewers[viewerIdx].GetViewLocation(), ConnectionViewers[viewerIdx].GetViewDir(), ConnectionViewers[viewerIdx].InViewer, ConnectionViewers[viewerIdx].ViewTarget, Channel, Time, bLowNetBandwidth))
             {
                 return false;
             }

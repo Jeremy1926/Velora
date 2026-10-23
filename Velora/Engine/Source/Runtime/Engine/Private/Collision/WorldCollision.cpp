@@ -22,7 +22,7 @@ FCollisionResponseParams& FCollisionResponseParams::DefaultResponseParam = *Anch
 
 bool UWorld::SweepSingleByChannel(FHitResult& OutHit, const FVector& Start, const FVector& End, const FQuat& Rot, ECollisionChannel TraceChannel, const FCollisionShape& CollisionShape, const FCollisionQueryParams& Params, const FCollisionResponseParams& ResponseParam) const
 {
-    static auto SweepSingleByChannel = Anchor::Function<bool (*)(const UWorld*, FHitResult&, const FVector&, const FVector&, const FQuat&, ECollisionChannel, const FCollisionShape&, const FCollisionQueryParams&, const FCollisionResponseParams&)>(TEXT("UWorld::SweepSingleByChannel"))
+    static auto SweepSingleByChannel = Anchor::Function<bool (*)(const UWorld*, FHitResult&, const TGameValue<FVector>&, const TGameValue<FVector>&, const TGameValue<FQuat>&, ECollisionChannel, const FCollisionShape&, const FCollisionQueryParams&, const FCollisionResponseParams&)>(TEXT("UWorld::SweepSingleByChannel"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:SphereTraceSingle"))
         .Find("mov dword ptr [rsp+0x5?], 0x2")
         .Find("call 0x*")

@@ -44,20 +44,20 @@ AActor* AController::GetViewTarget() const
 
 FRotator AController::GetControlRotation() const
 {
-    static auto GetControlRotation = Anchor::VirtualFunction<FRotator* (*)(const AController*, FRotator*)>(TEXT("AController::GetControlRotation"))
+    static auto GetControlRotation = Anchor::VirtualFunction<TGameValue<FRotator>* (*)(const AController*, TGameValue<FRotator>*)>(TEXT("AController::GetControlRotation"))
         .Exec(TEXT("/Script/Engine.Controller:GetControlRotation"))
         .Find("call [*+0x*]")
         .Get();
 
-    FRotator Result{};
+    TGameValue<FRotator> Result;
     GetControlRotation(this, &Result);
 
-    return Result;
+    return Result.Get();
 }
 
 void AController::SetControlRotation(const FRotator& NewRotation)
 {
-    static auto SetControlRotation = Anchor::VirtualFunction<void (*)(AController*, const FRotator&)>(TEXT("AController::SetControlRotation"))
+    static auto SetControlRotation = Anchor::VirtualFunction<void (*)(AController*, const TGameValue<FRotator>&)>(TEXT("AController::SetControlRotation"))
         .Exec(TEXT("/Script/Engine.Controller:SetControlRotation"))
         .Find("call [*+0x*]")
         .Get();
@@ -81,12 +81,17 @@ void AController::SetStateName(FName InStateName)
 
 void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const
 {
-    static auto GetPlayerViewPoint = Anchor::VirtualFunction<void (*)(const AController*, FVector&, FRotator&)>(TEXT("AController::GetPlayerViewPoint"))
+    static auto GetPlayerViewPoint = Anchor::VirtualFunction<void (*)(const AController*, TGameValue<FVector>&, TGameValue<FRotator>&)>(TEXT("AController::GetPlayerViewPoint"))
         .Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint"))
         .Find("call [*+0x*]")
         .LogSlot(TEXT("AActor::GetActorEyesViewPoint"))
         .ForwarderIn(TEXT("/Script/Engine.Default__Controller"))
         .Get();
 
-    GetPlayerViewPoint(this, Location, Rotation);
+    TGameValue<FVector> GameLocation(Location);
+    TGameValue<FRotator> GameRotation(Rotation);
+    GetPlayerViewPoint(this, GameLocation, GameRotation);
+
+    Location = GameLocation.Get();
+    Rotation = GameRotation.Get();
 }

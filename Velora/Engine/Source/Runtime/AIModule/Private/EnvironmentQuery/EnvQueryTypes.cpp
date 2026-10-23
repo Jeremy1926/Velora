@@ -7,16 +7,16 @@
 
 FVector FEnvQueryResult::GetItemAsLocation(int32 Index) const
 {
-    static auto GetItemAsLocation = Anchor::Function<FVector* (*)(const FEnvQueryResult*, FVector*, int32)>(TEXT("FEnvQueryResult::GetItemAsLocation"))
+    static auto GetItemAsLocation = Anchor::Function<TGameValue<FVector>* (*)(const FEnvQueryResult*, TGameValue<FVector>*, int32)>(TEXT("FEnvQueryResult::GetItemAsLocation"))
         .Native(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:GetResultsAsLocations"))
         .Find("cmp dword ptr [*+0x*], 0x3; jz 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
 
-    FVector Location;
+    TGameValue<FVector> Location;
 
-    return *GetItemAsLocation(this, &Location, Index);
+    return GetItemAsLocation(this, &Location, Index)->Get();
 }
 
 FEnvQueryRequest& FEnvQueryRequest::SetFloatParam(FName ParamName, float Value)

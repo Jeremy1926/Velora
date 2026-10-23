@@ -223,7 +223,7 @@ struct alignas(8) FHitResult
 
     float& GetTime();
 
-    FVector_NetQuantize& GetLocation();
+    FVector GetLocation();
 
     TWeakObjectPtr<AActor>& GetActor();
 

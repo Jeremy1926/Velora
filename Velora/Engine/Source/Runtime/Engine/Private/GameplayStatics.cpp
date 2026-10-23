@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Kismet/GameplayStatics.h"
+#include "Math/TransformVectorized.h"
 #include "Templates/UnrealTemplate.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
@@ -26,7 +27,7 @@ void UGameplayStatics::GetAllActorsOfClass(const UObject* WorldContextObject, TS
 
 AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, const FTransform& SpawnTransform, ESpawnActorCollisionHandlingMethod CollisionHandlingOverride, AActor* Owner)
 {
-    static auto BeginDeferredActorSpawnFromClass = Anchor::Function<AActor* (*)(const UObject*, TSubclassOf<AActor>, const FTransform&, ESpawnActorCollisionHandlingMethod, AActor*)>(TEXT("UGameplayStatics::BeginDeferredActorSpawnFromClass"))
+    static auto BeginDeferredActorSpawnFromClass = Anchor::Function<AActor* (*)(const UObject*, TSubclassOf<AActor>, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*)>(TEXT("UGameplayStatics::BeginDeferredActorSpawnFromClass"))
         .Native(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
         .Get();
 
@@ -35,7 +36,7 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
 
 AActor* UGameplayStatics::FinishSpawningActor(AActor* Actor, const FTransform& SpawnTransform)
 {
-    static auto FinishSpawningActor = Anchor::Function<AActor* (*)(AActor*, const FTransform&)>(TEXT("UGameplayStatics::FinishSpawningActor"))
+    static auto FinishSpawningActor = Anchor::Function<AActor* (*)(AActor*, const TGameValue<FTransform>&)>(TEXT("UGameplayStatics::FinishSpawningActor"))
         .Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
         .Get();
 

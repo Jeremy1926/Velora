@@ -8,24 +8,24 @@
 
 FVector FRotator::Vector() const
 {
-    static auto Vector = Anchor::Function<FVector* (*)(const FRotator*, FVector*)>(TEXT("FRotator::Vector"))
+    static auto Vector = Anchor::Function<TGameValue<FVector>* (*)(const TGameValue<FRotator>&, TGameValue<FVector>*)>(TEXT("FRotator::Vector"))
         .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector"))
         .Get();
 
-    FVector Result;
+    TGameValue<FVector> Result;
 
-    return *Vector(this, &Result);
+    return Vector(*this, &Result)->Get();
 }
 
 FRotator FVector::ToOrientationRotator() const
 {
-    static auto ToOrientationRotator = Anchor::Function<FRotator* (*)(const FVector*, FRotator*)>(TEXT("FVector::ToOrientationRotator"))
+    static auto ToOrientationRotator = Anchor::Function<TGameValue<FRotator>* (*)(const TGameValue<FVector>&, TGameValue<FRotator>*)>(TEXT("FVector::ToOrientationRotator"))
         .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_VectorToRotator"))
         .Get();
 
-    FRotator Result;
+    TGameValue<FRotator> Result;
 
-    return *ToOrientationRotator(this, &Result);
+    return ToOrientationRotator(*this, &Result)->Get();
 }
 
 FQuat FRotator::Quaternion() const
@@ -48,7 +48,7 @@ FQuat FRotator::Quaternion() const
 
 FRotator FQuat::Rotator() const
 {
-    static auto Rotator = Anchor::Function<FRotator* (*)(const FQuat*, FRotator*)>(TEXT("FQuat::Rotator"))
+    static auto Rotator = Anchor::Function<TGameValue<FRotator>* (*)(const TGameValue<FQuat>&, TGameValue<FRotator>*)>(TEXT("FQuat::Rotator"))
         .Exec(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
@@ -59,9 +59,9 @@ FRotator FQuat::Rotator() const
         .Call()
         .Get();
 
-    FRotator Result;
+    TGameValue<FRotator> Result;
 
-    return *Rotator(this, &Result);
+    return Rotator(*this, &Result)->Get();
 }
 
 const FTransform FTransform::Identity;
@@ -70,26 +70,26 @@ const FQuat FQuat::Identity(0, 0, 0, 1);
 
 FVector FMath::VRand()
 {
-    static auto VRand = Anchor::Function<FVector* (*)(FVector*)>(TEXT("UKismetMathLibrary::RandomUnitVector"))
+    static auto VRand = Anchor::Function<TGameValue<FVector>* (*)(TGameValue<FVector>*)>(TEXT("UKismetMathLibrary::RandomUnitVector"))
         .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVector"))
         .Get();
 
-    FVector Result;
+    TGameValue<FVector> Result;
 
-    return *VRand(&Result);
+    return VRand(&Result)->Get();
 }
 
 FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
 {
-    static auto VRandCone = Anchor::Function<FVector* (*)(FVector*, FVector const&, float)>(TEXT("FMath::VRandCone"))
+    static auto VRandCone = Anchor::Function<TGameValue<FVector>* (*)(TGameValue<FVector>*, const TGameValue<FVector>&, float)>(TEXT("FMath::VRandCone"))
         .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInCone"))
         .Or()
         .Native(TEXT("/Script/Engine.KismetMathLibrary:RandomUnitVectorInConeInRadians"))
         .Get();
 
-    FVector Result;
+    TGameValue<FVector> Result;
 
-    return *VRandCone(&Result, Dir, ConeHalfAngleRad);
+    return VRandCone(&Result, Dir, ConeHalfAngleRad)->Get();
 }
 
 bool UE::LWC::IsEnabled()

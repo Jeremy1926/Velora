@@ -99,12 +99,12 @@ public:
         return RootComponent ? RootComponent->GetComponentRotation() : FRotator{ 0.f, 0.f, 0.f };
     }
 
-    FORCEINLINE const FTransform& GetTransform() const
+    FORCEINLINE FTransform GetTransform() const
     {
         return ActorToWorld();
     }
 
-    FORCEINLINE const FTransform& ActorToWorld() const
+    FORCEINLINE FTransform ActorToWorld() const
     {
         auto RootComponent = GetRootComponent();
 

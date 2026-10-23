@@ -20,7 +20,7 @@ UCapsuleComponent* ACharacter::GetCapsuleComponent() const
 
 void ACharacter::LaunchCharacter(FVector LaunchVelocity, bool bXYOverride, bool bZOverride)
 {
-    static auto LaunchCharacter = Anchor::VirtualFunction<void (*)(ACharacter*, FVector, bool, bool)>(TEXT("ACharacter::LaunchCharacter"))
+    static auto LaunchCharacter = Anchor::VirtualFunction<void (*)(ACharacter*, TGameValue<FVector>, bool, bool)>(TEXT("ACharacter::LaunchCharacter"))
         .Exec(TEXT("/Script/Engine.Character:LaunchCharacter"))
         .Find("call [*+0x*]")
         .Get();

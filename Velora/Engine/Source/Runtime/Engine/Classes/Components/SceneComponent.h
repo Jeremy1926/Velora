@@ -8,11 +8,11 @@
 class USceneComponent : public UObject
 {
 public:
-    const FTransform& GetComponentTransform() const;
+    FTransform GetComponentTransform() const;
 
     FRotator GetComponentRotation() const;
 
-    const FBoxSphereBounds& GetBounds() const;
+    FBoxSphereBounds GetBounds() const;
 
     FBoxSphereBounds CalcLocalBounds() const;
 

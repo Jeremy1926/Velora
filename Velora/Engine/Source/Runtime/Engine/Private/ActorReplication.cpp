@@ -5,7 +5,7 @@
 
 bool AActor::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
-    static auto IsNetRelevantFor = Anchor::VirtualFunction<bool (*)(const AActor*, const AActor*, const AActor*, const FVector&)>(TEXT("AActor::IsNetRelevantFor"))
+    static auto IsNetRelevantFor = Anchor::VirtualFunction<bool (*)(const AActor*, const AActor*, const AActor*, const TGameValue<FVector>&)>(TEXT("AActor::IsNetRelevantFor"))
         .String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)"))
         .Start()
         .Find("call [*+0x*]")
@@ -16,7 +16,7 @@ bool AActor::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget
 
 float AActor::GetNetPriority(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth)
 {
-    static auto GetNetPriority = Anchor::VirtualFunction<float (*)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool)>(TEXT("AActor::GetNetPriority"))
+    static auto GetNetPriority = Anchor::VirtualFunction<float (*)(AActor*, const TGameValue<FVector>&, const TGameValue<FVector>&, AActor*, AActor*, UActorChannel*, float, bool)>(TEXT("AActor::GetNetPriority"))
         .String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)"))
         .Start()
         .Find("call [*+0x*]")
@@ -29,7 +29,7 @@ float AActor::GetNetPriority(const FVector& ViewPos, const FVector& ViewDir, AAc
 
 bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AActor* Viewer, AActor* ViewTarget, UActorChannel* InChannel, float Time, bool bLowBandwidth)
 {
-    static auto GetNetDormancy = Anchor::VirtualFunction<bool (*)(AActor*, const FVector&, const FVector&, AActor*, AActor*, UActorChannel*, float, bool)>(TEXT("AActor::GetNetDormancy"))
+    static auto GetNetDormancy = Anchor::VirtualFunction<bool (*)(AActor*, const TGameValue<FVector>&, const TGameValue<FVector>&, AActor*, AActor*, UActorChannel*, float, bool)>(TEXT("AActor::GetNetDormancy"))
         .String(TEXT("Actor %s / %s has no root component in AActor::IsNetRelevantFor. (Make bAlwaysRelevant=true?)"))
         .Start()
         .Find("call [*+0x*]")

@@ -31,11 +31,11 @@ float& FHitResult::GetTime()
     return *Time->ContainerPtrToValuePtr<float>(this);
 }
 
-FVector_NetQuantize& FHitResult::GetLocation()
+FVector FHitResult::GetLocation()
 {
     static auto Location = StaticStruct()->FindPropertyByName(FName(TEXT("Location")));
 
-    return *Location->ContainerPtrToValuePtr<FVector_NetQuantize>(this);
+    return Location->GetPropertyValue_InContainer<FVector>(this);
 }
 
 TWeakObjectPtr<AActor>& FHitResult::GetActor()

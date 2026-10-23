@@ -5,15 +5,10 @@
 
 class AActor;
 
-struct FAINoiseEvent
+struct alignas(8) FAINoiseEvent
 {
     FAINoiseEvent(AActor* InInstigator, const FVector& InNoiseLocation, float InLoudness, float InMaxRange, FName InTag);
 
-    float Age;
-    FVector NoiseLocation;
-    float Loudness;
-    float MaxRange;
-    AActor* Instigator;
-    FName Tag;
-    uint8 EventID;
+private:
+    uint8 Data[0x38];
 };

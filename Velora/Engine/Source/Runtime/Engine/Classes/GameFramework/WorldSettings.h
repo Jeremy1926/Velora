@@ -5,16 +5,33 @@
 #include "Math/Vector.h"
 
 class UNetConnection;
+class UScriptStruct;
 
 struct FNetViewer
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FNetViewer(UNetConnection* InConnection, float DeltaSeconds);
+
+    FVector GetViewLocation() const;
+
+    FVector GetViewDir() const;
+
     UNetConnection* Connection;
     AActor* InViewer;
     AActor* ViewTarget;
-    FVector ViewLocation;
-    FVector ViewDir;
+};
 
-    FNetViewer(UNetConnection* InConnection, float DeltaSeconds);
+template<>
+class TArray<FNetViewer, FDefaultAllocator> : public TRuntimeSizedArray<FNetViewer>
+{
+public:
+    void Reset()
+    {
+        ArrayNum = 0;
+    }
 };
 
 class AWorldSettings : public AActor

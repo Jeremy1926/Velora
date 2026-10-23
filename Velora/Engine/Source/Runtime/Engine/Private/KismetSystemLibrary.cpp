@@ -6,7 +6,7 @@
 
 bool UKismetSystemLibrary::LineTraceSingle(const UObject* WorldContextObject, const FVector Start, const FVector End, ETraceTypeQuery TraceChannel, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, FHitResult& OutHit, bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
 {
-    static auto LineTraceSingle = Anchor::Function<bool (*)(const UObject*, const FVector, const FVector, ETraceTypeQuery, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, FHitResult&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::LineTraceSingle"))
+    static auto LineTraceSingle = Anchor::Function<bool (*)(const UObject*, const TGameValue<FVector>, const TGameValue<FVector>, ETraceTypeQuery, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, FHitResult&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::LineTraceSingle"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:LineTraceSingle"))
         .Get();
 
@@ -15,7 +15,7 @@ bool UKismetSystemLibrary::LineTraceSingle(const UObject* WorldContextObject, co
 
 bool UKismetSystemLibrary::SphereTraceMultiForObjects(const UObject* WorldContextObject, const FVector Start, const FVector End, float Radius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
 {
-    static auto SphereTraceMultiForObjects = Anchor::Function<bool (*)(const UObject*, const FVector, const FVector, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, TArray<FHitResult>&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::SphereTraceMultiForObjects"))
+    static auto SphereTraceMultiForObjects = Anchor::Function<bool (*)(const UObject*, const TGameValue<FVector>, const TGameValue<FVector>, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, TArray<FHitResult>&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::SphereTraceMultiForObjects"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:SphereTraceMultiForObjects"))
         .Get();
 
@@ -24,7 +24,7 @@ bool UKismetSystemLibrary::SphereTraceMultiForObjects(const UObject* WorldContex
 
 bool UKismetSystemLibrary::CapsuleTraceMultiForObjects(const UObject* WorldContextObject, const FVector Start, const FVector End, float Radius, float HalfHeight, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
 {
-    static auto CapsuleTraceMultiForObjects = Anchor::Function<bool (*)(const UObject*, const FVector, const FVector, float, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, TArray<FHitResult>&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::CapsuleTraceMultiForObjects"))
+    static auto CapsuleTraceMultiForObjects = Anchor::Function<bool (*)(const UObject*, const TGameValue<FVector>, const TGameValue<FVector>, float, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, bool, const TArray<AActor*>&, EDrawDebugTrace::Type, TArray<FHitResult>&, bool, FLinearColor, FLinearColor, float)>(TEXT("UKismetSystemLibrary::CapsuleTraceMultiForObjects"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:CapsuleTraceMultiForObjects"))
         .Get();
 
@@ -33,7 +33,7 @@ bool UKismetSystemLibrary::CapsuleTraceMultiForObjects(const UObject* WorldConte
 
 bool UKismetSystemLibrary::SphereOverlapActors(const UObject* WorldContextObject, const FVector SpherePos, float SphereRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypes, UClass* ActorClassFilter, const TArray<AActor*>& ActorsToIgnore, TArray<AActor*>& OutActors)
 {
-    static auto SphereOverlapActors = Anchor::Function<bool (*)(const UObject*, const FVector, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, UClass*, const TArray<AActor*>&, TArray<AActor*>&)>(TEXT("UKismetSystemLibrary::SphereOverlapActors"))
+    static auto SphereOverlapActors = Anchor::Function<bool (*)(const UObject*, const TGameValue<FVector>, float, const TArray<TEnumAsByte<EObjectTypeQuery>>&, UClass*, const TArray<AActor*>&, TArray<AActor*>&)>(TEXT("UKismetSystemLibrary::SphereOverlapActors"))
         .Native(TEXT("/Script/Engine.KismetSystemLibrary:SphereOverlapActors"))
         .Get();
 

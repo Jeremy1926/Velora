@@ -80,7 +80,7 @@ void AActor::SetLifeSpan(float InLifespan)
 
 bool AActor::TeleportTo(const FVector& DestLocation, const FRotator& DestRotation, bool bIsATest, bool bNoCheck)
 {
-    static auto TeleportTo = Anchor::VirtualFunction<bool (*)(AActor*, const FVector&, const FRotator&, bool, bool)>(TEXT("AActor::TeleportTo"))
+    static auto TeleportTo = Anchor::VirtualFunction<bool (*)(AActor*, const TGameValue<FVector>&, const TGameValue<FRotator>&, bool, bool)>(TEXT("AActor::TeleportTo"))
         .Exec(TEXT("/Script/Engine.Actor:K2_TeleportTo"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
