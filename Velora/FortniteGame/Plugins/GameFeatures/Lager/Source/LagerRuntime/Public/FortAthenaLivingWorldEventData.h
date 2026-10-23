@@ -9,6 +9,17 @@
 
 class UEnvQuery;
 
+struct FPointProviderFilterEntry
+{
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FGameplayTagQuery& GetProviderFiltersTagQuery();
+
+    FScalableFloat& GetWeight();
+};
+
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription
 {
     static UScriptStruct* StaticStruct();

@@ -3,6 +3,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
 
 UScriptStruct* FFortAthenaLivingWorldCategory::StaticStruct()
 {
@@ -25,6 +26,13 @@ int32& FFortAthenaLivingWorldCategory::GetMaxCount()
     return *MaxCount->ContainerPtrToValuePtr<int32>(this);
 }
 
+int32 FFortAthenaLivingWorldCategory::GetMaxSpawnedCount()
+{
+    static auto MaxSpawnedCount = StaticStruct()->FindPropertyByName(FName(TEXT("MaxSpawnedCount")));
+
+    return *MaxSpawnedCount->ContainerPtrToValuePtr<int32>(this);
+}
+
 float FFortAthenaLivingWorldCategory::GetPriority()
 {
     static auto Priority = StaticStruct()->FindPropertyByName(FName(TEXT("Priority")));
@@ -41,6 +49,35 @@ bool FFortAthenaLivingWorldCategory::GetbExcludeFromGlobalAIBudget()
 
 bool FFortAthenaLivingWorldCategory::IsRequiredByPlaylist(const FGameplayTagContainer& PlaylistContextTags)
 {
+    static auto IsCategoryActive = Anchor::Optional<bool (*)(const FFortAthenaLivingWorldCategory*, const FGameplayTagContainer&)>(TEXT("UFortAthenaLivingWorldManager::IsCategoryActive"))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")) != nullptr)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")) != nullptr)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (IsCategoryActive)
+        return IsCategoryActive(this, PlaylistContextTags);
+
     static auto RequirePlaylistTags = StaticStruct()->FindPropertyByName(FName(TEXT("RequirePlaylistTags")));
     static auto RequirePlaylistTagQuery = StaticStruct()->FindPropertyByName(FName(TEXT("RequirePlaylistTagQuery")));
 

@@ -135,6 +135,12 @@ public:
         float DensityComputationRange = 0.0f;
     };
 
+    struct FLivingWorldCategoryRuntimeData
+    {
+        UDataTable* CurrentEventTable = nullptr;
+        int32 GameSpawnedCount = 0;
+    };
+
     struct FLivingWorldEventRuntimeDataEntry
     {
         TWeakObjectPtr<UFortAthenaLivingWorldManager> LivingWorldManager;
@@ -186,13 +192,15 @@ public:
 
     int32 GetTotalEncounterInstanceActorCount(UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
-    AActor* GetRandomPointProvider(const FGameplayTagQuery& ProviderFiltersTagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
+    AActor* GetRandomPointProvider(const FGameplayTagQuery& ProviderFiltersTagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, UFortAthenaLivingWorldEncounterInstance* EncounterInstance, FLivingWorldEventRuntimeData& RuntimeData);
 
     bool RequestSpawnToAISpawnerSystem(const FLivingWorldEventRequest& EventRequest);
 
     UClass* GetSpawnerDataClass(FFortAthenaLivingWorldEventDataActorSpawnDescription& ActorDescription);
 
     FLivingWorldEventRuntimeData& FindOrCreateEventRuntimeData(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
+
+    FLivingWorldCategoryRuntimeData* FindOrCreateCategoryRuntimeData(const FFortAthenaLivingWorldCategory* Category);
 
     UFortAthenaLivingWorldConfigData* GetConfig();
 

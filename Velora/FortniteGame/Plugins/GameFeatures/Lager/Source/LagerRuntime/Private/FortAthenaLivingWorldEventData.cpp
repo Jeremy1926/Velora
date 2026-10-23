@@ -4,6 +4,34 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
+UScriptStruct* FPointProviderFilterEntry::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.PointProviderFilterEntry"));
+
+    return Struct;
+}
+
+int32 FPointProviderFilterEntry::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FGameplayTagQuery& FPointProviderFilterEntry::GetProviderFiltersTagQuery()
+{
+    static auto ProviderFiltersTagQuery = StaticStruct()->FindPropertyByName(FName(TEXT("ProviderFiltersTagQuery")));
+
+    return *ProviderFiltersTagQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(this);
+}
+
+FScalableFloat& FPointProviderFilterEntry::GetWeight()
+{
+    static auto Weight = StaticStruct()->FindPropertyByName(FName(TEXT("Weight")));
+
+    return *Weight->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
 UScriptStruct* FFortAthenaLivingWorldEventDataActorSpawnDescription::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEventDataActorSpawnDescription"));

@@ -12,6 +12,8 @@ struct FFortAthenaLivingWorldCategory : public FTableRowBase
 
     int32& GetMaxCount();
 
+    int32 GetMaxSpawnedCount();
+
     float GetPriority();
 
     bool GetbExcludeFromGlobalAIBudget();
