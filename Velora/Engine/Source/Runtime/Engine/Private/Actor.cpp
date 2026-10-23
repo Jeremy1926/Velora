@@ -68,6 +68,18 @@ void AActor::SetLifeSpan(float InLifespan)
     SetLifeSpan(this, InLifespan);
 }
 
+bool AActor::TeleportTo(const FVector& DestLocation, const FRotator& DestRotation, bool bIsATest, bool bNoCheck)
+{
+    static auto TeleportTo = Anchor::VirtualFunction<bool (*)(AActor*, const FVector&, const FRotator&, bool, bool)>(TEXT("AActor::TeleportTo"))
+        .Exec(TEXT("/Script/Engine.Actor:K2_TeleportTo"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Get();
+
+    return TeleportTo(this, DestLocation, DestRotation, bIsATest, bNoCheck);
+}
+
 void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
 {
     static auto bInlined = Anchor::Exists()
