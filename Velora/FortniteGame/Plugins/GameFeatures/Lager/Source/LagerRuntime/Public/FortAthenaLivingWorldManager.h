@@ -15,6 +15,7 @@ class AActor;
 class AFortGameStateAthena;
 class UDataTable;
 class UFortAthenaLivingWorldConfigData;
+class UFortAthenaLivingWorldEncounterInstance;
 class UFortAthenaLivingWorldEventData;
 class UWorld;
 struct FFortAthenaLivingWorldCategory;
@@ -62,6 +63,38 @@ public:
         TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
     };
 
+    struct FLivingWorldEventRequestData
+    {
+        FFortAthenaLivingWorldCategory* Category;
+        FFortAthenaLivingWorldEvent* Event;
+        TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
+        UFortAthenaLivingWorldEncounterInstance* EncounterInstance;
+        int32 ActorCountToSpawn;
+    };
+
+    struct FLivingWorldTagPreRegistration
+    {
+        FGameplayTag Tag;
+        int32 PreRegistrationHandle;
+    };
+
+    struct FLivingWorldPendingActorSpawnEventRequest
+    {
+        struct FRequestInfo
+        {
+            FVector Location;
+            TWeakObjectPtr<AActor> Actor;
+            FScriptInterface PointProvider;
+            int32 RequestID;
+            int32 PreRegistrationHandle;
+            TArray<FLivingWorldTagPreRegistration, TInlineAllocator<1>> TagPreRegistrations;
+        };
+
+        FLivingWorldEventRequestData RequestData;
+        TArray<FRequestInfo> RequestInfos;
+        TDelegate<void(const TArray<AActor*>&, bool)> OnSpawned;
+    };
+
     struct FLivingWorldEventRequest
     {
         TWeakObjectPtr<UFortAthenaLivingWorldManager> LivingWorldManager;
@@ -102,6 +135,8 @@ public:
     static UClass* StaticClass();
 
     static int32 GetEventInstancesOffset();
+
+    static int32 GetPendingActorSpawnEventRequestsOffset();
 
     static void LivingWorldManagerRegisterPointProvider(AActor* PointProvider);
 
@@ -164,6 +199,8 @@ public:
     TArray<AActor*>& GetRuntimePointProviderList();
 
     TRuntimeSizedArray<FLivingWorldEventInstance>& GetEventInstances();
+
+    TArray<FLivingWorldPendingActorSpawnEventRequest>& GetPendingActorSpawnEventRequests();
 
     float& GetNextEventGenerationTime();
 
