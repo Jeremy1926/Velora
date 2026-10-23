@@ -268,6 +268,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public">
       <UniqueIdentifier>{E20DC464-C3A6-4DE1-A5B4-FB2DA0557D6F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake">
+      <UniqueIdentifier>{632E64ED-E8ED-47F5-974A-923C1BBAF997}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake\Source">
+      <UniqueIdentifier>{25CF6D73-DE36-4C12-AA20-6CF9A65ED032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime">
+      <UniqueIdentifier>{B120E21B-955D-42AC-B369-09C06707CE9D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Private">
+      <UniqueIdentifier>{B003888A-DB63-483D-8A38-5B10667EF12E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Public">
+      <UniqueIdentifier>{C7788240-64F5-41DB-B633-9F5A3410CB26}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay">
       <UniqueIdentifier>{CA2B1AE9-4234-4650-B6D6-EA5BDA1189DE}</UniqueIdentifier>
     </Filter>
@@ -1318,6 +1333,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortMcpProfile.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Public\MilkshakeEarthquakeActor.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public\FortControllerComponent_VictoryCrowns.h">
       <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Public</Filter>
     </ClInclude>
@@ -2340,6 +2358,9 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\PrimaryAssetId.cpp">
       <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Private\MilkshakeEarthquakeActor.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Milkshake\Source\MilkshakeRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private\FortControllerComponent_VictoryCrowns.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\VictoryCrownsGameplay\Source\VictoryCrownsRuntime\Private</Filter>
