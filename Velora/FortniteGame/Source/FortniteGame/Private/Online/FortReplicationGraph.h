@@ -10,11 +10,14 @@
 #include "Templates/SubclassOf.h"
 #include "UObject/WeakObjectPtr.h"
 
+class ABuildingContainer;
+class ABuildingGameplayActorSpawnChip;
 class AFortGameModeAthena;
 class AFortInventory;
 class AFortLiveSpectatorController;
 class AFortPawn;
 class AFortPlayerState;
+class AFortPlayerStateAthena;
 class AFortTeamHealthInfo;
 class AFortTeamPrivateInfo;
 class APlayerState;
@@ -132,6 +135,18 @@ public:
 
     void OnPlayerRemovedTeam(AFortTeamPrivateInfo* TeamInfo, AFortPlayerState* PS);
 
+    UFortReplicationGraphNode_AlwaysRelevantForSquad* GetNodeForSquad(uint8 SquadID);
+
+    void OnPlayerStateSquadAssign(AFortPlayerStateAthena* PS, uint8 PreviousSquadId);
+
+    void OnSquadSpecificContainerSpawned(int32 SquadId, ABuildingContainer* Container);
+
+    void OnSquadSpecificContainerDestroyed(int32 SquadId, ABuildingContainer* Container);
+
+    void OnRebootCardSpawned(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card);
+
+    void OnRebootCardDestroyed(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card);
+
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);
 
@@ -168,6 +183,8 @@ private:
     TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>& GetFortTeamPrivateInfoMap();
 
     TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& GetSquadMap();
+
+    bool& GetSpecialRelevancyEnabled();
 
     TArray<UClass*>& GetExplicitlySetClasses();
 
@@ -214,7 +231,19 @@ private:
 class UFortReplicationGraphNode_AlwaysRelevantForSquad : public UReplicationGraphNode
 {
 public:
+    static UClass* StaticClass();
+
+    uint8& GetSquadID();
+
     bool& GetSpecialRelevancyEnabled();
+
+    TArray<AFortPlayerStateAthena*>& GetPlayerStates();
+
+    TArray<ABuildingGameplayActorSpawnChip*>& GetRebootCards();
+
+    TArray<ABuildingContainer*>& GetContainers();
+
+    FActorRepListRefView& GetReplicationActorList();
 };
 
 class UFortReplicationGraphNode_AlwaysRelevantForTeam : public UReplicationGraphNode

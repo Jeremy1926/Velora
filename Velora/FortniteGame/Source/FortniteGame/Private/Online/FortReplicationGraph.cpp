@@ -7,6 +7,8 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Building/BuildingContainer.h"
+#include "Building/BuildingGameplayActorSpawnChip.h"
 #include "Containers/Set.h"
 #include "Containers/UnrealString.h"
 #include "Engine/NetConnection.h"
@@ -305,6 +307,11 @@ TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplication
     return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)(&GetClassRepNodePolicies() + 1) + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
 }
 
+bool& UFortReplicationGraph::GetSpecialRelevancyEnabled()
+{
+    return *((bool*)(&GetSquadMap() + 1) + 1);
+}
+
 TArray<UClass*>& UFortReplicationGraph::GetExplicitlySetClasses()
 {
     return *((TArray<UClass*>*)&GetGlobalActorClassSettings() - 1);
@@ -557,10 +564,15 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
 
     GetDestructInfoMaxDistanceSquared() = DestructInfoMaxDist->GetFloat() * DestructInfoMaxDist->GetFloat();
 
+    AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment().AddUObject(this, &UFortReplicationGraph::OnPlayerStateSquadAssign);
     AFortGameModeAthena::GetNotifyNewAIClass().AddUObject(this, &UFortReplicationGraph::OnAIClassAdditionRequest);
     AFortTeamPrivateInfo::GetNotifyPlayerAdded().AddUObject(this, &UFortReplicationGraph::OnPlayerAddedTeam);
     AFortTeamPrivateInfo::GetNotifyPlayerRemoved().AddUObject(this, &UFortReplicationGraph::OnPlayerRemovedTeam);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
+    AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
+    AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
+    AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerSpawned);
+    AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerDestroyed);
     AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
     AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
 
@@ -1034,6 +1046,83 @@ void UFortReplicationGraph::OnPlayerRemovedTeam(AFortTeamPrivateInfo* TeamInfo, 
     }
 }
 
+UFortReplicationGraphNode_AlwaysRelevantForSquad* UFortReplicationGraph::GetNodeForSquad(uint8 SquadID)
+{
+    auto& SquadMap = GetSquadMap();
+
+    if (auto Found = SquadMap.Find(SquadID))
+    {
+        if (*Found)
+            return *Found;
+    }
+
+    if (GetDisableSquadNodes())
+        return nullptr;
+
+    auto SquadNode = CreateNewNode<UFortReplicationGraphNode_AlwaysRelevantForSquad>();
+    SquadNode->GetSquadID() = SquadID;
+    SquadNode->GetSpecialRelevancyEnabled() = GetSpecialRelevancyEnabled();
+    SquadMap.Add(SquadID, SquadNode);
+
+    return SquadNode;
+}
+
+void UFortReplicationGraph::OnPlayerStateSquadAssign(AFortPlayerStateAthena* PS, uint8 PreviousSquadId)
+{
+    auto NetConnection = PS->GetNetConnection();
+
+    if (!NetConnection)
+        return;
+
+    if (auto PreviousSquadNode = GetNodeForSquad(PreviousSquadId))
+    {
+        PreviousSquadNode->GetPlayerStates().RemoveSwap(PS);
+        RemoveConnectionGraphNode(PreviousSquadNode, FindOrAddConnectionManager(NetConnection));
+    }
+
+    if (auto SquadNode = GetNodeForSquad(PS->GetSquadId()))
+    {
+        SquadNode->GetPlayerStates().AddUnique(PS);
+        AddConnectionGraphNode(SquadNode, FindOrAddConnectionManager(NetConnection));
+    }
+}
+
+void UFortReplicationGraph::OnSquadSpecificContainerSpawned(int32 SquadId, ABuildingContainer* Container)
+{
+    if (!Container)
+        return;
+
+    if (auto SquadNode = GetNodeForSquad((uint8)SquadId))
+        SquadNode->GetContainers().AddUnique(Container);
+}
+
+void UFortReplicationGraph::OnSquadSpecificContainerDestroyed(int32 SquadId, ABuildingContainer* Container)
+{
+    if (!Container)
+        return;
+
+    if (auto SquadNode = GetNodeForSquad((uint8)SquadId))
+        SquadNode->GetContainers().RemoveSwap(Container);
+}
+
+void UFortReplicationGraph::OnRebootCardSpawned(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card)
+{
+    if (!PS->GetNetConnection())
+        return;
+
+    if (auto SquadNode = GetNodeForSquad(Card->GetSquadId()))
+        SquadNode->GetRebootCards().AddUnique(Card);
+}
+
+void UFortReplicationGraph::OnRebootCardDestroyed(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card)
+{
+    if (!PS->GetNetConnection())
+        return;
+
+    if (auto SquadNode = GetNodeForSquad(Card->GetSquadId()))
+        SquadNode->GetRebootCards().RemoveSwap(Card);
+}
+
 void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)
 {
     if (ParentActor && Inventory)
@@ -1127,6 +1216,47 @@ void UFortReplicationGraph::execOnGameStatePlaylistLoaded(FFrame& Stack, void* c
     Stack.Code += !!Stack.Code;
 
     OnGameStatePlaylistLoaded(PlaylistName, GameplayTags);
+}
+
+UClass* UFortReplicationGraphNode_AlwaysRelevantForSquad::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_AlwaysRelevantForSquad"));
+
+    return Class;
+}
+
+uint8& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSquadID()
+{
+    return *((uint8*)&GetSpecialRelevancyEnabled() - 1);
+}
+
+TArray<AFortPlayerStateAthena*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetPlayerStates()
+{
+    return *(TArray<AFortPlayerStateAthena*>*)((uint8*)&GetRebootCards() - sizeof(TArray<AFortPlayerStateAthena*>));
+}
+
+TArray<ABuildingGameplayActorSpawnChip*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetRebootCards()
+{
+    return *(TArray<ABuildingGameplayActorSpawnChip*>*)((uint8*)&GetContainers() - sizeof(TArray<ABuildingGameplayActorSpawnChip*>));
+}
+
+TArray<ABuildingContainer*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetContainers()
+{
+    return *(TArray<ABuildingContainer*>*)((uint8*)&GetReplicationActorList() - sizeof(TArray<ABuildingContainer*>));
+}
+
+FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetReplicationActorList()
+{
+    static auto ReplicationActorList = Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForSquad::ReplicationActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
+        .Find("lea *, [rcx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
 }
 
 bool& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabled()

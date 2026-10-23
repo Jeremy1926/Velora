@@ -479,6 +479,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIDirector.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\AthenaAIDirector.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\StaticMeshComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnChip.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSpawnMachine.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorTransientQuest.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\CurveTable.h" />
@@ -841,6 +842,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool_ContextTrap.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIDirector.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIDirector.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnChip.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSpawnMachine.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorTransientQuest.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CurveTable.cpp" />

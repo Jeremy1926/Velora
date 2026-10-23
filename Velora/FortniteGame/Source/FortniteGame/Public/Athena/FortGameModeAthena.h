@@ -8,6 +8,7 @@
 class AFortAthenaAIBotController;
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
+class AFortPlayerStateAthena;
 class AFortSafeZoneIndicator;
 class AFortInventory;
 class AFortLiveSpectatorController;
@@ -36,6 +37,8 @@ public:
     static TMulticastDelegate<void, AFortGameModeAthena*>& GetNotifyPlaylistDataLoaded();
 
     static TMulticastDelegate<void, AFortLiveSpectatorController*>& GetNotifyLiveSpectatorJoined();
+
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>& GetNotifyPlayerStateSquadAssignment();
 
     static TMulticastDelegate<void, TSubclassOf<AFortPawn>>& GetNotifyNewAIClass();
 

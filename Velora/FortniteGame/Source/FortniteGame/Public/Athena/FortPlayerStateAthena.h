@@ -1,8 +1,11 @@
 #pragma once
 
 #include "Player/FortPlayerStatePvP.h"
+#include "Delegates/Delegate.h"
 
 class AActor;
+class ABuildingContainer;
+class ABuildingGameplayActorSpawnChip;
 class AFortPlayerPawnAthena;
 class UScriptStruct;
 struct FGameplayTagContainer;
@@ -53,6 +56,14 @@ public:
     static EDeathCause ToDeathCause(const FGameplayTagContainer& InTags, bool bWasDBNO);
 
     static int32 ToDeathCircumstance(AFortPlayerPawnAthena* Pawn);
+
+    static TMulticastDelegate<void, int32, ABuildingContainer*>& GetNotifySquadSpecificContainerSpawned();
+
+    static TMulticastDelegate<void, int32, ABuildingContainer*>& GetNotifySquadSpecificContainerDestroyed();
+
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& GetNotifyRebootCardSpawned();
+
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& GetNotifyRebootCardDestroyed();
 
     FDeathInfo& GetDeathInfo();
 

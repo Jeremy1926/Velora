@@ -228,6 +228,71 @@ int32& AFortPlayerStateAthena::GetTeamKillScore()
     return *TeamKillScore->ContainerPtrToValuePtr<int32>(this);
 }
 
+TMulticastDelegate<void, int32, ABuildingContainer*>& AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned()
+{
+    static auto NotifySquadSpecificContainerSpawned = Anchor::Data<TMulticastDelegate<void, int32, ABuildingContainer*>*>(TEXT("AFortPlayerStateAthena::NotifySquadSpecificContainerSpawned"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateAthena:OnSquadSpecificContainerSpawned"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifySquadSpecificContainerSpawned;
+}
+
+TMulticastDelegate<void, int32, ABuildingContainer*>& AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed()
+{
+    static auto NotifySquadSpecificContainerDestroyed = Anchor::Data<TMulticastDelegate<void, int32, ABuildingContainer*>*>(TEXT("AFortPlayerStateAthena::NotifySquadSpecificContainerDestroyed"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateAthena:OnSquadSpecificContainerDestroyed"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifySquadSpecificContainerDestroyed;
+}
+
+TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& AFortPlayerStateAthena::GetNotifyRebootCardSpawned()
+{
+    static auto NotifyRebootCardSpawned = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifyRebootCardSpawned"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov rcx, [*+0x*]; test rcx, rcx; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyRebootCardSpawned;
+}
+
+TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& AFortPlayerStateAthena::GetNotifyRebootCardDestroyed()
+{
+    static auto NotifyRebootCardDestroyed = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifyRebootCardDestroyed"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8)
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov rdx, [*+0x*]; test rdx, rdx; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyRebootCardDestroyed;
+}
+
 uint8 AFortPlayerStateAthena::GetSquadId() const
 {
     static auto SquadId = GetClass()->FindPropertyByName(FName(TEXT("SquadId")));
