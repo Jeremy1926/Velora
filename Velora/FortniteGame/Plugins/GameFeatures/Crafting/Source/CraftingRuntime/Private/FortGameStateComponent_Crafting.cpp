@@ -69,8 +69,9 @@ void UFortGameStateComponent_Crafting::UpdateCraftingResultsList()
 
     for (auto& Pair : *(TMap<FGameplayTag, TArray<FName>>*)((uint8*)this + CraftingObjectToFormulaName))
     {
-        for (auto& FormulaRow : Pair.Value)
+        for (int32 FormulaIndex = 0; FormulaIndex < Pair.Value.Num(); FormulaIndex++)
         {
+            const FName FormulaRow = TGameLayout<FName>::Load((uint8*)Pair.Value.GetData() + FormulaIndex * TGameLayout<FName>::Size());
             auto CraftingFormula = GetCraftingFormulaForRowName(this, &FormulaRow, false);
 
             if (!CraftingFormula)

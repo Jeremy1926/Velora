@@ -819,9 +819,16 @@ int32 UNetDriver::ServerReplicateActors_ProcessPrioritizedActors(UNetConnection*
 
         if (ActorInfo == nullptr && PriorityActors[j]->DestructionInfo)
         {
-            if (PriorityActors[j]->DestructionInfo->GetStreamingLevelName() != NAME_None && !Connection->GetClientVisibleLevelNames().Contains(PriorityActors[j]->DestructionInfo->GetStreamingLevelName()))
+            const FName StreamingLevelName = PriorityActors[j]->DestructionInfo->GetStreamingLevelName();
+
+            if (StreamingLevelName != NAME_None)
             {
-                continue;
+                auto& ClientVisibleLevelNames = Connection->GetClientVisibleLevelNames();
+
+                if (!(FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)ClientVisibleLevelNames).Contains(StreamingLevelName.GetComparisonIndex()) : ClientVisibleLevelNames.Contains(StreamingLevelName)))
+                {
+                    continue;
+                }
             }
 
             UActorChannel* Channel = (UActorChannel*)Connection->CreateChannel(CHTYPE_Actor, 1);

@@ -855,15 +855,28 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
     if (!RedirectAthenaLootTierGroups || !SupportedAthenaLootTierGroups)
         return Result;
 
-    for (auto& Redirect : *RedirectAthenaLootTierGroups->ContainerPtrToValuePtr<TMap<FName, FName>>(this))
+    if (FName::IsOutlineNumber())
     {
-        if (Redirect.Key == LootTierGroup)
-            return Redirect.Value;
+        for (auto& Redirect : *RedirectAthenaLootTierGroups->ContainerPtrToValuePtr<TMap<FNameEntryId, FNameEntryId>>(this))
+        {
+            if (Redirect.Key == LootTierGroup.GetComparisonIndex())
+                return TGameLayout<FName>::Load(&Redirect.Value);
+        }
+    }
+    else
+    {
+        for (auto& Redirect : *RedirectAthenaLootTierGroups->ContainerPtrToValuePtr<TMap<FName, FName>>(this))
+        {
+            if (Redirect.Key == LootTierGroup)
+                return Redirect.Value;
+        }
     }
 
-    for (auto& SupportedGroup : *SupportedAthenaLootTierGroups->ContainerPtrToValuePtr<TArray<FName>>(this))
+    auto& SupportedGroups = *SupportedAthenaLootTierGroups->ContainerPtrToValuePtr<TArray<FName>>(this);
+
+    for (int32 GroupIndex = 0; GroupIndex < SupportedGroups.Num(); GroupIndex++)
     {
-        if (SupportedGroup == LootTierGroup)
+        if (TGameLayout<FName>::Load((uint8*)SupportedGroups.GetData() + GroupIndex * TGameLayout<FName>::Size()) == LootTierGroup)
             return LootTierGroup;
     }
 

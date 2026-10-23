@@ -7,6 +7,37 @@
 
 typedef int32 NAME_INDEX;
 
+struct FNameEntryId
+{
+    FNameEntryId()
+        : Value(0)
+    {
+    }
+
+    bool operator==(FNameEntryId Rhs) const
+    {
+        return Value == Rhs.Value;
+    }
+
+    uint32 ToUnstableInt() const
+    {
+        return Value;
+    }
+
+    static FORCEINLINE FNameEntryId FromUnstableInt(uint32 UnstableInt)
+    {
+        FNameEntryId Id;
+        Id.Value = UnstableInt;
+
+        return Id;
+    }
+
+private:
+    uint32 Value;
+};
+
+uint32 GetTypeHash(FNameEntryId Id);
+
 enum EFindName
 {
     FNAME_Find,
@@ -28,6 +59,11 @@ public:
     }
 
     friend uint32 GetTypeHash(const FName N);
+
+    FORCEINLINE FNameEntryId GetComparisonIndex() const
+    {
+        return FNameEntryId::FromUnstableInt(ComparisonIndex);
+    }
 
     FName(EName N);
 

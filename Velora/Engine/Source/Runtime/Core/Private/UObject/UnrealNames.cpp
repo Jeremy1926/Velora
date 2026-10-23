@@ -146,6 +146,14 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
     MakeWithNumber(this, &View, FindType, InternalNumber);
 }
 
+uint32 GetTypeHash(FNameEntryId Id)
+{
+    const uint32 Block = Id.ToUnstableInt() >> 16;
+    const uint32 Offset = Id.ToUnstableInt() & 0xFFFF;
+
+    return (Block << 19) + Block + (Offset << 16) + Offset + (Offset >> 4);
+}
+
 uint32 GetTypeHash(const FName N)
 {
     auto& Version = FEngineVersion::Current();
@@ -153,10 +161,7 @@ uint32 GetTypeHash(const FName N)
     if (Version.GetMajor() == 4 && Version.GetMinor() < 24)
         return N.ComparisonIndex + N.Number;
 
-    const uint32 Block = N.ComparisonIndex >> 16;
-    const uint32 Offset = N.ComparisonIndex & 0xFFFF;
-
-    return (Block << 19) + Block + (Offset << 16) + Offset + (Offset >> 4) + (FName::IsOutlineNumber() ? 0 : N.Number);
+    return GetTypeHash(N.GetComparisonIndex()) + (FName::IsOutlineNumber() ? 0 : N.Number);
 }
 
 FString FName::ToString() const
