@@ -57,6 +57,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Weapons/FortWeapon.h"
+#include "SimObject.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -582,6 +583,7 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortPickup::GetNotifyPickupCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnPickupCullDistanceChanged);
     ABuildingActor::GetNotifyBuildingNetCullDistChange().AddUObject(this, &UFortReplicationGraph::OnBuildingDistSqChange);
     AFortAthenaVehicle::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
+    ASimObject::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
     AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
     AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
