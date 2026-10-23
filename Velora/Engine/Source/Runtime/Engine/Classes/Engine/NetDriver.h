@@ -149,6 +149,8 @@ public:
 
     int32 GetMaxClientRate() const;
 
+    int32 GetNetServerMaxTickRate() const;
+
     void SetMaxClientRate(int32 InMaxClientRate);
 
     float GetServerTravelPause() const;

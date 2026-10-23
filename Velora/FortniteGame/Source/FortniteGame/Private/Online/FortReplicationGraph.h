@@ -2,6 +2,7 @@
 
 #include "ReplicationGraph.h"
 #include "Containers/Map.h"
+#include "ReplicationGraphTypes.h"
 #include "UObject/WeakObjectPtr.h"
 
 class AFortTeamHealthInfo;
@@ -17,11 +18,18 @@ public:
 
     UReplicationGraphNode*& GetReplayPlayerStateLimiterNode();
 
+    UReplicationGraphNode_GridSpatialization2D*& GetRootGridNode();
+
     TMap<FName, FActorRepListRefView>& GetAlwaysRelevantStreamingLevelActors();
 
     void InitializeForWorld(UWorld* World);
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
+
+    void InitDynamicSpatializationSettings();
+
+private:
+    void EnableDynamicSpatialFrequencyNode(bool bEnable);
 };
 
 struct FFortAlwaysRelevantActorInfo
@@ -110,7 +118,13 @@ class UFortReplicationGraphNode_DynamicSpatialFrequency : public UReplicationGra
 public:
     static UClass* StaticClass();
 
+    static TClassMap<bool>& GetAIClasses();
+
+    static FSettings* GetNodeSettings();
+
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    void SetupClassToNodeMap();
 
 protected:
     void GatherActors(const FActorRepListRefView& RepList, FGlobalActorReplicationInfoMap& GlobalMap, FPerConnectionActorInfoMap& ConnectionMap, const FConnectionGatherActorListParameters& Params, UNetConnection* NetConnection);

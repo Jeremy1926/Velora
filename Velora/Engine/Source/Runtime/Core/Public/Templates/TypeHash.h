@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include <type_traits>
 
 inline uint32 HashCombine(uint32 A, uint32 C)
 {
@@ -30,6 +31,12 @@ inline uint32 PointerHash(const void* Key, uint32 C = 0)
 inline uint32 GetTypeHash(const int32 A)
 {
     return A;
+}
+
+template<typename EnumType> requires std::is_enum_v<EnumType>
+inline uint32 GetTypeHash(EnumType E)
+{
+    return GetTypeHash((int32)(std::underlying_type_t<EnumType>)E);
 }
 
 inline uint32 GetTypeHash(const void* A)

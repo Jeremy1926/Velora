@@ -7,6 +7,7 @@
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
 #include "Engine/NetConnection.h"
+#include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
@@ -23,6 +24,7 @@
 #include "HAL/IConsoleManager.h"
 #include "HAL/UnrealMemory.h"
 #include "Templates/Casts.h"
+#include "Templates/Function.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -47,6 +49,13 @@ UReplicationGraphNode*& UFortReplicationGraph::GetReplayPlayerStateLimiterNode()
     static auto ReplayPlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("ReplayPlayerStateLimiterNode")));
 
     return *ReplayPlayerStateLimiterNode->ContainerPtrToValuePtr<UReplicationGraphNode*>(this);
+}
+
+UReplicationGraphNode_GridSpatialization2D*& UFortReplicationGraph::GetRootGridNode()
+{
+    static auto RootGridNode = StaticClass()->FindPropertyByName(FName(TEXT("RootGridNode")));
+
+    return *RootGridNode->ContainerPtrToValuePtr<UReplicationGraphNode_GridSpatialization2D*>(this);
 }
 
 TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStreamingLevelActors()
@@ -92,6 +101,91 @@ void UFortReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnect
 
     AddConnectionGraphNode(AlwaysRelevantConnectionNode, ConnectionManager);
     AddConnectionGraphNode(ConnectionManager->GetNetConnection()->IsReplay() ? GetReplayPlayerStateLimiterNode() : GetPlayerStateLimiterNode(), ConnectionManager);
+}
+
+void UFortReplicationGraph::EnableDynamicSpatialFrequencyNode(bool bEnable)
+{
+    if (bEnable)
+    {
+        UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses().Set(AActor::StaticClass(), false);
+        UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses().Set(AFortAIPawn::StaticClass(), true);
+
+        GetRootGridNode()->GetCreateCellNodeOverride() = [](UReplicationGraphNode_GridSpatialization2D* Parent) -> UReplicationGraphNode_GridCell*
+        {
+            auto NewNode = Parent->CreateChildNode<UReplicationGraphNode_GridCell>();
+
+            NewNode->GetCreateDynamicNodeOverride() = [](UReplicationGraphNode_GridCell* CellNode) -> UReplicationGraphNode*
+            {
+                auto DynamicNode = CellNode->CreateChildNode<UFortReplicationGraphNode_DynamicSpatialFrequency>();
+
+                if (DynamicNode)
+                    DynamicNode->SetupClassToNodeMap();
+
+                return DynamicNode;
+            };
+
+            return NewNode;
+        };
+    }
+    else
+    {
+        GetRootGridNode()->GetCreateCellNodeOverride() = nullptr;
+    }
+
+    InitDynamicSpatializationSettings();
+}
+
+void UFortReplicationGraph::InitDynamicSpatializationSettings()
+{
+    static auto PlayerPawnKBytesSec = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.PlayerPawnKBytesSec"));
+    static auto AIPawnKBytesSec = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.AIPawnKBytesSec"));
+    static auto MaxAIPerClient = IConsoleManager::Get().FindConsoleVariable(TEXT("Deimos.MaxAIPerClient"));
+
+    using FSpatializationZone = UReplicationGraphNode_DynamicSpatialFrequency::FSpatializationZone;
+    using FSettings = UReplicationGraphNode_DynamicSpatialFrequency::FSettings;
+
+    static TArray<FSpatializationZone> DefaultZones;
+    static TArray<FSpatializationZone> PhysicsObjectZones;
+    static TArray<FSpatializationZone> VehicleZones;
+    static TArray<FSpatializationZone> AIZones;
+    static TArray<FSpatializationZone> NonFastSharedZones;
+
+    const float TickRate = (float)GetNetDriver()->GetNetServerMaxTickRate();
+
+    DefaultZones.Reset();
+    PhysicsObjectZones.Reset();
+    VehicleZones.Reset();
+    AIZones.Reset();
+    NonFastSharedZones.Reset();
+
+    DefaultZones.Add(FSpatializationZone(0.f, 0.1f, 0.15f, 1.f, 1.f, 5.f, 3.f, TickRate));
+    DefaultZones.Add(FSpatializationZone(0.71f, 0.1f, 0.25f, 1.f, 1.f, 10.f, 5.f, TickRate));
+    DefaultZones.Add(FSpatializationZone(1.f, 0.1f, 0.5f, 1.f, 1.f, 20.f, 10.f, TickRate));
+
+    AIZones.Add(FSpatializationZone(0.f, 0.05f, 0.15f, 1.f, 1.f, 5.f, 2.f, TickRate));
+    AIZones.Add(FSpatializationZone(0.71f, 0.05f, 0.25f, 1.f, 1.f, 5.f, 3.f, TickRate));
+    AIZones.Add(FSpatializationZone(1.f, 0.1f, 0.5f, 1.f, 1.f, 10.f, 5.f, TickRate));
+
+    NonFastSharedZones.Add(FSpatializationZone(0.f, 0.1f, 0.5f, 10.f, 5.f, 0.f, 0.f, TickRate));
+    NonFastSharedZones.Add(FSpatializationZone(0.71f, 0.1f, 0.5f, 15.f, 10.f, 0.f, 0.f, TickRate));
+    NonFastSharedZones.Add(FSpatializationZone(1.f, 0.1f, 0.5f, 30.f, 10.f, 0.f, 0.f, TickRate));
+
+    PhysicsObjectZones.Add(FSpatializationZone(0.f, 0.1f, 0.15f, 5.f, 1.f, 5.f, 1.f, TickRate));
+    PhysicsObjectZones.Add(FSpatializationZone(0.71f, 0.1f, 0.25f, 5.f, 5.f, 5.f, 5.f, TickRate));
+    PhysicsObjectZones.Add(FSpatializationZone(1.f, 0.1f, 0.5f, 10.f, 5.f, 10.f, 5.f, TickRate));
+
+    VehicleZones.Add(FSpatializationZone(0.f, 0.1f, 0.15f, 5.f, 1.f, 5.f, 1.f, TickRate));
+    VehicleZones.Add(FSpatializationZone(0.71f, 0.1f, 0.25f, 10.f, 5.f, 10.f, 5.f, TickRate));
+    VehicleZones.Add(FSpatializationZone(1.f, 0.1f, 0.5f, 15.f, 5.f, 15.f, 5.f, TickRate));
+
+    const int64 PlayerPawnMaxBitsPerFrame = (int64)(PlayerPawnKBytesSec->GetFloat() * 1024.f * 8.f * (1.f / TickRate));
+    const int64 AIPawnMaxBitsPerFrame = (int64)(AIPawnKBytesSec->GetFloat() * 1024.f * 8.f * (1.f / TickRate));
+    auto NodeSettings = UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings();
+
+    UReplicationGraphNode_DynamicSpatialFrequency::GetDefaultSettings() = FSettings{ { DefaultZones.GetData(), DefaultZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+    NodeSettings[(uint8)EFortDynamicNodeType::WorldStatic] = FSettings{ { AIZones.GetData(), AIZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, AIPawnMaxBitsPerFrame, MaxAIPerClient->GetInt() };
+    NodeSettings[(uint8)EFortDynamicNodeType::WorldDynamic] = FSettings{ { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+    NodeSettings[(uint8)EFortDynamicNodeType::Pawn] = FSettings{ { VehicleZones.GetData(), VehicleZones.Num() }, { VehicleZones.GetData(), VehicleZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
 }
 
 UClass* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()
@@ -586,6 +680,51 @@ UClass* UFortReplicationGraphNode_DynamicSpatialFrequency::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_DynamicSpatialFrequency"));
 
     return Class;
+}
+
+TClassMap<bool>& UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses()
+{
+    static auto AIClasses = Anchor::Data<TClassMap<bool>*>(TEXT("UFortReplicationGraphNode_DynamicSpatialFrequency::AIClasses"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"))
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *AIClasses;
+}
+
+UReplicationGraphNode_DynamicSpatialFrequency::FSettings* UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings()
+{
+    static auto NodeSettings = Anchor::Data<FSettings*>(TEXT("UFortReplicationGraphNode_DynamicSpatialFrequency::NodeSettings"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"))
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Get();
+
+    return NodeSettings;
+}
+
+void UFortReplicationGraphNode_DynamicSpatialFrequency::SetupClassToNodeMap()
+{
+    auto& DynamicTypeToNodeMap = GetDynamicTypeToNodeMap();
+
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::WorldStatic, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::WorldDynamic, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::Pawn, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
 }
 
 EFortDynamicNodeType& UFortReplicationGraphNode_DynamicSpatialFrequency::GetCurrentDynamicNodeType()

@@ -16,6 +16,7 @@
 #include "Net/DataBunch.h"
 #include "Net/RepLayout.h"
 #include "Templates/Casts.h"
+#include "Templates/Function.h"
 #include "Templates/Sorting.h"
 #include <cfloat>
 #include "HAL/IConsoleManager.h"
@@ -927,6 +928,23 @@ UReplicationGraphNode* UReplicationGraphNode_GridCell::GetDynamicNode()
         .Find("cmp qword ptr [rcx+0x*], 0x0")
         .Disp();
 
+    auto& Node = *(UReplicationGraphNode**)((uint8*)this + DynamicNode);
+
+    if (!Node)
+    {
+        auto& CreateDynamicNodeOverride = GetCreateDynamicNodeOverride();
+
+        if (CreateDynamicNodeOverride)
+            Node = CreateDynamicNodeOverride(this);
+        else
+            Node = CreateChildNode<UReplicationGraphNode_ActorListFrequencyBuckets>();
+    }
+
+    return Node;
+}
+
+TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>& UReplicationGraphNode_GridCell::GetCreateDynamicNodeOverride()
+{
     static auto CreateDynamicNodeOverride = Anchor::Offset(TEXT("UReplicationGraphNode_GridCell::CreateDynamicNodeOverride"))
         .String(TEXT("Child: %s"))
         .Start()
@@ -950,29 +968,7 @@ UReplicationGraphNode* UReplicationGraphNode_GridCell::GetDynamicNode()
         .Find("mov rdi, [rcx+0x*]")
         .Disp();
 
-    auto& Node = *(UReplicationGraphNode**)((uint8*)this + DynamicNode);
-
-    if (!Node)
-    {
-        auto Override = (uint8*)this + CreateDynamicNodeOverride;
-        auto Callable = *(UReplicationGraphNode* (**)(void*, UReplicationGraphNode_GridCell*&))Override;
-
-        if (Callable)
-        {
-            auto Storage = Override + 0x10;
-            auto OwnedObject = *(uint8**)Storage ? *(uint8**)Storage : Storage + 0x10;
-            auto GetAddress = (*(void* (***)(void*))OwnedObject)[1];
-            UReplicationGraphNode_GridCell* Self = this;
-
-            Node = Callable(GetAddress(OwnedObject), Self);
-        }
-        else
-        {
-            Node = CreateChildNode<UReplicationGraphNode_ActorListFrequencyBuckets>();
-        }
-    }
-
-    return Node;
+    return *(TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>*)((uint8*)this + CreateDynamicNodeOverride);
 }
 
 void UReplicationGraphNode_GridCell::AddDynamicActor(const FNewReplicatedActorInfo& ActorInfo)
@@ -1086,9 +1082,9 @@ float& UReplicationGraphNode_GridSpatialization2D::GetConnectionMaxZ()
     return *(float*)(GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size());
 }
 
-uint8* UReplicationGraphNode_GridSpatialization2D::GetCreateCellNodeOverride()
+TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>& UReplicationGraphNode_GridSpatialization2D::GetCreateCellNodeOverride()
 {
-    return (uint8*)((((uintptr_t)&GetConnectionMaxZ() + sizeof(float)) + 0xF) & ~(uintptr_t)0xF);
+    return *(TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>*)((((uintptr_t)&GetConnectionMaxZ() + sizeof(float)) + 0xF) & ~(uintptr_t)0xF);
 }
 
 uint8* UReplicationGraphNode_GridSpatialization2D::GetGridBounds()
@@ -1223,22 +1219,12 @@ UReplicationGraphNode_GridCell* UReplicationGraphNode_GridSpatialization2D::GetC
 {
     if (!NodePtr)
     {
-        auto CreateCellNodeOverride = GetCreateCellNodeOverride();
-        auto Callable = *(UReplicationGraphNode_GridCell* (**)(void*, UReplicationGraphNode_GridSpatialization2D*&))CreateCellNodeOverride;
+        auto& CreateCellNodeOverride = GetCreateCellNodeOverride();
 
-        if (Callable)
-        {
-            auto Storage = CreateCellNodeOverride + 0x10;
-            auto OwnedObject = *(uint8**)Storage ? *(uint8**)Storage : Storage + 0x10;
-            auto GetAddress = (*(void* (***)(void*))OwnedObject)[1];
-            UReplicationGraphNode_GridSpatialization2D* Self = this;
-
-            NodePtr = Callable(GetAddress(OwnedObject), Self);
-        }
+        if (CreateCellNodeOverride)
+            NodePtr = CreateCellNodeOverride(this);
         else
-        {
             NodePtr = CreateChildNode<UReplicationGraphNode_GridCell>();
-        }
     }
 
     return NodePtr;

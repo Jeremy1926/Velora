@@ -8,6 +8,8 @@
 #include "Delegates/Delegate.h"
 #include "Math/Box.h"
 #include "Math/IntVector.h"
+#include "Math/UnrealMathUtility.h"
+#include "Templates/Function.h"
 #include "Templates/SharedPointer.h"
 #include "UObject/ObjectKey.h"
 #include "UObject/UObjectGlobals.h"
@@ -118,6 +120,8 @@ public:
 
     UReplicationGraphNode* GetDynamicNode();
 
+    TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>& GetCreateDynamicNodeOverride();
+
     void AddDynamicActor(const FNewReplicatedActorInfo& ActorInfo);
 
     void RemoveDynamicActor(const FNewReplicatedActorInfo& ActorInfo);
@@ -173,6 +177,8 @@ public:
 
     void GetGridNodesForActor(AActor* Actor, const FActorCellInfo& CellInfo, TArray<UReplicationGraphNode_GridCell*>& OutNodes);
 
+    TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>& GetCreateCellNodeOverride();
+
 private:
     struct FPlayerGridCellInformation
     {
@@ -185,8 +191,6 @@ private:
     uint8* GetSpatialBias();
 
     float& GetConnectionMaxZ();
-
-    uint8* GetCreateCellNodeOverride();
 
     bool& GetDestroyDormantDynamicActors();
 
@@ -255,6 +259,22 @@ class UReplicationGraphNode_DynamicSpatialFrequency : public UReplicationGraphNo
 public:
     struct FSpatializationZone
     {
+        FSpatializationZone(float InMinDotProduct, float InMinDistPct, float InMaxDistPct, float InMinRepHz, float InMaxRepHz, float InMinRepHz_FastPath, float InMaxRepHz_FastPath, float TickRate)
+            : MinDotProduct(InMinDotProduct)
+            , MinDistPct(InMinDistPct)
+            , MaxDistPct(InMaxDistPct)
+            , MinRepPeriod(HzToFrm(InMinRepHz, TickRate))
+            , MaxRepPeriod(HzToFrm(InMaxRepHz, TickRate))
+            , FastPath_MinRepPeriod(HzToFrm(InMinRepHz_FastPath, TickRate))
+            , FastPath_MaxRepPeriod(HzToFrm(InMaxRepHz_FastPath, TickRate))
+        {
+        }
+
+        static uint32 HzToFrm(float Hz, float TargetFrameRate)
+        {
+            return Hz > 0.f ? (uint32)FMath::CeilToInt(TargetFrameRate / Hz) : 0;
+        }
+
         float MinDotProduct;
         float MinDistPct;
         float MaxDistPct;

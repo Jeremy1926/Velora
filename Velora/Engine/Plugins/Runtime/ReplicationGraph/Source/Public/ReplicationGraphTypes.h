@@ -85,6 +85,11 @@ struct TClassMap
         return GetClassInfoForNewClass_r(ObjKey, Class);
     }
 
+    void Set(UClass* Class, const ValueType& Value)
+    {
+        Map.Add(FObjectKey(Class), Value);
+    }
+
     alignas(16) uint8 InitNewElement[0x40];
 
 private:
