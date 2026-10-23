@@ -208,6 +208,105 @@ void UNetReplicationGraphConnection::NotifyAddDormantDestructionInfo(AActor* Act
     Info.PathName = Actor->GetName();
 }
 
+UClass* UReplicationGraphNode_ActorListFrequencyBuckets::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_ActorListFrequencyBuckets"));
+
+    return Class;
+}
+
+const UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGraphNode_ActorListFrequencyBuckets::GetSettings()
+{
+    static auto Settings = Anchor::Offset(TEXT("UReplicationGraphNode_ActorListFrequencyBuckets::Settings"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("inc *")
+        .FindEither("call 0x*", "jmp 0x*")
+        .Target()
+        .Find("cmp qword ptr [rcx+0x*], 0x0")
+        .Disp();
+
+    static auto& DefaultSettings = *Anchor::Data<FSettings*>(TEXT("UReplicationGraphNode_ActorListFrequencyBuckets::DefaultSettings"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("inc *")
+        .FindEither("call 0x*", "jmp 0x*")
+        .Target()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Get();
+
+    auto& SettingsPtr = *(TSharedPtr<FSettings>*)((uint8*)this + Settings);
+
+    return SettingsPtr.IsValid() ? *SettingsPtr.Get() : DefaultSettings;
+}
+
+TArray<FActorRepListRefView, TInlineAllocator<2>>& UReplicationGraphNode_ActorListFrequencyBuckets::GetNonStreamingCollection()
+{
+    static auto NonStreamingCollection = Anchor::Offset(TEXT("UReplicationGraphNode_ActorListFrequencyBuckets::NonStreamingCollection"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("lea rax, [rcx+0x*]")
+        .Disp();
+
+    return *(TArray<FActorRepListRefView, TInlineAllocator<2>>*)((uint8*)this + NonStreamingCollection);
+}
+
+FStreamingLevelActorListCollection& UReplicationGraphNode_ActorListFrequencyBuckets::GetStreamingLevelCollection()
+{
+    return *(FStreamingLevelActorListCollection*)((uint8*)&GetNonStreamingCollection() + sizeof(TArray<FActorRepListRefView, TInlineAllocator<2>>));
+}
+
+void UReplicationGraphNode_ActorListFrequencyBuckets::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_ActorListFrequencyBuckets, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"), "ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_ActorListFrequencyBuckets::StaticClass()));
+
+    const FSettings& MySettings = GetSettings();
+    const uint32 ReplicationFrameNum = Params.GetReplicationFrameNum();
+    auto& NonStreamingCollection = GetNonStreamingCollection();
+
+    if (MySettings.EnableFastPath)
+    {
+        const int32 DefaultReplicationIdx = (ReplicationFrameNum % NonStreamingCollection.Num());
+
+        for (int32 idx = 0; idx < NonStreamingCollection.Num(); ++idx)
+        {
+            if (DefaultReplicationIdx == idx)
+            {
+                Params.GetOutGatheredReplicationLists()->AddReplicationActorList(NonStreamingCollection[idx], EActorRepListTypeFlags::Default);
+            }
+            else
+            {
+                if (ReplicationFrameNum % MySettings.FastPathFrameModulo == 0)
+                    Params.GetOutGatheredReplicationLists()->AddReplicationActorList(NonStreamingCollection[idx], EActorRepListTypeFlags::FastShared);
+            }
+        }
+    }
+    else
+    {
+        const int32 idx = ReplicationFrameNum % NonStreamingCollection.Num();
+        Params.GetOutGatheredReplicationLists()->AddReplicationActorList(NonStreamingCollection[idx]);
+    }
+
+    GetStreamingLevelCollection().Gather(Params);
+}
+
 UClass* UReplicationGraphNode_TearOff_ForConnection::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_TearOff_ForConnection"));

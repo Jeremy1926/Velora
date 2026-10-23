@@ -121,7 +121,26 @@ UNetReplicationGraphConnection* FConnectionGatherActorListParameters::GetConnect
     return *(UNetReplicationGraphConnection* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32));
 }
 
+uint32 FConnectionGatherActorListParameters::GetReplicationFrameNum() const
+{
+    return *(const uint32*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32) + sizeof(void*));
+}
+
 FGatheredReplicationActorLists* FConnectionGatherActorListParameters::GetOutGatheredReplicationLists() const
 {
     return *(FGatheredReplicationActorLists* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32) + 2 * sizeof(void*));
+}
+
+void FStreamingLevelActorListCollection::Gather(const FConnectionGatherActorListParameters& Params)
+{
+    static auto Gather = Anchor::Function<void (*)(FStreamingLevelActorListCollection*, const FConnectionGatherActorListParameters&)>(TEXT("FStreamingLevelActorListCollection::Gather"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    Gather(this, Params);
 }

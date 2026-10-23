@@ -176,5 +176,12 @@ struct FConnectionGatherActorListParameters
 {
     UNetReplicationGraphConnection* GetConnectionManager() const;
 
+    uint32 GetReplicationFrameNum() const;
+
     FGatheredReplicationActorLists* GetOutGatheredReplicationLists() const;
+};
+
+struct FStreamingLevelActorListCollection
+{
+    void Gather(const FConnectionGatherActorListParameters& Params);
 };

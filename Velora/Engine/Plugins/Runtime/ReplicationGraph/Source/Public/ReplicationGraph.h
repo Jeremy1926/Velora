@@ -24,6 +24,29 @@ public:
     void NotifyResetAllNetworkActors();
 };
 
+class UReplicationGraphNode_ActorListFrequencyBuckets : public UReplicationGraphNode
+{
+public:
+    struct FSettings
+    {
+        int32 NumBuckets;
+        int32 ListSize;
+        bool EnableFastPath;
+        int32 FastPathFrameModulo;
+    };
+
+    static UClass* StaticClass();
+
+    const FSettings& GetSettings();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+private:
+    TArray<FActorRepListRefView, TInlineAllocator<2>>& GetNonStreamingCollection();
+
+    FStreamingLevelActorListCollection& GetStreamingLevelCollection();
+};
+
 class UReplicationGraphNode_TearOff_ForConnection : public UReplicationGraphNode
 {
 public:
