@@ -49,14 +49,14 @@ void UFortGameStateComponent_Crafting::UpdateCraftingResultsList()
     static auto GetCraftingFormulaForRowName = Anchor::Function<void* (*)(UFortGameStateComponent_Crafting*, const FName*, bool)>(TEXT("UFortGameStateComponent_Crafting::GetCraftingFormulaForRowName"))
         .Pattern("48 8B 93 B0 00 00 00 48 8B C8 E8 ? ? ? ? 48 8B F8 4C 8D 35 ? ? ? ? 48 85 FF 74 ? 48 8B CB E8")
         .Call(2)
-        .Find("xor r8d, r8d; mov rdx, *; mov rcx, rsi; call 0x*")
+        .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*")
         .Call()
         .Get();
 
     static auto CraftingObjectToFormulaName = Anchor::Offset(TEXT("UFortGameStateComponent_Crafting::CraftingObjectToFormulaName"))
         .Pattern("48 8B 93 B0 00 00 00 48 8B C8 E8 ? ? ? ? 48 8B F8 4C 8D 35 ? ? ? ? 48 85 FF 74 ? 48 8B CB E8")
         .Call(2)
-        .Find("lea r15, [rcx+0x*]")
+        .Find("lea *, [rcx+0x*]")
         .Disp();
 
     static auto ResultLootTierKey = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.CraftingFormula")))->FindPropertyByName(FName(TEXT("ResultLootTierKey")));
