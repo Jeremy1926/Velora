@@ -23,4 +23,6 @@ public:
     FScalableFloat* GetDensityComputationDistance();
 
     FScalableFloat* GetMaxActorDensityUpdatesPerTick();
+
+    FScalableFloat* GetPointClusterSize();
 };

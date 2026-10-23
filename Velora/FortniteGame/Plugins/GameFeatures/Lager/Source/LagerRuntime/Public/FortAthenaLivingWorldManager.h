@@ -123,6 +123,8 @@ public:
     {
         float ActivationTime = -1.0f;
         int32 SpawnedCount = 0;
+        float TotalPointProviderWeight = 0.0f;
+        float DensityComputationRange = 0.0f;
     };
 
     struct FLivingWorldEventRuntimeDataEntry
@@ -217,6 +219,10 @@ public:
     float GetActorDensity(const FVector& Location, float Radius);
 
     int32 GetActorDensityBudget(const FVector& Location, float Radius);
+
+    float GetMaxActorDensity();
+
+    void ClusterPoints(const TArray<FVector>& Points, TArray<FVector>& ClusteredPoints);
 
 private:
     static TArray<FLivingWorldEventRuntimeDataEntry> EventRuntimeData;

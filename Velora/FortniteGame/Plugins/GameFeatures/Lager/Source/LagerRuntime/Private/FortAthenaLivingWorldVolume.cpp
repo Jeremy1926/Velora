@@ -4,6 +4,9 @@
 #include "FortAthenaLivingWorldPointProviderInterface.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Components/SceneComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/GameStateBase.h"
+#include "Templates/Casts.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameplayTagContainer.h"
 #include "Math/UnrealMathUtility.h"
@@ -34,6 +37,17 @@ void AFortAthenaLivingWorldVolume::OnCurrentPlaylistLoaded(FName PlaylistName, c
 
         if ((WaterLevelIndexMin != -1.0f && WaterLevelIndex < WaterLevelIndexMin) || (WaterLevelIndexMax != -1.0f && WaterLevelIndex > WaterLevelIndexMax))
             return;
+    }
+
+    if (auto CachedLivingWorldManager = GetCachedLivingWorldManager())
+    {
+        auto GameState = GetWorld() ? GetWorld()->GetGameState() : nullptr;
+
+        GetCachedGameState() = Cast<AFortGameStateAthena>(GameState);
+        *CachedLivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
+
+        if (auto bIsEnabled = GetbIsEnabled())
+            *bIsEnabled = true;
     }
 
     auto EnvironmentQuery = GetEnvironmentQuery();
@@ -87,9 +101,23 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
     else if (Result.IsValid())
     {
         auto& Points = GetPoints();
+        auto PointProviderMaxRadiusSqr = GetPointProviderMaxRadiusSqr();
+        auto ClusteredEnvironmentQueryResults = GetClusteredEnvironmentQueryResults();
+        auto CachedLivingWorldManager = GetCachedLivingWorldManager();
+        const FVector Location = GetActorLocation();
 
         for (int32 Index = 0; Index < Result->Items.Num(); Index++)
-            Points.Add(Result->GetItemAsLocation(Index));
+        {
+            const FVector Point = Result->GetItemAsLocation(Index);
+
+            Points.Add(Point);
+
+            if (PointProviderMaxRadiusSqr)
+                *PointProviderMaxRadiusSqr = FMath::Max(*PointProviderMaxRadiusSqr, (Location.X - Point.X) * (Location.X - Point.X) + (Location.Y - Point.Y) * (Location.Y - Point.Y));
+        }
+
+        if (ClusteredEnvironmentQueryResults && CachedLivingWorldManager && *CachedLivingWorldManager && Points.Num() > 0 && GetWorld())
+            (*CachedLivingWorldManager)->ClusterPoints(Points, *ClusteredEnvironmentQueryResults);
     }
 
     if (GetPoints().Num() > 0 && GetWorld())
@@ -195,11 +223,65 @@ bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorld
     return true;
 }
 
-AFortGameStateAthena* AFortAthenaLivingWorldVolume::GetCachedGameState() const
+AFortGameStateAthena*& AFortAthenaLivingWorldVolume::GetCachedGameState() const
 {
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
-    return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this);
+    return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>((void*)this);
+}
+
+UFortAthenaLivingWorldManager** AFortAthenaLivingWorldVolume::GetCachedLivingWorldManager()
+{
+    static auto CachedLivingWorldManager = GetClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager")));
+
+    return CachedLivingWorldManager ? CachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(this) : nullptr;
+}
+
+bool* AFortAthenaLivingWorldVolume::GetbIsEnabled()
+{
+    static auto bIsEnabled = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::bIsEnabled"))
+        .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:IsPointProviderEnabled"))
+        .Optional()
+        .Find("mov al, [rcx+0x*]")
+        .Disp();
+
+    return bIsEnabled > 0 ? (bool*)((uint8*)this + bIsEnabled) : nullptr;
+}
+
+TArray<FVector>* AFortAthenaLivingWorldVolume::GetClusteredEnvironmentQueryResults()
+{
+    static auto InterfaceClusteredEnvironmentQueryResults = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::ClusteredEnvironmentQueryResults"))
+        .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Optional()
+        .Find("movsxd rax, dword ptr [rbx+0x*]; mov rdi, [rbx+0x*]")
+        .Find("mov rdi, [rbx+0x*]")
+        .Disp();
+
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+
+    return InterfaceClusteredEnvironmentQueryResults > 0 ? (TArray<FVector>*)((uint8*)this + PointerOffset + InterfaceClusteredEnvironmentQueryResults) : nullptr;
+}
+
+float* AFortAthenaLivingWorldVolume::GetPointProviderMaxRadiusSqr()
+{
+    static auto InterfacePointProviderMaxRadiusSqr = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::PointProviderMaxRadiusSqr"))
+        .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Optional()
+        .Find("sqrtss xmm0, [rbx+0x*]")
+        .Disp();
+
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+
+    return InterfacePointProviderMaxRadiusSqr > 0 ? (float*)((uint8*)this + PointerOffset + InterfacePointProviderMaxRadiusSqr) : nullptr;
 }
 
 UEnvQuery* AFortAthenaLivingWorldVolume::GetEnvironmentQuery() const

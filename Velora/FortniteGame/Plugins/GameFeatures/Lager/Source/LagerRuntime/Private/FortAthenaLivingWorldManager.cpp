@@ -320,7 +320,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             if (ActorCount <= 0)
                 continue;
 
-            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity(), ActorCount);
+            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasEventRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
             auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter);
 
             if (!PointProvider)
@@ -716,7 +716,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     auto PointProvider = EventRequest.PointProvider.Get();
     auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
     const int32 ActorCount = EventData ? FMath::Min(EventRequest.ActorCountToSpawn, EventData->GetActorDescriptions().Num()) : 0;
-    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event->GetbOnlyInSafeZone(), Event->GetbCheckForActorDensity(), ActorCount);
+    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasEventRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
     const auto SpawnedCallback = TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned);
     auto Config = GetConfig();
     auto DensityComputationDistance = Config ? Config->GetDensityComputationDistance() : nullptr;
@@ -927,6 +927,18 @@ UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData& UFortAthenaLivingWo
         .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(!NativeFindOrCreateEventRuntimeData && StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto EventRuntimeDataMap = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::EventRuntimeDataMap"))
@@ -938,6 +950,16 @@ UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData& UFortAthenaLivingWo
         .Target()
         .Find("movss [*+0x*], xmm0; call 0x*; mov rcx, *; call 0x*")
         .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
+        .Or()
+        .If(NativeFindOrAddEventRuntimeData != nullptr)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*", 3)
         .Target()
         .Find("lea rdx, [*+0x*]; mov [rbp+0x*], rax; mov rcx, *; call 0x*")
         .Disp();
@@ -972,6 +994,13 @@ UFortAthenaLivingWorldConfigData* UFortAthenaLivingWorldManager::GetConfig()
 
 void UFortAthenaLivingWorldManager::AddPointProvider(AActor* PointProvider)
 {
+    static auto AddPointProviderToEventRuntimeData = Anchor::Optional<void (*)(UFortAthenaLivingWorldManager*, const FScriptInterface*)>(TEXT("UFortAthenaLivingWorldManager::AddPointProviderToEventRuntimeData"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Find("lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
     if (!HasPointProviderInterfaces())
     {
         GetPointProviders().AddUnique(PointProvider);
@@ -991,6 +1020,9 @@ void UFortAthenaLivingWorldManager::AddPointProvider(AActor* PointProvider)
     NewPointProvider.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
 
     PointProviders.Add(NewPointProvider);
+
+    if (AddPointProviderToEventRuntimeData)
+        AddPointProviderToEventRuntimeData(this, &NewPointProvider);
 }
 
 void UFortAthenaLivingWorldManager::RemovePointProvider(AActor* PointProvider)
@@ -1176,6 +1208,53 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
     auto ActorDensityGrid = GetActorDensityGrid();
 
     return GetGridActorDensity && ActorDensityGrid ? (float)GetGridActorDensity(ActorDensityGrid, Location, Radius) : 0.0f;
+}
+
+float UFortAthenaLivingWorldManager::GetMaxActorDensity()
+{
+    auto Config = GetConfig();
+    auto MaxActorDensity = Config ? Config->GetMaxActorDensity() : nullptr;
+
+    return MaxActorDensity ? MaxActorDensity->GetValueAtLevel(0.0f) : 0.0f;
+}
+
+void UFortAthenaLivingWorldManager::ClusterPoints(const TArray<FVector>& Points, TArray<FVector>& ClusteredPoints)
+{
+    auto Config = GetConfig();
+
+    if (!Config)
+        return;
+
+    ClusteredPoints.Empty();
+
+    if (Points.Num() <= 0)
+        return;
+
+    auto PointClusterSize = Config->GetPointClusterSize();
+    const float HalfClusterSize = (PointClusterSize ? PointClusterSize->GetValueAtLevel(0.0f) : 0.0f) * 0.5f;
+
+    if (HalfClusterSize <= 0.0f)
+    {
+        ClusteredPoints.Append(Points);
+        return;
+    }
+
+    for (auto& Point : Points)
+    {
+        bool bInCluster = false;
+
+        for (auto& ClusteredPoint : ClusteredPoints)
+        {
+            if (Point.X > ClusteredPoint.X - HalfClusterSize && Point.X < ClusteredPoint.X + HalfClusterSize && Point.Y > ClusteredPoint.Y - HalfClusterSize && Point.Y < ClusteredPoint.Y + HalfClusterSize)
+            {
+                bInCluster = true;
+                break;
+            }
+        }
+
+        if (!bInCluster)
+            ClusteredPoints.Add(Point);
+    }
 }
 
 int32 UFortAthenaLivingWorldManager::GetActorDensityBudget(const FVector& Location, float Radius)

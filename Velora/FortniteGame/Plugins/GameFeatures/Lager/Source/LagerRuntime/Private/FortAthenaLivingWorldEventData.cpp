@@ -53,6 +53,13 @@ UEnvQuery* FFortAthenaLivingWorldEventDataActorSpawnDescription::GetSpawnAroundE
     return SpawnAroundEnvironmentQuery ? *SpawnAroundEnvironmentQuery->ContainerPtrToValuePtr<UEnvQuery*>(this) : nullptr;
 }
 
+FScalableFloat* FFortAthenaLivingWorldEventDataActorSpawnDescription::GetActorDensityValue()
+{
+    static auto ActorDensityValue = StaticStruct()->FindPropertyByName(FName(TEXT("ActorDensityValue")));
+
+    return ActorDensityValue ? ActorDensityValue->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 UClass* UFortAthenaLivingWorldEventData::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldEventData"));

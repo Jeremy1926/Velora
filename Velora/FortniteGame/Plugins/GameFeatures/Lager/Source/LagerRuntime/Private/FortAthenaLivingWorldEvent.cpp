@@ -113,3 +113,52 @@ bool FFortAthenaLivingWorldEvent::GetbCheckForActorDensity()
 
     return bCheckForActorDensity ? *bCheckForActorDensity->ContainerPtrToValuePtr<bool>(this) : false;
 }
+
+bool FFortAthenaLivingWorldEvent::GetbOnlyInNextSafeZone()
+{
+    static auto bOnlyInNextSafeZone = StaticStruct()->FindPropertyByName(FName(TEXT("bOnlyInNextSafeZone")));
+
+    return bOnlyInNextSafeZone ? *bOnlyInNextSafeZone->ContainerPtrToValuePtr<bool>(this) : false;
+}
+
+bool FFortAthenaLivingWorldEvent::GetbOnlyInNextSafeZoneIfStormShrinking()
+{
+    static auto bOnlyInNextSafeZoneIfStormShrinking = StaticStruct()->FindPropertyByName(FName(TEXT("bOnlyInNextSafeZoneIfStormShrinking")));
+
+    return bOnlyInNextSafeZoneIfStormShrinking ? *bOnlyInNextSafeZoneIfStormShrinking->ContainerPtrToValuePtr<bool>(this) : false;
+}
+
+TArray<FFortAthenaLivingWorldEventTagDensityCondition>* FFortAthenaLivingWorldEvent::GetTagDensityConditions()
+{
+    static auto TagDensityConditions = StaticStruct()->FindPropertyByName(FName(TEXT("TagDensityConditions")));
+
+    return TagDensityConditions ? TagDensityConditions->ContainerPtrToValuePtr<TArray<FFortAthenaLivingWorldEventTagDensityCondition>>(this) : nullptr;
+}
+
+float FFortAthenaLivingWorldEvent::GetMaxActorDensityOverride()
+{
+    static auto MaxActorDensityOverride = StaticStruct()->FindPropertyByName(FName(TEXT("MaxActorDensityOverride")));
+
+    return MaxActorDensityOverride ? *MaxActorDensityOverride->ContainerPtrToValuePtr<float>(this) : -1.0f;
+}
+
+float FFortAthenaLivingWorldEvent::GetMinDistanceToPlayer()
+{
+    static auto MinDistanceToPlayer = StaticStruct()->FindPropertyByName(FName(TEXT("MinDistanceToPlayer")));
+
+    return MinDistanceToPlayer ? *MinDistanceToPlayer->ContainerPtrToValuePtr<float>(this) : 0.0f;
+}
+
+float FFortAthenaLivingWorldEvent::GetMaxDistanceToPlayer()
+{
+    static auto MaxDistanceToPlayer = StaticStruct()->FindPropertyByName(FName(TEXT("MaxDistanceToPlayer")));
+
+    return MaxDistanceToPlayer ? *MaxDistanceToPlayer->ContainerPtrToValuePtr<float>(this) : 0.0f;
+}
+
+bool FFortAthenaLivingWorldEvent::GetbCanSpawnWithoutMatchingPlayerDistance()
+{
+    static auto bCanSpawnWithoutMatchingPlayerDistance = StaticStruct()->FindPropertyByName(FName(TEXT("bCanSpawnWithoutMatchingPlayerDistance")));
+
+    return bCanSpawnWithoutMatchingPlayerDistance ? *bCanSpawnWithoutMatchingPlayerDistance->ContainerPtrToValuePtr<bool>(this) : false;
+}

@@ -6,15 +6,21 @@
 
 class AActor;
 class UClass;
+class UFortAthenaLivingWorldEventData;
 class UScriptStruct;
+struct FFortAthenaLivingWorldEvent;
 
 struct FFortAthenaLivingWorldPointProviderFilterRules
 {
     FFortAthenaLivingWorldPointProviderFilterRules(bool bOnlyInSafeZone, bool bCheckForActorDensity, int32 ExpectedSpawnCount);
 
+    FFortAthenaLivingWorldPointProviderFilterRules(FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEventData* EventData, int32 ExpectedSpawnCount, float DensityComputationRange, float MaxActorDensity);
+
     static UScriptStruct* StaticStruct();
 
     static int32 GetFlagsOffset();
+
+    static bool HasEventRules();
 
     int32 GetExpectedSpawnCount() const;
 
@@ -25,7 +31,7 @@ struct FFortAthenaLivingWorldPointProviderFilterRules
     void SetbCheckForActorDensity(bool bCheckForActorDensity);
 
 private:
-    alignas(int32) uint8 Data[sizeof(int32) * 2];
+    alignas(void*) uint8 Data[0x30];
 };
 
 struct FFortAthenaLivingWorldPointProviderSpawnLimiter

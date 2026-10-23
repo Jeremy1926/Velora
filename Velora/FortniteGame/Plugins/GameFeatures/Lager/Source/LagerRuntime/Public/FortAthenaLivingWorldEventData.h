@@ -24,6 +24,8 @@ struct FFortAthenaLivingWorldEventDataActorSpawnDescription
     bool GetbSpawnAroundDefaultPoint();
 
     UEnvQuery* GetSpawnAroundEnvironmentQuery();
+
+    FScalableFloat* GetActorDensityValue();
 };
 
 class UFortAthenaLivingWorldEventData : public UDataAsset

@@ -9,6 +9,7 @@
 
 class AFortGameStateAthena;
 class UEnvQuery;
+class UFortAthenaLivingWorldManager;
 struct FEnvQueryResult;
 struct FFortAthenaLivingWorldPointProviderFilterRules;
 struct FFrame;
@@ -29,7 +30,15 @@ public:
 
     bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const;
 
-    AFortGameStateAthena* GetCachedGameState() const;
+    AFortGameStateAthena*& GetCachedGameState() const;
+
+    UFortAthenaLivingWorldManager** GetCachedLivingWorldManager();
+
+    bool* GetbIsEnabled();
+
+    TArray<FVector>* GetClusteredEnvironmentQueryResults();
+
+    float* GetPointProviderMaxRadiusSqr();
 
     UEnvQuery* GetEnvironmentQuery() const;
 

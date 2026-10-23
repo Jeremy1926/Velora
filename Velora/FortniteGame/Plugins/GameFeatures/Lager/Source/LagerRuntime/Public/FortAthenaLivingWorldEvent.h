@@ -8,6 +8,13 @@
 class UFortAthenaLivingWorldEventData;
 enum class EAthenaGamePhaseStep : uint8;
 
+struct FFortAthenaLivingWorldEventTagDensityCondition
+{
+    FGameplayTag Tag;
+    float Distance;
+    float MaxDensity;
+};
+
 struct FFortAthenaLivingWorldEvent : public FTableRowBase
 {
     static UScriptStruct* StaticStruct();
@@ -39,4 +46,18 @@ struct FFortAthenaLivingWorldEvent : public FTableRowBase
     FGameplayTagContainer& GetRequirePlaylistTags();
 
     bool GetbCheckForActorDensity();
+
+    bool GetbOnlyInNextSafeZone();
+
+    bool GetbOnlyInNextSafeZoneIfStormShrinking();
+
+    TArray<FFortAthenaLivingWorldEventTagDensityCondition>* GetTagDensityConditions();
+
+    float GetMaxActorDensityOverride();
+
+    float GetMinDistanceToPlayer();
+
+    float GetMaxDistanceToPlayer();
+
+    bool GetbCanSpawnWithoutMatchingPlayerDistance();
 };

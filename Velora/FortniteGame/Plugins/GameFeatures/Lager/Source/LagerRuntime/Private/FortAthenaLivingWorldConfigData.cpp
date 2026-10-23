@@ -53,6 +53,13 @@ FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensityUpdatesPerTi
     return MaxActorDensityUpdatesPerTick ? MaxActorDensityUpdatesPerTick->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
 }
 
+FScalableFloat* UFortAthenaLivingWorldConfigData::GetPointClusterSize()
+{
+    static auto PointClusterSize = GetClass()->FindPropertyByName(FName(TEXT("PointClusterSize")));
+
+    return PointClusterSize ? PointClusterSize->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
 FScalableFloat* UFortAthenaLivingWorldConfigData::GetMaxActorDensity()
 {
     static auto MaxActorDensity = GetClass()->FindPropertyByName(FName(TEXT("MaxActorDensity")));
