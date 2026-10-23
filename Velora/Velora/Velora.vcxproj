@@ -440,6 +440,8 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameMode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortGameSession.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortReplicationGraph.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortTeamActorInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortTeamHealthInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
@@ -800,6 +802,8 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameModeZone.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortGameSession.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortReplicationGraph.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortTeamActorInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortTeamHealthInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
