@@ -4,10 +4,12 @@
 #include "Engine/NetSerialization.h"
 #include "GameFramework/OnlineReplStructs.h"
 #include "GameplayTagContainer.h"
+#include "Delegates/Delegate.h"
 #include "Math/Vector.h"
 #include "UObject/ScriptDelegates.h"
 
 class AController;
+class APlayerState;
 class AFortAthenaMapInfo;
 class AFortBroadcastSpectatorInfo;
 class AFortPawn;
@@ -54,6 +56,10 @@ class AFortGameStateAthena : public AFortGameStateZone
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, APlayerState*>& GetNotifyOnPlayerStateAdded();
+
+    static TMulticastDelegate<void, APlayerState*>& GetNotifyOnPlayerStateRemoved();
 
     EAthenaGamePhase GetGamePhase() const;
 

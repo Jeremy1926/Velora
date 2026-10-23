@@ -10,7 +10,10 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
+#include "Containers/BitArray.h"
+#include "GameFramework/PlayerState.h"
 #include "Items/FortInventoryOwnerInterface.h"
+#include "Kismet/GameplayStatics.h"
 #include "Pawns/FortAIPawn.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortLiveBroadcastController.h"
@@ -457,6 +460,125 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
         if (PlayerController && WhitelistedPlayers->Contains(FObjectKey(PlayerController)))
             ReplicationActorList.ConditionalAdd((AActor*)FutureReplicator);
     }
+}
+
+UClass* UFortReplicationGraphNode_PlayerStateFrequencyLimiter::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_PlayerStateFrequencyLimiter"));
+
+    return Class;
+}
+
+int32& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetCurrentFrameListIndex()
+{
+    static auto CurrentFrameListIndex = Anchor::Offset(TEXT("UFortReplicationGraphNode_PlayerStateFrequencyLimiter::CurrentFrameListIndex"))
+        .String(TEXT("UFortReplicationGraphNode_PlayerStateFrequencyLimiter_GlobalPrepareForReplication"))
+        .Start()
+        .Find("mov ecx, [rcx+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + CurrentFrameListIndex);
+}
+
+int32& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetMaxStatesToReplicatePerFrame()
+{
+    return *(&GetCurrentFrameListIndex() + 1);
+}
+
+TBitArray<>& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetActiveLists()
+{
+    return *(TBitArray<>*)(&GetMaxStatesToReplicatePerFrame() + 1);
+}
+
+TArray<FActorRepListRefView>& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetPerFramePlayerStateLists()
+{
+    return *((TArray<FActorRepListRefView>*)&GetCurrentFrameListIndex() - 1);
+}
+
+TMap<APlayerState*, int32>& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetPlayerStateStoredListIndexMap()
+{
+    return *((TMap<APlayerState*, int32>*)&GetPerFramePlayerStateLists() - 1);
+}
+
+void UFortReplicationGraphNode_PlayerStateFrequencyLimiter::InitNode(UWorld* World)
+{
+    static auto MaxExpectedPlayerStates = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.MaxExpectedPlayerStates"));
+
+    const int32 NumLists = MaxExpectedPlayerStates->GetInt() / GetMaxStatesToReplicatePerFrame();
+
+    GetPerFramePlayerStateLists().Reserve(NumLists);
+    GetActiveLists().Reserve(NumLists);
+
+    TArray<AActor*> PlayerStates;
+    UGameplayStatics::GetAllActorsOfClass(World, APlayerState::StaticClass(), PlayerStates);
+
+    for (auto PlayerState : PlayerStates)
+    {
+        if (IsActorValidForReplicationGather(PlayerState))
+            OnPlayerStateAdded((APlayerState*)PlayerState);
+    }
+
+    AFortGameStateAthena::GetNotifyOnPlayerStateAdded().AddUObject(this, &UFortReplicationGraphNode_PlayerStateFrequencyLimiter::OnPlayerStateAdded);
+    AFortGameStateAthena::GetNotifyOnPlayerStateRemoved().AddUObject(this, &UFortReplicationGraphNode_PlayerStateFrequencyLimiter::OnPlayerStateRemoved);
+}
+
+void UFortReplicationGraphNode_PlayerStateFrequencyLimiter::OnPlayerStateAdded(APlayerState* AddedPlayerState)
+{
+    if (!IsActorValidForReplicationGather(AddedPlayerState))
+        return;
+
+    auto& PlayerStateStoredListIndexMap = GetPlayerStateStoredListIndexMap();
+
+    if (PlayerStateStoredListIndexMap.Find(AddedPlayerState))
+        return;
+
+    auto& PerFramePlayerStateLists = GetPerFramePlayerStateLists();
+    bool bNeedsNewList = true;
+
+    for (int32 ListIdx = 0; ListIdx < PerFramePlayerStateLists.Num(); ++ListIdx)
+    {
+        auto& List = PerFramePlayerStateLists[ListIdx];
+
+        if (List.RepList.Num() < GetMaxStatesToReplicatePerFrame())
+        {
+            PlayerStateStoredListIndexMap.Add(AddedPlayerState, ListIdx);
+            List.RepList.Add(AddedPlayerState);
+            GetActiveLists().SetBit(ListIdx, true);
+            bNeedsNewList = false;
+            break;
+        }
+    }
+
+    if (bNeedsNewList)
+    {
+        auto& NewList = PerFramePlayerStateLists[PerFramePlayerStateLists.Add(FActorRepListRefView())];
+
+        GetActiveLists().Add(true);
+        PlayerStateStoredListIndexMap.Add(AddedPlayerState, PerFramePlayerStateLists.Num() - 1);
+
+        NewList.RepList.Reset(GetMaxStatesToReplicatePerFrame());
+        NewList.RepList.Add(AddedPlayerState);
+    }
+}
+
+void UFortReplicationGraphNode_PlayerStateFrequencyLimiter::OnPlayerStateRemoved(APlayerState* RemovedPlayerState)
+{
+    auto& PlayerStateStoredListIndexMap = GetPlayerStateStoredListIndexMap();
+    auto ListIdxPtr = PlayerStateStoredListIndexMap.Find(RemovedPlayerState);
+
+    if (!ListIdxPtr)
+        return;
+
+    const int32 ListIdx = *ListIdxPtr;
+    PlayerStateStoredListIndexMap.Remove(RemovedPlayerState);
+
+    if (ListIdx == -1)
+        return;
+
+    auto& List = GetPerFramePlayerStateLists()[ListIdx];
+    List.RepList.RemoveSingleSwap(RemovedPlayerState, true);
+
+    GetActiveLists().SetBit(ListIdx, List.RepList.Num() > 0);
 }
 
 UClass* UFortReplicationGraphNode_LiveSpectator::StaticClass()

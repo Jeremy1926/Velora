@@ -3,6 +3,7 @@
 #include "ReplicationGraph.h"
 
 class AFortTeamHealthInfo;
+class APlayerState;
 class UNetConnection;
 
 class UFortReplicationGraph : public UReplicationGraph
@@ -69,6 +70,29 @@ private:
     TMap<FObjectKey, TArray<TWeakObjectPtr<AFortTeamHealthInfo>>>& GetReplicationActorMap();
 
     FActorRepListRefView& GetReplicationActorList();
+};
+
+class UFortReplicationGraphNode_PlayerStateFrequencyLimiter : public UReplicationGraphNode
+{
+public:
+    static UClass* StaticClass();
+
+    void InitNode(UWorld* World);
+
+    void OnPlayerStateAdded(APlayerState* AddedPlayerState);
+
+    void OnPlayerStateRemoved(APlayerState* RemovedPlayerState);
+
+    int32& GetMaxStatesToReplicatePerFrame();
+
+private:
+    TMap<APlayerState*, int32>& GetPlayerStateStoredListIndexMap();
+
+    TArray<FActorRepListRefView>& GetPerFramePlayerStateLists();
+
+    int32& GetCurrentFrameListIndex();
+
+    TBitArray<>& GetActiveLists();
 };
 
 class UFortReplicationGraphNode_LiveSpectator : public UReplicationGraphNode_ActorList

@@ -68,6 +68,22 @@ UClass* AFortGameStateAthena::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, APlayerState*>& AFortGameStateAthena::GetNotifyOnPlayerStateAdded()
+{
+    static auto NotifyOnPlayerStateAdded = Anchor::Data<TMulticastDelegate<void, APlayerState*>*>(TEXT("AFortGameStateAthena::NotifyOnPlayerStateAdded"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameStateAthena"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rbp; mov [rsp+0x20], rsi; push rdi; sub rsp, 0x20; mov rsi, rcx; mov rbx, rdx; lea rcx, [0x*]; call 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyOnPlayerStateAdded;
+}
+
+TMulticastDelegate<void, APlayerState*>& AFortGameStateAthena::GetNotifyOnPlayerStateRemoved()
+{
+    return *(&GetNotifyOnPlayerStateAdded() + 1);
+}
+
 EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
 {
     static auto GamePhase = GetClass()->FindPropertyByName(FName(TEXT("GamePhase")));

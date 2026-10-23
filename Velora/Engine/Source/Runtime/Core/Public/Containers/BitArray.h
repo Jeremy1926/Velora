@@ -22,6 +22,11 @@ public:
         Realloc(0);
     }
 
+    FORCEINLINE int32 Num() const
+    {
+        return NumBits;
+    }
+
     FORCEINLINE bool operator[](int32 Index) const
     {
         return (GetData()[Index / 32] & (1 << (Index & 31))) != 0;
@@ -52,6 +57,16 @@ public:
         SetBit(Index, Value);
 
         return Index;
+    }
+
+    void Reserve(int32 Number)
+    {
+        if (Number > MaxBits)
+        {
+            const uint32 MaxDWORDs = AllocatorInstance.CalculateSlackGrow(FMath::DivideAndRoundUp(Number, 32), FMath::DivideAndRoundUp(MaxBits, 32), sizeof(uint32));
+            MaxBits = MaxDWORDs * 32;
+            Realloc(NumBits);
+        }
     }
 
     void Empty(int32 ExpectedNumBits = 0)
