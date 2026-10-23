@@ -71,6 +71,10 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .Is("ret*")
         .Or()
         .StubExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Find("xor esi, esi")
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rdi], rsi; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
@@ -110,6 +114,29 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
     Stack.Code += !!Stack.Code;
 
     GiveItemToInventoryOwner(InventoryOwner, ItemDefinition, NumberToGive, !!bNotifyPlayer);
+
+    static auto ReturnValue = Function->FindPropertyByName(FName(TEXT("ReturnValue")));
+
+    if (!ReturnValue)
+        return;
+
+    UFortWorldItem* GivenItem = nullptr;
+    auto PlayerController = Cast<AFortPlayerController>(InventoryOwner.GetObject());
+    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (WorldInventory)
+    {
+        for (auto Item : WorldInventory->GetInventory().GetItemInstances())
+        {
+            if (Item && Item->GetItemEntry().GetItemDefinition() == ItemDefinition)
+            {
+                GivenItem = Item;
+                break;
+            }
+        }
+    }
+
+    *(UFortWorldItem**)Z_Param__Result = GivenItem;
 }
 
 void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive)
