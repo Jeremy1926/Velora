@@ -2,6 +2,7 @@
 
 #include "Player/FortPlayerControllerPvP.h"
 
+class AController;
 class AFortPlayerState;
 class UAthenaBackpackItemDefinition;
 class UAthenaCharacterItemDefinition;
@@ -9,6 +10,8 @@ class UAthenaGliderItemDefinition;
 class UAthenaMarkerComponent;
 class UAthenaPickaxeItemDefinition;
 class UAthenaSkyDiveContrailItemDefinition;
+class UFortWorldItem;
+class UFortWorldItemDefinition;
 
 struct FFortAthenaLoadout
 {
@@ -53,4 +56,8 @@ public:
     AFortPlayerState* GetSkydiveLeader() const;
 
     void RespawnPlayerAfterDeath(bool bEnterSkydiving);
+
+    static bool ExternalShouldAlwaysDropItemOnDeathOrLogout(const UFortWorldItem* Item, bool bIgnoreItemMutators);
+
+    static void ExternalShouldDropOrDestroyByItemType(AController* Controller, const UFortWorldItemDefinition* ItemDefinition, bool* bShouldDrop, bool* bShouldDestroy);
 };

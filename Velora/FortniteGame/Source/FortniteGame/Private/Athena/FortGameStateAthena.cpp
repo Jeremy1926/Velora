@@ -570,3 +570,15 @@ bool AFortGameStateAthena::AdjustedGravityMultiplier(AFortPawn* Pawn, float& New
 
     return AdjustedGravityMultiplier(this, Pawn, &NewGravityVal, &NewVehicleGravityVal, &NewJumpZ, &NewJumpHorizontalAcceleration, &NewJumpHorizontalVelocity);
 }
+
+void AFortGameStateAthena::ShouldDropOrDestroyItem(bool* bCurrentCanDropValue, bool* bCurrentCanDestroyValue, AController* Controller, const UFortWorldItemDefinition* ItemDef)
+{
+    static auto ShouldDropOrDestroyItem = Anchor::Function<void (*)(AFortGameStateAthena*, bool*, bool*, AController*, const UFortWorldItemDefinition*)>(TEXT("AFortGameStateAthena::ShouldDropOrDestroyItem"))
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Find("mov [rsp+0x20], rbx")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    ShouldDropOrDestroyItem(this, bCurrentCanDropValue, bCurrentCanDestroyValue, Controller, ItemDef);
+}

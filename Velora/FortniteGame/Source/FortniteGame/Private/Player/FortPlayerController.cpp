@@ -642,6 +642,7 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
 void AFortPlayerController::DropItemsAsPickups(const TArray<UFortWorldItem*>& Items, AFortPawn* Pawn, AFortInventory* Inventory, AFortPlayerController* PlayerController)
 {
     DETOUR(AFortPlayerController, DropItemsAsPickups, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
         .FieldPattern("80 ? %o 00", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
         .Optional()
         .Call()

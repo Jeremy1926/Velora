@@ -4,6 +4,7 @@
 #include "Containers/Array.h"
 
 class AFortInventory;
+class AFortPawn;
 class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
 class UFortAthenaAIRuntimeParametersComponent;
@@ -61,4 +62,6 @@ public:
     UBehaviorTree* GetBehaviorTree() const;
 
     FFortAthenaLoadout& GetCosmeticLoadoutBC();
+
+    void* DropInventoryItems(void* OutPickupsOrFortPawn, void* FortPawnOrPickupPostSpawnDelegate);
 };

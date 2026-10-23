@@ -9,6 +9,7 @@
 #include "Items/FortInventory.h"
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Items/FortItemDefinition.h"
+#include "Items/FortWorldItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWeaponItemDefinition.h"
 #include "Player/FortPlayerState.h"
@@ -342,4 +343,61 @@ FFortAthenaLoadout& AFortAthenaAIBotController::GetCosmeticLoadoutBC()
     static auto CosmeticLoadoutBC = GetClass()->FindPropertyByName(FName(TEXT("CosmeticLoadoutBC")));
 
     return *CosmeticLoadoutBC->ContainerPtrToValuePtr<FFortAthenaLoadout>(this);
+}
+
+void* AFortAthenaAIBotController::DropInventoryItems(void* OutPickupsOrFortPawn, void* FortPawnOrPickupPostSpawnDelegate)
+{
+    DETOUR(AFortAthenaAIBotController, DropInventoryItems, Anchor::Hook()
+        .String(TEXT("AFortAthenaAIBotController::DropLootOnDeath"))
+        .Optional()
+        .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+        .Find("call 0x*")
+        .Target()
+        .AtCallsIn(Anchor::Address()
+            .String(TEXT("AFortAthenaAIBotController::DropLootOnDeath"))
+            .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+            .Start()
+            .Get()));
+
+    static auto bReturnsPickups = Anchor::Exists()
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Has("mov [*+0x10], rdx")
+        .Get();
+
+    static auto DropAsPickup = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickup")));
+    static auto DropAsPickupDestroyOnEmpty = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickupDestroyOnEmpty")));
+    static auto DropAsPickupEvenWhenEmpty = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickupEvenWhenEmpty")));
+
+    auto FortPawn = (AFortPawn*)(bReturnsPickups ? FortPawnOrPickupPostSpawnDelegate : OutPickupsOrFortPawn);
+    auto Inventory = GetInventory();
+
+    if (Inventory && FortPawn)
+    {
+        TArray<UFortWorldItem*> ItemsToDropViaPickup;
+
+        for (auto Item : Inventory->GetInventory().GetItemInstances())
+        {
+            auto ItemDefinition = Cast<UFortWorldItemDefinition>(Item->GetItemDefinitionBP());
+
+            if (!ItemDefinition)
+                continue;
+
+            bool bShouldDrop = AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(Item, false);
+            bool bShouldDestroy = false;
+
+            AFortPlayerControllerAthena::ExternalShouldDropOrDestroyByItemType(this, ItemDefinition, &bShouldDrop, &bShouldDestroy);
+
+            if (!bShouldDrop || bShouldDestroy)
+                continue;
+
+            const auto DropBehavior = ItemDefinition->GetDropBehavior();
+
+            if (DropBehavior == DropAsPickup || DropBehavior == DropAsPickupEvenWhenEmpty || (DropBehavior == DropAsPickupDestroyOnEmpty && Item->GetNumInStack() > 0))
+                ItemsToDropViaPickup.Add(Item);
+        }
+
+        AFortPlayerController::DropItemsAsPickups(ItemsToDropViaPickup, FortPawn, Inventory, nullptr);
+    }
+
+    return Original(OutPickupsOrFortPawn, FortPawnOrPickupPostSpawnDelegate);
 }

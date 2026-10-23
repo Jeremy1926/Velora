@@ -7,10 +7,12 @@
 #include "Math/Vector.h"
 #include "UObject/ScriptDelegates.h"
 
+class AController;
 class AFortAthenaMapInfo;
 class AFortPawn;
 class AFortSafeZoneIndicator;
 class AFortVolumeManager;
+class UFortWorldItemDefinition;
 class UScriptStruct;
 
 enum class EAthenaGamePhase : uint8
@@ -109,4 +111,6 @@ public:
     static bool AmmoDroppedFromContainersForWeaponPickup();
 
     bool AdjustedGravityMultiplier(AFortPawn* Pawn, float& NewGravityVal, float& NewVehicleGravityVal, float& NewJumpZ, float& NewJumpHorizontalAcceleration, float& NewJumpHorizontalVelocity);
+
+    void ShouldDropOrDestroyItem(bool* bCurrentCanDropValue, bool* bCurrentCanDestroyValue, AController* Controller, const UFortWorldItemDefinition* ItemDef);
 };

@@ -4,6 +4,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* UFortWorldItemDefinition::StaticClass()
 {
@@ -59,4 +60,23 @@ const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() con
     static auto LootLevelData = GetClass()->FindPropertyByName(FName(TEXT("LootLevelData")));
 
     return *LootLevelData->ContainerPtrToValuePtr<FDataTableCategoryHandle>(this);
+}
+
+template<>
+UEnum* StaticEnum<EWorldItemDropBehavior>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EWorldItemDropBehavior"));
+
+    return Enum;
+}
+
+EWorldItemDropBehavior UFortWorldItemDefinition::GetDropBehavior() const
+{
+    static auto GetDropBehavior = Anchor::VirtualFunction<EWorldItemDropBehavior (*)(const UFortWorldItemDefinition*)>(TEXT("UFortWorldItemDefinition::GetDropBehavior"))
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Find("mov rax, [rbx]; mov rcx, rbx; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetDropBehavior(this);
 }

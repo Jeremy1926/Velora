@@ -4,6 +4,7 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
+#include "Items/FortWorldItemDefinition.h"
 #include "Components/FortControllerComponent_InventoryService.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "GameplayEffectTypes.h"
@@ -260,4 +261,27 @@ void AFortPlayerControllerAthena::RespawnPlayerAfterDeath(bool bEnterSkydiving)
         .Get();
 
     RespawnPlayerAfterDeath(this, bEnterSkydiving);
+}
+
+bool AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(const UFortWorldItem* Item, bool bIgnoreItemMutators)
+{
+    static auto ExternalShouldAlwaysDropItemOnDeathOrLogout = Anchor::Function<bool (*)(const UFortWorldItem*, bool)>(TEXT("AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout"))
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Find("mov byte ptr [rbp+0x*], 0x0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return ExternalShouldAlwaysDropItemOnDeathOrLogout(Item, bIgnoreItemMutators);
+}
+
+void AFortPlayerControllerAthena::ExternalShouldDropOrDestroyByItemType(AController* Controller, const UFortWorldItemDefinition* ItemDefinition, bool* bShouldDrop, bool* bShouldDestroy)
+{
+    auto World = Controller ? Controller->GetWorld() : nullptr;
+
+    if (auto GameState = World ? Cast<AFortGameStateAthena>(World->GetGameState()) : nullptr)
+        GameState->ShouldDropOrDestroyItem(bShouldDrop, bShouldDestroy, Controller, ItemDefinition);
+
+    if (ItemDefinition && !ItemDefinition->CanBeDropped())
+        *bShouldDrop = false;
 }
