@@ -1000,6 +1000,7 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
     static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"));
     static auto bTossWithVelocityParam = Function->FindPropertyByName(FName(TEXT("bTossWithVelocity")));
     static auto TossVelocityParam = Function->FindPropertyByName(FName(TEXT("TossVelocity")));
+    static auto LootWorldLevelParam = Function->FindPropertyByName(FName(TEXT("LootWorldLevel")));
 
     UObject* WorldContextObject = nullptr;
     FName LootTierName(NAME_None);
@@ -1010,6 +1011,7 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
     FVector TossVelocity(ForceInit);
     EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
     EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+    int32 LootWorldLevel = 0;
 
     Stack.StepCompiledIn(&WorldContextObject);
     Stack.StepCompiledIn(&LootTierName);
@@ -1025,6 +1027,10 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
 
     Stack.StepCompiledIn(&SourceType);
     Stack.StepCompiledIn(&Source);
+
+    if (LootWorldLevelParam)
+        Stack.StepCompiledIn(&LootWorldLevel);
+
     Stack.Code += !!Stack.Code;
 
     *(TArray<AFortPickup*>*)Z_Param__Result = K2_SpawnPickupInWorldWithLootTier(WorldContextObject, LootTierName, Position, OverrideMaxStackCount, !!bToss, SourceType, Source);
