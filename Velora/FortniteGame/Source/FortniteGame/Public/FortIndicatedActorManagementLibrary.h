@@ -49,4 +49,8 @@ public:
     static void AddActorsToIndicatedList(AFortPlayerControllerAthena* InstigatingController, TArray<AActor*> IndicatedActors, FIndicatedActorData IndicatedActorData, const bool bAddAsUnique);
 
     static void AddActorsToStenciledList(AFortPlayerControllerAthena* InstigatingController, TArray<AActor*> StenciledActors, FStenciledActorData StenciledActorData, const bool bAddAsUnique);
+
+    void execAddActorsToIndicatedList(FFrame& Stack, void* const Z_Param__Result);
+
+    void execAddActorsToStenciledList(FFrame& Stack, void* const Z_Param__Result);
 };

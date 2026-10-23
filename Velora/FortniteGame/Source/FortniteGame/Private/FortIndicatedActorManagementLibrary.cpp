@@ -127,6 +127,8 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
         .Find("mov rcx, [rsp+*]; lea rdx, [rsp+*]; call 0x*")
         .Call()
         .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov edi, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"))
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")));
 
@@ -215,4 +217,97 @@ void UFortIndicatedActorManagementLibrary::AddActorsToStenciledList(AFortPlayerC
 
     if (auto Component = InstigatingController ? InstigatingController->FindComponentByClass<UFortControllerComponent_IndicatedActorManagement>() : nullptr)
         Component->AddActorsToStenciledList(StenciledActors, StenciledActorData, bAddAsUnique);
+}
+
+void UFortIndicatedActorManagementLibrary::execAddActorsToIndicatedList(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortIndicatedActorManagementLibrary, execAddActorsToIndicatedList, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortIndicatedActorManagementLibrary, AddActorsToIndicatedList))
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList")));
+
+    static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToIndicatedList"));
+    static auto bTakesAddAsUnique = Function->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
+    static auto bTakesAllowOwningPlayer = Function->FindPropertyByName(FName(TEXT("bAllowOwningPlayer"))) != nullptr;
+    static auto bTakesReplaceExistingEntry = Function->FindPropertyByName(FName(TEXT("bReplaceExistingEntry"))) != nullptr;
+    static auto bTakesRefreshExistingEntry = Function->FindPropertyByName(FName(TEXT("bRefreshExistingEntry"))) != nullptr;
+
+    AFortPlayerControllerAthena* InstigatingController = nullptr;
+    TArray<AActor*> IndicatedActors;
+    TArray<uint8> IndicatedActorData;
+    uint32 bAddAsUnique = 0;
+    uint32 bAllowOwningPlayer = 0;
+    uint32 bReplaceExistingEntry = 0;
+    uint32 bRefreshExistingEntry = 0;
+
+    IndicatedActorData.AddUninitialized(FIndicatedActorData::StaticStruct()->GetPropertiesSize());
+    FIndicatedActorData::StaticStruct()->InitializeStruct(IndicatedActorData.GetData());
+
+    Stack.StepCompiledIn(&InstigatingController);
+    Stack.StepCompiledIn(&IndicatedActors);
+    Stack.StepCompiledIn(IndicatedActorData.GetData());
+
+    if (bTakesAddAsUnique)
+        Stack.StepCompiledIn(&bAddAsUnique);
+
+    if (bTakesAllowOwningPlayer)
+        Stack.StepCompiledIn(&bAllowOwningPlayer);
+
+    if (bTakesReplaceExistingEntry)
+        Stack.StepCompiledIn(&bReplaceExistingEntry);
+
+    if (bTakesRefreshExistingEntry)
+        Stack.StepCompiledIn(&bRefreshExistingEntry);
+
+    Stack.Code += !!Stack.Code;
+
+    if (auto Component = InstigatingController ? InstigatingController->FindComponentByClass<UFortControllerComponent_IndicatedActorManagement>() : nullptr)
+        Component->AddActorsToIndicatedList(IndicatedActors, *(const FIndicatedActorData*)IndicatedActorData.GetData(), !!bAddAsUnique);
+
+    FIndicatedActorData::StaticStruct()->DestroyStruct(IndicatedActorData.GetData());
+}
+
+void UFortIndicatedActorManagementLibrary::execAddActorsToStenciledList(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortIndicatedActorManagementLibrary, execAddActorsToStenciledList, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortIndicatedActorManagementLibrary, AddActorsToStenciledList))
+        .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList")));
+
+    static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsToStenciledList"));
+    static auto bTakesAddAsUnique = Function->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
+    static auto bTakesReplaceExistingEntry = Function->FindPropertyByName(FName(TEXT("bReplaceExistingEntry"))) != nullptr;
+    static auto bTakesRefreshExistingEntry = Function->FindPropertyByName(FName(TEXT("bRefreshExistingEntry"))) != nullptr;
+
+    AFortPlayerControllerAthena* InstigatingController = nullptr;
+    TArray<AActor*> StenciledActors;
+    TArray<uint8> StenciledActorData;
+    uint32 bAddAsUnique = 0;
+    uint32 bReplaceExistingEntry = 0;
+    uint32 bRefreshExistingEntry = 0;
+
+    StenciledActorData.AddUninitialized(FStenciledActorData::StaticStruct()->GetPropertiesSize());
+    FStenciledActorData::StaticStruct()->InitializeStruct(StenciledActorData.GetData());
+
+    Stack.StepCompiledIn(&InstigatingController);
+    Stack.StepCompiledIn(&StenciledActors);
+    Stack.StepCompiledIn(StenciledActorData.GetData());
+
+    if (bTakesAddAsUnique)
+        Stack.StepCompiledIn(&bAddAsUnique);
+
+    if (bTakesReplaceExistingEntry)
+        Stack.StepCompiledIn(&bReplaceExistingEntry);
+
+    if (bTakesRefreshExistingEntry)
+        Stack.StepCompiledIn(&bRefreshExistingEntry);
+
+    Stack.Code += !!Stack.Code;
+
+    if (auto Component = InstigatingController ? InstigatingController->FindComponentByClass<UFortControllerComponent_IndicatedActorManagement>() : nullptr)
+        Component->AddActorsToStenciledList(StenciledActors, *(const FStenciledActorData*)StenciledActorData.GetData(), !!bAddAsUnique);
+
+    FStenciledActorData::StaticStruct()->DestroyStruct(StenciledActorData.GetData());
 }
