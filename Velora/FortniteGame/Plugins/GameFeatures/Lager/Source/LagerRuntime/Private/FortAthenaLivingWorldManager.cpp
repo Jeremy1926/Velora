@@ -539,6 +539,12 @@ void UFortAthenaLivingWorldManager::UpdateActorsInfo()
         if (auto ActorDensityGrid = GetActorDensityGrid())
             ActorDensityGrid->UpdateActor(Actor);
 
+        for (auto& TagDensityToUpdate : ActorToUpdateInfo.TagDensityToUpdate)
+        {
+            if (auto TagDensityGrid = FindTagDensityGrid(TagDensityToUpdate))
+                TagDensityGrid->UpdateActor(Actor);
+        }
+
         if (ActorToUpdateInfo.Event)
         {
             auto DespawnCondition = ActorToUpdateInfo.Event->GetDespawnCondition();
@@ -1743,6 +1749,50 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .Disp();
 
     return ActorDensityGrid > 0 ? (FFortAthenaLivingWorldDensityGrid*)((uint8*)this + ActorDensityGrid) : nullptr;
+}
+
+FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::FindTagDensityGrid(const FGameplayTag& Tag)
+{
+    static auto TagDensityGrids = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::TagDensityGrids"))
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rbx, [r13+0x*]; mov r12, rax; xor r15d, r15d")
+        .Optional()
+        .Disp();
+
+    static auto FindId = Anchor::Optional<int32* (*)(void*, int32*, const FGameplayTag*)>(TEXT("TMap<FGameplayTag, FFortAthenaLivingWorldDensityGrid>::FindId"))
+        .If(TagDensityGrids > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov r8, rdi; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto ElementSize = Anchor::Offset(TEXT("sizeof(TSetElement<TPair<FGameplayTag, FFortAthenaLivingWorldDensityGrid>>)"))
+        .If(TagDensityGrids > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov r8, rdi; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Find("imul rcx, rax, 0x*")
+        .Optional()
+        .Imm();
+
+    static auto Grid = Anchor::Offset(TEXT("TPair<FGameplayTag, FFortAthenaLivingWorldDensityGrid>::Value"))
+        .If(TagDensityGrids > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov r8, rdi; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Find("lea rax, [rcx+0x*]; neg rcx")
+        .Optional()
+        .Disp();
+
+    if (TagDensityGrids <= 0 || !FindId || ElementSize <= 0 || Grid <= 0)
+        return nullptr;
+
+    auto TagDensityGridMap = (uint8*)this + TagDensityGrids;
+    int32 ElementId = INDEX_NONE;
+
+    FindId(TagDensityGridMap, &ElementId, &Tag);
+
+    return ElementId != INDEX_NONE ? (FFortAthenaLivingWorldDensityGrid*)(*(uint8**)TagDensityGridMap + ElementId * ElementSize + Grid) : nullptr;
 }
 
 TArray<AActor*>* UFortAthenaLivingWorldManager::GetSpawnedPawns()

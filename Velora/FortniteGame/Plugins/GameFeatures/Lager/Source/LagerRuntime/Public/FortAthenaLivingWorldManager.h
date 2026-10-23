@@ -142,7 +142,7 @@ public:
         TWeakObjectPtr<AActor> Actor;
         FFortAthenaLivingWorldEvent* Event = nullptr;
         float IsDespawnCandidateSinceTimestamp = -1.0f;
-        TArray<FName, TInlineAllocator<1>> TagDensityToUpdate;
+        TArray<FGameplayTag, TInlineAllocator<1>> TagDensityToUpdate;
     };
 
     struct FLivingWorldCategoryRuntimeData
@@ -259,6 +259,8 @@ public:
     AActor* GetEQSHelper();
 
     FFortAthenaLivingWorldDensityGrid* GetActorDensityGrid();
+
+    FFortAthenaLivingWorldDensityGrid* FindTagDensityGrid(const FGameplayTag& Tag);
 
     TArray<AActor*>* GetSpawnedPawns();
 
