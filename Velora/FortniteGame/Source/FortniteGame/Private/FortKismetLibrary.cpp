@@ -75,18 +75,26 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
     static auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"));
+    static auto bHasItemVariantGuid = Function->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr;
     static auto bHasItemLevel = Function->FindPropertyByName(FName(TEXT("ItemLevel"))) != nullptr;
     static auto bHasPickupInstigatorHandle = Function->FindPropertyByName(FName(TEXT("PickupInstigatorHandle"))) != nullptr;
+    static auto bHasUseItemPickupAnalyticEvent = Function->FindPropertyByName(FName(TEXT("bUseItemPickupAnalyticEvent"))) != nullptr;
 
     TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner;
     UFortWorldItemDefinition* ItemDefinition = nullptr;
+    FGuid ItemVariantGuid;
     int32 NumberToGive = 0;
     uint32 bNotifyPlayer = 0;
     int32 ItemLevel = 0;
     int32 PickupInstigatorHandle = 0;
+    uint32 bUseItemPickupAnalyticEvent = 0;
 
     Stack.StepCompiledIn(&InventoryOwner);
     Stack.StepCompiledIn(&ItemDefinition);
+
+    if (bHasItemVariantGuid)
+        Stack.StepCompiledIn(&ItemVariantGuid);
+
     Stack.StepCompiledIn(&NumberToGive);
     Stack.StepCompiledIn(&bNotifyPlayer);
 
@@ -95,6 +103,9 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
 
     if (bHasPickupInstigatorHandle)
         Stack.StepCompiledIn(&PickupInstigatorHandle);
+
+    if (bHasUseItemPickupAnalyticEvent)
+        Stack.StepCompiledIn(&bUseItemPickupAnalyticEvent);
 
     Stack.Code += !!Stack.Code;
 
