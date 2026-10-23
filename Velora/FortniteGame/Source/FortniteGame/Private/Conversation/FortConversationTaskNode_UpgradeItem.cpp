@@ -20,26 +20,54 @@ UClass* UFortConversationTaskNode_UpgradeItem::StaticClass()
 
 const FWeaponUpgradeItemRow* UFortConversationTaskNode_UpgradeItem::GetUpgradedItemRow(const FConversationContext& Context) const
 {
-    static auto GetUpgradedItemRow = Anchor::Function<const FWeaponUpgradeItemRow* (*)(const UFortConversationTaskNode_UpgradeItem*, const FConversationContext&)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradedItemRow"))
+    static auto GetUpgradedItemRow = Anchor::Optional<const FWeaponUpgradeItemRow* (*)(const UFortConversationTaskNode_UpgradeItem*, const FConversationContext&)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradedItemRow"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
-        .Call(1)
+        .Find("call 0x*; test rax, rax; jz 0x*; mov r8, rax; lea rdx, [rsp+0x*]")
+        .Target()
         .Get();
 
-    return GetUpgradedItemRow(this, Context);
+    if (GetUpgradedItemRow)
+        return GetUpgradedItemRow(this, Context);
+
+    auto PlayerController = UFortConversationContextLibrary::GetParticipantPlayerController(Context);
+    auto PlayerPawn = PlayerController ? PlayerController->GetMyFortPawn() : nullptr;
+    auto CurrentWeapon = PlayerPawn ? PlayerPawn->GetCurrentWeapon() : nullptr;
+    auto WeaponData = CurrentWeapon ? CurrentWeapon->GetWeaponData() : nullptr;
+
+    return WeaponData ? ABuildingItemWeaponUpgradeActor::StaticClass()->GetDefaultObject<ABuildingItemWeaponUpgradeActor>()->GetItemRow(WeaponData, EFortWeaponUpgradeDirection::Vertical) : nullptr;
 }
 
-TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FWeaponUpgradeItemRow* UpgradedItemRow) const
+TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FConversationContext& Context, const FWeaponUpgradeItemRow* UpgradedItemRow) const
 {
+    static auto GetUpgradePriceForContext = Anchor::Optional<TOptional<int32>* (*)(const UFortConversationTaskNode_UpgradeItem*, TOptional<int32>*, const FConversationContext&, const FWeaponUpgradeItemRow*)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradePrice"))
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
+        .Find("mov r9, rax; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    TOptional<int32> UpgradePrice;
+
+    if (GetUpgradePriceForContext)
+    {
+        GetUpgradePriceForContext(this, &UpgradePrice, Context, UpgradedItemRow);
+
+        return UpgradePrice;
+    }
+
     static auto GetUpgradePrice = Anchor::Function<TOptional<int32>* (*)(const UFortConversationTaskNode_UpgradeItem*, TOptional<int32>*, const FWeaponUpgradeItemRow*)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradePrice"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
-        .Call(2)
+        .Find("mov r8, rax; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
-    TOptional<int32> UpgradePrice;
     GetUpgradePrice(this, &UpgradePrice, UpgradedItemRow);
 
     return UpgradePrice;
@@ -53,7 +81,7 @@ FConversationTaskResult UFortConversationTaskNode_UpgradeItem::ExecuteTaskNode_I
     auto UpgradedItemRow = GetUpgradedItemRow(Context);
     auto UpgradedWeaponDef = UpgradedItemRow ? UpgradedItemRow->GetUpgradedWeaponDef() : nullptr;
 
-    if (!CurrentWeapon || !UpgradedWeaponDef || !PayPrice(Context, GetUpgradePrice(UpgradedItemRow)))
+    if (!CurrentWeapon || !UpgradedWeaponDef || !PayPrice(Context, GetUpgradePrice(Context, UpgradedItemRow)))
         return FConversationTaskResult::ReturnToCurrentClientChoice();
 
     UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(PlayerController, CurrentWeapon->GetItemEntryGuid(), 1, true);

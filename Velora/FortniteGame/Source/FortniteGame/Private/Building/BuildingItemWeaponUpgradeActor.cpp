@@ -171,6 +171,13 @@ FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponIt
         .Find("setz dl; mov rcx, *; add dl, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
+        .Find("mov dl, 0x1; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (StaticGetItemRow)

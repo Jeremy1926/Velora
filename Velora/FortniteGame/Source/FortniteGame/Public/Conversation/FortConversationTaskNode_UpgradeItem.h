@@ -11,7 +11,7 @@ public:
 
     const FWeaponUpgradeItemRow* GetUpgradedItemRow(const FConversationContext& Context) const;
 
-    TOptional<int32> GetUpgradePrice(const FWeaponUpgradeItemRow* UpgradedItemRow) const;
+    TOptional<int32> GetUpgradePrice(const FConversationContext& Context, const FWeaponUpgradeItemRow* UpgradedItemRow) const;
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
 };

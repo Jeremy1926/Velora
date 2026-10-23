@@ -5,6 +5,7 @@
 
 struct FFrame;
 class UFortItemDefinition;
+class UFortWeaponItemDefinition;
 enum class EFortWeaponType : uint8;
 
 enum class EFortWeaponAbilityRemovalReason : uint8
@@ -27,6 +28,8 @@ public:
     static UClass* StaticClass();
 
     static EFortWeaponType FindWeaponTypeForStats(const UFortItemDefinition* ItemDefinition);
+
+    UFortWeaponItemDefinition* GetWeaponData() const;
 
     void PlayWeaponFireFX(bool bPersistentFire);
 

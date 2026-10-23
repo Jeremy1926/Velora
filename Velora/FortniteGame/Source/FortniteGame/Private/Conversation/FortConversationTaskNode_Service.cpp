@@ -52,7 +52,9 @@ bool UFortConversationTaskNode_Service::CanPlayerAffordPrice(const FConversation
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
-        .Call(3)
+        .Find("lea r8, [rsp+0x*]; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     TOptional<int32> InPrice = Price;

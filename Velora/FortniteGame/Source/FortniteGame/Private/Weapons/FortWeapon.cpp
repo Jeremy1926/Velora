@@ -47,6 +47,13 @@ EFortWeaponType AFortWeapon::FindWeaponTypeForStats(const UFortItemDefinition* I
     return FindWeaponTypeForStats(ItemDefinition);
 }
 
+UFortWeaponItemDefinition* AFortWeapon::GetWeaponData() const
+{
+    static auto WeaponData = StaticClass()->FindPropertyByName(FName(TEXT("WeaponData")));
+
+    return *WeaponData->ContainerPtrToValuePtr<UFortWeaponItemDefinition*>(this);
+}
+
 void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
 {
     static auto PlayWeaponFireFX = Anchor::VirtualFunction<void (*)(AFortWeapon*, bool)>(TEXT("AFortWeapon::PlayWeaponFireFX"))
