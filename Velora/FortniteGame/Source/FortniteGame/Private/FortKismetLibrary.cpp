@@ -163,6 +163,12 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 
         NumberToGive -= ItemEntry->GetCount();
 
+        if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition))
+        {
+            if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
+                ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+        }
+
         ItemEntry->GetParentInventory() = WorldInventory;
         ItemEntry->GetIsReplicatedCopy() = true;
 
