@@ -87,7 +87,7 @@ FName FColletorUnitInfo::GetOverrideOutputItemLootTierGroupName()
 {
     static auto OverrideOutputItemLootTierGroupName = StaticStruct()->FindPropertyByName(FName(TEXT("OverrideOutputItemLootTierGroupName")));
 
-    return *OverrideOutputItemLootTierGroupName->ContainerPtrToValuePtr<FName>(this);
+    return OverrideOutputItemLootTierGroupName->GetPropertyValue_InContainer<FName>(this);
 }
 
 UClass* ABuildingItemCollectorActor::StaticClass()
@@ -313,7 +313,7 @@ FName ABuildingItemCollectorActor::GetDefaultItemLootTierGroupName() const
 {
     static auto DefaultItemLootTierGroupName = GetClass()->FindPropertyByName(FName(TEXT("DefaultItemLootTierGroupName")));
 
-    return *DefaultItemLootTierGroupName->ContainerPtrToValuePtr<FName>(this);
+    return DefaultItemLootTierGroupName->GetPropertyValue_InContainer<FName>(this);
 }
 
 TArray<FColletorUnitInfo>& ABuildingItemCollectorActor::GetItemCollections()

@@ -61,7 +61,7 @@ void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation
 
     if (IsInAircraft())
     {
-        PlayerController->GetStateName() = NAME_Inactive;
+        PlayerController->SetStateName(NAME_Inactive);
         PlayerController->GetAirSpawnControlRotation() = ClientRotation;
         PlayerController->ServerRestartPlayer_Implementation();
         PlayerController->SetControlRotation(ClientRotation);

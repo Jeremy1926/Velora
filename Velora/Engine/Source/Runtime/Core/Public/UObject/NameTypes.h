@@ -62,14 +62,20 @@ struct TGameLayout<FName>
 
     static FORCEINLINE FName Load(const void* Game)
     {
+        if (!FName::IsOutlineNumber())
+            return *(const FName*)Game;
+
         FName Value(NAME_None);
-        memcpy(&Value, Game, Size());
+        memcpy(&Value, Game, sizeof(NAME_INDEX));
 
         return Value;
     }
 
     static FORCEINLINE void Store(void* Game, const FName& Value)
     {
-        memcpy(Game, &Value, Size());
+        if (!FName::IsOutlineNumber())
+            *(FName*)Game = Value;
+        else
+            memcpy(Game, &Value, sizeof(NAME_INDEX));
     }
 };

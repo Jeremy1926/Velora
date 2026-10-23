@@ -392,7 +392,7 @@ FName ABuildingFoundation::GetLevelToStream() const
 {
     static auto LevelToStream = GetClass()->FindPropertyByName(FName(TEXT("LevelToStream")));
 
-    return *LevelToStream->ContainerPtrToValuePtr<FName>(this);
+    return LevelToStream->GetPropertyValue_InContainer<FName>(this);
 }
 
 FTransform& ABuildingFoundation::GetDynamicFoundationTransform()

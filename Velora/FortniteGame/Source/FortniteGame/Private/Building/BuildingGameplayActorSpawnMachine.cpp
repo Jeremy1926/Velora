@@ -455,7 +455,7 @@ FName ABuildingGameplayActorSpawnMachine::GetGrantedItemsLootTier() const
 {
     static auto GrantedItemsLootTier = GetClass()->FindPropertyByName(FName(TEXT("GrantedItemsLootTier")));
 
-    return *GrantedItemsLootTier->ContainerPtrToValuePtr<FName>(this);
+    return GrantedItemsLootTier->GetPropertyValue_InContainer<FName>(this);
 }
 
 float ABuildingGameplayActorSpawnMachine::GetHeightCheckForSkydive() const

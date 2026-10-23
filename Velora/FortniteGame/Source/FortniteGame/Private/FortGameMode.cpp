@@ -132,7 +132,7 @@ FName AFortGameMode::GetCurrentPlaylistName() const
 {
     static auto CurrentPlaylistName = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistName")));
 
-    return *CurrentPlaylistName->ContainerPtrToValuePtr<FName>(this);
+    return CurrentPlaylistName->GetPropertyValue_InContainer<FName>(this);
 }
 
 void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTables) const

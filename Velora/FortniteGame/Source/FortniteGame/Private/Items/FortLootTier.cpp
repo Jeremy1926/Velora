@@ -19,14 +19,14 @@ FName FFortLootTierData::GetLootPackage() const
 {
     static auto LootPackage = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackage")));
 
-    return *LootPackage->ContainerPtrToValuePtr<FName>(this);
+    return LootPackage->GetPropertyValue_InContainer<FName>(this);
 }
 
 FName FFortLootTierData::GetLootPreviewPackage() const
 {
     static auto LootPreviewPackage = StaticStruct()->FindPropertyByName(FName(TEXT("LootPreviewPackage")));
 
-    return *LootPreviewPackage->ContainerPtrToValuePtr<FName>(this);
+    return LootPreviewPackage->GetPropertyValue_InContainer<FName>(this);
 }
 
 float FFortLootTierData::GetNumLootPackageDrops() const

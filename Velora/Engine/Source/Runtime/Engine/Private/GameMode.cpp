@@ -8,5 +8,5 @@ FName AGameMode::GetMatchState() const
 {
     static auto MatchState = GetClass()->FindPropertyByName(FName(TEXT("MatchState")));
 
-    return *MatchState->ContainerPtrToValuePtr<FName>(this);
+    return MatchState->GetPropertyValue_InContainer<FName>(this);
 }

@@ -250,5 +250,5 @@ FName AFriendChestNative::GetInstancedLootTierGroup() const
 {
     static auto InstancedLootTierGroup = StaticClass()->FindPropertyByName(FName(TEXT("InstancedLootTierGroup")));
 
-    return *InstancedLootTierGroup->ContainerPtrToValuePtr<FName>(this);
+    return InstancedLootTierGroup->GetPropertyValue_InContainer<FName>(this);
 }

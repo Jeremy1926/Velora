@@ -49,7 +49,7 @@ void UCraftingObjectComponent::PickupItemAndStartCrafting(AFortPlayerController*
         return;
 
     *PendingPickupCraftingItem->ContainerPtrToValuePtr<AFortPickup*>(this) = Pickup;
-    *PendingPickupCraftingFormula->ContainerPtrToValuePtr<FName>(this) = FormulaRow;
+    PendingPickupCraftingFormula->SetPropertyValue_InContainer<FName>(this, FormulaRow);
 
     FScriptDelegate Delegate;
     Delegate.BindUFunction(this, FName(TEXT("HandlePickupCraftingItemPickedUp")));

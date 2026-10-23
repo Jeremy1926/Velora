@@ -26,7 +26,7 @@ int32 FKAggregateGeom::GetElementIndexByName(const FName InName) const
 
         for (int32 Index = 0; Index < Elems.Num(); Index++, ElementIndex++)
         {
-            if (*Name->ContainerPtrToValuePtr<FName>(Elems.GetData() + Index * ElemSize) == InName)
+            if (Name->GetPropertyValue_InContainer<FName>(Elems.GetData() + Index * ElemSize) == InName)
                 return ElementIndex;
         }
     }

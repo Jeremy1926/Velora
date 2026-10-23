@@ -162,7 +162,7 @@ void UFortConversationTaskNode_GiveGift::GiveGiftItems(UFortNPCConversationParti
     FName LootTierKey(NAME_None);
     int32 ChosenLootTier = -1;
 
-    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, ChosenLootTier, *LootTier->ContainerPtrToValuePtr<FName>(GiftItemRow), WorldLevel, GameplayTags))
+    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, ChosenLootTier, LootTier->GetPropertyValue_InContainer<FName>(GiftItemRow), WorldLevel, GameplayTags))
         return;
 
     TArray<FFortItemEntry> LootToDrop;

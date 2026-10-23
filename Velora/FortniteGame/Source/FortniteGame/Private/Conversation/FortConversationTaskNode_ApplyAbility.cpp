@@ -45,7 +45,7 @@ FName UFortConversationTaskNode_ApplyAbility::GetPricingKey() const
 {
     static auto PricingKey = StaticClass()->FindPropertyByName(FName(TEXT("PricingKey")));
 
-    return *PricingKey->ContainerPtrToValuePtr<FName>(this);
+    return PricingKey->GetPropertyValue_InContainer<FName>(this);
 }
 
 EPreventAbilityUseReason UFortConversationTaskNode_ApplyAbility::CheckPlayerFacingUsageRequirements(const FConversationContext& Context, const AFortPlayerPawn& PlayerPawn, int32 Price) const

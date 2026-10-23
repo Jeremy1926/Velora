@@ -131,7 +131,7 @@ FName ABGAConsumableSpawner::GetSpawnLootTierGroup() const
 {
     static auto SpawnLootTierGroup = GetClass()->FindPropertyByName(FName(TEXT("SpawnLootTierGroup")));
 
-    return *SpawnLootTierGroup->ContainerPtrToValuePtr<FName>(this);
+    return SpawnLootTierGroup->GetPropertyValue_InContainer<FName>(this);
 }
 
 UEnvQuery* ABGAConsumableSpawner::GetQueryTemplate() const

@@ -18,7 +18,7 @@ struct FFortAIPawnLootDropData
 
     float& GetLootDropChance();
 
-    FName& GetWorldItemTierGroup();
+    FName GetWorldItemTierGroup();
 };
 
 struct FPendingSpawnInfo

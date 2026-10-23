@@ -248,7 +248,7 @@ uint8* UFortControllerComponent_VictoryCrowns::FindCurrentPlaylistRow() const
     if (!DataTable || !DataTable->RowStruct || !Playlist)
         return nullptr;
 
-    auto RowName = *PlaylistName->ContainerPtrToValuePtr<FName>(Playlist);
+    auto RowName = PlaylistName->GetPropertyValue_InContainer<FName>(Playlist);
     auto RowData = RowName != NAME_None ? DataTable->RowMap.Find(RowName) : nullptr;
 
     return RowData ? *RowData : nullptr;

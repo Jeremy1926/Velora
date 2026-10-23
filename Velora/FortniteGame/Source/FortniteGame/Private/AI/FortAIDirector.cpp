@@ -22,11 +22,11 @@ float& FFortAIPawnLootDropData::GetLootDropChance()
     return *LootDropChance->ContainerPtrToValuePtr<float>(this);
 }
 
-FName& FFortAIPawnLootDropData::GetWorldItemTierGroup()
+FName FFortAIPawnLootDropData::GetWorldItemTierGroup()
 {
     static auto WorldItemTierGroup = StaticStruct()->FindPropertyByName(FName(TEXT("WorldItemTierGroup")));
 
-    return *WorldItemTierGroup->ContainerPtrToValuePtr<FName>(this);
+    return WorldItemTierGroup->GetPropertyValue_InContainer<FName>(this);
 }
 
 UScriptStruct* FPendingSpawnInfo::StaticStruct()

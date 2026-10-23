@@ -24,7 +24,9 @@ public:
 
     void SetControlRotation(const FRotator& NewRotation);
 
-    FName& GetStateName();
+    FName GetStateName();
+
+    void SetStateName(FName InStateName);
 
     void GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const;
 };

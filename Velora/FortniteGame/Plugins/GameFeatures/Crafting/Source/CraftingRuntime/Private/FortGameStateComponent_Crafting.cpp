@@ -76,7 +76,7 @@ void UFortGameStateComponent_Crafting::UpdateCraftingResultsList()
             if (!CraftingFormula)
                 continue;
 
-            const FName LootTierKey = *ResultLootTierKey->ContainerPtrToValuePtr<FName>(CraftingFormula);
+            const FName LootTierKey = ResultLootTierKey->GetPropertyValue_InContainer<FName>(CraftingFormula);
             bool bAlreadyListed = false;
 
             for (auto& CraftingResult : CraftingResultsList)

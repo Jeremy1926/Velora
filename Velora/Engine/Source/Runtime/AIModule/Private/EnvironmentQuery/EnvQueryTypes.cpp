@@ -48,11 +48,11 @@ int32 FAIDynamicParam::GetTypeSize()
     return TypeSize;
 }
 
-FName& FAIDynamicParam::GetParamName()
+FName FAIDynamicParam::GetParamName()
 {
     static auto ParamName = StaticStruct()->FindPropertyByName(FName(TEXT("ParamName")));
 
-    return *ParamName->ContainerPtrToValuePtr<FName>(this);
+    return ParamName->GetPropertyValue_InContainer<FName>(this);
 }
 
 EAIParamType& FAIDynamicParam::GetParamType()

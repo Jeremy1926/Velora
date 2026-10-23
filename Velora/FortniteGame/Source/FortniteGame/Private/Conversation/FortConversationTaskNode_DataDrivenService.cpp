@@ -120,7 +120,7 @@ FName UFortConversationTaskNode_DataDrivenService::GetPricingKey() const
 {
     static auto PricingKey = StaticClass()->FindPropertyByName(FName(TEXT("PricingKey")));
 
-    return *PricingKey->ContainerPtrToValuePtr<FName>(this);
+    return PricingKey->GetPropertyValue_InContainer<FName>(this);
 }
 
 int32 UFortConversationTaskNode_DataDrivenService::GetPricingColumn() const
@@ -148,7 +148,7 @@ FName UFortConversationTaskNode_DataDrivenService::GetServiceBriefCollectionKeyO
 {
     static auto ServiceBriefCollectionKeyOveride = StaticClass()->FindPropertyByName(FName(TEXT("ServiceBriefCollectionKeyOveride")));
 
-    return ServiceBriefCollectionKeyOveride ? *ServiceBriefCollectionKeyOveride->ContainerPtrToValuePtr<FName>(this) : NAME_None;
+    return ServiceBriefCollectionKeyOveride ? ServiceBriefCollectionKeyOveride->GetPropertyValue_InContainer<FName>(this) : NAME_None;
 }
 
 void UFortConversationTaskNode_DataDrivenService::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const

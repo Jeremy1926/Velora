@@ -39,7 +39,7 @@ FName FFortLootPackageData::GetRequiredTag() const
 {
     static auto RequiredTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredTag")));
 
-    return *RequiredTag->ContainerPtrToValuePtr<FName>(this);
+    return RequiredTag->GetPropertyValue_InContainer<FName>(this);
 }
 
 const FString& FFortLootPackageData::GetLootPackageCall() const

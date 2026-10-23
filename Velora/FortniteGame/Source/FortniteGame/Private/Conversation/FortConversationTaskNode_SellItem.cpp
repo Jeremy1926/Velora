@@ -94,7 +94,7 @@ FConversationSellTaskMemory* UFortConversationTaskNode_SellItem::GetSellingData(
     FName LootTierKey(NAME_None);
     int32 ChosenLootTier = -1;
 
-    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, ChosenLootTier, *LootTier->ContainerPtrToValuePtr<FName>(SaleRow), WorldLevel, GameplayTags))
+    if (!UFortLootTier::ChooseUnquotaedLootTierKey(LootTierKey, ChosenLootTier, LootTier->GetPropertyValue_InContainer<FName>(SaleRow), WorldLevel, GameplayTags))
         return &Entry.SellingData;
 
     auto LootTierData = UFortGameData::Get()->FindLootTierDataRow(LootTierKey, TEXT("UFortConversationTaskNode_SellItem::GetSellingData"));

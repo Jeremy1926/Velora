@@ -79,7 +79,7 @@ struct FAIDynamicParam
 
     static int32 GetTypeSize();
 
-    FName& GetParamName();
+    FName GetParamName();
 
     EAIParamType& GetParamType();
 

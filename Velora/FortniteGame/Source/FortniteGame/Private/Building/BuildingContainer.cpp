@@ -79,7 +79,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
     if (!IsAlreadySearched())
     {
         const FVector LootSpawnLocation = GetTransform().TransformPosition(GetLootSpawnLocation());
-        auto& ContainerLootTierKey = GetContainerLootTierKey();
+        auto ContainerLootTierKey = GetContainerLootTierKey();
 
         if (ContainerLootTierKey == NAME_None)
         {
@@ -91,6 +91,7 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
             int32 LootTier = -1;
 
             UFortLootTier::ChooseUnquotaedLootTierKey(ContainerLootTierKey, LootTier, SearchLootTierGroup, -1, GetStaticGameplayTags());
+            SetContainerLootTierKey(ContainerLootTierKey);
         }
 
         if (ContainerLootTierKey != NAME_None)
@@ -194,14 +195,21 @@ FName ABuildingContainer::GetSearchLootTierGroup() const
 {
     static auto SearchLootTierGroup = GetClass()->FindPropertyByName(FName(TEXT("SearchLootTierGroup")));
 
-    return *SearchLootTierGroup->ContainerPtrToValuePtr<FName>(this);
+    return SearchLootTierGroup->GetPropertyValue_InContainer<FName>(this);
 }
 
-FName& ABuildingContainer::GetContainerLootTierKey()
+FName ABuildingContainer::GetContainerLootTierKey()
 {
     static auto ContainerLootTierKey = GetClass()->FindPropertyByName(FName(TEXT("ContainerLootTierKey")));
 
-    return *ContainerLootTierKey->ContainerPtrToValuePtr<FName>(this);
+    return ContainerLootTierKey->GetPropertyValue_InContainer<FName>(this);
+}
+
+void ABuildingContainer::SetContainerLootTierKey(FName InContainerLootTierKey)
+{
+    static auto ContainerLootTierKey = GetClass()->FindPropertyByName(FName(TEXT("ContainerLootTierKey")));
+
+    ContainerLootTierKey->SetPropertyValue_InContainer<FName>(this, InContainerLootTierKey);
 }
 
 FVector ABuildingContainer::GetLootSpawnLocation() const

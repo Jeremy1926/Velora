@@ -22,5 +22,5 @@ FName UFortAthenaAIRuntimeParameters_Inventory::GetCurrencyPayoutRowName() const
 {
     static auto CurrencyPayoutRowName = GetClass()->FindPropertyByName(FName(TEXT("CurrencyPayoutRowName")));
 
-    return CurrencyPayoutRowName ? *CurrencyPayoutRowName->ContainerPtrToValuePtr<FName>(this) : FName(NAME_None);
+    return CurrencyPayoutRowName ? CurrencyPayoutRowName->GetPropertyValue_InContainer<FName>(this) : FName(NAME_None);
 }

@@ -305,5 +305,5 @@ FName ABuildingSMActor::GetDestructionLootTierKey() const
 {
     static auto DestructionLootTierKey = GetClass()->FindPropertyByName(FName(TEXT("DestructionLootTierKey")));
 
-    return *DestructionLootTierKey->ContainerPtrToValuePtr<FName>(this);
+    return DestructionLootTierKey->GetPropertyValue_InContainer<FName>(this);
 }

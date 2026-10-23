@@ -38,7 +38,9 @@ public:
 
     FName GetSearchLootTierGroup() const;
 
-    FName& GetContainerLootTierKey();
+    FName GetContainerLootTierKey();
+
+    void SetContainerLootTierKey(FName InContainerLootTierKey);
 
     FVector GetLootSpawnLocation() const;
 

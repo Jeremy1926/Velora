@@ -65,11 +65,18 @@ void AController::SetControlRotation(const FRotator& NewRotation)
     SetControlRotation(this, NewRotation);
 }
 
-FName& AController::GetStateName()
+FName AController::GetStateName()
 {
     static auto StateName = GetClass()->FindPropertyByName(FName(TEXT("StateName")));
 
-    return *StateName->ContainerPtrToValuePtr<FName>(this);
+    return StateName->GetPropertyValue_InContainer<FName>(this);
+}
+
+void AController::SetStateName(FName InStateName)
+{
+    static auto StateName = GetClass()->FindPropertyByName(FName(TEXT("StateName")));
+
+    StateName->SetPropertyValue_InContainer<FName>(this, InStateName);
 }
 
 void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) const

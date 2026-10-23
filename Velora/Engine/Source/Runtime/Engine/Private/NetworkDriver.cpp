@@ -69,7 +69,7 @@ FName UNetDriver::GetNetDriverName() const
 {
     static auto NetDriverName = GetClass()->FindPropertyByName(FName(TEXT("NetDriverName")));
 
-    return *NetDriverName->ContainerPtrToValuePtr<FName>(this);
+    return NetDriverName->GetPropertyValue_InContainer<FName>(this);
 }
 
 float UNetDriver::GetTime() const
