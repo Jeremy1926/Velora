@@ -23,6 +23,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* ABuildingContainer::StaticClass()
 {
@@ -35,7 +36,9 @@ void ABuildingContainer::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (HasAuthority() && GetStartAlreadySearched_Athena())
+    auto GameStateAthena = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (HasAuthority() && GetStartAlreadySearched_Athena() && (!DETOUR_ORIGINAL(AFortGameStateAthena, OnPlaylistLootTableAssetsDataLoadCompleted) || !GameStateAthena || GameStateAthena->GetPlaylistDataIsLoaded()))
         SpawnLoot(nullptr);
 }
 

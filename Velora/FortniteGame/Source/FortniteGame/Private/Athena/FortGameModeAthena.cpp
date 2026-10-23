@@ -353,15 +353,20 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
     if (bPlaylistGarbageCollection && GetDisableGCOnServerDuringMatch())
         IConsoleManager::Get().FindConsoleVariable(TEXT("gc.TimeBetweenPurgingPendingKillObjects"))->Set(TEXT("0"), ECVF_SetByCode);
 
-    TArray<AActor*> BuildingContainers;
-    UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
+    auto GameStateAthena = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
 
-    for (auto Actor : BuildingContainers)
+    if (!DETOUR_ORIGINAL(AFortGameStateAthena, OnPlaylistLootTableAssetsDataLoadCompleted) || !GameStateAthena || GameStateAthena->GetPlaylistDataIsLoaded())
     {
-        auto BuildingContainer = (ABuildingContainer*)Actor;
+        TArray<AActor*> BuildingContainers;
+        UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
 
-        if (BuildingContainer->GetStartAlreadySearched_Athena())
-            BuildingContainer->SpawnLoot(nullptr);
+        for (auto Actor : BuildingContainers)
+        {
+            auto BuildingContainer = (ABuildingContainer*)Actor;
+
+            if (BuildingContainer->GetStartAlreadySearched_Athena())
+                BuildingContainer->SpawnLoot(nullptr);
+        }
     }
 
     if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))

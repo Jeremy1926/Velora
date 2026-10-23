@@ -4,6 +4,7 @@
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Athena/Vehicles/FortVehicleManager.h"
+#include "Building/BuildingContainer.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "FortAthenaLivingWorldManager.h"
 #include "FortAthenaLivingWorldVolume.h"
@@ -336,6 +337,17 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         GameMode->PerformAsyncLoadForGameFeatureLootData();
 
     Original();
+
+    TArray<AActor*> BuildingContainers;
+    UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
+
+    for (auto Actor : BuildingContainers)
+    {
+        auto BuildingContainer = (ABuildingContainer*)Actor;
+
+        if (BuildingContainer->GetStartAlreadySearched_Athena())
+            BuildingContainer->SpawnLoot(nullptr);
+    }
 
     if (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
     {
