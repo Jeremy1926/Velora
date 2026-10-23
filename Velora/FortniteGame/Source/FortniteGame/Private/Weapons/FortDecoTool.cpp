@@ -18,7 +18,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
     DETOUR(AFortDecoTool, ServerCreateBuildingAndSpawnDeco_Implementation, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(AFortPlayerController, ServerCreateBuildingActorInternal))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .LogSlot(TEXT("AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
@@ -27,17 +27,27 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     static auto GetSoftObject = Anchor::Function<UObject* (*)(const void*)>(TEXT("FSoftObjectPtr::Get"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("mov rcx, rsi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("test byte ptr [*+0x*], 0x2")
+        .Find("call 0x*")
+        .Target()
         .Find("call 0x*")
         .Target()
         .Get();
 
     static auto GetBuildingTypeFromBuildingAttachmentType = Anchor::Function<int32 (*)(EBuildingAttachmentType)>(TEXT("AFortDecoHelper::GetBuildingTypeFromBuildingAttachmentType"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("cmp eax, 0xc")
@@ -47,7 +57,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     static auto GameplayTags = Anchor::Function<const uint8* (*)()>(TEXT("UFortGlobals::GameplayTags"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("cmp eax, 0xc")
@@ -57,7 +67,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     static auto TrapExtraPieceCostIgnore = Anchor::Offset(TEXT("FFortGlobalGameplayTags::TrapExtraPieceCostIgnore"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("lea rdx, [rax+0x*]")
@@ -65,7 +75,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     static auto DoesItemDefinitionHaveGameplayTag = Anchor::Function<bool (*)(const UFortItemDefinition*, const void*)>(TEXT("UFortKismetLibrary::DoesItemDefinitionHaveGameplayTag"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("lea rdx, [rax+0x*]")
@@ -75,10 +85,10 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     static auto FindAvailableBuildingClassForBuildingTypeAndEditModePattern = Anchor::Function<UClass** (*)(AFortPlayerController*, UClass**, int32, const TArray<UObject*>*, bool, uint8)>(TEXT("AFortPlayerController::FindAvailableBuildingClassForBuildingTypeAndEditModePattern"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
-        .Find("mov [rsp+0x20], al; call 0x*")
+        .Find("mov [rsp+0x20], al")
         .Find("call 0x*")
         .Target()
         .Get();
@@ -89,6 +99,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("call [r10+0x*]")
+        .Optional()
         .Get();
 
     auto PlayerController = GetPlayerController();
@@ -141,6 +152,21 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
     if (!Building)
         return;
 
+    static auto bSpawnDecoOnExtraPieceParam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco")))->FindPropertyByName(FName(TEXT("bSpawnDecoOnExtraPiece")));
+
+    if (!bSpawnDecoOnExtraPieceParam)
+    {
+        static auto ServerSpawnDeco_Implementation = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const FVector*, const FRotator*, ABuildingSMActor*, EBuildingAttachmentType)>(TEXT("AFortDecoTool::ServerSpawnDeco_Implementation"))
+            .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+            .Find("call *r10*; test al, al")
+            .Find("call [r10+0x*]")
+            .Get();
+
+        ServerSpawnDeco_Implementation(this, &Location, &Rotation, Building, InBuildingAttachmentType);
+
+        return;
+    }
+
     if (bAllowAutoCreateExtraPiece && bAllowAutoCreateExtraPiece->GetPropertyValue_InContainer(DecoItemDefinition) && bSpawnDecoOnExtraPiece)
     {
         if (bGiveFreeDecoOnUndergroundPiece && bGiveFreeDecoOnUndergroundPiece->GetPropertyValue_InContainer(DecoItemDefinition))
@@ -156,7 +182,7 @@ AFortPlayerController* AFortDecoTool::GetPlayerController() const
 {
     static auto GetPlayerController = Anchor::Function<AFortPlayerController* (*)(const AFortDecoTool*)>(TEXT("AFortDecoTool::GetPlayerController"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("call 0x*")
@@ -170,10 +196,10 @@ UFortItemDefinition* AFortDecoTool::GetDecoItemDefinition() const
 {
     static auto GetDecoItemDefinition = Anchor::VirtualFunction<UFortItemDefinition* (*)(const AFortDecoTool*)>(TEXT("AFortDecoTool::GetDecoItemDefinition"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
-        .Find("call r10; test al, al")
+        .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
-        .Find("call [rax+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return GetDecoItemDefinition(this);
