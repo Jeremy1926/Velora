@@ -901,6 +901,7 @@ TArray<TSoftObjectPtr<UDataTable>>& AFortGameModeAthena::GetGameFeatureLootPacka
 FSimpleMulticastDelegate* AFortGameModeAthena::GetOnPlaylistLootTablesAppliedDelegate()
 {
     static auto GameFeaturesStreamingRangedWeaponData = StaticClass()->FindPropertyByName(FName(TEXT("GameFeaturesStreamingRangedWeaponData")));
+    static auto OnPlaylistLootTablesAppliedDelegate = GameFeaturesStreamingRangedWeaponData && GameFeaturesStreamingRangedWeaponData->GetOffset_ForInternal() + 0x38 <= StaticClass()->GetPropertiesSize() ? GameFeaturesStreamingRangedWeaponData->GetOffset_ForInternal() + 0x20 : 0;
 
-    return GameFeaturesStreamingRangedWeaponData ? (FSimpleMulticastDelegate*)((uint8*)this + GameFeaturesStreamingRangedWeaponData->GetOffset_ForInternal() + 0x20) : nullptr;
+    return OnPlaylistLootTablesAppliedDelegate ? (FSimpleMulticastDelegate*)((uint8*)this + OnPlaylistLootTablesAppliedDelegate) : nullptr;
 }
