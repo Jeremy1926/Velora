@@ -240,7 +240,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
 
     for (int32 Index = EventInstances.Num() - 1; Index >= 0; Index--)
     {
-        if (!EventInstances[Index].GetSpawnedActors().Num() && !EventInstances[Index].GetPendingSpawnRequests().Num() && TimeSeconds >= EventInstances[Index].GetRespawnTime())
+        if (!EventInstances[Index].GetSpawnedActors().Num() && (GetPendingActorSpawnEventRequestsOffset() > 0 || !EventInstances[Index].GetPendingSpawnRequests().Num()) && TimeSeconds >= EventInstances[Index].GetRespawnTime())
             EventInstances.RemoveAt(Index);
     }
 
@@ -650,6 +650,20 @@ int32 UFortAthenaLivingWorldManager::GetActorCount(const FFortAthenaLivingWorldC
 
         if (EventData && EventRequest.LivingWorldManager.Get() == this && (!Category || EventRequest.Category == Category) && (!Event || EventRequest.Event == Event))
             ActorCount += EventRequest.ActorCountToSpawn;
+    }
+
+    if (GetPendingActorSpawnEventRequestsOffset() > 0)
+    {
+        for (auto& PendingActorSpawnEventRequest : GetPendingActorSpawnEventRequests())
+        {
+            auto& RequestData = PendingActorSpawnEventRequest.RequestData;
+
+            if (!Category && !Event && RequestData.Category && RequestData.Category->GetbExcludeFromGlobalAIBudget())
+                continue;
+
+            if ((!Category || RequestData.Category == Category) && (!Event || RequestData.Event == Event))
+                ActorCount += RequestData.ActorCountToSpawn;
+        }
     }
 
     return ActorCount;
