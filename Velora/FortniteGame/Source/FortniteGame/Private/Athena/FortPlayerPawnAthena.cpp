@@ -213,6 +213,13 @@ void AFortPlayerPawnAthena::execForceReviveFromDBNO(FFrame& Stack, void* const Z
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO")));
 
+    static auto bHasEventInstigator = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena:ForceReviveFromDBNO")))->FindPropertyByName(FName(TEXT("EventInstigator"))) != nullptr;
+
+    AController* EventInstigator = nullptr;
+
+    if (bHasEventInstigator)
+        Stack.StepCompiledIn(&EventInstigator);
+
     Stack.Code += !!Stack.Code;
 
     if (GetIsDBNO())
