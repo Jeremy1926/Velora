@@ -887,6 +887,24 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
             return LootTierGroup;
     }
 
+    static auto ExternalSupportedAthenaLootTierGroups = Anchor::Data<TMap<FName, TArray<FName>>*>(TEXT("AFortGameModeAthena::ExternalSupportedAthenaLootTierGroups"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__UFortGameFeatureAction_LootTierGroups"), "lea rdx, [rcx+0x28]; mov rcx, [rcx+0x18]; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov r8, [0x*]")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (ExternalSupportedAthenaLootTierGroups)
+    {
+        for (auto& ExternalGroups : *ExternalSupportedAthenaLootTierGroups)
+        {
+            if (ExternalGroups.Value.Contains(LootTierGroup))
+                return LootTierGroup;
+        }
+    }
+
     return FName(NAME_None);
 }
 
