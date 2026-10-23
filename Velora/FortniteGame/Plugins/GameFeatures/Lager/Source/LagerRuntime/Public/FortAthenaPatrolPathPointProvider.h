@@ -29,6 +29,8 @@ public:
 
     void DisablePointProvider();
 
+    void InitPointProvider(AActor* PatrolPath, bool bUsePatrolPathTags);
+
     void execDisablePointProvider(FFrame& Stack, void* const Z_Param__Result);
 
     AFortGameStateAthena* GetCachedGameState() const;

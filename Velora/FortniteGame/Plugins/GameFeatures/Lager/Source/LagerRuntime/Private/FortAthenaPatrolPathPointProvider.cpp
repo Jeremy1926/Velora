@@ -259,6 +259,33 @@ void AFortAthenaPatrolPathPointProvider::EnablePointProvider()
         UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(PointProvider);
 }
 
+void AFortAthenaPatrolPathPointProvider::InitPointProvider(AActor* PatrolPath, bool bUsePatrolPathTags)
+{
+    DETOUR(AFortAthenaPatrolPathPointProvider, InitPointProvider, Anchor::Hook()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
+        .Is("xor eax, eax; cmp [rdx+0x20], rax; setnz al; add rcx, 0x*; add [rdx+0x20], rax; mov rax, [rcx]; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("xor r8d, r8d; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
+        .Is("xor eax, eax; cmp [rdx+0x20], rax; setnz al; add rcx, 0x*; add [rdx+0x20], rax; mov rax, [rcx]; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("xor r8d, r8d; add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    Original(PatrolPath, bUsePatrolPathTags);
+
+    if (bUsePatrolPathTags && PatrolPath)
+        UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
+}
+
 void AFortAthenaPatrolPathPointProvider::DisablePointProvider()
 {
     DETOUR(AFortAthenaPatrolPathPointProvider, DisablePointProvider, Anchor::Hook()
