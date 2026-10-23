@@ -15,6 +15,7 @@ class FNetGUIDCache;
 class FNetworkNotify;
 class FNetworkObjectList;
 class UActorChannel;
+class ULevel;
 class UNetConnection;
 class UReplicationDriver;
 class UWorld;
@@ -66,6 +67,12 @@ public:
     FString& GetPathName();
 
     FName GetStreamingLevelName();
+
+    TWeakObjectPtr<ULevel>& GetLevel();
+
+    EChannelCloseReason& GetReason();
+
+    bool& GetIgnoreDistanceCulling();
 
 private:
     template<typename VectorType>
@@ -165,6 +172,8 @@ public:
     ENetMode GetNetMode() const;
 
     bool IsLevelInitializedForActor(const AActor* InActor, const UNetConnection* InConnection) const;
+
+    int64 SendDestructionInfo(UNetConnection* Connection, FActorDestructionInfo* DestructionInfo);
 
     static bool IsAdaptiveNetUpdateFrequencyEnabled();
 

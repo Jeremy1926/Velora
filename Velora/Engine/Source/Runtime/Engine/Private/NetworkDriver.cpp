@@ -165,6 +165,41 @@ FName FActorDestructionInfo::GetStreamingLevelName()
     return TGameLayout<FName>::Load(GetFields() + (UE::LWC::IsEnabled() ? offsetof(TFields<FVector3d>, StreamingLevelName) : offsetof(TFields<FVector>, StreamingLevelName)));
 }
 
+TWeakObjectPtr<ULevel>& FActorDestructionInfo::GetLevel()
+{
+    return *(TWeakObjectPtr<ULevel>*)this;
+}
+
+EChannelCloseReason& FActorDestructionInfo::GetReason()
+{
+    return *(EChannelCloseReason*)(GetFields() + (UE::LWC::IsEnabled() ? offsetof(TFields<FVector3d>, StreamingLevelName) : offsetof(TFields<FVector>, StreamingLevelName)) + TGameLayout<FName>::Size());
+}
+
+bool& FActorDestructionInfo::GetIgnoreDistanceCulling()
+{
+    return *(bool*)(&GetReason() + 1);
+}
+
+int64 UNetDriver::SendDestructionInfo(UNetConnection* Connection, FActorDestructionInfo* DestructionInfo)
+{
+    static auto NetControlChannelDestructionInfo = IConsoleManager::Get().FindConsoleVariable(TEXT("net.ControlChannelDestructionInfo"));
+
+    int64 NumBits = 0;
+
+    Connection->GetRepContextLevel() = (ULevel*)DestructionInfo->GetLevel().Get();
+
+    if (NetControlChannelDestructionInfo->GetInt() == 0 || Connection->IsReplay())
+    {
+        if (auto Channel = (UActorChannel*)Connection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally))
+            NumBits = Channel->SetChannelActorForDestroy(DestructionInfo);
+    }
+
+    Connection->GetRepContextActor() = nullptr;
+    Connection->GetRepContextLevel() = nullptr;
+
+    return NumBits;
+}
+
 TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDormantActors()
 {
     static auto DestroyedStartupOrDormantActors = Anchor::Offset(TEXT("UNetDriver::DestroyedStartupOrDormantActors"))

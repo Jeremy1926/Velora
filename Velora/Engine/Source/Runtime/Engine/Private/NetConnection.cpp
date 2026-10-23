@@ -60,6 +60,32 @@ bool UNetConnection::IsReplay() const
     return (*InternalAck->ContainerPtrToValuePtr<uint32>(this) >> 2) & 1;
 }
 
+AActor*& UNetConnection::GetRepContextActor()
+{
+    static auto RepContextActor = Anchor::Offset(TEXT("UNetConnection::RepContextActor"))
+        .Pattern("48 8B 01 48 85 C0 74 13 48 83 A0 ? ? ? ? 00 48 8B 01 48 83 A0 ? ? ? ? 00 C3")
+        .Find("and qword ptr [rax+0x*], 0x0")
+        .Disp();
+
+    return *(AActor**)((uint8*)this + RepContextActor);
+}
+
+ULevel*& UNetConnection::GetRepContextLevel()
+{
+    static auto RepContextLevel = Anchor::Offset(TEXT("UNetConnection::RepContextLevel"))
+        .Pattern("48 8B 01 48 85 C0 74 13 48 83 A0 ? ? ? ? 00 48 8B 01 48 83 A0 ? ? ? ? 00 C3")
+        .Find("and qword ptr [rax+0x*], 0x0")
+        .Find("and qword ptr [rax+0x*], 0x0")
+        .Disp();
+
+    return *(ULevel**)((uint8*)this + RepContextLevel);
+}
+
+bool UNetConnection::GetPendingCloseDueToReplicationFailure()
+{
+    return *((uint8*)&GetRepContextLevel() - 0xA2) != 0;
+}
+
 bool UNetConnection::GetInternalAck() const
 {
     static auto InternalAck = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("InternalAck")));

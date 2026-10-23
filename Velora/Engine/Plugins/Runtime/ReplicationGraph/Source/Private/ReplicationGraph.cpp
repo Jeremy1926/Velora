@@ -7,6 +7,7 @@
 #include "Engine/PackageMapClient.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
@@ -119,6 +120,176 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
 TArray<FLastLocationGatherInfo>& UNetReplicationGraphConnection::GetLastGatherLocations()
 {
     return *(TArray<FLastLocationGatherInfo>*)(((uintptr_t)&GetConnectionId() + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+}
+
+int32& UNetReplicationGraphConnection::GetQueuedBitsForActorDiscovery()
+{
+    return *(int32*)(&GetLastGatherLocations() + 1);
+}
+
+TArray<FCachedDestructInfo>& UNetReplicationGraphConnection::GetOutOfRangeDestroyedActors()
+{
+    return *(&GetPendingDestructInfoList() - 1);
+}
+
+bool UNetReplicationGraphConnection::PrepareForReplication()
+{
+    auto NetConnection = GetNetConnection();
+    auto PlayerController = NetConnection->GetPlayerController();
+
+    NetConnection->SetViewTarget(PlayerController ? PlayerController->GetViewTarget() : NetConnection->GetOwningActor());
+
+    for (auto Child : NetConnection->GetChildren())
+    {
+        auto ChildPlayerController = Child->GetPlayerController();
+
+        Child->SetViewTarget(ChildPlayerController ? ChildPlayerController->GetViewTarget() : Child->GetOwningActor());
+    }
+
+    return NetConnection->GetState() != USOCK_Closed && NetConnection->GetViewTarget() != nullptr;
+}
+
+void UNetReplicationGraphConnection::GetClientVisibleLevelNames(TSet<FName>& OutLevelNames)
+{
+    static auto GetClientVisibleLevelNames = Anchor::VirtualFunction<void (*)(UNetReplicationGraphConnection*, TSet<FName>&)>(TEXT("UNetReplicationGraphConnection::GetClientVisibleLevelNames"))
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x48)
+        .Get();
+
+    GetClientVisibleLevelNames(this, OutLevelNames);
+}
+
+void UNetReplicationGraphConnection::UpdateGatherLocationsForConnection(const FNetViewerArray& ConnectionViewers, const FReplicationGraphDestructionSettings& DestructionSettings)
+{
+    auto& LastGatherLocations = GetLastGatherLocations();
+
+    for (const FNetViewer& CurViewer : ConnectionViewers)
+    {
+        if (CurViewer.Connection != nullptr)
+        {
+            if (auto LastInfoForViewer = LastGatherLocations.FindByKey(CurViewer.Connection))
+                OnUpdateViewerLocation(LastInfoForViewer, CurViewer, DestructionSettings);
+            else
+                LastGatherLocations.Emplace(CurViewer.Connection, CurViewer.GetViewLocation());
+        }
+    }
+
+    LastGatherLocations.RemoveAll([](const FLastLocationGatherInfo& CurGatherInfo)
+    {
+        return CurGatherInfo.Connection == nullptr;
+    });
+}
+
+void UNetReplicationGraphConnection::OnUpdateViewerLocation(FLastLocationGatherInfo* LocationInfo, const FNetViewer& Viewer, const FReplicationGraphDestructionSettings& DestructionSettings)
+{
+    const bool bIgnoreDistanceCheck = DestructionSettings.OutOfRangeDistanceCheckThresholdSquared == 0.0f;
+    const FVector ViewLocation = Viewer.GetViewLocation();
+    const FVector LastOutOfRangeLocationCheck = LocationInfo->GetLastOutOfRangeLocationCheck();
+    const float OutOfRangeDistanceSquared = (ViewLocation.X - LastOutOfRangeLocationCheck.X) * (ViewLocation.X - LastOutOfRangeLocationCheck.X) + (ViewLocation.Y - LastOutOfRangeLocationCheck.Y) * (ViewLocation.Y - LastOutOfRangeLocationCheck.Y);
+
+    if (bIgnoreDistanceCheck || OutOfRangeDistanceSquared > DestructionSettings.OutOfRangeDistanceCheckThresholdSquared)
+    {
+        LocationInfo->SetLastOutOfRangeLocationCheck(ViewLocation);
+
+        auto& OutOfRangeDestroyedActors = GetOutOfRangeDestroyedActors();
+
+        for (int32 Index = OutOfRangeDestroyedActors.Num() - 1; Index >= 0; --Index)
+        {
+            FCachedDestructInfo& CachedInfo = OutOfRangeDestroyedActors[Index];
+            const FVector CachedPosition = CachedInfo.GetCachedPosition();
+            const float ActorDistSquared = (CachedPosition.X - ViewLocation.X) * (CachedPosition.X - ViewLocation.X) + (CachedPosition.Y - ViewLocation.Y) * (CachedPosition.Y - ViewLocation.Y);
+
+            if (ActorDistSquared < DestructionSettings.DestructInfoMaxDistanceSquared)
+            {
+                GetPendingDestructInfoList().Emplace(CachedInfo);
+                OutOfRangeDestroyedActors.RemoveAtSwap(Index, 1, false);
+            }
+        }
+    }
+
+    LocationInfo->SetLastLocation(ViewLocation);
+}
+
+int64 UNetReplicationGraphConnection::ReplicateDestructionInfos(const FNetViewerArray& Viewers, const float DestructInfoMaxDistanceSquared)
+{
+    int64 NumBits = 0;
+    auto& PendingDestructInfoList = GetPendingDestructInfoList();
+
+    for (int32 idx = PendingDestructInfoList.Num() - 1; idx >= 0; --idx)
+    {
+        FCachedDestructInfo& Info = PendingDestructInfoList[idx];
+        FActorDestructionInfo* DestructInfo = Info.DestructionInfo;
+        bool bSendDestructionInfo = false;
+
+        if (!DestructInfo->GetIgnoreDistanceCulling())
+        {
+            const FVector CachedPosition = Info.GetCachedPosition();
+
+            for (const FNetViewer& CurViewer : Viewers)
+            {
+                const FVector ViewLocation = CurViewer.GetViewLocation();
+                const float DistSquared = (CachedPosition.X - ViewLocation.X) * (CachedPosition.X - ViewLocation.X) + (CachedPosition.Y - ViewLocation.Y) * (CachedPosition.Y - ViewLocation.Y);
+
+                if (DistSquared < DestructInfoMaxDistanceSquared)
+                {
+                    bSendDestructionInfo = true;
+                    break;
+                }
+            }
+        }
+
+        if (bSendDestructionInfo || DestructInfo->GetIgnoreDistanceCulling())
+        {
+            auto NetConnection = GetNetConnection();
+
+            if (NetConnection && NetConnection->GetDriver())
+            {
+                NumBits += NetConnection->GetDriver()->SendDestructionInfo(NetConnection, DestructInfo);
+
+                PendingDestructInfoList.RemoveAtSwap(idx, 1, false);
+                GetTrackedDestructionInfoPtrs().Remove(DestructInfo);
+            }
+        }
+        else
+        {
+            GetOutOfRangeDestroyedActors().Emplace(Info);
+            PendingDestructInfoList.RemoveAtSwap(idx, 1, false);
+        }
+    }
+
+    return NumBits;
+}
+
+int64 UNetReplicationGraphConnection::ReplicateDormantDestructionInfos()
+{
+    int64 NumBits = 0;
+    auto NetConnection = GetNetConnection();
+
+    if (NetConnection && NetConnection->GetDriver())
+    {
+        for (const FCachedDormantDestructInfo& Info : GetPendingDormantDestructList())
+        {
+            alignas(16) uint8 DestructInfoStorage[0x80] = {};
+            auto& DestructInfo = *(FActorDestructionInfo*)DestructInfoStorage;
+
+            DestructInfo.GetNetGUID() = Info.NetGUID;
+            DestructInfo.GetLevel() = Info.Level;
+            DestructInfo.GetObjOuter() = Info.ObjOuter;
+            DestructInfo.GetPathName() = Info.PathName;
+            DestructInfo.GetReason() = EChannelCloseReason::Relevancy;
+
+            NumBits += NetConnection->GetDriver()->SendDestructionInfo(NetConnection, &DestructInfo);
+
+            DestructInfo.GetPathName().~FString();
+        }
+
+        GetPendingDormantDestructList().Reset();
+        GetTrackedDormantDestructionInfos().Reset();
+    }
+
+    return NumBits;
 }
 
 FActorRepListRefView& UNetReplicationGraphConnection::GetPrevDormantActorListForNode(const UReplicationGraphNode* GridNode)

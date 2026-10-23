@@ -538,6 +538,60 @@ public:
         return OldNum;
     }
 
+    template<typename PredicateType>
+    int32 RemoveAll(const PredicateType& Predicate)
+    {
+        const int32 OriginalNum = ArrayNum;
+        int32 WriteIndex = 0;
+
+        for (int32 ReadIndex = 0; ReadIndex < OriginalNum; ReadIndex++)
+        {
+            if (Predicate((*this)[ReadIndex]))
+            {
+                (*this)[ReadIndex].~ElementType();
+            }
+            else
+            {
+                if (WriteIndex != ReadIndex)
+                    memmove(&(*this)[WriteIndex], &(*this)[ReadIndex], ElementType::GetTypeSize());
+
+                WriteIndex++;
+            }
+        }
+
+        ArrayNum = WriteIndex;
+
+        return OriginalNum - ArrayNum;
+    }
+
+    void RemoveAtSwap(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
+    {
+        if (Count)
+        {
+            for (int32 RemoveIndex = Index; RemoveIndex < Index + Count; RemoveIndex++)
+                (*this)[RemoveIndex].~ElementType();
+
+            const int32 NumElementsAfterHole = ArrayNum - (Index + Count);
+            const int32 NumElementsToMoveIntoHole = Count < NumElementsAfterHole ? Count : NumElementsAfterHole;
+
+            if (NumElementsToMoveIntoHole)
+                memcpy(&(*this)[Index], &(*this)[ArrayNum - NumElementsToMoveIntoHole], NumElementsToMoveIntoHole * ElementType::GetTypeSize());
+
+            ArrayNum -= Count;
+
+            if (bAllowShrinking)
+            {
+                const int32 NewArrayMax = AllocatorInstance.CalculateSlackShrink(ArrayNum, ArrayMax, ElementType::GetTypeSize());
+
+                if (NewArrayMax != ArrayMax)
+                {
+                    ArrayMax = NewArrayMax;
+                    AllocatorInstance.ResizeAllocation(ArrayNum, ArrayMax, ElementType::GetTypeSize());
+                }
+            }
+        }
+    }
+
     void RemoveAt(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
     {
         if (Count)

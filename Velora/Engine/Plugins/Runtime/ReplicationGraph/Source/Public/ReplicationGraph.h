@@ -314,6 +314,22 @@ public:
 
     TArray<FLastLocationGatherInfo>& GetLastGatherLocations();
 
+    int32& GetQueuedBitsForActorDiscovery();
+
+    TArray<FCachedDestructInfo>& GetOutOfRangeDestroyedActors();
+
+    bool PrepareForReplication();
+
+    void GetClientVisibleLevelNames(TSet<FName>& OutLevelNames);
+
+    void UpdateGatherLocationsForConnection(const FNetViewerArray& ConnectionViewers, const FReplicationGraphDestructionSettings& DestructionSettings);
+
+    void OnUpdateViewerLocation(FLastLocationGatherInfo* LocationInfo, const FNetViewer& Viewer, const FReplicationGraphDestructionSettings& DestructionSettings);
+
+    int64 ReplicateDestructionInfos(const FNetViewerArray& Viewers, const float DestructInfoMaxDistanceSquared);
+
+    int64 ReplicateDormantDestructionInfos();
+
     FActorRepListRefView& GetPrevDormantActorListForNode(const UReplicationGraphNode* GridNode);
 
     void NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel);

@@ -131,6 +131,11 @@ struct FCachedDestructInfo
 
     FCachedDestructInfo(FActorDestructionInfo* InDestructionInfo);
 
+    FVector GetCachedPosition() const
+    {
+        return TGameLayout<FVector>::Load(this + 1);
+    }
+
     FActorDestructionInfo* DestructionInfo;
 };
 
@@ -141,6 +146,11 @@ public:
     void Emplace(FActorDestructionInfo* DestructionInfo)
     {
         new(&TRuntimeSizedArray::operator[](AddUninitialized(1))) FCachedDestructInfo(DestructionInfo);
+    }
+
+    void Emplace(const FCachedDestructInfo& Info)
+    {
+        memcpy(&TRuntimeSizedArray::operator[](AddUninitialized(1)), &Info, FCachedDestructInfo::GetTypeSize());
     }
 };
 
@@ -189,6 +199,21 @@ struct FLastLocationGatherInfo
         return TGameLayout<FVector>::Load(this + 1);
     }
 
+    void SetLastLocation(const FVector& InLastLocation)
+    {
+        TGameLayout<FVector>::Store(this + 1, InLastLocation);
+    }
+
+    FVector GetLastOutOfRangeLocationCheck() const
+    {
+        return TGameLayout<FVector>::Load((const uint8*)(this + 1) + TGameLayout<FVector>::Size());
+    }
+
+    void SetLastOutOfRangeLocationCheck(const FVector& InLastOutOfRangeLocationCheck)
+    {
+        TGameLayout<FVector>::Store((uint8*)(this + 1) + TGameLayout<FVector>::Size(), InLastOutOfRangeLocationCheck);
+    }
+
     UNetConnection* Connection;
 };
 
@@ -218,6 +243,54 @@ enum class EActorRepListTypeFlags : uint8
     Default = 0,
     FastShared = 1,
     Max,
+};
+
+template<>
+class TArray<FNetViewer, TInlineAllocator<4>>
+{
+public:
+    TArray();
+
+    ~TArray();
+
+    TArray(const TArray&) = delete;
+
+    TArray& operator=(const TArray&) = delete;
+
+    int32 Num() const;
+
+    FNetViewer& operator[](int32 Index) const;
+
+    TRuntimeSizedArray<FNetViewer>::TIterator begin() const;
+
+    TRuntimeSizedArray<FNetViewer>::TIterator end() const;
+
+    FNetViewer& Emplace(UNetConnection* InConnection, float DeltaSeconds);
+
+private:
+    uint8*& GetSecondaryData() const;
+
+    int32& GetArrayNum() const;
+
+    int32& GetArrayMax() const;
+
+    uint8* GetData() const;
+
+    alignas(16) uint8 Storage[0x200];
+};
+
+typedef TArray<FNetViewer, TInlineAllocator<4>> FNetViewerArray;
+
+struct FReplicationGraphDestructionSettings
+{
+    FReplicationGraphDestructionSettings(float InDestructInfoMaxDistanceSquared, float InOutOfRangeDistanceCheckThresholdSquared)
+        : DestructInfoMaxDistanceSquared(InDestructInfoMaxDistanceSquared)
+        , OutOfRangeDistanceCheckThresholdSquared(InOutOfRangeDistanceCheckThresholdSquared)
+    {
+    }
+
+    float DestructInfoMaxDistanceSquared;
+    float OutOfRangeDistanceCheckThresholdSquared;
 };
 
 struct FGatheredReplicationActorLists

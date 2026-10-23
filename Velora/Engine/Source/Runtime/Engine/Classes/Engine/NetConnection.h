@@ -9,6 +9,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
+class ULevel;
 class UActorChannel;
 class UChildConnection;
 class UNetDriver;
@@ -49,6 +50,12 @@ public:
     bool GetInternalAck() const;
 
     bool IsReplay() const;
+
+    AActor*& GetRepContextActor();
+
+    ULevel*& GetRepContextLevel();
+
+    bool GetPendingCloseDueToReplicationFailure();
 
     EConnectionState GetState() const;
 

@@ -135,6 +135,81 @@ FCachedDestructInfo::FCachedDestructInfo(FActorDestructionInfo* InDestructionInf
     TGameLayout<FVector>::Store(this + 1, InDestructionInfo->GetDestroyedPosition());
 }
 
+TArray<FNetViewer, TInlineAllocator<4>>::TArray()
+{
+    GetSecondaryData() = nullptr;
+    GetArrayNum() = 0;
+    GetArrayMax() = 4;
+}
+
+TArray<FNetViewer, TInlineAllocator<4>>::~TArray()
+{
+    if (GetSecondaryData())
+        FMemory::Free(GetSecondaryData());
+}
+
+int32 TArray<FNetViewer, TInlineAllocator<4>>::Num() const
+{
+    return GetArrayNum();
+}
+
+FNetViewer& TArray<FNetViewer, TInlineAllocator<4>>::operator[](int32 Index) const
+{
+    return *(FNetViewer*)(GetData() + Index * FNetViewer::GetTypeSize());
+}
+
+TRuntimeSizedArray<FNetViewer>::TIterator TArray<FNetViewer, TInlineAllocator<4>>::begin() const
+{
+    return TRuntimeSizedArray<FNetViewer>::TIterator(GetData());
+}
+
+TRuntimeSizedArray<FNetViewer>::TIterator TArray<FNetViewer, TInlineAllocator<4>>::end() const
+{
+    return TRuntimeSizedArray<FNetViewer>::TIterator(GetData() + GetArrayNum() * FNetViewer::GetTypeSize());
+}
+
+FNetViewer& TArray<FNetViewer, TInlineAllocator<4>>::Emplace(UNetConnection* InConnection, float DeltaSeconds)
+{
+    const int32 Index = GetArrayNum();
+
+    if (Index + 1 > GetArrayMax())
+    {
+        const int32 NewMax = DefaultCalculateSlackGrow(Index + 1, GetArrayMax(), FNetViewer::GetTypeSize(), true);
+        const bool bWasInline = GetSecondaryData() == nullptr;
+
+        GetSecondaryData() = (uint8*)FMemory::Realloc(GetSecondaryData(), NewMax * FNetViewer::GetTypeSize());
+
+        if (bWasInline)
+            memcpy(GetSecondaryData(), Storage, Index * FNetViewer::GetTypeSize());
+
+        GetArrayMax() = NewMax;
+    }
+
+    GetArrayNum() = Index + 1;
+
+    return *new(GetData() + Index * FNetViewer::GetTypeSize()) FNetViewer(InConnection, DeltaSeconds);
+}
+
+uint8*& TArray<FNetViewer, TInlineAllocator<4>>::GetSecondaryData() const
+{
+    return *(uint8**)((uint8*)Storage + 4 * FNetViewer::GetTypeSize());
+}
+
+int32& TArray<FNetViewer, TInlineAllocator<4>>::GetArrayNum() const
+{
+    return *(int32*)((uint8*)Storage + 4 * FNetViewer::GetTypeSize() + sizeof(uint8*));
+}
+
+int32& TArray<FNetViewer, TInlineAllocator<4>>::GetArrayMax() const
+{
+    return *(int32*)((uint8*)Storage + 4 * FNetViewer::GetTypeSize() + sizeof(uint8*) + sizeof(int32));
+}
+
+uint8* TArray<FNetViewer, TInlineAllocator<4>>::GetData() const
+{
+    return GetSecondaryData() ? GetSecondaryData() : (uint8*)Storage;
+}
+
 bool FActorRepListRefView::ConditionalAdd(AActor* NewElement)
 {
     if (IsActorValidForReplicationGather(NewElement))
