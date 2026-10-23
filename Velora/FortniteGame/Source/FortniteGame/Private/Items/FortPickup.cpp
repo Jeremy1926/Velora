@@ -476,6 +476,29 @@ bool& AFortPickup::GetTossedFromContainer()
     return *bTossedFromContainer->ContainerPtrToValuePtr<bool>(this);
 }
 
+void AFortPickup::SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup)
+{
+    static auto PawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("PawnWhoDroppedPickup")));
+    static auto OnSetPawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("OnSetPawnWhoDroppedPickup")));
+
+    if (!PawnWhoDroppedPickup)
+        return;
+
+    auto& CurrentPawnWhoDroppedPickup = *PawnWhoDroppedPickup->ContainerPtrToValuePtr<AFortPawn*>(this);
+
+    if (CurrentPawnWhoDroppedPickup == InPawnWhoDroppedPickup)
+        return;
+
+    CurrentPawnWhoDroppedPickup = InPawnWhoDroppedPickup;
+
+    if (OnSetPawnWhoDroppedPickup)
+    {
+        auto SelfActor = this;
+
+        OnSetPawnWhoDroppedPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(&SelfActor);
+    }
+}
+
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
     static auto VirtualSetPickupTarget = Anchor::VirtualFunction<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(TEXT("AFortPickup::SetPickupTarget"))

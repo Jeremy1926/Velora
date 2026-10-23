@@ -104,6 +104,8 @@ public:
 
     bool& GetTossedFromContainer();
 
+    void SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup);
+
     void SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
     float GetFlyTime() const;

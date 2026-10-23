@@ -422,7 +422,10 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
         const FVector Location = Pawn->GetActorLocation();
 
         if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::Player))
+        {
+            Pickup->SetPawnWhoDroppedPickup(Pawn);
             Pickup->TossPickup(Location, Pawn, 0, true);
+        }
 
         RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), false);
 
