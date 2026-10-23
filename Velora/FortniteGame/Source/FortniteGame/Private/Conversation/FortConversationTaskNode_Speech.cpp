@@ -58,7 +58,15 @@ FText UFortConversationTaskNode_Speech::GetMessage(const FConversationContext& C
 bool UFortConversationTaskNode_Speech::ResolveMessageForContext(const FGameplayTag& SpeakerParticipantTag, const FConversationContext& ConversationContext, FText& OutText) const
 {
     static auto ResolveMessageForContext = Anchor::Optional<bool (*)(const UFortConversationTaskNode_Speech*, const FGameplayTag&, const FConversationContext&, FText&)>(TEXT("UFortConversationTaskNode_Speech::ResolveMessageForContext"))
-        .Native(TEXT("/Script/FortniteGame.FortConversationTaskNode_Speech:ResolveMessageForContext"))
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode_Speech:ResolveMessageForContext"))
+        .Find("setnz *; add [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode_Speech:ResolveMessageForContext"))
+        .Find("setnz *; add *, *; mov [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return ResolveMessageForContext && ResolveMessageForContext(this, SpeakerParticipantTag, ConversationContext, OutText);
