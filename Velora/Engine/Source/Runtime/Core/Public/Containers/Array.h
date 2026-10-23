@@ -493,7 +493,7 @@ public:
         }
     }
 
-private:
+protected:
     FDefaultAllocator::ForAnyElementType AllocatorInstance;
     int32 ArrayNum;
     int32 ArrayMax;

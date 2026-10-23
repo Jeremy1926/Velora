@@ -106,7 +106,7 @@ void UFortControllerEffect_ApplyGameplayEffectBase::ApplyGameplayEffect(AControl
         auto RestoreQuantity = GetClass()->FindPropertyByName(FName(RestoreQuantityName));
 
         if (RestoreQuantity)
-            SpecHandle.Data->SetSetByCallerMagnitude(*ParameterName->ContainerPtrToValuePtr<FGameplayTag>(this), RestoreQuantity->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f));
+            SpecHandle.Data->SetSetByCallerMagnitude(ParameterName->GetPropertyValue_InContainer<FGameplayTag>(this), RestoreQuantity->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f));
     }
 
     AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
@@ -149,7 +149,7 @@ void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AC
     static auto CustomFeedMessageTag = StaticClass()->FindPropertyByName(FName(TEXT("CustomFeedMessageTag")));
     static auto AdditionalLocalSpaceContextOriginOffset = StaticClass()->FindPropertyByName(FName(TEXT("AdditionalLocalSpaceContextOriginOffset")));
 
-    TriggerCustomFeedMessage(TargetController, *CustomFeedMessageTag->ContainerPtrToValuePtr<FGameplayTag>(this), *AdditionalLocalSpaceContextOriginOffset->ContainerPtrToValuePtr<FVector>(this));
+    TriggerCustomFeedMessage(TargetController, CustomFeedMessageTag->GetPropertyValue_InContainer<FGameplayTag>(this), *AdditionalLocalSpaceContextOriginOffset->ContainerPtrToValuePtr<FVector>(this));
 }
 
 void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AController* TargetController, const FGameplayTag& CustomFeedMessageTag, const FVector& LocalSpaceContextOriginOffset)

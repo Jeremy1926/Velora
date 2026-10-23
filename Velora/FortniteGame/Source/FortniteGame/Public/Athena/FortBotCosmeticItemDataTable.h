@@ -20,5 +20,5 @@ struct FFortBotCosmeticItemSetDataTableRow : public FTableRowBase
 
     float& GetWeight();
 
-    FGameplayTag& GetSetTag();
+    FGameplayTag GetSetTag();
 };

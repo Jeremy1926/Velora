@@ -76,7 +76,7 @@ void UFortConversationTaskNode_GiveGift::GiveGift(UFortNPCConversationParticipan
     for (auto GiftRow : NPCComponent->GetSupportedGiftRows())
     {
         const float GiftWeight = *Weight->ContainerPtrToValuePtr<float>(GiftRow);
-        const FGameplayTag& RowGiftTag = *GiftTag->ContainerPtrToValuePtr<FGameplayTag>(GiftRow);
+        const FGameplayTag RowGiftTag = GiftTag->GetPropertyValue_InContainer<FGameplayTag>(GiftRow);
 
         if (GiftWeight <= 0.0f)
             continue;

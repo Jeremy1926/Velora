@@ -37,11 +37,11 @@ FConversationTaskResult UFortConversationTaskNode_ApplyDataDrivenEffect::Execute
     return FConversationTaskResult::AdvanceConversation();
 }
 
-const FGameplayTag& UFortConversationTaskNode_ApplyDataDrivenEffect::GetParticipantID() const
+FGameplayTag UFortConversationTaskNode_ApplyDataDrivenEffect::GetParticipantID() const
 {
     static auto ParticipantID = StaticClass()->FindPropertyByName(FName(TEXT("ParticipantID")));
 
-    return *ParticipantID->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return ParticipantID->GetPropertyValue_InContainer<FGameplayTag>(this);
 }
 
 const TArray<UFortControllerEffect*>& UFortConversationTaskNode_ApplyDataDrivenEffect::GetEffectsToApply() const

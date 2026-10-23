@@ -123,7 +123,7 @@ public:
 
     FScalableFloat& GetSetByCallerReviveHealth();
 
-    FGameplayTag& GetEventReviveTag();
+    FGameplayTag GetEventReviveTag();
 
     FFortClientObservedStatArray& GetClientObservedStats();
 };

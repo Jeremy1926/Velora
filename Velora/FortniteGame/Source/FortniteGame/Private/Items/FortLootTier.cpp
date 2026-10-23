@@ -61,7 +61,7 @@ FGameplayTag FFortLootTierData::GetRequiredGameplayTag() const
 {
     static auto RequiredGameplayTag = StaticStruct()->FindPropertyByName(FName(TEXT("RequiredGameplayTag")));
 
-    return RequiredGameplayTag ? *RequiredGameplayTag->ContainerPtrToValuePtr<FGameplayTag>(this) : FGameplayTag();
+    return RequiredGameplayTag ? RequiredGameplayTag->GetPropertyValue_InContainer<FGameplayTag>(this) : FGameplayTag();
 }
 
 bool FFortLootTierData::GetAllowBonusLootDrops() const

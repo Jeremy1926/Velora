@@ -545,11 +545,11 @@ FScalableFloat& AFortPlayerPawn::GetSetByCallerReviveHealth()
     return *SetByCallerReviveHealth->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
-FGameplayTag& AFortPlayerPawn::GetEventReviveTag()
+FGameplayTag AFortPlayerPawn::GetEventReviveTag()
 {
     static auto EventReviveTag = GetClass()->FindPropertyByName(FName(TEXT("EventReviveTag")));
 
-    return *EventReviveTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return EventReviveTag->GetPropertyValue_InContainer<FGameplayTag>(this);
 }
 
 FFortClientObservedStatArray& AFortPlayerPawn::GetClientObservedStats()

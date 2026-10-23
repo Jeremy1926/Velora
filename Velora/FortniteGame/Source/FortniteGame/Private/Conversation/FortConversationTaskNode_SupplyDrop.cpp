@@ -171,11 +171,11 @@ bool UFortConversationTaskNode_SupplyDrop::GetbLimitedStock() const
     return *bLimitedStock->ContainerPtrToValuePtr<bool>(this);
 }
 
-const FGameplayTag& UFortConversationTaskNode_SupplyDrop::GetCustomFeedMessageTag() const
+FGameplayTag UFortConversationTaskNode_SupplyDrop::GetCustomFeedMessageTag() const
 {
     static auto CustomFeedMessageTag = StaticClass()->FindPropertyByName(FName(TEXT("CustomFeedMessageTag")));
 
-    return *CustomFeedMessageTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return CustomFeedMessageTag->GetPropertyValue_InContainer<FGameplayTag>(this);
 }
 
 void UFortConversationTaskNode_SupplyDrop::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const

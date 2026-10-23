@@ -20,7 +20,7 @@ EConversationRequirementResult UFortConversationRequirement_HasService::IsRequir
 
     auto NPCConversationParticipantComponent = Cast<UFortNPCConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context));
 
-    if (NPCConversationParticipantComponent && NPCConversationParticipantComponent->GetSupportedServices().HasTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(this)))
+    if (NPCConversationParticipantComponent && NPCConversationParticipantComponent->GetSupportedServices().HasTag(ServiceTag->GetPropertyValue_InContainer<FGameplayTag>(this)))
         return EConversationRequirementResult::Passed;
 
     return EConversationRequirementResult::FailedAndHidden;

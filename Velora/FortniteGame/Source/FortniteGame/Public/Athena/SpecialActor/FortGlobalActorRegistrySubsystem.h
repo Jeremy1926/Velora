@@ -23,7 +23,9 @@ public:
 
     void execRegisteredActorDestroyed(FFrame& Stack, void* const Z_Param__Result);
 
-    FGameplayTag& GetGameplayTag();
+    FGameplayTag GetGameplayTag();
+
+    void SetGameplayTag(const FGameplayTag& InGameplayTag);
 
     TArray<AActor*>& GetRegisteredActors();
 

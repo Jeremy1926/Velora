@@ -53,9 +53,9 @@ float& FFortBotCosmeticItemSetDataTableRow::GetWeight()
     return *Weight->ContainerPtrToValuePtr<float>(this);
 }
 
-FGameplayTag& FFortBotCosmeticItemSetDataTableRow::GetSetTag()
+FGameplayTag FFortBotCosmeticItemSetDataTableRow::GetSetTag()
 {
     static auto SetTag = StaticStruct()->FindPropertyByName(FName(TEXT("SetTag")));
 
-    return *SetTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return SetTag->GetPropertyValue_InContainer<FGameplayTag>(this);
 }

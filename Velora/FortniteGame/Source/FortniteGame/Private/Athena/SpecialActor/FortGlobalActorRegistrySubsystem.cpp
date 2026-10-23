@@ -85,7 +85,7 @@ void UActorRegisterData_GameplayTagBased::execRegisteredActorDestroyed(FFrame& S
     RegisteredActorDestroyed(DestroyedActor);
 }
 
-FGameplayTag& UActorRegisterData_GameplayTagBased::GetGameplayTag()
+FGameplayTag UActorRegisterData_GameplayTagBased::GetGameplayTag()
 {
     static auto GameplayTag = Anchor::Offset(TEXT("UActorRegisterData_GameplayTagBased::GameplayTag"))
         .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
@@ -93,7 +93,18 @@ FGameplayTag& UActorRegisterData_GameplayTagBased::GetGameplayTag()
         .Find("mov rax, [rcx+0x*]")
         .Disp();
 
-    return *(FGameplayTag*)((uint8*)this + GameplayTag);
+    return TGameLayout<FGameplayTag>::Load((uint8*)this + GameplayTag);
+}
+
+void UActorRegisterData_GameplayTagBased::SetGameplayTag(const FGameplayTag& InGameplayTag)
+{
+    static auto GameplayTag = Anchor::Offset(TEXT("UActorRegisterData_GameplayTagBased::GameplayTag"))
+        .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
+        .Find("add [*+0x20], *")
+        .Find("mov rax, [rcx+0x*]")
+        .Disp();
+
+    TGameLayout<FGameplayTag>::Store((uint8*)this + GameplayTag, InGameplayTag);
 }
 
 TArray<AActor*>& UActorRegisterData_GameplayTagBased::GetRegisteredActors()
@@ -159,7 +170,7 @@ UActorRegisterData_GameplayTagBased* UFortGlobalActorRegistrySubsystem::GetActor
     if (!RegisterData)
         return nullptr;
 
-    RegisterData->GetGameplayTag() = GameplayTag;
+    RegisterData->SetGameplayTag(GameplayTag);
 
     return ActorRegistrationDataByGameplayTagMap.Add(GameplayTag, RegisterData);
 }

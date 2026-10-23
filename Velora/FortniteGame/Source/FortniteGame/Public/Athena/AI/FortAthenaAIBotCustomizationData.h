@@ -19,7 +19,7 @@ struct FFortAthenaAIBotRunTimeCustomizationData
 {
     static UScriptStruct* StaticStruct();
 
-    const FGameplayTag& GetPredefinedCosmeticSetTag() const;
+    FGameplayTag GetPredefinedCosmeticSetTag() const;
 };
 
 class UFortAthenaAIBotCharacterCustomization : public UObject

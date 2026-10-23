@@ -23,7 +23,7 @@ FConversationTaskResult UFortConversationTaskNode_Speech::ExecuteSpeechTaskNode(
         return FConversationTaskResult::AbortConversation();
 
     FClientConversationMessage Message;
-    Message.SpeakerID = *SpeakerTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    Message.SpeakerID = SpeakerTag->GetPropertyValue_InContainer<FGameplayTag>(this);
     Message.ParticipantDisplayName = GetParticipantNameStyled(Context, Message.SpeakerID);
     Message.Text = GetMessage(Context);
 
@@ -46,7 +46,7 @@ FText UFortConversationTaskNode_Speech::GetMessage(const FConversationContext& C
 
     FText OutText;
 
-    if (SpeakerTag && ResolveMessageForContext(*SpeakerTag->ContainerPtrToValuePtr<FGameplayTag>(this), Context, OutText))
+    if (SpeakerTag && ResolveMessageForContext(SpeakerTag->GetPropertyValue_InContainer<FGameplayTag>(this), Context, OutText))
         return OutText;
 
     if (ConditionalMessageContainer && UFortConversationContextConditionHelpers::GetMessageForContext(ConditionalMessageContainer->ContainerPtrToValuePtr<void>(this), Context, OutText))

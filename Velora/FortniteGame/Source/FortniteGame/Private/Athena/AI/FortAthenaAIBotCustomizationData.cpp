@@ -18,11 +18,11 @@ UScriptStruct* FFortAthenaAIBotRunTimeCustomizationData::StaticStruct()
     return Struct;
 }
 
-const FGameplayTag& FFortAthenaAIBotRunTimeCustomizationData::GetPredefinedCosmeticSetTag() const
+FGameplayTag FFortAthenaAIBotRunTimeCustomizationData::GetPredefinedCosmeticSetTag() const
 {
     static auto PredefinedCosmeticSetTag = StaticStruct()->FindPropertyByName(FName(TEXT("PredefinedCosmeticSetTag")));
 
-    return *PredefinedCosmeticSetTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return PredefinedCosmeticSetTag->GetPropertyValue_InContainer<FGameplayTag>(this);
 }
 
 FFortAthenaLoadout& UFortAthenaAIBotCharacterCustomization::GetCustomizationLoadout()

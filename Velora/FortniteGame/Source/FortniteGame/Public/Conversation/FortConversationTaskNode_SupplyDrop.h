@@ -46,5 +46,5 @@ public:
 
     bool GetbLimitedStock() const;
 
-    const FGameplayTag& GetCustomFeedMessageTag() const;
+    FGameplayTag GetCustomFeedMessageTag() const;
 };

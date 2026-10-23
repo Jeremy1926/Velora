@@ -146,7 +146,7 @@ void FGameplayTagQueryExpression::EmitTokens(TArray<uint8>& TokenStream, TArray<
         uint8 NumTags = (uint8)TagSet.Num();
         TokenStream.Add(NumTags);
 
-        for (auto Tag : TagSet)
+        for (const FGameplayTag& Tag : TagSet)
         {
             int32 TagIdx = TagDictionary.AddUnique(Tag);
             TokenStream.Add((uint8)TagIdx);

@@ -12,7 +12,7 @@ public:
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
 
-    const FGameplayTag& GetParticipantID() const;
+    FGameplayTag GetParticipantID() const;
 
     const TArray<UFortControllerEffect*>& GetEffectsToApply() const;
 };

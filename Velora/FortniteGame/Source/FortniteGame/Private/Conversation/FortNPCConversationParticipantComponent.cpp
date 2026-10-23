@@ -68,7 +68,7 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     {
         const uint8* Row = RowPair.Value;
 
-        if (*NPC->ContainerPtrToValuePtr<FGameplayTag>(Row) == NPCTag && FMath::FRand() < *Chance->ContainerPtrToValuePtr<float>(Row))
+        if (NPC->GetPropertyValue_InContainer<FGameplayTag>(Row) == NPCTag && FMath::FRand() < *Chance->ContainerPtrToValuePtr<float>(Row))
             RolledServices.push_back(Row);
     }
 
@@ -80,7 +80,7 @@ void UFortNPCConversationParticipantComponent::InitializeServices()
     const int32 ServiceLimit = *MaxServices->ContainerPtrToValuePtr<int32>(this);
 
     for (size_t Index = 0; Index < RolledServices.size() && (ServiceLimit <= 0 || Index < (size_t)ServiceLimit); Index++)
-        GetSupportedServices().AddTag(*ServiceTag->ContainerPtrToValuePtr<FGameplayTag>(RolledServices[Index]));
+        GetSupportedServices().AddTag(ServiceTag->GetPropertyValue_InContainer<FGameplayTag>(RolledServices[Index]));
 }
 
 void UFortNPCConversationParticipantComponent::UpdateCanStartConversation()
@@ -110,7 +110,7 @@ FGameplayTag UFortNPCConversationParticipantComponent::GetNPCTag() const
 
     auto TandemCharacterData = *CharacterData->ContainerPtrToValuePtr<UObject*>(this);
 
-    return TandemCharacterData ? *GameplayTag->ContainerPtrToValuePtr<FGameplayTag>(TandemCharacterData) : FGameplayTag();
+    return TandemCharacterData ? GameplayTag->GetPropertyValue_InContainer<FGameplayTag>(TandemCharacterData) : FGameplayTag();
 }
 
 TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedSaleRows() const
@@ -130,7 +130,7 @@ TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedSaleR
 
     for (auto& RowPair : SalesInventory->RowMap)
     {
-        if (*NPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value) == NPCTag)
+        if (NPC->GetPropertyValue_InContainer<FGameplayTag>(RowPair.Value) == NPCTag)
             Rows.push_back(RowPair.Value);
     }
 
@@ -161,7 +161,7 @@ TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedGiftR
 
     for (auto& RowPair : GiftsTable->RowMap)
     {
-        const FGameplayTag& RowNPC = *NPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value);
+        const FGameplayTag RowNPC = NPC->GetPropertyValue_InContainer<FGameplayTag>(RowPair.Value);
 
         if (!RowNPC.IsValid() || RowNPC == NPCTag)
             GiftRows.Add(RowPair.Value);
@@ -186,7 +186,7 @@ TArray<const uint8*> UFortNPCConversationParticipantComponent::GetSupportedGiftI
 
     for (auto& RowPair : GiftItemTable->RowMap)
     {
-        const FGameplayTag& RowNPC = *NPC->ContainerPtrToValuePtr<FGameplayTag>(RowPair.Value);
+        const FGameplayTag RowNPC = NPC->GetPropertyValue_InContainer<FGameplayTag>(RowPair.Value);
 
         if (!RowNPC.IsValid() || RowNPC == NPCTag)
             GiftItemRows.Add(RowPair.Value);

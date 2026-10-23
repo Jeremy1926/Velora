@@ -17,7 +17,7 @@ FGameplayTag UConversationLinkNode::GetRemoteEntryTag() const
 {
     static auto RemoteEntryTag = StaticClass()->FindPropertyByName(FName(TEXT("RemoteEntryTag")));
 
-    return *RemoteEntryTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+    return RemoteEntryTag->GetPropertyValue_InContainer<FGameplayTag>(this);
 }
 
 void UConversationLinkNode::GatherChoices(FConversationBranchPointBuilder& BranchBuilder, const FConversationContext& Context) const
