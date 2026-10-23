@@ -1,6 +1,7 @@
 #pragma once
 
 #include "UObject/Object.h"
+#include "Containers/Array.h"
 #include "Engine/EngineBaseTypes.h"
 #include "Engine/EngineTypes.h"
 #include "Components/SceneComponent.h"
@@ -35,6 +36,8 @@ public:
     bool GetNetUseOwnerRelevancy() const;
 
     bool IsReplicatingMovement() const;
+
+    void GetAttachedActors(TArray<AActor*>& OutActors, bool bResetArray = true) const;
 
     bool IsNetStartupActor() const;
 

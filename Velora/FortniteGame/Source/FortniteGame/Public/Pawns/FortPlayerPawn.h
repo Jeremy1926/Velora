@@ -4,11 +4,14 @@
 #include "Math/Vector.h"
 #include "Templates/SubclassOf.h"
 #include "UObject/ScriptDelegates.h"
+#include "Delegates/Delegate.h"
 
 class AActor;
+class ABuildingGameplayActor;
 class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
+class AFortPlayerPetRepState;
 class UAthenaGliderItemDefinition;
 class UFortMontageItemDefinitionBase;
 class UFortWorldItem;
@@ -55,6 +58,12 @@ class AFortPlayerPawn : public AFortPawn
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, AFortPlayerPawn*, AFortPlayerPetRepState*, AFortPlayerPetRepState*>& GetNotifyPetStateChange();
+
+    static TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGameplayActor*>& GetNotifyBalloonStateChange();
+
+    static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& GetNotifyPossessedPropStateChange();
 
     static FMulticastScriptDelegate* GetOnVehicleSpawnedEvent();
 

@@ -15,6 +15,20 @@ UClass* AFortPawn::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>& AFortPawn::GetNotifyWeaponChange()
+{
+    static auto NotifyWeaponChange = Anchor::Data<TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>*>(TEXT("AFortPawn::NotifyWeaponChange"))
+        .String(TEXT("EquipWeapon - Weapon %s is owned by %s but %s attempted to being equip it."))
+        .Find("mov r8, [*+0x*]; mov r9, *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyWeaponChange;
+}
+
 AFortWeapon* AFortPawn::GetCurrentWeapon() const
 {
     static auto CurrentWeapon = GetClass()->FindPropertyByName(FName(TEXT("CurrentWeapon")));

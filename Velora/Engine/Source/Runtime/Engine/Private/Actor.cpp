@@ -56,6 +56,15 @@ bool AActor::IsReplicatingMovement() const
     return bReplicateMovement->GetPropertyValue_InContainer(this);
 }
 
+void AActor::GetAttachedActors(TArray<AActor*>& OutActors, bool bResetArray) const
+{
+    static auto GetAttachedActors = Anchor::Function<void (*)(const AActor*, TArray<AActor*>&, bool)>(TEXT("AActor::GetAttachedActors"))
+        .Native(TEXT("/Script/Engine.Actor:GetAttachedActors"))
+        .Get();
+
+    GetAttachedActors(this, OutActors, bResetArray);
+}
+
 bool AActor::IsNetStartupActor() const
 {
     static auto bNetStartup = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetStartup")));

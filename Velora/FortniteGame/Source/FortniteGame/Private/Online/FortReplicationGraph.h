@@ -11,15 +11,19 @@
 #include "UObject/WeakObjectPtr.h"
 
 class ABuildingContainer;
+class ABuildingGameplayActor;
 class ABuildingGameplayActorSpawnChip;
 class AFortGameModeAthena;
 class AFortInventory;
 class AFortLiveSpectatorController;
 class AFortPawn;
+class AFortPlayerPawn;
+class AFortPlayerPetRepState;
 class AFortPlayerState;
 class AFortPlayerStateAthena;
 class AFortTeamHealthInfo;
 class AFortTeamPrivateInfo;
+class AFortWeapon;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
 class UFortReplicationGraphNode_AlwaysRelevantForTeam;
@@ -146,6 +150,14 @@ public:
     void OnRebootCardSpawned(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card);
 
     void OnRebootCardDestroyed(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card);
+
+    void OnPawnWeaponChange(AFortPawn* Pawn, AFortWeapon* NewWeapon, AFortWeapon* OldWeapon);
+
+    void OnPetStateChange(AFortPlayerPawn* Pawn, AFortPlayerPetRepState* NewPet, AFortPlayerPetRepState* OldPet);
+
+    void OnBalloonStateChange(AFortPlayerPawn* Pawn, ABuildingGameplayActor* NewBalloon, ABuildingGameplayActor* OldBalloon);
+
+    void OnPossessedPropStateChange(AFortPlayerPawn* Pawn, AActor* NewPossessedProp, AActor* OldPossessedProp);
 
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);

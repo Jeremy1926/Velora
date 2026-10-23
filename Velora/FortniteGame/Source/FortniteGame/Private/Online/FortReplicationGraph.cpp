@@ -52,6 +52,7 @@
 #include "UObject/UObjectArray.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "Weapons/FortWeapon.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -568,6 +569,10 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortGameModeAthena::GetNotifyNewAIClass().AddUObject(this, &UFortReplicationGraph::OnAIClassAdditionRequest);
     AFortTeamPrivateInfo::GetNotifyPlayerAdded().AddUObject(this, &UFortReplicationGraph::OnPlayerAddedTeam);
     AFortTeamPrivateInfo::GetNotifyPlayerRemoved().AddUObject(this, &UFortReplicationGraph::OnPlayerRemovedTeam);
+    AFortPawn::GetNotifyWeaponChange().AddUObject(this, &UFortReplicationGraph::OnPawnWeaponChange);
+    AFortPlayerPawn::GetNotifyPetStateChange().AddUObject(this, &UFortReplicationGraph::OnPetStateChange);
+    AFortPlayerPawn::GetNotifyBalloonStateChange().AddUObject(this, &UFortReplicationGraph::OnBalloonStateChange);
+    AFortPlayerPawn::GetNotifyPossessedPropStateChange().AddUObject(this, &UFortReplicationGraph::OnPossessedPropStateChange);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
     AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
     AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
@@ -1121,6 +1126,60 @@ void UFortReplicationGraph::OnRebootCardDestroyed(AFortPlayerStateAthena* PS, AB
 
     if (auto SquadNode = GetNodeForSquad(Card->GetSquadId()))
         SquadNode->GetRebootCards().RemoveSwap(Card);
+}
+
+void UFortReplicationGraph::OnPawnWeaponChange(AFortPawn* Pawn, AFortWeapon* NewWeapon, AFortWeapon* OldWeapon)
+{
+    if (OldWeapon)
+        GetGlobalActorReplicationInfoMap().RemoveDependentActor(Pawn, OldWeapon);
+
+    if (NewWeapon && IsActorValidForReplication(NewWeapon))
+        GetGlobalActorReplicationInfoMap().AddDependentActor(Pawn, NewWeapon);
+}
+
+void UFortReplicationGraph::OnPetStateChange(AFortPlayerPawn* Pawn, AFortPlayerPetRepState* NewPet, AFortPlayerPetRepState* OldPet)
+{
+    if (NewPet)
+        GetGlobalActorReplicationInfoMap().AddDependentActor(Pawn, (AActor*)NewPet);
+
+    if (OldPet)
+        GetGlobalActorReplicationInfoMap().RemoveDependentActor(Pawn, (AActor*)OldPet);
+}
+
+void UFortReplicationGraph::OnBalloonStateChange(AFortPlayerPawn* Pawn, ABuildingGameplayActor* NewBalloon, ABuildingGameplayActor* OldBalloon)
+{
+    if (NewBalloon)
+        GetGlobalActorReplicationInfoMap().AddDependentActor(Pawn, (AActor*)NewBalloon);
+
+    if (OldBalloon)
+        GetGlobalActorReplicationInfoMap().RemoveDependentActor(Pawn, (AActor*)OldBalloon);
+}
+
+void UFortReplicationGraph::OnPossessedPropStateChange(AFortPlayerPawn* Pawn, AActor* NewPossessedProp, AActor* OldPossessedProp)
+{
+    auto& GlobalActorReplicationInfoMap = GetGlobalActorReplicationInfoMap();
+
+    if (OldPossessedProp)
+    {
+        GlobalActorReplicationInfoMap.RemoveDependentActor(Pawn, OldPossessedProp);
+
+        TArray<AActor*> AttachedActors;
+        OldPossessedProp->GetAttachedActors(AttachedActors);
+
+        for (auto AttachedActor : AttachedActors)
+            GlobalActorReplicationInfoMap.RemoveDependentActor(Pawn, AttachedActor);
+    }
+
+    if (NewPossessedProp)
+    {
+        GlobalActorReplicationInfoMap.AddDependentActor(Pawn, NewPossessedProp);
+
+        TArray<AActor*> AttachedActors;
+        NewPossessedProp->GetAttachedActors(AttachedActors);
+
+        for (auto AttachedActor : AttachedActors)
+            GlobalActorReplicationInfoMap.AddDependentActor(Pawn, AttachedActor);
+    }
 }
 
 void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)

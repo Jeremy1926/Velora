@@ -36,6 +36,43 @@ UClass* AFortPlayerPawn::StaticClass()
     return Class;
 }
 
+TMulticastDelegate<void, AFortPlayerPawn*, AFortPlayerPetRepState*, AFortPlayerPetRepState*>& AFortPlayerPawn::GetNotifyPetStateChange()
+{
+    static auto NotifyPetStateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, AFortPlayerPetRepState*, AFortPlayerPetRepState*>*>(TEXT("AFortPlayerPawn::NotifyPetStateChange"))
+        .FieldPattern("4C 8B 89 %o 48 8B F2 48 8B F9 4D 85 C9 0F 85", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("PetState"))) : nullptr)
+        .Find("jnz 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPetStateChange;
+}
+
+TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGameplayActor*>& AFortPlayerPawn::GetNotifyBalloonStateChange()
+{
+    static auto NotifyBalloonStateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGameplayActor*>*>(TEXT("AFortPlayerPawn::NotifyBalloonStateChange"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetBalloonRope"))
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyBalloonStateChange;
+}
+
+TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::GetNotifyPossessedPropStateChange()
+{
+    static auto NotifyPossessedPropStateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>*>(TEXT("AFortPlayerPawn::NotifyPossessedPropStateChange"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPossessedPropStateChange;
+}
+
 UScriptStruct* FVehiclePawnState::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehiclePawnState"));

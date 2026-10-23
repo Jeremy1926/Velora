@@ -4,6 +4,7 @@
 #include "Math/Vector.h"
 #include "Misc/Guid.h"
 #include "UObject/ScriptDelegates.h"
+#include "Delegates/Delegate.h"
 
 class AFortWeapon;
 class UAbilitySystemComponent;
@@ -18,6 +19,8 @@ class AFortPawn : public ACharacter
 {
 public:
     static UClass* StaticClass();
+
+    static TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>& GetNotifyWeaponChange();
 
     AFortWeapon* GetCurrentWeapon() const;
 
