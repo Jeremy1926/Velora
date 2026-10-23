@@ -292,6 +292,12 @@ bool& UFortControllerComponent_VictoryCrowns::GetShouldGrantCrownOnSpawn()
         .Exec(TEXT("/Script/VictoryCrownsRuntime.FortControllerComponent_VictoryCrowns:HandleEnterAircraft"))
         .Find("setnz al; mov [*+0x*], al")
         .Find("mov [*+0x*], al")
+        .Or()
+        .Exec(TEXT("/Script/VictoryCrownsRuntime.FortControllerComponent_VictoryCrowns:HandleEnterAircraft"))
+        .Find("add [*+0x20], *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov byte ptr [*+0x*], 0x1")
         .Disp();
 
     return *(bool*)((uint8_t*)this + bShouldGrantCrownOnSpawn);
