@@ -11,17 +11,30 @@
 #include "Templates/SharedPointer.h"
 
 class AActor;
+class FClassNetCache;
+class FClassNetCacheMgr;
+class FFieldNetCache;
 class FNetGUIDCache;
 class FNetworkNotify;
 class FNetworkObjectList;
+class FRepLayout;
 class UActorChannel;
+class UFunction;
 class ULevel;
 class UNetConnection;
 class UReplicationDriver;
 class UWorld;
+struct FFrame;
 struct FNetViewer;
 struct FNetworkObjectInfo;
+struct FOutParmRec;
 struct FURL;
+
+enum class EProcessRemoteFunctionFlags : uint8
+{
+    None = 0,
+    ReplicatedActor = 1 << 0,
+};
 
 struct FActorPriority
 {
@@ -125,6 +138,13 @@ private:
 class UNetDriver : public UObject
 {
 public:
+    enum ERemoteFunctionSendPolicy
+    {
+        Default,
+        ForceSend,
+        ForceQueue,
+    };
+
     int32 GetMaxInternetClientRate() const;
 
     int32 GetMaxClientRate() const;
@@ -146,6 +166,12 @@ public:
     float GetRelevantTimeout() const;
 
     TSharedPtr<FNetGUIDCache>& GetGuidCache();
+
+    TSharedPtr<FClassNetCacheMgr>& GetNetCache();
+
+    TSharedPtr<FRepLayout, ESPMode::ThreadSafe> GetFunctionRepLayout(UFunction* Function);
+
+    void ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const FClassNetCache* ClassCache, const FFieldNetCache* FieldCache, UObject* TargetObj, UNetConnection* Connection, UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack, const bool bIsServer, const ERemoteFunctionSendPolicy SendPolicy, EProcessRemoteFunctionFlags& RemoteFunctionFlags);
 
     int32 GetNetTag() const;
 

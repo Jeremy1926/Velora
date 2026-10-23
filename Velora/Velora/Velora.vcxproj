@@ -252,6 +252,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ActorChannel.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PackageMapClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\DataBunch.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\RepLayout.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\GuidReferences.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Analytics\Analytics\Public\AnalyticsEventAttribute.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameModeBase.h" />
@@ -648,6 +649,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetworkObjectList.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PackageMapClient.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataBunch.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\RepLayout.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\DataChannel.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\NetConnection.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Crc.cpp" />

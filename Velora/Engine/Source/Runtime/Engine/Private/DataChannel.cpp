@@ -302,3 +302,34 @@ int64 UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructIn
 
     return 0;
 }
+
+void UActorChannel::WriteFieldHeaderAndPayload(FNetBitWriter& Bunch, const FClassNetCache* ClassCache, const FFieldNetCache* FieldCache, FNetFieldExportGroup* NetFieldExportGroup, FNetBitWriter& Payload, bool bIgnoreInternalAck)
+{
+    static auto WriteFieldHeaderAndPayload = Anchor::Function<void (*)(UActorChannel*, FNetBitWriter&, const FClassNetCache*, const FFieldNetCache*, FNetFieldExportGroup*, FNetBitWriter&, bool)>(TEXT("UActorChannel::WriteFieldHeaderAndPayload"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("and dword ptr [rsp+0x*], 0x0")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; lea rax, [rbp+0x*]; xor r9d, r9d; lea r8, [rbp-0x*]")
+        .Target()
+        .Get();
+
+    WriteFieldHeaderAndPayload(this, Bunch, ClassCache, FieldCache, NetFieldExportGroup, Payload, bIgnoreInternalAck);
+}
+
+int32 UActorChannel::WriteContentBlockPayload(UObject* Obj, FNetBitWriter& Bunch, const bool bHasRepLayout, FNetBitWriter& Payload)
+{
+    static auto WriteContentBlockPayload = Anchor::Function<int32 (*)(UActorChannel*, UObject*, FNetBitWriter&, bool, FNetBitWriter&)>(TEXT("UActorChannel::WriteContentBlockPayload"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("and dword ptr [rsp+0x*], 0x0")
+        .Find("call 0x*")
+        .Target()
+        .Find("xor r9d, r9d; lea r8, [rbp-0x*]; mov [rsp+0x20], rax; mov rdx, r*; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return WriteContentBlockPayload(this, Obj, Bunch, bHasRepLayout, Payload);
+}

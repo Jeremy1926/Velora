@@ -12,6 +12,7 @@ class APawn;
 class UActorChannel;
 class UActorComponent;
 class ULevel;
+class UNetConnection;
 class UNetDriver;
 
 struct FActorDestroyedSignature : public FSparseDelegate
@@ -114,6 +115,8 @@ public:
     }
 
     bool IsPendingKillPending() const;
+
+    UNetConnection* GetNetConnection() const;
 
     bool IsActorInitialized() const;
 

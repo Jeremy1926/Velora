@@ -15,10 +15,13 @@
 class AActor;
 class FOutBunch;
 class UActorChannel;
+class UFunction;
 class UNetConnection;
 class UNetDriver;
 class UReplicationGraph;
 class UWorld;
+struct FFrame;
+struct FOutParmRec;
 
 struct FReplicationGraphGlobalData
 {
@@ -385,6 +388,10 @@ public:
 
     TSet<AActor*>& GetActiveNetworkActors();
 
+    TMap<FObjectKey, FRPCSendPolicyInfo>& GetRPCSendPolicyMap();
+
+    TClassMap<bool>& GetRPC_Multicast_OpenChannelForClass();
+
     void InitForNetDriver(UNetDriver* InNetDriver);
 
     void InitializeActorsInWorld(UWorld* InWorld);
@@ -442,6 +449,8 @@ public:
     void HandleStarvedActorList(const FPrioritizedRepList& List, int32 StartIdx, FPerConnectionActorInfoMap& ConnectionActorInfoMap, uint32 FrameNum);
 
     void UpdateActorChannelCloseFrameNum(AActor* Actor, FConnectionReplicationActorInfo& ConnectionData, const FGlobalActorReplicationInfo& GlobalData, const uint32 FrameNum, UNetConnection* NetConnection);
+
+    bool ProcessRemoteFunction(AActor* Actor, UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack, UObject* SubObject);
 
     void NotifyConnectionSaturated(UNetReplicationGraphConnection& Connection);
 

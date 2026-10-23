@@ -10,6 +10,20 @@ class UObject;
 
 class FFieldVariant
 {
+public:
+    FFieldVariant()
+        : bIsUObject(false)
+    {
+        Container.Field = nullptr;
+    }
+
+    FFieldVariant(UObject* InObject)
+        : bIsUObject(true)
+    {
+        Container.Object = InObject;
+    }
+
+private:
     union FFieldObjectUnion
     {
         FField* Field;

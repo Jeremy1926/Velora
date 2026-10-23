@@ -16,7 +16,9 @@
 #include "Misc/CommandLine.h"
 #include "Misc/EngineVersion.h"
 #include "Misc/Parse.h"
+#include "Net/RepLayout.h"
 #include "Templates/Sorting.h"
+#include "UObject/CoreNet.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "CoreGlobals.h"
@@ -101,6 +103,46 @@ TSharedPtr<FNetGUIDCache>& UNetDriver::GetGuidCache()
         .Disp();
 
     return *(TSharedPtr<FNetGUIDCache>*)((uint8_t*)this + GuidCache);
+}
+
+TSharedPtr<FClassNetCacheMgr>& UNetDriver::GetNetCache()
+{
+    static auto NetCache = Anchor::Offset(TEXT("UNetDriver::NetCache"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Disp();
+
+    return *(TSharedPtr<FClassNetCacheMgr>*)((uint8_t*)this + NetCache);
+}
+
+TSharedPtr<FRepLayout, ESPMode::ThreadSafe> UNetDriver::GetFunctionRepLayout(UFunction* Function)
+{
+    static auto GetFunctionRepLayout = Anchor::Function<void (*)(UNetDriver*, TSharedPtr<FRepLayout, ESPMode::ThreadSafe>*, UFunction*)>(TEXT("UNetDriver::GetFunctionRepLayout"))
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call [rax+0x*]; test al, al; jnz 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    TSharedPtr<FRepLayout, ESPMode::ThreadSafe> RepLayout;
+    GetFunctionRepLayout(this, &RepLayout, Function);
+
+    return RepLayout;
+}
+
+void UNetDriver::ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const FClassNetCache* ClassCache, const FFieldNetCache* FieldCache, UObject* TargetObj, UNetConnection* Connection, UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack, const bool bIsServer, const ERemoteFunctionSendPolicy SendPolicy, EProcessRemoteFunctionFlags& RemoteFunctionFlags)
+{
+    static auto ProcessRemoteFunctionForChannelPrivate = Anchor::Function<void (*)(UNetDriver*, UActorChannel*, const FClassNetCache*, const FFieldNetCache*, UObject*, UNetConnection*, UFunction*, void*, FOutParmRec*, FFrame*, bool, ERemoteFunctionSendPolicy, EProcessRemoteFunctionFlags&)>(TEXT("UNetDriver::ProcessRemoteFunctionForChannelPrivate"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("and dword ptr [rsp+0x*], 0x0")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    ProcessRemoteFunctionForChannelPrivate(this, Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
 }
 
 int32 UNetDriver::GetNetTag() const

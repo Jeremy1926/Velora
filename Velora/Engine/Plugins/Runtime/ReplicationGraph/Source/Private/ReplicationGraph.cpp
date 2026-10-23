@@ -13,9 +13,13 @@
 #include "HAL/UnrealMemory.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/DataBunch.h"
+#include "Net/RepLayout.h"
+#include "Templates/Casts.h"
 #include "Templates/Sorting.h"
 #include <cfloat>
 #include "HAL/IConsoleManager.h"
+#include "UObject/Class.h"
+#include "UObject/CoreNet.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -2498,6 +2502,212 @@ void UReplicationGraph::UpdateActorChannelCloseFrameNum(AActor* Actor, FConnecti
     }
 }
 
+bool UReplicationGraph::ProcessRemoteFunction(AActor* Actor, UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack, UObject* SubObject)
+{
+    DETOUR(UReplicationGraph, ProcessRemoteFunction, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x30)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov al, 0x1; ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraph::StaticClass()));
+
+    if (!IsActorValidForReplication(Actor))
+        return true;
+
+    while (Function->GetSuperStruct())
+        Function = (UFunction*)Function->GetSuperStruct();
+
+    UObject* TargetObj = SubObject ? SubObject : Actor;
+    UNetDriver* NetDriver = GetNetDriver();
+
+    const FClassNetCache* ClassCache = NetDriver->GetNetCache()->GetClassNetCache(TargetObj->GetClass());
+
+    if (!ClassCache)
+        return true;
+
+    const FFieldNetCache* FieldCache = ClassCache->GetFromField(Function);
+
+    if (!FieldCache)
+        return true;
+
+    if (GetFastSharedReplicationBunch() && GetFastSharedReplicationFuncName() == Function->GetFName())
+    {
+        UActorChannel* FastSharedReplicationChannel = GetFastSharedReplicationChannel();
+
+        if (FastSharedReplicationChannel)
+        {
+            GetFastSharedReplicationBunch()->Reset();
+
+            auto TempWriter = new FNetBitWriter(nullptr, 0);
+            auto RepLayout = NetDriver->GetFunctionRepLayout(Function);
+
+            RepLayout->SendPropertiesForRPC(Function, FastSharedReplicationChannel, *TempWriter, Parameters);
+
+            auto TempBlockWriter = new FNetBitWriter(nullptr, 0);
+
+            FastSharedReplicationChannel->WriteFieldHeaderAndPayload(*TempBlockWriter, ClassCache, FieldCache, nullptr, *TempWriter, true);
+            FastSharedReplicationChannel->WriteContentBlockPayload(TargetObj, *(FNetBitWriter*)GetFastSharedReplicationBunch(), false, *TempBlockWriter);
+
+            GetFastSharedReplicationBunch() = nullptr;
+            GetFastSharedReplicationChannel() = nullptr;
+            SetFastSharedReplicationFuncName(FName(NAME_None));
+
+            delete TempBlockWriter;
+            delete TempWriter;
+        }
+
+        return true;
+    }
+
+    if (Function->GetFunctionFlags() & FUNC_NetMulticast)
+    {
+        auto RepLayout = NetDriver->GetFunctionRepLayout(Function);
+
+        bool bHasActorLocation = false;
+        FVector ActorLocation;
+
+        UNetDriver::ERemoteFunctionSendPolicy SendPolicy = UNetDriver::Default;
+
+        if (FRPCSendPolicyInfo* FuncSendPolicy = GetRPCSendPolicyMap().Find(FObjectKey(Function)))
+        {
+            if (FuncSendPolicy->bSendImmediately)
+                SendPolicy = UNetDriver::ForceSend;
+        }
+
+        RepLayout->BuildSharedSerializationForRPC(Parameters);
+
+        FGlobalActorReplicationInfo& GlobalInfo = GetGlobalActorReplicationInfoMap().Get(Actor);
+
+        bool ForceFlushNetDormancy = false;
+
+        FNewReplicatedActorInfo NewActorInfo(Actor);
+        const FName ActorStreamingLevelName = NewActorInfo.StreamingLevelName;
+        EProcessRemoteFunctionFlags RemoteFunctionFlags = EProcessRemoteFunctionFlags::None;
+
+        for (UNetReplicationGraphConnection* Manager : GetConnections())
+        {
+            FConnectionReplicationActorInfo& ConnectionActorInfo = Manager->GetActorInfoMap().FindOrAdd(Actor);
+            UNetConnection* NetConnection = Manager->GetNetConnection();
+
+            if (NetConnection->GetViewTarget() == nullptr)
+                continue;
+
+            if (ActorStreamingLevelName != NAME_None && NetConnection->GetClientVisibleLevelNames().Contains(ActorStreamingLevelName) == false)
+                continue;
+
+            if (ConnectionActorInfo.Channel == nullptr && (GetRPC_Multicast_OpenChannelForClass().GetChecked(Actor->GetClass()) == true))
+            {
+                bool bShouldOpenChannel = true;
+
+                if (ConnectionActorInfo.CullDistanceSquared > 0.f)
+                {
+                    bShouldOpenChannel = false;
+
+                    if (bHasActorLocation == false)
+                    {
+                        ActorLocation = Actor->GetActorLocation();
+                        bHasActorLocation = true;
+                    }
+
+                    FNetViewerArray ViewsToConsider;
+                    ViewsToConsider.Emplace(NetConnection, 0.f);
+
+                    auto& Children = NetConnection->GetChildren();
+
+                    for (int32 ChildIdx = 0; ChildIdx < Children.Num(); ++ChildIdx)
+                    {
+                        if (Children[ChildIdx]->GetViewTarget() != nullptr)
+                            ViewsToConsider.Emplace(Children[ChildIdx], 0.f);
+                    }
+
+                    for (const FNetViewer& Viewer : ViewsToConsider)
+                    {
+                        const float DistSq = (ActorLocation - Viewer.GetViewLocation()).SizeSquared();
+
+                        if (DistSq <= ConnectionActorInfo.CullDistanceSquared)
+                        {
+                            bShouldOpenChannel = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (bShouldOpenChannel)
+                {
+                    ConnectionActorInfo.Channel = (UActorChannel*)NetConnection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally);
+
+                    if (ConnectionActorInfo.Channel)
+                    {
+                        ConnectionActorInfo.Channel->SetChannelActor(Actor, ESetChannelActorFlags::None);
+
+                        UpdateActorChannelCloseFrameNum(Actor, ConnectionActorInfo, GlobalInfo, GetReplicationGraphFrame() + 1, NetConnection);
+
+                        ForceFlushNetDormancy |= ConnectionActorInfo.bDormantOnConnection != 0;
+                    }
+                }
+            }
+
+            if (ConnectionActorInfo.Channel)
+            {
+                NetDriver->ProcessRemoteFunctionForChannelPrivate(ConnectionActorInfo.Channel, ClassCache, FieldCache, TargetObj, NetConnection, Function, Parameters, OutParms, Stack, true, SendPolicy, RemoteFunctionFlags);
+
+                if (SendPolicy == UNetDriver::ForceSend)
+                    GetConnectionsNeedingsPostTickDispatchFlush().AddUnique(NetConnection);
+            }
+        }
+
+        RepLayout->ClearSharedSerializationForRPC();
+
+        if (ForceFlushNetDormancy)
+            Actor->FlushNetDormancy();
+
+        return true;
+    }
+
+    UNetConnection* Connection = Actor->GetNetConnection();
+
+    if (Connection)
+    {
+        const bool bIsReliable = (Function->GetFunctionFlags() & FUNC_NetReliable) != 0;
+
+        if (!(bIsReliable || Connection->IsNetReady(false)))
+            return true;
+
+        if (Connection->GetUChildConnection())
+            Connection = ((UChildConnection*)Connection)->GetParent();
+
+        if (Connection->GetState() == USOCK_Closed)
+            return true;
+
+        UActorChannel* Ch = Connection->GetActorChannels().FindRef(TWeakObjectPtr<AActor>(Actor));
+
+        if (Ch == nullptr)
+        {
+            if (Actor->IsPendingKillPending() || !NetDriver->IsLevelInitializedForActor(Actor, Connection))
+                return true;
+
+            Ch = (UActorChannel*)Connection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally);
+            Ch->SetChannelActor(Actor, ESetChannelActorFlags::None);
+
+            if (UNetReplicationGraphConnection* ConnectionManager = Cast<UNetReplicationGraphConnection>(Connection->GetReplicationConnectionDriver()))
+            {
+                FConnectionReplicationActorInfo& ConnectionActorInfo = ConnectionManager->GetActorInfoMap().FindOrAdd(Actor);
+                FGlobalActorReplicationInfo& GlobalInfo = GetGlobalActorReplicationInfoMap().Get(Actor);
+
+                UpdateActorChannelCloseFrameNum(Actor, ConnectionActorInfo, GlobalInfo, GetReplicationGraphFrame() + 1, Connection);
+            }
+        }
+
+        EProcessRemoteFunctionFlags RemoteFunctionFlags = EProcessRemoteFunctionFlags::None;
+
+        NetDriver->ProcessRemoteFunctionForChannelPrivate(Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parameters, OutParms, Stack, true, UNetDriver::Default, RemoteFunctionFlags);
+    }
+
+    return true;
+}
+
 void UReplicationGraph::NotifyConnectionSaturated(UNetReplicationGraphConnection& Connection)
 {
     GetWasConnectionSaturated() = true;
@@ -2514,6 +2724,16 @@ FGlobalActorReplicationInfoMap& UReplicationGraph::GetGlobalActorReplicationInfo
         .Disp();
 
     return *(FGlobalActorReplicationInfoMap*)((uint8*)this + GlobalActorReplicationInfoMap);
+}
+
+TMap<FObjectKey, FRPCSendPolicyInfo>& UReplicationGraph::GetRPCSendPolicyMap()
+{
+    return *(TMap<FObjectKey, FRPCSendPolicyInfo>*)(&GetActiveNetworkActors() + 1);
+}
+
+TClassMap<bool>& UReplicationGraph::GetRPC_Multicast_OpenChannelForClass()
+{
+    return *(TClassMap<bool>*)(&GetRPCSendPolicyMap() + 1);
 }
 
 TSet<AActor*>& UReplicationGraph::GetActiveNetworkActors()

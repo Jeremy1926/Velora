@@ -22,6 +22,8 @@ public:
 
     int64 GetNumBits() const;
 
+    void Reset();
+
     void SetNext(FOutBunch* InNext);
 
     void SetChannel(UChannel* InChannel);

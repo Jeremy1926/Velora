@@ -7,7 +7,10 @@
 #include "Math/Vector.h"
 #include "Misc/NetworkGuid.h"
 #include "Templates/SharedPointer.h"
+#include "Templates/UnrealTemplate.h"
+#include "UObject/Class.h"
 #include "UObject/NameTypes.h"
+#include "UObject/ObjectKey.h"
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
@@ -44,6 +47,67 @@ struct TGlobalActorReplicationInfoLayout
     bool bWantsToBeDormant;
     bool bSwapRolesOnReplicate;
     alignas(16) uint8 Settings[0x10];
+};
+
+struct FRPCSendPolicyInfo
+{
+    uint8 bSendImmediately : 1;
+};
+
+template<typename ValueType>
+struct TClassMap
+{
+    ValueType& GetChecked(UClass* Class)
+    {
+        return *Get(Class);
+    }
+
+    ValueType* Get(UClass* Class)
+    {
+        FObjectKey ObjKey(Class);
+
+        if (ValueType* Ptr = Map.Find(ObjKey))
+            return Ptr;
+
+        auto Callable = *(bool (**)(void*, UClass*&, ValueType&))InitNewElement;
+
+        if (Callable)
+        {
+            auto Storage = InitNewElement + 0x10;
+            auto OwnedObject = *(uint8**)Storage ? *(uint8**)Storage : Storage + 0x10;
+            auto GetAddress = (*(void* (***)(void*))OwnedObject)[1];
+            ValueType NewValue{};
+
+            if (Callable(GetAddress(OwnedObject), Class, NewValue))
+                return &Map.Add(ObjKey, MoveTemp(NewValue));
+        }
+
+        return GetClassInfoForNewClass_r(ObjKey, Class);
+    }
+
+    alignas(16) uint8 InitNewElement[0x40];
+
+private:
+    ValueType* GetClassInfoForNewClass_r(FObjectKey OriginalObjKey, const UClass* OriginalClass)
+    {
+        const UClass* Class = (const UClass*)OriginalClass->GetSuperStruct();
+
+        if (!Class)
+            return nullptr;
+
+        FObjectKey ObjKey(Class);
+
+        if (ValueType* Ptr = Map.Find(ObjKey))
+        {
+            ValueType LocalData = *Ptr;
+
+            return &Map.Add(OriginalObjKey, LocalData);
+        }
+
+        return GetClassInfoForNewClass_r(ObjKey, Class);
+    }
+
+    TMap<FObjectKey, ValueType> Map;
 };
 
 struct FFastSharedReplicationInfo

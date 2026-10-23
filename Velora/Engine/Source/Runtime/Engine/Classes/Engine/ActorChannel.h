@@ -3,7 +3,11 @@
 #include "Engine/Channel.h"
 
 class AActor;
+class FClassNetCache;
+class FFieldNetCache;
+class FNetBitWriter;
 struct FActorDestructionInfo;
+struct FNetFieldExportGroup;
 
 struct FScopedActorRoleSwap
 {
@@ -50,4 +54,8 @@ public:
     void SetChannelActor(AActor* InActor, ESetChannelActorFlags Flags = ESetChannelActorFlags::None);
 
     int64 SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo);
+
+    void WriteFieldHeaderAndPayload(FNetBitWriter& Bunch, const FClassNetCache* ClassCache, const FFieldNetCache* FieldCache, FNetFieldExportGroup* NetFieldExportGroup, FNetBitWriter& Payload, bool bIgnoreInternalAck = false);
+
+    int32 WriteContentBlockPayload(UObject* Obj, FNetBitWriter& Bunch, const bool bHasRepLayout, FNetBitWriter& Payload);
 };

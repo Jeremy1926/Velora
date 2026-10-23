@@ -53,3 +53,10 @@ enum class EInternalObjectFlags : int32
     GarbageCollectionKeepFlags = Native | Async | AsyncLoading,
     AllFlags = ReachableInCluster | ClusterRoot | Native | Async | AsyncLoading | Unreachable | PendingKill | RootSet | NoStrongReference
 };
+
+enum EFunctionFlags : uint32
+{
+    FUNC_None = 0x00000000,
+    FUNC_NetReliable = 0x00000080,
+    FUNC_NetMulticast = 0x00004000,
+};

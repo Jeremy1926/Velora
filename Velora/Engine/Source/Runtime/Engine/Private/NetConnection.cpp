@@ -271,6 +271,13 @@ void UNetConnection::FlushDormancy(AActor* Actor)
     FlushDormancy(this, Actor);
 }
 
+UNetConnection* UChildConnection::GetParent() const
+{
+    static auto Parent = GetClass()->FindPropertyByName(FName(TEXT("Parent")));
+
+    return *Parent->ContainerPtrToValuePtr<UNetConnection*>(this);
+}
+
 UChildConnection* UNetConnection::GetUChildConnection()
 {
     static auto GetUChildConnection = Anchor::VirtualFunction<UChildConnection* (*)(UNetConnection*)>(TEXT("UNetConnection::GetUChildConnection"))

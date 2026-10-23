@@ -102,6 +102,8 @@ public:
     Native GetNativeFunc() const;
 
     void SetNativeFunc(Native InFunc);
+
+    EFunctionFlags GetFunctionFlags() const;
 };
 
 class UEnum : public UField

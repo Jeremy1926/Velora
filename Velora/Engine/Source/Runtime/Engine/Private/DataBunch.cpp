@@ -81,6 +81,15 @@ int64 FOutBunch::GetNumBits() const
     return *(const int64*)((const uint8_t*)this + Num);
 }
 
+void FOutBunch::Reset()
+{
+    static auto Reset = Anchor::VirtualFunction<void (*)(FOutBunch*)>(TEXT("FBitWriter::Reset"))
+        .VirtualStartHas(*(const void* const* const*)this, "movsxd r8, dword ptr [rdi+0x*]; xor edx, edx; mov rcx, [rdi+0x*]; and qword ptr [rdi+0x*], 0x0")
+        .Get();
+
+    Reset(this);
+}
+
 void FOutBunch::SetNext(FOutBunch* InNext)
 {
     static auto Next = Anchor::Offset(TEXT("FOutBunch::Next"))

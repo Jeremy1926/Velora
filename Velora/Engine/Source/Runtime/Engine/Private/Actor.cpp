@@ -432,6 +432,18 @@ void AActor::ForceNetUpdate()
     ForceNetUpdate(this);
 }
 
+UNetConnection* AActor::GetNetConnection() const
+{
+    static auto GetNetConnection = Anchor::VirtualFunction<UNetConnection* (*)(const AActor*)>(TEXT("AActor::GetNetConnection"))
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
+        .Find("call [rax+0x*]; test rax, rax")
+        .Get();
+
+    return GetNetConnection(this);
+}
+
 void AActor::FlushNetDormancy()
 {
     static auto FlushNetDormancy = Anchor::Function<void (*)(AActor*)>(TEXT("AActor::FlushNetDormancy"))

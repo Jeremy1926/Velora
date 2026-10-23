@@ -86,6 +86,17 @@ void UFunction::SetNativeFunc(Native InFunc)
     *(Native*)((uint8_t*)this + Func) = InFunc;
 }
 
+EFunctionFlags UFunction::GetFunctionFlags() const
+{
+    static auto FunctionFlags = Anchor::Offset(TEXT("UFunction::FunctionFlags"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov eax, [r*+0x*]; test al, al")
+        .Disp();
+
+    return *(const EFunctionFlags*)((const uint8_t*)this + FunctionFlags);
+}
+
 int64 UEnum::GetValueByName(FName InName) const
 {
     for (auto& Kvp : Names)
