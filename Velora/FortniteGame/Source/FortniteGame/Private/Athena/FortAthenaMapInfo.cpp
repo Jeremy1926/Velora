@@ -90,6 +90,9 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
     static auto PickSupplyDropLocation = Anchor::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
         .String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location."))
         .Start()
+        .Or()
+        .String("AFortAthenaMapInfo::PickSupplyDropLocation")
+        .Start()
         .Get();
 
     FVector Location;
