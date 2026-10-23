@@ -302,9 +302,9 @@ void UFortReplicationGraph::InitDynamicSpatializationSettings()
     auto NodeSettings = UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings();
 
     UReplicationGraphNode_DynamicSpatialFrequency::GetDefaultSettings() = FSettings{ { DefaultZones.GetData(), DefaultZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
-    NodeSettings[(uint8)EFortDynamicNodeType::WorldStatic] = FSettings{ { AIZones.GetData(), AIZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, AIPawnMaxBitsPerFrame, MaxAIPerClient->GetInt() };
-    NodeSettings[(uint8)EFortDynamicNodeType::WorldDynamic] = FSettings{ { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
-    NodeSettings[(uint8)EFortDynamicNodeType::Pawn] = FSettings{ { VehicleZones.GetData(), VehicleZones.Num() }, { VehicleZones.GetData(), VehicleZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+    NodeSettings[(uint8)EFortDynamicNodeType::AI] = FSettings{ { AIZones.GetData(), AIZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, AIPawnMaxBitsPerFrame, MaxAIPerClient->GetInt() };
+    NodeSettings[(uint8)EFortDynamicNodeType::PhysicsObject] = FSettings{ { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+    NodeSettings[(uint8)EFortDynamicNodeType::Vehicle] = FSettings{ { VehicleZones.GetData(), VehicleZones.Num() }, { VehicleZones.GetData(), VehicleZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
 }
 
 void UFortReplicationGraph::InitForPlaylist(AFortGameModeAthena* GameMode)
@@ -372,7 +372,7 @@ void UFortReplicationGraph::InitForPlaylist(AFortGameModeAthena* GameMode)
         }
 
         if (Playlist && *bOverrideServerPerClientMaxAI->ContainerPtrToValuePtr<bool>(Playlist))
-            UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings()[(uint8)EFortDynamicNodeType::WorldStatic].MaxNearestActors = *ServerPerClientMaxAI->ContainerPtrToValuePtr<int32>(Playlist);
+            UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings()[(uint8)EFortDynamicNodeType::AI].MaxNearestActors = *ServerPerClientMaxAI->ContainerPtrToValuePtr<int32>(Playlist);
 
         if (GameState->GetPlaylistDataIsLoaded())
         {
@@ -1083,9 +1083,9 @@ void UFortReplicationGraphNode_DynamicSpatialFrequency::SetupClassToNodeMap()
 {
     auto& DynamicTypeToNodeMap = GetDynamicTypeToNodeMap();
 
-    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::WorldStatic, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
-    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::WorldDynamic, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
-    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::Pawn, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::AI, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::PhysicsObject, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
+    DynamicTypeToNodeMap.Add(EFortDynamicNodeType::Vehicle, TWeakObjectPtr<UFortReplicationGraphNode_DynamicSpatialFrequency>());
 }
 
 EFortDynamicNodeType& UFortReplicationGraphNode_DynamicSpatialFrequency::GetCurrentDynamicNodeType()
@@ -1144,7 +1144,7 @@ void UFortReplicationGraphNode_DynamicSpatialFrequency::GatherActors(const FActo
     const uint32 FrameNum = Params.GetReplicationFrameNum();
     TArray<AActor*> TetherPawns;
 
-    if (GetCurrentDynamicNodeType() == EFortDynamicNodeType::WorldStatic)
+    if (GetCurrentDynamicNodeType() == EFortDynamicNodeType::AI)
     {
         for (const FNetViewer& CurViewer : Params.GetViewers())
         {

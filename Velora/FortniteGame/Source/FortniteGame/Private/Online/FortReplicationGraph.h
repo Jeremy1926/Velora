@@ -164,10 +164,10 @@ private:
 
 enum class EFortDynamicNodeType : uint8
 {
-    WorldStatic,
-    WorldDynamic,
-    Pawn,
-    Visibility,
+    AI,
+    PhysicsObject,
+    Vehicle,
+    NumTypes,
 };
 
 class UFortReplicationGraphNode_DynamicSpatialFrequency : public UReplicationGraphNode_DynamicSpatialFrequency
