@@ -170,6 +170,11 @@ void UNetReplicationGraphConnection::AddConnectionGraphNode(UReplicationGraphNod
     GetConnectionGraphNodes().Add(Node);
 }
 
+void UNetReplicationGraphConnection::RemoveConnectionGraphNode(UReplicationGraphNode* Node)
+{
+    GetConnectionGraphNodes().RemoveSingleSwap(Node);
+}
+
 void UNetReplicationGraphConnection::SetActorNotDormantOnConnection(AActor* InActor)
 {
     static auto SetActorNotDormantOnConnection = Anchor::Function<void (*)(UNetReplicationGraphConnection*, AActor*)>(TEXT("UNetReplicationGraphConnection::SetActorNotDormantOnConnection"))
@@ -3613,6 +3618,11 @@ void UReplicationGraph::InitNode(UReplicationGraphNode* Node)
 void UReplicationGraph::AddConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager)
 {
     ConnectionManager->AddConnectionGraphNode(GraphNode);
+}
+
+void UReplicationGraph::RemoveConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager)
+{
+    ConnectionManager->RemoveConnectionGraphNode(GraphNode);
 }
 
 void UReplicationGraph::AddNetworkActor(AActor* Actor)

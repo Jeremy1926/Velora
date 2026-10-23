@@ -14,9 +14,12 @@ class AFortGameModeAthena;
 class AFortInventory;
 class AFortLiveSpectatorController;
 class AFortPawn;
+class AFortPlayerState;
 class AFortTeamHealthInfo;
+class AFortTeamPrivateInfo;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
+class UFortReplicationGraphNode_AlwaysRelevantForTeam;
 class UNetConnection;
 class UScriptStruct;
 struct FFrame;
@@ -123,6 +126,12 @@ public:
 
     void OnNotifyRemoveReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory);
 
+    UFortReplicationGraphNode_AlwaysRelevantForTeam* GetNodeForTeamInfo(AFortTeamPrivateInfo* TeamInfo);
+
+    void OnPlayerAddedTeam(AFortTeamPrivateInfo* TeamInfo, AFortPlayerState* PS);
+
+    void OnPlayerRemovedTeam(AFortTeamPrivateInfo* TeamInfo, AFortPlayerState* PS);
+
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);
 
@@ -155,6 +164,8 @@ private:
     bool& GetDisableHighFrequencyPawnRouting();
 
     TClassMap<EClassRepNodeMapping>& GetClassRepNodePolicies();
+
+    TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>& GetFortTeamPrivateInfoMap();
 
     TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& GetSquadMap();
 
@@ -204,6 +215,16 @@ class UFortReplicationGraphNode_AlwaysRelevantForSquad : public UReplicationGrap
 {
 public:
     bool& GetSpecialRelevancyEnabled();
+};
+
+class UFortReplicationGraphNode_AlwaysRelevantForTeam : public UReplicationGraphNode
+{
+public:
+    static UClass* StaticClass();
+
+    AFortTeamPrivateInfo*& GetFortTeamPrivateInfo();
+
+    FActorRepListRefView& GetReplicationActorList();
 };
 
 class UFortReplicationGraphNode_Custom : public UReplicationGraphNode

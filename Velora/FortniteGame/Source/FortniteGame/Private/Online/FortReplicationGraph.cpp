@@ -36,6 +36,8 @@
 #include "Player/FortLiveSpectatorController.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortTeamHealthInfo.h"
+#include "Player/FortTeamPrivateInfo.h"
+#include "UObject/ObjectKey.h"
 #include "HAL/IConsoleManager.h"
 #include "HAL/UnrealMemory.h"
 #include "Math/UnrealMathUtility.h"
@@ -291,6 +293,11 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
         .Imm();
 
     return *(TClassMap<EClassRepNodeMapping>*)((uint8*)this + ClassRepNodePolicies);
+}
+
+TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>& UFortReplicationGraph::GetFortTeamPrivateInfoMap()
+{
+    return *(TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>*)(&GetClassRepNodePolicies() + 1);
 }
 
 TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplicationGraph::GetSquadMap()
@@ -551,6 +558,8 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     GetDestructInfoMaxDistanceSquared() = DestructInfoMaxDist->GetFloat() * DestructInfoMaxDist->GetFloat();
 
     AFortGameModeAthena::GetNotifyNewAIClass().AddUObject(this, &UFortReplicationGraph::OnAIClassAdditionRequest);
+    AFortTeamPrivateInfo::GetNotifyPlayerAdded().AddUObject(this, &UFortReplicationGraph::OnPlayerAddedTeam);
+    AFortTeamPrivateInfo::GetNotifyPlayerRemoved().AddUObject(this, &UFortReplicationGraph::OnPlayerRemovedTeam);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
     AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
     AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
@@ -985,6 +994,44 @@ void UFortReplicationGraph::OnLiveSpectatorJoined(AFortLiveSpectatorController* 
 
     if (ConnectionManager && GetLiveSpectatorRelevancyNode())
         AddConnectionGraphNode(GetLiveSpectatorRelevancyNode(), ConnectionManager);
+}
+
+UFortReplicationGraphNode_AlwaysRelevantForTeam* UFortReplicationGraph::GetNodeForTeamInfo(AFortTeamPrivateInfo* TeamInfo)
+{
+    const FObjectKey ObjKey(TeamInfo);
+    auto& FortTeamPrivateInfoMap = GetFortTeamPrivateInfoMap();
+
+    if (auto Found = FortTeamPrivateInfoMap.Find(ObjKey))
+    {
+        if (*Found)
+            return *Found;
+    }
+
+    auto TeamNode = CreateNewNode<UFortReplicationGraphNode_AlwaysRelevantForTeam>();
+    TeamNode->GetFortTeamPrivateInfo() = TeamInfo;
+    TeamNode->GetReplicationActorList().RepList.Reset();
+    TeamNode->GetReplicationActorList().ConditionalAdd(TeamInfo);
+    FortTeamPrivateInfoMap.Add(ObjKey, TeamNode);
+
+    return TeamNode;
+}
+
+void UFortReplicationGraph::OnPlayerAddedTeam(AFortTeamPrivateInfo* TeamInfo, AFortPlayerState* PS)
+{
+    if (auto NetConnection = PS->GetNetConnection())
+    {
+        auto TeamNode = GetNodeForTeamInfo(TeamInfo);
+        AddConnectionGraphNode(TeamNode, FindOrAddConnectionManager(NetConnection));
+    }
+}
+
+void UFortReplicationGraph::OnPlayerRemovedTeam(AFortTeamPrivateInfo* TeamInfo, AFortPlayerState* PS)
+{
+    if (auto NetConnection = PS->GetNetConnection())
+    {
+        auto TeamNode = GetNodeForTeamInfo(TeamInfo);
+        RemoveConnectionGraphNode(TeamNode, FindOrAddConnectionManager(NetConnection));
+    }
 }
 
 void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)
@@ -1861,6 +1908,32 @@ void UFortReplicationGraphNode_LiveSpectator::GatherActorListsForConnection(cons
         GatherBroadcasterActorListsForConnection(Params);
 
     Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ReplicationActorList);
+}
+
+UClass* UFortReplicationGraphNode_AlwaysRelevantForTeam::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_AlwaysRelevantForTeam"));
+
+    return Class;
+}
+
+AFortTeamPrivateInfo*& UFortReplicationGraphNode_AlwaysRelevantForTeam::GetFortTeamPrivateInfo()
+{
+    return *(AFortTeamPrivateInfo**)((uint8*)&GetReplicationActorList() - sizeof(AFortTeamPrivateInfo*));
+}
+
+FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForTeam::GetReplicationActorList()
+{
+    static auto ReplicationActorList = Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForTeam::ReplicationActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForTeam"))
+        .Find("lea rdx, [rcx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
 }
 
 UClass* UFortReplicationGraphNode_AlwaysRelevantHealthForTeam::StaticClass()

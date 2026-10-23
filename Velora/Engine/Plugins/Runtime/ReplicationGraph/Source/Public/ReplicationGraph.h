@@ -473,6 +473,8 @@ private:
 
     void AddConnectionGraphNode(UReplicationGraphNode* Node);
 
+    void RemoveConnectionGraphNode(UReplicationGraphNode* Node);
+
     void InitForConnection(UNetConnection* InConnection);
 };
 
@@ -605,6 +607,8 @@ public:
 
 protected:
     void AddConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager);
+
+    void RemoveConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager);
 
 private:
     UNetReplicationGraphConnection* CreateClientConnectionManagerInternal(UNetConnection* Connection);
