@@ -50,6 +50,7 @@ void AFortGameModeZone::FinishWorldInitialization()
 void AFortGameModeZone::CreateAIDirector()
 {
     DETOUR(AFortGameModeZone, CreateAIDirector, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(AFortGameModeAthena, CreateAIDirector))
         .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
         .Optional()
         .Start()

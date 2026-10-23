@@ -26,6 +26,8 @@ public:
 
     void FinishWorldInitialization();
 
+    void CreateAIDirector();
+
     bool ReadyToStartMatch_Implementation();
 
     int32 CountReadyPlayers();

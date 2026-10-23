@@ -78,6 +78,24 @@ void AFortGameModeAthena::FinishWorldInitialization()
     Original();
 }
 
+void AFortGameModeAthena::CreateAIDirector()
+{
+    DETOUR(AFortGameModeAthena, CreateAIDirector, Anchor::Hook()
+        .If(!::Anchor::Exists()
+            .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
+            .Start()
+            .Find("call 0x*; mov rax, [rbx+0x*]")
+            .Get())
+        .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
+        .Optional()
+        .Start()
+        .Inline());
+
+    AFortGameModeZone::CreateAIDirector();
+
+    Original();
+}
+
 void AFortGameModeAthena::InitGameState()
 {
     DETOUR(AFortGameModeAthena, InitGameState, Anchor::Hook()
