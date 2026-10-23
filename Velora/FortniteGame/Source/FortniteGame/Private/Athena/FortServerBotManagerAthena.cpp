@@ -148,9 +148,9 @@ void UFortServerBotManagerAthena::CheckForBotBrainActivation()
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("AAIController::RunBehaviorTree"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"))
-        .FieldFind("mov *, [rcx+%x]; test *, *; jz *; cmp byte ptr [*+0x*], 0x0", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .FieldFind("mov *, [rcx+%x]; test *, *; jz *; cmp *[*+0x*], *", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
         .Optional()
-        .Find("cmp byte ptr [*+0x*], 0x0")
+        .Find("cmp *[*+0x*], *")
         .Disp();
 
     auto World = GetWorld();
