@@ -210,8 +210,35 @@ void UCraftingObjectComponent::GiveCraftingIngredients()
         InstigatorInventoryOwner.SetObject(Instigator);
         InstigatorInventoryOwner.SetInterface(InstigatorInterface);
 
-        for (auto& ItemEntry : GetIngredientItems())
+        auto& IngredientItems = GetIngredientItems();
+        auto NonConsumedIngredientItemIndices = GetNonConsumedIngredientItemIndices();
+        auto& PendingPickupCraftingItemEntry = GetPendingPickupCraftingItemEntry();
+
+        if (PendingPickupCraftingItemEntry.GetItemDefinition())
         {
+            const int32 PendingIndex = IngredientItems.AddUninitialized();
+
+            new (&IngredientItems[PendingIndex]) FFortItemEntry(PendingPickupCraftingItemEntry);
+
+            if (NonConsumedIngredientItemIndices)
+                NonConsumedIngredientItemIndices->Add(PendingIndex);
+
+            FFortItemEntry::StaticStruct()->DestroyStruct(&PendingPickupCraftingItemEntry);
+            FFortItemEntry::StaticStruct()->InitializeStruct(&PendingPickupCraftingItemEntry);
+            GetPendingPickupHeldCount() = 0;
+        }
+
+        const int32 NumIngredients = NonConsumedIngredientItemIndices ? NonConsumedIngredientItemIndices->Num() : IngredientItems.Num();
+
+        for (int32 Ingredient = 0; Ingredient < NumIngredients; Ingredient++)
+        {
+            const int32 Index = NonConsumedIngredientItemIndices ? (*NonConsumedIngredientItemIndices)[Ingredient] : Ingredient;
+
+            if (Index < 0 || Index >= IngredientItems.Num())
+                continue;
+
+            auto& ItemEntry = IngredientItems[Index];
+
             if (GetGiveIngredientsToCraftingObject() && OwnerInterface)
             {
                 if (OwnerInventory && OwnerInventory->GetOverflowFromAddingItem(ItemEntry) <= 0)
@@ -299,8 +326,30 @@ TArray<FItemAndCount>& UCraftingObjectComponent::GetCraftingResults()
 TArray<FFortItemEntry>& UCraftingObjectComponent::GetIngredientItems()
 {
     static auto IngredientItems = StaticClass()->FindPropertyByName(FName(TEXT("IngredientItems")));
+    static auto AllOfTheIngredientItems = StaticClass()->FindPropertyByName(FName(TEXT("AllOfTheIngredientItems")));
 
-    return *IngredientItems->ContainerPtrToValuePtr<TArray<FFortItemEntry>>(this);
+    return *(IngredientItems ? IngredientItems : AllOfTheIngredientItems)->ContainerPtrToValuePtr<TArray<FFortItemEntry>>(this);
+}
+
+TArray<int32>* UCraftingObjectComponent::GetNonConsumedIngredientItemIndices()
+{
+    static auto NonConsumedIngredientItemIndices = StaticClass()->FindPropertyByName(FName(TEXT("NonConsumedIngredientItemIndices")));
+
+    return NonConsumedIngredientItemIndices ? NonConsumedIngredientItemIndices->ContainerPtrToValuePtr<TArray<int32>>(this) : nullptr;
+}
+
+FFortItemEntry& UCraftingObjectComponent::GetPendingPickupCraftingItemEntry()
+{
+    static auto PendingPickupCraftingItemEntry = StaticClass()->FindPropertyByName(FName(TEXT("PendingPickupCraftingItemEntry")));
+
+    return *PendingPickupCraftingItemEntry->ContainerPtrToValuePtr<FFortItemEntry>(this);
+}
+
+int32& UCraftingObjectComponent::GetPendingPickupHeldCount()
+{
+    static auto PendingPickupHeldCount = StaticClass()->FindPropertyByName(FName(TEXT("PendingPickupHeldCount")));
+
+    return *PendingPickupHeldCount->ContainerPtrToValuePtr<int32>(this);
 }
 
 const FVector& UCraftingObjectComponent::GetIngredientSpawnOffset() const

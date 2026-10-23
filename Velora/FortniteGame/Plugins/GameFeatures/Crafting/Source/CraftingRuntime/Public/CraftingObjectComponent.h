@@ -54,6 +54,12 @@ public:
 
     TArray<FFortItemEntry>& GetIngredientItems();
 
+    TArray<int32>* GetNonConsumedIngredientItemIndices();
+
+    FFortItemEntry& GetPendingPickupCraftingItemEntry();
+
+    int32& GetPendingPickupHeldCount();
+
     const FVector& GetIngredientSpawnOffset() const;
 
     bool GetGiveIngredientsToCraftingObject() const;
