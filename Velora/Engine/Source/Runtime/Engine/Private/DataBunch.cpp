@@ -10,12 +10,21 @@ void* FOutBunch::operator new(size_t Size)
         .Start()
         .Find("mov ecx, 0x*; call 0x*; test rax, rax")
         .Call()
+        .Or()
+        .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
+        .Start()
+        .Find("mov ecx, 0x*; inc [*]; call 0x*; test rax, rax")
+        .Call()
         .Get();
 
     static auto BunchSize = (size_t)Anchor::Offset(TEXT("sizeof(FOutBunch)"))
         .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
         .Start()
         .Find("mov ecx, 0x*; call 0x*; test rax, rax")
+        .Or()
+        .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
+        .Start()
+        .Find("mov ecx, 0x*; inc [*]; call 0x*; test rax, rax")
         .Value();
 
     return New(BunchSize);
