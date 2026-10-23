@@ -159,8 +159,14 @@ void UFortControllerComponent_CampsiteAccountItem::execWriteStashedItem(FFrame& 
         .Optional()
         .InExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:WriteStashedItem")));
 
+    static auto bHasPlayerController = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:WriteStashedItem")))->FindPropertyByName(FName(TEXT("PlayerController"))) != nullptr;
+
+    AFortPlayerController* PlayerController = nullptr;
     UFortWorldItem* Item = nullptr;
     int32 StashedItemIndex = 0;
+
+    if (bHasPlayerController)
+        Stack.StepCompiledIn(&PlayerController);
 
     Stack.StepCompiledIn(&Item);
     Stack.StepCompiledIn(&StashedItemIndex);
@@ -177,6 +183,13 @@ void UFortControllerComponent_CampsiteAccountItem::execWriteStashedItemFromEntry
         .Find("add [*+0x20], *; call 0x*; mov rcx, [rsp+0x*]; xor rcx, rsp; call 0x*")
         .Optional()
         .InExec(TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:WriteStashedItemFromEntry")));
+
+    static auto bHasPlayerController = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CampsiteRuntime.FortControllerComponent_CampsiteAccountItem:WriteStashedItemFromEntry")))->FindPropertyByName(FName(TEXT("PlayerController"))) != nullptr;
+
+    AFortPlayerController* PlayerController = nullptr;
+
+    if (bHasPlayerController)
+        Stack.StepCompiledIn(&PlayerController);
 
     FFortItemEntry TemporaryItemEntry(nullptr, 0, 0);
     auto& ItemEntry = Stack.StepCompiledInRef<FFortItemEntry>(&TemporaryItemEntry);
