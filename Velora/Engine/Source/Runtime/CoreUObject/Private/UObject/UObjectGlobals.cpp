@@ -37,6 +37,10 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Or()
         .Pattern("45 33 F6 4C 8B E1 45 0F B6 E9 49 8B F8 41 8B C6 41 8B CE 48 83 FA FF 0F 84")
         .Start()
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
