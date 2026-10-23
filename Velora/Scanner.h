@@ -963,10 +963,12 @@ namespace Anchor
             {
                 char Call[32];
                 char Jump[32];
+                char Load[48];
                 snprintf(Call, sizeof(Call), "call [*+0x%llx]", (unsigned long long)(Index * sizeof(void*)));
                 snprintf(Jump, sizeof(Jump), "jmp [*+0x%llx]", (unsigned long long)(Index * sizeof(void*)));
+                snprintf(Load, sizeof(Load), "mov r10, [*+0x%llx]; jmp r10", (unsigned long long)(Index * sizeof(void*)));
 
-                if (Anchor::At(VTable[Index]).Has(Call) || Anchor::At(VTable[Index]).Has(Jump))
+                if (Anchor::At(VTable[Index]).Has(Call) || Anchor::At(VTable[Index]).Has(Jump) || Anchor::At(VTable[Index]).Has(Load))
                 {
                     Found = Index * sizeof(void*);
                     break;
