@@ -2,6 +2,7 @@
 
 #include "GameFramework/PlayerState.h"
 
+class AFortTeamPrivateInfo;
 class APawn;
 class UFortAbilitySystemComponent;
 
@@ -19,4 +20,6 @@ public:
     void SetWorldPlayerId(int32 InWorldPlayerId);
 
     UFortAbilitySystemComponent*& GetAbilitySystemComponent();
+
+    AFortTeamPrivateInfo* GetPlayerTeamPrivate() const;
 };

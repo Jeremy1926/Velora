@@ -135,6 +135,18 @@ FCachedDestructInfo::FCachedDestructInfo(FActorDestructionInfo* InDestructionInf
     TGameLayout<FVector>::Store(this + 1, InDestructionInfo->GetDestroyedPosition());
 }
 
+bool FActorRepListRefView::ConditionalAdd(AActor* NewElement)
+{
+    if (IsActorValidForReplicationGather(NewElement))
+    {
+        RepList.Add(NewElement);
+
+        return true;
+    }
+
+    return false;
+}
+
 bool IsActorValidForReplication(const AActor* In)
 {
     return !In->IsPendingKillPending() && !(In->GetFlags() & 0x60000000) && !GUObjectArray.IndexToObject((int32)In->GetUniqueID())->IsUnreachable();

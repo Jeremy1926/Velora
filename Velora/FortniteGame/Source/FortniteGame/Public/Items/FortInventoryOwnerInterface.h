@@ -2,6 +2,7 @@
 
 #include "Containers/Array.h"
 
+class AFortInventory;
 class UClass;
 struct FItemAndCount;
 
@@ -9,6 +10,8 @@ class IFortInventoryOwnerInterface
 {
 public:
     static UClass* StaticClass();
+
+    AFortInventory* GetWorldInventory();
 
     bool CreateInventory();
 

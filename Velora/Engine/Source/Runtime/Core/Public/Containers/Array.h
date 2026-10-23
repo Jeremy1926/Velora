@@ -218,6 +218,32 @@ public:
         }
     }
 
+    template<typename PredicateType>
+    int32 RemoveAll(const PredicateType& Predicate)
+    {
+        const int32 OriginalNum = ArrayNum;
+        int32 WriteIndex = 0;
+
+        for (int32 ReadIndex = 0; ReadIndex < OriginalNum; ReadIndex++)
+        {
+            if (Predicate(GetData()[ReadIndex]))
+            {
+                DestructItems(GetData() + ReadIndex, 1);
+            }
+            else
+            {
+                if (WriteIndex != ReadIndex)
+                    memmove((void*)(GetData() + WriteIndex), (void*)(GetData() + ReadIndex), sizeof(ElementType));
+
+                WriteIndex++;
+            }
+        }
+
+        ArrayNum = WriteIndex;
+
+        return OriginalNum - ArrayNum;
+    }
+
     void RemoveAtSwap(int32 Index, int32 Count = 1, bool bAllowShrinking = true)
     {
         if (Count)

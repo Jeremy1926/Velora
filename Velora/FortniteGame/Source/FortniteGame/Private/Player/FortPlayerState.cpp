@@ -104,3 +104,10 @@ UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
 
     return *AbilitySystemComponent->ContainerPtrToValuePtr<UFortAbilitySystemComponent*>(this);
 }
+
+AFortTeamPrivateInfo* AFortPlayerState::GetPlayerTeamPrivate() const
+{
+    static auto PlayerTeamPrivate = GetClass()->FindPropertyByName(FName(TEXT("PlayerTeamPrivate")));
+
+    return *PlayerTeamPrivate->ContainerPtrToValuePtr<AFortTeamPrivateInfo*>(this);
+}

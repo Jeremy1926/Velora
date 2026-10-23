@@ -66,4 +66,8 @@ public:
     void SetGravityMultiplier(float NewGravityVal);
 
     void Suicide();
+
+    TArray<AFortWeapon*>& GetCurrentWeaponList();
+
+    void UpdateCullDistance();
 };

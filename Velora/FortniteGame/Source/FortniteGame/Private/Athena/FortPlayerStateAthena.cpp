@@ -261,3 +261,12 @@ int32& AFortPlayerStateAthena::GetRebootCounter()
 
     return *RebootCounter->ContainerPtrToValuePtr<int32>(this);
 }
+
+bool AFortPlayerStateAthena::IsTeamOutOfGame() const
+{
+    static auto IsTeamOutOfGame = Anchor::Function<bool (*)(const AFortPlayerStateAthena*)>(TEXT("AFortPlayerStateAthena::IsTeamOutOfGame"))
+        .Pattern("48 89 5C 24 08 48 89 6C 24 18 56 57 41 55 41 56 41 57 48 83 EC 20 48 8B F9 E8 ? ? ? ? 4C 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8B 98 ? ? ? ? 48 85 DB 74 ? E8 ? ? ? ? 48 8B 4B 10 48 8B D0 E8 ? ? ? ? 84 C0 75 02 33 DB 48 85 DB 0F 84 ? ? ? ? 48 8D 8F ? ? ? ? 48 8B 01 FF 50 28 8A D0 48 8B CB E8 ? ? ? ? 48 8B 38 48 63 40 08 4C 8D 3C C7 49 3B FF 0F 84")
+        .Get();
+
+    return IsTeamOutOfGame(this);
+}

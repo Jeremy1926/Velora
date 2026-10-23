@@ -649,3 +649,10 @@ void AFortGameStateAthena::ShouldDropOrDestroyItem(bool* bCurrentCanDropValue, b
 
     ShouldDropOrDestroyItem(this, bCurrentCanDropValue, bCurrentCanDestroyValue, Controller, ItemDef);
 }
+
+AFortBroadcastSpectatorInfo* AFortGameStateAthena::GetBroadcastSpectatorInfo() const
+{
+    static auto BroadcastSpectatorInfo = GetClass()->FindPropertyByName(FName(TEXT("BroadcastSpectatorInfo")));
+
+    return *BroadcastSpectatorInfo->ContainerPtrToValuePtr<AFortBroadcastSpectatorInfo*>(this);
+}

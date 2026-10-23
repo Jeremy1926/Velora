@@ -207,3 +207,10 @@ void AFortAIPawn::SetHasDroppedLoot(bool bInHasDroppedLoot)
 
     bHasDroppedLoot->SetPropertyValue_InContainer(this, bInHasDroppedLoot);
 }
+
+AFortPawn* AFortAIPawn::GetTetheredFollower() const
+{
+    static auto TetheredFollower = GetClass()->FindPropertyByName(FName(TEXT("TetheredFollower")));
+
+    return *TetheredFollower->ContainerPtrToValuePtr<AFortPawn*>(this);
+}

@@ -9,6 +9,7 @@
 
 class AController;
 class AFortAthenaMapInfo;
+class AFortBroadcastSpectatorInfo;
 class AFortPawn;
 class AFortSafeZoneIndicator;
 class AFortVolumeManager;
@@ -63,6 +64,8 @@ public:
     int32 GetSafeZonePhase() const;
 
     AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
+
+    AFortBroadcastSpectatorInfo* GetBroadcastSpectatorInfo() const;
 
     float GetSafeZonePauseTime() const;
 

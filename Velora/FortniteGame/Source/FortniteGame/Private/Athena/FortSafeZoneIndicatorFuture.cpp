@@ -38,8 +38,9 @@ TArray<FObjectKey>* AFortSafeZoneIndicatorFuture::GetWhitelistedPlayers()
         .Target()
         .Optional()
         .Get();
+    static TArray<FObjectKey> RebuiltWhitelistedPlayers;
 
-    return WhitelistedPlayers;
+    return WhitelistedPlayers ? WhitelistedPlayers : &RebuiltWhitelistedPlayers;
 }
 
 FVector AFortSafeZoneIndicatorFuture::GetNextNextCenter()

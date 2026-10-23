@@ -15,6 +15,16 @@ UClass* IFortInventoryOwnerInterface::StaticClass()
     return Class;
 }
 
+AFortInventory* IFortInventoryOwnerInterface::GetWorldInventory()
+{
+    static auto GetWorldInventory = Anchor::VirtualFunction<AFortInventory* (*)(IFortInventoryOwnerInterface*)>(TEXT("IFortInventoryOwnerInterface::GetWorldInventory"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:GetOverflowCountIfItemWasAddedToInventory"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetWorldInventory(this);
+}
+
 bool IFortInventoryOwnerInterface::CreateInventory()
 {
     DETOUR(IFortInventoryOwnerInterface, CreateInventory, Anchor::Hook()

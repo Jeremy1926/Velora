@@ -181,4 +181,6 @@ public:
     UStatManager* GetStatManager() const;
 
     void SetAirSpawnControlRotation(const FRotator& InAirSpawnControlRotation);
+
+    AFortInventory* GetViewTargetInventory() const;
 };

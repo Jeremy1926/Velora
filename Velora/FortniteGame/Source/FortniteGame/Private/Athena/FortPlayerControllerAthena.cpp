@@ -288,3 +288,10 @@ void AFortPlayerControllerAthena::ExternalShouldDropOrDestroyByItemType(AControl
     if (ItemDefinition && !ItemDefinition->CanBeDropped())
         *bShouldDrop = false;
 }
+
+AFortBroadcastRemoteClientInfo* AFortPlayerControllerAthena::GetBroadcastRemoteClientInfo() const
+{
+    static auto BroadcastRemoteClientInfo = GetClass()->FindPropertyByName(FName(TEXT("BroadcastRemoteClientInfo")));
+
+    return *BroadcastRemoteClientInfo->ContainerPtrToValuePtr<AFortBroadcastRemoteClientInfo*>(this);
+}

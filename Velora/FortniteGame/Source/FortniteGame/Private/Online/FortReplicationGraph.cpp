@@ -1,14 +1,344 @@
 #include "pch.h"
 #include "FortReplicationGraph.h"
 #include "FortTeamActorInterface.h"
+#include "Athena/FortGameStateAthena.h"
+#include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
+#include "Athena/FortSafeZoneIndicator.h"
+#include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Engine/NetConnection.h"
+#include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
+#include "Items/FortInventoryOwnerInterface.h"
+#include "Pawns/FortAIPawn.h"
+#include "Pawns/FortPlayerPawn.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortTeamHealthInfo.h"
 #include "Templates/Casts.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UClass* UFortReplicationGraph::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraph"));
+
+    return Class;
+}
+
+TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStreamingLevelActors()
+{
+    static auto ReplayPlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("ReplayPlayerStateLimiterNode")));
+
+    return *(TMap<FName, FActorRepListRefView>*)(ReplayPlayerStateLimiterNode->ContainerPtrToValuePtr<uint8>(this) + sizeof(UReplicationGraphNode*));
+}
+
+UClass* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortReplicationGraphNode_AlwaysRelevant_ForConnection"));
+
+    return Class;
+}
+
+FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetReplicationActorList()
+{
+    static auto ReplicationActorList = Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevant_ForConnection::ReplicationActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x20)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevant_ForConnection"))
+        .Find("lea rcx, [rbx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
+}
+
+int32& UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetNumAlwaysRelevantStreamingLevelsNeedingReplication()
+{
+    return *(int32*)((uint8*)&GetReplicationActorList() - 2 * sizeof(int32));
+}
+
+uint8* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetAlwaysRelevantStreamingLevelsNeedingReplication()
+{
+    auto SecondaryData = (uint8**)((uint8*)&GetNumAlwaysRelevantStreamingLevelsNeedingReplication() - sizeof(uint8*));
+
+    return *SecondaryData ? *SecondaryData : (uint8*)SecondaryData - 64 * TGameLayout<FName>::Size();
+}
+
+TArray<FFortAlwaysRelevantActorInfo>& UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetPastRelevantActors()
+{
+    return *(TArray<FFortAlwaysRelevantActorInfo>*)(&GetReplicationActorList() + 1);
+}
+
+bool& UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetInitializedPlayerState()
+{
+    return *(bool*)(&GetPastRelevantActors() + 1);
+}
+
+void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UFortReplicationGraphNode_AlwaysRelevant_ForConnection, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevant_ForConnection"), "ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()));
+
+    auto Graph = (UFortReplicationGraph*)GetOuter();
+    auto& ReplicationActorList = GetReplicationActorList();
+    ReplicationActorList.RepList.Reset();
+
+    auto ConnectionManager = Params.GetConnectionManager();
+    auto& ActorInfoMap = ConnectionManager->GetActorInfoMap();
+    const int32 ConnectionParity = ConnectionManager->GetConnectionOrderNum() % 2;
+    const int32 FrameParity = Params.GetReplicationFrameNum() & 1;
+    const bool bIsReplay = ConnectionManager->GetNetConnection()->IsReplay();
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        const FNetViewer& CurViewer = Params.GetViewer(Index);
+
+        if (bIsReplay && CurViewer.Connection != ConnectionManager->GetNetConnection())
+        {
+            if (CurViewer.ViewTarget && !CurViewer.ViewTarget->GetOnlyRelevantToOwner())
+                ReplicationActorList.ConditionalAdd(CurViewer.ViewTarget);
+
+            auto PlayerController = Cast<AFortPlayerController>(CurViewer.InViewer);
+
+            if (!PlayerController)
+                continue;
+
+            if (ConnectionParity == FrameParity)
+            {
+                ReplicationActorList.ConditionalAdd((AActor*)((IFortInventoryOwnerInterface*)PlayerController->GetInterfaceAddress(IFortInventoryOwnerInterface::StaticClass()))->GetWorldInventory());
+
+                if (auto PlayerControllerAthena = Cast<AFortPlayerControllerAthena>(PlayerController))
+                {
+                    ReplicationActorList.ConditionalAdd((AActor*)PlayerControllerAthena->GetViewTargetInventory());
+                    ReplicationActorList.ConditionalAdd((AActor*)PlayerControllerAthena->GetBroadcastRemoteClientInfo());
+                }
+            }
+
+            if (auto Pawn = Cast<AFortPawn>(PlayerController->GetPawn()))
+            {
+                auto& ActorInfo = ActorInfoMap.FindOrAdd(Pawn);
+                ActorInfo.SetCullDistanceSquared(0.f);
+                ActorInfo.ReplicationPeriodFrame = 1;
+
+                if (CurViewer.ViewTarget != Pawn)
+                    ReplicationActorList.ConditionalAdd(Pawn);
+
+                for (auto Weapon : Pawn->GetCurrentWeaponList())
+                    ReplicationActorList.ConditionalAdd((AActor*)Weapon);
+            }
+
+            if (auto ViewTargetPlayerPawn = Cast<AFortPlayerPawn>(CurViewer.ViewTarget))
+                ReplicationActorList.ConditionalAdd(ViewTargetPlayerPawn->GetTetherPawn());
+            else if (auto ViewTargetAIPawn = Cast<AFortAIPawn>(CurViewer.ViewTarget))
+                ReplicationActorList.ConditionalAdd(ViewTargetAIPawn->GetTetheredFollower());
+
+            continue;
+        }
+
+        ReplicationActorList.RepList.Add(CurViewer.InViewer);
+        ReplicationActorList.ConditionalAdd(CurViewer.ViewTarget);
+
+        auto PlayerController = Cast<AFortPlayerController>(CurViewer.InViewer);
+
+        if (!PlayerController)
+            continue;
+
+        if (ConnectionParity == FrameParity)
+        {
+            if (auto PlayerState = PlayerController->GetPlayerState())
+            {
+                if (!GetInitializedPlayerState())
+                {
+                    GetInitializedPlayerState() = true;
+                    ActorInfoMap.FindOrAdd(PlayerState).ReplicationPeriodFrame = 1;
+                }
+
+                ReplicationActorList.ConditionalAdd(PlayerState);
+            }
+
+            ReplicationActorList.ConditionalAdd((AActor*)((IFortInventoryOwnerInterface*)PlayerController->GetInterfaceAddress(IFortInventoryOwnerInterface::StaticClass()))->GetWorldInventory());
+
+            if (auto PlayerControllerAthena = Cast<AFortPlayerControllerAthena>(PlayerController))
+            {
+                ReplicationActorList.ConditionalAdd((AActor*)PlayerControllerAthena->GetViewTargetInventory());
+                ReplicationActorList.ConditionalAdd((AActor*)PlayerControllerAthena->GetBroadcastRemoteClientInfo());
+
+                auto PlayerStateAthena = Cast<AFortPlayerStateAthena>(PlayerControllerAthena->GetPlayerState());
+
+                if (CurViewer.InViewer != CurViewer.ViewTarget && PlayerStateAthena && PlayerStateAthena->IsTeamOutOfGame())
+                {
+                    if (auto ViewTargetPawn = Cast<AFortPawn>(CurViewer.ViewTarget))
+                    {
+                        if (auto ViewTargetPlayerState = Cast<AFortPlayerStateAthena>(ViewTargetPawn->GetPlayerState()))
+                            ReplicationActorList.ConditionalAdd((AActor*)ViewTargetPlayerState->GetPlayerTeamPrivate());
+                    }
+                }
+            }
+        }
+
+        auto& PastRelevantActors = GetPastRelevantActors();
+        auto LastData = PastRelevantActors.FindByKey(CurViewer.Connection);
+
+        if (!LastData)
+        {
+            FFortAlwaysRelevantActorInfo NewActorInfo = { CurViewer.Connection, nullptr, nullptr };
+            LastData = &PastRelevantActors[PastRelevantActors.Add(NewActorInfo)];
+        }
+
+        if (auto Pawn = Cast<AFortPawn>(PlayerController->GetPawn()))
+        {
+            if (Pawn != LastData->LastPawn)
+            {
+                LastData->LastPawn = Pawn;
+
+                auto& ActorInfo = ActorInfoMap.FindOrAdd(Pawn);
+                ActorInfo.SetCullDistanceSquared(0.f);
+                ActorInfo.ReplicationPeriodFrame = 1;
+            }
+
+            if (CurViewer.ViewTarget != Pawn)
+                ReplicationActorList.ConditionalAdd(Pawn);
+
+            for (auto Weapon : Pawn->GetCurrentWeaponList())
+                ReplicationActorList.ConditionalAdd((AActor*)Weapon);
+        }
+        else if (CurViewer.InViewer == CurViewer.ViewTarget && LastData->LastPawn)
+        {
+            ReplicationActorList.ConditionalAdd(LastData->LastPawn);
+        }
+
+        AActor* TetherPawn = nullptr;
+
+        if (auto ViewTargetPlayerPawn = Cast<AFortPlayerPawn>(CurViewer.ViewTarget))
+        {
+            TetherPawn = ViewTargetPlayerPawn->GetTetherPawn();
+            ReplicationActorList.ConditionalAdd(TetherPawn);
+        }
+        else if (auto ViewTargetAIPawn = Cast<AFortAIPawn>(CurViewer.ViewTarget))
+        {
+            TetherPawn = ViewTargetAIPawn->GetTetheredFollower();
+            ReplicationActorList.ConditionalAdd(TetherPawn);
+        }
+
+        if (CurViewer.ViewTarget != LastData->LastPawn && Cast<AFortPawn>(CurViewer.ViewTarget))
+        {
+            auto LastPawn = Cast<AFortPawn>(LastData->LastPawn);
+
+            if (LastPawn && LastPawn != TetherPawn)
+                LastPawn->UpdateCullDistance();
+
+            LastData->LastPawn = CurViewer.ViewTarget;
+
+            auto& ActorInfo = ActorInfoMap.FindOrAdd(CurViewer.ViewTarget);
+            ActorInfo.SetCullDistanceSquared(0.f);
+            ActorInfo.ReplicationPeriodFrame = 1;
+        }
+
+        if (TetherPawn)
+        {
+            if (TetherPawn != LastData->LastTetherPawn)
+            {
+                LastData->LastTetherPawn = TetherPawn;
+
+                auto& ActorInfo = ActorInfoMap.FindOrAdd(TetherPawn);
+                ActorInfo.SetCullDistanceSquared(0.f);
+                ActorInfo.ReplicationPeriodFrame = 1;
+            }
+        }
+        else if (LastData->LastTetherPawn)
+        {
+            auto LastTetherPawn = Cast<AFortPawn>(LastData->LastTetherPawn);
+
+            if (LastTetherPawn && LastTetherPawn != LastData->LastPawn)
+                LastTetherPawn->UpdateCullDistance();
+
+            LastData->LastTetherPawn = nullptr;
+        }
+    }
+
+    GetPastRelevantActors().RemoveAll([](const FFortAlwaysRelevantActorInfo& RelActorInfo)
+    {
+        return RelActorInfo.Connection == nullptr;
+    });
+
+    Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ReplicationActorList);
+
+    auto& AlwaysRelevantStreamingLevelActors = Graph->GetAlwaysRelevantStreamingLevelActors();
+    auto& NumAlwaysRelevantStreamingLevels = GetNumAlwaysRelevantStreamingLevelsNeedingReplication();
+
+    for (int32 Idx = NumAlwaysRelevantStreamingLevels - 1; Idx >= 0; Idx--)
+    {
+        auto StreamingLevels = GetAlwaysRelevantStreamingLevelsNeedingReplication();
+        const FName StreamingLevel = TGameLayout<FName>::Load(StreamingLevels + Idx * TGameLayout<FName>::Size());
+        auto Ptr = AlwaysRelevantStreamingLevelActors.Find(StreamingLevel);
+        bool bRemove = !Ptr;
+
+        if (Ptr && Ptr->RepList.Num() > 0)
+        {
+            bool bAllDormant = true;
+
+            for (auto Actor : Ptr->RepList)
+            {
+                if (!ActorInfoMap.FindOrAdd(Actor).bDormantOnConnection)
+                {
+                    bAllDormant = false;
+                    break;
+                }
+            }
+
+            if (bAllDormant)
+                bRemove = true;
+            else
+                Params.GetOutGatheredReplicationLists()->AddReplicationActorList(*Ptr);
+        }
+
+        if (bRemove)
+        {
+            if (Idx != NumAlwaysRelevantStreamingLevels - 1)
+                memcpy(StreamingLevels + Idx * TGameLayout<FName>::Size(), StreamingLevels + (NumAlwaysRelevantStreamingLevels - 1) * TGameLayout<FName>::Size(), TGameLayout<FName>::Size());
+
+            NumAlwaysRelevantStreamingLevels--;
+        }
+    }
+
+    auto World = GetGraphGlobals().IsValid() ? GetGraphGlobals()->World : nullptr;
+
+    if (!World)
+        return;
+
+    auto GameState = Cast<AFortGameStateAthena>(World->GetGameState());
+
+    if (!GameState)
+        return;
+
+    if (bIsReplay)
+        ReplicationActorList.ConditionalAdd((AActor*)GameState->GetBroadcastSpectatorInfo());
+
+    auto SafeZoneIndicator = GameState->GetSafeZoneIndicator();
+    auto FutureReplicator = SafeZoneIndicator ? SafeZoneIndicator->GetFutureReplicator() : nullptr;
+
+    if (!FutureReplicator)
+        return;
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        auto PlayerController = Cast<AFortPlayerController>(Params.GetViewer(Index).InViewer);
+        auto WhitelistedPlayers = AFortSafeZoneIndicatorFuture::GetWhitelistedPlayers();
+
+        if (PlayerController && WhitelistedPlayers->Contains(FObjectKey(PlayerController)))
+            ReplicationActorList.ConditionalAdd((AActor*)FutureReplicator);
+    }
+}
 
 UClass* UFortReplicationGraphNode_AlwaysRelevantHealthForTeam::StaticClass()
 {

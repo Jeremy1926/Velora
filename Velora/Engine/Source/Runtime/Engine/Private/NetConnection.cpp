@@ -53,6 +53,13 @@ AActor* UNetConnection::GetOwningActor() const
     return *OwningActor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
+bool UNetConnection::IsReplay() const
+{
+    static auto InternalAck = GetClass()->FindPropertyByName(FName(TEXT("InternalAck")));
+
+    return (*InternalAck->ContainerPtrToValuePtr<uint32>(this) >> 2) & 1;
+}
+
 bool UNetConnection::GetInternalAck() const
 {
     static auto InternalAck = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("InternalAck")));

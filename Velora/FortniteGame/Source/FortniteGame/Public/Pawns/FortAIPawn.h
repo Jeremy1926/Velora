@@ -35,4 +35,6 @@ public:
     bool GetHasDroppedLoot() const;
 
     void SetHasDroppedLoot(bool bInHasDroppedLoot);
+
+    AFortPawn* GetTetheredFollower() const;
 };

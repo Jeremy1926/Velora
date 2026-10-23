@@ -558,3 +558,17 @@ FFortClientObservedStatArray& AFortPlayerPawn::GetClientObservedStats()
 
     return *ClientObservedStats->ContainerPtrToValuePtr<FFortClientObservedStatArray>(this);
 }
+
+APawn* AFortPlayerPawn::GetTetherPawn() const
+{
+    static auto TetherComponentProperty = GetClass()->FindPropertyByName(FName(TEXT("TetherComponent")));
+
+    auto TetherComponent = *TetherComponentProperty->ContainerPtrToValuePtr<UObject*>(this);
+
+    if (!TetherComponent)
+        return nullptr;
+
+    static auto TetherPawn = TetherComponent->GetClass()->FindPropertyByName(FName(TEXT("TetherPawn")));
+
+    return *TetherPawn->ContainerPtrToValuePtr<APawn*>(TetherComponent);
+}

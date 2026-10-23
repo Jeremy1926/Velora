@@ -22,6 +22,7 @@ class UWorld;
 struct FReplicationGraphGlobalData
 {
     FGlobalActorReplicationInfoMap* GlobalActorReplicationInfoMap;
+    UWorld* World;
 };
 
 class UReplicationGraphNode : public UObject

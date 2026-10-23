@@ -75,4 +75,6 @@ public:
     void PlayerPawnRebooted();
 
     int32& GetRebootCounter();
+
+    bool IsTeamOutOfGame() const;
 };

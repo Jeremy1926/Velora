@@ -126,4 +126,6 @@ public:
     FGameplayTag GetEventReviveTag();
 
     FFortClientObservedStatArray& GetClientObservedStats();
+
+    APawn* GetTetherPawn() const;
 };

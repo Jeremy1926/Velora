@@ -1698,3 +1698,10 @@ void AFortPlayerController::SetAirSpawnControlRotation(const FRotator& InAirSpaw
 
     TGameLayout<FRotator>::Store((uint8*)this + AirSpawnControlRotation, InAirSpawnControlRotation);
 }
+
+AFortInventory* AFortPlayerController::GetViewTargetInventory() const
+{
+    static auto ViewTargetInventory = GetClass()->FindPropertyByName(FName(TEXT("ViewTargetInventory")));
+
+    return *ViewTargetInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
+}

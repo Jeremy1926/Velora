@@ -154,6 +154,8 @@ struct FCachedDormantDestructInfo
 
 struct FActorRepListRefView
 {
+    bool ConditionalAdd(AActor* NewElement);
+
     TArray<AActor*> RepList;
 };
 

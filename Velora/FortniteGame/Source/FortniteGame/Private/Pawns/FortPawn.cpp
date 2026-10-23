@@ -286,3 +286,20 @@ void AFortPawn::Suicide()
 
     Suicide(this);
 }
+
+TArray<AFortWeapon*>& AFortPawn::GetCurrentWeaponList()
+{
+    static auto CurrentWeaponList = GetClass()->FindPropertyByName(FName(TEXT("CurrentWeaponList")));
+
+    return *CurrentWeaponList->ContainerPtrToValuePtr<TArray<AFortWeapon*>>(this);
+}
+
+void AFortPawn::UpdateCullDistance()
+{
+    static auto UpdateCullDistance = Anchor::VirtualFunction<void (*)(AFortPawn*)>(TEXT("AFortPawn::UpdateCullDistance"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:SetPawnVisibility"))
+        .Find("call [rax+0x*]")
+        .Get(sizeof(void*));
+
+    UpdateCullDistance(this);
+}

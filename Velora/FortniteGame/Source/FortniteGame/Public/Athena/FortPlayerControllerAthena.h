@@ -3,6 +3,7 @@
 #include "Player/FortPlayerControllerPvP.h"
 
 class AController;
+class AFortBroadcastRemoteClientInfo;
 class AFortPlayerState;
 class UAthenaBackpackItemDefinition;
 class UAthenaCharacterItemDefinition;
@@ -54,6 +55,8 @@ public:
     uint8 GetSquadId() const;
 
     AFortPlayerState* GetSkydiveLeader() const;
+
+    AFortBroadcastRemoteClientInfo* GetBroadcastRemoteClientInfo() const;
 
     void RespawnPlayerAfterDeath(bool bEnterSkydiving);
 

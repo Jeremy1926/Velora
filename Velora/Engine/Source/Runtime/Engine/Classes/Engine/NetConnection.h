@@ -42,6 +42,8 @@ public:
 
     bool GetInternalAck() const;
 
+    bool IsReplay() const;
+
     EConnectionState GetState() const;
 
     double GetLastReceiveTime() const;
