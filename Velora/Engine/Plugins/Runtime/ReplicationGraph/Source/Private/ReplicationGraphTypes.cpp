@@ -43,6 +43,61 @@ float FGlobalActorReplicationInfo::GetCullDistance() const
     return *(const float*)(GetSettings() + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistance) : offsetof(TClassReplicationInfoLayout<FName>, CullDistance)));
 }
 
+uint32& FGlobalActorReplicationInfo::GetLastPreReplicationFrame()
+{
+    return *(uint32*)((uint8*)this + offsetof(TGlobalActorReplicationInfoLayout<FVector>, LastPreReplicationFrame));
+}
+
+uint32 FGlobalActorReplicationInfo::GetForceNetUpdateFrame() const
+{
+    return *(const uint32*)((const uint8*)this + offsetof(TGlobalActorReplicationInfoLayout<FVector>, ForceNetUpdateFrame));
+}
+
+bool FGlobalActorReplicationInfo::GetWantsToBeDormant() const
+{
+    return *((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bWantsToBeDormant) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bWantsToBeDormant))) != 0;
+}
+
+bool FGlobalActorReplicationInfo::GetSwapRolesOnReplicate() const
+{
+    return *((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bSwapRolesOnReplicate) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bSwapRolesOnReplicate))) != 0;
+}
+
+float FGlobalActorReplicationInfo::GetDistancePriorityScale() const
+{
+    return *(const float*)(GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, DistancePriorityScale));
+}
+
+float FGlobalActorReplicationInfo::GetStarvationPriorityScale() const
+{
+    return *(const float*)(GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, StarvationPriorityScale));
+}
+
+float FGlobalActorReplicationInfo::GetAccumulatedNetPriorityBias() const
+{
+    return *(const float*)(GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, AccumulatedNetPriorityBias));
+}
+
+uint16 FGlobalActorReplicationInfo::GetActorChannelFrameTimeout() const
+{
+    return *(const uint16*)(GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, ActorChannelFrameTimeout));
+}
+
+TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
+{
+    static auto DependentActorList = Anchor::Offset(TEXT("FGlobalActorReplicationInfo::DependentActorList"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("lea r14, [rdi+0x*]")
+        .Disp();
+
+    return *(TArray<AActor*>*)((uint8*)this + DependentActorList);
+}
+
 FGlobalActorReplicationInfo* FGlobalActorReplicationInfoMap::Find(AActor* const& Actor)
 {
     auto InfoPtr = ActorMap.Find(Actor);

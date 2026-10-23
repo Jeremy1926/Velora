@@ -49,6 +49,8 @@ public:
 
     bool GetInternalAck() const;
 
+    int32& GetQueuedBits();
+
     bool IsReplay() const;
 
     AActor*& GetRepContextActor();

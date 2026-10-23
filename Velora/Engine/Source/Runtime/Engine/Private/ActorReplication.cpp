@@ -65,3 +65,14 @@ void AActor::CallPreReplication(UNetDriver* NetDriver)
 
     CallPreReplication(this, NetDriver);
 }
+
+void AActor::SwapRoles()
+{
+    static auto SwapRoles = Anchor::Function<void (*)(AActor*)>(TEXT("AActor::SwapRoles"))
+        .Pattern("40 53 48 83 EC 20 48 89 11 48 8B D9 48 85 D2 74 ? 80 7A ? 03 75 ? 48 8B CA E8 ? ? ? ? EB ? 48 83 21 00 48 8B C3 48 83 C4 20 5B C3")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SwapRoles(this);
+}

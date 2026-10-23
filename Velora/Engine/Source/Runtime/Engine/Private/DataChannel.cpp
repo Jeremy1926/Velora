@@ -2,6 +2,7 @@
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
+#include "GameFramework/Actor.h"
 #include "Misc/EngineVersion.h"
 #include "Net/DataBunch.h"
 #include "UObject/UnrealType.h"
@@ -119,6 +120,19 @@ FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
     SendBunch(this, &Result, Bunch, Merge);
 
     return Result;
+}
+
+FScopedActorRoleSwap::FScopedActorRoleSwap(AActor* InActor)
+    : Actor(InActor && InActor->GetRemoteRole() == ROLE_Authority ? InActor : nullptr)
+{
+    if (Actor)
+        Actor->SwapRoles();
+}
+
+FScopedActorRoleSwap::~FScopedActorRoleSwap()
+{
+    if (Actor)
+        Actor->SwapRoles();
 }
 
 int64 UChannel::Close(EChannelCloseReason Reason)

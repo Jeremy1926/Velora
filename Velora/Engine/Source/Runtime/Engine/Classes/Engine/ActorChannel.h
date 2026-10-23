@@ -5,6 +5,20 @@
 class AActor;
 struct FActorDestructionInfo;
 
+struct FScopedActorRoleSwap
+{
+    FScopedActorRoleSwap(AActor* InActor);
+
+    ~FScopedActorRoleSwap();
+
+    FScopedActorRoleSwap(const FScopedActorRoleSwap&) = delete;
+
+    FScopedActorRoleSwap& operator=(const FScopedActorRoleSwap&) = delete;
+
+private:
+    AActor* Actor;
+};
+
 enum class ESetChannelActorFlags : uint32
 {
     None = 0,

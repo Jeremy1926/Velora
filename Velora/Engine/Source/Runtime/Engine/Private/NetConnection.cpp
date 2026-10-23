@@ -111,6 +111,21 @@ double UNetConnection::GetLastReceiveTime() const
     return *LastReceiveTime->ContainerPtrToValuePtr<double>(this);
 }
 
+int32& UNetConnection::GetQueuedBits()
+{
+    static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("xor edx, edx")
+        .Find("call [*]")
+        .LogSlot(TEXT("UNetConnection::IsNetReady"))
+        .Entry(TEXT("/Script/Engine.Default__NetConnection"))
+        .Find("mov [*], e*")
+        .Disp();
+
+    return *(int32*)((uint8_t*)this + QueuedBits);
+}
+
 int32 UNetConnection::GetTickCount() const
 {
     static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))

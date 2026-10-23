@@ -138,4 +138,6 @@ public:
     bool Destroy(bool bNetForce = false, bool bShouldModifyLevel = true);
 
     void CallPreReplication(UNetDriver* NetDriver);
+
+    void SwapRoles();
 };

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ReplicationGraph.h"
+#include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "Engine/Engine.h"
@@ -10,6 +11,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Templates/Sorting.h"
+#include <cfloat>
 #include "HAL/IConsoleManager.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -120,6 +123,11 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
 TArray<FLastLocationGatherInfo>& UNetReplicationGraphConnection::GetLastGatherLocations()
 {
     return *(TArray<FLastLocationGatherInfo>*)(((uintptr_t)&GetConnectionId() + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+}
+
+TMulticastDelegate<void, UNetReplicationGraphConnection*, FPrioritizedRepList*>& UNetReplicationGraphConnection::GetOnPostReplicatePrioritizeLists()
+{
+    return *(TMulticastDelegate<void, UNetReplicationGraphConnection*, FPrioritizedRepList*>*)(&GetActorInfoMap() + 1);
 }
 
 int32& UNetReplicationGraphConnection::GetQueuedBitsForActorDiscovery()
@@ -1971,6 +1979,315 @@ TSharedPtr<FReplicationGraphGlobalData>& UReplicationGraph::GetGraphGlobals()
         .Disp();
 
     return *(TSharedPtr<FReplicationGraphGlobalData>*)((uint8*)this + GraphGlobals);
+}
+
+float& UReplicationGraph::GetDestructInfoMaxDistanceSquared()
+{
+    return *(float*)(&GetGraphGlobals() + 1);
+}
+
+UReplicationGraph::FPrioritizationConstants& UReplicationGraph::GetPrioritizationConstants()
+{
+    return *(FPrioritizationConstants*)(&GetDestructInfoMaxDistanceSquared() + 1);
+}
+
+UReplicationGraph::FFastSharedPathConstants& UReplicationGraph::GetFastSharedPathConstants()
+{
+    return *(FFastSharedPathConstants*)(&GetPrioritizationConstants() + 1);
+}
+
+uint32& UReplicationGraph::GetGlobalActorChannelFrameNumTimeout()
+{
+    return *(uint32*)(&GetFastSharedPathConstants() + 1);
+}
+
+FPrioritizedRepList& UReplicationGraph::GetPrioritizedReplicationList()
+{
+    return *(FPrioritizedRepList*)(&GetGlobalGraphNodes() - 1);
+}
+
+FFrameReplicationStats& UReplicationGraph::GetFrameReplicationStats()
+{
+    static auto FrameReplicationStats = Anchor::Offset(TEXT("UReplicationGraph::FrameReplicationStats"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movdqu [rcx+0x*], xmm0")
+        .Disp();
+
+    return *(FFrameReplicationStats*)((uint8*)this + FrameReplicationStats);
+}
+
+bool& UReplicationGraph::GetWasConnectionSaturated()
+{
+    return *(bool*)(&GetFrameReplicationStats() + 1);
+}
+
+uint32& UReplicationGraph::GetReplicationGraphFrame()
+{
+    return *(uint32*)((uint8*)&GetWasConnectionSaturated() + sizeof(uint32));
+}
+
+int32& UReplicationGraph::GetActorDiscoveryMaxBitsPerFrame()
+{
+    return *(int32*)(&GetReplicationGraphFrame() + 1);
+}
+
+void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers)
+{
+    static auto ForceConnectionViewerPriority = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.ForceConnectionViewerPriority"));
+
+    auto NetConnection = ConnectionManager->GetNetConnection();
+    auto& ConnectionActorInfoMap = ConnectionManager->GetActorInfoMap();
+    const uint32 FrameNum = GetReplicationGraphFrame();
+    auto& PrioritizedReplicationList = GetPrioritizedReplicationList();
+    const auto& PrioritizationConstants = GetPrioritizationConstants();
+
+    PrioritizedReplicationList.Items.Reset();
+
+    for (auto List : GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::Default])
+    {
+        for (auto Actor : List->RepList)
+        {
+            FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
+
+            if (ConnectionData.bDormantOnConnection)
+                continue;
+
+            FGlobalActorReplicationInfo& GlobalData = GetGlobalActorReplicationInfoMap().Get(Actor);
+
+            if (!(ConnectionData.NextReplicationFrameNum <= FrameNum || GlobalData.GetForceNetUpdateFrame() > ConnectionData.LastRepFrameNum))
+                continue;
+
+            float AccumulatedPriority = GlobalData.GetAccumulatedNetPriorityBias();
+
+            if (GlobalData.GetDistancePriorityScale() > 0.f)
+            {
+                float SmallestDistanceSq = FLT_MAX;
+                int32 ViewersThatSkipActor = 0;
+                const FVector WorldLocation = GlobalData.GetWorldLocation();
+
+                for (const FNetViewer& CurViewer : Viewers)
+                {
+                    const FVector ViewLocation = CurViewer.GetViewLocation();
+                    const float DistSq = (WorldLocation.Y - ViewLocation.Y) * (WorldLocation.Y - ViewLocation.Y) + (WorldLocation.X - ViewLocation.X) * (WorldLocation.X - ViewLocation.X) + (WorldLocation.Z - ViewLocation.Z) * (WorldLocation.Z - ViewLocation.Z);
+
+                    SmallestDistanceSq = DistSq < SmallestDistanceSq ? DistSq : SmallestDistanceSq;
+
+                    if (ConnectionData.CullDistanceSquared > 0.f && DistSq > ConnectionData.CullDistanceSquared)
+                        ++ViewersThatSkipActor;
+                }
+
+                if (ViewersThatSkipActor >= Viewers.Num())
+                    continue;
+
+                const float DistanceFactor = FMath::Clamp(SmallestDistanceSq / PrioritizationConstants.MaxDistanceScaling, 0.f, 1.f) * GlobalData.GetDistancePriorityScale();
+                AccumulatedPriority += DistanceFactor;
+            }
+
+            UpdateActorChannelCloseFrameNum(Actor, ConnectionData, GlobalData, FrameNum, NetConnection);
+
+            if (GlobalData.GetStarvationPriorityScale() > 0.f)
+            {
+                const uint32 FramesSinceLastRep = FrameNum - ConnectionData.LastRepFrameNum;
+                const float StarvationFactor = 1.f - FMath::Clamp(((float)FramesSinceLastRep * GlobalData.GetStarvationPriorityScale()) / (float)PrioritizationConstants.MaxFramesSinceLastRep, 0.f, 1.f);
+
+                AccumulatedPriority += StarvationFactor;
+            }
+
+            if (GlobalData.GetWantsToBeDormant() && ConnectionData.LastRepFrameNum > 0)
+                AccumulatedPriority += -1.5f;
+
+            if (GlobalData.GetForceNetUpdateFrame() > ConnectionData.LastRepFrameNum)
+                AccumulatedPriority += -1.f;
+
+            for (const FNetViewer& CurViewer : Viewers)
+            {
+                if (Actor == CurViewer.ViewTarget || Actor == CurViewer.InViewer)
+                {
+                    if (ForceConnectionViewerPriority->GetFloat() > 0.f)
+                        AccumulatedPriority = -FLT_MAX;
+                    else
+                        AccumulatedPriority += -10.f;
+
+                    break;
+                }
+            }
+
+            PrioritizedReplicationList.Items.Add(FPrioritizedRepList::FItem(AccumulatedPriority, Actor, &GlobalData, &ConnectionData));
+        }
+    }
+
+    AlgoImpl::IntroSortInternal(PrioritizedReplicationList.Items.GetData(), PrioritizedReplicationList.Items.Num(), [](const FPrioritizedRepList::FItem& A, const FPrioritizedRepList::FItem& B)
+    {
+        return A < B;
+    });
+
+    ReplicateActorsForConnection(NetConnection, ConnectionActorInfoMap, ConnectionManager, FrameNum);
+
+    ConnectionManager->GetOnPostReplicatePrioritizeLists().Broadcast(ConnectionManager, &PrioritizedReplicationList);
+}
+
+void UReplicationGraph::ReplicateActorsForConnection(UNetConnection* NetConnection, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection* ConnectionManager, const uint32 FrameNum)
+{
+    auto& PrioritizedReplicationList = GetPrioritizedReplicationList();
+
+    for (int32 ActorIdx = 0; ActorIdx < PrioritizedReplicationList.Items.Num(); ++ActorIdx)
+    {
+        const FPrioritizedRepList::FItem& RepItem = PrioritizedReplicationList.Items[ActorIdx];
+
+        AActor* Actor = RepItem.Actor;
+        FConnectionReplicationActorInfo& ActorInfo = *RepItem.ConnectionData;
+
+        if (ActorInfo.LastRepFrameNum == FrameNum)
+            continue;
+
+        FGlobalActorReplicationInfo& GlobalActorInfo = *RepItem.GlobalData;
+
+        ReplicateSingleActor(Actor, ActorInfo, GlobalActorInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
+
+        if (!NetConnection->IsNetReady(false))
+        {
+            HandleStarvedActorList(PrioritizedReplicationList, ActorIdx + 1, ConnectionActorInfoMap, FrameNum);
+            NotifyConnectionSaturated(*ConnectionManager);
+            break;
+        }
+    }
+}
+
+int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicationActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalActorInfo, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum)
+{
+    if (!Actor)
+        return 0;
+
+    UNetConnection* NetConnection = ConnectionManager.GetNetConnection();
+
+    if (!IsActorValidForReplication(Actor))
+        return 0;
+
+    if (ActorInfo.Channel)
+    {
+        if (ActorInfo.Channel->GetClosing())
+            return 0;
+        else if (ActorInfo.Channel->GetActor() != Actor)
+            return 0;
+    }
+
+    GetFrameReplicationStats().NumReplicatedActors++;
+    ActorInfo.LastRepFrameNum = FrameNum;
+    ActorInfo.NextReplicationFrameNum = FrameNum + ActorInfo.ReplicationPeriodFrame;
+
+    if (GlobalActorInfo.GetLastPreReplicationFrame() != FrameNum)
+    {
+        GlobalActorInfo.GetLastPreReplicationFrame() = FrameNum;
+        Actor->CallPreReplication(GetNetDriver());
+    }
+
+    FScopedActorRoleSwap SwapGuard(GlobalActorInfo.GetSwapRolesOnReplicate() ? Actor : nullptr);
+
+    const bool bWantsToGoDormant = GlobalActorInfo.GetWantsToBeDormant();
+
+    if (ActorInfo.Channel == nullptr)
+    {
+        ActorInfo.Channel = (UActorChannel*)NetConnection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally);
+
+        if (!ActorInfo.Channel)
+            return 0;
+
+        ActorInfo.Channel->SetChannelActor(Actor, ESetChannelActorFlags::None);
+    }
+
+    if (bWantsToGoDormant)
+        ActorInfo.Channel->StartBecomingDormant();
+
+    int64 BitsWritten = 0;
+
+    if (ActorInfo.bTearOff)
+    {
+        BitsWritten = ActorInfo.Channel->ReplicateActor();
+        BitsWritten += ActorInfo.Channel->Close(EChannelCloseReason::TearOff);
+    }
+    else
+    {
+        BitsWritten = ActorInfo.Channel->ReplicateActor();
+    }
+
+    if (!(BitsWritten > 0))
+        GetFrameReplicationStats().NumReplicatedCleanActors++;
+
+    const bool bIsTrafficActorDiscovery = GetActorDiscoveryMaxBitsPerFrame() > 0 && (ActorInfo.Channel && ActorInfo.Channel->GetSpawnAcked() == false);
+    const bool bIsActorDiscoveryBudgetFull = bIsTrafficActorDiscovery && (ConnectionManager.GetQueuedBitsForActorDiscovery() >= GetActorDiscoveryMaxBitsPerFrame());
+
+    auto& DependentActorList = GlobalActorInfo.GetDependentActorList();
+
+    if (DependentActorList.Num() > 0)
+    {
+        const uint32 CloseFrameNum = ActorInfo.ActorChannelCloseFrameNum;
+
+        for (AActor* DependentActor : DependentActorList)
+        {
+            FConnectionReplicationActorInfo& DependentActorConnectionInfo = ConnectionActorInfoMap.FindOrAdd(DependentActor);
+            FGlobalActorReplicationInfo& DependentActorGlobalData = GetGlobalActorReplicationInfoMap().Get(DependentActor);
+
+            UpdateActorChannelCloseFrameNum(DependentActor, DependentActorConnectionInfo, DependentActorGlobalData, FrameNum, NetConnection);
+
+            DependentActorConnectionInfo.ActorChannelCloseFrameNum = CloseFrameNum > DependentActorConnectionInfo.ActorChannelCloseFrameNum ? CloseFrameNum : DependentActorConnectionInfo.ActorChannelCloseFrameNum;
+
+            if (!(DependentActorConnectionInfo.NextReplicationFrameNum <= FrameNum || DependentActorGlobalData.GetForceNetUpdateFrame() > DependentActorConnectionInfo.LastRepFrameNum))
+                continue;
+
+            if (!IsActorValidForReplication(DependentActor))
+                continue;
+
+            BitsWritten += ReplicateSingleActor(DependentActor, DependentActorConnectionInfo, DependentActorGlobalData, ConnectionActorInfoMap, ConnectionManager, FrameNum);
+        }
+    }
+
+    if (bIsTrafficActorDiscovery && !bIsActorDiscoveryBudgetFull)
+    {
+        ConnectionManager.GetQueuedBitsForActorDiscovery() += (int32)BitsWritten;
+        NetConnection->GetQueuedBits() -= (int32)BitsWritten;
+        BitsWritten = 0;
+    }
+
+    return BitsWritten;
+}
+
+void UReplicationGraph::HandleStarvedActorList(const FPrioritizedRepList& List, int32 StartIdx, FPerConnectionActorInfoMap& ConnectionActorInfoMap, uint32 FrameNum)
+{
+    for (int32 ActorIdx = StartIdx; ActorIdx < List.Items.Num(); ++ActorIdx)
+    {
+        const FPrioritizedRepList::FItem& RepItem = List.Items[ActorIdx];
+        FConnectionReplicationActorInfo& ActorInfo = *RepItem.ConnectionData;
+        FGlobalActorReplicationInfo& GlobalActorInfo = GetGlobalActorReplicationInfoMap().Get(RepItem.Actor);
+        auto& DependentActorList = GlobalActorInfo.GetDependentActorList();
+
+        if (DependentActorList.Num() > 0)
+        {
+            const uint32 CloseFrameNum = ActorInfo.ActorChannelCloseFrameNum;
+
+            for (AActor* DependentActor : DependentActorList)
+            {
+                FConnectionReplicationActorInfo& DependentActorConnectionInfo = ConnectionActorInfoMap.FindOrAdd(DependentActor);
+                DependentActorConnectionInfo.ActorChannelCloseFrameNum = CloseFrameNum > DependentActorConnectionInfo.ActorChannelCloseFrameNum ? CloseFrameNum : DependentActorConnectionInfo.ActorChannelCloseFrameNum;
+            }
+        }
+    }
+}
+
+void UReplicationGraph::UpdateActorChannelCloseFrameNum(AActor* Actor, FConnectionReplicationActorInfo& ConnectionData, const FGlobalActorReplicationInfo& GlobalData, const uint32 FrameNum, UNetConnection* NetConnection)
+{
+    if (GlobalData.GetActorChannelFrameTimeout() > 0)
+    {
+        const uint32 NewCloseFrameNum = FrameNum + ConnectionData.ReplicationPeriodFrame + GlobalData.GetActorChannelFrameTimeout() + GetGlobalActorChannelFrameNumTimeout();
+        ConnectionData.ActorChannelCloseFrameNum = ConnectionData.ActorChannelCloseFrameNum > NewCloseFrameNum ? ConnectionData.ActorChannelCloseFrameNum : NewCloseFrameNum;
+    }
+}
+
+void UReplicationGraph::NotifyConnectionSaturated(UNetReplicationGraphConnection& Connection)
+{
+    GetWasConnectionSaturated() = true;
 }
 
 FGlobalActorReplicationInfoMap& UReplicationGraph::GetGlobalActorReplicationInfoMap()

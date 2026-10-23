@@ -314,6 +314,8 @@ public:
 
     TArray<FLastLocationGatherInfo>& GetLastGatherLocations();
 
+    TMulticastDelegate<void, UNetReplicationGraphConnection*, FPrioritizedRepList*>& GetOnPostReplicatePrioritizeLists();
+
     int32& GetQueuedBitsForActorDiscovery();
 
     TArray<FCachedDestructInfo>& GetOutOfRangeDestroyedActors();
@@ -351,6 +353,19 @@ private:
 class UReplicationGraph : public UReplicationDriver
 {
 public:
+    struct FPrioritizationConstants
+    {
+        float MaxDistanceScaling;
+        uint32 MaxFramesSinceLastRep;
+    };
+
+    struct FFastSharedPathConstants
+    {
+        float DistanceRequirementPct;
+        int32 MaxBitsPerFrame;
+        int32 ListSkipPerFrame;
+    };
+
     static UClass* StaticClass();
 
     UClass* GetReplicationConnectionManagerClass();
@@ -384,6 +399,36 @@ public:
     void InitGlobalGraphNodes();
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
+
+    float& GetDestructInfoMaxDistanceSquared();
+
+    FPrioritizationConstants& GetPrioritizationConstants();
+
+    FFastSharedPathConstants& GetFastSharedPathConstants();
+
+    uint32& GetGlobalActorChannelFrameNumTimeout();
+
+    FPrioritizedRepList& GetPrioritizedReplicationList();
+
+    FFrameReplicationStats& GetFrameReplicationStats();
+
+    bool& GetWasConnectionSaturated();
+
+    uint32& GetReplicationGraphFrame();
+
+    int32& GetActorDiscoveryMaxBitsPerFrame();
+
+    void ReplicateActorListsForConnections_Default(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers);
+
+    void ReplicateActorsForConnection(UNetConnection* NetConnection, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection* ConnectionManager, const uint32 FrameNum);
+
+    int64 ReplicateSingleActor(AActor* Actor, FConnectionReplicationActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalActorInfo, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum);
+
+    void HandleStarvedActorList(const FPrioritizedRepList& List, int32 StartIdx, FPerConnectionActorInfoMap& ConnectionActorInfoMap, uint32 FrameNum);
+
+    void UpdateActorChannelCloseFrameNum(AActor* Actor, FConnectionReplicationActorInfo& ConnectionData, const FGlobalActorReplicationInfo& GlobalData, const uint32 FrameNum, UNetConnection* NetConnection);
+
+    void NotifyConnectionSaturated(UNetReplicationGraphConnection& Connection);
 
 private:
     UNetReplicationGraphConnection* CreateClientConnectionManagerInternal(UNetConnection* Connection);

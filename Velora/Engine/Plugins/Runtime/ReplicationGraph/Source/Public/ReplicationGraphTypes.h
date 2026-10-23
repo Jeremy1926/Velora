@@ -59,6 +59,24 @@ struct FGlobalActorReplicationInfo
 
     float GetCullDistance() const;
 
+    uint32& GetLastPreReplicationFrame();
+
+    uint32 GetForceNetUpdateFrame() const;
+
+    bool GetWantsToBeDormant() const;
+
+    bool GetSwapRolesOnReplicate() const;
+
+    float GetDistancePriorityScale() const;
+
+    float GetStarvationPriorityScale() const;
+
+    float GetAccumulatedNetPriorityBias() const;
+
+    uint16 GetActorChannelFrameTimeout() const;
+
+    TArray<AActor*>& GetDependentActorList();
+
 private:
     const uint8* GetSettings() const;
 };
@@ -291,6 +309,40 @@ struct FReplicationGraphDestructionSettings
 
     float DestructInfoMaxDistanceSquared;
     float OutOfRangeDistanceCheckThresholdSquared;
+};
+
+struct FPrioritizedRepList
+{
+    struct FItem
+    {
+        FItem(float InPriority, AActor* InActor, FGlobalActorReplicationInfo* InGlobal, FConnectionReplicationActorInfo* InConn)
+            : Priority(InPriority)
+            , Actor(InActor)
+            , GlobalData(InGlobal)
+            , ConnectionData(InConn)
+        {
+        }
+
+        bool operator<(const FItem& Other) const
+        {
+            return Priority < Other.Priority;
+        }
+
+        float Priority;
+        AActor* Actor;
+        FGlobalActorReplicationInfo* GlobalData;
+        FConnectionReplicationActorInfo* ConnectionData;
+    };
+
+    TArray<FItem> Items;
+};
+
+struct FFrameReplicationStats
+{
+    int32 NumReplicatedActors;
+    int32 NumReplicatedCleanActors;
+    int32 NumReplicatedFastPathActors;
+    int32 NumConnections;
 };
 
 struct FGatheredReplicationActorLists
