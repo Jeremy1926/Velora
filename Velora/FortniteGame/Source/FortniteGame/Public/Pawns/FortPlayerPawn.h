@@ -9,6 +9,7 @@ class AActor;
 class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
+class UAthenaGliderItemDefinition;
 class UFortMontageItemDefinitionBase;
 class UGameplayEffect;
 class UScriptStruct;
@@ -95,6 +96,16 @@ public:
     void SetClientObservedStatsFromAnotherPawn(AFortPlayerPawn* OtherPawn);
 
     void execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, void* const Z_Param__Result);
+
+    TArray<const UAthenaGliderItemDefinition*>& GetGliderOverrideStack();
+
+    void PushGliderOverride(const UAthenaGliderItemDefinition* InGliderOverride);
+
+    void execPushGliderOverride(FFrame& Stack, void* const Z_Param__Result);
+
+    void PopGliderOverride(const UAthenaGliderItemDefinition* InGliderToRemove);
+
+    void execPopGliderOverride(FFrame& Stack, void* const Z_Param__Result);
 
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 

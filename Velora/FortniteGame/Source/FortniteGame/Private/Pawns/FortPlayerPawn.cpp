@@ -431,6 +431,73 @@ void AFortPlayerPawn::execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, v
     SetClientObservedStatsFromAnotherPawn(OtherPawn);
 }
 
+TArray<const UAthenaGliderItemDefinition*>& AFortPlayerPawn::GetGliderOverrideStack()
+{
+    static auto GliderOverrideStack = StaticClass()->FindPropertyByName(FName(TEXT("GliderOverrideStack")));
+
+    return *GliderOverrideStack->ContainerPtrToValuePtr<TArray<const UAthenaGliderItemDefinition*>>(this);
+}
+
+void AFortPlayerPawn::PushGliderOverride(const UAthenaGliderItemDefinition* InGliderOverride)
+{
+    if (InGliderOverride)
+        GetGliderOverrideStack().Add(InGliderOverride);
+}
+
+void AFortPlayerPawn::execPushGliderOverride(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execPushGliderOverride, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PushGliderOverride")))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PushGliderOverride"))
+        .Is("ret*")
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PushGliderOverride")))
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PushGliderOverride"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PushGliderOverride")));
+
+    UAthenaGliderItemDefinition* InGliderOverride = nullptr;
+
+    Stack.StepCompiledIn(&InGliderOverride);
+    Stack.Code += !!Stack.Code;
+
+    PushGliderOverride(InGliderOverride);
+}
+
+void AFortPlayerPawn::PopGliderOverride(const UAthenaGliderItemDefinition* InGliderToRemove)
+{
+    auto& GliderOverrideStack = GetGliderOverrideStack();
+
+    for (int32 Index = GliderOverrideStack.Num() - 1; Index >= 0; Index--)
+    {
+        if (GliderOverrideStack[Index] != InGliderToRemove)
+            continue;
+
+        GliderOverrideStack.RemoveAt(Index);
+        return;
+    }
+}
+
+void AFortPlayerPawn::execPopGliderOverride(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execPopGliderOverride, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PopGliderOverride")))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:PopGliderOverride"))
+        .Is("ret*")
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:PopGliderOverride")))
+        .StubExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PopGliderOverride"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:PopGliderOverride")));
+
+    UAthenaGliderItemDefinition* InGliderToRemove = nullptr;
+
+    Stack.StepCompiledIn(&InGliderToRemove);
+    Stack.Code += !!Stack.Code;
+
+    PopGliderOverride(InGliderToRemove);
+}
+
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 {
     static auto CanReviveFromDBNO = Anchor::VirtualFunction<bool (*)(AFortPlayerPawn*, AController*)>(TEXT("AFortPlayerPawn::CanReviveFromDBNO"))
