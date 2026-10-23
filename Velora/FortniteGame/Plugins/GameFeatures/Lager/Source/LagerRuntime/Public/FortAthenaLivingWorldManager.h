@@ -156,6 +156,8 @@ public:
 
     void GenerateEvents();
 
+    void GenerateEventRequests(UFortAthenaLivingWorldEncounterInstance* EncounterInstance, FFortAthenaLivingWorldCategory* Category, UDataTable* EventTable);
+
     void ProcessEventRequests();
 
     void ProcessEQSRequests();

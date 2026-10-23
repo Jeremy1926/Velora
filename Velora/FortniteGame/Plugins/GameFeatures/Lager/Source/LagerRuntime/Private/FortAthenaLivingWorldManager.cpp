@@ -282,7 +282,6 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
             EventInstances.RemoveAt(Index);
     }
 
-    int32 ActorBudget = (int32)Config->GetMaxActorCount().GetValueAtLevel(0.0f) - GetActorCount(nullptr, nullptr);
     TArray<FFortAthenaLivingWorldCategory*> Categories;
 
     for (auto& CategoryPair : CategoryTable->RowMap)
@@ -293,9 +292,7 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
 
     for (auto Category : Categories)
     {
-        const bool bExcludeFromGlobalAIBudget = Category->GetbExcludeFromGlobalAIBudget();
-
-        if (!bExcludeFromGlobalAIBudget && ActorBudget <= 0)
+        if (!Category->GetbExcludeFromGlobalAIBudget() && (int32)Config->GetMaxActorCount().GetValueAtLevel(0.0f) - GetActorCount(nullptr, nullptr) <= 0)
             continue;
 
         if (!Category->IsRequiredByPlaylist(GetPlaylistContextTags()))
@@ -306,89 +303,101 @@ void UFortAthenaLivingWorldManager::GenerateEvents()
         if (!EventTable)
             continue;
 
-        int32 CategoryBudget = Category->GetMaxCount() - GetActorCount(Category, nullptr);
-        TArray<FFortAthenaLivingWorldEvent*> ActiveEvents;
-        float TotalWeight = 0.0f;
+        GenerateEventRequests(nullptr, Category, EventTable);
+    }
+}
+
+void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorldEncounterInstance* EncounterInstance, FFortAthenaLivingWorldCategory* Category, UDataTable* EventTable)
+{
+    auto Config = GetConfig();
+    const bool bExcludeFromGlobalAIBudget = Category->GetbExcludeFromGlobalAIBudget();
+    int32 ActorBudget = (int32)Config->GetMaxActorCount().GetValueAtLevel(0.0f) - GetActorCount(nullptr, nullptr);
+
+    if (!bExcludeFromGlobalAIBudget && ActorBudget <= 0)
+        return;
+
+    int32 CategoryBudget = Category->GetMaxCount() - GetActorCount(Category, nullptr);
+    TArray<FFortAthenaLivingWorldEvent*> ActiveEvents;
+    float TotalWeight = 0.0f;
+
+    if (!bExcludeFromGlobalAIBudget)
+        CategoryBudget = FMath::Min(ActorBudget, CategoryBudget);
+
+    ComputeActiveEvents(EventTable, ActiveEvents, TotalWeight);
+
+    for (int32 Attempt = CategoryBudget; Attempt > 0 && CategoryBudget > 0 && TotalWeight > 0.0f; Attempt--)
+    {
+        const float Pick = FMath::FRand() * TotalWeight;
+        float Weight = 0.0f;
+        FFortAthenaLivingWorldEvent* Event = nullptr;
+
+        for (auto ActiveEvent : ActiveEvents)
+        {
+            if (ActiveEvent->GetWeight() <= 0.0f)
+                continue;
+
+            Weight += ActiveEvent->GetWeight();
+
+            if (Pick <= Weight)
+            {
+                Event = ActiveEvent;
+                break;
+            }
+        }
+
+        if (!Event)
+            break;
+
+        auto EventData = Event->GetEventData().LoadSynchronous();
+        const int32 EventBudget = FMath::Min(CategoryBudget, GetEventBudget(Event));
+        const int32 NumActorDescriptions = EventData ? EventData->GetActorDescriptions().Num() : 0;
+        auto MinActorCountToSpawn = EventData ? EventData->GetMinActorCountToSpawn() : nullptr;
+        auto MaxActorCountToSpawn = EventData ? EventData->GetMaxActorCountToSpawn() : nullptr;
+        const int32 MinActorCount = MinActorCountToSpawn ? (int32)MinActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
+        const int32 MaxActorCount = MaxActorCountToSpawn ? (int32)MaxActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
+
+        if (!NumActorDescriptions || MinActorCount > EventBudget)
+        {
+            ActiveEvents.RemoveSingle(Event);
+            TotalWeight -= Event->GetWeight();
+            continue;
+        }
+
+        const int32 ActorCount = FMath::Min(FMath::Min(FMath::RandRange(MinActorCount, MaxActorCount), NumActorDescriptions), EventBudget);
+
+        if (ActorCount <= 0)
+            continue;
+
+        const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
+        auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter);
+
+        if (!PointProvider)
+        {
+            ActiveEvents.RemoveSingle(Event);
+            TotalWeight -= Event->GetWeight();
+            continue;
+        }
+
+        auto PointProviderInterface = (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass());
+
+        for (int32 Index = 0; Index < ActorCount; Index++)
+            PointProviderInterface->OnEventRequested();
+
+        FLivingWorldEventRequest EventRequest;
+        EventRequest.LivingWorldManager = this;
+        EventRequest.Category = Category;
+        EventRequest.Event = Event;
+        EventRequest.EventData = EventData;
+        EventRequest.PointProvider = PointProvider;
+        EventRequest.ActorCountToSpawn = ActorCount;
+
+        PendingEventRequests.Add(EventRequest);
+        FindOrCreateEventRuntimeData(Event).SpawnedCount += ActorCount;
+
+        CategoryBudget -= ActorCount;
 
         if (!bExcludeFromGlobalAIBudget)
-            CategoryBudget = FMath::Min(ActorBudget, CategoryBudget);
-
-        ComputeActiveEvents(EventTable, ActiveEvents, TotalWeight);
-
-        for (int32 Attempt = CategoryBudget; Attempt > 0 && CategoryBudget > 0 && TotalWeight > 0.0f; Attempt--)
-        {
-            const float Pick = FMath::FRand() * TotalWeight;
-            float Weight = 0.0f;
-            FFortAthenaLivingWorldEvent* Event = nullptr;
-
-            for (auto ActiveEvent : ActiveEvents)
-            {
-                if (ActiveEvent->GetWeight() <= 0.0f)
-                    continue;
-
-                Weight += ActiveEvent->GetWeight();
-
-                if (Pick <= Weight)
-                {
-                    Event = ActiveEvent;
-                    break;
-                }
-            }
-
-            if (!Event)
-                break;
-
-            auto EventData = Event->GetEventData().LoadSynchronous();
-            const int32 EventBudget = FMath::Min(CategoryBudget, GetEventBudget(Event));
-            const int32 NumActorDescriptions = EventData ? EventData->GetActorDescriptions().Num() : 0;
-            auto MinActorCountToSpawn = EventData ? EventData->GetMinActorCountToSpawn() : nullptr;
-            auto MaxActorCountToSpawn = EventData ? EventData->GetMaxActorCountToSpawn() : nullptr;
-            const int32 MinActorCount = MinActorCountToSpawn ? (int32)MinActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
-            const int32 MaxActorCount = MaxActorCountToSpawn ? (int32)MaxActorCountToSpawn->GetValueAtLevel(0.0f) : NumActorDescriptions;
-
-            if (!NumActorDescriptions || MinActorCount > EventBudget)
-            {
-                ActiveEvents.RemoveSingle(Event);
-                TotalWeight -= Event->GetWeight();
-                continue;
-            }
-
-            const int32 ActorCount = FMath::Min(FMath::Min(FMath::RandRange(MinActorCount, MaxActorCount), NumActorDescriptions), EventBudget);
-
-            if (ActorCount <= 0)
-                continue;
-
-            const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event).DensityComputationRange : 0.0f, GetMaxActorDensity());
-            auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter);
-
-            if (!PointProvider)
-            {
-                ActiveEvents.RemoveSingle(Event);
-                TotalWeight -= Event->GetWeight();
-                continue;
-            }
-
-            auto PointProviderInterface = (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass());
-
-            for (int32 Index = 0; Index < ActorCount; Index++)
-                PointProviderInterface->OnEventRequested();
-
-            FLivingWorldEventRequest EventRequest;
-            EventRequest.LivingWorldManager = this;
-            EventRequest.Category = Category;
-            EventRequest.Event = Event;
-            EventRequest.EventData = EventData;
-            EventRequest.PointProvider = PointProvider;
-            EventRequest.ActorCountToSpawn = ActorCount;
-
-            PendingEventRequests.Add(EventRequest);
-            FindOrCreateEventRuntimeData(Event).SpawnedCount += ActorCount;
-
-            CategoryBudget -= ActorCount;
-
-            if (!bExcludeFromGlobalAIBudget)
-                ActorBudget -= ActorCount;
-        }
+            ActorBudget -= ActorCount;
     }
 }
 
