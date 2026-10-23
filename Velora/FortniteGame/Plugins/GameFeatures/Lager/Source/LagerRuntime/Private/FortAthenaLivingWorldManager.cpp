@@ -1334,6 +1334,13 @@ void UFortAthenaLivingWorldManager::AddPointProvider(AActor* PointProvider)
 
 void UFortAthenaLivingWorldManager::RemovePointProvider(AActor* PointProvider)
 {
+    static auto RemovePointProviderFromEventRuntimeData = Anchor::Optional<void (*)(UFortAthenaLivingWorldManager*, const FScriptInterface*)>(TEXT("UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntimeData"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Find("mov rcx, rbx; movdqa [rbp-0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
     if (!HasPointProviderInterfaces())
     {
         GetPointProviders().RemoveSingle(PointProvider);
@@ -1351,11 +1358,18 @@ void UFortAthenaLivingWorldManager::RemovePointProvider(AActor* PointProvider)
         }
     }
 
-    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
-        return;
-
     FScriptInterface OldPointProvider;
     OldPointProvider.SetObject(PointProvider);
+    OldPointProvider.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
+
+    if (RemovePointProviderFromEventRuntimeData)
+    {
+        RemovePointProviderFromEventRuntimeData(this, &OldPointProvider);
+        return;
+    }
+
+    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
+        return;
 
     for (auto EncounterInstance : GetRunningEncounterInstances())
     {
