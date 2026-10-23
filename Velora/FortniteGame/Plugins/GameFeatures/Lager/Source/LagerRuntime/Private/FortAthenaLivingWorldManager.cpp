@@ -1814,6 +1814,11 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
         .Find("movaps xmm2, xmm0; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("movss xmm2, dword ptr [r14+0x*]; lea rdx, [rsp+0x*]; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto GetGridActorDensity = Anchor::Optional<int32 (*)(FFortAthenaLivingWorldDensityGrid*, const FVector&, float)>(TEXT("FFortAthenaLivingWorldDensityGrid::GetActorDensity"))
