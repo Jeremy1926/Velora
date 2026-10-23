@@ -2,6 +2,7 @@
 #include "FortKismetLibrary.h"
 #include "FortGameModeZone.h"
 #include "FortGlobals.h"
+#include "GameDataBR.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
 #include "Abilities/FortAbilitySet.h"
@@ -660,6 +661,24 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
 
 void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
 {
+    static auto GenerateAmmoPickupForWeaponItemDefinitionToPosition = Anchor::Optional<AFortPickup* (*)(UObject*, UWorld*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortWeaponPickupSpawnAmmoData::GenerateAmmoPickupForWeaponItemDefinitionToPosition"))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
+        .Find("mov rdx, r15; mov [rsp+0x20], *; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (GenerateAmmoPickupForWeaponItemDefinitionToPosition)
+    {
+        auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+        auto GameDataBR = World && WeaponItemDefinition ? UGameDataBR::Get() : nullptr;
+
+        if (auto FortWeaponPickupSpawnAmmoData = GameDataBR ? GameDataBR->GetFortWeaponPickupSpawnAmmoData() : nullptr)
+            GenerateAmmoPickupForWeaponItemDefinitionToPosition(FortWeaponPickupSpawnAmmoData, World, WeaponItemDefinition, SourceTags, Location, SourceTypeFlag, SpawnSource);
+
+        return;
+    }
+
     static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
         .Get();

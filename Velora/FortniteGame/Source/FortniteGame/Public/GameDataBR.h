@@ -14,6 +14,8 @@ public:
 
     UFortAbilitySet* GetPlayerAbilitySetBR() const;
 
+    UObject* GetFortWeaponPickupSpawnAmmoData() const;
+
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTablesBR() const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootPackageDataTablesBR() const;

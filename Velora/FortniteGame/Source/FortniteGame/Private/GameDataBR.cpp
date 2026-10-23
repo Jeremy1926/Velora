@@ -31,6 +31,13 @@ UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
     return PlayerAbilitySetBR ? PlayerAbilitySetBR->ContainerPtrToValuePtr<TSoftObjectPtr<UFortAbilitySet>>(this)->LoadSynchronous() : nullptr;
 }
 
+UObject* UGameDataBR::GetFortWeaponPickupSpawnAmmoData() const
+{
+    static auto FortWeaponPickupSpawnAmmoData = GetClass()->FindPropertyByName(FName(TEXT("FortWeaponPickupSpawnAmmoData")));
+
+    return FortWeaponPickupSpawnAmmoData ? FortWeaponPickupSpawnAmmoData->ContainerPtrToValuePtr<TSoftObjectPtr<UObject>>(this)->LoadSynchronous() : nullptr;
+}
+
 const TArray<TAssetPtr<UDataTable>>& UGameDataBR::GetLootTierDataTablesBR() const
 {
     static auto LootTierDataTablesBR = GetClass()->FindPropertyByName(FName(TEXT("LootTierDataTablesBR")));
