@@ -142,6 +142,13 @@ bool UFortAthenaLivingWorldEncounterInstance::GetbIsPaused()
     return *bIsPaused->ContainerPtrToValuePtr<bool>(this);
 }
 
+FMulticastScriptDelegate& UFortAthenaLivingWorldEncounterInstance::GetOnActorSpawned()
+{
+    static auto OnActorSpawned = GetClass()->FindPropertyByName(FName(TEXT("OnActorSpawned")));
+
+    return *OnActorSpawned->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
 void* UFortAthenaLivingWorldEncounterInstance::GetEventRuntimeDataMap()
 {
     static auto EventRuntimeDataMap = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::EventRuntimeDataMap"))

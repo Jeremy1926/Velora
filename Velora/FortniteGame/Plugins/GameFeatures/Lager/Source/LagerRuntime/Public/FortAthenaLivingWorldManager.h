@@ -109,6 +109,7 @@ public:
         FFortAthenaLivingWorldEvent* Event = nullptr;
         TWeakObjectPtr<UFortAthenaLivingWorldEventData> EventData;
         TWeakObjectPtr<AActor> PointProvider;
+        TWeakObjectPtr<UFortAthenaLivingWorldEncounterInstance> EncounterInstance;
         int32 ActorCountToSpawn = 0;
     };
 
@@ -159,6 +160,10 @@ public:
 
     void GenerateEventRequests(UFortAthenaLivingWorldEncounterInstance* EncounterInstance, FFortAthenaLivingWorldCategory* Category, UDataTable* EventTable);
 
+    void UpdateEncounterInstances();
+
+    int32 ComputeCategoryRemainingBudget(FFortAthenaLivingWorldCategory* Category);
+
     void ProcessEventRequests();
 
     void ProcessEQSRequests();
@@ -171,23 +176,23 @@ public:
 
     void OnActorSpawned(FLivingWorldEventInstance& EventInstance, AActor* SpawnedActor, AActor* PointProvider, const FVector& PositionFromProvider, float DensityValue, float DensityRange);
 
-    void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight);
+    void ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
     bool IsEventActive(FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEventData* EventData);
 
-    int32 GetEventBudget(FFortAthenaLivingWorldEvent* Event);
+    int32 GetEventBudget(FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
     int32 GetActorCount(const FFortAthenaLivingWorldCategory* Category, const FFortAthenaLivingWorldEvent* Event);
 
     int32 GetTotalEncounterInstanceActorCount(UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
-    AActor* GetRandomPointProvider(const FGameplayTagQuery& ProviderFiltersTagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter);
+    AActor* GetRandomPointProvider(const FGameplayTagQuery& ProviderFiltersTagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
     bool RequestSpawnToAISpawnerSystem(const FLivingWorldEventRequest& EventRequest);
 
     UClass* GetSpawnerDataClass(FFortAthenaLivingWorldEventDataActorSpawnDescription& ActorDescription);
 
-    FLivingWorldEventRuntimeData& FindOrCreateEventRuntimeData(const FFortAthenaLivingWorldEvent* Event);
+    FLivingWorldEventRuntimeData& FindOrCreateEventRuntimeData(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
     UFortAthenaLivingWorldConfigData* GetConfig();
 
@@ -212,6 +217,8 @@ public:
     FFortAthenaLivingWorldPlayerTracker* GetPlayerTracker();
 
     TArray<AActor*>& GetRuntimePointProviderList();
+
+    TArray<UFortAthenaLivingWorldEncounterInstance*>& GetRunningEncounterInstances();
 
     TRuntimeSizedArray<FLivingWorldEventInstance>& GetEventInstances();
 

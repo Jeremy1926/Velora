@@ -4,6 +4,7 @@
 #include "Engine/DataAsset.h"
 #include "GameplayEffectTypes.h"
 #include "UObject/Object.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/ScriptInterface.h"
 #include "UObject/SoftObjectPtr.h"
 
@@ -52,6 +53,8 @@ public:
     float& GetLastGenerationTime();
 
     bool GetbIsPaused();
+
+    FMulticastScriptDelegate& GetOnActorSpawned();
 
     void* GetEventRuntimeDataMap();
 };
