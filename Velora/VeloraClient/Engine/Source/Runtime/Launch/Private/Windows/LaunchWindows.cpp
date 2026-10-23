@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <ctime>
+#include "Math/UnrealMathUtility.h"
 #include "Misc/EngineVersion.h"
 #include "Misc/OutputDeviceRedirector.h"
 #include "Windows/WindowsConsoleOutputDevice.h"
@@ -11,6 +12,14 @@
 
 #pragma warning(disable: 4073)
 #pragma init_seg(lib)
+
+static auto bGameLayoutDecided = []
+{
+    UE::LWC::IsEnabled();
+    FName::IsOutlineNumber();
+
+    return true;
+}();
 
 static auto bOutputDevicesRegistered = []
 {
