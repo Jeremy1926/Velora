@@ -1,6 +1,5 @@
 #include "pch.h"
 #include <ctime>
-#include "Math/UnrealMathUtility.h"
 #include "Misc/EngineVersion.h"
 #include "Misc/OutputDeviceRedirector.h"
 #include "Windows/WindowsConsoleOutputDevice.h"
@@ -15,7 +14,6 @@
 
 static auto bGameLayoutDecided = []
 {
-    UE::LWC::IsEnabled();
     FName::IsOutlineNumber();
 
     return true;
