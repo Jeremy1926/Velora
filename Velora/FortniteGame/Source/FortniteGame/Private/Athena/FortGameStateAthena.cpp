@@ -494,6 +494,33 @@ bool AFortGameStateAthena::GetPlaylistDataIsLoaded() const
     return *bPlaylistDataIsLoaded->ContainerPtrToValuePtr<bool>(this);
 }
 
+bool AFortGameStateAthena::GetIsLargeTeamGame() const
+{
+    static auto bIsLargeTeamGame = GetClass()->FindPropertyByName(FName(TEXT("bIsLargeTeamGame")));
+
+    return *bIsLargeTeamGame->ContainerPtrToValuePtr<bool>(this);
+}
+
+bool AFortGameStateAthena::IsCreativeOrPlaygroundModePlaylist() const
+{
+    static auto IsCreativeOrPlaygroundModePlaylist = Anchor::Function<bool (*)(const AFortGameStateAthena*)>(TEXT("AFortGameStateAthena::IsCreativeOrPlaygroundModePlaylist"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:IsCreativeOrPlaygroundModePlaylist"))
+        .Call(1)
+        .Get();
+
+    return IsCreativeOrPlaygroundModePlaylist(this);
+}
+
+bool AFortGameStateAthena::IsBattleLabModePlaylist() const
+{
+    static auto IsBattleLabModePlaylist = Anchor::Function<bool (*)(UObject*)>(TEXT("UFortPlaylistAthenaHelper::IsBattleLabModePlaylist"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:IsBattleLabModePlaylist"))
+        .Call(1)
+        .Get();
+
+    return IsBattleLabModePlaylist(GetCurrentPlaylist());
+}
+
 AFortVolumeManager* AFortGameStateAthena::GetVolumeManager() const
 {
     static auto VolumeManager = GetClass()->FindPropertyByName(FName(TEXT("VolumeManager")));

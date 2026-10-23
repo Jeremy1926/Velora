@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UObject/Class.h"
+#include "Containers/UnrealString.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
@@ -183,4 +184,15 @@ UClass* UClass::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Class"));
 
     return Class;
+}
+
+UFunction* UClass::FindFunctionByName(FName InName) const
+{
+    for (auto Struct = (const UStruct*)this; Struct; Struct = Struct->GetSuperStruct())
+    {
+        if (auto Function = (UFunction*)StaticFindObject(nullptr, (UObject*)Struct, *InName.ToString()))
+            return Function;
+    }
+
+    return nullptr;
 }

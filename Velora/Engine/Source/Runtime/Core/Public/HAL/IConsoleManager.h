@@ -47,6 +47,8 @@ class IConsoleVariable : public IConsoleObject
 public:
     void Set(const TCHAR* InValue, EConsoleVariableFlags SetBy);
 
+    void Set(int32 InValue, EConsoleVariableFlags SetBy);
+
     int32 GetInt() const;
 
     float GetFloat() const;

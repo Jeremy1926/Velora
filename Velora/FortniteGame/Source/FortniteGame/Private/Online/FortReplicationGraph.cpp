@@ -17,6 +17,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Kismet/GameplayStatics.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Pawns/FortAIPawn.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortLiveBroadcastController.h"
@@ -27,6 +28,7 @@
 #include "HAL/UnrealMemory.h"
 #include "Templates/Casts.h"
 #include "Templates/Function.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
@@ -233,6 +235,124 @@ void UFortReplicationGraph::InitDynamicSpatializationSettings()
     NodeSettings[(uint8)EFortDynamicNodeType::WorldStatic] = FSettings{ { AIZones.GetData(), AIZones.Num() }, { NonFastSharedZones.GetData(), NonFastSharedZones.Num() }, AIPawnMaxBitsPerFrame, MaxAIPerClient->GetInt() };
     NodeSettings[(uint8)EFortDynamicNodeType::WorldDynamic] = FSettings{ { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, { PhysicsObjectZones.GetData(), PhysicsObjectZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
     NodeSettings[(uint8)EFortDynamicNodeType::Pawn] = FSettings{ { VehicleZones.GetData(), VehicleZones.Num() }, { VehicleZones.GetData(), VehicleZones.Num() }, PlayerPawnMaxBitsPerFrame, -1 };
+}
+
+void UFortReplicationGraph::InitForPlaylist(AFortGameModeAthena* GameMode)
+{
+    static auto PlaylistAthenaClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena"));
+    static auto ServerMaxTickRate = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("ServerMaxTickRate")));
+    static auto bOverrideServerPerClientMaxAI = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("bOverrideServerPerClientMaxAI")));
+    static auto ServerPerClientMaxAI = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("ServerPerClientMaxAI")));
+    static auto NetActorDiscoveryBudgetInKBytesPerSec = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("NetActorDiscoveryBudgetInKBytesPerSec")));
+    static auto NetDormancyNumFramesUntilObsolete = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("NetDormancyNumFramesUntilObsolete")));
+    static auto RespawnType = PlaylistAthenaClass->FindPropertyByName(FName(TEXT("RespawnType")));
+    static auto PlaylistName = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("PlaylistName")));
+    static auto ConnectionDormancyNumFramesUntilObsolete = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.ConnectionDormancy.NumFramesUntilObsolete"));
+    static auto TargetKBitsSecFastSharedPath = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.TargetKBitsSecFastSharedPath"));
+    static auto OverrideActorDiscoveryBudget = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.OverrideActorDiscoveryBudget"));
+    static auto EnableDynamicDormancyActorDestructionForCreativeModes = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.EnableDynamicDormancyActorDestructionForCreativeModes"));
+    static auto DSFEnabled = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DSF.Enabled"));
+    static auto DynamicActorFrequencyBuckets = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DynamicActorFrequencyBuckets"));
+    static auto DynamicActorFrequencyBucketsBigTeamMode = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DynamicActorFrequencyBuckets.BigTeamMode"));
+    static auto FastSharedPathFrameModulo = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.FastSharedPathFrameModulo"));
+    static auto InstantFlushLargeTeamMode = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.InstantFlush.LargeTeamMode"));
+
+    uint32 NumFramesUntilObsolete = ConnectionDormancyNumFramesUntilObsolete->GetInt();
+    bool bIsLargeTeamGame = false;
+
+    if (auto GameState = GameMode ? Cast<AFortGameStateAthena>(GameMode->GetGameState()) : nullptr)
+    {
+        bIsLargeTeamGame = GameState->GetIsLargeTeamGame();
+
+        const bool bIsCreativeOrPlaygroundModePlaylist = GameState->IsCreativeOrPlaygroundModePlaylist();
+        const bool bIsBattleLabModePlaylist = GameState->IsBattleLabModePlaylist();
+        auto Playlist = GameState->GetCurrentPlaylist();
+        auto NetDriver = GetNetDriver();
+
+        if (NetDriver && Playlist && *ServerMaxTickRate->ContainerPtrToValuePtr<uint8>(Playlist))
+        {
+            int32 NewNetServerMaxTickRate = NetDriver->GetNetServerMaxTickRate();
+
+            if (*ServerMaxTickRate->ContainerPtrToValuePtr<uint8>(Playlist) == 1)
+                NewNetServerMaxTickRate = 20;
+            else if (*ServerMaxTickRate->ContainerPtrToValuePtr<uint8>(Playlist) == 2)
+                NewNetServerMaxTickRate = 30;
+
+            NetDriver->SetNetServerMaxTickRate(NewNetServerMaxTickRate);
+
+            InitDynamicSpatializationSettings();
+
+            GetFastSharedPathConstants().MaxBitsPerFrame = (int32)((float)TargetKBitsSecFastSharedPath->GetInt() / (float)NetDriver->GetNetServerMaxTickRate());
+        }
+
+        if (OverrideActorDiscoveryBudget->GetInt() >= 0)
+            SetActorDiscoveryBudget(OverrideActorDiscoveryBudget->GetInt());
+        else if (Playlist && *NetActorDiscoveryBudgetInKBytesPerSec->ContainerPtrToValuePtr<int32>(Playlist) > 0)
+            SetActorDiscoveryBudget(*NetActorDiscoveryBudgetInKBytesPerSec->ContainerPtrToValuePtr<int32>(Playlist));
+
+        if (Playlist && *NetDormancyNumFramesUntilObsolete->ContainerPtrToValuePtr<int32>(Playlist) >= 0)
+            NumFramesUntilObsolete = *NetDormancyNumFramesUntilObsolete->ContainerPtrToValuePtr<int32>(Playlist);
+        else if (bIsCreativeOrPlaygroundModePlaylist || (Playlist && *RespawnType->ContainerPtrToValuePtr<uint8>(Playlist)))
+            NumFramesUntilObsolete = 0;
+
+        if (bIsCreativeOrPlaygroundModePlaylist && !bIsBattleLabModePlaylist)
+        {
+            if (auto DormantDynamicActorsDestruction = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.DormantDynamicActorsDestruction")))
+                DormantDynamicActorsDestruction->Set(EnableDynamicDormancyActorDestructionForCreativeModes->GetInt(), ECVF_SetByCode);
+        }
+
+        if (Playlist && *bOverrideServerPerClientMaxAI->ContainerPtrToValuePtr<bool>(Playlist))
+            UFortReplicationGraphNode_DynamicSpatialFrequency::GetNodeSettings()[(uint8)EFortDynamicNodeType::WorldStatic].MaxNearestActors = *ServerPerClientMaxAI->ContainerPtrToValuePtr<int32>(Playlist);
+
+        if (GameState->GetPlaylistDataIsLoaded())
+        {
+            const FGameplayTagContainer GameplayTags = GameState->GetAthenaPlaylistContextTags();
+
+            OnGameStatePlaylistLoaded(PlaylistName->GetPropertyValue_InContainer<FName>(GameState->GetCurrentPlaylist()), GameplayTags);
+        }
+        else
+        {
+            FScriptDelegate OnCurrentPlaylistLoadedDelegate;
+            OnCurrentPlaylistLoadedDelegate.BindUFunction(this, FName(TEXT("OnGameStatePlaylistLoaded")));
+
+            GameState->GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);
+        }
+    }
+
+    if (!DSFEnabled->GetInt())
+    {
+        auto& DefaultSettings = UReplicationGraphNode_ActorListFrequencyBuckets::GetDefaultSettings();
+        uint32 MinActorChannelFrameNumTimeout;
+
+        if (!bIsLargeTeamGame)
+        {
+            DefaultSettings.NumBuckets = DynamicActorFrequencyBuckets->GetInt();
+            DefaultSettings.BucketThresholds.Reset();
+            DefaultSettings.EnableFastPath = true;
+            DefaultSettings.FastPathFrameModulo = 1;
+            MinActorChannelFrameNumTimeout = DynamicActorFrequencyBuckets->GetInt() * 2;
+        }
+        else
+        {
+            DefaultSettings.BucketThresholds.Add({ 50, DynamicActorFrequencyBucketsBigTeamMode->GetInt() });
+            DefaultSettings.BucketThresholds.Add({ 80, DynamicActorFrequencyBucketsBigTeamMode->GetInt() + 1 });
+            DefaultSettings.BucketThresholds.Add({ 999, DynamicActorFrequencyBucketsBigTeamMode->GetInt() + 2 });
+            DefaultSettings.FastPathFrameModulo = FastSharedPathFrameModulo->GetInt();
+            MinActorChannelFrameNumTimeout = DynamicActorFrequencyBucketsBigTeamMode->GetInt() + 2;
+        }
+
+        GetGlobalActorChannelFrameNumTimeout() = FMath::Max<uint32>(GetGlobalActorChannelFrameNumTimeout(), MinActorChannelFrameNumTimeout);
+    }
+
+    auto& RPCSendPolicyMap = GetRPCSendPolicyMap();
+    RPCSendPolicyMap.Reset();
+
+    if (!bIsLargeTeamGame || InstantFlushLargeTeamMode->GetInt() > 0)
+        RPCSendPolicyMap.Add(FObjectKey(AFortPlayerPawnAthena::StaticClass()->FindFunctionByName(FName(TEXT("NetMulticast_Athena_BatchedDamageCues")))), FRPCSendPolicyInfo{ true });
+
+    RPCSendPolicyMap.Add(FObjectKey(AFortAIPawn::StaticClass()->FindFunctionByName(FName(TEXT("NetMulticast_BatchedDamageCues")))), FRPCSendPolicyInfo{ true });
+
+    UReplicationGraphNode_ConnectionDormancyNode::SetNumFramesUntilObsolete(NumFramesUntilObsolete);
 }
 
 void UFortReplicationGraph::AddClassRepInfo(UClass* Class, EClassRepNodeMapping Mapping)

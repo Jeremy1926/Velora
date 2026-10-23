@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "HAL/IConsoleManager.h"
+#include "Containers/UnrealString.h"
 #include "Scanner.h"
 
 IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(TEXT("IConsoleManager::Singleton"))
@@ -79,6 +80,11 @@ void IConsoleVariable::Set(const TCHAR* InValue, EConsoleVariableFlags SetBy)
         .Get();
 
     Set(this, InValue, SetBy);
+}
+
+void IConsoleVariable::Set(int32 InValue, EConsoleVariableFlags SetBy)
+{
+    Set(*FString::FromInt(InValue), SetBy);
 }
 
 int32 IConsoleVariable::GetInt() const

@@ -1680,7 +1680,14 @@ const UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGr
         .Find("cmp qword ptr [rcx+0x*], 0x0")
         .Disp();
 
-    static auto& DefaultSettings = *Anchor::Data<FSettings*>(TEXT("UReplicationGraphNode_ActorListFrequencyBuckets::DefaultSettings"))
+    auto& SettingsPtr = *(TSharedPtr<FSettings>*)((uint8*)this + Settings);
+
+    return SettingsPtr.IsValid() ? *SettingsPtr.Get() : GetDefaultSettings();
+}
+
+UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGraphNode_ActorListFrequencyBuckets::GetDefaultSettings()
+{
+    static auto DefaultSettings = Anchor::Data<FSettings*>(TEXT("UReplicationGraphNode_ActorListFrequencyBuckets::DefaultSettings"))
         .String(TEXT("Child: %s"))
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
@@ -1693,9 +1700,7 @@ const UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGr
         .Target()
         .Get();
 
-    auto& SettingsPtr = *(TSharedPtr<FSettings>*)((uint8*)this + Settings);
-
-    return SettingsPtr.IsValid() ? *SettingsPtr.Get() : DefaultSettings;
+    return *DefaultSettings;
 }
 
 TArray<FActorRepListRefView, TInlineAllocator<2>>& UReplicationGraphNode_ActorListFrequencyBuckets::GetNonStreamingCollection()
@@ -1756,6 +1761,23 @@ void UReplicationGraphNode_ActorListFrequencyBuckets::GatherActorListsForConnect
     }
 
     GetStreamingLevelCollection().Gather(Params);
+}
+
+void UReplicationGraphNode_ConnectionDormancyNode::SetNumFramesUntilObsolete(uint32 NumFrames)
+{
+    static auto NumFramesUntilObsolete = Anchor::Data<uint32*>(TEXT("UReplicationGraphNode_ConnectionDormancyNode::NumFramesUntilObsolete"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DormancyNode"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("mov edx, [0x*]")
+        .Target()
+        .Get();
+
+    *NumFramesUntilObsolete = NumFrames;
 }
 
 UClass* UReplicationGraphNode_DynamicSpatialFrequency::StaticClass()
@@ -3509,6 +3531,20 @@ void UReplicationGraph::AddNetworkActor(AActor* Actor)
         .Get();
 
     AddNetworkActor(this, Actor);
+}
+
+void UReplicationGraph::SetActorDiscoveryBudget(int32 ActorDiscoveryBudgetInKBytesPerSec)
+{
+    if (ActorDiscoveryBudgetInKBytesPerSec <= 0)
+    {
+        GetActorDiscoveryMaxBitsPerFrame() = 0;
+        return;
+    }
+
+    if (!GetNetDriver())
+        return;
+
+    GetActorDiscoveryMaxBitsPerFrame() = (ActorDiscoveryBudgetInKBytesPerSec * 8000) / GetNetDriver()->GetNetServerMaxTickRate();
 }
 
 void UReplicationGraph::AddGlobalGraphNode(UReplicationGraphNode* GraphNode)

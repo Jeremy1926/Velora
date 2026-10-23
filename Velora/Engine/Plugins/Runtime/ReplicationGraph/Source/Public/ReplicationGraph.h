@@ -76,6 +76,8 @@ class UReplicationGraphNode_ConnectionDormancyNode : public UReplicationGraphNod
 public:
     static UClass* StaticClass();
 
+    static void SetNumFramesUntilObsolete(uint32 NumFrames);
+
     FObjectKey& GetConnectionOwner();
 
     uint32& GetLastGatheredFrame();
@@ -236,13 +238,22 @@ class UReplicationGraphNode_ActorListFrequencyBuckets : public UReplicationGraph
 public:
     struct FSettings
     {
+        struct FBucketThresholds
+        {
+            int32 MaxActors;
+            int32 NumBuckets;
+        };
+
         int32 NumBuckets;
         int32 ListSize;
         bool EnableFastPath;
         int32 FastPathFrameModulo;
+        TArray<FBucketThresholds, TInlineAllocator<4>> BucketThresholds;
     };
 
     static UClass* StaticClass();
+
+    static FSettings& GetDefaultSettings();
 
     const FSettings& GetSettings();
 
@@ -538,6 +549,8 @@ public:
     uint32& GetReplicationGraphFrame();
 
     int32& GetActorDiscoveryMaxBitsPerFrame();
+
+    void SetActorDiscoveryBudget(int32 ActorDiscoveryBudgetInKBytesPerSec);
 
     TArray<UNetConnection*>& GetConnectionsNeedingsPostTickDispatchFlush();
 

@@ -7,6 +7,7 @@
 #include "UObject/NameTypes.h"
 #include "UObject/WeakObjectPtr.h"
 
+class AFortGameModeAthena;
 class AFortTeamHealthInfo;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
@@ -43,6 +44,8 @@ public:
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
 
     void InitDynamicSpatializationSettings();
+
+    void InitForPlaylist(AFortGameModeAthena* GameMode);
 
     void OnGameStatePlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& GameplayTags);
 

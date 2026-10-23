@@ -7,6 +7,7 @@
 #include "Misc/EngineVersion.h"
 #include "UObject/Field.h"
 
+class UFunction;
 class UProperty;
 struct FFrame;
 
@@ -94,6 +95,8 @@ public:
     }
 
     UObject* InternalCreateDefaultObjectWrapper() const;
+
+    UFunction* FindFunctionByName(FName InName) const;
 };
 
 class UFunction : public UStruct

@@ -46,6 +46,13 @@ int32 UNetDriver::GetNetServerMaxTickRate() const
     return *NetServerMaxTickRate->ContainerPtrToValuePtr<int32>(this);
 }
 
+void UNetDriver::SetNetServerMaxTickRate(int32 InNetServerMaxTickRate)
+{
+    static auto NetServerMaxTickRate = GetClass()->FindPropertyByName(FName(TEXT("NetServerMaxTickRate")));
+
+    *NetServerMaxTickRate->ContainerPtrToValuePtr<int32>(this) = InNetServerMaxTickRate;
+}
+
 void UNetDriver::SetMaxClientRate(int32 InMaxClientRate)
 {
     static auto MaxClientRate = GetClass()->FindPropertyByName(FName(TEXT("MaxClientRate")));

@@ -109,6 +109,12 @@ public:
 
     bool GetPlaylistDataIsLoaded() const;
 
+    bool GetIsLargeTeamGame() const;
+
+    bool IsCreativeOrPlaygroundModePlaylist() const;
+
+    bool IsBattleLabModePlaylist() const;
+
     AFortVolumeManager* GetVolumeManager() const;
 
     void SetCurrentPlaylistName(FName PlaylistName);
