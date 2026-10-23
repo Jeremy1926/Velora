@@ -284,6 +284,19 @@ APawn* AActor::GetInstigator() const
 
 bool AActor::IsPendingKillPending() const
 {
+    static auto SignedOffset = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Find("xor al, al; cmp [*+0x*], al; jl *")
+        .Find("cmp [*+0x*], al")
+        .Disp();
+
+    if (SignedOffset > 0)
+        return *((const int8*)this + SignedOffset) < 0 || IsPendingKill();
+
     static auto Offset = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
         .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
         .Find("test byte ptr [*], 0x*")
