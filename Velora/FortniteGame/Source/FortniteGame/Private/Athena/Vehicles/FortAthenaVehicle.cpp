@@ -2,6 +2,10 @@
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleConfigs.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
+#include "Pawns/FortPlayerPawn.h"
+#include "AbilitySystemComponent.h"
+#include "GameFramework/Controller.h"
+#include "GameplayTagContainer.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/EngineTypes.h"
@@ -154,12 +158,171 @@ AFortPlayerPawn* AFortAthenaVehicle::GetPawnAtSeat(int32 SeatIdx) const
 
 bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Seat, bool bIgnoreDBNOCheck)
 {
-    static auto ForceEnterDriverSeat = Anchor::Optional<bool (*)(AFortAthenaVehicle*, AFortPlayerPawn*)>(TEXT("AFortAthenaVehicle::ForceEnterSeat"))
+    static auto ForceEnterSeatBody = Anchor::Address()
         .Pattern("48 89 5C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 40 48 8B 01 48 8B FA 4C 8B F1 FF 90 ? ? ? ?")
         .Has("lea rdx, [rax+0x*]; call [rbx+0x*]; test al, al; jz 0x*; mov rax, [rsi]; xor r8d, r8d; mov rdx, rdi; mov rcx, rsi; call [rax+0x*]")
+        .Or()
+        .Pattern("48 89 5C 24 10 48 89 6C 24 18 56 57 41 56 48 83 EC 40 48 8B 01 48 8B FA 41 0F B6 E8 4C 8B F1 FF 90 ? ? ? ?")
+        .Has("lea rdx, [rax+0x*]; call rbx; test al, al; jz 0x*; mov rax, [rsi]; mov r8d, ebp; mov rdx, rdi; mov rcx, rsi; call [rax+0x*]")
+        .Optional()
         .Get();
 
-    return Seat == EVehicleSeats::Driver && ForceEnterDriverSeat && ForceEnterDriverSeat(this, Pawn);
+    if (!ForceEnterSeatBody)
+        return false;
+
+    static auto CanContainPlayers = Anchor::VirtualFunction<bool (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::CanContainPlayers"))
+        .At(ForceEnterSeatBody)
+        .Find("lea rsi, [r14+0x*]; mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto GameplayTags = Anchor::Function<const uint8* (*)()>(TEXT("UFortGlobals::GameplayTags"))
+        .At(ForceEnterSeatBody)
+        .Find("call 0x*; mov rcx, rdi; lea rdx, [rax+0x*]")
+        .Target()
+        .Get();
+
+    static auto AthenaEnterVehicle = Anchor::Offset(TEXT("FFortGlobalGameplayTags::AthenaEnterVehicle"))
+        .At(ForceEnterSeatBody)
+        .Find("call 0x*; mov rcx, rdi; lea rdx, [rax+0x*]")
+        .Find("lea rdx, [rax+0x*]")
+        .Disp();
+
+    static auto CanPerformNativeAction = Anchor::VirtualFunction<bool (*)(const AFortPlayerPawn*, const FGameplayTag*)>(TEXT("AFortPawn::CanPerformNativeAction"))
+        .At(ForceEnterSeatBody)
+        .Find("lea rdx, [rax+0x*]; call [rbx+0x*]")
+        .Find("call [rbx+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov rax, [rdi]; mov rbx, [rax+0x*]")
+        .Find("mov rbx, [rax+0x*]")
+        .Get();
+
+    static auto CanPutPlayerInSlot = Anchor::VirtualFunction<bool (*)(const IFortVehicleInterface*, AFortPlayerPawn*, int32)>(TEXT("IFortVehicleInterface::CanPutPlayerInSlot"))
+        .At(ForceEnterSeatBody)
+        .Find("mov rdx, rdi; mov rcx, rsi; call [rax+0x*]; test al, al")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto SeatPlayerInternal = Anchor::VirtualFunction<void (*)(IFortVehicleInterface*, AFortPlayerPawn*, FName&, int32)>(TEXT("IFortVehicleInterface::SeatPlayerInternal"))
+        .At(ForceEnterSeatBody)
+        .Find("lea r8, [rsp+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto bInheritScale = Anchor::Offset(TEXT("UFortVehicleConfigs::bInheritScale"))
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
+        .Disp();
+
+    static auto SnapToTargetNotIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetNotIncludingScale"))
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
+        .Last("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    static auto SnapToTargetIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetIncludingScale"))
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
+        .Last("lea r8, [0x*]")
+        .Target()
+        .Get();
+
+    static auto AttachToActor = Anchor::Function<bool (*)(AActor*, AActor*, const FAttachmentTransformRules*, FName)>(TEXT("AActor::AttachToActor"))
+        .At(ForceEnterSeatBody)
+        .Find("cmovz r8, rcx; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto CharacterMovement = Anchor::Offset(TEXT("ACharacter::CharacterMovement"))
+        .At(ForceEnterSeatBody)
+        .Find("mov rbx, [rdi+0x*]; mov rcx, rbx; mov rax, [rbx]; call [rax+0x*]")
+        .Disp();
+
+    static auto StopMovementImmediately = Anchor::VirtualFunction<void (*)(UObject*)>(TEXT("UMovementComponent::StopMovementImmediately"))
+        .At(ForceEnterSeatBody)
+        .Find("mov rbx, [rdi+0x*]; mov rcx, rbx; mov rax, [rbx]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto ServerGetDriverPawn = Anchor::VirtualFunction<AFortPlayerPawn* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::ServerGetDriverPawn"))
+        .At(ForceEnterSeatBody)
+        .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; mov r9, [rbx]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto SetMovementMode = Anchor::VirtualFunction<void (*)(UObject*, uint8, uint8)>(TEXT("UCharacterMovementComponent::SetMovementMode"))
+        .At(ForceEnterSeatBody)
+        .Find("mov edx, 0x6; mov rcx, rbx")
+        .Find("call [r9+0x*]")
+        .Get();
+
+    static auto SetBase = Anchor::VirtualFunction<void (*)(AFortPlayerPawn*, USceneComponent*, FName, bool)>(TEXT("ACharacter::SetBase"))
+        .At(ForceEnterSeatBody)
+        .Find("mov rdx, [r14+0x*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto TryActivateAbilitiesByTag = Anchor::Function<bool (*)(UAbilitySystemComponent*, const FGameplayTagContainer&, bool)>(TEXT("UAbilitySystemComponent::TryActivateAbilitiesByTag"))
+        .At(ForceEnterSeatBody)
+        .Find("mov r8b, 0x1; lea rdx, [rsp+0x*]; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+    static auto FortPlayerControllerAthena = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerControllerAthena"));
+    static auto bDelayedTeleporting = FortPlayerControllerAthena ? (UBoolProperty*)FortPlayerControllerAthena->FindPropertyByName(FName(TEXT("bDelayedTeleporting"))) : nullptr;
+    static auto bIsUsingJetpack = (UBoolProperty*)AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("bIsUsingJetpack")));
+
+    auto VehicleInterface = (IFortVehicleInterface*)GetInterfaceAddress(FortVehicleInterface);
+
+    if (!VehicleInterface || !GameplayTags || !AttachToActor || !TryActivateAbilitiesByTag || !SnapToTargetIncludingScale || !SnapToTargetNotIncludingScale)
+        return false;
+
+    WakeUp();
+
+    if (!Pawn || !CanContainPlayers(VehicleInterface))
+        return false;
+
+    auto Controller = Pawn->GetController();
+
+    if (Controller && bDelayedTeleporting && Controller->IsA(FortPlayerControllerAthena) && bDelayedTeleporting->GetPropertyValue_InContainer(Controller))
+        return false;
+
+    if (!bIgnoreDBNOCheck && Pawn->GetIsDBNO())
+        return false;
+
+    if (Pawn->GetVehicleStateLocal().GetVehicle() || (bIsUsingJetpack && bIsUsingJetpack->GetPropertyValue_InContainer(Pawn)))
+        return false;
+
+    auto EnterVehicleTag = (const FGameplayTag*)(GameplayTags() + AthenaEnterVehicle);
+
+    if (!CanPerformNativeAction(Pawn, EnterVehicleTag) || !CanPutPlayerInSlot(VehicleInterface, Pawn, (int32)Seat))
+        return false;
+
+    FName SeatName(NAME_None);
+    SeatPlayerInternal(VehicleInterface, Pawn, SeatName, (int32)Seat);
+
+    auto VehicleConfigs = (const uint8*)VehicleInterface->GetVehicleConfigs();
+    AttachToActor(Pawn, this, VehicleConfigs && VehicleConfigs[bInheritScale] ? SnapToTargetIncludingScale : SnapToTargetNotIncludingScale, SeatName);
+
+    auto MovementComponent = *(UObject**)((uint8*)Pawn + CharacterMovement);
+    StopMovementImmediately(MovementComponent);
+    SetMovementMode(MovementComponent, 6, ServerGetDriverPawn(VehicleInterface) == Pawn ? 1 : 2);
+    SetBase(Pawn, GetRootComponent(), SeatName, true);
+
+    if (auto AbilitySystemComponent = Pawn->GetAbilitySystemComponent())
+    {
+        FGameplayTagContainer TagContainer;
+        TagContainer.AddTag(*EnterVehicleTag);
+
+        TryActivateAbilitiesByTag(AbilitySystemComponent, TagContainer, true);
+    }
+
+    return true;
 }
 
 float AFortAthenaVehicle::ModifyIncomingDamage(float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser)
