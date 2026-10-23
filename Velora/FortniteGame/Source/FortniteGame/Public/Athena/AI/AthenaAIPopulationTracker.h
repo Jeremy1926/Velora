@@ -8,7 +8,7 @@ class UAthenaAIPopulationTracker : public UAISubsystem
 public:
     static UClass* StaticClass();
 
-    TArray<FFortServerBotInfo>& GetPlayerBots();
+    TArray<FFortServerBotInfo>* GetPlayerBots();
 
-    TArray<FFortServerBotInfo>& GetNoneAthenaParticipantBots();
+    TArray<FFortServerBotInfo>* GetNoneAthenaParticipantBots();
 };

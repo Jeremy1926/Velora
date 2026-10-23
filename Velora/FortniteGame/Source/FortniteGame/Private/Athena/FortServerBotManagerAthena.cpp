@@ -206,19 +206,20 @@ TArray<FFortServerBotInfo>* UFortServerBotManagerAthena::GetPlayerBots()
 
     auto AIPopulationTracker = GetCachedAIPopulationTracker();
 
-    return AIPopulationTracker ? &AIPopulationTracker->GetPlayerBots() : nullptr;
+    return AIPopulationTracker ? AIPopulationTracker->GetPlayerBots() : nullptr;
 }
 
 TArray<FFortServerBotInfo>* UFortServerBotManagerAthena::GetNoneAthenaParticipantBots()
 {
     static auto NoneAthenaParticipantBots = GetClass()->FindPropertyByName(FName(TEXT("NoneAthenaParticipantBots")));
+    static auto NonAthenaParticipantBots = GetClass()->FindPropertyByName(FName(TEXT("NonAthenaParticipantBots")));
 
-    if (NoneAthenaParticipantBots)
-        return NoneAthenaParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+    if (auto ParticipantBots = NoneAthenaParticipantBots ? NoneAthenaParticipantBots : NonAthenaParticipantBots)
+        return ParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
 
     auto AIPopulationTracker = GetCachedAIPopulationTracker();
 
-    return AIPopulationTracker ? &AIPopulationTracker->GetNoneAthenaParticipantBots() : nullptr;
+    return AIPopulationTracker ? AIPopulationTracker->GetNoneAthenaParticipantBots() : nullptr;
 }
 
 AFortGameModeAthena*& UFortServerBotManagerAthena::GetCachedGameMode()

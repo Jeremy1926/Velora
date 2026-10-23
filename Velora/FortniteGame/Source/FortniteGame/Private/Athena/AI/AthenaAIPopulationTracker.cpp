@@ -10,16 +10,18 @@ UClass* UAthenaAIPopulationTracker::StaticClass()
     return Class;
 }
 
-TArray<FFortServerBotInfo>& UAthenaAIPopulationTracker::GetPlayerBots()
+TArray<FFortServerBotInfo>* UAthenaAIPopulationTracker::GetPlayerBots()
 {
     static auto PlayerBots = GetClass()->FindPropertyByName(FName(TEXT("PlayerBots")));
 
-    return *PlayerBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+    return PlayerBots ? PlayerBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this) : nullptr;
 }
 
-TArray<FFortServerBotInfo>& UAthenaAIPopulationTracker::GetNoneAthenaParticipantBots()
+TArray<FFortServerBotInfo>* UAthenaAIPopulationTracker::GetNoneAthenaParticipantBots()
 {
     static auto NoneAthenaParticipantBots = GetClass()->FindPropertyByName(FName(TEXT("NoneAthenaParticipantBots")));
+    static auto NonAthenaParticipantBots = GetClass()->FindPropertyByName(FName(TEXT("NonAthenaParticipantBots")));
+    auto ParticipantBots = NoneAthenaParticipantBots ? NoneAthenaParticipantBots : NonAthenaParticipantBots;
 
-    return *NoneAthenaParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this);
+    return ParticipantBots ? ParticipantBots->ContainerPtrToValuePtr<TArray<FFortServerBotInfo>>(this) : nullptr;
 }
