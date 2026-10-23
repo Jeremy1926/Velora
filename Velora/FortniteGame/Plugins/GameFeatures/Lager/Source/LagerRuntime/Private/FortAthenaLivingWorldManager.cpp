@@ -97,8 +97,12 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetEncounterInst
     static auto EncounterInstance = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FLivingWorldEventInstance::EncounterInstance"))
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() <= 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
-        .Optional()
         .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; mov rcx, r14; call 0x*")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; lea rcx, [rsi+0x*]; call 0x*")
+        .Optional()
         .Disp();
 
     return EncounterInstance;
@@ -796,6 +800,15 @@ int32 UFortAthenaLivingWorldManager::GetTotalEncounterInstanceActorCount(UFortAt
             ActorCount += EventRequest.ActorCountToSpawn;
     }
 
+    if (GetPendingActorSpawnEventRequestsOffset() > 0)
+    {
+        for (auto& PendingActorSpawnEventRequest : GetPendingActorSpawnEventRequests())
+        {
+            if (PendingActorSpawnEventRequest.RequestData.EncounterInstance == EncounterInstance)
+                ActorCount += PendingActorSpawnEventRequest.RequestData.ActorCountToSpawn;
+        }
+    }
+
     return ActorCount;
 }
 
@@ -1322,7 +1335,7 @@ void UFortAthenaLivingWorldManager::AddPointProvider(AActor* PointProvider)
             AddPointProviderToEventRuntimeData(this, &NewPointProvider);
     }
 
-    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
+    if (AddPointProviderToEventRuntimeData || FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
         return;
 
     for (auto EncounterInstance : GetRunningEncounterInstances())
