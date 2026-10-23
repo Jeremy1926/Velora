@@ -181,7 +181,8 @@ void AFortAthenaPatrolPathPointProvider::EnablePointProvider()
     DETOUR(AFortAthenaPatrolPathPointProvider, EnablePointProvider, Anchor::Hook()
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
         .Optional()
-        .Find("jmp 0x*")
+        .Find("jmp *")
+        .Is("jmp 0x*")
         .Target()
         .Inline());
 
