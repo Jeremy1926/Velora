@@ -726,6 +726,21 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
 
     Original(NewSafeZonePhase);
 
+    if (auto DiagIndicator = GetSafeZoneIndicator())
+    {
+        static auto DiagRadius = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("Radius")));
+        static auto DiagLastRadius = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("LastRadius")));
+        static auto DiagNextRadius = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("NextRadius")));
+        static auto DiagLastCenter = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("LastCenter")));
+        static auto DiagNextCenter = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("NextCenter")));
+
+        auto DiagGameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+        const FVector DiagLast = *DiagLastCenter->ContainerPtrToValuePtr<FVector>(DiagIndicator);
+        const FVector DiagNext = *DiagNextCenter->ContainerPtrToValuePtr<FVector>(DiagIndicator);
+
+        UE_LOG(LogVelora, Display, TEXT("diag safe zone phase %d (arg %d) indicator %p %s gamestate indicator %p radius %f last %f next %f lastcenter %f %f %f nextcenter %f %f %f start %f finish %f servertime %f worldtime %f"), GetSafeZonePhase(), NewSafeZonePhase, DiagIndicator, *GetNameSafe(DiagIndicator), DiagGameState ? DiagGameState->GetSafeZoneIndicator() : nullptr, *DiagRadius->ContainerPtrToValuePtr<float>(DiagIndicator), *DiagLastRadius->ContainerPtrToValuePtr<float>(DiagIndicator), *DiagNextRadius->ContainerPtrToValuePtr<float>(DiagIndicator), DiagLast.X, DiagLast.Y, DiagLast.Z, DiagNext.X, DiagNext.Y, DiagNext.Z, DiagIndicator->GetSafeZoneStartShrinkTime(), DiagIndicator->GetSafeZoneFinishShrinkTime(), DiagGameState ? DiagGameState->GetServerWorldTimeSeconds() : -1.0f, GetWorld()->GetTimeSeconds());
+    }
+
     UFortConversationTaskNode_ShowFutureStormCircle::HandleSafeZoneUpdated();
 
     auto SafeZoneIndicator = GetSafeZoneIndicator();
