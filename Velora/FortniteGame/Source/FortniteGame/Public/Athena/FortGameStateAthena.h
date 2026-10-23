@@ -88,6 +88,8 @@ public:
 
     void OnPlaylistLootTableAssetsDataLoadCompleted();
 
+    void ApplyPlaylistDataTables();
+
     FGameplayTagContainer GetAthenaPlaylistContextTags() const;
 
     FMulticastScriptDelegate& GetOnCurrentPlaylistLoaded();

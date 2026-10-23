@@ -11,6 +11,7 @@
 #include "Online/FortPlaylistManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "HAL/IConsoleManager.h"
+#include "Engine/CurveTable.h"
 #include "Engine/World.h"
 #include "Misc/CoreMiscDefines.h"
 #include "Templates/Casts.h"
@@ -374,6 +375,57 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 
         for (auto WeaponUpgradeActor : WeaponUpgradeActors)
             ((ABuildingItemWeaponUpgradeActor*)WeaponUpgradeActor)->AthenaPostApplyPlaylistDataTables();
+    }
+}
+
+void AFortGameStateAthena::ApplyPlaylistDataTables()
+{
+    DETOUR(AFortGameStateAthena, ApplyPlaylistDataTables, Anchor::Hook()
+        .If(!::Anchor::Exists().String(TEXT("Default.Parachute.DeployTraceForGroundDistance")).Get())
+        .String(TEXT("PLAYLIST: Preparing to apply Data Tables and Curves in AFortGameModeAthena::ApplyPlaylistDataTables(), PlaylistName is %s (Server Only)"))
+        .Start()
+        .Optional()
+        .Inline());
+
+    Original();
+
+    static auto AthenaGameDataTable = GetClass()->FindPropertyByName(FName(TEXT("AthenaGameDataTable")));
+    auto GameData = AthenaGameDataTable ? *AthenaGameDataTable->ContainerPtrToValuePtr<UCurveTable*>(this) : nullptr;
+
+    if (!GameData)
+        return;
+
+    static const FString GliderRedeployContext(TEXT("HotfixWorkAround for Glider Redeploy"));
+    static const FString AutoDeployContext(TEXT("HotfixWorkAround for Auto Deploy Height from Bus"));
+    static const FString NeutralEditingContext(TEXT("HotfixWorkAround for Allow Neutral Editing"));
+    static const FString RebootVanContext(TEXT("HotfixWorkAround for Spawn Reboot Van Hotfix"));
+
+    auto Apply = [this, GameData](const TCHAR* RowName, const FString& ContextString, const TCHAR* PropertyName)
+    {
+        auto Property = GetClass()->FindPropertyByName(FName(PropertyName));
+
+        if (auto Curve = GameData->FindCurve(FName(RowName), ContextString); Curve && Property)
+            *Property->ContainerPtrToValuePtr<float>(this) = Curve->Eval(0.0f);
+    };
+
+    Apply(TEXT("Default.GliderRedeploy.CanRedeploy"), GliderRedeployContext, TEXT("DefaultGliderRedeployCanRedeploy"));
+    Apply(TEXT("Default.RedeployGlider.LateralVelocityMult"), GliderRedeployContext, TEXT("DefaultRedeployGliderLateralVelocityMult"));
+    Apply(TEXT("Default.RedeployGlider.HeightLimit"), GliderRedeployContext, TEXT("DefaultRedeployGliderHeightLimit"));
+    Apply(TEXT("Default.Parachute.DeployTraceForGroundDistance"), AutoDeployContext, TEXT("DefaultParachuteDeployTraceForGroundDistance"));
+    Apply(TEXT("AllowNeutralEditing"), NeutralEditingContext, TEXT("DefaultAllowNeutralWallEditing"));
+    Apply(TEXT("Default.SCMachine.HotfixOn"), RebootVanContext, TEXT("DefaultRebootMachineHotfix"));
+    Apply(TEXT("SignalInStormRegenSpeedCN"), GliderRedeployContext, TEXT("SignalInStormRegenSpeed"));
+    Apply(TEXT("SignalInStormLostSpeedCN"), GliderRedeployContext, TEXT("SignalInStormLostSpeed"));
+
+    if (auto Curve = GameData->FindCurve(FName(TEXT("DamageVulnerabilityInStormCN")), GliderRedeployContext))
+    {
+        const TCHAR* Levels[] = { TEXT("StormCNDamageVulnerabilityLevel0"), TEXT("StormCNDamageVulnerabilityLevel1"), TEXT("StormCNDamageVulnerabilityLevel2"), TEXT("StormCNDamageVulnerabilityLevel3") };
+
+        for (int32 Level = 0; Level < 4; Level++)
+        {
+            if (auto Property = GetClass()->FindPropertyByName(FName(Levels[Level])))
+                *Property->ContainerPtrToValuePtr<float>(this) = Curve->Eval((float)Level);
+        }
     }
 }
 
