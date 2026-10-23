@@ -407,6 +407,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortDagwoodVehicleManager.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Public\FortValetGameFeatureData.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortInteractInterface.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorConversationCompatible.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingProp_ConversationCompatible.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortMissionLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortIndicatedActorManagementLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortPlaylistManager.h" />
@@ -744,6 +747,9 @@
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortDagwoodVehicleManager.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Valet\Source\ValetRuntime\Private\FortValetGameFeatureData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortInteractInterface.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorConversationCompatible.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingProp_ConversationCompatible.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortMissionLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortIndicatedActorManagementLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortInventory.cpp" />
