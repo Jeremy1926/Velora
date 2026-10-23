@@ -313,6 +313,17 @@ AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AAct
     return GetFortPlayerControllerFromActor(Actor);
 }
 
+EFortTeamAffiliation UFortKismetLibrary::GetTeamAffiliation(const AActor* ActorA, const AActor* ActorB)
+{
+    static auto GetTeamAffiliation = Anchor::Function<EFortTeamAffiliation* (*)(EFortTeamAffiliation*, const AActor*, const AActor*)>(TEXT("UFortKismetLibrary::GetTeamAffiliation"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetTeamAffiliation"))
+        .Get();
+
+    EFortTeamAffiliation Affiliation;
+
+    return *GetTeamAffiliation(&Affiliation, ActorA, ActorB);
+}
+
 float UFortKismetLibrary::GetServerWorldTimeSeconds(const UObject* WorldContextObject)
 {
     static auto GetServerWorldTimeSeconds = Anchor::Function<float (*)(const UObject*)>(TEXT("UFortKismetLibrary::GetServerWorldTimeSeconds"))

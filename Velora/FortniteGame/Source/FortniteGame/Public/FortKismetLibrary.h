@@ -32,6 +32,13 @@ enum class EFortPickupSourceTypeFlag : uint8;
 enum class EFortPickupSpawnSource : uint8;
 enum class EFortRarity : uint8;
 
+enum class EFortTeamAffiliation : uint8
+{
+    Friendly,
+    Neutral,
+    Hostile,
+};
+
 struct FSpawnItemVariantParams
 {
     FSpawnItemVariantParams();
@@ -98,6 +105,8 @@ public:
     static AFortPlayerController* GetFortPlayerControllerFromActor(AActor* Actor);
 
     static float GetServerWorldTimeSeconds(const UObject* WorldContextObject);
+
+    static EFortTeamAffiliation GetTeamAffiliation(const AActor* ActorA, const AActor* ActorB);
 
     static void BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise);
 

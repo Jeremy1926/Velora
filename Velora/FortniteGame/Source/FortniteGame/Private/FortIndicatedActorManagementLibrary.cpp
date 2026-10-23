@@ -2,10 +2,12 @@
 #include "FortIndicatedActorManagementLibrary.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Components/FortControllerComponent_IndicatedActorManagement.h"
+#include "FortKismetLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameplayTagAssetInterface.h"
 #include "GameplayTagContainer.h"
 #include "UObject/Class.h"
+#include "UObject/SoftObjectPtr.h"
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -38,6 +40,13 @@ const FGameplayTagContainer& FIndicatedActorDataWithFilter::GetIndicatedActorTag
     return *IndicatedActorTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this);
 }
 
+const FGameplayTagQuery* FIndicatedActorDataWithFilter::GetIndicatedActorTagQuery() const
+{
+    static auto IndicatedActorTagQuery = StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedActorTagQuery")));
+
+    return IndicatedActorTagQuery ? IndicatedActorTagQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(this) : nullptr;
+}
+
 const TArray<TEnumAsByte<EObjectTypeQuery>>& FIndicatedActorDataWithFilter::GetObjectTypes() const
 {
     static auto ObjectTypes = StaticStruct()->FindPropertyByName(FName(TEXT("ObjectTypes")));
@@ -49,7 +58,17 @@ UClass* FIndicatedActorDataWithFilter::GetActorClassFilter() const
 {
     static auto ActorClassFilter = StaticStruct()->FindPropertyByName(FName(TEXT("ActorClassFilter")));
 
-    return *ActorClassFilter->ContainerPtrToValuePtr<UClass*>(this);
+    if (ActorClassFilter->GetSize() == sizeof(UClass*))
+        return *ActorClassFilter->ContainerPtrToValuePtr<UClass*>(this);
+
+    return ActorClassFilter->ContainerPtrToValuePtr<TSoftClassPtr<UObject>>(this)->LoadSynchronous();
+}
+
+const TArray<EFortTeamAffiliation>* FIndicatedActorDataWithFilter::GetWithAffiliation() const
+{
+    static auto WithAffiliation = StaticStruct()->FindPropertyByName(FName(TEXT("WithAffiliation")));
+
+    return WithAffiliation ? WithAffiliation->ContainerPtrToValuePtr<TArray<EFortTeamAffiliation>>(this) : nullptr;
 }
 
 const FIndicatedActorData& FIndicatedActorDataWithFilter::GetIndicatedData() const
@@ -71,12 +90,12 @@ float FIndicatedActorDataWithFilter::GetOverlapRadius() const
     return *OverlapRadius->ContainerPtrToValuePtr<float>(this);
 }
 
-void UFortIndicatedActorManagementLibrary::AddActorsInRadiusToIndicatedList(AFortPlayerControllerAthena* InstigatingController, const TArray<FIndicatedActorDataWithFilter>& IndicatedActorFilterDatas, const bool bAddAsUnique)
+void UFortIndicatedActorManagementLibrary::AddActorsInRadiusToIndicatedList(AFortPlayerControllerAthena* InstigatingController, const TArray<FIndicatedActorDataWithFilter>& IndicatedActorFilterDatas, const bool bAddAsUnique, AActor* InstigatingActorOverride)
 {
     static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
 
     auto Component = InstigatingController ? InstigatingController->FindComponentByClass<UFortControllerComponent_IndicatedActorManagement>() : nullptr;
-    auto Pawn = InstigatingController ? InstigatingController->GetPawn() : nullptr;
+    auto Pawn = InstigatingActorOverride ? InstigatingActorOverride : InstigatingController ? (AActor*)InstigatingController->GetPawn() : nullptr;
 
     if (!Component || !Pawn)
         return;
@@ -101,6 +120,12 @@ void UFortIndicatedActorManagementLibrary::AddActorsInRadiusToIndicatedList(AFor
             for (auto& Tag : IndicatedActorTags)
                 bMatchesTags |= OwnedTags.HasTag(Tag);
 
+            if (auto IndicatedActorTagQuery = IndicatedActorFilterData.GetIndicatedActorTagQuery(); bMatchesTags && IndicatedActorTagQuery && !IndicatedActorTagQuery->IsEmpty())
+                bMatchesTags = IndicatedActorTagQuery->Matches(OwnedTags);
+
+            if (auto WithAffiliation = IndicatedActorFilterData.GetWithAffiliation(); bMatchesTags && WithAffiliation && WithAffiliation->Num() > 0)
+                bMatchesTags = WithAffiliation->Contains(UFortKismetLibrary::GetTeamAffiliation(Pawn, Actor));
+
             if (bMatchesTags)
                 IndicatedActors.Add(Actor);
         }
@@ -112,12 +137,6 @@ void UFortIndicatedActorManagementLibrary::AddActorsInRadiusToIndicatedList(AFor
 void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UFortIndicatedActorManagementLibrary, execAddActorsInRadiusToIndicatedList, Anchor::Hook()
-        .If([]
-        {
-            auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"));
-
-            return Function && !Function->FindPropertyByName(FName(TEXT("InstigatingActorOverride")));
-        })
         .Exec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"))
         .Find("movzx r8d, *; call 0x*")
         .Call()
@@ -132,13 +151,18 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")));
 
-    static auto bTakesAddAsUnique = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")))->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
-    static auto bTakesReplaceExistingEntry = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList")))->FindPropertyByName(FName(TEXT("bReplaceExistingEntry"))) != nullptr;
+    static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIndicatedActorManagementLibrary:AddActorsInRadiusToIndicatedList"));
+    static auto bTakesAddAsUnique = Function->FindPropertyByName(FName(TEXT("bAddAsUnique"))) != nullptr;
+    static auto bTakesReplaceExistingEntry = Function->FindPropertyByName(FName(TEXT("bReplaceExistingEntry"))) != nullptr;
+    static auto bTakesRefreshExistingEntry = Function->FindPropertyByName(FName(TEXT("bRefreshExistingEntry"))) != nullptr;
+    static auto bTakesInstigatingActorOverride = Function->FindPropertyByName(FName(TEXT("InstigatingActorOverride"))) != nullptr;
 
     AFortPlayerControllerAthena* InstigatingController = nullptr;
     TArray<FIndicatedActorDataWithFilter> IndicatedActorFilterDatas;
     uint32 bAddAsUnique = 0;
     uint32 bReplaceExistingEntry = 0;
+    uint32 bRefreshExistingEntry = 0;
+    AActor* InstigatingActorOverride = nullptr;
 
     Stack.StepCompiledIn(&InstigatingController);
     Stack.StepCompiledIn(&IndicatedActorFilterDatas);
@@ -149,9 +173,15 @@ void UFortIndicatedActorManagementLibrary::execAddActorsInRadiusToIndicatedList(
     if (bTakesReplaceExistingEntry)
         Stack.StepCompiledIn(&bReplaceExistingEntry);
 
+    if (bTakesRefreshExistingEntry)
+        Stack.StepCompiledIn(&bRefreshExistingEntry);
+
+    if (bTakesInstigatingActorOverride)
+        Stack.StepCompiledIn(&InstigatingActorOverride);
+
     Stack.Code += !!Stack.Code;
 
-    AddActorsInRadiusToIndicatedList(InstigatingController, IndicatedActorFilterDatas, !!bAddAsUnique);
+    AddActorsInRadiusToIndicatedList(InstigatingController, IndicatedActorFilterDatas, !!bAddAsUnique, InstigatingActorOverride);
 }
 
 void UFortIndicatedActorManagementLibrary::AddActorsToIndicatedList(AFortPlayerControllerAthena* InstigatingController, TArray<AActor*> IndicatedActors, FIndicatedActorData IndicatedActorData, const bool bAddAsUnique)
