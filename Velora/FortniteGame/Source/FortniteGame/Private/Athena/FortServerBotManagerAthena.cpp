@@ -107,7 +107,7 @@ AFortPlayerPawnAthena* UFortServerBotManagerAthena::SpawnBot(const FVector& InSp
 void UFortServerBotManagerAthena::AssignTeam(AFortAthenaAIBotController* BotController, const uint8* CustomSquadId)
 {
     static auto AssignTeam = Anchor::Function<void (*)(UFortServerBotManagerAthena*, AFortAthenaAIBotController*, const uint8*)>(TEXT("UFortServerBotManagerAthena::AssignTeam"))
-        .String(TEXT("Can't configure player bots if no GameMode set"))
+        .String(TEXT("No more team for this Bot:%s"))
         .Start()
         .Get();
 
