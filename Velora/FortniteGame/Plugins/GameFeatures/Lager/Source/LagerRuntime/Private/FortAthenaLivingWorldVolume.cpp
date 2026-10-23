@@ -233,8 +233,8 @@ TArray<FVector>& AFortAthenaLivingWorldVolume::GetPoints() const
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Optional()
-        .Find("cmp byte ptr [rbx+0x*], 0x0; jz 0x*; lea r14, [rbx+0x*]")
-        .Find("lea r14, [rbx+0x*]")
+        .Find("cmp byte ptr [rbx+0x*], 0x0; jz 0x*; lea r1?, [rbx+0x*]")
+        .Find("lea r1?, [rbx+0x*]")
         .Disp();
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
