@@ -10,7 +10,15 @@ class UFortReplicationGraph : public UReplicationGraph
 public:
     static UClass* StaticClass();
 
+    UReplicationGraphNode*& GetPlayerStateLimiterNode();
+
+    UReplicationGraphNode*& GetReplayPlayerStateLimiterNode();
+
     TMap<FName, FActorRepListRefView>& GetAlwaysRelevantStreamingLevelActors();
+
+    void InitializeForWorld(UWorld* World);
+
+    void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
 };
 
 struct FFortAlwaysRelevantActorInfo
@@ -31,6 +39,10 @@ public:
     static UClass* StaticClass();
 
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    void OnClientLevelVisibilityAdd(FName LevelName, UWorld* StreamingWorld);
+
+    void OnClientLevelVisibilityRemove(FName LevelName);
 
 private:
     uint8* GetAlwaysRelevantStreamingLevelsNeedingReplication();

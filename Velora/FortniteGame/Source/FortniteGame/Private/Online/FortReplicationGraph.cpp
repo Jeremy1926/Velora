@@ -18,6 +18,7 @@
 #include "Player/FortPlayerState.h"
 #include "Player/FortTeamHealthInfo.h"
 #include "HAL/IConsoleManager.h"
+#include "HAL/UnrealMemory.h"
 #include "Templates/Casts.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
@@ -31,11 +32,63 @@ UClass* UFortReplicationGraph::StaticClass()
     return Class;
 }
 
+UReplicationGraphNode*& UFortReplicationGraph::GetPlayerStateLimiterNode()
+{
+    static auto PlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("PlayerStateLimiterNode")));
+
+    return *PlayerStateLimiterNode->ContainerPtrToValuePtr<UReplicationGraphNode*>(this);
+}
+
+UReplicationGraphNode*& UFortReplicationGraph::GetReplayPlayerStateLimiterNode()
+{
+    static auto ReplayPlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("ReplayPlayerStateLimiterNode")));
+
+    return *ReplayPlayerStateLimiterNode->ContainerPtrToValuePtr<UReplicationGraphNode*>(this);
+}
+
 TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStreamingLevelActors()
 {
     static auto ReplayPlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("ReplayPlayerStateLimiterNode")));
 
     return *(TMap<FName, FActorRepListRefView>*)(ReplayPlayerStateLimiterNode->ContainerPtrToValuePtr<uint8>(this) + sizeof(UReplicationGraphNode*));
+}
+
+void UFortReplicationGraph::InitializeForWorld(UWorld* World)
+{
+    DETOUR(UFortReplicationGraph, InitializeForWorld, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x80)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "push rbx; sub rsp, 0x20; lea rbx, [rcx+0x*]; mov eax, [rbx+0x8]; cmp eax, [rbx+0x34]; jz 0x*; mov rcx, rbx; call 0x*; mov rcx, rbx; call 0x*; add rsp, 0x20; pop rbx; ret")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    Original(World);
+
+    UReplicationGraph::InitializeForWorld(World);
+}
+
+void UFortReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager)
+{
+    DETOUR(UFortReplicationGraph, InitConnectionGraphNodes, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0xA0)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rdi, rdx; mov rbx, rcx; call 0x*; mov r8, [rbx]; mov rdx, rax; mov rcx, rbx; mov rsi, rax; call [r8+0x*]")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    Original(ConnectionManager);
+
+    auto AlwaysRelevantConnectionNode = CreateNewNode<UFortReplicationGraphNode_AlwaysRelevant_ForConnection>();
+
+    ConnectionManager->GetOnClientVisibleLevelNameAdd().AddUObject(AlwaysRelevantConnectionNode, &UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibilityAdd);
+    ConnectionManager->GetOnClientVisibleLevelNameRemove().AddUObject(AlwaysRelevantConnectionNode, &UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibilityRemove);
+
+    AddConnectionGraphNode(AlwaysRelevantConnectionNode, ConnectionManager);
+    AddConnectionGraphNode(ConnectionManager->GetNetConnection()->IsReplay() ? GetReplayPlayerStateLimiterNode() : GetPlayerStateLimiterNode(), ConnectionManager);
 }
 
 UClass* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()
@@ -69,6 +122,69 @@ uint8* UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetAlwaysRelevant
     auto SecondaryData = (uint8**)((uint8*)&GetNumAlwaysRelevantStreamingLevelsNeedingReplication() - sizeof(uint8*));
 
     return *SecondaryData ? *SecondaryData : (uint8*)SecondaryData - 64 * TGameLayout<FName>::Size();
+}
+
+void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibilityAdd(FName LevelName, UWorld* StreamingWorld)
+{
+    const int32 NameSize = TGameLayout<FName>::Size();
+    auto& ArrayNum = GetNumAlwaysRelevantStreamingLevelsNeedingReplication();
+    auto& ArrayMax = *(&ArrayNum + 1);
+    auto& SecondaryData = *(uint8**)((uint8*)&ArrayNum - sizeof(uint8*));
+    auto InlineData = (uint8*)&SecondaryData - 64 * NameSize;
+
+    for (int32 Index = 0; Index < ArrayNum; Index++)
+    {
+        if (TGameLayout<FName>::Load(GetAlwaysRelevantStreamingLevelsNeedingReplication() + Index * NameSize) == LevelName)
+            return;
+    }
+
+    const int32 OldNum = ArrayNum++;
+
+    if (ArrayNum > ArrayMax)
+    {
+        SIZE_T Grow = 4;
+
+        if (ArrayMax || SIZE_T(ArrayNum) > Grow)
+            Grow = SIZE_T(ArrayNum) + 3 * SIZE_T(ArrayNum) / 8 + 16;
+
+        ArrayMax = ArrayNum <= 64 ? 64 : (int32)(FMemory::QuantizeSize(Grow * NameSize) / NameSize);
+
+        if (ArrayMax > 64)
+        {
+            if (!SecondaryData)
+            {
+                SecondaryData = (uint8*)FMemory::Realloc(nullptr, ArrayMax * NameSize);
+                memcpy(SecondaryData, InlineData, OldNum * NameSize);
+            }
+            else
+            {
+                SecondaryData = (uint8*)FMemory::Realloc(SecondaryData, ArrayMax * NameSize);
+            }
+        }
+    }
+
+    TGameLayout<FName>::Store(GetAlwaysRelevantStreamingLevelsNeedingReplication() + OldNum * NameSize, LevelName);
+}
+
+void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::OnClientLevelVisibilityRemove(FName LevelName)
+{
+    const int32 NameSize = TGameLayout<FName>::Size();
+    auto& ArrayNum = GetNumAlwaysRelevantStreamingLevelsNeedingReplication();
+    auto Data = GetAlwaysRelevantStreamingLevelsNeedingReplication();
+    int32 WriteIndex = 0;
+
+    for (int32 ReadIndex = 0; ReadIndex < ArrayNum; ReadIndex++)
+    {
+        if (TGameLayout<FName>::Load(Data + ReadIndex * NameSize) == LevelName)
+            continue;
+
+        if (WriteIndex != ReadIndex)
+            memmove(Data + WriteIndex * NameSize, Data + ReadIndex * NameSize, NameSize);
+
+        WriteIndex++;
+    }
+
+    ArrayNum = WriteIndex;
 }
 
 TArray<FFortAlwaysRelevantActorInfo>& UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GetPastRelevantActors()

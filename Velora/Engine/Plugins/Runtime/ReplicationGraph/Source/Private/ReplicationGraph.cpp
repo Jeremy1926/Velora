@@ -113,6 +113,16 @@ TSet<FActorDestructionInfo*>& UNetReplicationGraphConnection::GetTrackedDestruct
     return *(TSet<FActorDestructionInfo*>*)((uint8*)this + TrackedDestructionInfoPtrs);
 }
 
+TMulticastDelegate<void, FName, UWorld*>& UNetReplicationGraphConnection::GetOnClientVisibleLevelNameAdd()
+{
+    return *((TMulticastDelegate<void, FName, UWorld*>*)&GetOnClientVisibleLevelNameAddMap() - 1);
+}
+
+TMulticastDelegate<void, FName>& UNetReplicationGraphConnection::GetOnClientVisibleLevelNameRemove()
+{
+    return *(TMulticastDelegate<void, FName>*)(&GetOnClientVisibleLevelNameAddMap() + 1);
+}
+
 TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConnection::GetOnClientVisibleLevelNameAddMap()
 {
     static auto OnClientVisibleLevelNameAddMap = Anchor::Offset(TEXT("UNetReplicationGraphConnection::OnClientVisibleLevelNameAddMap"))
@@ -151,6 +161,11 @@ TArray<UReplicationGraphNode*>& UNetReplicationGraphConnection::GetConnectionGra
     static auto ConnectionGraphNodes = StaticClass()->FindPropertyByName(FName(TEXT("ConnectionGraphNodes")));
 
     return *ConnectionGraphNodes->ContainerPtrToValuePtr<TArray<UReplicationGraphNode*>>(this);
+}
+
+void UNetReplicationGraphConnection::AddConnectionGraphNode(UReplicationGraphNode* Node)
+{
+    GetConnectionGraphNodes().Add(Node);
 }
 
 void UNetReplicationGraphConnection::SetActorNotDormantOnConnection(AActor* InActor)
@@ -3092,6 +3107,23 @@ void UReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnection*
         .Get();
 
     InitConnectionGraphNodes(this, ConnectionManager);
+}
+
+void UReplicationGraph::InitNode(UReplicationGraphNode* Node)
+{
+    static auto InitNode = Anchor::VirtualFunction<void (*)(UReplicationGraph*, UReplicationGraphNode*)>(TEXT("UReplicationGraph::InitNode"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x88)
+        .Get();
+
+    InitNode(this, Node);
+}
+
+void UReplicationGraph::AddConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager)
+{
+    ConnectionManager->AddConnectionGraphNode(GraphNode);
 }
 
 void UReplicationGraph::AddNetworkActor(AActor* Actor)

@@ -316,7 +316,11 @@ public:
 
     TSet<FNetworkGUID>& GetTrackedDormantDestructionInfos();
 
+    TMulticastDelegate<void, FName, UWorld*>& GetOnClientVisibleLevelNameAdd();
+
     TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& GetOnClientVisibleLevelNameAddMap();
+
+    TMulticastDelegate<void, FName>& GetOnClientVisibleLevelNameRemove();
 
     TArray<FLastLocationGatherInfo>& GetLastGatherLocations();
 
@@ -356,6 +360,8 @@ private:
     friend UReplicationGraph;
 
     void InitForGraph(UReplicationGraph* Graph);
+
+    void AddConnectionGraphNode(UReplicationGraphNode* Node);
 
     void InitForConnection(UNetConnection* InConnection);
 };
@@ -416,6 +422,17 @@ public:
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
 
+    void InitNode(UReplicationGraphNode* Node);
+
+    template<class T>
+    T* CreateNewNode()
+    {
+        auto NewNode = NewObject<T>(this, T::StaticClass());
+        InitNode(NewNode);
+
+        return NewNode;
+    }
+
     float& GetDestructInfoMaxDistanceSquared();
 
     FPrioritizationConstants& GetPrioritizationConstants();
@@ -467,6 +484,9 @@ public:
     bool ProcessRemoteFunction(AActor* Actor, UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack, UObject* SubObject);
 
     void NotifyConnectionSaturated(UNetReplicationGraphConnection& Connection);
+
+protected:
+    void AddConnectionGraphNode(UReplicationGraphNode* GraphNode, UNetReplicationGraphConnection* ConnectionManager);
 
 private:
     UNetReplicationGraphConnection* CreateClientConnectionManagerInternal(UNetConnection* Connection);
