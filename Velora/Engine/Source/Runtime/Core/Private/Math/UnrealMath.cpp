@@ -2,6 +2,8 @@
 #include "Math/Rotator.h"
 #include "Math/Quat.h"
 #include "Math/TransformVectorized.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 FVector FRotator::Vector() const
@@ -88,4 +90,16 @@ FVector FMath::VRandCone(FVector const& Dir, float ConeHalfAngleRad)
     FVector Result;
 
     return *VRandCone(&Result, Dir, ConeHalfAngleRad);
+}
+
+bool UE::LWC::IsEnabled()
+{
+    static auto bEnabled = []
+    {
+        auto Vector = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Vector"));
+
+        return Vector && Vector->GetPropertiesSize() == (int32)sizeof(FVector3d);
+    }();
+
+    return bEnabled;
 }

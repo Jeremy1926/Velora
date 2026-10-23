@@ -1,9 +1,45 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Templates/UnrealTemplate.h"
 #include <xmmintrin.h>
 
 struct FVector;
+
+namespace UE::LWC
+{
+    bool IsEnabled();
+}
+
+template<typename ValueType, typename DoubleStorageType>
+struct TLWCGameLayout
+{
+    using FStorage = DoubleStorageType;
+
+    static FORCEINLINE int32 Size()
+    {
+        return UE::LWC::IsEnabled() ? (int32)sizeof(DoubleStorageType) : (int32)sizeof(ValueType);
+    }
+
+    static FORCEINLINE ValueType Load(const void* Game)
+    {
+        if (UE::LWC::IsEnabled())
+            return (ValueType)*(const DoubleStorageType*)Game;
+
+        ValueType Value;
+        memcpy(&Value, Game, sizeof(ValueType));
+
+        return Value;
+    }
+
+    static FORCEINLINE void Store(void* Game, const ValueType& Value)
+    {
+        if (UE::LWC::IsEnabled())
+            *(DoubleStorageType*)Game = DoubleStorageType(Value);
+        else
+            memcpy(Game, &Value, sizeof(ValueType));
+    }
+};
 
 struct FMath
 {

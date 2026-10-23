@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "UObject/NameTypes.h"
 #include "Misc/EngineVersion.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 FName::FName(EName N)
@@ -173,4 +175,16 @@ FString FName::ToString() const
     ToString(this, Out);
 
     return Out;
+}
+
+bool FName::IsOutlineNumber()
+{
+    static auto bOutlineNumber = []
+    {
+        auto PrimaryAssetType = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.PrimaryAssetType"));
+
+        return PrimaryAssetType && PrimaryAssetType->GetPropertiesSize() < (int32)sizeof(FName);
+    }();
+
+    return bOutlineNumber;
 }

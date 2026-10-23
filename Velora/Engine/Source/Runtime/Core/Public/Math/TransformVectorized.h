@@ -64,6 +64,13 @@ public:
         Scale3D = _mm_setr_ps(InScale3D.X, InScale3D.Y, InScale3D.Z, 0.0f);
     }
 
+    FORCEINLINE explicit FTransform(const FQuat& InRotation, const FVector& InTranslation, const FVector& InScale3D)
+        : Rotation(_mm_setr_ps(InRotation.X, InRotation.Y, InRotation.Z, InRotation.W))
+        , Translation(_mm_setr_ps(InTranslation.X, InTranslation.Y, InTranslation.Z, 0.0f))
+        , Scale3D(_mm_setr_ps(InScale3D.X, InScale3D.Y, InScale3D.Z, 0.0f))
+    {
+    }
+
     FORCEINLINE FVector GetTranslation() const
     {
         return FVector(Translation.m128_f32[0], Translation.m128_f32[1], Translation.m128_f32[2]);
@@ -72,6 +79,11 @@ public:
     FORCEINLINE FQuat GetRotation() const
     {
         return FQuat(Rotation.m128_f32[0], Rotation.m128_f32[1], Rotation.m128_f32[2], Rotation.m128_f32[3]);
+    }
+
+    FORCEINLINE FVector GetScale3D() const
+    {
+        return FVector(Scale3D.m128_f32[0], Scale3D.m128_f32[1], Scale3D.m128_f32[2]);
     }
 
     FORCEINLINE void SetLocation(const FVector& Origin)
@@ -249,3 +261,40 @@ protected:
     VectorRegister Translation;
     VectorRegister Scale3D;
 };
+
+namespace UE::Math
+{
+    template<typename T>
+    struct TTransform
+    {
+        TQuat<T> Rotation;
+        TVector<T> Translation;
+        T TranslationW;
+        TVector<T> Scale3D;
+        T Scale3DW;
+
+        TTransform() = default;
+
+        FORCEINLINE explicit TTransform(const FTransform& Transform)
+            : Rotation(Transform.GetRotation())
+            , Translation(Transform.GetTranslation())
+            , TranslationW(0)
+            , Scale3D(Transform.GetScale3D())
+            , Scale3DW(0)
+        {
+        }
+
+        FORCEINLINE explicit operator FTransform() const
+        {
+            return FTransform((FQuat)Rotation, (FVector)Translation, (FVector)Scale3D);
+        }
+    };
+}
+
+using FTransform3d = UE::Math::TTransform<double>;
+
+template<>
+struct TGameLayout<FTransform> : TLWCGameLayout<FTransform, FTransform3d>
+{
+};
+

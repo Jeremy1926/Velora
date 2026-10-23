@@ -40,3 +40,36 @@ struct FRotator
         return Angle;
     }
 };
+
+namespace UE::Math
+{
+    template<typename T>
+    struct TRotator
+    {
+        T Pitch;
+        T Yaw;
+        T Roll;
+
+        TRotator() = default;
+
+        FORCEINLINE explicit TRotator(const FRotator& R)
+            : Pitch(R.Pitch)
+            , Yaw(R.Yaw)
+            , Roll(R.Roll)
+        {
+        }
+
+        FORCEINLINE explicit operator FRotator() const
+        {
+            return FRotator{ (float)Pitch, (float)Yaw, (float)Roll };
+        }
+    };
+}
+
+using FRotator3d = UE::Math::TRotator<double>;
+
+template<>
+struct TGameLayout<FRotator> : TLWCGameLayout<FRotator, FRotator3d>
+{
+};
+

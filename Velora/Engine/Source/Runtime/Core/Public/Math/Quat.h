@@ -36,3 +36,38 @@ struct alignas(16) FQuat
 
     FRotator Rotator() const;
 };
+
+namespace UE::Math
+{
+    template<typename T>
+    struct alignas(16) TQuat
+    {
+        T X;
+        T Y;
+        T Z;
+        T W;
+
+        TQuat() = default;
+
+        FORCEINLINE explicit TQuat(const FQuat& Q)
+            : X(Q.X)
+            , Y(Q.Y)
+            , Z(Q.Z)
+            , W(Q.W)
+        {
+        }
+
+        FORCEINLINE explicit operator FQuat() const
+        {
+            return FQuat((float)X, (float)Y, (float)Z, (float)W);
+        }
+    };
+}
+
+using FQuat4d = UE::Math::TQuat<double>;
+
+template<>
+struct TGameLayout<FQuat> : TLWCGameLayout<FQuat, FQuat4d>
+{
+};
+

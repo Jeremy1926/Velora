@@ -129,3 +129,36 @@ struct FVector
         return FMath::Abs(X - V.X) <= Tolerance && FMath::Abs(Y - V.Y) <= Tolerance && FMath::Abs(Z - V.Z) <= Tolerance;
     }
 };
+
+namespace UE::Math
+{
+    template<typename T>
+    struct TVector
+    {
+        T X;
+        T Y;
+        T Z;
+
+        TVector() = default;
+
+        FORCEINLINE explicit TVector(const FVector& V)
+            : X(V.X)
+            , Y(V.Y)
+            , Z(V.Z)
+        {
+        }
+
+        FORCEINLINE explicit operator FVector() const
+        {
+            return FVector((float)X, (float)Y, (float)Z);
+        }
+    };
+}
+
+using FVector3d = UE::Math::TVector<double>;
+
+template<>
+struct TGameLayout<FVector> : TLWCGameLayout<FVector, FVector3d>
+{
+};
+

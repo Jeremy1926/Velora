@@ -2,6 +2,7 @@
 
 #include "HAL/Platform.h"
 #include "Containers/UnrealString.h"
+#include "Templates/UnrealTemplate.h"
 #include "UObject/UnrealNames.h"
 
 typedef int32 NAME_INDEX;
@@ -34,6 +35,8 @@ public:
 
     FString ToString() const;
 
+    static bool IsOutlineNumber();
+
 private:
     union
     {
@@ -45,4 +48,28 @@ private:
 
         uint64 CompositeComparisonValue;
     };
+};
+
+template<>
+struct TGameLayout<FName>
+{
+    using FStorage = FName;
+
+    static FORCEINLINE int32 Size()
+    {
+        return FName::IsOutlineNumber() ? (int32)sizeof(NAME_INDEX) : (int32)sizeof(FName);
+    }
+
+    static FORCEINLINE FName Load(const void* Game)
+    {
+        FName Value(NAME_None);
+        memcpy(&Value, Game, Size());
+
+        return Value;
+    }
+
+    static FORCEINLINE void Store(void* Game, const FName& Value)
+    {
+        memcpy(Game, &Value, Size());
+    }
 };

@@ -38,6 +38,18 @@ public:
         return ContainerPtrToValuePtr<ValueType>((void*)ContainerPtr, ArrayIndex);
     }
 
+    template<typename ValueType>
+    FORCEINLINE ValueType GetPropertyValue_InContainer(void const* ContainerPtr, int32 ArrayIndex = 0) const
+    {
+        return TGameLayout<ValueType>::Load(ContainerPtrToValuePtr<void>(ContainerPtr, ArrayIndex));
+    }
+
+    template<typename ValueType>
+    FORCEINLINE void SetPropertyValue_InContainer(void* ContainerPtr, const ValueType& Value, int32 ArrayIndex = 0) const
+    {
+        TGameLayout<ValueType>::Store(ContainerPtrToValuePtr<void>(ContainerPtr, ArrayIndex), Value);
+    }
+
 protected:
     FORCEINLINE const UProperty* GetProperty() const
     {
