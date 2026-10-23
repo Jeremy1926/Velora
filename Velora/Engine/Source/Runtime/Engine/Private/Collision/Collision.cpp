@@ -41,8 +41,9 @@ FVector_NetQuantize& FHitResult::GetLocation()
 TWeakObjectPtr<AActor>& FHitResult::GetActor()
 {
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
+    static auto HitObjectHandle = StaticStruct()->FindPropertyByName(FName(TEXT("HitObjectHandle")));
 
-    return *Actor->ContainerPtrToValuePtr<TWeakObjectPtr<AActor>>(this);
+    return *(Actor ? Actor : HitObjectHandle)->ContainerPtrToValuePtr<TWeakObjectPtr<AActor>>(this);
 }
 
 const TWeakObjectPtr<UPrimitiveComponent>& FHitResult::GetComponent() const
