@@ -1539,6 +1539,99 @@ void UReplicationGraphNode_ActorListFrequencyBuckets::GatherActorListsForConnect
     GetStreamingLevelCollection().Gather(Params);
 }
 
+UClass* UReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_AlwaysRelevant_ForConnection"));
+
+    return Class;
+}
+
+FActorRepListRefView& UReplicationGraphNode_AlwaysRelevant_ForConnection::GetReplicationActorList()
+{
+    static auto ReplicationActorList = Anchor::Offset(TEXT("UReplicationGraphNode_AlwaysRelevant_ForConnection::ReplicationActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x20)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_AlwaysRelevant_ForConnection"))
+        .Find("lea rcx, [rbx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
+}
+
+TArray<FAlwaysRelevantActorInfo>& UReplicationGraphNode_AlwaysRelevant_ForConnection::GetPastRelevantActors()
+{
+    return *(TArray<FAlwaysRelevantActorInfo>*)(&GetReplicationActorList() + 1);
+}
+
+void UReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_AlwaysRelevant_ForConnection, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_AlwaysRelevant_ForConnection"), "jmp 0x*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_AlwaysRelevant_ForConnection::StaticClass()));
+
+    Original(Params);
+
+    auto& ReplicationActorList = GetReplicationActorList();
+    auto ConnectionManager = Params.GetConnectionManager();
+
+    auto UpdateActor = [&](AActor* NewActor, AActor*& LastActor)
+    {
+        if (LastActor != NewActor)
+        {
+            if (NewActor)
+                ConnectionManager->GetActorInfoMap().FindOrAdd(NewActor).SetCullDistanceSquared(0.f);
+
+            if (LastActor)
+                ConnectionManager->GetActorInfoMap().FindOrAdd(LastActor).SetCullDistanceSquared(GetGraphGlobals()->GlobalActorReplicationInfoMap->Get(LastActor).GetCullDistanceSquared());
+
+            LastActor = NewActor;
+        }
+
+        if (NewActor && !ReplicationActorList.RepList.Contains(NewActor))
+            ReplicationActorList.RepList.Add(NewActor);
+    };
+
+    ReplicationActorList.RepList.Reset();
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        const FNetViewer& CurViewer = Params.GetViewer(Index);
+
+        if (!CurViewer.Connection)
+            continue;
+
+        if (ConnectionManager->GetNetConnection()->IsReplay() && CurViewer.Connection != ConnectionManager->GetNetConnection())
+            continue;
+
+        auto& PastRelevantActors = GetPastRelevantActors();
+        auto LastData = PastRelevantActors.FindByKey(CurViewer.Connection);
+
+        if (!LastData)
+        {
+            FAlwaysRelevantActorInfo NewActorInfo = { CurViewer.Connection, nullptr, nullptr };
+            LastData = &PastRelevantActors[PastRelevantActors.Add(NewActorInfo)];
+        }
+
+        UpdateActor(CurViewer.InViewer, LastData->LastViewer);
+        UpdateActor(CurViewer.ViewTarget, LastData->LastViewTarget);
+    }
+
+    GetPastRelevantActors().RemoveAll([](const FAlwaysRelevantActorInfo& RelActorInfo)
+    {
+        return RelActorInfo.Connection == nullptr;
+    });
+
+    if (ReplicationActorList.RepList.Num() > 0)
+        Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ReplicationActorList);
+}
+
 UClass* UReplicationGraphNode_TearOff_ForConnection::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_TearOff_ForConnection"));

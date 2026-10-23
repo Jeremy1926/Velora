@@ -242,6 +242,31 @@ private:
     FStreamingLevelActorListCollection& GetStreamingLevelCollection();
 };
 
+struct FAlwaysRelevantActorInfo
+{
+    bool operator==(const UNetConnection* InConnection) const
+    {
+        return Connection == InConnection;
+    }
+
+    UNetConnection* Connection;
+    AActor* LastViewer;
+    AActor* LastViewTarget;
+};
+
+class UReplicationGraphNode_AlwaysRelevant_ForConnection : public UReplicationGraphNode_ActorList
+{
+public:
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+private:
+    FActorRepListRefView& GetReplicationActorList();
+
+    TArray<FAlwaysRelevantActorInfo>& GetPastRelevantActors();
+};
+
 class UReplicationGraphNode_TearOff_ForConnection : public UReplicationGraphNode
 {
 public:
