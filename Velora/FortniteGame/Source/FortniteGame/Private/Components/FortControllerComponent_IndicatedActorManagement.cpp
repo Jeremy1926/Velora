@@ -4,11 +4,14 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "FortKismetLibrary.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
+#include "Detour.h"
 
 FIndicatedActorData::~FIndicatedActorData()
 {
@@ -127,6 +130,32 @@ AActor* FIndicatedActorInfoEntry::GetActor() const
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
+float FIndicatedActorInfoEntry::GetStartTime() const
+{
+    static auto StartTime = StaticStruct()->FindPropertyByName(FName(TEXT("StartTime")));
+
+    return *StartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float FIndicatedActorInfoEntry::GetEndTime() const
+{
+    static auto EndTime = StaticStruct()->FindPropertyByName(FName(TEXT("EndTime")));
+
+    return *EndTime->ContainerPtrToValuePtr<float>(this);
+}
+
+const FIndicatedActorData& FIndicatedActorInfoEntry::GetData() const
+{
+    static auto Data = []
+    {
+        auto Data = StaticStruct()->FindPropertyByName(FName(TEXT("Data")));
+
+        return Data ? Data : StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedActorData")));
+    }();
+
+    return *Data->ContainerPtrToValuePtr<FIndicatedActorData>(this);
+}
+
 UScriptStruct* FIndicatedActorInfoArray::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.IndicatedActorInfoArray"));
@@ -181,6 +210,27 @@ AActor* FStenciledActorInfoEntry::GetActor() const
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
 
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
+}
+
+float FStenciledActorInfoEntry::GetStartTime() const
+{
+    static auto StartTime = StaticStruct()->FindPropertyByName(FName(TEXT("StartTime")));
+
+    return *StartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float FStenciledActorInfoEntry::GetEndTime() const
+{
+    static auto EndTime = StaticStruct()->FindPropertyByName(FName(TEXT("EndTime")));
+
+    return *EndTime->ContainerPtrToValuePtr<float>(this);
+}
+
+const FStenciledActorData& FStenciledActorInfoEntry::GetData() const
+{
+    static auto Data = StaticStruct()->FindPropertyByName(FName(TEXT("Data")));
+
+    return *Data->ContainerPtrToValuePtr<FStenciledActorData>(this);
 }
 
 UScriptStruct* FStenciledActorInfoArray::StaticStruct()
@@ -238,6 +288,55 @@ TArray<FStenciledActorInfoEntry>& UFortControllerComponent_IndicatedActorManagem
         return *DeferredStenciledActorList->ContainerPtrToValuePtr<TArray<FStenciledActorInfoEntry>>(this);
 
     return ((FStenciledActorInfoArray*)((uint8*)this + StenciledActorList->GetOffset_ForInternal() + StenciledActorList->GetSize()))->GetEntries();
+}
+
+void UFortControllerComponent_IndicatedActorManagement::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    DETOUR(UFortControllerComponent_IndicatedActorManagement, TickComponent, Anchor::Hook()
+        .If(!::Anchor::Exists()
+            .String(TEXT("STAT_FortControllerComponent_IndicatedActorManagementTick"))
+            .Start()
+            .Find("cmp dword ptr [*], 0xffffffff; jnz 0x*; inc [*+0x50]")
+            .Get())
+        .String(TEXT("STAT_FortControllerComponent_IndicatedActorManagementTick"))
+        .Start()
+        .Optional()
+        .Inline());
+
+    const float ServerWorldTimeSeconds = UFortKismetLibrary::GetServerWorldTimeSeconds(this);
+    auto& DeferredIndicatedActorList = GetDeferredIndicatedActorList();
+
+    for (int32 Index = DeferredIndicatedActorList.Num() - 1; Index >= 0; Index--)
+    {
+        auto& Entry = DeferredIndicatedActorList[Index];
+
+        if (Entry.GetStartTime() <= 0.0f || Entry.GetStartTime() >= ServerWorldTimeSeconds)
+            continue;
+
+        auto& IndicatedActorList = GetIndicatedActorList();
+        auto NewEntry = new(IndicatedActorList.GetEntries()) FIndicatedActorInfoEntry(Entry.GetActor(), Entry.GetStartTime(), Entry.GetEndTime(), Entry.GetData());
+
+        IndicatedActorList.MarkItemDirty(*NewEntry);
+        GetOwner()->ForceNetUpdate();
+    }
+
+    auto& DeferredStenciledActorList = GetDeferredStenciledActorList();
+
+    for (int32 Index = DeferredStenciledActorList.Num() - 1; Index >= 0; Index--)
+    {
+        auto& Entry = DeferredStenciledActorList[Index];
+
+        if (Entry.GetStartTime() <= 0.0f || Entry.GetStartTime() >= ServerWorldTimeSeconds)
+            continue;
+
+        auto& StenciledActorList = GetStenciledActorList();
+        auto NewEntry = new(StenciledActorList.GetEntries()) FStenciledActorInfoEntry(Entry.GetActor(), Entry.GetStartTime(), Entry.GetEndTime(), Entry.GetData());
+
+        StenciledActorList.MarkItemDirty(*NewEntry);
+        GetOwner()->ForceNetUpdate();
+    }
+
+    Original(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UFortControllerComponent_IndicatedActorManagement::AddActorsToIndicatedList(const TArray<AActor*>& IndicatedActors, const FIndicatedActorData& Data, const bool bAddAsUnique)

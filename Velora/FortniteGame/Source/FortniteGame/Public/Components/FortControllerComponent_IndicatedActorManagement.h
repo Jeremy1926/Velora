@@ -2,6 +2,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Containers/Array.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Engine/NetSerialization.h"
 
 class AActor;
@@ -57,6 +58,12 @@ struct FIndicatedActorInfoEntry : public FFastArraySerializerItem
     static int32 GetTypeSize();
 
     AActor* GetActor() const;
+
+    float GetStartTime() const;
+
+    float GetEndTime() const;
+
+    const FIndicatedActorData& GetData() const;
 };
 
 template<>
@@ -84,6 +91,12 @@ struct FStenciledActorInfoEntry : public FFastArraySerializerItem
     static int32 GetTypeSize();
 
     AActor* GetActor() const;
+
+    float GetStartTime() const;
+
+    float GetEndTime() const;
+
+    const FStenciledActorData& GetData() const;
 };
 
 template<>
@@ -110,6 +123,8 @@ public:
     FStenciledActorInfoArray& GetStenciledActorList();
 
     TArray<FStenciledActorInfoEntry>& GetDeferredStenciledActorList();
+
+    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
     void AddActorsToIndicatedList(const TArray<AActor*>& IndicatedActors, const FIndicatedActorData& Data, const bool bAddAsUnique);
 

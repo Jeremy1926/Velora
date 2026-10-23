@@ -12,6 +12,16 @@ enum ENetMode
     NM_MAX,
 };
 
+enum ELevelTick
+{
+    LEVELTICK_TimeOnly,
+    LEVELTICK_ViewportsOnly,
+    LEVELTICK_All,
+    LEVELTICK_PauseTick,
+};
+
+struct FActorComponentTickFunction;
+
 namespace ENetworkFailure
 {
     enum Type
