@@ -155,6 +155,38 @@ void AFortAIPawn::execDropAllItems(FFrame& Stack, void* const Z_Param__Result)
     DropAllItems(!!bSpawnPickups);
 }
 
+void AFortAIPawn::SpawnPickupInWorldWithLootTierAsync(FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source)
+{
+    if (HasAuthority())
+        UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(this, LootTierName, Position, OverrideMaxStackCount, bToss, SourceType, Source);
+}
+
+void AFortAIPawn::execSpawnPickupInWorldWithLootTierAsync(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAIPawn, execSpawnPickupInWorldWithLootTierAsync, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAIPawn:SpawnPickupInWorldWithLootTierAsync")))
+        .StubExec(TEXT("/Script/FortniteGame.FortAIPawn:SpawnPickupInWorldWithLootTierAsync"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortAIPawn:SpawnPickupInWorldWithLootTierAsync")));
+
+    FName LootTierName(NAME_None);
+    FVector Position(ForceInit);
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+
+    Stack.StepCompiledIn(&LootTierName);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.Code += !!Stack.Code;
+
+    SpawnPickupInWorldWithLootTierAsync(LootTierName, Position, OverrideMaxStackCount, !!bToss, SourceType, Source);
+}
+
 AFortInventory* AFortAIPawn::GetWorldInventory() const
 {
     static auto Inventory = StaticClass()->FindPropertyByName(FName(TEXT("Inventory")));
