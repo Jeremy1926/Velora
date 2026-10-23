@@ -169,6 +169,37 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     if (bAllowAutoCreateExtraPiece && bAllowAutoCreateExtraPiece->GetPropertyValue_InContainer(DecoItemDefinition) && bSpawnDecoOnExtraPiece)
     {
+        static auto GetCurrent = Anchor::Function<UObject* (*)(const UObject*)>(TEXT("UBuildingStructuralSupportSystem::GetCurrent"))
+            .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+            .Find("call *r10*; test al, al")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Find("call [*+0x*]; test eax, eax; jz 0x*")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+            .Find("call 0x*; test rax, rax; jz 0x*; mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
+            .Target()
+            .Get();
+
+        static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const FVector*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
+            .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+            .Find("call *r10*; test al, al")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Find("call [*+0x*]; test eax, eax; jz 0x*")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+            .Find("mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        auto StructuralSupportSystem = GetCurrent(this);
+
+        if (!StructuralSupportSystem)
+            return;
+
+        if (auto ExistingBuilding = GetExistingBuildingInGridLocation(StructuralSupportSystem, Building, &BuildingExtraPieceLocation))
+            SpawnDecoInternal(this, &BuildingExtraPieceLocation, &Rotation, ExistingBuilding, InBuildingAttachmentType, false);
+
         if (bGiveFreeDecoOnUndergroundPiece && bGiveFreeDecoOnUndergroundPiece->GetPropertyValue_InContainer(DecoItemDefinition))
             SpawnDecoInternal(this, &Location, &Rotation, Building, InBuildingAttachmentType, true);
 
