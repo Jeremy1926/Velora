@@ -73,23 +73,34 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
 
     if (StaticConstructObject_InternalWithParams)
     {
-        struct
+        auto ConstructWithParams = [&](auto GameName)
         {
-            UClass* Class;
-            UObject* Outer;
-            FName Name;
-            EObjectFlags SetFlags;
-            EInternalObjectFlags InternalSetFlags;
-            bool bCopyTransientsFromClassDefaults;
-            bool bAssumeTemplateIsArchetype;
-            UObject* Template;
-            FObjectInstancingGraph* InstanceGraph;
-            void* ExternalPackage;
-            uint8 PropertyInitCallback[0x40];
-            void* SubobjectOverrides;
-        } Params { Class, InOuter, Name, SetFlags, InternalSetFlags, bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype, Template, InstanceGraph, nullptr };
+            struct
+            {
+                UClass* Class;
+                UObject* Outer;
+                decltype(GameName) Name;
+                EObjectFlags SetFlags;
+                EInternalObjectFlags InternalSetFlags;
+                bool bCopyTransientsFromClassDefaults;
+                bool bAssumeTemplateIsArchetype;
+                UObject* Template;
+                FObjectInstancingGraph* InstanceGraph;
+                void* ExternalPackage;
+                uint8 PropertyInitCallback[0x40];
+                void* SubobjectOverrides;
+            } Params { Class, InOuter, GameName, SetFlags, InternalSetFlags, bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype, Template, InstanceGraph, nullptr };
 
-        return StaticConstructObject_InternalWithParams(&Params);
+            return StaticConstructObject_InternalWithParams(&Params);
+        };
+
+        if (!FName::IsOutlineNumber())
+            return ConstructWithParams(Name);
+
+        NAME_INDEX OutlineName = 0;
+        TGameLayout<FName>::Store(&OutlineName, Name);
+
+        return ConstructWithParams(OutlineName);
     }
 
     static auto StaticConstructObject_Internal = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool)>(TEXT("StaticConstructObject_Internal"))
