@@ -11,6 +11,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
+class FOutBunch;
 class UClass;
 class UNetConnection;
 struct FNetViewer;
@@ -45,6 +46,17 @@ struct TGlobalActorReplicationInfoLayout
     alignas(16) uint8 Settings[0x10];
 };
 
+struct FFastSharedReplicationInfo
+{
+    uint32 LastAttemptBuildFrameNum;
+    uint32 LastBunchBuildFrameNum;
+
+    FOutBunch& GetBunch()
+    {
+        return *(FOutBunch*)(this + 1);
+    }
+};
+
 struct FGlobalActorReplicationInfo
 {
     uint16 GetReplicationPeriodFrame() const;
@@ -76,6 +88,12 @@ struct FGlobalActorReplicationInfo
     uint16 GetActorChannelFrameTimeout() const;
 
     TArray<AActor*>& GetDependentActorList();
+
+    uint8* GetFastSharedReplicationFunc();
+
+    FName GetFastSharedReplicationFuncName() const;
+
+    FFastSharedReplicationInfo*& GetFastSharedReplicationInfo();
 
 private:
     const uint8* GetSettings() const;

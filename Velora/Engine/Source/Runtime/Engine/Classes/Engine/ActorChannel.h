@@ -39,6 +39,8 @@ public:
 
     bool GetSpawnAcked() const;
 
+    bool& GetHoldQueuedExportBunchesAndGUIDs();
+
     void Close();
 
     void StartBecomingDormant();

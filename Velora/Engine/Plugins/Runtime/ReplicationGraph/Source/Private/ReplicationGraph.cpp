@@ -10,7 +10,9 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
+#include "HAL/UnrealMemory.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/DataBunch.h"
 #include "Templates/Sorting.h"
 #include <cfloat>
 #include "HAL/IConsoleManager.h"
@@ -2034,6 +2036,39 @@ int32& UReplicationGraph::GetActorDiscoveryMaxBitsPerFrame()
     return *(int32*)(&GetReplicationGraphFrame() + 1);
 }
 
+TArray<UNetConnection*>& UReplicationGraph::GetConnectionsNeedingsPostTickDispatchFlush()
+{
+    static auto ConnectionsNeedingsPostTickDispatchFlush = Anchor::Offset(TEXT("UReplicationGraph::ConnectionsNeedingsPostTickDispatchFlush"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x40)
+        .Find("lea rdi, [rcx+0x*]")
+        .Disp();
+
+    return *(TArray<UNetConnection*>*)((uint8*)this + ConnectionsNeedingsPostTickDispatchFlush);
+}
+
+UActorChannel*& UReplicationGraph::GetFastSharedReplicationChannel()
+{
+    return *((UActorChannel**)&GetConnectionsNeedingsPostTickDispatchFlush() - 2);
+}
+
+FOutBunch*& UReplicationGraph::GetFastSharedReplicationBunch()
+{
+    return *((FOutBunch**)&GetFastSharedReplicationChannel() - 1);
+}
+
+FName UReplicationGraph::GetFastSharedReplicationFuncName()
+{
+    return TGameLayout<FName>::Load(&GetFastSharedReplicationChannel() + 1);
+}
+
+void UReplicationGraph::SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName)
+{
+    TGameLayout<FName>::Store(&GetFastSharedReplicationChannel() + 1, InFastSharedReplicationFuncName);
+}
+
 void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers)
 {
     static auto ForceConnectionViewerPriority = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.ForceConnectionViewerPriority"));
@@ -2154,6 +2189,184 @@ void UReplicationGraph::ReplicateActorsForConnection(UNetConnection* NetConnecti
             break;
         }
     }
+}
+
+void UReplicationGraph::ReplicateActorListsForConnections_FastShared(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers)
+{
+    const auto& GatheredLists = GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::FastShared];
+
+    if (GatheredLists.Num() <= 0)
+        return;
+
+    auto& ConnectionActorInfoMap = ConnectionManager->GetActorInfoMap();
+    UNetConnection* const NetConnection = ConnectionManager->GetNetConnection();
+    const uint32 FrameNum = GetReplicationGraphFrame();
+    const auto& FastSharedPathConstants = GetFastSharedPathConstants();
+    const float FastSharedDistanceRequirementPct = FastSharedPathConstants.DistanceRequirementPct;
+    const int64 MaxBits = FastSharedPathConstants.MaxBitsPerFrame;
+    const int32 StartIdx = FrameNum * FastSharedPathConstants.ListSkipPerFrame;
+
+    int32 TotalBitsWritten = 0;
+
+    for (int32 ListIdx = 0; ListIdx < GatheredLists.Num(); ++ListIdx)
+    {
+        const auto& List = GatheredLists[(ListIdx + FrameNum) % GatheredLists.Num()]->RepList;
+
+        for (int32 i = 0; i < List.Num(); ++i)
+        {
+            AActor* Actor = List[(i + StartIdx) % List.Num()];
+
+            FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
+
+            if (ConnectionData.LastRepFrameNum == FrameNum)
+                continue;
+
+            if (ConnectionData.bTearOff)
+                continue;
+
+            UActorChannel* ActorChannel = ConnectionData.Channel;
+
+            if (ActorChannel == nullptr || ActorChannel->GetClosing())
+                continue;
+
+            FGlobalActorReplicationInfo& GlobalActorInfo = GetGlobalActorReplicationInfoMap().Get(Actor);
+
+            if (*(void**)GlobalActorInfo.GetFastSharedReplicationFunc() == nullptr)
+                continue;
+
+            bool bNoViewRelevency = true;
+            const FVector WorldLocation = GlobalActorInfo.GetWorldLocation();
+
+            for (const FNetViewer& CurView : Viewers)
+            {
+                const FVector DirToActor = WorldLocation - CurView.GetViewLocation();
+
+                if (!((DirToActor | CurView.GetViewDir()) < 0.f))
+                {
+                    bNoViewRelevency = false;
+                    break;
+                }
+
+                const float DistSq = DirToActor.SizeSquared();
+
+                if (!(DistSq > (ConnectionData.CullDistanceSquared * FastSharedDistanceRequirementPct)))
+                {
+                    bNoViewRelevency = false;
+                    break;
+                }
+            }
+
+            if (bNoViewRelevency)
+                continue;
+
+            TotalBitsWritten += (int32)ReplicateSingleActor_FastShared(Actor, ConnectionData, GlobalActorInfo, *ConnectionManager, FrameNum);
+
+            if (TotalBitsWritten > MaxBits)
+            {
+                NotifyConnectionSaturated(*ConnectionManager);
+                NetConnection->GetQueuedBits() -= TotalBitsWritten;
+                return;
+            }
+        }
+    }
+
+    NetConnection->GetQueuedBits() -= TotalBitsWritten;
+}
+
+int64 UReplicationGraph::ReplicateSingleActor_FastShared(AActor* Actor, FConnectionReplicationActorInfo& ConnectionData, FGlobalActorReplicationInfo& GlobalActorInfo, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum)
+{
+    UNetConnection* NetConnection = ConnectionManager.GetNetConnection();
+
+    const int64 BitsWritten = [&]() -> int64
+    {
+        FScopedActorRoleSwap SwapGuard(GlobalActorInfo.GetSwapRolesOnReplicate() ? Actor : nullptr);
+
+        if (NetConnection->IsReplay())
+            return ReplicateSingleActor(Actor, ConnectionData, GlobalActorInfo, ConnectionManager.GetActorInfoMap(), ConnectionManager, FrameNum);
+
+        UActorChannel* ActorChannel = ConnectionData.Channel;
+
+        if (ActorChannel == nullptr || ActorChannel->GetClosing())
+            return 0;
+
+        GetFrameReplicationStats().NumReplicatedFastPathActors++;
+
+        auto& FastSharedReplicationInfo = GlobalActorInfo.GetFastSharedReplicationInfo();
+
+        if (!FastSharedReplicationInfo)
+        {
+            FastSharedReplicationInfo = (FFastSharedReplicationInfo*)FMemory::Realloc(nullptr, sizeof(FFastSharedReplicationInfo) + FOutBunch::GetTypeSize());
+            FastSharedReplicationInfo->LastAttemptBuildFrameNum = 0;
+            FastSharedReplicationInfo->LastBunchBuildFrameNum = 0;
+            FMemory::Memzero(&FastSharedReplicationInfo->GetBunch(), FOutBunch::GetTypeSize());
+            ::new(&FastSharedReplicationInfo->GetBunch()) FOutBunch();
+        }
+
+        FOutBunch& OutBunch = FastSharedReplicationInfo->GetBunch();
+
+        if (FastSharedReplicationInfo->LastAttemptBuildFrameNum < FrameNum)
+        {
+            FastSharedReplicationInfo->LastAttemptBuildFrameNum = FrameNum;
+
+            auto FastSharedReplicationFunc = GlobalActorInfo.GetFastSharedReplicationFunc();
+            auto Callable = *(bool (**)(void*, AActor*&))FastSharedReplicationFunc;
+
+            if (Callable == nullptr)
+                return 0;
+
+            GetFastSharedReplicationBunch() = &OutBunch;
+            GetFastSharedReplicationChannel() = ActorChannel;
+            SetFastSharedReplicationFuncName(GlobalActorInfo.GetFastSharedReplicationFuncName());
+
+            auto Storage = FastSharedReplicationFunc + 0x10;
+            auto OwnedObject = *(uint8**)Storage ? *(uint8**)Storage : Storage + 0x10;
+            auto GetAddress = (*(void* (***)(void*))OwnedObject)[1];
+
+            if (Callable(GetAddress(OwnedObject), Actor) == false)
+            {
+                GetFastSharedReplicationBunch() = nullptr;
+                GetFastSharedReplicationChannel() = nullptr;
+                SetFastSharedReplicationFuncName(FName(NAME_None));
+                return 0;
+            }
+
+            if (GetFastSharedReplicationBunch() == nullptr)
+            {
+                FastSharedReplicationInfo->LastBunchBuildFrameNum = FrameNum;
+            }
+            else
+            {
+                GetFastSharedReplicationBunch() = nullptr;
+                GetFastSharedReplicationChannel() = nullptr;
+                SetFastSharedReplicationFuncName(FName(NAME_None));
+            }
+        }
+
+        if (ConnectionData.FastPath_LastRepFrameNum >= FastSharedReplicationInfo->LastBunchBuildFrameNum)
+            return 0;
+
+        if (OutBunch.GetNumBits() <= 0)
+            return 0;
+
+        OutBunch.SetChName(ActorChannel->GetChName());
+        OutBunch.SetChIndex(ActorChannel->GetChIndex());
+        OutBunch.SetChannel(ActorChannel);
+        OutBunch.SetNext(nullptr);
+
+        auto& bHoldQueuedExportBunchesAndGUIDs = ActorChannel->GetHoldQueuedExportBunchesAndGUIDs();
+        const bool bOldHoldQueuedExportBunchesAndGUIDs = bHoldQueuedExportBunchesAndGUIDs;
+
+        bHoldQueuedExportBunchesAndGUIDs = true;
+        ActorChannel->SendBunch(&OutBunch, false);
+        bHoldQueuedExportBunchesAndGUIDs = bOldHoldQueuedExportBunchesAndGUIDs;
+
+        return OutBunch.GetNumBits();
+    }();
+
+    ConnectionData.FastPath_LastRepFrameNum = FrameNum;
+    ConnectionData.FastPath_NextReplicationFrameNum = FrameNum + ConnectionData.FastPath_ReplicationPeriodFrame;
+
+    return BitsWritten;
 }
 
 int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicationActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalActorInfo, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum)

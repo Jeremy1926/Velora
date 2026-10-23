@@ -13,6 +13,7 @@
 #include "ReplicationGraphTypes.h"
 
 class AActor;
+class FOutBunch;
 class UActorChannel;
 class UNetConnection;
 class UNetDriver;
@@ -418,9 +419,23 @@ public:
 
     int32& GetActorDiscoveryMaxBitsPerFrame();
 
+    TArray<UNetConnection*>& GetConnectionsNeedingsPostTickDispatchFlush();
+
+    FOutBunch*& GetFastSharedReplicationBunch();
+
+    UActorChannel*& GetFastSharedReplicationChannel();
+
+    FName GetFastSharedReplicationFuncName();
+
+    void SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName);
+
     void ReplicateActorListsForConnections_Default(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers);
 
     void ReplicateActorsForConnection(UNetConnection* NetConnection, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection* ConnectionManager, const uint32 FrameNum);
+
+    void ReplicateActorListsForConnections_FastShared(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers);
+
+    int64 ReplicateSingleActor_FastShared(AActor* Actor, FConnectionReplicationActorInfo& ConnectionData, FGlobalActorReplicationInfo& GlobalActorInfo, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum);
 
     int64 ReplicateSingleActor(AActor* Actor, FConnectionReplicationActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalActorInfo, FPerConnectionActorInfoMap& ConnectionActorInfoMap, UNetReplicationGraphConnection& ConnectionManager, const uint32 FrameNum);
 

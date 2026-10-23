@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "Misc/EngineVersion.h"
 #include "Net/DataBunch.h"
+#include "UObject/NameTypes.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 
@@ -13,6 +14,33 @@ UNetConnection* UChannel::GetConnection() const
     static auto Connection = GetClass()->FindPropertyByName(FName(TEXT("Connection")));
 
     return *Connection->ContainerPtrToValuePtr<UNetConnection*>(this);
+}
+
+int32 UChannel::GetChIndex() const
+{
+    static auto ChIndex = Anchor::Offset(TEXT("UChannel::ChIndex"))
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
+        .Disp();
+
+    return *(const int32*)((const uint8_t*)this + ChIndex);
+}
+
+FName UChannel::GetChName() const
+{
+    static auto ChName = Anchor::Offset(TEXT("UChannel::ChName"))
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
+        .Find("mov *, [rbx+0x*]")
+        .Disp();
+
+    return TGameLayout<FName>::Load((const uint8_t*)this + ChName);
 }
 
 bool UChannel::GetClosing() const
@@ -209,6 +237,16 @@ bool UActorChannel::GetSpawnAcked() const
     static auto Actor = GetClass()->FindPropertyByName(FName(TEXT("Actor")));
 
     return *((uint8_t*)Actor->ContainerPtrToValuePtr<AActor*>(this) + sizeof(AActor*) + sizeof(FNetworkGUID) + sizeof(float) + 2 * sizeof(double)) & 1;
+}
+
+bool& UActorChannel::GetHoldQueuedExportBunchesAndGUIDs()
+{
+    static auto bHoldQueuedExportBunchesAndGUIDs = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x0; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Disp();
+
+    return *(bool*)((uint8_t*)this + bHoldQueuedExportBunchesAndGUIDs);
 }
 
 int64 UActorChannel::ReplicateActor()

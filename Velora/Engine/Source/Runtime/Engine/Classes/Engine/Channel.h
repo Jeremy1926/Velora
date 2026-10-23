@@ -3,6 +3,7 @@
 #include "Engine/EngineBaseTypes.h"
 #include "UObject/Object.h"
 #include "UObject/CoreNet.h"
+#include "UObject/NameTypes.h"
 
 class FOutBunch;
 class UNetConnection;
@@ -21,6 +22,10 @@ class UChannel : public UObject
 {
 public:
     UNetConnection* GetConnection() const;
+
+    int32 GetChIndex() const;
+
+    FName GetChName() const;
 
     bool GetClosing() const;
 

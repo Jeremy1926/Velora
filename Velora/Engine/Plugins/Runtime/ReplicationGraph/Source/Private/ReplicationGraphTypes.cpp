@@ -98,6 +98,40 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
     return *(TArray<AActor*>*)((uint8*)this + DependentActorList);
 }
 
+uint8* FGlobalActorReplicationInfo::GetFastSharedReplicationFunc()
+{
+    return (uint8*)GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFunc);
+}
+
+FName FGlobalActorReplicationInfo::GetFastSharedReplicationFuncName() const
+{
+    return TGameLayout<FName>::Load(GetSettings() + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, FastSharedReplicationFuncName) : offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFuncName)));
+}
+
+FFastSharedReplicationInfo*& FGlobalActorReplicationInfo::GetFastSharedReplicationInfo()
+{
+    static auto FastSharedReplicationInfo = Anchor::Offset(TEXT("FGlobalActorReplicationInfo::FastSharedReplicationInfo"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("pop rdi; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rcx, [rax+r8*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdi, [rbx+0x*]; test rdi, rdi; jz 0x*; lea rcx, [rdi+0x8]; call 0x*")
+        .Disp();
+
+    return *(FFastSharedReplicationInfo**)((uint8*)this + FastSharedReplicationInfo);
+}
+
 FGlobalActorReplicationInfo* FGlobalActorReplicationInfoMap::Find(AActor* const& Actor)
 {
     auto InfoPtr = ActorMap.Find(Actor);
