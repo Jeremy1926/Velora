@@ -277,7 +277,7 @@ int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const 
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor"))
         .Find("mov rcx, [rsp+0x*]; call 0x*")
         .Call()
-        .Find("mov r9, [*]; mov r8, *; mov rdx, *; mov rcx, *; call [r9+0x*]")
+        .Find("mov r9, [*]; mov r8, *; mov ?dx, *; mov rcx, *; call [r9+0x*]")
         .Find("call [r9+0x*]")
         .Get();
 

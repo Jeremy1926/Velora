@@ -90,7 +90,7 @@ FGameplayTag UActorRegisterData_GameplayTagBased::GetGameplayTag()
     static auto GameplayTag = Anchor::Offset(TEXT("UActorRegisterData_GameplayTagBased::GameplayTag"))
         .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
         .Find("add [*+0x20], *")
-        .Find("mov rax, [rcx+0x*]")
+        .Find("mov ?ax, [rcx+0x*]")
         .Disp();
 
     return TGameLayout<FGameplayTag>::Load((uint8*)this + GameplayTag);

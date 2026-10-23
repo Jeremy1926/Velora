@@ -295,7 +295,7 @@ int32 UCraftingObjectComponent::SendGameplayEvent(FGameplayTag EventTag, float E
     static auto SendGameplayEvent = Anchor::Function<int32 (*)(UCraftingObjectComponent*, FGameplayTag, float)>(TEXT("UCraftingObjectComponent::SendGameplayEvent"))
         .String("Overcrafted")
         .Caller()
-        .Find("xorps xmm2, xmm2; mov rcx, rbx; mov rdx, [rax]; call 0x*")
+        .Find("xorps xmm2, xmm2; mov rcx, rbx; mov ?dx, [rax]; call 0x*")
         .Call()
         .Get();
 
