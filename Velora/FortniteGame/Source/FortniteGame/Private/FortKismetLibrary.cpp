@@ -183,11 +183,13 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
 {
     DETOUR(UFortKismetLibrary, K2_RemoveItemFromPlayer, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_RemoveItemFromPlayer))
         .If(FColletorUnitInfo::StaticStruct())
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
         .Is("test rcx, rcx")
         .Inline(), Anchor::Hook()
         .After(DETOUR_ORIGINAL(ABuildingItemWeaponUpgradeActor, GrantOutput))
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_RemoveItemFromPlayer))
         .If(ABuildingItemWeaponUpgradeActor::StaticClass())
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
         .Is("test rcx, rcx")
@@ -225,6 +227,7 @@ int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerC
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayerByGuid(AFortPlayerController* PlayerController, const FGuid& ItemGuid, int32 AmountToRemove, bool bForceRemoval)
 {
     DETOUR(UFortKismetLibrary, K2_RemoveItemFromPlayerByGuid, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_RemoveItemFromPlayerByGuid))
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
         .Inline());
@@ -331,6 +334,7 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
         {
             return UFortKismetLibrary::PickLootDrops(OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
         } : (void*)&UFortKismetLibrary::PickLootDrops)
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execPickLootDrops))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
         .Find("call 0x*; lea rcx, [rsp+0x20]")
         .Or()
@@ -366,6 +370,7 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
 {
     DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorld, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_SpawnPickupInWorld))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
         .Find("call 0x*; mov rbx, [rsp+*]")
         .Or()
@@ -380,6 +385,7 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
 AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
 {
     DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorldWithClass, Anchor::Hook()
+        .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_SpawnPickupInWorldWithClass))
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
         .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
