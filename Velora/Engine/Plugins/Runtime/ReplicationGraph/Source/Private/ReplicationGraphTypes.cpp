@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ReplicationGraphTypes.h"
 #include "Engine/NetDriver.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/WorldSettings.h"
 #include "HAL/UnrealMemory.h"
 #include "Scanner.h"
 
@@ -107,4 +109,19 @@ FCachedDestructInfo::FCachedDestructInfo(FActorDestructionInfo* InDestructionInf
     : DestructionInfo(InDestructionInfo)
 {
     TGameLayout<FVector>::Store(this + 1, InDestructionInfo->GetDestroyedPosition());
+}
+
+bool IsActorValidForReplication(const AActor* In)
+{
+    return !In->IsPendingKillPending() && !(In->GetFlags() & 0x60000000) && !GUObjectArray.IndexToObject((int32)In->GetUniqueID())->IsUnreachable();
+}
+
+UNetReplicationGraphConnection* FConnectionGatherActorListParameters::GetConnectionManager() const
+{
+    return *(UNetReplicationGraphConnection* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32));
+}
+
+FGatheredReplicationActorLists* FConnectionGatherActorListParameters::GetOutGatheredReplicationLists() const
+{
+    return *(FGatheredReplicationActorLists* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32) + 2 * sizeof(void*));
 }

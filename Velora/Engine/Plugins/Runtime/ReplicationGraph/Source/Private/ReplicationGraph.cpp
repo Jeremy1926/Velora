@@ -208,6 +208,80 @@ void UNetReplicationGraphConnection::NotifyAddDormantDestructionInfo(AActor* Act
     Info.PathName = Actor->GetName();
 }
 
+UClass* UReplicationGraphNode_TearOff_ForConnection::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_TearOff_ForConnection"));
+
+    return Class;
+}
+
+TArray<UReplicationGraphNode_TearOff_ForConnection::FTearOffActorInfo>& UReplicationGraphNode_TearOff_ForConnection::GetTearOffActors()
+{
+    static auto TearOffActors = Anchor::Offset(TEXT("UReplicationGraphNode_TearOff_ForConnection::TearOffActors"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
+        .Find("lea rcx, [rdi+0x*]; call 0x*")
+        .Disp();
+
+    return *(TArray<FTearOffActorInfo>*)((uint8*)this + TearOffActors);
+}
+
+FActorRepListRefView& UReplicationGraphNode_TearOff_ForConnection::GetReplicationActorList()
+{
+    return *(FActorRepListRefView*)((uint8*)&GetTearOffActors() + sizeof(TArray<FTearOffActorInfo>));
+}
+
+void UReplicationGraphNode_TearOff_ForConnection::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_TearOff_ForConnection, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_TearOff_ForConnection"), "ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_TearOff_ForConnection::StaticClass()));
+
+    auto& TearOffActors = GetTearOffActors();
+
+    if (TearOffActors.Num() > 0)
+    {
+        auto& ReplicationActorList = GetReplicationActorList();
+        ReplicationActorList.RepList.Reset();
+
+        auto& ActorInfoMap = Params.GetConnectionManager()->GetActorInfoMap();
+
+        for (int32 idx = TearOffActors.Num() - 1; idx >= 0; --idx)
+        {
+            auto& TearOffInfo = TearOffActors[idx];
+            AActor* Actor = TearOffInfo.Actor;
+            const uint32 TearOffFrameNum = TearOffInfo.TearOffFrameNum;
+
+            if (Actor && IsActorValidForReplication(Actor))
+            {
+                if (auto ActorInfoPtr = ActorInfoMap.ActorMap.Find(Actor))
+                {
+                    auto ActorInfo = ActorInfoPtr->Get();
+
+                    if (ActorInfo && ActorInfo->LastRepFrameNum <= TearOffFrameNum && !(ActorInfo->LastRepFrameNum <= 0 && TearOffInfo.bHasReppedOnce))
+                    {
+                        ReplicationActorList.RepList.Add(Actor);
+                        TearOffInfo.bHasReppedOnce = true;
+                        continue;
+                    }
+                }
+            }
+
+            TearOffActors.RemoveAtSwap(idx, 1, false);
+        }
+
+        if (ReplicationActorList.RepList.Num() > 0)
+            Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ReplicationActorList);
+    }
+}
+
 void UReplicationGraphNode::NotifyResetAllNetworkActors()
 {
     static auto NotifyResetAllNetworkActors = Anchor::VirtualFunction<void (*)(UReplicationGraphNode*)>(TEXT("UReplicationGraphNode::NotifyResetAllNetworkActors"))

@@ -140,3 +140,41 @@ struct FCachedDormantDestructInfo
     FNetworkGUID NetGUID;
     FString PathName;
 };
+
+struct FActorRepListRefView
+{
+    TArray<AActor*> RepList;
+};
+
+enum class EActorRepListTypeFlags : uint8
+{
+    Default = 0,
+    FastShared = 1,
+    Max,
+};
+
+struct FGatheredReplicationActorLists
+{
+    void AddReplicationActorList(const FActorRepListRefView& List, EActorRepListTypeFlags Flags = EActorRepListTypeFlags::Default)
+    {
+        if (List.RepList.Num() > 0)
+        {
+            ReplicationLists[(uint32)Flags].Add(&List);
+            CachedNum++;
+        }
+    }
+
+    TArray<const FActorRepListRefView*> ReplicationLists[(uint32)EActorRepListTypeFlags::Max];
+    int32 CachedNum;
+};
+
+bool IsActorValidForReplication(const AActor* In);
+
+class UNetReplicationGraphConnection;
+
+struct FConnectionGatherActorListParameters
+{
+    UNetReplicationGraphConnection* GetConnectionManager() const;
+
+    FGatheredReplicationActorLists* GetOutGatheredReplicationLists() const;
+};

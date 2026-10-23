@@ -24,6 +24,26 @@ public:
     void NotifyResetAllNetworkActors();
 };
 
+class UReplicationGraphNode_TearOff_ForConnection : public UReplicationGraphNode
+{
+public:
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+private:
+    struct FTearOffActorInfo
+    {
+        uint32 TearOffFrameNum;
+        AActor* Actor;
+        bool bHasReppedOnce;
+    };
+
+    TArray<FTearOffActorInfo>& GetTearOffActors();
+
+    FActorRepListRefView& GetReplicationActorList();
+};
+
 class UNetReplicationGraphConnection : public UReplicationConnectionDriver
 {
 public:
