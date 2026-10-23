@@ -28,6 +28,13 @@ void ABuildingWall::Open_Implementation(AController* ControllerInstigator)
         .Find("add [*+0x20], *")
         .Call(3)
         .Find("call [r8+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:OpenActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Call(3)
+        .Find("mov rcx, rax; call [r9+0x*]")
+        .Find("call [r9+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
@@ -77,6 +84,9 @@ void ABuildingWall::SetIsDoorOpen(EDoorOpenStyle InDoorOpenStyle, AFortPawn* Int
         .Find("mov dl, 0x1; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("41 B6 03 4D 8B F8 40 8A FA 48 8B F1 44 38 B1 ? ? ? ? 0F 85")
+        .Start()
         .Get();
 
     SetIsDoorOpen(this, InDoorOpenStyle, InteractingPawn);
