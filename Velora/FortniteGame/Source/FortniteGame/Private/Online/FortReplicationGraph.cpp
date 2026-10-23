@@ -186,7 +186,7 @@ void UFortReplicationGraph::InitDynamicSpatializationSettings()
 {
     static auto PlayerPawnKBytesSec = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.PlayerPawnKBytesSec"));
     static auto AIPawnKBytesSec = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.AIPawnKBytesSec"));
-    static auto MaxAIPerClient = IConsoleManager::Get().FindConsoleVariable(TEXT("Deimos.MaxAIPerClient"));
+    static auto MaxAIPerClient = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.Deimos.MaxAIPerClient"));
 
     using FSpatializationZone = UReplicationGraphNode_DynamicSpatialFrequency::FSpatializationZone;
     using FSettings = UReplicationGraphNode_DynamicSpatialFrequency::FSettings;
