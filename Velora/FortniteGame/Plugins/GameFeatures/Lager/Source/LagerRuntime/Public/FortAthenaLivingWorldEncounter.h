@@ -8,6 +8,7 @@
 #include "UObject/ScriptInterface.h"
 #include "UObject/SoftObjectPtr.h"
 
+class AActor;
 class UDataTable;
 struct FFrame;
 struct FFortAthenaLivingWorldCategory;
@@ -51,6 +52,8 @@ public:
     TArray<FScriptInterface>& GetOriginalPointProviders();
 
     TArray<FScriptInterface>& GetRegisteredPointProviders();
+
+    AActor* GetActorDensityReservoir();
 
     FFortAthenaLivingWorldCategory*& GetCategory();
 

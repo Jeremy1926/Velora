@@ -681,14 +681,22 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(FLivingWorldEventInstance& Ev
     if (auto SpawnedPawns = GetSpawnedPawns())
         SpawnedPawns->Add(SpawnedActor);
 
+    auto EncounterInstance = FLivingWorldEventInstance::GetEncounterInstanceOffset() > 0 ? EventInstance.GetEncounterInstance() : nullptr;
+    auto ActorDensityReservoir = EncounterInstance ? EncounterInstance->GetActorDensityReservoir() : nullptr;
+
     if (auto ActorDensityGrid = GetActorDensityGrid())
+    {
         ActorDensityGrid->AddActor(SpawnedActor, DensityValue, DensityRange >= 0.0f ? DensityRange : FMath::Sqrt(SpawnedActor->GetNetCullDistanceSquared()));
+
+        if (ActorDensityReservoir)
+            ActorDensityGrid->UpdateActorDensityValue(ActorDensityReservoir, FMath::Max(0.0f, ActorDensityGrid->GetActorDensityValue(ActorDensityReservoir) - DensityValue));
+    }
 
     if (PointProviderInterface)
         PointProviderInterface->OnSpawnedActor(SpawnedActor, PositionFromProvider);
 
-    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() > 0 && EventInstance.GetEncounterInstance())
-        EventInstance.GetEncounterInstance()->GetOnActorSpawned().ProcessMulticastDelegate<UObject>(&SpawnedActor);
+    if (EncounterInstance)
+        EncounterInstance->GetOnActorSpawned().ProcessMulticastDelegate<UObject>(&SpawnedActor);
 }
 
 void UFortAthenaLivingWorldManager::ComputeActiveEvents(UDataTable* EventTable, TArray<FFortAthenaLivingWorldEvent*>& ActiveEvents, float& TotalWeight, UFortAthenaLivingWorldEncounterInstance* EncounterInstance)

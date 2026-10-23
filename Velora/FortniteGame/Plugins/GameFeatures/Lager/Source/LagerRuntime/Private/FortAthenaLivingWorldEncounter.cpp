@@ -143,6 +143,13 @@ TArray<FScriptInterface>& UFortAthenaLivingWorldEncounterInstance::GetRegistered
     return *RegisteredPointProviders->ContainerPtrToValuePtr<TArray<FScriptInterface>>(this);
 }
 
+AActor* UFortAthenaLivingWorldEncounterInstance::GetActorDensityReservoir()
+{
+    static auto ActorDensityReservoir = GetClass()->FindPropertyByName(FName(TEXT("ActorDensityReservoir")));
+
+    return *ActorDensityReservoir->ContainerPtrToValuePtr<AActor*>(this);
+}
+
 FFortAthenaLivingWorldCategory*& UFortAthenaLivingWorldEncounterInstance::GetCategory()
 {
     static auto Category = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::Category"))
