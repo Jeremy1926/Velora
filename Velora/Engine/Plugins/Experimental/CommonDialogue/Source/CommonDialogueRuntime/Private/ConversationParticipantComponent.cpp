@@ -109,7 +109,7 @@ void UConversationParticipantComponent::SendClientConversationMessage(const FCon
 {
     AActor* Owner = GetOwner();
 
-    UE_LOG(LogVelora, Display, TEXT("diag conversation message %s owner %s remote role %d participants %d options %d text %s"), *GetNameSafe(this), *GetNameSafe(Owner), Owner ? (int32)Owner->GetRemoteRole() : -1, Payload.Participants.List.Num(), Payload.Options.Num(), *Payload.Message.Text.ToString());
+    UE_LOG(LogVelora, Display, TEXT("diag conversation message %s owner %s remote role %d participants %d options %d"), *GetNameSafe(this), *GetNameSafe(Owner), Owner ? (int32)Owner->GetRemoteRole() : -1, Payload.Participants.List.Num(), Payload.Options.Num());
 
     if (Owner && Owner->GetRemoteRole() == ROLE_AutonomousProxy)
         ClientUpdateConversation(Payload);
