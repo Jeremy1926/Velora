@@ -9,6 +9,7 @@
 #include "Athena/AI/AthenaAISpawner.h"
 #include "Athena/AI/AthenaAISystem.h"
 #include "Athena/AI/FortAthenaAISpawnerData.h"
+#include "Athena/FortAthenaActorSpawnerData.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
@@ -751,7 +752,11 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     {
         auto& ActorDescription = EventData->GetActorDescriptions()[Index];
         auto SpawnerDataClass = GetSpawnerDataClass(ActorDescription);
-        auto ActorClass = SpawnerDataClass ? nullptr : ActorDescription.GetActorClass().LoadSynchronous();
+        auto ActorSpawnerData = SpawnerDataClass ? Cast<UFortAthenaActorSpawnerData>(SpawnerDataClass->GetDefaultObject()) : nullptr;
+        auto ActorClass = ActorSpawnerData ? ActorSpawnerData->GetActorClass() : SpawnerDataClass ? nullptr : ActorDescription.GetActorClass().LoadSynchronous();
+
+        if (ActorSpawnerData)
+            SpawnerDataClass = nullptr;
         FVector Location(ForceInit);
         FRotator Rotation{ 0.0f, 0.0f, 0.0f };
 
@@ -900,9 +905,12 @@ UClass* UFortAthenaLivingWorldManager::GetSpawnerDataClass(FFortAthenaLivingWorl
 
     for (auto LoadedSpawnerDataClass : GetLoadedSpawnerDataClass())
     {
-        auto SpawnerData = LoadedSpawnerDataClass ? Cast<UFortAthenaAISpawnerData>(LoadedSpawnerDataClass->GetDefaultObject()) : nullptr;
+        auto DefaultObject = LoadedSpawnerDataClass ? LoadedSpawnerDataClass->GetDefaultObject() : nullptr;
+        auto AISpawnerData = Cast<UFortAthenaAISpawnerData>(DefaultObject);
+        auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(DefaultObject);
+        auto DescriptorTag = AISpawnerData ? &AISpawnerData->GetDescriptorTag() : ActorSpawnerData ? &ActorSpawnerData->GetDescriptorTag() : nullptr;
 
-        if (SpawnerData && ActorDescription.GetSpawnerDataTagQuery().Matches(SpawnerData->GetDescriptorTag()))
+        if (DescriptorTag && ActorDescription.GetSpawnerDataTagQuery().Matches(*DescriptorTag))
             SpawnerDataClasses.Add(LoadedSpawnerDataClass);
     }
 
