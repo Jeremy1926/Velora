@@ -146,6 +146,26 @@ TArray<FCachedDestructInfo>& UNetReplicationGraphConnection::GetOutOfRangeDestro
     return *(&GetPendingDestructInfoList() - 1);
 }
 
+TArray<UReplicationGraphNode*>& UNetReplicationGraphConnection::GetConnectionGraphNodes()
+{
+    static auto ConnectionGraphNodes = StaticClass()->FindPropertyByName(FName(TEXT("ConnectionGraphNodes")));
+
+    return *ConnectionGraphNodes->ContainerPtrToValuePtr<TArray<UReplicationGraphNode*>>(this);
+}
+
+void UNetReplicationGraphConnection::SetActorNotDormantOnConnection(AActor* InActor)
+{
+    static auto SetActorNotDormantOnConnection = Anchor::Function<void (*)(UNetReplicationGraphConnection*, AActor*)>(TEXT("UNetReplicationGraphConnection::SetActorNotDormantOnConnection"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .Find("mov rdx, [rbp+0x*]; mov rcx, [rbx]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SetActorNotDormantOnConnection(this, InActor);
+}
+
 bool UNetReplicationGraphConnection::PrepareForReplication()
 {
     auto NetConnection = GetNetConnection();
@@ -432,6 +452,18 @@ void UReplicationGraphNode::GatherActorListsForConnection(const FConnectionGathe
         .Get();
 
     GatherActorListsForConnection(this, Params);
+}
+
+void UReplicationGraphNode::PrepareForReplication()
+{
+    static auto PrepareForReplication = Anchor::VirtualFunction<void (*)(UReplicationGraphNode*)>(TEXT("UReplicationGraphNode::PrepareForReplication"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Get();
+
+    PrepareForReplication(this);
 }
 
 void UReplicationGraphNode::NotifyAddNetworkActor(const FNewReplicatedActorInfo& ActorInfo)
@@ -1967,6 +1999,13 @@ TArray<UNetReplicationGraphConnection*>& UReplicationGraph::GetPendingConnection
     return *PendingConnections->ContainerPtrToValuePtr<TArray<UNetReplicationGraphConnection*>>(this);
 }
 
+TArray<UReplicationGraphNode*>& UReplicationGraph::GetPrepareForReplicationNodes()
+{
+    static auto PrepareForReplicationNodes = StaticClass()->FindPropertyByName(FName(TEXT("PrepareForReplicationNodes")));
+
+    return *PrepareForReplicationNodes->ContainerPtrToValuePtr<TArray<UReplicationGraphNode*>>(this);
+}
+
 TArray<UReplicationGraphNode*>& UReplicationGraph::GetGlobalGraphNodes()
 {
     static auto GlobalGraphNodes = StaticClass()->FindPropertyByName(FName(TEXT("GlobalGraphNodes")));
@@ -2071,6 +2110,190 @@ FName UReplicationGraph::GetFastSharedReplicationFuncName()
 void UReplicationGraph::SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName)
 {
     TGameLayout<FName>::Store(&GetFastSharedReplicationChannel() + 1, InFastSharedReplicationFuncName);
+}
+
+int32 UReplicationGraph::ServerReplicateActors(float DeltaSeconds)
+{
+    DETOUR(UReplicationGraph, ServerReplicateActors, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "push rbp; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp")
+        .Optional()
+        .InChildVTables(UReplicationGraph::StaticClass()));
+
+    static auto OutOfRangeDistanceCheckRatio = IConsoleManager::Get().FindConsoleVariable(TEXT("Net.RepGraph.OutOfRangeDistanceCheckRatio"));
+
+    UNetDriver* NetDriver = GetNetDriver();
+    NetDriver->SetReplicationFrame(NetDriver->GetReplicationFrame() + 1);
+
+    const uint32 FrameNum = GetReplicationGraphFrame();
+
+    GetFrameReplicationStats() = FFrameReplicationStats{};
+    GetWasConnectionSaturated() = false;
+
+    TSet<UNetConnection*> ConnectionsToClose;
+
+    auto OnScopeExit = [&]()
+    {
+        GetReplicationGraphFrame()++;
+
+        for (UNetConnection* ConnectionToClose : ConnectionsToClose)
+            ConnectionToClose->Close();
+    };
+
+    for (UReplicationGraphNode* Node : GetPrepareForReplicationNodes())
+        Node->PrepareForReplication();
+
+    int32 NumChildrenConnectionsProcessed = 0;
+
+    for (UNetReplicationGraphConnection* ConnectionManager : GetConnections())
+    {
+        if (ConnectionManager->PrepareForReplication() == false)
+            continue;
+
+        FNetViewerArray ConnectionViewers;
+        UNetConnection* const NetConnection = ConnectionManager->GetNetConnection();
+        APlayerController* const PC = NetConnection->GetPlayerController();
+        FPerConnectionActorInfoMap& ConnectionActorInfoMap = ConnectionManager->GetActorInfoMap();
+
+        const bool bReplayConnection = NetConnection->IsReplay();
+
+        if (bReplayConnection && !NetConnection->IsReplayReady())
+            continue;
+
+        ConnectionViewers.Emplace(NetConnection, 0.f);
+
+        if (PC)
+            PC->SendClientAdjustment();
+
+        auto& Children = NetConnection->GetChildren();
+
+        for (int32 ChildIdx = 0; ChildIdx < Children.Num(); ++ChildIdx)
+        {
+            UNetConnection* ChildConnection = Children[ChildIdx];
+
+            if (ChildConnection && ChildConnection->GetPlayerController() && ChildConnection->GetViewTarget())
+            {
+                ChildConnection->GetPlayerController()->SendClientAdjustment();
+                ConnectionViewers.Emplace(ChildConnection, 0.f);
+            }
+        }
+
+        NumChildrenConnectionsProcessed += Children.Num();
+
+        if (bReplayConnection)
+        {
+            for (UNetReplicationGraphConnection* RepGraphConn : GetConnections())
+            {
+                if ((RepGraphConn->GetNetConnection() != NetConnection) && !RepGraphConn->GetNetConnection()->IsReplay() && RepGraphConn->PrepareForReplication())
+                    ConnectionViewers.Emplace(RepGraphConn->GetNetConnection(), 0.f);
+            }
+
+            AddReplayViewers(NetConnection, ConnectionViewers);
+        }
+
+        auto OnConnectionScopeExit = [&]()
+        {
+            NetConnection->SetTickCount(NetConnection->GetTickCount() + 1);
+            GetWasConnectionSaturated() = false;
+        };
+
+        const FReplicationGraphDestructionSettings DestructionSettings(GetDestructInfoMaxDistanceSquared(), OutOfRangeDistanceCheckRatio->GetFloat() * GetDestructInfoMaxDistanceSquared());
+
+        ConnectionManager->GetQueuedBitsForActorDiscovery() = 0;
+
+        FGatheredReplicationActorLists GatheredReplicationListsForConnection{};
+        TSet<FName> AllVisibleLevelNames;
+
+        ConnectionManager->GetClientVisibleLevelNames(AllVisibleLevelNames);
+
+        const FConnectionGatherActorListParameters Parameters(ConnectionViewers, *ConnectionManager, AllVisibleLevelNames, FrameNum, GatheredReplicationListsForConnection);
+
+        for (UReplicationGraphNode* Node : GetGlobalGraphNodes())
+            Node->GatherActorListsForConnection(Parameters);
+
+        for (UReplicationGraphNode* Node : ConnectionManager->GetConnectionGraphNodes())
+            Node->GatherActorListsForConnection(Parameters);
+
+        ConnectionManager->UpdateGatherLocationsForConnection(ConnectionViewers, DestructionSettings);
+
+        if (GatheredReplicationListsForConnection.CachedNum == 0)
+        {
+            OnConnectionScopeExit();
+            OnScopeExit();
+
+            return 0;
+        }
+
+        ReplicateActorListsForConnections_Default(ConnectionManager, GatheredReplicationListsForConnection, ConnectionViewers);
+        ReplicateActorListsForConnections_FastShared(ConnectionManager, GatheredReplicationListsForConnection, ConnectionViewers);
+
+        for (const auto& Pair : ConnectionActorInfoMap.ChannelMap)
+        {
+            UActorChannel* Channel = Pair.Key;
+            FConnectionReplicationActorInfo& ConnectionActorInfo = *Pair.Value.Get();
+
+            if (Channel->GetClosing())
+                continue;
+            else if (ConnectionActorInfo.Channel->GetClosing())
+                continue;
+
+            if (ConnectionActorInfo.ActorChannelCloseFrameNum > 0 && ConnectionActorInfo.ActorChannelCloseFrameNum <= FrameNum)
+            {
+                AActor* Actor = Channel->GetActor();
+
+                if (Actor)
+                {
+                    if (Actor->IsNetStartupActor())
+                        continue;
+
+                    ConnectionActorInfo.Channel->Close(EChannelCloseReason::Relevancy);
+                    ConnectionManager->SetActorNotDormantOnConnection(Actor);
+                }
+            }
+        }
+
+        ConnectionManager->ReplicateDestructionInfos(ConnectionViewers, DestructionSettings.DestructInfoMaxDistanceSquared);
+        ConnectionManager->ReplicateDormantDestructionInfos();
+
+        if (NetConnection->GetPendingCloseDueToReplicationFailure())
+            ConnectionsToClose.Add(NetConnection);
+
+        OnConnectionScopeExit();
+    }
+
+    GetFrameReplicationStats().NumConnections = GetConnections().Num() + NumChildrenConnectionsProcessed;
+    PostServerReplicateStats(GetFrameReplicationStats());
+
+    OnScopeExit();
+
+    return 0;
+}
+
+void UReplicationGraph::AddReplayViewers(UNetConnection* NetConnection, FNetViewerArray& Viewers)
+{
+    static auto AddReplayViewers = Anchor::VirtualFunction<void (*)(UReplicationGraph*, UNetConnection*, FNetViewerArray&)>(TEXT("UReplicationGraph::AddReplayViewers"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0xA8)
+        .Get();
+
+    AddReplayViewers(this, NetConnection, Viewers);
+}
+
+void UReplicationGraph::PostServerReplicateStats(const FFrameReplicationStats& Stats)
+{
+    static auto PostServerReplicateStats = Anchor::VirtualFunction<void (*)(UReplicationGraph*, const FFrameReplicationStats&)>(TEXT("UReplicationGraph::PostServerReplicateStats"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0xB0)
+        .Get();
+
+    PostServerReplicateStats(this, Stats);
 }
 
 void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicationGraphConnection* ConnectionManager, FGatheredReplicationActorLists& GatheredReplicationListsForConnection, FNetViewerArray& Viewers)

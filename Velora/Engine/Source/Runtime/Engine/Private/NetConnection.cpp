@@ -278,6 +278,49 @@ UNetConnection* UChildConnection::GetParent() const
     return *Parent->ContainerPtrToValuePtr<UNetConnection*>(this);
 }
 
+bool UNetConnection::IsReplayReady() const
+{
+    static auto IsReplayReady = Anchor::VirtualFunction<bool (*)(const UNetConnection*)>(TEXT("UNetConnection::IsReplayReady"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("call [rax+0x*]")
+        .SlotShift(TEXT("/Script/Engine.Default__NetConnection"), -0x8)
+        .Get();
+
+    return IsReplayReady(this);
+}
+
+void UNetConnection::Close()
+{
+    static auto Close = Anchor::Function<void (*)(UNetConnection*)>(TEXT("UNetConnection::Close"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("call [rax+0x*]; lea rcx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rcx+rax*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movdqu [rcx+0x*], xmm0")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rcx+rax*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    Close(this);
+}
+
 UChildConnection* UNetConnection::GetUChildConnection()
 {
     static auto GetUChildConnection = Anchor::VirtualFunction<UChildConnection* (*)(UNetConnection*)>(TEXT("UNetConnection::GetUChildConnection"))

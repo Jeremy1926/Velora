@@ -36,6 +36,8 @@ public:
 
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
 
+    void PrepareForReplication();
+
     void NotifyAddNetworkActor(const FNewReplicatedActorInfo& ActorInfo);
 
     void TearDown();
@@ -324,7 +326,11 @@ public:
 
     TArray<FCachedDestructInfo>& GetOutOfRangeDestroyedActors();
 
+    TArray<UReplicationGraphNode*>& GetConnectionGraphNodes();
+
     bool PrepareForReplication();
+
+    void SetActorNotDormantOnConnection(AActor* InActor);
 
     void GetClientVisibleLevelNames(TSet<FName>& OutLevelNames);
 
@@ -382,6 +388,8 @@ public:
 
     TArray<UReplicationGraphNode*>& GetGlobalGraphNodes();
 
+    TArray<UReplicationGraphNode*>& GetPrepareForReplicationNodes();
+
     TSharedPtr<FReplicationGraphGlobalData>& GetGraphGlobals();
 
     FGlobalActorReplicationInfoMap& GetGlobalActorReplicationInfoMap();
@@ -417,6 +425,12 @@ public:
     uint32& GetGlobalActorChannelFrameNumTimeout();
 
     FPrioritizedRepList& GetPrioritizedReplicationList();
+
+    int32 ServerReplicateActors(float DeltaSeconds);
+
+    void AddReplayViewers(UNetConnection* NetConnection, FNetViewerArray& Viewers);
+
+    void PostServerReplicateStats(const FFrameReplicationStats& Stats);
 
     FFrameReplicationStats& GetFrameReplicationStats();
 

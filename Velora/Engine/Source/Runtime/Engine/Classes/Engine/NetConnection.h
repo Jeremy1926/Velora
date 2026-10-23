@@ -53,6 +53,10 @@ public:
 
     bool IsReplay() const;
 
+    bool IsReplayReady() const;
+
+    void Close();
+
     AActor*& GetRepContextActor();
 
     ULevel*& GetRepContextLevel();

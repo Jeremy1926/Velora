@@ -321,6 +321,36 @@ bool IsActorValidForReplicationGather(const AActor* In)
     return In && IsActorValidForReplication(In) && In->GetIsReplicated() && !In->GetTearOff() && !(In->GetNetDormancy() == DORM_Initial && In->IsNetStartupActor());
 }
 
+FConnectionGatherActorListParameters::FConnectionGatherActorListParameters(FNetViewerArray& InViewers, UNetReplicationGraphConnection& InConnectionManager, TSet<FName>& InClientVisibleLevelNamesRef, uint32 InReplicationFrameNum, FGatheredReplicationActorLists& InOutGatheredReplicationLists)
+{
+    const int32 ViewerSize = FNetViewer::GetTypeSize();
+    const int32 NumViewers = InViewers.Num();
+    auto Header = Storage + 4 * ViewerSize;
+    auto& SecondaryData = *(uint8**)Header;
+
+    SecondaryData = NumViewers > 4 ? (uint8*)FMemory::Realloc(nullptr, NumViewers * ViewerSize) : nullptr;
+    *(int32*)(Header + sizeof(void*)) = NumViewers;
+    *(int32*)(Header + sizeof(void*) + sizeof(int32)) = NumViewers > 4 ? NumViewers : 4;
+
+    if (NumViewers > 0)
+        memcpy(SecondaryData ? SecondaryData : Storage, &InViewers[0], NumViewers * ViewerSize);
+
+    *(UNetReplicationGraphConnection**)(Header + sizeof(void*) + 2 * sizeof(int32)) = &InConnectionManager;
+    *(uint32*)(Header + sizeof(void*) + 2 * sizeof(int32) + sizeof(void*)) = InReplicationFrameNum;
+    *(FGatheredReplicationActorLists**)(Header + sizeof(void*) + 2 * sizeof(int32) + 2 * sizeof(void*)) = &InOutGatheredReplicationLists;
+    *(TSet<FName>**)(Header + sizeof(void*) + 2 * sizeof(int32) + 3 * sizeof(void*)) = &InClientVisibleLevelNamesRef;
+
+    TGameLayout<FName>::Store(Header + sizeof(void*) + 2 * sizeof(int32) + 4 * sizeof(void*), FName(NAME_None));
+}
+
+FConnectionGatherActorListParameters::~FConnectionGatherActorListParameters()
+{
+    auto SecondaryData = *(uint8**)(Storage + 4 * FNetViewer::GetTypeSize());
+
+    if (SecondaryData)
+        FMemory::Free(SecondaryData);
+}
+
 int32 FConnectionGatherActorListParameters::GetNumViewers() const
 {
     return *(const int32*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*));

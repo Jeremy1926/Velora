@@ -450,6 +450,14 @@ class UNetReplicationGraphConnection;
 
 struct FConnectionGatherActorListParameters
 {
+    FConnectionGatherActorListParameters(FNetViewerArray& InViewers, UNetReplicationGraphConnection& InConnectionManager, TSet<FName>& InClientVisibleLevelNamesRef, uint32 InReplicationFrameNum, FGatheredReplicationActorLists& InOutGatheredReplicationLists);
+
+    ~FConnectionGatherActorListParameters();
+
+    FConnectionGatherActorListParameters(const FConnectionGatherActorListParameters&) = delete;
+
+    FConnectionGatherActorListParameters& operator=(const FConnectionGatherActorListParameters&) = delete;
+
     int32 GetNumViewers() const;
 
     const FNetViewer& GetViewer(int32 Index) const;
@@ -461,6 +469,9 @@ struct FConnectionGatherActorListParameters
     FGatheredReplicationActorLists* GetOutGatheredReplicationLists() const;
 
     bool CheckClientVisibilityForLevel(const FName& StreamingLevelName) const;
+
+private:
+    alignas(16) uint8 Storage[0x200];
 };
 
 struct FStreamingLevelActorListCollection
