@@ -12,6 +12,20 @@ typedef TArray<FDelegateBase> TInvocationList;
 template<typename ObjectPtrType>
 class FMulticastDelegateBase
 {
+public:
+    bool IsBoundToObject(const void* InUserObject) const
+    {
+        for (const auto& DelegateBaseRef : InvocationList)
+        {
+            auto DelegateInstance = DelegateBaseRef.GetDelegateInstanceProtected();
+
+            if (DelegateInstance && IDelegateInstance::HasSameObject(DelegateInstance, InUserObject))
+                return true;
+        }
+
+        return false;
+    }
+
 protected:
     inline FMulticastDelegateBase()
         : CompactionThreshold(2)

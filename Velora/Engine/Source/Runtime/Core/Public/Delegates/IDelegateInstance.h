@@ -119,6 +119,11 @@ public:
         return WithLayout(Instance, [](auto Interface, auto) { return Interface->IsCompactable(); });
     }
 
+    static bool HasSameObject(const void* Instance, const void* InUserObject)
+    {
+        return WithLayout(Instance, [&](auto Interface, auto) { return Interface->HasSameObject(InUserObject); });
+    }
+
     static bool IsSafeToExecute(const void* Instance)
     {
         return WithLayout(Instance, [](auto Interface, auto) { return Interface->IsSafeToExecute(); });

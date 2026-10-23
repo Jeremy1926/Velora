@@ -97,6 +97,8 @@ public:
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
 
+    void RouteAddNetworkActorToNodes(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo);
+
     void InitGlobalActorClassSettings();
 
     void InitGlobalGraphNodes();
@@ -121,6 +123,16 @@ private:
     bool ConditionalInitClassReplicationInfo(UClass* ReplicatedClass, FClassReplicationInfo& ClassInfo);
 
     void InitClassReplicationInfo(FClassReplicationInfo& Info, UClass* Class, bool bSpatialize);
+
+    EClassRepNodeMapping GetMappingPolicy(UClass* Class, AActor* Actor);
+
+    EClassRepNodeMapping GetInstanceDynamicRepNodeMapping(AActor* Actor);
+
+    void AddRelevantToAllConnections(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo);
+
+    void AddRelevantToAllInsideFortVolume(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo);
+
+    void OnAlwaysRelevantStreamingActorDormancyFlush(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo);
 
     void SetAllSquadNodesEnabled(bool bEnabled);
 

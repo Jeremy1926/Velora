@@ -173,6 +173,12 @@ public:
 
     void PrepareForReplication();
 
+    void AddActor_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo);
+
+    void AddActor_Dynamic(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo);
+
+    void AddActor_Dormancy(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo);
+
     void AddActorInternal_Static_Implementation(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
 
     void PutStaticActorIntoCell(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
@@ -190,6 +196,11 @@ public:
     uint8* GetSpatialBias();
 
     void AddToClassRebuildDenyList(UClass* Class);
+
+protected:
+    void AddActorInternal_Dynamic(const FNewReplicatedActorInfo& ActorInfo);
+
+    void AddActorInternal_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
 
 private:
     struct FPlayerGridCellInformation

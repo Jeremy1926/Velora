@@ -103,6 +103,18 @@ uint8* FGlobalActorReplicationInfo::GetFastSharedReplicationFunc()
     return (uint8*)GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFunc);
 }
 
+FGlobalActorReplicationEvents& FGlobalActorReplicationInfo::GetEvents()
+{
+    static auto DormancyFlush = Anchor::Offset(TEXT("FGlobalActorReplicationEvents::DormancyFlush"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .Find("movdqa xmm0, [0x*]; lea rdx, [rbx+0x*]")
+        .Find("lea rdx, [rbx+0x*]")
+        .Disp();
+
+    return *(FGlobalActorReplicationEvents*)((uint8*)this + DormancyFlush - offsetof(FGlobalActorReplicationEvents, DormancyFlush));
+}
+
 FName FGlobalActorReplicationInfo::GetFastSharedReplicationFuncName() const
 {
     return TGameLayout<FName>::Load(GetSettings() + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, FastSharedReplicationFuncName) : offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFuncName)));

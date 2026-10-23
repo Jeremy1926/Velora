@@ -3,6 +3,8 @@
 #include "Containers/Map.h"
 #include "Containers/Set.h"
 #include "Containers/UnrealString.h"
+#include "Delegates/Delegate.h"
+#include "Engine/EngineTypes.h"
 #include "Math/UnrealMathUtility.h"
 #include "Math/Vector.h"
 #include "Misc/NetworkGuid.h"
@@ -152,6 +154,17 @@ struct FFastSharedReplicationInfo
     }
 };
 
+struct FGlobalActorReplicationInfo;
+
+DECLARE_MULTICAST_DELEGATE_FourParams(FNotifyActorChangeDormancy, AActor*, FGlobalActorReplicationInfo&, ENetDormancy, ENetDormancy);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FNotifyActorFlushDormancy, AActor*, FGlobalActorReplicationInfo&);
+
+struct FGlobalActorReplicationEvents
+{
+    FNotifyActorChangeDormancy DormancyChange;
+    FNotifyActorFlushDormancy DormancyFlush;
+};
+
 struct FGlobalActorReplicationInfo
 {
     uint16 GetReplicationPeriodFrame() const;
@@ -189,6 +202,8 @@ struct FGlobalActorReplicationInfo
     FName GetFastSharedReplicationFuncName() const;
 
     FFastSharedReplicationInfo*& GetFastSharedReplicationInfo();
+
+    FGlobalActorReplicationEvents& GetEvents();
 
 private:
     const uint8* GetSettings() const;

@@ -7,6 +7,7 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Containers/Set.h"
 #include "Containers/UnrealString.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
@@ -292,6 +293,50 @@ void UFortReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnect
 
     AddConnectionGraphNode(AlwaysRelevantConnectionNode, ConnectionManager);
     AddConnectionGraphNode(ConnectionManager->GetNetConnection()->IsReplay() ? GetReplayPlayerStateLimiterNode() : GetPlayerStateLimiterNode(), ConnectionManager);
+}
+
+void UFortReplicationGraph::RouteAddNetworkActorToNodes(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo)
+{
+    DETOUR(UFortReplicationGraph, RouteAddNetworkActorToNodes, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x48)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    const auto Policy = GetMappingPolicy(ActorInfo.Class, ActorInfo.Actor);
+
+    if (Policy >= EClassRepNodeMapping::Spatialize_Static)
+    {
+        auto RootGridNode = GetRootGridNode();
+
+        if (Policy == EClassRepNodeMapping::Spatialize_Static)
+            RootGridNode->AddActor_Static(ActorInfo, GlobalInfo);
+        else if (Policy == EClassRepNodeMapping::Spatialize_Dynamic)
+            RootGridNode->AddActor_Dynamic(ActorInfo, GlobalInfo);
+        else if (Policy == EClassRepNodeMapping::Spatialize_Dormancy)
+            RootGridNode->AddActor_Dormancy(ActorInfo, GlobalInfo);
+    }
+    else if (Policy == EClassRepNodeMapping::RelevantAllConnections)
+    {
+        AddRelevantToAllConnections(ActorInfo, GlobalInfo);
+    }
+    else if (Policy == EClassRepNodeMapping::RelevantAllInsideFortVolume)
+    {
+        AddRelevantToAllInsideFortVolume(ActorInfo, GlobalInfo);
+    }
+    else if (Policy == EClassRepNodeMapping::Custom)
+    {
+        auto NodePtr = GetClassToNodetoRouteTo().Find(ActorInfo.Class);
+
+        if (NodePtr && *NodePtr)
+            (*NodePtr)->NotifyAddNetworkActor(ActorInfo);
+    }
+
+    if (auto LiveSpectatorRelevancyNode = GetLiveSpectatorRelevancyNode())
+        LiveSpectatorRelevancyNode->NotifyAddNetworkActor(ActorInfo);
 }
 
 void UFortReplicationGraph::InitGlobalActorClassSettings()
@@ -758,6 +803,81 @@ void UFortReplicationGraph::InitClassReplicationInfo(FClassReplicationInfo& Info
         Info.SetCullDistanceSquared(ActorCDO->GetNetCullDistanceSquared());
 
     Info.ReplicationPeriodFrame = GetReplicationPeriodFrameForFrequency(ActorCDO->GetNetUpdateFrequency());
+}
+
+EClassRepNodeMapping UFortReplicationGraph::GetMappingPolicy(UClass* Class, AActor* Actor)
+{
+    auto Policy = GetClassRepNodePolicies().GetChecked(Class);
+
+    if (Policy == EClassRepNodeMapping::Instance_Dynamic)
+        Policy = GetInstanceDynamicRepNodeMapping(Actor);
+
+    return Policy;
+}
+
+EClassRepNodeMapping UFortReplicationGraph::GetInstanceDynamicRepNodeMapping(AActor* Actor)
+{
+    static auto GetInstanceDynamicRepNodeMapping = Anchor::Function<EClassRepNodeMapping (*)(UFortReplicationGraph*, AActor*)>(TEXT("UFortReplicationGraph::GetInstanceDynamicRepNodeMapping"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("cmp eax, 0x7; jnz 0x*; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return GetInstanceDynamicRepNodeMapping(this, Actor);
+}
+
+void UFortReplicationGraph::AddRelevantToAllConnections(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo)
+{
+    if (ActorInfo.StreamingLevelName == NAME_None)
+    {
+        GetAlwaysRelevantNode()->NotifyAddNetworkActor(ActorInfo);
+
+        return;
+    }
+
+    GetAlwaysRelevantStreamingLevelActors().FindOrAdd(ActorInfo.StreamingLevelName).RepList.Add(ActorInfo.Actor);
+
+    OnAlwaysRelevantStreamingActorDormancyFlush(ActorInfo.Actor, GlobalInfo);
+
+    auto& DormancyFlush = GlobalInfo.GetEvents().DormancyFlush;
+
+    if (!DormancyFlush.IsBoundToObject(this))
+        DormancyFlush.AddUObject(this, &UFortReplicationGraph::OnAlwaysRelevantStreamingActorDormancyFlush);
+}
+
+void UFortReplicationGraph::AddRelevantToAllInsideFortVolume(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo)
+{
+    AddRelevantToAllConnections(ActorInfo, GlobalInfo);
+}
+
+void UFortReplicationGraph::OnAlwaysRelevantStreamingActorDormancyFlush(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo)
+{
+    FNewReplicatedActorInfo ActorInfo(Actor);
+
+    if (ActorInfo.StreamingLevelName == NAME_None)
+        return;
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (!ConnectionManager)
+            continue;
+
+        TSet<FName> AllVisibleLevelNames;
+        ConnectionManager->GetClientVisibleLevelNames(AllVisibleLevelNames);
+
+        if (!AllVisibleLevelNames.Contains(ActorInfo.StreamingLevelName))
+            continue;
+
+        for (auto Node : ConnectionManager->GetConnectionGraphNodes())
+        {
+            if (auto AlwaysRelevantNode = Cast<UFortReplicationGraphNode_AlwaysRelevant_ForConnection>(Node))
+                AlwaysRelevantNode->OnClientLevelVisibilityAdd(ActorInfo.StreamingLevelName, nullptr);
+        }
+    }
 }
 
 void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)
