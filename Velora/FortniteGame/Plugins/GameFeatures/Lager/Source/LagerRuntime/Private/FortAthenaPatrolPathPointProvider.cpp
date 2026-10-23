@@ -78,13 +78,73 @@ bool AFortAthenaPatrolPathPointProvider::IsEnabled(const FFortAthenaLivingWorldP
 bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, FVector& OutPosition, FRotator& OutRotation) const
 {
     DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook(static_cast<bool (AFortAthenaPatrolPathPointProvider::*)(const FFortAthenaLivingWorldPointProviderFilterRules&, FVector&, FRotator&) const>(&AFortAthenaPatrolPathPointProvider::GetValidLocation))
-        .If(!IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
+        .If(!IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius() && !FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules())
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("cmp byte ptr [*+0x1], 0x0; jz 0x*; lea rcx, [*-0x*]; mov rax, [rcx]; call [rax+0x*]")
         .Optional()
         .Inline());
+    DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook(static_cast<bool (AFortAthenaPatrolPathPointProvider::*)(const FFortAthenaLivingWorldPointProviderFilterRules&, FVector&, FRotator&) const>(&AFortAthenaPatrolPathPointProvider::GetValidLocation))
+        .If(FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() && !IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Optional()
+        .InInterfaceVTables(StaticClass(), IFortAthenaLivingWorldPointProviderInterface::StaticClass(), "sub rsp, 0x28; cmp qword ptr [rcx+0x*], 0x0; jz 0x*; add rcx, 0x*; call 0x*; xor al, al*"));
+
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+
+    auto PointProvider = (const AFortAthenaPatrolPathPointProvider*)((const uint8*)this - PointerOffset);
+    auto GameState = PointProvider->GetCachedGameState();
+    auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
+
+    if (FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules())
+    {
+        const AActor* SpawnPoint = PointProvider;
+
+        if (!GameState)
+            return false;
+
+        if (PointProvider->GetbSpawnOnPatrolPath())
+        {
+            auto PatrolPath = PointProvider->GetRuntimePatrolPath();
+
+            if (!PatrolPath)
+                return false;
+
+            static auto PatrolPoints = PatrolPath->GetClass()->FindPropertyByName(FName(TEXT("PatrolPoints")));
+            static auto bUseRandomStartupPatrolPoint = PatrolPath->GetClass()->FindPropertyByName(FName(TEXT("bUseRandomStartupPatrolPoint")));
+            auto& Points = *PatrolPoints->ContainerPtrToValuePtr<TArray<AActor*>>(PatrolPath);
+
+            if (Points.Num() <= 0)
+                return false;
+
+            SpawnPoint = Points[*bUseRandomStartupPatrolPoint->ContainerPtrToValuePtr<bool>(PatrolPath) ? FMath::RandHelper(Points.Num()) : 0];
+
+            if (!SpawnPoint)
+                return false;
+        }
+
+        const FVector Location = SpawnPoint->GetActorLocation();
+
+        if (PointFilter.GetbOnlyInSafeZone() && GameState->GetSafeZoneState() != EFortSafeZoneState::None)
+        {
+            const FVector SafeZoneCenter = GameState->GetSafeZoneCenter();
+            const float SafeZoneRadius = GameState->GetSafeZoneRadius();
+
+            if ((SafeZoneCenter.X - Location.X) * (SafeZoneCenter.X - Location.X) + (SafeZoneCenter.Y - Location.Y) * (SafeZoneCenter.Y - Location.Y) > SafeZoneRadius * SafeZoneRadius)
+                return false;
+        }
+
+        if (PointFilter.GetbCheckForActorDensity() && (!LivingWorldManager || LivingWorldManager->GetActorDensityBudget(Location, 0.0f) <= 0))
+            return false;
+
+        OutPosition = Location;
+        OutRotation = SpawnPoint->GetActorRotation();
+
+        return true;
+    }
 
     if (!PointFilter.GetbCheckForActorDensity())
         return Original(PointFilter, OutPosition, OutRotation);
@@ -94,13 +154,6 @@ bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivin
 
     if (!Original(LocationFilter, OutPosition, OutRotation))
         return false;
-
-    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
-    static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
-
-    auto PointProvider = (const AFortAthenaPatrolPathPointProvider*)((const uint8*)this - PointerOffset);
-    auto GameState = PointProvider->GetCachedGameState();
-    auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
 
     return LivingWorldManager && LivingWorldManager->GetActorDensityBudget(OutPosition, 0.0f) > 0;
 }
@@ -255,6 +308,13 @@ bool AFortAthenaPatrolPathPointProvider::GetbStartEnabled() const
     static auto bStartEnabled = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bStartEnabled")));
 
     return bStartEnabled && bStartEnabled->GetPropertyValue_InContainer(this);
+}
+
+bool AFortAthenaPatrolPathPointProvider::GetbSpawnOnPatrolPath() const
+{
+    static auto bSpawnOnPatrolPath = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bSpawnOnPatrolPath")));
+
+    return bSpawnOnPatrolPath && bSpawnOnPatrolPath->GetPropertyValue_InContainer(this);
 }
 
 bool AFortAthenaPatrolPathPointProvider::GetbDisableOnSuccessfulSpawn() const

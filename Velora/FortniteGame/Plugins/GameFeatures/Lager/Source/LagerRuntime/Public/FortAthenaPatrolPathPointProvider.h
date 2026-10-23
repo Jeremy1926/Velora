@@ -39,6 +39,8 @@ public:
 
     bool GetbStartEnabled() const;
 
+    bool GetbSpawnOnPatrolPath() const;
+
     bool GetbDisableOnSuccessfulSpawn() const;
 
     float GetRadius() const;
