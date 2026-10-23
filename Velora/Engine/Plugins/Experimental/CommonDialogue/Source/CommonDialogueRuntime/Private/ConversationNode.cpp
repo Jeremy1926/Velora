@@ -35,6 +35,7 @@ const TArray<FGuid>& UConversationNodeWithLinks::GetOutputConnections() const
 FGuid UConversationNodeWithLinks::GetNodeGuid() const
 {
     static auto NodeGUID = StaticClass()->FindPropertyByName(FName(TEXT("NodeGUID")));
+    static auto Compiled_NodeGUID = UConversationNode::StaticClass()->FindPropertyByName(FName(TEXT("Compiled_NodeGUID")));
 
-    return *NodeGUID->ContainerPtrToValuePtr<FGuid>(this);
+    return *(NodeGUID ? NodeGUID : Compiled_NodeGUID)->ContainerPtrToValuePtr<FGuid>(this);
 }
