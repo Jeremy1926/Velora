@@ -233,16 +233,30 @@ void AFortAthenaPatrolPathPointProvider::EnablePointProvider()
 {
     DETOUR(AFortAthenaPatrolPathPointProvider, EnablePointProvider, Anchor::Hook()
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
+        .Is("xor eax, eax; cmp [rdx+0x20], rax; setnz al; add rcx, 0x*; add [rdx+0x20], rax; mov rax, [rcx]; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
         .Optional()
         .Find("jmp *")
         .Is("jmp 0x*")
         .Target()
         .Inline());
 
+    static auto bInterfaceEntry = Anchor::Exists()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaPatrolPathPointProvider:EnablePointProvider"))
+        .Is("xor eax, eax; cmp [rdx+0x20], rax; setnz al; add rcx, 0x*; add [rdx+0x20], rax; mov rax, [rcx]; jmp [rax+0x*]")
+        .Get();
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto PointerOffset = bInterfaceEntry ? (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject : 0;
+
     Original();
 
-    if (GetAssociatedPatrolPath())
-        UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
+    auto PointProvider = (AFortAthenaPatrolPathPointProvider*)((uint8*)this - PointerOffset);
+
+    if (PointProvider->GetAssociatedPatrolPath())
+        UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(PointProvider);
 }
 
 void AFortAthenaPatrolPathPointProvider::DisablePointProvider()
