@@ -21,27 +21,27 @@ public:
 
     FConversationParticipants GetParticipantsCopy() const
     {
-        return Participants;
+        return GetParticipants();
     }
 
     const FConversationParticipantEntry* GetParticipant(const FGameplayTag& ParticipantTag) const
     {
-        return Participants.GetParticipant(ParticipantTag);
+        return GetParticipants().GetParticipant(ParticipantTag);
     }
 
     const FConversationChoiceReference& GetCurrentChoiceReference() const
     {
-        return CurrentBranchPoint.ClientChoice.ChoiceReference;
+        return GetCurrentBranchPoint().ClientChoice.ChoiceReference;
     }
 
     FConversationNodeHandle GetCurrentNodeHandle() const
     {
-        return CurrentBranchPoint.GetNodeHandle();
+        return GetCurrentBranchPoint().GetNodeHandle();
     }
 
     const TArray<FClientConversationOptionEntry>& GetCurrentUserConversationChoices() const
     {
-        return CurrentUserChoices;
+        return GetCurrentUserChoices();
     }
 
     void ServerRemoveParticipant(FGameplayTag ParticipantID);
@@ -81,14 +81,25 @@ private:
 
     void OnCurrentConversationNodeModified();
 
-    FConversationParticipants Participants;
-    FGameplayTag StartingEntryGameplayTag;
-    FConversationBranchPoint StartingBranchPoint;
-    FConversationBranchPoint CurrentBranchPoint;
-    TArray<FCheckpoint> ClientBranchPoints;
-    TArray<FConversationBranchPoint> CurrentBranchPoints;
-    TArray<FClientConversationOptionEntry> CurrentUserChoices;
-    TArray<FConversationChoiceReference> ScopeStack;
-    FRandomStream ConversationRNG;
-    bool bConversationStarted;
+    uint8* GetLayoutMember(int32 OldLayoutOffset, int32 NewLayoutOffset) const;
+
+    FConversationParticipants& GetParticipants() const;
+
+    FGameplayTag& GetStartingEntryGameplayTag() const;
+
+    FConversationBranchPoint& GetStartingBranchPoint() const;
+
+    FConversationBranchPoint& GetCurrentBranchPoint() const;
+
+    TArray<FCheckpoint>& GetClientBranchPoints() const;
+
+    TArray<FConversationBranchPoint>& GetCurrentBranchPoints() const;
+
+    TArray<FClientConversationOptionEntry>& GetCurrentUserChoices() const;
+
+    TArray<FConversationChoiceReference>& GetScopeStack() const;
+
+    FRandomStream& GetConversationRNG() const;
+
+    bool& GetbConversationStarted() const;
 };

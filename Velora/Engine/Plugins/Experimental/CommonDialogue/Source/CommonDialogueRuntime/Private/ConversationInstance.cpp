@@ -21,23 +21,23 @@ bool UConversationInstance::HasServerLayout()
     auto Class = StaticClass();
     auto ParticipantsProperty = Class ? Class->FindPropertyByName(FName(TEXT("Participants"))) : nullptr;
 
-    return ParticipantsProperty && ParticipantsProperty->GetOffset_ForInternal() == sizeof(UObject) && Class->GetPropertiesSize() == sizeof(UConversationInstance);
+    return ParticipantsProperty && Class->GetPropertiesSize() == (ParticipantsProperty->GetOffset_ForInternal() == sizeof(UObject) ? 0x190 : 0x1A8);
 }
 
 void UConversationInstance::ServerRemoveParticipant(FGameplayTag ParticipantID)
 {
-    for (int32 Index = 0; Index < Participants.List.Num(); Index++)
+    for (int32 Index = 0; Index < GetParticipants().List.Num(); Index++)
     {
-        if (!(Participants.List[Index].ParticipantID == ParticipantID))
+        if (!(GetParticipants().List[Index].ParticipantID == ParticipantID))
             continue;
 
-        if (auto OldParticipant = Participants.List[Index].GetParticipantComponent())
+        if (auto OldParticipant = GetParticipants().List[Index].GetParticipantComponent())
         {
-            if (bConversationStarted)
+            if (GetbConversationStarted())
                 OldParticipant->ServerNotifyConversationEnded(this);
         }
 
-        Participants.List.RemoveAt(Index);
+        GetParticipants().List.RemoveAt(Index);
         break;
     }
 }
@@ -52,9 +52,9 @@ void UConversationInstance::ServerAssignParticipant(FGameplayTag ParticipantID, 
     FConversationParticipantEntry NewEntry;
     NewEntry.ParticipantID = ParticipantID;
     NewEntry.Actor = ParticipantActor;
-    Participants.List.Add(NewEntry);
+    GetParticipants().List.Add(NewEntry);
 
-    if (bConversationStarted)
+    if (GetbConversationStarted())
     {
         if (auto ParticipantComponent = NewEntry.GetParticipantComponent())
             ParticipantComponent->ServerNotifyConversationStarted(this, ParticipantID);
@@ -64,7 +64,7 @@ void UConversationInstance::ServerAssignParticipant(FGameplayTag ParticipantID, 
 void UConversationInstance::ServerStartConversation(FGameplayTag EntryPoint)
 {
     ResetConversationProgress();
-    StartingEntryGameplayTag = EntryPoint;
+    GetStartingEntryGameplayTag() = EntryPoint;
 
     auto ConversationRegistry = UConversationRegistry::GetFromWorld(GetWorld());
 
@@ -84,15 +84,15 @@ void UConversationInstance::ServerStartConversation(FGameplayTag EntryPoint)
         return;
     }
 
-    const int32 StartingIndex = ConversationRNG.RandRange(0, LegalStartingPoints.Num() - 1);
+    const int32 StartingIndex = GetConversationRNG().RandRange(0, LegalStartingPoints.Num() - 1);
 
     FConversationBranchPoint StartingPoint;
     StartingPoint.ClientChoice.ChoiceReference = FConversationChoiceReference(LegalStartingPoints[StartingIndex]);
 
-    StartingBranchPoint = StartingPoint;
-    CurrentBranchPoint = StartingPoint;
+    GetStartingBranchPoint() = StartingPoint;
+    GetCurrentBranchPoint() = StartingPoint;
 
-    const TArray<FConversationParticipantEntry> ParticipantList = Participants.List;
+    const TArray<FConversationParticipantEntry> ParticipantList = GetParticipants().List;
 
     for (const FConversationParticipantEntry& ParticipantEntry : ParticipantList)
     {
@@ -100,14 +100,14 @@ void UConversationInstance::ServerStartConversation(FGameplayTag EntryPoint)
             ParticipantComponent->ServerNotifyConversationStarted(this, ParticipantEntry.ParticipantID);
     }
 
-    bConversationStarted = true;
+    GetbConversationStarted() = true;
 
     TryStartingConversation();
 }
 
 void UConversationInstance::TryStartingConversation()
 {
-    if (!bConversationStarted)
+    if (!GetbConversationStarted())
         return;
 
     OnCurrentConversationNodeModified();
@@ -115,7 +115,7 @@ void UConversationInstance::TryStartingConversation()
 
 void UConversationInstance::ServerAdvanceConversation(const FAdvanceConversationRequest& InChoicePicked)
 {
-    if (!bConversationStarted || !GetCurrentChoiceReference().IsValid())
+    if (!GetbConversationStarted() || !GetCurrentChoiceReference().IsValid())
         return;
 
     TArray<FConversationBranchPoint> CandidateDestinations;
@@ -134,14 +134,14 @@ void UConversationInstance::ServerAdvanceConversation(const FAdvanceConversation
     }
     else
     {
-        if (CurrentBranchPoints.Num() == 0 && ScopeStack.Num() > 0)
+        if (GetCurrentBranchPoints().Num() == 0 && GetScopeStack().Num() > 0)
         {
-            const FConversationChoiceReference ScopeTop = ScopeStack[ScopeStack.Num() - 1];
+            const FConversationChoiceReference ScopeTop = GetScopeStack()[GetScopeStack().Num() - 1];
             ModifyCurrentConversationNode(ScopeTop);
             return;
         }
 
-        for (const FConversationBranchPoint& BranchPoint : CurrentBranchPoints)
+        for (const FConversationBranchPoint& BranchPoint : GetCurrentBranchPoints())
         {
             if (BranchPoint.ClientChoice.IsChoiceAvailable())
                 CandidateDestinations.Add(BranchPoint);
@@ -165,7 +165,7 @@ void UConversationInstance::ServerAdvanceConversation(const FAdvanceConversation
         return;
     }
 
-    const int32 StartingIndex = ConversationRNG.RandRange(0, ValidDestinations.Num() - 1);
+    const int32 StartingIndex = GetConversationRNG().RandRange(0, ValidDestinations.Num() - 1);
     const FConversationBranchPoint TargetChoice = ValidDestinations[StartingIndex];
 
     ModifyCurrentConversationNode(TargetChoice);
@@ -173,9 +173,9 @@ void UConversationInstance::ServerAdvanceConversation(const FAdvanceConversation
 
 void UConversationInstance::ServerAbortConversation()
 {
-    if (bConversationStarted)
+    if (GetbConversationStarted())
     {
-        const TArray<FConversationParticipantEntry> ListCopy = Participants.List;
+        const TArray<FConversationParticipantEntry> ListCopy = GetParticipants().List;
 
         for (const FConversationParticipantEntry& ParticipantEntry : ListCopy)
             ServerRemoveParticipant(ParticipantEntry.ParticipantID);
@@ -183,21 +183,21 @@ void UConversationInstance::ServerAbortConversation()
 
     ResetConversationProgress();
 
-    bConversationStarted = false;
+    GetbConversationStarted() = false;
 }
 
 void UConversationInstance::PauseConversationAndSendClientChoices(const FConversationContext& Context, const FClientConversationMessage& ClientMessage)
 {
     FClientConversationMessagePayload LastMessage;
     LastMessage.Message = ClientMessage;
-    LastMessage.Options = CurrentUserChoices;
+    LastMessage.Options = GetCurrentUserChoices();
     LastMessage.CurrentNode = Context.GetCurrentNodeHandle();
     LastMessage.Participants = GetParticipantsCopy();
 
     FCheckpoint Checkpoint;
-    Checkpoint.ClientBranchPoint = CurrentBranchPoint;
-    Checkpoint.ScopeStack = ScopeStack;
-    ClientBranchPoints.Add(Checkpoint);
+    Checkpoint.ClientBranchPoint = GetCurrentBranchPoint();
+    Checkpoint.ScopeStack = GetScopeStack();
+    GetClientBranchPoints().Add(Checkpoint);
 
     for (const FConversationParticipantEntry& ParticipantEntry : LastMessage.Participants.List)
     {
@@ -208,38 +208,38 @@ void UConversationInstance::PauseConversationAndSendClientChoices(const FConvers
 
 void UConversationInstance::ReturnToLastClientChoice(const FConversationContext& Context)
 {
-    if (ClientBranchPoints.Num() > 1)
+    if (GetClientBranchPoints().Num() > 1)
     {
-        ClientBranchPoints.RemoveAt(ClientBranchPoints.Num() - 1);
+        GetClientBranchPoints().RemoveAt(GetClientBranchPoints().Num() - 1);
 
-        const FCheckpoint Checkpoint = ClientBranchPoints[ClientBranchPoints.Num() - 1];
-        ScopeStack = Checkpoint.ScopeStack;
+        const FCheckpoint Checkpoint = GetClientBranchPoints()[GetClientBranchPoints().Num() - 1];
+        GetScopeStack() = Checkpoint.ScopeStack;
         ModifyCurrentConversationNode(Checkpoint.ClientBranchPoint);
     }
 }
 
 void UConversationInstance::ReturnToCurrentClientChoice(const FConversationContext& Context)
 {
-    if (ClientBranchPoints.Num() > 0)
+    if (GetClientBranchPoints().Num() > 0)
     {
-        const FCheckpoint Checkpoint = ClientBranchPoints[ClientBranchPoints.Num() - 1];
+        const FCheckpoint Checkpoint = GetClientBranchPoints()[GetClientBranchPoints().Num() - 1];
 
-        ClientBranchPoints.RemoveAt(ClientBranchPoints.Num() - 1);
+        GetClientBranchPoints().RemoveAt(GetClientBranchPoints().Num() - 1);
 
-        ScopeStack = Checkpoint.ScopeStack;
+        GetScopeStack() = Checkpoint.ScopeStack;
         ModifyCurrentConversationNode(Checkpoint.ClientBranchPoint);
     }
 }
 
 void UConversationInstance::ReturnToStart(const FConversationContext& Context)
 {
-    const FGameplayTag EntryStartPointGameplayTagCache = StartingEntryGameplayTag;
-    const FConversationBranchPoint StartingBranchPointCache = StartingBranchPoint;
+    const FGameplayTag EntryStartPointGameplayTagCache = GetStartingEntryGameplayTag();
+    const FConversationBranchPoint StartingBranchPointCache = GetStartingBranchPoint();
 
     ResetConversationProgress();
 
-    StartingEntryGameplayTag = EntryStartPointGameplayTagCache;
-    StartingBranchPoint = StartingBranchPointCache;
+    GetStartingEntryGameplayTag() = EntryStartPointGameplayTagCache;
+    GetStartingBranchPoint() = StartingBranchPointCache;
 
     ModifyCurrentConversationNode(StartingBranchPointCache);
 }
@@ -254,22 +254,22 @@ void UConversationInstance::ModifyCurrentConversationNode(const FConversationCho
 
 void UConversationInstance::ModifyCurrentConversationNode(const FConversationBranchPoint& NewBranchPoint)
 {
-    CurrentBranchPoint = NewBranchPoint;
+    GetCurrentBranchPoint() = NewBranchPoint;
 
     for (const FConversationNodeHandle& ReturnScope : NewBranchPoint.ReturnScopeStack)
-        ScopeStack.Add(FConversationChoiceReference(ReturnScope));
+        GetScopeStack().Add(FConversationChoiceReference(ReturnScope));
 
     OnCurrentConversationNodeModified();
 }
 
 void UConversationInstance::ResetConversationProgress()
 {
-    StartingEntryGameplayTag = FGameplayTag();
-    StartingBranchPoint = FConversationBranchPoint();
-    CurrentBranchPoint = FConversationBranchPoint();
-    CurrentBranchPoints.Reset();
-    ClientBranchPoints.Reset();
-    CurrentUserChoices.Reset();
+    GetStartingEntryGameplayTag() = FGameplayTag();
+    GetStartingBranchPoint() = FConversationBranchPoint();
+    GetCurrentBranchPoint() = FConversationBranchPoint();
+    GetCurrentBranchPoints().Reset();
+    GetClientBranchPoints().Reset();
+    GetCurrentUserChoices().Reset();
 }
 
 void UConversationInstance::UpdateNextChoices(const FConversationContext& Context)
@@ -295,27 +295,27 @@ void UConversationInstance::UpdateNextChoices(const FConversationContext& Contex
 
 void UConversationInstance::SetNextChoices(const TArray<FConversationBranchPoint>& InAllChoices)
 {
-    CurrentUserChoices.Reset();
-    CurrentBranchPoints = InAllChoices;
+    GetCurrentUserChoices().Reset();
+    GetCurrentBranchPoints() = InAllChoices;
 
-    for (const FConversationBranchPoint& UserBranchPoint : CurrentBranchPoints)
+    for (const FConversationBranchPoint& UserBranchPoint : GetCurrentBranchPoints())
     {
         if (UserBranchPoint.ClientChoice.ChoiceType != EConversationChoiceType::ServerOnly)
-            CurrentUserChoices.Add(UserBranchPoint.ClientChoice);
+            GetCurrentUserChoices().Add(UserBranchPoint.ClientChoice);
     }
 
-    if ((CurrentBranchPoints.Num() > 0 || ScopeStack.Num() > 0) && CurrentUserChoices.Num() == 0)
+    if ((GetCurrentBranchPoints().Num() > 0 || GetScopeStack().Num() > 0) && GetCurrentUserChoices().Num() == 0)
     {
         FClientConversationOptionEntry DefaultChoice;
         DefaultChoice.ChoiceText = UKismetTextLibrary::Conv_StringToText(FString(TEXT("Continue")));
         DefaultChoice.ChoiceType = EConversationChoiceType::UserChoiceAvailable;
-        CurrentUserChoices.Add(DefaultChoice);
+        GetCurrentUserChoices().Add(DefaultChoice);
     }
 }
 
 const FConversationBranchPoint* UConversationInstance::FindBranchPointFromClientChoice(const FConversationChoiceReference& InChoice) const
 {
-    for (const FConversationBranchPoint& BranchPoint : CurrentBranchPoints)
+    for (const FConversationBranchPoint& BranchPoint : GetCurrentBranchPoints())
     {
         if (BranchPoint.ClientChoice.ChoiceType != EConversationChoiceType::ServerOnly && BranchPoint.ClientChoice == InChoice)
             return &BranchPoint;
@@ -356,8 +356,8 @@ void UConversationInstance::OnCurrentConversationNodeModified()
 
     const FConversationTaskResult TaskResult = TaskNode->ExecuteTaskNodeWithSideEffects(Context);
 
-    if (ScopeStack.Num() > 0 && ScopeStack[ScopeStack.Num() - 1].NodeReference.NodeGUID == TaskNode->GetNodeGuid())
-        ScopeStack.RemoveAt(ScopeStack.Num() - 1);
+    if (GetScopeStack().Num() > 0 && GetScopeStack()[GetScopeStack().Num() - 1].NodeReference.NodeGUID == TaskNode->GetNodeGuid())
+        GetScopeStack().RemoveAt(GetScopeStack().Num() - 1);
 
     UpdateNextChoices(Context);
 
@@ -387,4 +387,63 @@ void UConversationInstance::OnCurrentConversationNodeModified()
     default:
         break;
     }
+}
+
+uint8* UConversationInstance::GetLayoutMember(int32 OldLayoutOffset, int32 NewLayoutOffset) const
+{
+    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
+
+    return (uint8*)this + (Participants->GetOffset_ForInternal() == sizeof(UObject) ? OldLayoutOffset : NewLayoutOffset);
+}
+
+FConversationParticipants& UConversationInstance::GetParticipants() const
+{
+    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
+
+    return *Participants->ContainerPtrToValuePtr<FConversationParticipants>((void*)this);
+}
+
+FGameplayTag& UConversationInstance::GetStartingEntryGameplayTag() const
+{
+    return *(FGameplayTag*)GetLayoutMember(0x38, 0x60);
+}
+
+FConversationBranchPoint& UConversationInstance::GetStartingBranchPoint() const
+{
+    return *(FConversationBranchPoint*)GetLayoutMember(0x40, 0x68);
+}
+
+FConversationBranchPoint& UConversationInstance::GetCurrentBranchPoint() const
+{
+    return *(FConversationBranchPoint*)GetLayoutMember(0xC0, 0xE8);
+}
+
+TArray<UConversationInstance::FCheckpoint>& UConversationInstance::GetClientBranchPoints() const
+{
+    return *(TArray<FCheckpoint>*)GetLayoutMember(0x140, 0x168);
+}
+
+TArray<FConversationBranchPoint>& UConversationInstance::GetCurrentBranchPoints() const
+{
+    return *(TArray<FConversationBranchPoint>*)GetLayoutMember(0x150, 0x178);
+}
+
+TArray<FClientConversationOptionEntry>& UConversationInstance::GetCurrentUserChoices() const
+{
+    return *(TArray<FClientConversationOptionEntry>*)GetLayoutMember(0x160, 0x40);
+}
+
+TArray<FConversationChoiceReference>& UConversationInstance::GetScopeStack() const
+{
+    return *(TArray<FConversationChoiceReference>*)GetLayoutMember(0x170, 0x188);
+}
+
+FRandomStream& UConversationInstance::GetConversationRNG() const
+{
+    return *(FRandomStream*)GetLayoutMember(0x180, 0x198);
+}
+
+bool& UConversationInstance::GetbConversationStarted() const
+{
+    return *(bool*)GetLayoutMember(0x188, 0x1A0);
 }
