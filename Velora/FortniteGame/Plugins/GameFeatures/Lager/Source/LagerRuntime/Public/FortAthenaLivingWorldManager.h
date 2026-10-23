@@ -22,6 +22,7 @@ struct FFortAthenaLivingWorldCategory;
 struct FFortAthenaLivingWorldDensityGrid;
 struct FFortAthenaLivingWorldEvent;
 struct FFortAthenaLivingWorldEventDataActorSpawnDescription;
+struct FFortAthenaLivingWorldPlayerTracker;
 struct FFortAthenaLivingWorldPointProviderFilterRules;
 
 class UFortAthenaLivingWorldManager : public UActorComponent
@@ -207,6 +208,8 @@ public:
     TArray<UClass*>& GetLoadedSpawnerDataClass();
 
     AFortGameStateAthena*& GetCachedGameState();
+
+    FFortAthenaLivingWorldPlayerTracker* GetPlayerTracker();
 
     TArray<AActor*>& GetRuntimePointProviderList();
 

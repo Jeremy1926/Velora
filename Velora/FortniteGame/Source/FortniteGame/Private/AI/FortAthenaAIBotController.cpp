@@ -324,6 +324,13 @@ AFortInventory*& AFortAthenaAIBotController::GetInventory()
     return *Inventory->ContainerPtrToValuePtr<AFortInventory*>(this);
 }
 
+AFortPlayerPawn* AFortAthenaAIBotController::GetPlayerBotPawn() const
+{
+    static auto PlayerBotPawn = StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn")));
+
+    return *PlayerBotPawn->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
+}
+
 UFortAthenaAIBotInventoryItems* AFortAthenaAIBotController::GetStartupInventory() const
 {
     static auto StartupInventory = GetClass()->FindPropertyByName(FName(TEXT("StartupInventory")));

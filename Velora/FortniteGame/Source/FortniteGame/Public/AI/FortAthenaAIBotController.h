@@ -5,6 +5,7 @@
 
 class AFortInventory;
 class AFortPawn;
+class AFortPlayerPawn;
 class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
 class UFortAthenaAIRuntimeParametersComponent;
@@ -54,6 +55,8 @@ public:
     bool GetbAllowUnsupportedItemsInDefaultInventory() const;
 
     AFortInventory*& GetInventory();
+
+    AFortPlayerPawn* GetPlayerBotPawn() const;
 
     UFortAthenaAIRuntimeParametersComponent* GetCachedAIRuntimeParametersComponent() const;
 

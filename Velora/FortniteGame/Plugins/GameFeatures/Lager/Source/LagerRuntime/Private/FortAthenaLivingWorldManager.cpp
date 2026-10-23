@@ -6,6 +6,7 @@
 #include "FortAthenaLivingWorldEncounter.h"
 #include "FortAthenaLivingWorldEvent.h"
 #include "FortAthenaLivingWorldEventData.h"
+#include "FortAthenaLivingWorldPlayerTracker.h"
 #include "FortAthenaLivingWorldPointProviderInterface.h"
 #include "Athena/AI/AthenaAISpawner.h"
 #include "Athena/AI/AthenaAISystem.h"
@@ -248,9 +249,17 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
     if (!World || !Config || NextEventGenerationTime < 0.0f)
         return;
 
+    auto PlayerTracker = GetPlayerTracker();
+
+    if (PlayerTracker)
+        PlayerTracker->UpdateTimeSinceLastRefresh(DeltaTime);
+
     if (World->GetTimeSeconds() >= NextEventGenerationTime)
     {
         NextEventGenerationTime = World->GetTimeSeconds() + Config->GetMinimumEventGenerationInterval().GetValueAtLevel(0.0f);
+
+        if (PlayerTracker && GetCachedGameState())
+            PlayerTracker->RefreshTree(World, GetCachedGameState());
 
         GenerateEvents();
     }
@@ -1192,6 +1201,13 @@ AFortGameStateAthena*& UFortAthenaLivingWorldManager::GetCachedGameState()
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
     return *CachedGameState->ContainerPtrToValuePtr<AFortGameStateAthena*>(this);
+}
+
+FFortAthenaLivingWorldPlayerTracker* UFortAthenaLivingWorldManager::GetPlayerTracker()
+{
+    static auto PlayerTracker = GetClass()->FindPropertyByName(FName(TEXT("PlayerTracker")));
+
+    return PlayerTracker ? PlayerTracker->ContainerPtrToValuePtr<FFortAthenaLivingWorldPlayerTracker>(this) : nullptr;
 }
 
 TArray<AActor*>& UFortAthenaLivingWorldManager::GetRuntimePointProviderList()
