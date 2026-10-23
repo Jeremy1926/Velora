@@ -578,7 +578,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Find("lea *, [0x*]")
         .Target()
         .Log(TEXT("ENGINE_ReceiveBeginPlay"))
-        .Reference("mov rdx, *")
+        .Reference("mov ?dx, *")
         .Start()
         .Log(TEXT("AActor::ReceiveBeginPlay"))
         .Caller()

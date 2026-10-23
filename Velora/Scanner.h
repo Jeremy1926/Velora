@@ -68,7 +68,7 @@ namespace Scanner
 
     inline FCode Event(const TCHAR* FunctionName)
     {
-        return Reference(String(FunctionName).Find("lea rcx, [0x*]").Target(), "mov rdx, *").Start();
+        return Reference(String(FunctionName).Find("lea rcx, [0x*]").Target(), "mov ?dx, *").Start();
     }
 
     inline FCode Exec(const TCHAR* FunctionPath)
