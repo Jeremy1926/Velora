@@ -2,6 +2,7 @@
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
+#include "Misc/EngineVersion.h"
 #include "Net/DataBunch.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -120,6 +121,17 @@ FPacketIdRange UChannel::SendBunch(FOutBunch* Bunch, bool Merge)
     return Result;
 }
 
+int64 UChannel::Close(EChannelCloseReason Reason)
+{
+    static auto Close = Anchor::VirtualFunction<int64 (*)(UChannel*, EChannelCloseReason)>(TEXT("UChannel::Close"))
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Channel"))
+        .Get();
+
+    return Close(this, Reason);
+}
+
 AActor* UActorChannel::GetActor() const
 {
     static auto Actor = GetClass()->FindPropertyByName(FName(TEXT("Actor")));
@@ -178,31 +190,51 @@ void UActorChannel::StartBecomingDormant()
     StartBecomingDormant(this);
 }
 
-bool UActorChannel::ReplicateActor()
+bool UActorChannel::GetSpawnAcked() const
 {
-    static auto ReplicateActor = Anchor::Function<bool (*)(UActorChannel*)>(TEXT("UActorChannel::ReplicateActor"))
+    static auto Actor = GetClass()->FindPropertyByName(FName(TEXT("Actor")));
+
+    return *((uint8_t*)Actor->ContainerPtrToValuePtr<AActor*>(this) + sizeof(AActor*) + sizeof(FNetworkGUID) + sizeof(float) + 2 * sizeof(double)) & 1;
+}
+
+int64 UActorChannel::ReplicateActor()
+{
+    static auto ReplicateActor = Anchor::Function<int64 (*)(UActorChannel*)>(TEXT("UActorChannel::ReplicateActor"))
         .String(TEXT("Replicate %s, bNetInitial: %d, bNetOwner: %d"))
         .Start()
         .Get();
 
-    return ReplicateActor(this);
+    const auto Result = ReplicateActor(this);
+
+    return FEngineVersion::Current().GetMajor() >= 5 ? Result : (uint8)Result;
 }
 
-void UActorChannel::SetChannelActor(AActor* InActor)
+void UActorChannel::SetChannelActor(AActor* InActor, ESetChannelActorFlags Flags)
 {
-    static auto SetChannelActor = Anchor::Function<void (*)(UActorChannel*, AActor*)>(TEXT("UActorChannel::SetChannelActor"))
+    static auto SetChannelActor = Anchor::Function<void (*)(UActorChannel*, AActor*, ESetChannelActorFlags)>(TEXT("UActorChannel::SetChannelActor"))
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .FindCallToString(TEXT("Created channel %i of type %i"))
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("40 55 53 56 57 41 54 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 45 33 E4 48 8D 3D ? ? ? ? 44 89 A5 ? ? ? ? 48 8B D9 48 8B 41 28 45 8B F8 48 8B F2 45 8B F4 48 8B 48 58 48 85 C9 74 ? 4C 39 A1 ? ? ? ? 74 ? 48 85 D2 74")
         .Get();
 
-    SetChannelActor(this, InActor);
+    SetChannelActor(this, InActor, Flags);
 }
 
-void UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo)
+int64 UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo)
 {
+    if (FEngineVersion::Current().GetMajor() >= 5)
+    {
+        static auto SetChannelActorForDestroy = Anchor::Function<int64 (*)(UActorChannel*, FActorDestructionInfo*)>(TEXT("UActorChannel::SetChannelActorForDestroy"))
+            .Pattern("40 55 53 56 57 41 54 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 33 F6 4C 8B F2 F6 41 30 02 4C 8B F9 0F 85 ? ? ? ? 48 8B 41 28 44 8B 80 ? ? ? ? 41 83 E8 02 41 83 F8 01 0F 87")
+            .Get();
+
+        return SetChannelActorForDestroy(this, DestructInfo);
+    }
+
     if (!GetClosing() && (GetConnection()->GetState() == USOCK_Open || GetConnection()->GetState() == USOCK_Pending))
     {
         auto CloseBunch = new FOutBunch(this, 1);
@@ -215,4 +247,6 @@ void UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructInf
 
         delete CloseBunch;
     }
+
+    return 0;
 }

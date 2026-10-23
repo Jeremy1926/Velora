@@ -5,9 +5,16 @@
 class AActor;
 struct FActorDestructionInfo;
 
+enum class ESetChannelActorFlags : uint32
+{
+    None = 0,
+};
+
 class UActorChannel : public UChannel
 {
 public:
+    using UChannel::Close;
+
     AActor* GetActor() const;
 
     double GetRelevantTime() const;
@@ -16,13 +23,15 @@ public:
 
     double GetLastUpdateTime() const;
 
+    bool GetSpawnAcked() const;
+
     void Close();
 
     void StartBecomingDormant();
 
-    bool ReplicateActor();
+    int64 ReplicateActor();
 
-    void SetChannelActor(AActor* InActor);
+    void SetChannelActor(AActor* InActor, ESetChannelActorFlags Flags = ESetChannelActorFlags::None);
 
-    void SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo);
+    int64 SetChannelActorForDestroy(FActorDestructionInfo* DestructInfo);
 };

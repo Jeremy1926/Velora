@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/EngineBaseTypes.h"
 #include "UObject/Object.h"
 #include "UObject/CoreNet.h"
 
@@ -32,4 +33,6 @@ public:
     int32 IsNetReady(bool Saturate);
 
     FPacketIdRange SendBunch(FOutBunch* Bunch, bool Merge);
+
+    int64 Close(EChannelCloseReason Reason);
 };

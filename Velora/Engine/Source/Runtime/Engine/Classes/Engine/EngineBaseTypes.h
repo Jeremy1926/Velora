@@ -3,6 +3,15 @@
 #include "Containers/UnrealString.h"
 #include "Containers/Array.h"
 
+enum class EChannelCloseReason : uint8
+{
+    Destroyed,
+    Dormancy,
+    LevelUnloaded,
+    Relevancy,
+    TearOff,
+};
+
 enum ENetMode
 {
     NM_Standalone,

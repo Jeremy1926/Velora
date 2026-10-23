@@ -208,6 +208,16 @@ UChannel* UNetConnection::CreateChannel(EChannelType Type, bool bOpenedLocally, 
     return CreateChannel(this, Type, bOpenedLocally, ChannelIndex);
 }
 
+UChannel* UNetConnection::CreateChannelByName(const FName& ChName, EChannelCreateFlags CreateFlags, int32 ChIndex)
+{
+    static auto CreateChannelByName = Anchor::Function<UChannel* (*)(UNetConnection*, const FName&, EChannelCreateFlags, int32)>(TEXT("UNetConnection::CreateChannelByName"))
+        .String(TEXT("Created channel %i of type %s"))
+        .Start()
+        .Get();
+
+    return CreateChannelByName(this, ChName, CreateFlags, ChIndex);
+}
+
 void UNetConnection::FlushDormancy(AActor* Actor)
 {
     static auto FlushDormancy = Anchor::VirtualFunction<void (*)(UNetConnection*, AActor*)>(TEXT("UNetConnection::FlushDormancy"))

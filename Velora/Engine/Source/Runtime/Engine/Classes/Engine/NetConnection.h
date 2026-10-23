@@ -15,6 +15,12 @@ class UNetDriver;
 class UPackageMap;
 class UReplicationConnectionDriver;
 
+enum class EChannelCreateFlags : uint32
+{
+    None = (1 << 0),
+    OpenedLocally = (1 << 1),
+};
+
 enum EConnectionState
 {
     USOCK_Invalid = 0,
@@ -65,6 +71,8 @@ public:
     int32 IsNetReady(bool Saturate);
 
     UChannel* CreateChannel(EChannelType Type, bool bOpenedLocally, int32 ChannelIndex = -1);
+
+    UChannel* CreateChannelByName(const FName& ChName, EChannelCreateFlags CreateFlags, int32 ChIndex = -1);
 
     void FlushDormancy(AActor* Actor);
 
