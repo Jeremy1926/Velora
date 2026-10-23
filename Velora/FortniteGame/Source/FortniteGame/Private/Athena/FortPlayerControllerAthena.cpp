@@ -225,6 +225,9 @@ void AFortPlayerControllerAthena::ClientReportPhaseFound(const FString& Phase)
 {
     static auto ClientReportPhaseFound = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerControllerAthena:ClientReportPhaseFound"));
 
+    if (!ClientReportPhaseFound)
+        return;
+
     struct
     {
         FString Phase;
