@@ -76,7 +76,7 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
         return;
     }
 
-    static auto Constructor = Anchor::Function<void (*)(FName*, const WIDECHAR*, EFindName)>(TEXT("FName::FName"))
+    static auto Constructor = Anchor::Optional<void (*)(FName*, const WIDECHAR*, EFindName)>(TEXT("FName::FName"))
         .String(TEXT("OnlineSubsystemUtils"), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
@@ -87,7 +87,59 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
         .Call()
         .Get();
 
-    Constructor(this, Name, FindType);
+    if (Constructor)
+    {
+        Constructor(this, Name, FindType);
+        return;
+    }
+
+    static auto ParseNumber = Anchor::Function<uint32 (*)(const WIDECHAR*, int32&)>(TEXT("FNameHelper::ParseNumber"))
+        .String(TEXT("OnlineSubsystemUtils"), "lea r8, [0x*]; mov edx, *; mov [rsp+0x*], r8")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto MakeWithNumber = Anchor::Function<FName* (*)(FName*, const void*, EFindName, uint32)>(TEXT("FNameHelper::MakeWithNumber"))
+        .String(TEXT("OnlineSubsystemUtils"), "lea r8, [0x*]; mov edx, *; mov [rsp+0x*], r8")
+        .Find("mov r8d, 0x1; movdqa [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    struct
+    {
+        const void* Data;
+        int32 Len;
+        bool bIsWide;
+    } View { Name, 0, false };
+
+    uint32 Chars = 0;
+
+    while (Name && Name[View.Len])
+        Chars |= Name[View.Len++];
+
+    View.bIsWide = (Chars & 0xFFFFFF80) != 0;
+
+    const uint32 InternalNumber = View.Len ? ParseNumber(Name, View.Len) : 0;
+
+    if (!View.Len)
+    {
+        ComparisonIndex = NAME_None;
+        Number = 0;
+        return;
+    }
+
+    ANSICHAR AnsiName[1024];
+
+    if (!View.bIsWide)
+    {
+        for (int32 Index = 0; Index < View.Len && Index < 1024; Index++)
+            AnsiName[Index] = (ANSICHAR)Name[Index];
+
+        View.Data = AnsiName;
+    }
+
+    MakeWithNumber(this, &View, FindType, InternalNumber);
 }
 
 uint32 GetTypeHash(const FName N)
