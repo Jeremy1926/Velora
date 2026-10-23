@@ -19,6 +19,7 @@
 #include "GameFramework/WorldSettings.h"
 #include "Containers/BitArray.h"
 #include "GameFramework/PlayerState.h"
+#include "Items/FortInventory.h"
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Athena/FortPlayerPawnAthena.h"
@@ -549,6 +550,11 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
 
     GetDestructInfoMaxDistanceSquared() = DestructInfoMaxDist->GetFloat() * DestructInfoMaxDist->GetFloat();
 
+    AFortGameModeAthena::GetNotifyNewAIClass().AddUObject(this, &UFortReplicationGraph::OnAIClassAdditionRequest);
+    AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
+    AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
+    AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
+
     GetRPC_Multicast_OpenChannelForClass().Reset();
 
     for (auto& ActorClassSettings : ClassSettings)
@@ -957,6 +963,40 @@ void UFortReplicationGraph::OnAlwaysRelevantStreamingActorAdded(AActor* Actor, F
                 AlwaysRelevantNode->FlushStreamingAlwaysRelevantList(ActorInfo);
         }
     }
+}
+
+void UFortReplicationGraph::OnAIClassAdditionRequest(TSubclassOf<AFortPawn> NewAIClass)
+{
+    if (NewAIClass && ((UClass*)NewAIClass)->IsChildOf(AFortPawn::StaticClass()))
+        UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses().Set(NewAIClass, true);
+}
+
+void UFortReplicationGraph::OnLiveSpectatorJoined(AFortLiveSpectatorController* PC)
+{
+    if (!PC)
+        return;
+
+    auto NetConnection = PC->GetNetConnection();
+
+    if (!NetConnection)
+        return;
+
+    auto ConnectionManager = FindOrAddConnectionManager(NetConnection);
+
+    if (ConnectionManager && GetLiveSpectatorRelevancyNode())
+        AddConnectionGraphNode(GetLiveSpectatorRelevancyNode(), ConnectionManager);
+}
+
+void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)
+{
+    if (ParentActor && Inventory)
+        GetGlobalActorReplicationInfoMap().AddDependentActor(ParentActor, Inventory);
+}
+
+void UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)
+{
+    if (ParentActor && Inventory)
+        GetGlobalActorReplicationInfoMap().RemoveDependentActor(ParentActor, Inventory);
 }
 
 void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)

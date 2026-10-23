@@ -98,6 +98,11 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
     return *(TArray<AActor*>*)((uint8*)this + DependentActorList);
 }
 
+TArray<AActor*>& FGlobalActorReplicationInfo::GetParentActorList()
+{
+    return *(&GetDependentActorList() + 1);
+}
+
 uint8* FGlobalActorReplicationInfo::GetFastSharedReplicationFunc()
 {
     return (uint8*)GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, FastSharedReplicationFunc);
@@ -142,6 +147,36 @@ FFastSharedReplicationInfo*& FGlobalActorReplicationInfo::GetFastSharedReplicati
         .Disp();
 
     return *(FFastSharedReplicationInfo**)((uint8*)this + FastSharedReplicationInfo);
+}
+
+void FGlobalActorReplicationInfoMap::AddDependentActor(AActor* Parent, AActor* Child)
+{
+    if (!Parent || !IsActorValidForReplication(Parent) || !Child || !IsActorValidForReplication(Child))
+        return;
+
+    if (auto ParentInfo = Find(Parent))
+    {
+        if (!ParentInfo->GetDependentActorList().Contains(Child) && IsActorValidForReplicationGather(Child))
+            ParentInfo->GetDependentActorList().Add(Child);
+    }
+
+    if (auto ChildInfo = Find(Child))
+    {
+        if (!ChildInfo->GetParentActorList().Contains(Parent) && IsActorValidForReplicationGather(Parent))
+            ChildInfo->GetParentActorList().Add(Parent);
+    }
+}
+
+void FGlobalActorReplicationInfoMap::RemoveDependentActor(AActor* Parent, AActor* Child)
+{
+    if (!Parent || !Child)
+        return;
+
+    if (auto ParentInfo = Find(Parent))
+        ParentInfo->GetDependentActorList().RemoveSingleSwap(Child);
+
+    if (auto ChildInfo = Find(Child))
+        ChildInfo->GetParentActorList().RemoveSingleSwap(Parent);
 }
 
 void FClassReplicationInfo::SetFastSharedReplicationFuncName(const FName& InFastSharedReplicationFuncName)

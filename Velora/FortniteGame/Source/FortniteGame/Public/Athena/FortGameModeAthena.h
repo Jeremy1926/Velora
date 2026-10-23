@@ -9,6 +9,9 @@ class AFortAthenaAIBotController;
 class AFortAthenaVehicle;
 class AFortPlayerControllerAthena;
 class AFortSafeZoneIndicator;
+class AFortInventory;
+class AFortLiveSpectatorController;
+class AFortPawn;
 class APlayerState;
 class UFortServerBotManagerAthena;
 class UFortWeaponItemDefinition;
@@ -31,6 +34,14 @@ public:
     static UClass* StaticClass();
 
     static TMulticastDelegate<void, AFortGameModeAthena*>& GetNotifyPlaylistDataLoaded();
+
+    static TMulticastDelegate<void, AFortLiveSpectatorController*>& GetNotifyLiveSpectatorJoined();
+
+    static TMulticastDelegate<void, TSubclassOf<AFortPawn>>& GetNotifyNewAIClass();
+
+    static TMulticastDelegate<void, AActor*, AFortInventory*>& GetNotifyAddReplicatedNonPlayerInventory();
+
+    static TMulticastDelegate<void, AActor*, AFortInventory*>& GetNotifyRemoveReplicatedNonPlayerInventory();
 
     void InitGameState();
 

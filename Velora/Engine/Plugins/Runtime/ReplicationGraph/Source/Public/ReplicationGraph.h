@@ -522,6 +522,8 @@ public:
 
     void AddClientConnection(UNetConnection* NetConnection);
 
+    UNetReplicationGraphConnection* FindOrAddConnectionManager(UNetConnection* NetConnection);
+
     void AddNetworkActor(AActor* Actor);
 
     void AddGlobalGraphNode(UReplicationGraphNode* GraphNode);

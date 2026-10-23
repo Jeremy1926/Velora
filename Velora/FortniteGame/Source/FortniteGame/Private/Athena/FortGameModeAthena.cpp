@@ -74,6 +74,69 @@ TMulticastDelegate<void, AFortGameModeAthena*>& AFortGameModeAthena::GetNotifyPl
     return *NotifyPlaylistDataLoaded;
 }
 
+TMulticastDelegate<void, AFortLiveSpectatorController*>& AFortGameModeAthena::GetNotifyLiveSpectatorJoined()
+{
+    static auto NotifyLiveSpectatorJoined = Anchor::Data<TMulticastDelegate<void, AFortLiveSpectatorController*>*>(TEXT("AFortGameModeAthena::NotifyLiveSpectatorJoined"))
+        .String(TEXT("PlayerJoin,%s,%d,%d"))
+        .Start()
+        .Find("mov rdx, rbx; mov [rax+*], rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyLiveSpectatorJoined;
+}
+
+TMulticastDelegate<void, TSubclassOf<AFortPawn>>& AFortGameModeAthena::GetNotifyNewAIClass()
+{
+    static auto NotifyNewAIClass = Anchor::Data<TMulticastDelegate<void, TSubclassOf<AFortPawn>>*>(TEXT("AFortGameModeAthena::NotifyNewAIClass"))
+        .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyNewAIClass;
+}
+
+TMulticastDelegate<void, AActor*, AFortInventory*>& AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory()
+{
+    static auto NotifyAddReplicatedNonPlayerInventory = Anchor::Data<TMulticastDelegate<void, AActor*, AFortInventory*>*>(TEXT("AFortGameModeAthena::NotifyAddReplicatedNonPlayerInventory"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyAddReplicatedNonPlayerInventory;
+}
+
+TMulticastDelegate<void, AActor*, AFortInventory*>& AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory()
+{
+    static auto NotifyRemoveReplicatedNonPlayerInventory = Anchor::Data<TMulticastDelegate<void, AActor*, AFortInventory*>*>(TEXT("AFortGameModeAthena::NotifyRemoveReplicatedNonPlayerInventory"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8)
+        .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyRemoveReplicatedNonPlayerInventory;
+}
+
 void AFortGameModeAthena::FinishWorldInitialization()
 {
     DETOUR(AFortGameModeAthena, FinishWorldInitialization, Anchor::Hook()

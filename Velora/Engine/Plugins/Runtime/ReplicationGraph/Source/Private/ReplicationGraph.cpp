@@ -3686,6 +3686,29 @@ void UReplicationGraph::InitializeForWorld(UWorld* World)
     }
 }
 
+UNetReplicationGraphConnection* UReplicationGraph::FindOrAddConnectionManager(UNetConnection* NetConnection)
+{
+    if (NetConnection->GetUChildConnection())
+        NetConnection = ((UChildConnection*)NetConnection)->GetParent();
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (ConnectionManager->GetNetConnection() == NetConnection)
+            return ConnectionManager;
+    }
+
+    for (auto ConnectionManager : GetPendingConnectionManagers())
+    {
+        if (ConnectionManager->GetNetConnection() == NetConnection)
+            return ConnectionManager;
+    }
+
+    auto NewManager = CreateClientConnectionManagerInternal(NetConnection);
+    GetPendingConnectionManagers().Add(NewManager);
+
+    return NewManager;
+}
+
 UNetReplicationGraphConnection* UReplicationGraph::CreateClientConnectionManagerInternal(UNetConnection* Connection)
 {
     auto ConnectionManagerClass = GetReplicationConnectionManagerClass();

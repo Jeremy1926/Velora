@@ -197,6 +197,8 @@ struct FGlobalActorReplicationInfo
 
     TArray<AActor*>& GetDependentActorList();
 
+    TArray<AActor*>& GetParentActorList();
+
     uint8* GetFastSharedReplicationFunc();
 
     FName GetFastSharedReplicationFuncName() const;
@@ -217,6 +219,10 @@ public:
     FGlobalActorReplicationInfo* Find(AActor* const& Actor);
 
     void ResetActorMap();
+
+    void AddDependentActor(AActor* Parent, AActor* Child);
+
+    void RemoveDependentActor(AActor* Parent, AActor* Child);
 
     void SetInitClassInfoFunc(TFunction<bool(UClass*, FClassReplicationInfo&)> Func);
 

@@ -7,9 +7,13 @@
 #include "Containers/Array.h"
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
+#include "Templates/SubclassOf.h"
 #include "UObject/WeakObjectPtr.h"
 
 class AFortGameModeAthena;
+class AFortInventory;
+class AFortLiveSpectatorController;
+class AFortPawn;
 class AFortTeamHealthInfo;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
@@ -110,6 +114,14 @@ public:
     void OnGameStatePlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& GameplayTags);
 
     void execOnGameStatePlaylistLoaded(FFrame& Stack, void* const Z_Param__Result);
+
+    void OnAIClassAdditionRequest(TSubclassOf<AFortPawn> NewAIClass);
+
+    void OnLiveSpectatorJoined(AFortLiveSpectatorController* PC);
+
+    void OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory);
+
+    void OnNotifyRemoveReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory);
 
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);
