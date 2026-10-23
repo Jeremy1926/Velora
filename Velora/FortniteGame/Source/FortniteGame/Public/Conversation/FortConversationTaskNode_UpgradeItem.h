@@ -14,4 +14,6 @@ public:
     TOptional<int32> GetUpgradePrice(const FConversationContext& Context, const FWeaponUpgradeItemRow* UpgradedItemRow) const;
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
+
+    void GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const;
 };

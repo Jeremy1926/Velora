@@ -8,4 +8,6 @@ public:
     static UClass* StaticClass();
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
+
+    void GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const;
 };

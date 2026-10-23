@@ -19,6 +19,13 @@ const FString& UFortConversationTaskNode::GetNodeType() const
     return *NodeType->ContainerPtrToValuePtr<FString>(this);
 }
 
+const FGameplayTagContainer& UFortConversationTaskNode::GetNodeTags() const
+{
+    static auto NodeTags = StaticClass()->FindPropertyByName(FName(TEXT("NodeTags")));
+
+    return *NodeTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this);
+}
+
 bool UFortConversationTaskNode::HasPreviewData(const FConversationContext& Context, const FClientConversationOptionEntry& Option) const
 {
     static auto HasPreviewData = Anchor::VirtualFunction<bool (*)(const UFortConversationTaskNode*, const FConversationContext&, const FClientConversationOptionEntry&)>(TEXT("UFortConversationTaskNode::HasPreviewData"))
@@ -47,4 +54,13 @@ void UFortConversationTaskNode::FillPreviewData(const FConversationContext& Cont
         .Get();
 
     FillPreviewData(this, Context, Option, OutPreviewData);
+}
+
+void UFortConversationTaskNode::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    if (GetNodeType().Len() > 0)
+        InOutExtraData.Add({ FString(TEXT("Type")), GetNodeType() });
+
+    if (!GetNodeTags().IsEmpty())
+        InOutExtraData.Add({ FString(TEXT("preview_tags")), GetNodeTags().ToString() });
 }

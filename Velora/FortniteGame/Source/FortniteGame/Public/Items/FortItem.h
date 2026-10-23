@@ -13,4 +13,8 @@ public:
     FGuid GetItemGuid() const;
 
     FGuid GetTrackerGuid() const;
+
+    bool CanBeDropped() const;
+
+    int32 GetNumInStack() const;
 };

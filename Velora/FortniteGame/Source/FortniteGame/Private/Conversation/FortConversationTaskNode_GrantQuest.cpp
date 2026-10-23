@@ -5,6 +5,7 @@
 #include "Player/FortPlayerController.h"
 #include "Quests/FortQuestItemDefinition.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
@@ -13,6 +14,13 @@ UClass* UFortConversationTaskNode_GrantQuest::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortConversationTaskNode_GrantQuest"));
 
     return Class;
+}
+
+bool UFortConversationTaskNode_GrantQuest::GetbShouldDisplayQuestProviderImage() const
+{
+    static auto bShouldDisplayQuestProviderImage = StaticClass()->FindPropertyByName(FName(TEXT("bShouldDisplayQuestProviderImage")));
+
+    return *bShouldDisplayQuestProviderImage->ContainerPtrToValuePtr<bool>(this);
 }
 
 TSoftObjectPtr<UFortQuestItemDefinition> UFortConversationTaskNode_GrantQuest::GetQuestToGrant(const FConversationContext& Context) const
@@ -49,4 +57,17 @@ FConversationTaskResult UFortConversationTaskNode_GrantQuest::ExecuteTaskNode_Im
     TransientQuests->GrantTransientQuest(QuestToGrant);
 
     return FConversationTaskResult::AdvanceConversation();
+}
+
+void UFortConversationTaskNode_GrantQuest::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    const FString QuestToGrant = GetQuestToGrant(Context).ToString();
+
+    if (QuestToGrant.IsEmpty())
+        return;
+
+    InOutExtraData.Add({ FString(TEXT("quest")), QuestToGrant });
+    InOutExtraData.Add({ FString(TEXT("displayimage")), FString(GetbShouldDisplayQuestProviderImage() ? TEXT("1") : TEXT("0")) });
 }

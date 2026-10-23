@@ -10,7 +10,11 @@ class UFortConversationTaskNode_GrantQuest : public UFortConversationTaskNode_Se
 public:
     static UClass* StaticClass();
 
+    bool GetbShouldDisplayQuestProviderImage() const;
+
     TSoftObjectPtr<UFortQuestItemDefinition> GetQuestToGrant(const FConversationContext& Context) const;
 
     FConversationTaskResult ExecuteTaskNode_Implementation(const FConversationContext& Context) const;
+
+    void GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const;
 };

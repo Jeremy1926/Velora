@@ -1801,6 +1801,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_FindActorByClass.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestManager.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Quests</Filter>
     </ClInclude>
@@ -2735,6 +2738,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_DuelNPC.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationTaskNode_FindActorByClass.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestManager.cpp">

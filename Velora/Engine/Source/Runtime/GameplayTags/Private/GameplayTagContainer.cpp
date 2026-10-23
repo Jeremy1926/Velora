@@ -35,6 +35,20 @@ FString FGameplayTagContainer::ToStringSimple(bool bQuoted) const
     return RetString;
 }
 
+FString FGameplayTagContainer::ToString() const
+{
+    static auto ToString = Anchor::Function<FString* (*)(const FGameplayTagContainer*, FString*)>(TEXT("FGameplayTagContainer::ToString"))
+        .String(TEXT("ability tag: %s"))
+        .Last("call 0x*")
+        .Target()
+        .Get();
+
+    FString Result;
+    ToString(this, &Result);
+
+    return Result;
+}
+
 void FGameplayTagContainer::AppendTags(FGameplayTagContainer const& Other)
 {
     for (const FGameplayTag& OtherTag : Other.GameplayTags)

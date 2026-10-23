@@ -44,3 +44,23 @@ FGuid UFortItem::GetTrackerGuid() const
 
     return Result;
 }
+
+bool UFortItem::CanBeDropped() const
+{
+    static auto CanBeDropped = Anchor::VirtualFunction<bool (*)(const UFortItem*)>(TEXT("UFortItem::CanBeDropped"))
+        .Exec(TEXT("/Script/FortniteGame.FortItem:CanBeDropped"))
+        .Find("call [*]")
+        .Get();
+
+    return CanBeDropped(this);
+}
+
+int32 UFortItem::GetNumInStack() const
+{
+    static auto GetNumInStack = Anchor::VirtualFunction<int32 (*)(const UFortItem*)>(TEXT("UFortItem::GetNumInStack"))
+        .Exec(TEXT("/Script/FortniteGame.FortItem:GetNumInStack"))
+        .Find("call [*]")
+        .Get();
+
+    return GetNumInStack(this);
+}

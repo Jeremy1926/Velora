@@ -12,6 +12,7 @@
 #include "Conversation/FortConversationTaskNode_ApplyDataDrivenEffect.h"
 #include "Conversation/FortConversationTaskNode_DataDrivenService.h"
 #include "Conversation/FortConversationTaskNode_DuelNPC.h"
+#include "Conversation/FortConversationTaskNode_FindActorByClass.h"
 #include "Conversation/FortConversationTaskNode_GrantPlayerBounty.h"
 #include "Conversation/FortConversationTaskNode_GiveGift.h"
 #include "Conversation/FortConversationTaskNode_GrantQuest.h"
@@ -322,5 +323,41 @@ void UConversationTaskNode::GatherStaticExtraData(const FConversationContext& Co
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), -0x18)
         .Get();
 
-    GatherStaticExtraData(this, Context, InOutExtraData);
+    auto GatherStaticExtraData_Implementation = Scanner::Virtual<void (*)(const UConversationTaskNode*, const FConversationContext&, TArray<FConversationNodeParameterPair>&)>(this, GatherStaticExtraData.Slot);
+
+    if (!Anchor::At((const void*)GatherStaticExtraData_Implementation).Is("ret*"))
+    {
+        GatherStaticExtraData_Implementation(this, Context, InOutExtraData);
+        return;
+    }
+
+    if (auto UpgradeItem = Cast<UFortConversationTaskNode_UpgradeItem>(this))
+        return UpgradeItem->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto HireNPC = Cast<UFortConversationTaskNode_HireNPC>(this))
+        return HireNPC->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto DataDrivenService = Cast<UFortConversationTaskNode_DataDrivenService>(this))
+        return DataDrivenService->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto DuelNPC = Cast<UFortConversationTaskNode_DuelNPC>(this))
+        return DuelNPC->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto FindActorByClass = Cast<UFortConversationTaskNode_FindActorByClass>(this))
+        return FindActorByClass->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto SupplyDrop = Cast<UFortConversationTaskNode_SupplyDrop>(this))
+        return SupplyDrop->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto ShowFutureStormCircle = Cast<UFortConversationTaskNode_ShowFutureStormCircle>(this))
+        return ShowFutureStormCircle->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto GrantQuest = Cast<UFortConversationTaskNode_GrantQuest>(this))
+        return GrantQuest->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto ApplyAbility = Cast<UFortConversationTaskNode_ApplyAbility>(this))
+        return ApplyAbility->GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (auto FortTaskNode = Cast<UFortConversationTaskNode>(this))
+        FortTaskNode->GatherStaticExtraData_Implementation(Context, InOutExtraData);
 }

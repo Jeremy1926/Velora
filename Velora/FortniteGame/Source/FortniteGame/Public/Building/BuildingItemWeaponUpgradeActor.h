@@ -15,6 +15,14 @@ enum class EFortWeaponUpgradeDirection : uint8
     Horizontal,
 };
 
+enum class EFortWeaponUpgradeInteractionResult : uint8
+{
+    Upgradable,
+    NotEnoughResources,
+    CannotUpgrade,
+    CannotInteract,
+};
+
 struct FWeaponUpgradeItemRow
 {
     static UScriptStruct* StaticStruct();

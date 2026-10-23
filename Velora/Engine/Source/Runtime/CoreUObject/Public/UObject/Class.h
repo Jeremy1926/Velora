@@ -109,6 +109,8 @@ class UEnum : public UField
 public:
     int64 GetValueByName(FName InName) const;
 
+    FString GetNameStringByValue(int64 InValue) const;
+
 private:
     FString CppType;
     TArray<TPair<FName, int64>> Names;

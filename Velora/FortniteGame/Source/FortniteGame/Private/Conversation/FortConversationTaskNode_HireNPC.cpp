@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortConversationTaskNode_HireNPC.h"
 #include "Conversation/FortConversationContextLibrary.h"
+#include "Conversation/FortNPCConversationParticipantComponent.h"
 #include "ConversationParticipantComponent.h"
 #include "Pawns/FortPawnComponent_Convert.h"
 #include "Pawns/FortPlayerPawn.h"
@@ -30,4 +31,17 @@ FConversationTaskResult UFortConversationTaskNode_HireNPC::ExecuteTaskNode_Imple
     ConvertComponent->ConvertPawn(NPCPawn);
 
     return FConversationTaskResult::AdvanceConversation();
+}
+
+void UFortConversationTaskNode_HireNPC::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    if (!Cast<UFortNPCConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context)))
+        return;
+
+    const TOptional<int32> HirePrice = FindServicePrice(FName(TEXT("HireNPC")), 0);
+
+    if (HirePrice.IsSet())
+        InOutExtraData.Add({ FString(TEXT("cost")), FString::FromInt(HirePrice.GetValue()) });
 }

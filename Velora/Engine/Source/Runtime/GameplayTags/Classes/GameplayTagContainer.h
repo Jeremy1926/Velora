@@ -78,6 +78,8 @@ struct FGameplayTagContainer
 
     FString ToStringSimple(bool bQuoted = false) const;
 
+    FString ToString() const;
+
 protected:
     TArray<FGameplayTag> GameplayTags;
     TArray<FGameplayTag> ParentTags;

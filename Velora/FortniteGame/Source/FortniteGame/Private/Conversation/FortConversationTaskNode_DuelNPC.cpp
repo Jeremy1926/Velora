@@ -1,8 +1,13 @@
 #include "pch.h"
 #include "Conversation/FortConversationTaskNode_DuelNPC.h"
 #include "Conversation/FortConversationContextLibrary.h"
+#include "AI/FortAthenaAIBotController.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayEffectTypes.h"
+#include "Items/FortInventory.h"
+#include "Items/FortItemDefinition.h"
+#include "Items/FortWorldItem.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortPlayerController.h"
 #include "Templates/Casts.h"
@@ -67,4 +72,40 @@ void UFortConversationTaskNode_DuelNPC::SetChallenger(AActor* NonParticipantPawn
 
     if (auto AbilitySystemComponent = FortPawn ? FortPawn->GetAbilitySystemComponent() : nullptr)
         *GEDuelHandle->ContainerPtrToValuePtr<FActiveGameplayEffectHandle>(NonParticipantPawn) = AbilitySystemComponent->BP_ApplyGameplayEffectToSelf(*GE_DuelTag->ContainerPtrToValuePtr<UClass*>(NonParticipantPawn), 0.0f, FGameplayEffectContextHandle());
+}
+
+void UFortConversationTaskNode_DuelNPC::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    int32 InventoryCount = 0;
+    auto NPCPawn = Cast<AFortPlayerPawn>(UFortConversationContextLibrary::GetParticipantActorNPC(Context));
+    auto NPCController = NPCPawn ? Cast<AFortAthenaAIBotController>(NPCPawn->GetController()) : nullptr;
+    auto Inventory = NPCController ? NPCController->GetInventory() : nullptr;
+
+    if (Inventory)
+    {
+        for (auto Item : Inventory->GetInventory().GetItemInstances())
+        {
+            if (!Item || !Item->CanBeDropped() || !Item->GetNumInStack())
+                continue;
+
+            auto ItemDefinition = Item->GetItemDefinitionBP();
+
+            if (!ItemDefinition)
+                continue;
+
+            FString ItemKey(TEXT("inventory_item_"));
+            ItemKey += FString::FromInt(InventoryCount);
+
+            FString ItemCountKey(TEXT("inventory_item_count_"));
+            ItemCountKey += FString::FromInt(InventoryCount);
+
+            InOutExtraData.Add({ ItemKey, UKismetSystemLibrary::GetPathName(ItemDefinition) });
+            InOutExtraData.Add({ ItemCountKey, FString::FromInt(Item->GetNumInStack()) });
+            InventoryCount++;
+        }
+    }
+
+    InOutExtraData.Add({ FString(TEXT("inventory_count")), FString::FromInt(InventoryCount) });
 }

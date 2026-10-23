@@ -7,6 +7,7 @@
 #include "Player/FortPlayerController.h"
 #include "Weapons/FortWeapon.h"
 #include "FortKismetLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -88,4 +89,33 @@ FConversationTaskResult UFortConversationTaskNode_UpgradeItem::ExecuteTaskNode_I
     ABuildingItemWeaponUpgradeActor::StaticClass()->GetDefaultObject<ABuildingItemWeaponUpgradeActor>()->GrantOutput(PlayerController, UpgradedWeaponDef);
 
     return FConversationTaskResult::AdvanceConversation();
+}
+
+void UFortConversationTaskNode_UpgradeItem::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    auto UpgradedItemRow = GetUpgradedItemRow(Context);
+    auto UpgradedWeaponDef = UpgradedItemRow ? UpgradedItemRow->GetUpgradedWeaponDef() : nullptr;
+
+    if (!UpgradedWeaponDef)
+    {
+        static auto WeaponUpgradeInteractionResult = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortWeaponUpgradeInteractionResult"));
+
+        InOutExtraData.Add({ FString(TEXT("cannotupgradereason")), WeaponUpgradeInteractionResult ? WeaponUpgradeInteractionResult->GetNameStringByValue((int64)EFortWeaponUpgradeInteractionResult::CannotUpgrade) : FString() });
+        return;
+    }
+
+    InOutExtraData.Add({ FString(TEXT("upgradetoitem")), UKismetSystemLibrary::GetPathName(UpgradedWeaponDef) });
+
+    auto PlayerController = UFortConversationContextLibrary::GetParticipantPlayerController(Context);
+    auto PlayerPawn = PlayerController ? PlayerController->GetMyFortPawn() : nullptr;
+    auto CurrentWeapon = PlayerPawn ? PlayerPawn->GetCurrentWeapon() : nullptr;
+    auto WeaponData = CurrentWeapon ? CurrentWeapon->GetWeaponData() : nullptr;
+
+    if (WeaponData)
+        InOutExtraData.Add({ FString(TEXT("currentitem")), UKismetSystemLibrary::GetPathName(WeaponData) });
+
+    const TOptional<int32> UpgradePrice = GetUpgradePrice(Context, UpgradedItemRow);
+    InOutExtraData.Add({ FString(TEXT("cost")), FString::FromInt(UpgradePrice.IsSet() ? UpgradePrice.GetValue() : 99999999) });
 }

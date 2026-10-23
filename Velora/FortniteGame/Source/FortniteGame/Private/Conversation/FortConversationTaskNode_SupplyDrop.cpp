@@ -177,3 +177,13 @@ const FGameplayTag& UFortConversationTaskNode_SupplyDrop::GetCustomFeedMessageTa
 
     return *CustomFeedMessageTag->ContainerPtrToValuePtr<FGameplayTag>(this);
 }
+
+void UFortConversationTaskNode_SupplyDrop::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    const TOptional<int32> Price = FindServicePrice(FName(TEXT("supplydrop")), 0);
+
+    if (Price.IsSet())
+        InOutExtraData.Add({ FString(TEXT("cost")), FString::FromInt(Price.GetValue()) });
+}

@@ -6,6 +6,7 @@
 #include "Player/FortControllerEffect.h"
 #include "Player/FortPlayerController.h"
 #include "GameplayEffectTypes.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -134,4 +135,55 @@ const FScalableFloat& UFortConversationTaskNode_DataDrivenService::GetLimitedSto
     static auto LimitedStockCount = StaticClass()->FindPropertyByName(FName(TEXT("LimitedStockCount")));
 
     return *LimitedStockCount->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+UObject* UFortConversationTaskNode_DataDrivenService::GetServiceBriefConfigCollection() const
+{
+    static auto ServiceBriefConfigCollection = StaticClass()->FindPropertyByName(FName(TEXT("ServiceBriefConfigCollection")));
+
+    return *ServiceBriefConfigCollection->ContainerPtrToValuePtr<UObject*>(this);
+}
+
+FName UFortConversationTaskNode_DataDrivenService::GetServiceBriefCollectionKeyOveride() const
+{
+    static auto ServiceBriefCollectionKeyOveride = StaticClass()->FindPropertyByName(FName(TEXT("ServiceBriefCollectionKeyOveride")));
+
+    return *ServiceBriefCollectionKeyOveride->ContainerPtrToValuePtr<FName>(this);
+}
+
+void UFortConversationTaskNode_DataDrivenService::GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
+{
+    UFortConversationTaskNode::GatherStaticExtraData_Implementation(Context, InOutExtraData);
+
+    const TOptional<int32> Price = FindServicePrice(GetPricingKey(), GetPricingColumn());
+
+    if (Price.IsSet())
+        InOutExtraData.Add({ FString(TEXT("cost")), FString::FromInt(Price.GetValue()) });
+
+    if (auto FailedRequirement = CheckForFailedRequirements(Context))
+        InOutExtraData.Add({ FString(TEXT("cannotusereason")), FailedRequirement->GetCannotUseReasonParameter() });
+    else if (!CanPlayerAffordPrice(Context, Price))
+        InOutExtraData.Add({ FString(TEXT("cannotusereason")), FString(TEXT("cannotafford")) });
+
+    if (auto ServiceBriefConfigCollection = GetServiceBriefConfigCollection())
+        InOutExtraData.Add({ FString(TEXT("configdef")), UKismetSystemLibrary::GetPathName(ServiceBriefConfigCollection) });
+
+    const FName ServiceBriefCollectionKeyOveride = GetServiceBriefCollectionKeyOveride();
+
+    if (ServiceBriefCollectionKeyOveride != NAME_None)
+        InOutExtraData.Add({ FString(TEXT("configkey")), ServiceBriefCollectionKeyOveride.ToString() });
+}
+
+UScriptStruct* FConversationParticipantRequirement::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ConversationParticipantRequirement"));
+
+    return Struct;
+}
+
+const FString& FConversationParticipantRequirement::GetCannotUseReasonParameter() const
+{
+    static auto CannotUseReasonParameter = StaticStruct()->FindPropertyByName(FName(TEXT("CannotUseReasonParameter")));
+
+    return *CannotUseReasonParameter->ContainerPtrToValuePtr<FString>(this);
 }

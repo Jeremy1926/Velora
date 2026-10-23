@@ -94,6 +94,20 @@ int64 UEnum::GetValueByName(FName InName) const
     return -1;
 }
 
+FString UEnum::GetNameStringByValue(int64 InValue) const
+{
+    static auto GetNameStringByValue = Anchor::Function<FString* (*)(const UEnum*, FString*, int64)>(TEXT("UEnum::GetNameStringByValue"))
+        .String(TEXT("Action Router - Player [%d]: Input Type[%s]"))
+        .Last("call 0x*")
+        .Target()
+        .Get();
+
+    FString Result;
+    GetNameStringByValue(this, &Result, InValue);
+
+    return Result;
+}
+
 UObject* UClass::GetDefaultObject(bool bCreateIfNeeded) const
 {
     static auto ClassDefaultObject = Anchor::Offset(TEXT("UClass::ClassDefaultObject"))

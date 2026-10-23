@@ -3,13 +3,20 @@
 #include "Conversation/FortConversationTaskNode_Service.h"
 
 class UFortControllerEffect;
-struct FConversationParticipantRequirement;
+class UScriptStruct;
 struct FScalableFloat;
 
 enum class EDataDrivenEffectRecipient : uint8
 {
     Player,
     NPC
+};
+
+struct FConversationParticipantRequirement
+{
+    static UScriptStruct* StaticStruct();
+
+    const FString& GetCannotUseReasonParameter() const;
 };
 
 struct FEffectRecipientConfig
@@ -36,4 +43,10 @@ public:
     int32 GetPricingColumn() const;
 
     const FScalableFloat& GetLimitedStockCount() const;
+
+    UObject* GetServiceBriefConfigCollection() const;
+
+    FName GetServiceBriefCollectionKeyOveride() const;
+
+    void GatherStaticExtraData_Implementation(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const;
 };
