@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Engine/World.h"
 #include "Math/TransformVectorized.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 FActorSpawnParameters::FActorSpawnParameters()
@@ -21,7 +22,16 @@ AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, co
         .Start()
         .Get();
 
-    return SpawnActor(this, Class, UserTransformPtr, SpawnParameters);
+    if (FEngineVersion::Current().GetMajor() < 5)
+        return SpawnActor(this, Class, UserTransformPtr, SpawnParameters);
+
+    alignas(FActorSpawnParameters) uint8 Parameters[0x90] = {};
+
+    memcpy(Parameters, &SpawnParameters, 0x28);
+    *(ESpawnActorCollisionHandlingMethod*)(Parameters + 0x30) = SpawnParameters.SpawnCollisionHandlingOverride;
+    *(EObjectFlags*)(Parameters + 0x34) = SpawnParameters.ObjectFlags;
+
+    return SpawnActor(this, Class, UserTransformPtr, *(const FActorSpawnParameters*)Parameters);
 }
 
 AActor* UWorld::SpawnActor(UClass* Class, FVector const* Location, FRotator const* Rotation, const FActorSpawnParameters& SpawnParameters)
