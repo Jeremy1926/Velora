@@ -48,6 +48,13 @@ public:
         return Pairs[PairId].Value;
     }
 
+    FORCEINLINE ValueType& Add(const KeyType& InKey, ValueType&& InValue)
+    {
+        const FSetElementId PairId = Pairs.Add(TPair<KeyType, ValueType>{ InKey, MoveTemp(InValue) });
+
+        return Pairs[PairId].Value;
+    }
+
     FORCEINLINE ValueType* Find(const KeyType& Key)
     {
         auto Pair = Pairs.Find(Key);

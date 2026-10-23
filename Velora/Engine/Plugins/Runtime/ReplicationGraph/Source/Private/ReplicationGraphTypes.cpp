@@ -116,6 +116,18 @@ bool IsActorValidForReplication(const AActor* In)
     return !In->IsPendingKillPending() && !(In->GetFlags() & 0x60000000) && !GUObjectArray.IndexToObject((int32)In->GetUniqueID())->IsUnreachable();
 }
 
+int32 FConnectionGatherActorListParameters::GetNumViewers() const
+{
+    return *(const int32*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*));
+}
+
+const FNetViewer& FConnectionGatherActorListParameters::GetViewer(int32 Index) const
+{
+    auto SecondaryData = *(const uint8* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize());
+
+    return *(const FNetViewer*)((SecondaryData ? SecondaryData : (const uint8*)this) + Index * FNetViewer::GetTypeSize());
+}
+
 UNetReplicationGraphConnection* FConnectionGatherActorListParameters::GetConnectionManager() const
 {
     return *(UNetReplicationGraphConnection* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32));
@@ -131,6 +143,22 @@ FGatheredReplicationActorLists* FConnectionGatherActorListParameters::GetOutGath
     return *(FGatheredReplicationActorLists* const*)((const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32) + 2 * sizeof(void*));
 }
 
+bool FConnectionGatherActorListParameters::CheckClientVisibilityForLevel(const FName& StreamingLevelName) const
+{
+    static auto CheckClientVisibilityForLevel = Anchor::Function<bool (*)(const FConnectionGatherActorListParameters*, const FName&)>(TEXT("FConnectionGatherActorListParameters::CheckClientVisibilityForLevel"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return CheckClientVisibilityForLevel(this, StreamingLevelName);
+}
+
 void FStreamingLevelActorListCollection::Gather(const FConnectionGatherActorListParameters& Params)
 {
     static auto Gather = Anchor::Function<void (*)(FStreamingLevelActorListCollection*, const FConnectionGatherActorListParameters&)>(TEXT("FStreamingLevelActorListCollection::Gather"))
@@ -143,4 +171,18 @@ void FStreamingLevelActorListCollection::Gather(const FConnectionGatherActorList
         .Get();
 
     Gather(this, Params);
+}
+
+void FStreamingLevelActorListCollection::DeepCopyFrom(const FStreamingLevelActorListCollection& Source)
+{
+    StreamingLevelLists.Reset();
+
+    for (const auto& StreamingLevel : Source.StreamingLevelLists)
+    {
+        if (StreamingLevel.ReplicationActorList.RepList.Num() > 0)
+        {
+            auto NewStreamingLevel = new(StreamingLevelLists) FStreamingLevelActors(TGameLayout<FName>::Load(&StreamingLevel.StreamingLevelName));
+            NewStreamingLevel->ReplicationActorList.RepList = StreamingLevel.ReplicationActorList.RepList;
+        }
+    }
 }

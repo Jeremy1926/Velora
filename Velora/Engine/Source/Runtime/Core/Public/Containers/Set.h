@@ -4,6 +4,7 @@
 #include "Containers/SparseArray.h"
 #include "Containers/ContainerAllocationPolicies.h"
 #include "Templates/TypeHash.h"
+#include "Templates/UnrealTemplate.h"
 
 class FSetElementId
 {
@@ -131,8 +132,13 @@ public:
 
     FSetElementId Add(const InElementType& InElement)
     {
+        return Add(InElementType(InElement));
+    }
+
+    FSetElementId Add(InElementType&& InElement)
+    {
         FSparseArrayAllocationInfo ElementAllocation = Elements.AddUninitialized();
-        TSetElement<InElementType>& Element = *new(ElementAllocation) TSetElement<InElementType>{ InElement };
+        TSetElement<InElementType>& Element = *new(ElementAllocation) TSetElement<InElementType>{ MoveTemp(InElement) };
         FSetElementId ElementId(ElementAllocation.Index);
 
         if (Elements.Num() != 1)

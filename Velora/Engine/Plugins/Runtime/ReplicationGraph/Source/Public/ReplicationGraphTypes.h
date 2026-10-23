@@ -11,6 +11,7 @@
 #include "UObject/WeakObjectPtr.h"
 
 class AActor;
+struct FNetViewer;
 class UActorChannel;
 class ULevel;
 class UObject;
@@ -174,14 +175,41 @@ class UNetReplicationGraphConnection;
 
 struct FConnectionGatherActorListParameters
 {
+    int32 GetNumViewers() const;
+
+    const FNetViewer& GetViewer(int32 Index) const;
+
     UNetReplicationGraphConnection* GetConnectionManager() const;
 
     uint32 GetReplicationFrameNum() const;
 
     FGatheredReplicationActorLists* GetOutGatheredReplicationLists() const;
+
+    bool CheckClientVisibilityForLevel(const FName& StreamingLevelName) const;
 };
 
 struct FStreamingLevelActorListCollection
 {
+    struct FStreamingLevelActors
+    {
+        FStreamingLevelActors(const FName& InStreamingLevelName)
+            : StreamingLevelName(NAME_None)
+        {
+            TGameLayout<FName>::Store(&StreamingLevelName, InStreamingLevelName);
+        }
+
+        bool operator==(const FName& InStreamingLevelName) const
+        {
+            return TGameLayout<FName>::Load(&StreamingLevelName) == InStreamingLevelName;
+        }
+
+        FName StreamingLevelName;
+        FActorRepListRefView ReplicationActorList;
+    };
+
     void Gather(const FConnectionGatherActorListParameters& Params);
+
+    void DeepCopyFrom(const FStreamingLevelActorListCollection& Source);
+
+    TArray<FStreamingLevelActors, TInlineAllocator<4>> StreamingLevelLists;
 };

@@ -38,6 +38,11 @@ public:
         return ObjectIndex != Other.ObjectIndex || ObjectSerialNumber != Other.ObjectSerialNumber;
     }
 
+    FORCEINLINE bool operator<(const FObjectKey& Other) const
+    {
+        return ObjectIndex < Other.ObjectIndex || (ObjectIndex == Other.ObjectIndex && ObjectSerialNumber < Other.ObjectSerialNumber);
+    }
+
     friend FORCEINLINE uint32 GetTypeHash(const FObjectKey& Key)
     {
         return HashCombine(Key.ObjectIndex, Key.ObjectSerialNumber);

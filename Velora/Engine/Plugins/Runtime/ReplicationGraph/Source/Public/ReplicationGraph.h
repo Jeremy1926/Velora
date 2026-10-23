@@ -2,8 +2,12 @@
 
 #include "Engine/ReplicationDriver.h"
 #include "Containers/Array.h"
+#include "Containers/Map.h"
 #include "Containers/Set.h"
+#include "Delegates/Delegate.h"
 #include "Templates/SharedPointer.h"
+#include "UObject/ObjectKey.h"
+#include "UObject/UObjectGlobals.h"
 #include "ReplicationGraphTypes.h"
 
 class AActor;
@@ -22,6 +26,64 @@ class UReplicationGraphNode : public UObject
 {
 public:
     void NotifyResetAllNetworkActors();
+
+    TArray<UReplicationGraphNode*>& GetAllChildNodes();
+
+    TSharedPtr<FReplicationGraphGlobalData, ESPMode::ThreadSafe>& GetGraphGlobals();
+
+    template<class T>
+    T* CreateChildNode()
+    {
+        auto NewNode = NewObject<T>(this, T::StaticClass());
+        NewNode->GetGraphGlobals() = GetGraphGlobals();
+        GetAllChildNodes().Add(NewNode);
+
+        return NewNode;
+    }
+};
+
+class UReplicationGraphNode_ActorList : public UReplicationGraphNode
+{
+public:
+    FActorRepListRefView& GetReplicationActorList();
+
+    FStreamingLevelActorListCollection& GetStreamingLevelCollection();
+};
+
+class UReplicationGraphNode_ConnectionDormancyNode : public UReplicationGraphNode_ActorList
+{
+public:
+    static UClass* StaticClass();
+
+    FObjectKey& GetConnectionOwner();
+
+    uint32& GetLastGatheredFrame();
+
+    int32& GetTrickleStartCounter();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    void OnClientVisibleLevelNameAdd(FName LevelName, UWorld* World);
+
+private:
+    void ConditionalGatherDormantActorsForConnection(FActorRepListRefView& ConnectionList, const FConnectionGatherActorListParameters& Params, FActorRepListRefView* RemovedList);
+
+    FStreamingLevelActorListCollection& GetRemovedStreamingLevelActorListCollection();
+};
+
+class UReplicationGraphNode_DormancyNode : public UReplicationGraphNode_ActorList
+{
+public:
+    static UClass* StaticClass();
+
+    void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
+
+    UReplicationGraphNode_ConnectionDormancyNode* GetExistingConnectionNode(const FConnectionGatherActorListParameters& Params);
+
+private:
+    UReplicationGraphNode_ConnectionDormancyNode* CreateConnectionNode(const FConnectionGatherActorListParameters& Params);
+
+    TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>& GetConnectionNodes();
 };
 
 class UReplicationGraphNode_ActorListFrequencyBuckets : public UReplicationGraphNode
@@ -89,6 +151,8 @@ public:
     TArray<FCachedDormantDestructInfo>& GetPendingDormantDestructList();
 
     TSet<FNetworkGUID>& GetTrackedDormantDestructionInfos();
+
+    TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& GetOnClientVisibleLevelNameAddMap();
 
     void NotifyActorChannelAdded(AActor* Actor, UActorChannel* Channel);
 

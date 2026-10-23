@@ -142,6 +142,18 @@ public:
         return false;
     }
 
+    template<typename KeyType>
+    FORCEINLINE ElementType* FindByKey(const KeyType& Key)
+    {
+        for (ElementType* Data = GetData(), *DataEnd = Data + ArrayNum; Data != DataEnd; ++Data)
+        {
+            if (*Data == Key)
+                return Data;
+        }
+
+        return nullptr;
+    }
+
     FORCEINLINE int32 AddUnique(const ElementType& Item)
     {
         int32 Index;

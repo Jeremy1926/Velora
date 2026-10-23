@@ -6,6 +6,7 @@
 #include "Engine/PackageMapClient.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -98,6 +99,19 @@ TSet<FActorDestructionInfo*>& UNetReplicationGraphConnection::GetTrackedDestruct
         .Disp();
 
     return *(TSet<FActorDestructionInfo*>*)((uint8*)this + TrackedDestructionInfoPtrs);
+}
+
+TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConnection::GetOnClientVisibleLevelNameAddMap()
+{
+    static auto OnClientVisibleLevelNameAddMap = Anchor::Offset(TEXT("UNetReplicationGraphConnection::OnClientVisibleLevelNameAddMap"))
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x28)
+        .Find("mov rcx, [rsi+0x*]")
+        .Disp();
+
+    return *(TMap<FName, TMulticastDelegate<void, FName, UWorld*>>*)((uint8*)this + OnClientVisibleLevelNameAddMap);
 }
 
 TArray<FCachedDormantDestructInfo>& UNetReplicationGraphConnection::GetPendingDormantDestructList()
@@ -206,6 +220,284 @@ void UNetReplicationGraphConnection::NotifyAddDormantDestructionInfo(AActor* Act
     Info.Level = Level;
     Info.ObjOuter = Actor->GetOuter();
     Info.PathName = Actor->GetName();
+}
+
+TArray<UReplicationGraphNode*>& UReplicationGraphNode::GetAllChildNodes()
+{
+    static auto AllChildNodes = Anchor::Offset(TEXT("UReplicationGraphNode::AllChildNodes"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("mov rdi, [rbx+0x*]")
+        .Disp();
+
+    return *(TArray<UReplicationGraphNode*>*)((uint8*)this + AllChildNodes);
+}
+
+TSharedPtr<FReplicationGraphGlobalData, ESPMode::ThreadSafe>& UReplicationGraphNode::GetGraphGlobals()
+{
+    static auto GraphGlobals = Anchor::Offset(TEXT("UReplicationGraphNode::GraphGlobals"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DormancyNode"))
+        .Find("cmp qword ptr [rcx+0x*], 0x0")
+        .Disp();
+
+    return *(TSharedPtr<FReplicationGraphGlobalData, ESPMode::ThreadSafe>*)((uint8*)this + GraphGlobals);
+}
+
+FActorRepListRefView& UReplicationGraphNode_ActorList::GetReplicationActorList()
+{
+    static auto ReplicationActorList = Anchor::Offset(TEXT("UReplicationGraphNode_ActorList::ReplicationActorList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("lea rdx, [rcx+0x*]")
+        .Disp();
+
+    return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
+}
+
+FStreamingLevelActorListCollection& UReplicationGraphNode_ActorList::GetStreamingLevelCollection()
+{
+    static auto StreamingLevelCollection = Anchor::Offset(TEXT("UReplicationGraphNode_ActorList::StreamingLevelCollection"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("lea rcx, [rbx+0x*]; mov rdx, rsi")
+        .Disp();
+
+    return *(FStreamingLevelActorListCollection*)((uint8*)this + StreamingLevelCollection);
+}
+
+UClass* UReplicationGraphNode_ConnectionDormancyNode::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_ConnectionDormancyNode"));
+
+    return Class;
+}
+
+FObjectKey& UReplicationGraphNode_ConnectionDormancyNode::GetConnectionOwner()
+{
+    return *(FObjectKey*)((uint8*)&GetStreamingLevelCollection() + sizeof(FStreamingLevelActorListCollection));
+}
+
+uint32& UReplicationGraphNode_ConnectionDormancyNode::GetLastGatheredFrame()
+{
+    return *(uint32*)((uint8*)&GetConnectionOwner() + sizeof(FObjectKey));
+}
+
+int32& UReplicationGraphNode_ConnectionDormancyNode::GetTrickleStartCounter()
+{
+    return *(int32*)((uint8*)&GetLastGatheredFrame() + sizeof(uint32));
+}
+
+FStreamingLevelActorListCollection& UReplicationGraphNode_ConnectionDormancyNode::GetRemovedStreamingLevelActorListCollection()
+{
+    return *(FStreamingLevelActorListCollection*)((uint8*)&GetTrickleStartCounter() + sizeof(int32));
+}
+
+void UReplicationGraphNode_ConnectionDormancyNode::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_ConnectionDormancyNode, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ConnectionDormancyNode"), "ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_ConnectionDormancyNode::StaticClass()));
+
+    GetLastGatheredFrame() = Params.GetReplicationFrameNum();
+
+    ConditionalGatherDormantActorsForConnection(GetReplicationActorList(), Params, nullptr);
+
+    auto& StreamingLevelLists = GetStreamingLevelCollection().StreamingLevelLists;
+    auto& RemovedStreamingLevelLists = GetRemovedStreamingLevelActorListCollection().StreamingLevelLists;
+
+    for (int32 idx = StreamingLevelLists.Num() - 1; idx >= 0; --idx)
+    {
+        auto& StreamingList = StreamingLevelLists[idx];
+
+        if (StreamingList.ReplicationActorList.RepList.Num() <= 0)
+        {
+            StreamingLevelLists.RemoveAtSwap(idx, 1, false);
+            continue;
+        }
+
+        if (Params.CheckClientVisibilityForLevel(StreamingList.StreamingLevelName))
+        {
+            const FName StreamingLevelName = TGameLayout<FName>::Load(&StreamingList.StreamingLevelName);
+            auto RemoveList = RemovedStreamingLevelLists.FindByKey(StreamingLevelName);
+
+            if (!RemoveList)
+            {
+                RemoveList = new(RemovedStreamingLevelLists) FStreamingLevelActorListCollection::FStreamingLevelActors(StreamingLevelName);
+                Params.GetConnectionManager()->GetOnClientVisibleLevelNameAddMap().FindOrAdd(StreamingLevelName).AddUObject(this, &UReplicationGraphNode_ConnectionDormancyNode::OnClientVisibleLevelNameAdd);
+            }
+
+            ConditionalGatherDormantActorsForConnection(StreamingList.ReplicationActorList, Params, &RemoveList->ReplicationActorList);
+        }
+    }
+}
+
+void UReplicationGraphNode_ConnectionDormancyNode::ConditionalGatherDormantActorsForConnection(FActorRepListRefView& ConnectionList, const FConnectionGatherActorListParameters& Params, FActorRepListRefView* RemovedList)
+{
+    auto& ConnectionActorInfoMap = Params.GetConnectionManager()->GetActorInfoMap();
+    auto GlobalActorReplicationInfoMap = GetGraphGlobals()->GlobalActorReplicationInfoMap;
+    bool bShouldTrickle = GetTrickleStartCounter() == 0;
+
+    for (int32 idx = ConnectionList.RepList.Num() - 1; idx >= 0; --idx)
+    {
+        AActor* Actor = ConnectionList.RepList[idx];
+        auto& ConnectionActorInfo = ConnectionActorInfoMap.FindOrAdd(Actor);
+
+        if (ConnectionActorInfo.bDormantOnConnection)
+        {
+            if (ConnectionActorInfo.CullDistanceSquared <= 0.f)
+            {
+                auto& GlobalInfo = GlobalActorReplicationInfoMap->Get(Actor);
+                ConnectionActorInfo.SetCullDistanceSquared(GlobalInfo.GetCullDistanceSquared());
+            }
+
+            ConnectionList.RepList.RemoveAtSwap(idx);
+
+            if (RemovedList)
+                RemovedList->RepList.Add(Actor);
+
+            bShouldTrickle = false;
+        }
+        else if (bShouldTrickle)
+        {
+            ConnectionActorInfo.SetCullDistanceSquared(0.f);
+            bShouldTrickle = false;
+        }
+    }
+
+    if (ConnectionList.RepList.Num() > 0)
+    {
+        Params.GetOutGatheredReplicationLists()->AddReplicationActorList(ConnectionList);
+
+        if (GetTrickleStartCounter() > 0)
+            GetTrickleStartCounter()--;
+    }
+}
+
+void UReplicationGraphNode_ConnectionDormancyNode::OnClientVisibleLevelNameAdd(FName LevelName, UWorld* World)
+{
+    auto RemoveList = GetRemovedStreamingLevelActorListCollection().StreamingLevelLists.FindByKey(LevelName);
+
+    if (!RemoveList)
+        return;
+
+    auto& StreamingLevelLists = GetStreamingLevelCollection().StreamingLevelLists;
+    auto AddList = StreamingLevelLists.FindByKey(LevelName);
+
+    if (!AddList)
+        AddList = new(StreamingLevelLists) FStreamingLevelActorListCollection::FStreamingLevelActors(LevelName);
+
+    AddList->ReplicationActorList.RepList.Append(RemoveList->ReplicationActorList.RepList);
+    RemoveList->ReplicationActorList.RepList.Reset();
+}
+
+UClass* UReplicationGraphNode_DormancyNode::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_DormancyNode"));
+
+    return Class;
+}
+
+TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>& UReplicationGraphNode_DormancyNode::GetConnectionNodes()
+{
+    return *(TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>*)((uint8*)&GetStreamingLevelCollection() + sizeof(FStreamingLevelActorListCollection));
+}
+
+void UReplicationGraphNode_DormancyNode::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
+{
+    DETOUR(UReplicationGraphNode_DormancyNode, GatherActorListsForConnection, Anchor::Hook()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DormancyNode"), "ret*")
+        .Optional()
+        .InChildVTables(UReplicationGraphNode_DormancyNode::StaticClass()));
+
+    int32 NumViewersAboveMaxZ = 0;
+
+    for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
+    {
+        if (Params.GetViewer(Index).GetViewLocation().Z > (UE::LWC::IsEnabled() ? 8796093022208.0 : 2097152.0))
+            ++NumViewersAboveMaxZ;
+    }
+
+    if (Params.GetNumViewers() <= NumViewersAboveMaxZ)
+        return;
+
+    auto ConnectionNode = GetExistingConnectionNode(Params);
+
+    if (!ConnectionNode)
+        ConnectionNode = CreateConnectionNode(Params);
+
+    ConnectionNode->GatherActorListsForConnection(Params);
+}
+
+UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode::GetExistingConnectionNode(const FConnectionGatherActorListParameters& Params)
+{
+    const FObjectKey RepGraphConnection(Params.GetConnectionManager());
+    auto& ConnectionNodes = GetConnectionNodes();
+    int32 Start = 0;
+
+    for (int32 Size = ConnectionNodes.Num(); Size > 0;)
+    {
+        const int32 LeftoverSize = Size % 2;
+        Size = Size / 2;
+
+        const int32 CheckIndex = Start + Size;
+        Start = ConnectionNodes[CheckIndex].Key < RepGraphConnection ? CheckIndex + LeftoverSize : Start;
+    }
+
+    return Start < ConnectionNodes.Num() && !(RepGraphConnection < ConnectionNodes[Start].Key) ? ConnectionNodes[Start].Value : nullptr;
+}
+
+UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode::CreateConnectionNode(const FConnectionGatherActorListParameters& Params)
+{
+    const FObjectKey RepGraphConnection(Params.GetConnectionManager());
+    auto ConnectionNode = CreateChildNode<UReplicationGraphNode_ConnectionDormancyNode>();
+    auto& ConnectionNodes = GetConnectionNodes();
+    int32 Start = 0;
+
+    for (int32 Size = ConnectionNodes.Num(); Size > 0;)
+    {
+        const int32 LeftoverSize = Size % 2;
+        Size = Size / 2;
+
+        const int32 CheckIndex = Start + Size;
+        Start = ConnectionNodes[CheckIndex].Key < RepGraphConnection ? CheckIndex + LeftoverSize : Start;
+    }
+
+    if (Start >= ConnectionNodes.Num() || RepGraphConnection < ConnectionNodes[Start].Key)
+    {
+        ConnectionNodes.AddUninitialized(1);
+        memmove(ConnectionNodes.GetData() + Start + 1, ConnectionNodes.GetData() + Start, (ConnectionNodes.Num() - 1 - Start) * sizeof(TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>));
+    }
+
+    ConnectionNodes[Start].Key = RepGraphConnection;
+    ConnectionNodes[Start].Value = ConnectionNode;
+
+    if (GetReplicationActorList().RepList.Num() > 0)
+        ConnectionNode->GetReplicationActorList().RepList = GetReplicationActorList().RepList;
+
+    ConnectionNode->GetStreamingLevelCollection().DeepCopyFrom(GetStreamingLevelCollection());
+    ConnectionNode->GetConnectionOwner() = RepGraphConnection;
+    ConnectionNode->GetLastGatheredFrame() = Params.GetReplicationFrameNum();
+
+    return ConnectionNode;
 }
 
 UClass* UReplicationGraphNode_ActorListFrequencyBuckets::StaticClass()
