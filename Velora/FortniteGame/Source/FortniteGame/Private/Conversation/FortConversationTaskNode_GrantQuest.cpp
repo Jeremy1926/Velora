@@ -22,6 +22,10 @@ TSoftObjectPtr<UFortQuestItemDefinition> UFortConversationTaskNode_GrantQuest::G
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_GrantQuest"), -0x18)
         .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:GetTaskIcon"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_GrantQuest"), 0x28)
         .Get();
 
     alignas(TSoftObjectPtr<UFortQuestItemDefinition>) uint8 QuestToGrantStorage[sizeof(TSoftObjectPtr<UFortQuestItemDefinition>)];

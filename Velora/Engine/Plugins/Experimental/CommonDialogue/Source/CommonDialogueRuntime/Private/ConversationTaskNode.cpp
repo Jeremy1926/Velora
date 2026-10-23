@@ -314,9 +314,13 @@ void UConversationTaskNode::GatherDynamicChoices(FConversationBranchPointBuilder
 void UConversationTaskNode::GatherStaticExtraData(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
 {
     static auto GatherStaticExtraData = Anchor::VirtualFunction<void (*)(const UConversationTaskNode*, const FConversationContext&, TArray<FConversationNodeParameterPair>&)>(TEXT("UConversationTaskNode::GatherStaticExtraData"))
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:GatherStaticExtraData"))
+        .Find("call [*+0x*]")
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:GetTaskIcon"))
         .Find("call [*+0x*]")
-        .Get(-0x18);
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), -0x18)
+        .Get();
 
     GatherStaticExtraData(this, Context, InOutExtraData);
 }
