@@ -858,13 +858,20 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayer(FFrame& Stack, void* const 
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")));
 
+    static auto bHasItemVariantGuid = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")))->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr;
+
     AFortPlayerController* PlayerController = nullptr;
     UFortWorldItemDefinition* ItemDefinition = nullptr;
+    FGuid ItemVariantGuid;
     int32 AmountToRemove = 0;
     uint32 bForceRemoval = 0;
 
     Stack.StepCompiledIn(&PlayerController);
     Stack.StepCompiledIn(&ItemDefinition);
+
+    if (bHasItemVariantGuid)
+        Stack.StepCompiledIn(&ItemVariantGuid);
+
     Stack.StepCompiledIn(&AmountToRemove);
     Stack.StepCompiledIn(&bForceRemoval);
     Stack.Code += !!Stack.Code;
