@@ -48,6 +48,8 @@ public:
 
         static int32 GetPendingSpawnRequestsOffset();
 
+        static int32 GetEncounterInstanceOffset();
+
         ~FLivingWorldEventInstance();
 
         TArray<TWeakObjectPtr<AActor>>& GetSpawnedActors();
@@ -55,6 +57,8 @@ public:
         TArray<FScriptInterface>* GetSpawnedActorPointProviders();
 
         TArray<FLivingWorldPendingSpawnRequest>& GetPendingSpawnRequests();
+
+        UFortAthenaLivingWorldEncounterInstance*& GetEncounterInstance();
 
         float& GetRespawnTime();
 
@@ -171,6 +175,8 @@ public:
     int32 GetEventBudget(FFortAthenaLivingWorldEvent* Event);
 
     int32 GetActorCount(const FFortAthenaLivingWorldCategory* Category, const FFortAthenaLivingWorldEvent* Event);
+
+    int32 GetTotalEncounterInstanceActorCount(UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
     AActor* GetRandomPointProvider(const FGameplayTagQuery& ProviderFiltersTagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter);
 

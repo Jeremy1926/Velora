@@ -3,6 +3,7 @@
 #include "FortAthenaLivingWorldCategory.h"
 #include "FortAthenaLivingWorldConfigData.h"
 #include "FortAthenaLivingWorldDensityGrid.h"
+#include "FortAthenaLivingWorldEncounter.h"
 #include "FortAthenaLivingWorldEvent.h"
 #include "FortAthenaLivingWorldEventData.h"
 #include "FortAthenaLivingWorldPointProviderInterface.h"
@@ -90,6 +91,18 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetSpawnedActorP
     return SpawnedActorPointProviders;
 }
 
+int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetEncounterInstanceOffset()
+{
+    static auto EncounterInstance = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FLivingWorldEventInstance::EncounterInstance"))
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() <= 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Optional()
+        .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; mov rcx, r14; call 0x*")
+        .Disp();
+
+    return EncounterInstance;
+}
+
 int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetPendingSpawnRequestsOffset()
 {
     static auto PendingSpawnRequests = GetSpawnedActorPointProvidersOffset() > 0 ? GetSpawnedActorPointProvidersOffset() + (int32)sizeof(TArray<FScriptInterface>) : (int32)(sizeof(FFortAthenaLivingWorldCategory*) + sizeof(FFortAthenaLivingWorldEvent*) + sizeof(TWeakObjectPtr<UFortAthenaLivingWorldEventData>));
@@ -121,6 +134,11 @@ TArray<FScriptInterface>* UFortAthenaLivingWorldManager::FLivingWorldEventInstan
 TArray<UFortAthenaLivingWorldManager::FLivingWorldPendingSpawnRequest>& UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetPendingSpawnRequests()
 {
     return *(TArray<FLivingWorldPendingSpawnRequest>*)((uint8*)this + GetPendingSpawnRequestsOffset());
+}
+
+UFortAthenaLivingWorldEncounterInstance*& UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetEncounterInstance()
+{
+    return *(UFortAthenaLivingWorldEncounterInstance**)((uint8*)this + GetEncounterInstanceOffset());
 }
 
 float& UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetRespawnTime()
@@ -648,6 +666,22 @@ int32 UFortAthenaLivingWorldManager::GetEventBudget(FFortAthenaLivingWorldEvent*
         return Budget;
 
     return FMath::Min(Budget, FMath::Max(0, Event->GetMaxSpawnedCount(SafeZonePhase) - FindOrCreateEventRuntimeData(Event).SpawnedCount));
+}
+
+int32 UFortAthenaLivingWorldManager::GetTotalEncounterInstanceActorCount(UFortAthenaLivingWorldEncounterInstance* EncounterInstance)
+{
+    int32 ActorCount = 0;
+
+    if (FLivingWorldEventInstance::GetEncounterInstanceOffset() <= 0)
+        return ActorCount;
+
+    for (auto& EventInstance : GetEventInstances())
+    {
+        if (EventInstance.GetEncounterInstance() == EncounterInstance)
+            ActorCount += EventInstance.GetActorCount();
+    }
+
+    return ActorCount;
 }
 
 int32 UFortAthenaLivingWorldManager::GetActorCount(const FFortAthenaLivingWorldCategory* Category, const FFortAthenaLivingWorldEvent* Event)

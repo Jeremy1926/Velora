@@ -1627,6 +1627,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldDensityGrid.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEncounter.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public\FortAthenaLivingWorldEvent.h">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Public</Filter>
     </ClInclude>
@@ -2573,6 +2576,9 @@
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldDensityGrid.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEncounter.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\Lager\Source\LagerRuntime\Private\FortAthenaLivingWorldEvent.cpp">
