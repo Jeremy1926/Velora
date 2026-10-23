@@ -225,6 +225,8 @@ void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AAct
     auto GameState = World ? World->GetGameState() : nullptr;
     auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(StaticClass()) : nullptr;
 
+    UE_LOG(LogVelora, Display, TEXT("diag lager register %s manager %p enabled %d authority %d"), *GetNameSafe(PointProvider), LivingWorldManager, LivingWorldManager ? (int32)LivingWorldManager->IsLivingWorldEnabled() : -1, GameState ? (int32)GameState->HasAuthority() : -1);
+
     if (!LivingWorldManager || !LivingWorldManager->IsLivingWorldEnabled() || !GameState->HasAuthority())
         return;
 
@@ -1136,6 +1138,11 @@ AActor* UFortAthenaLivingWorldManager::GetRandomPointProvider(const FGameplayTag
         if (PointProviderInterface->IsEnabled(PointFilter))
             ValidPointProviders.Add(PointProvider);
     }
+
+    static int32 DiagCount = 0;
+
+    if (DiagCount++ < 40)
+        UE_LOG(LogVelora, Display, TEXT("diag lager point providers runtime %d encounter %p candidates %d valid %d interfaces %d"), (int32)bFromRuntimeData, EncounterInstance, PointProviders.Num(), ValidPointProviders.Num(), HasPointProviderInterfaces() ? GetPointProviderInterfaces().Num() : GetPointProviders().Num());
 
     return ValidPointProviders.Num() ? ValidPointProviders[FMath::RandHelper(ValidPointProviders.Num())] : nullptr;
 }

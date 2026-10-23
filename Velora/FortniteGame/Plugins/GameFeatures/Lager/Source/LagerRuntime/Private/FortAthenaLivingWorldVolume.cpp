@@ -35,6 +35,8 @@ void AFortAthenaLivingWorldVolume::EnablePointProvider()
     auto WaterSubsystem = UWaterSubsystem::GetWaterSubsystem(GetWorld());
     const float WaterLevelIndex = WaterSubsystem ? WaterSubsystem->GetOceanFloodHeight() / 384.0f : -1.0f;
 
+    UE_LOG(LogVelora, Display, TEXT("diag lager volume %s enable water %f min %f max %f query %p root %p manager %p"), *GetNameSafe(this), WaterLevelIndex, GetWaterLevelIndexMin().GetValueAtLevel(0.0f), GetWaterLevelIndexMax().GetValueAtLevel(0.0f), GetEnvironmentQuery(), GetRootComponent(), GetCachedLivingWorldManager() ? *GetCachedLivingWorldManager() : nullptr);
+
     if (WaterLevelIndex != -1.0f)
     {
         const float WaterLevelIndexMin = GetWaterLevelIndexMin().GetValueAtLevel(0.0f);
@@ -136,6 +138,8 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
     }
 
     auto bIsEnabled = GetbIsEnabled();
+
+    UE_LOG(LogVelora, Display, TEXT("diag lager volume %s query finished valid %d points %d enabled %d"), *GetNameSafe(this), Result.IsValid() ? 1 : 0, GetPoints().Num(), bIsEnabled ? (int32)*bIsEnabled : -1);
 
     if (GetPoints().Num() > 0 && GetWorld() && (!bIsEnabled || *bIsEnabled))
         UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
