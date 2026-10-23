@@ -1498,6 +1498,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\FortGameSession.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Online</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortReplicationGraph.h">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -2513,6 +2516,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortGameSession.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortReplicationGraph.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Online</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp">
