@@ -757,6 +757,13 @@ TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>& URepli
     return *(TArray<TPair<FObjectKey, UReplicationGraphNode_ConnectionDormancyNode*>>*)((uint8*)&GetStreamingLevelCollection() + sizeof(FStreamingLevelActorListCollection));
 }
 
+float& UReplicationGraphNode_DormancyNode::GetMaxZForConnection()
+{
+    static float MaxZForConnection = UE::LWC::IsEnabled() ? 8796093022208.f : 2097152.f;
+
+    return MaxZForConnection;
+}
+
 void UReplicationGraphNode_DormancyNode::GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params)
 {
     DETOUR(UReplicationGraphNode_DormancyNode, GatherActorListsForConnection, Anchor::Hook()
@@ -772,7 +779,7 @@ void UReplicationGraphNode_DormancyNode::GatherActorListsForConnection(const FCo
 
     for (int32 Index = 0; Index < Params.GetNumViewers(); Index++)
     {
-        if (Params.GetViewer(Index).GetViewLocation().Z > (UE::LWC::IsEnabled() ? 8796093022208.0 : 2097152.0))
+        if (Params.GetViewer(Index).GetViewLocation().Z > GetMaxZForConnection())
             ++NumViewersAboveMaxZ;
     }
 
@@ -880,6 +887,13 @@ UReplicationGraphNode_ConnectionDormancyNode* UReplicationGraphNode_DormancyNode
     ConnectionNode->GetLastGatheredFrame() = Params.GetReplicationFrameNum();
 
     return ConnectionNode;
+}
+
+UClass* UReplicationGraphNode_ActorList::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.ReplicationGraphNode_ActorList"));
+
+    return Class;
 }
 
 UClass* UReplicationGraphNode_GridCell::StaticClass()
@@ -1161,6 +1175,37 @@ bool UReplicationGraphNode_GridSpatialization2D::WillActorLocationGrowSpatialBou
     const FBox GridBounds = TGameLayout<FBox>::Load(GetGridBounds());
 
     return GridBounds.IsValid ? false : (Location.X < TLWCGameLayout<float, double>::Load(GetSpatialBias()) || Location.Y < TLWCGameLayout<float, double>::Load(GetSpatialBias() + TLWCGameLayout<float, double>::Size()));
+}
+
+TClassMap<bool>& UReplicationGraphNode_GridSpatialization2D::GetClassRebuildDenyList()
+{
+    static auto ClassRebuildDenyList = Anchor::Offset(TEXT("UReplicationGraphNode_GridSpatialization2D::ClassRebuildDenyList"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Has("mov cl, [rbx+0x*]")
+        .Find("add rcx, 0x*")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("add rcx, 0x*")
+        .Imm();
+
+    return *(TClassMap<bool>*)((uint8*)this + ClassRebuildDenyList);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::AddToClassRebuildDenyList(UClass* Class)
+{
+    GetClassRebuildDenyList().Set(Class, true);
 }
 
 void UReplicationGraphNode_GridSpatialization2D::HandleActorOutOfSpatialBounds(AActor* Actor, const FVector& Location3D, const bool bStaticActor)

@@ -66,6 +66,8 @@ public:
 class UReplicationGraphNode_ActorList : public UReplicationGraphNode
 {
 public:
+    static UClass* StaticClass();
+
     FActorRepListRefView& GetReplicationActorList();
 
     FStreamingLevelActorListCollection& GetStreamingLevelCollection();
@@ -100,6 +102,8 @@ class UReplicationGraphNode_DormancyNode : public UReplicationGraphNode_ActorLis
 {
 public:
     static UClass* StaticClass();
+
+    static float& GetMaxZForConnection();
 
     void GatherActorListsForConnection(const FConnectionGatherActorListParameters& Params);
 
@@ -181,6 +185,12 @@ public:
 
     TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>& GetCreateCellNodeOverride();
 
+    float& GetCellSize();
+
+    uint8* GetSpatialBias();
+
+    void AddToClassRebuildDenyList(UClass* Class);
+
 private:
     struct FPlayerGridCellInformation
     {
@@ -188,9 +198,7 @@ private:
         FIntPoint PrevLocation;
     };
 
-    float& GetCellSize();
-
-    uint8* GetSpatialBias();
+    TClassMap<bool>& GetClassRebuildDenyList();
 
     float& GetConnectionMaxZ();
 

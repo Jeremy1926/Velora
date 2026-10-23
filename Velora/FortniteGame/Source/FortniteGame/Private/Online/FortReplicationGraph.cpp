@@ -10,6 +10,7 @@
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h"
@@ -26,6 +27,7 @@
 #include "Player/FortTeamHealthInfo.h"
 #include "HAL/IConsoleManager.h"
 #include "HAL/UnrealMemory.h"
+#include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "Templates/Function.h"
 #include "UObject/ScriptDelegates.h"
@@ -107,6 +109,20 @@ TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplication
     return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)(&GetClassRepNodePolicies() + 1) + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
 }
 
+UReplicationGraphNode_ActorList*& UFortReplicationGraph::GetAlwaysRelevantNode()
+{
+    static auto AlwaysRelevantNode = StaticClass()->FindPropertyByName(FName(TEXT("AlwaysRelevantNode")));
+
+    return *AlwaysRelevantNode->ContainerPtrToValuePtr<UReplicationGraphNode_ActorList*>(this);
+}
+
+UReplicationGraphNode*& UFortReplicationGraph::GetLiveSpectatorRelevancyNode()
+{
+    static auto LiveSpectatorRelevancyNode = StaticClass()->FindPropertyByName(FName(TEXT("LiveSpectatorRelevancyNode")));
+
+    return *LiveSpectatorRelevancyNode->ContainerPtrToValuePtr<UReplicationGraphNode*>(this);
+}
+
 TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStreamingLevelActors()
 {
     static auto ReplayPlayerStateLimiterNode = StaticClass()->FindPropertyByName(FName(TEXT("ReplayPlayerStateLimiterNode")));
@@ -150,6 +166,60 @@ void UFortReplicationGraph::InitConnectionGraphNodes(UNetReplicationGraphConnect
 
     AddConnectionGraphNode(AlwaysRelevantConnectionNode, ConnectionManager);
     AddConnectionGraphNode(ConnectionManager->GetNetConnection()->IsReplay() ? GetReplayPlayerStateLimiterNode() : GetPlayerStateLimiterNode(), ConnectionManager);
+}
+
+void UFortReplicationGraph::InitGlobalGraphNodes()
+{
+    DETOUR(UFortReplicationGraph, InitGlobalGraphNodes, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x98)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    static auto CellSize = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.CellSize"));
+    static auto SpatialBiasX = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.SpatialBiasX"));
+    static auto SpatialBiasY = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.SpatialBiasY"));
+    static auto DisableSpatialRebuilds = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DisableSpatialrebuilds"));
+    static auto MaxZDormantNode = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.MaxZDormantNode"));
+    static auto ReplayMaxPlayerStatesPerFrame = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.Replay.MaxPlayerStatesPerFrame"));
+    static auto DSFEnabled = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DSF.Enabled"));
+
+    auto RootGridNode = CreateNewNode<UReplicationGraphNode_GridSpatialization2D>();
+    GetRootGridNode() = RootGridNode;
+    RootGridNode->GetCellSize() = CellSize->GetFloat();
+    TLWCGameLayout<float, double>::Store(RootGridNode->GetSpatialBias(), SpatialBiasX->GetFloat());
+    TLWCGameLayout<float, double>::Store(RootGridNode->GetSpatialBias() + TLWCGameLayout<float, double>::Size(), SpatialBiasY->GetFloat());
+
+    if (DisableSpatialRebuilds->GetInt())
+        RootGridNode->AddToClassRebuildDenyList(AActor::StaticClass());
+
+    AddGlobalGraphNode(RootGridNode);
+
+    UReplicationGraphNode_DormancyNode::GetMaxZForConnection() = MaxZDormantNode->GetFloat();
+
+    auto AlwaysRelevantNode = CreateNewNode<UReplicationGraphNode_ActorList>();
+    GetAlwaysRelevantNode() = AlwaysRelevantNode;
+    AddGlobalGraphNode(AlwaysRelevantNode);
+
+    auto World = GetNetDriver()->GetWorld();
+
+    auto PlayerStateLimiterNode = CreateNewNode<UFortReplicationGraphNode_PlayerStateFrequencyLimiter>();
+    GetPlayerStateLimiterNode() = PlayerStateLimiterNode;
+    PlayerStateLimiterNode->InitNode(World);
+
+    auto ReplayPlayerStateLimiterNode = CreateNewNode<UFortReplicationGraphNode_PlayerStateFrequencyLimiter>();
+    GetReplayPlayerStateLimiterNode() = ReplayPlayerStateLimiterNode;
+    ReplayPlayerStateLimiterNode->GetMaxStatesToReplicatePerFrame() = ReplayMaxPlayerStatesPerFrame->GetInt();
+    ReplayPlayerStateLimiterNode->InitNode(World);
+
+    GetLiveSpectatorRelevancyNode() = CreateNewNode<UFortReplicationGraphNode_LiveSpectator>();
+
+    EnableDynamicSpatialFrequencyNode(DSFEnabled->GetInt() != 0);
+
+    InitForPlaylist(Cast<AFortGameModeAthena>(GetNetDriver()->GetWorld()->GetAuthGameMode()));
 }
 
 void UFortReplicationGraph::EnableDynamicSpatialFrequencyNode(bool bEnable)

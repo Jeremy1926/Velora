@@ -37,11 +37,17 @@ public:
 
     UReplicationGraphNode_GridSpatialization2D*& GetRootGridNode();
 
+    UReplicationGraphNode_ActorList*& GetAlwaysRelevantNode();
+
+    UReplicationGraphNode*& GetLiveSpectatorRelevancyNode();
+
     TMap<FName, FActorRepListRefView>& GetAlwaysRelevantStreamingLevelActors();
 
     void InitializeForWorld(UWorld* World);
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
+
+    void InitGlobalGraphNodes();
 
     void InitDynamicSpatializationSettings();
 
