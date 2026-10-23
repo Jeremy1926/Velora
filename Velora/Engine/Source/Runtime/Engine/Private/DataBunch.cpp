@@ -66,6 +66,10 @@ void FOutBunch::SetReliable(bool bInReliable)
         .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
         .Start()
         .Find("test byte ptr [*+0x*], 0x4; jz *; cmp byte ptr [*+0x*], 0x1")
+        .Or()
+        .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
+        .Start()
+        .Find("test byte ptr [*+0x*], 0x4; jz *; cmp [*+0x*], *")
         .Optional()
         .Disp();
 
