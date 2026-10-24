@@ -27,6 +27,7 @@ void AFortSafeZoneIndicator::OffsetShrinkTimesFromServerTime(float Offset)
         .Find("mov byte ptr [*], 0x0; mov rcx, [*]; call 0x*")
         .Find("call 0x*")
         .IsTarget("ret*")
+        .Optional()
         .AtCall());
 
     auto GameState = GetWorld()->GetGameState();
@@ -50,6 +51,7 @@ void AFortSafeZoneIndicator::SetShrinkDuration(float ShrinkDuration)
         .Find("mov rcx, [*]; movaps xmm1, *; call 0x*")
         .Find("call 0x*")
         .IsTarget("ret*")
+        .Optional()
         .AtCall());
 
     GetSafeZoneFinishShrinkTime() = GetSafeZoneStartShrinkTime() + ShrinkDuration;
@@ -76,6 +78,7 @@ void AFortSafeZoneIndicator::OnSafeZoneTimerPauseChanged(bool bIsPaused)
         .Find("movzx edx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Optional()
         .AtStubBranches(), Anchor::Hook()
         .If(AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
         .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
