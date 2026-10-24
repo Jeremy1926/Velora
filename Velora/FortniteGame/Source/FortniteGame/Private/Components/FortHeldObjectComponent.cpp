@@ -276,6 +276,14 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
             .Find("jnz 0x*")
             .Target()
             .Find("mov eax, [rcx+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rax, [rcx+0x*]; test rax, rax; jz 0x*")
+            .Find("jz 0x*")
+            .Target()
+            .Find("mov eax, [rcx+0x*]")
             .Disp();
 
         if (!CachedInstigator || !WeakInstigator)
