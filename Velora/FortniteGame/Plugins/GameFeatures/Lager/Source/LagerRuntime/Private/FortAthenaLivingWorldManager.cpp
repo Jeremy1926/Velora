@@ -184,6 +184,14 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetSpawnedCou
         .Find("call 0x*")
         .Target()
         .Find("sub ecx, [r14+0x*]")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Optional()
+        .Find("mov r9d, r14d; mov r8, r15; mov rdx, rsi; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("sub ecx, [r14+0x*]")
         .Disp();
 
     return SpawnedCount > 0 ? SpawnedCount : (int32)sizeof(float);
@@ -217,6 +225,11 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetDensityCom
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Optional()
         .Find("movss xmm2, dword ptr [r12+0x*]; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Optional()
+        .Find("movss xmm2, dword ptr [r15+0x*]; lea rdx, [rbp-0x*]; mov rcx, rdi; call 0x*")
         .Disp();
 
     return DensityComputationRange > 0 ? DensityComputationRange : (int32)(sizeof(float) + sizeof(int32) + sizeof(float));
@@ -1910,6 +1923,12 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetTagDensityG
         .Find("mov rdx, rsi; mov rcx, rbx; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [rsi+0x*]")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rdx, rbx; mov rcx, rdi; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [rbx+0x*]")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (NativeGetTagDensityGrid)
@@ -1988,6 +2007,11 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("movss xmm2, dword ptr [r12+0x*]; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("movss xmm2, dword ptr [r15+0x*]; lea rdx, [rbp-0x*]; mov rcx, rdi; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
