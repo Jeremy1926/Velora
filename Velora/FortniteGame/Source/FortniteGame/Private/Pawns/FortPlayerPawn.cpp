@@ -245,6 +245,34 @@ void AFortPlayerPawn::HandleInVehicleUpdate_ChangingSeats(const FFortPlayerPawnV
     Original(VehicleChangeParams);
 }
 
+void AFortPlayerPawn::SetIsInsideSafeZone(bool bNewValue)
+{
+    DETOUR(AFortPlayerPawn, SetIsInsideSafeZone, Anchor::Hook()
+        .Body(TEXT("/Script/FortniteGame.FortGameModeAthena:SafeZoneInsideChecks"))
+        .Find("call 0x*; mov rax, [rdi]; mov dl, *; mov rcx, rdi; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    static auto bIsInsideSafeZone = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIsInsideSafeZone")));
+
+    if (GetLocalRole() == ROLE_Authority && bIsInsideSafeZone->GetPropertyValue_InContainer(this) != bNewValue)
+    {
+        bIsInsideSafeZone->SetPropertyValue_InContainer(this, bNewValue);
+        OnRep_IsInsideSafeZone();
+    }
+}
+
+void AFortPlayerPawn::OnRep_IsInsideSafeZone()
+{
+    static auto OnRep_IsInsideSafeZone = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::OnRep_IsInsideSafeZone"))
+        .Body(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_IsInsideSafeZone"))
+        .Get();
+
+    OnRep_IsInsideSafeZone(this);
+}
+
 FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()
 {
     static auto LastEquippedWeaponOrGadgetGUID = Anchor::Offset(TEXT("AFortPlayerPawn::LastEquippedWeaponOrGadgetGUID"))

@@ -103,6 +103,10 @@ public:
 
     void HandleInVehicleUpdate_ChangingSeats(const FFortPlayerPawnVehicleChangeParams& VehicleChangeParams);
 
+    void SetIsInsideSafeZone(bool bNewValue);
+
+    void OnRep_IsInsideSafeZone();
+
     FGuid* GetLastEquippedWeaponOrGadgetGUID();
 
     void SetLastEquippedWeaponOrGadget(UFortWorldItem* Item);
