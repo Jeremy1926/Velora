@@ -2,6 +2,7 @@
 #include "Conversation/FortConversationTaskNode_UpgradeItem.h"
 #include "Conversation/FortConversationContextLibrary.h"
 #include "Building/BuildingItemWeaponUpgradeActor.h"
+#include "Items/FortItemDefinition.h"
 #include "Items/FortWeaponItemDefinition.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortPlayerController.h"
@@ -60,7 +61,7 @@ TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FC
         return UpgradePrice;
     }
 
-    static auto GetUpgradePrice = Anchor::Function<TOptional<int32>* (*)(const UFortConversationTaskNode_UpgradeItem*, TOptional<int32>*, const FWeaponUpgradeItemRow*)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradePrice"))
+    static auto GetUpgradePrice = Anchor::Optional<TOptional<int32>* (*)(const UFortConversationTaskNode_UpgradeItem*, TOptional<int32>*, const FWeaponUpgradeItemRow*)>(TEXT("UFortConversationTaskNode_UpgradeItem::GetUpgradePrice"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
@@ -69,9 +70,16 @@ TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FC
         .Target()
         .Get();
 
-    GetUpgradePrice(this, &UpgradePrice, UpgradedItemRow);
+    if (GetUpgradePrice)
+    {
+        GetUpgradePrice(this, &UpgradePrice, UpgradedItemRow);
 
-    return UpgradePrice;
+        return UpgradePrice;
+    }
+
+    static auto PricingKey = FName(TEXT("UpgradeItem"));
+
+    return UpgradedItemRow ? FindServicePrice(PricingKey, (int32)UpgradedItemRow->GetUpgradedWeaponDef()->GetRarity()) : UpgradePrice;
 }
 
 FConversationTaskResult UFortConversationTaskNode_UpgradeItem::ExecuteTaskNode_Implementation(const FConversationContext& Context) const
