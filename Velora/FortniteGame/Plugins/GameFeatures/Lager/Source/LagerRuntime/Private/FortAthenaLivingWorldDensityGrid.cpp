@@ -136,6 +136,18 @@ bool FFortAthenaLivingWorldDensityGrid::AddActor(AActor* InActor, float DensityV
         .Find("movaps xmm3, xmm6; movaps xmm2, xmm7; mov rdx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(HasActorDensityValues())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov r9, *; lea rdx, [*]; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movss xmm3, dword ptr [0x*]; xorps xmm2, xmm2; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movaps xmm3, xmm6; movaps xmm2, xmm7; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (HasActorDensityValues())
@@ -288,6 +300,21 @@ float* FFortAthenaLivingWorldDensityGrid::GetActorDataDensityRange(AActor* InAct
         .Find("call 0x*")
         .Target()
         .Find("movss [rbx+0x*], xmm1; mov byte ptr [rbx+0x*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov r9, *; lea rdx, [*]; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movss xmm3, dword ptr [0x*]; xorps xmm2, xmm2; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movaps xmm3, xmm6; movaps xmm2, xmm7; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [rbp-0x*]; lea rbx, [rsi+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movss [rbx+0x*], xmm1; mov byte ptr [rbx+0x*], 0x0")
         .Optional()
         .Disp();
 
@@ -417,6 +444,12 @@ TMap<FObjectKey, int32>& FFortAthenaLivingWorldDensityGrid::GetActorToDataIndexM
         .Find("call 0x*")
         .Target()
         .Find("lea rdi, [rcx+0x*]; lea rcx, [rsp+0x*]; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rdi, [rcx+0x*]; and dword ptr [*], 0x0; lea rcx, [*]; call 0x*")
         .Disp();
 
     return *(TMap<FObjectKey, int32>*)((uint8*)this + ActorToDataIndexMap);
