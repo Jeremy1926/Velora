@@ -183,6 +183,12 @@ public:
 
     void AddActor_Dormancy(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo);
 
+    void RemoveActor_Static(const FNewReplicatedActorInfo& ActorInfo);
+
+    void RemoveActor_Dynamic(const FNewReplicatedActorInfo& ActorInfo);
+
+    void RemoveActor_Dormancy(const FNewReplicatedActorInfo& ActorInfo);
+
     void AddActorInternal_Static_Implementation(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
 
     void PutStaticActorIntoCell(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
@@ -205,6 +211,10 @@ protected:
     void AddActorInternal_Dynamic(const FNewReplicatedActorInfo& ActorInfo);
 
     void AddActorInternal_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bDormancyDriven);
+
+    void RemoveActorInternal_Dynamic(const FNewReplicatedActorInfo& ActorInfo);
+
+    void RemoveActorInternal_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bWasAddedAsDormantActor);
 
 private:
     struct FPlayerGridCellInformation

@@ -444,6 +444,29 @@ void UFortReplicationGraph::RouteAddNetworkActorToNodes(const FNewReplicatedActo
         LiveSpectatorRelevancyNode->NotifyAddNetworkActor(ActorInfo);
 }
 
+void UFortReplicationGraph::RouteRemoveNetworkActorToNodes(const FNewReplicatedActorInfo& ActorInfo)
+{
+    DETOUR(UFortReplicationGraph, RouteRemoveNetworkActorToNodes, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x50)
+        .HasVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "cmp eax, 0x4; jnl 0x*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    const auto Policy = GetMappingPolicy(ActorInfo.Class, ActorInfo.Actor);
+
+    if (Policy == EClassRepNodeMapping::Spatialize_Static)
+        GetRootGridNode()->RemoveActor_Static(ActorInfo);
+    else if (Policy == EClassRepNodeMapping::Spatialize_Dynamic)
+        GetRootGridNode()->RemoveActor_Dynamic(ActorInfo);
+    else if (Policy == EClassRepNodeMapping::Spatialize_Dormancy)
+        GetRootGridNode()->RemoveActor_Dormancy(ActorInfo);
+
+    Original(ActorInfo);
+}
+
 void UFortReplicationGraph::InitGlobalActorClassSettings()
 {
     DETOUR(UFortReplicationGraph, InitGlobalActorClassSettings, Anchor::Hook()

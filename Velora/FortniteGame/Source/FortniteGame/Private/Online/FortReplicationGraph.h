@@ -119,6 +119,8 @@ public:
 
     void RouteAddNetworkActorToNodes(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo);
 
+    void RouteRemoveNetworkActorToNodes(const FNewReplicatedActorInfo& ActorInfo);
+
     void InitGlobalActorClassSettings();
 
     void InitGlobalGraphNodes();

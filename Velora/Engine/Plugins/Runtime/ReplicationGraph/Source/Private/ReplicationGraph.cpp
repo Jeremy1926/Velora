@@ -1290,6 +1290,36 @@ void UReplicationGraphNode_GridSpatialization2D::AddActor_Dormancy(const FNewRep
     AddActor_Dormancy(this, ActorInfo, ActorRepInfo);
 }
 
+void UReplicationGraphNode_GridSpatialization2D::RemoveActor_Static(const FNewReplicatedActorInfo& ActorInfo)
+{
+    if (GetGraphGlobals().IsValid())
+    {
+        auto& GlobalInfo = GetGraphGlobals()->GlobalActorReplicationInfoMap->Get(ActorInfo.Actor);
+
+        RemoveActorInternal_Static(ActorInfo, GlobalInfo, GlobalInfo.GetWantsToBeDormant());
+    }
+}
+
+void UReplicationGraphNode_GridSpatialization2D::RemoveActor_Dynamic(const FNewReplicatedActorInfo& ActorInfo)
+{
+    RemoveActorInternal_Dynamic(ActorInfo);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::RemoveActor_Dormancy(const FNewReplicatedActorInfo& ActorInfo)
+{
+    static auto RemoveActor_Dormancy = Anchor::Function<void (*)(UReplicationGraphNode_GridSpatialization2D*, const FNewReplicatedActorInfo&)>(TEXT("UReplicationGraphNode_GridSpatialization2D::RemoveActor_Dormancy"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x50)
+        .Find("mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    RemoveActor_Dormancy(this, ActorInfo);
+}
+
 void UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo, float OldDist)
 {
     static auto NotifyActorCullDistChange = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_GridSpatialization2D*, AActor*, FGlobalActorReplicationInfo&, float)>(TEXT("UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange"))
@@ -1336,6 +1366,30 @@ void UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Static_Impleme
         .Get();
 
     AddActorInternal_Static_Implementation(this, ActorInfo, ActorRepInfo, bDormancyDriven);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Dynamic(const FNewReplicatedActorInfo& ActorInfo)
+{
+    static auto RemoveActorInternal_Dynamic = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_GridSpatialization2D*, const FNewReplicatedActorInfo&)>(TEXT("UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Dynamic"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x38)
+        .Get();
+
+    RemoveActorInternal_Dynamic(this, ActorInfo);
+}
+
+void UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo, bool bWasAddedAsDormantActor)
+{
+    static auto RemoveActorInternal_Static = Anchor::VirtualFunction<void (*)(UReplicationGraphNode_GridSpatialization2D*, const FNewReplicatedActorInfo&, FGlobalActorReplicationInfo&, bool)>(TEXT("UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Static"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x40)
+        .Get();
+
+    RemoveActorInternal_Static(this, ActorInfo, ActorRepInfo, bWasAddedAsDormantActor);
 }
 
 UReplicationGraphNode_GridCell* UReplicationGraphNode_GridSpatialization2D::GetCellNode(UReplicationGraphNode_GridCell*& NodePtr)
