@@ -49,6 +49,12 @@ int32 UReplicationDriver::ServerReplicateActors(float DeltaSeconds)
         .Start()
         .SlotIn(this)
         .LogSlot(TEXT("UReplicationDriver::ServerReplicateActors"), sizeof(void*))
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(this)
+        .SlotShift(this, 0x30)
+        .LogSlot(TEXT("UReplicationDriver::ServerReplicateActors"), sizeof(void*))
         .Get(sizeof(void*));
 
     return ServerReplicateActors(this, DeltaSeconds);
