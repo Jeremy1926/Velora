@@ -3404,7 +3404,7 @@ bool UReplicationGraph::ProcessRemoteFunction(AActor* Actor, UFunction* Function
             if (NetConnection->GetViewTarget() == nullptr)
                 continue;
 
-            if (ActorStreamingLevelName != NAME_None && NetConnection->GetClientVisibleLevelNames().Contains(ActorStreamingLevelName) == false)
+            if (ActorStreamingLevelName != NAME_None && !(FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)NetConnection->GetClientVisibleLevelNames()).Contains(ActorStreamingLevelName.GetComparisonIndex()) : NetConnection->GetClientVisibleLevelNames().Contains(ActorStreamingLevelName)))
                 continue;
 
             if (ConnectionActorInfo.Channel == nullptr && (GetRPC_Multicast_OpenChannelForClass().GetChecked(Actor->GetClass()) == true))

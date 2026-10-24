@@ -1032,7 +1032,7 @@ void UFortReplicationGraph::OnAlwaysRelevantStreamingActorAdded(AActor* Actor, F
         TSet<FName> AllVisibleLevelNames;
         ConnectionManager->GetClientVisibleLevelNames(AllVisibleLevelNames);
 
-        if (!AllVisibleLevelNames.Contains(ActorInfo.StreamingLevelName))
+        if (!(FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)AllVisibleLevelNames).Contains(ActorInfo.StreamingLevelName.GetComparisonIndex()) : AllVisibleLevelNames.Contains(ActorInfo.StreamingLevelName)))
             continue;
 
         for (auto Node : ConnectionManager->GetConnectionGraphNodes())
