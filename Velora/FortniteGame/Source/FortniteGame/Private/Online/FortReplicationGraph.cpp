@@ -1675,7 +1675,7 @@ uint8 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabl
         .FirstOf("cmp byte ptr [rbx+0x*], 0x0", "test byte ptr [rbx+0x*], 0x*")
         .Value();
 
-    return Mask ? Mask : 0xFF;
+    return Mask ? Mask : 1;
 }
 
 UClass* UFortReplicationGraphNode_Custom::StaticClass()
