@@ -26,6 +26,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
+#include "Logging/LogMacros.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -513,12 +514,43 @@ UStatManager* FFortClientObservedStatArray::GetMyStatManager() const
 
 void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState)
 {
+    static auto DiagZipline = FZiplinePawnState::StaticStruct()->FindPropertyByName(FName(TEXT("Zipline")));
+    static auto DiagInteractComponent = FZiplinePawnState::StaticStruct()->FindPropertyByName(FName(TEXT("InteractComponent")));
+    static auto DiagIsZiplining = FZiplinePawnState::StaticStruct()->FindPropertyByName(FName(TEXT("bIsZiplining")));
+    static auto DiagAscenderClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/AscenderCodeRuntime.FortAscenderZipline"));
+    static auto DiagCanBeginZiplining = Anchor::VirtualFunction<bool (*)(AActor*, AFortPlayerPawn*, UObject*)>(TEXT("AFortAthenaZiplineBase::CanBeginZiplining_Implementation"))
+        .If(DiagAscenderClass != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaZiplineBase:CanBeginZiplining"))
+        .Find("call [rax+0x*]")
+        .Optional()
+        .Get();
+
+    auto DiagZiplineActor = *DiagZipline->ContainerPtrToValuePtr<AActor*>(&InZiplineState);
+    auto DiagComponent = *DiagInteractComponent->ContainerPtrToValuePtr<UObject*>(&InZiplineState);
+    const bool bDiagAscender = DiagZiplineActor && DiagAscenderClass && DiagZiplineActor->IsA(DiagAscenderClass);
+    const int32 DiagCanBegin = bDiagAscender && DiagCanBeginZiplining ? (int32)DiagCanBeginZiplining(DiagZiplineActor, this, DiagComponent) : -1;
+
     auto& ZiplineState = GetZiplineState();
+    const int32 DiagOldValue = ZiplineState.GetAuthoritativeValue();
 
     if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
         memcpy(&ZiplineState, &InZiplineState, FZiplinePawnState::StaticStruct()->GetPropertiesSize());
 
     HandleZiplineStateChanged();
+
+    UE_LOG(LogVelora, Display, TEXT("diag zipline %s zipline %s class %s component %s ziplining %d value %d -> %d now %d ascender %d native can begin before %d"), *GetNameSafe(this), *GetNameSafe(DiagZiplineActor), DiagZiplineActor ? *GetNameSafe(DiagZiplineActor->GetClass()) : TEXT("none"), *GetNameSafe(DiagComponent), (int32)*DiagIsZiplining->ContainerPtrToValuePtr<uint8>(&InZiplineState), DiagOldValue, InZiplineState.GetAuthoritativeValue(), ZiplineState.GetAuthoritativeValue(), (int32)bDiagAscender, DiagCanBegin);
+
+    if (bDiagAscender)
+    {
+        static auto DiagPawnUsingHandle = DiagAscenderClass->FindPropertyByName(FName(TEXT("PawnUsingHandle")));
+        static auto DiagHandleReturning = DiagAscenderClass->FindPropertyByName(FName(TEXT("bHandleReturning")));
+        static auto DiagInitialSplineEnd = DiagAscenderClass->FindPropertyByName(FName(TEXT("InitialSplineEndLocation")));
+        static auto DiagCurrentHandle = DiagAscenderClass->FindPropertyByName(FName(TEXT("CurrentHandleLocation")));
+        auto DiagInitial = DiagInitialSplineEnd->ContainerPtrToValuePtr<double>(DiagZiplineActor);
+        auto DiagHandle = DiagCurrentHandle->ContainerPtrToValuePtr<double>(DiagZiplineActor);
+
+        UE_LOG(LogVelora, Display, TEXT("diag ascender %s pawn using handle %s returning %d initial spline end %f %f %f handle %f %f %f"), *GetNameSafe(DiagZiplineActor), *GetNameSafe(*DiagPawnUsingHandle->ContainerPtrToValuePtr<UObject*>(DiagZiplineActor)), (int32)*DiagHandleReturning->ContainerPtrToValuePtr<uint8>(DiagZiplineActor), DiagInitial[0], DiagInitial[1], DiagInitial[2], DiagHandle[0], DiagHandle[1], DiagHandle[2]);
+    }
 }
 
 void AFortPlayerPawn::HandleZiplineStateChanged()
