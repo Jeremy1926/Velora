@@ -22,6 +22,8 @@
 #include "GameplayTagContainer.h"
 #include "Containers/Map.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerState.h"
 #include "Math/Rotator.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
@@ -339,6 +341,36 @@ void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* co
 
 AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AActor* Actor)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("test *, *; jz 0x*; call 0x*; mov rcx, [*+0x10]; mov rdx, rax; call 0x*")
+        .Get();
+
+    if (bInlined)
+    {
+        if (!Actor)
+            return nullptr;
+
+        if (auto FortPC = Cast<AFortPlayerController>(Actor))
+            return FortPC;
+
+        if (auto Pawn = Cast<APawn>(Actor))
+        {
+            if (auto FortPC = Cast<AFortPlayerController>(Pawn->GetController()))
+                return FortPC;
+        }
+
+        if (auto PlayerState = Cast<APlayerState>(Actor))
+        {
+            if (auto FortPC = Cast<AFortPlayerController>(PlayerState->GetOwner()))
+                return FortPC;
+        }
+
+        return Cast<AFortPlayerController>(Actor->GetOwner());
+    }
+
     static auto GetFortPlayerControllerFromActor = Anchor::Function<AFortPlayerController* (*)(AActor*)>(TEXT("UFortKismetLibrary::GetFortPlayerControllerFromActor"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor"))
         .Get();
