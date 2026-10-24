@@ -103,8 +103,6 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
     {
         struct
         {
-            FVector SpawnLocation;
-            FRotator SpawnRotation;
             AFortPlayerController* OptionalOwnerPC;
             UClass* OverrideClass;
             AActor* Owner;
@@ -112,20 +110,26 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
             EFortPickupSpawnSource PickupSpawnSource;
             uint8 bRandomRotation : 1;
             uint8 bPickupOnlyRelevantToOwner : 1;
-        } const AfterItemEntry{ SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner };
+        } const AfterSpawnRotation{ OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner };
+
+        const int32 SpawnLocationOffset = sizeof(UWorld*) + FFortItemEntry::GetTypeSize();
+        const int32 SpawnRotationOffset = SpawnLocationOffset + TGameLayout<FVector>::Size();
+        const int32 AfterSpawnRotationOffset = SpawnRotationOffset + TGameLayout<FRotator>::Size();
 
         TArray<uint8> CreationData;
-        CreationData.AddUninitialized(sizeof(UWorld*) + FFortItemEntry::GetTypeSize() + sizeof(AfterItemEntry));
+        CreationData.AddUninitialized(AfterSpawnRotationOffset + sizeof(AfterSpawnRotation));
 
         *(UWorld**)CreationData.GetData() = World;
         auto ItemEntryCopy = new(CreationData.GetData() + sizeof(UWorld*)) FFortItemEntry(ItemEntry);
-        memcpy(CreationData.GetData() + sizeof(UWorld*) + FFortItemEntry::GetTypeSize(), &AfterItemEntry, sizeof(AfterItemEntry));
+        TGameLayout<FVector>::Store(CreationData.GetData() + SpawnLocationOffset, SpawnLocation);
+        TGameLayout<FRotator>::Store(CreationData.GetData() + SpawnRotationOffset, SpawnRotation);
+        memcpy(CreationData.GetData() + AfterSpawnRotationOffset, &AfterSpawnRotation, sizeof(AfterSpawnRotation));
 
         if (bWeakOwners)
         {
-            auto CreationAfterItemEntry = (decltype(&AfterItemEntry))(CreationData.GetData() + sizeof(UWorld*) + FFortItemEntry::GetTypeSize());
-            *(FWeakObjectPtr*)&CreationAfterItemEntry->OptionalOwnerPC = OptionalOwnerPC;
-            *(FWeakObjectPtr*)&CreationAfterItemEntry->Owner = Owner;
+            auto CreationAfterSpawnRotation = (decltype(&AfterSpawnRotation))(CreationData.GetData() + AfterSpawnRotationOffset);
+            *(FWeakObjectPtr*)&CreationAfterSpawnRotation->OptionalOwnerPC = OptionalOwnerPC;
+            *(FWeakObjectPtr*)&CreationAfterSpawnRotation->Owner = Owner;
         }
 
         auto Pickup = ((AFortPickup* (*)(const uint8*))CreateFromData)(CreationData.GetData());
@@ -134,14 +138,17 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         return Pickup;
     }
 
+    const TGameValue<FVector> GameSpawnLocation(SpawnLocation);
+    const TGameValue<FRotator> GameSpawnRotation(SpawnRotation);
+
     if (!bArguments && PickupSourceTypeFlags && PickupSourceTypeFlags->GetSize() == sizeof(EFortPickupSourceTypeFlag))
     {
         struct FortPickupCreationData
         {
             UWorld* World;
             const FFortItemEntry* ItemEntry;
-            const FVector* SpawnLocation;
-            const FRotator* SpawnRotation;
+            const TGameValue<FVector>* SpawnLocation;
+            const TGameValue<FRotator>* SpawnRotation;
             AFortPlayerController* OptionalOwnerPC;
             UClass* OverrideClass;
             AActor* Owner;
@@ -151,13 +158,13 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
             uint8 bPickupOnlyRelevantToOwner : 1;
         };
 
-        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner });
+        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &GameSpawnLocation, &GameSpawnRotation, OptionalOwnerPC, OverrideClass, Owner, SourceTypeFlags, PickupSpawnSource, bRandomRotation, bPickupOnlyRelevantToOwner });
     }
 
     if (!bArguments)
-        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &SpawnLocation, &SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, (uint32)SourceTypeFlags });
+        return ((AFortPickup* (*)(const FortPickupCreationData&))CreateFromData)({ World, &ItemEntry, &GameSpawnLocation, &GameSpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, (uint32)SourceTypeFlags });
 
-    return ((AFortPickup* (*)(UWorld*, const FFortItemEntry&, const FVector&, const FRotator&, AFortPlayerController*, UClass*, AActor*, bool, bool))CreateFromData)(World, ItemEntry, SpawnLocation, SpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, bPickupOnlyRelevantToOwner);
+    return ((AFortPickup* (*)(UWorld*, const FFortItemEntry&, const TGameValue<FVector>&, const TGameValue<FRotator>&, AFortPlayerController*, UClass*, AActor*, bool, bool))CreateFromData)(World, ItemEntry, GameSpawnLocation, GameSpawnRotation, OptionalOwnerPC, OverrideClass, Owner, bRandomRotation, bPickupOnlyRelevantToOwner);
 }
 
 void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss, bool bShouldCombinePickupsWhenTossCompletes, EFortPickupSourceTypeFlag InPickupSourceTypeFlags, EFortPickupSpawnSource InPickupSpawnSource)
@@ -170,11 +177,11 @@ void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner,
 
     if (bTakesCombine)
     {
-        ((void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool, bool, EFortPickupSourceTypeFlag, EFortPickupSpawnSource))TossPickup)(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss, bShouldCombinePickupsWhenTossCompletes, InPickupSourceTypeFlags, InPickupSpawnSource);
+        ((void (*)(AFortPickup*, TGameValue<FVector>, AFortPawn*, int32, bool, bool, EFortPickupSourceTypeFlag, EFortPickupSpawnSource))TossPickup)(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss, bShouldCombinePickupsWhenTossCompletes, InPickupSourceTypeFlags, InPickupSpawnSource);
         return;
     }
 
-    ((void (*)(AFortPickup*, FVector, AFortPawn*, int32, bool, EFortPickupSourceTypeFlag, EFortPickupSpawnSource))TossPickup)(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss, InPickupSourceTypeFlags, InPickupSpawnSource);
+    ((void (*)(AFortPickup*, TGameValue<FVector>, AFortPawn*, int32, bool, EFortPickupSourceTypeFlag, EFortPickupSpawnSource))TossPickup)(this, FinalLocation, ItemOwner, OverrideMaxStackCount, bToss, InPickupSourceTypeFlags, InPickupSpawnSource);
 }
 
 decltype(AFortPickup::GameGivePickupTo) AFortPickup::GameGivePickupTo = nullptr;
@@ -202,9 +209,9 @@ void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, boo
             alignas(16) uint8 Parms[0x40] = {};
 
             *SelfActor->ContainerPtrToValuePtr<AFortPickup*>(Parms) = this;
-            *InteractingPawn->ContainerPtrToValuePtr<AFortPawn*>(Parms) = GetPickupLocationData().PickupTarget;
+            *InteractingPawn->ContainerPtrToValuePtr<AFortPawn*>(Parms) = GetPickupLocationData().GetPickupTarget();
             *WorldItemDefinition->ContainerPtrToValuePtr<UFortWorldItemDefinition*>(Parms) = Cast<UFortWorldItemDefinition>(GetPrimaryPickupItemEntry().GetItemDefinition());
-            *PickupLocation->ContainerPtrToValuePtr<FVector>(Parms) = GetActorLocation();
+            PickupLocation->SetPropertyValue_InContainer<FVector>(Parms, GetActorLocation());
 
             OnPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(Parms);
         }
@@ -239,7 +246,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         PendingSwaps.RemoveAt(Index);
     }
 
-    auto PickupTarget = GetPickupLocationData().PickupTarget;
+    auto PickupTarget = GetPickupLocationData().GetPickupTarget();
     auto PlayerController = PickupTarget ? Cast<AFortPlayerControllerAthena>(PickupTarget->GetController()) : nullptr;
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
 
@@ -477,6 +484,62 @@ TArray<FFortItemEntry>& AFortPickup::GetMultiItemPickupEntries()
     return *MultiItemPickupEntries->ContainerPtrToValuePtr<TArray<FFortItemEntry>>(this);
 }
 
+UScriptStruct* FFortPickupLocationData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPickupLocationData"));
+
+    return Struct;
+}
+
+AFortPawn* FFortPickupLocationData::GetPickupTarget() const
+{
+    static auto PickupTarget = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("PickupTarget"))) : nullptr;
+
+    return PickupTarget ? *PickupTarget->ContainerPtrToValuePtr<AFortPawn*>(this) : *(AFortPawn* const*)this;
+}
+
+UScriptStruct* FFortPickupRequestInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPickupRequestInfo"));
+
+    return Struct;
+}
+
+FGuid FFortPickupRequestInfo::GetSwapWithItem() const
+{
+    static auto SwapWithItem = StaticStruct()->FindPropertyByName(FName(TEXT("SwapWithItem")));
+
+    return *SwapWithItem->ContainerPtrToValuePtr<FGuid>(this);
+}
+
+float FFortPickupRequestInfo::GetFlyTime() const
+{
+    static auto FlyTime = StaticStruct()->FindPropertyByName(FName(TEXT("FlyTime")));
+
+    return *FlyTime->ContainerPtrToValuePtr<float>(this);
+}
+
+FVector FFortPickupRequestInfo::GetDirection() const
+{
+    static auto Direction = StaticStruct()->FindPropertyByName(FName(TEXT("Direction")));
+
+    return Direction->GetPropertyValue_InContainer<FVector>(this);
+}
+
+bool FFortPickupRequestInfo::GetPlayPickupSound() const
+{
+    static auto bPlayPickupSound = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bPlayPickupSound")));
+
+    return bPlayPickupSound->GetPropertyValue_InContainer(this);
+}
+
+bool FFortPickupRequestInfo::GetUseRequestedSwap() const
+{
+    static auto bUseRequestedSwap = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bUseRequestedSwap")));
+
+    return bUseRequestedSwap->GetPropertyValue_InContainer(this);
+}
+
 FFortPickupLocationData& AFortPickup::GetPickupLocationData()
 {
     static auto PickupLocationData = GetClass()->FindPropertyByName(FName(TEXT("PickupLocationData")));
@@ -516,7 +579,7 @@ void AFortPickup::SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup)
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
 {
-    static auto VirtualSetPickupTarget = Anchor::VirtualFunction<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(TEXT("AFortPickup::SetPickupTarget"))
+    static auto VirtualSetPickupTarget = Anchor::VirtualFunction<void (*)(AFortPickup*, AFortPawn*, float, const TGameValue<FVector>&, bool)>(TEXT("AFortPickup::SetPickupTarget"))
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("ret")
         .Last("mov byte ptr [rsp+0x20], 0x1")
@@ -533,7 +596,7 @@ void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, co
     if (VirtualSetPickupTarget)
         return VirtualSetPickupTarget(this, InPickupTarget, InFlyTime, InStartDirection, bPlayPickupSound);
 
-    static auto SetPickupTarget = Anchor::Function<void (*)(AFortPickup*, AFortPawn*, float, const FVector&, bool)>(TEXT("AFortPickup::SetPickupTarget"))
+    static auto SetPickupTarget = Anchor::Function<void (*)(AFortPickup*, AFortPawn*, float, const TGameValue<FVector>&, bool)>(TEXT("AFortPickup::SetPickupTarget"))
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("ret")
         .Last("mov byte ptr [rsp+0x20], 0x1")

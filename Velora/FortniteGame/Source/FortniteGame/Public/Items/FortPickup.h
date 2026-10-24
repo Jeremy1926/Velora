@@ -2,7 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Delegates/Delegate.h"
-#include "Engine/NetSerialization.h"
+#include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "Misc/Guid.h"
 
@@ -10,6 +10,7 @@ class AFortPawn;
 class AFortPickup;
 class AFortPlayerController;
 class IFortInventoryOwnerInterface;
+class UScriptStruct;
 class UWorld;
 struct FFortItemEntry;
 struct FRotator;
@@ -43,35 +44,32 @@ enum class EFortPickupSpawnSource : uint8
 
 struct FFortPickupLocationData
 {
-    AFortPawn* PickupTarget;
-    AFortPickup* CombineTarget;
-    AFortPawn* ItemOwner;
-    FVector_NetQuantize10 LootInitialPosition;
-    FVector_NetQuantize10 LootFinalPosition;
-    float FlyTime;
-    FVector_NetQuantizeNormal StartDirection;
-    FVector_NetQuantize10 FinalTossRestLocation;
-    EFortPickupTossState TossState;
-    FGuid PickupGuid;
+    static UScriptStruct* StaticStruct();
+
+    AFortPawn* GetPickupTarget() const;
 };
 
 struct FFortPickupRequestInfo
 {
-    FGuid SwapWithItem;
-    float FlyTime;
-    FVector Direction;
-    uint8 bPlayPickupSound : 1;
-    uint8 bIsAutoPickup : 1;
-    uint8 bUseRequestedSwap : 1;
-    uint8 bTrySwapWithWeapon : 1;
+    static UScriptStruct* StaticStruct();
+
+    FGuid GetSwapWithItem() const;
+
+    float GetFlyTime() const;
+
+    FVector GetDirection() const;
+
+    bool GetPlayPickupSound() const;
+
+    bool GetUseRequestedSwap() const;
 };
 
 struct FortPickupCreationData
 {
     UWorld* World;
     const FFortItemEntry* ItemEntry;
-    const FVector* SpawnLocation;
-    const FRotator* SpawnRotation;
+    const TGameValue<FVector>* SpawnLocation;
+    const TGameValue<FRotator>* SpawnRotation;
     AFortPlayerController* OptionalOwnerPC;
     UClass* OverrideClass;
     AActor* Owner;

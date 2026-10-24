@@ -13,7 +13,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const FVector& Position, const FVector& Direction)
+AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection)
 {
     DETOUR(AFortAthenaSupplyDrop, SpawnPickup, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(AFortAthenaSupplyDrop, execSpawnPickup))
@@ -22,6 +22,8 @@ AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDe
         .Find("mov [*+0x20], *; movsd [*], xmm*; call 0x*")
         .Find("call 0x*")
         .AtCall());
+
+    const FVector Position = GamePosition.Get();
 
     if (!ItemDefinition || NumberToSpawn <= 0)
         return nullptr;
@@ -63,8 +65,8 @@ void AFortAthenaSupplyDrop::execSpawnPickup(FFrame& Stack, void* const Z_Param__
     UFortWorldItemDefinition* ItemDefinition = nullptr;
     int32 NumberToSpawn = 0;
     AFortPawn* TriggeringPawn = nullptr;
-    FVector Position(ForceInit);
-    FVector Direction(ForceInit);
+    TGameValue<FVector> Position;
+    TGameValue<FVector> Direction;
 
     Stack.StepCompiledIn(&ItemDefinition);
     Stack.StepCompiledIn(&NumberToSpawn);

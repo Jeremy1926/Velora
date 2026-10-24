@@ -170,7 +170,7 @@ void AFortAIPawn::execSpawnPickupInWorldWithLootTierAsync(FFrame& Stack, void* c
         .InExec(TEXT("/Script/FortniteGame.FortAIPawn:SpawnPickupInWorldWithLootTierAsync")));
 
     FName LootTierName(NAME_None);
-    FVector Position(ForceInit);
+    TGameValue<FVector> Position;
     int32 OverrideMaxStackCount = 0;
     uint32 bToss = 0;
     EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
@@ -184,7 +184,7 @@ void AFortAIPawn::execSpawnPickupInWorldWithLootTierAsync(FFrame& Stack, void* c
     Stack.StepCompiledIn(&Source);
     Stack.Code += !!Stack.Code;
 
-    SpawnPickupInWorldWithLootTierAsync(LootTierName, Position, OverrideMaxStackCount, !!bToss, SourceType, Source);
+    SpawnPickupInWorldWithLootTierAsync(LootTierName, Position.Get(), OverrideMaxStackCount, !!bToss, SourceType, Source);
 }
 
 AFortInventory* AFortAIPawn::GetWorldInventory() const

@@ -423,7 +423,7 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
     return ActiveGameplayEffectHandle;
 }
 
-AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
+AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection, int32 OverrideMaxStackCount, bool bToss)
 {
     DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorld, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_SpawnPickupInWorld))
@@ -435,10 +435,10 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorld(UObject* WorldContextObje
         .Find("call 0x*")
         .AtCall());
 
-    return K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, AFortPickupAthena::StaticClass(), NumberToSpawn, Position, Direction, OverrideMaxStackCount, bToss);
+    return K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, AFortPickupAthena::StaticClass(), NumberToSpawn, GamePosition, GameDirection, OverrideMaxStackCount, bToss);
 }
 
-AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss)
+AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection, int32 OverrideMaxStackCount, bool bToss)
 {
     DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorldWithClass, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(UFortKismetLibrary, execK2_SpawnPickupInWorldWithClass))
@@ -450,6 +450,7 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldCo
 
     static auto bHasToss = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")))->FindPropertyByName(FName(TEXT("bToss"))) != nullptr;
 
+    const FVector Position = GamePosition.Get();
     auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
 
     if (!World || !ItemDefinition || NumberToSpawn <= 0)
@@ -480,7 +481,7 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldCo
     return Pickup;
 }
 
-TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source)
+TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const TGameValue<FVector>& GamePosition, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source)
 {
     DETOUR(UFortKismetLibrary, K2_SpawnPickupInWorldWithLootTier, Anchor::Hook()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")))
@@ -491,6 +492,7 @@ TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObje
         .Optional()
         .AtCall());
 
+    const FVector Position = GamePosition.Get();
     TArray<AFortPickup*> Pickups;
     TArray<FFortItemEntry> LootToDrop;
     auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
@@ -550,18 +552,18 @@ int32 FSpawnItemVariantParams::GetNumberToSpawn() const
     return *NumberToSpawn->ContainerPtrToValuePtr<int32>(this);
 }
 
-const FVector& FSpawnItemVariantParams::GetPosition() const
+FVector FSpawnItemVariantParams::GetPosition() const
 {
     static auto Position = StaticStruct()->FindPropertyByName(FName(TEXT("Position")));
 
-    return *Position->ContainerPtrToValuePtr<FVector>(this);
+    return Position->GetPropertyValue_InContainer<FVector>(this);
 }
 
-const FVector& FSpawnItemVariantParams::GetDirection() const
+FVector FSpawnItemVariantParams::GetDirection() const
 {
     static auto Direction = StaticStruct()->FindPropertyByName(FName(TEXT("Direction")));
 
-    return *Direction->ContainerPtrToValuePtr<FVector>(this);
+    return Direction->GetPropertyValue_InContainer<FVector>(this);
 }
 
 int32 FSpawnItemVariantParams::GetOverrideMaxStackCount() const
@@ -684,8 +686,8 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
 
     UFortWorldItemDefinition* WorldItemDefinition = nullptr;
     int32 NumberToSpawn = 0;
-    FVector Position(ForceInit);
-    FVector Direction(ForceInit);
+    TGameValue<FVector> Position;
+    TGameValue<FVector> Direction;
     int32 OverrideMaxStackCount = 0;
     uint32 bToss = 0;
     uint32 bRandomRotation = 0;
@@ -711,12 +713,12 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
     Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
     Stack.Code += !!Stack.Code;
 
-    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, WorldItemDefinition, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
+    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, WorldItemDefinition, NumberToSpawn, Position.Get(), Direction.Get(), OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
 }
 
 void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(UObject* WorldContextObject, const UFortWeaponItemDefinition* WeaponItemDefinition, const FGameplayTagContainer& SourceTags, const FVector& Location, const EFortPickupSourceTypeFlag SourceTypeFlag, const EFortPickupSpawnSource SpawnSource)
 {
-    static auto GenerateAmmoPickupForWeaponItemDefinitionToPosition = Anchor::Optional<AFortPickup* (*)(UObject*, UWorld*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortWeaponPickupSpawnAmmoData::GenerateAmmoPickupForWeaponItemDefinitionToPosition"))
+    static auto GenerateAmmoPickupForWeaponItemDefinitionToPosition = Anchor::Optional<AFortPickup* (*)(UObject*, UWorld*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const TGameValue<FVector>&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortWeaponPickupSpawnAmmoData::GenerateAmmoPickupForWeaponItemDefinitionToPosition"))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
         .Find("mov rdx, r15; mov [rsp+0x20], *; mov rcx, rax; call 0x*")
         .Find("call 0x*")
@@ -734,7 +736,7 @@ void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(U
         return;
     }
 
-    static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const FVector&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
+    static auto CreateTossAmmoPickupForWeaponItemDefinitionAtLocation = Anchor::Function<void (*)(UObject*, const UFortWeaponItemDefinition*, const FGameplayTagContainer&, const TGameValue<FVector>&, EFortPickupSourceTypeFlag, EFortPickupSpawnSource)>(TEXT("UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
         .Get();
 
@@ -992,8 +994,8 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_
     UObject* WorldContextObject = nullptr;
     UFortWorldItemDefinition* ItemDefinition = nullptr;
     int32 NumberToSpawn = 0;
-    FVector Position(ForceInit);
-    FVector Direction(ForceInit);
+    TGameValue<FVector> Position;
+    TGameValue<FVector> Direction;
     int32 OverrideMaxStackCount = 0;
     uint32 bToss = 0;
     uint32 bRandomRotation = 0;
@@ -1020,7 +1022,7 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_
     Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
     Stack.Code += !!Stack.Code;
 
-    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, ItemDefinition, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
+    *(AFortPickup**)Z_Param__Result = SpawnItemVariantPickupInWorld(WorldContextObject, ItemDefinition, NumberToSpawn, Position.Get(), Direction.Get(), OverrideMaxStackCount, !!bToss, !!bRandomRotation, !!bBlockedFromAutoPickup, PickupInstigatorHandle, SourceType, Source, OptionalOwnerPC, !!bPickupOnlyRelevantToOwner);
 }
 
 void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, void* const Z_Param__Result)
@@ -1048,11 +1050,11 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
 
     UObject* WorldContextObject = nullptr;
     FName LootTierName(NAME_None);
-    FVector Position(ForceInit);
+    TGameValue<FVector> Position;
     int32 OverrideMaxStackCount = 0;
     uint32 bToss = 0;
     uint32 bTossWithVelocity = 0;
-    FVector TossVelocity(ForceInit);
+    TGameValue<FVector> TossVelocity;
     EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
     EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
     int32 LootWorldLevel = 0;
@@ -1098,8 +1100,8 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void*
     UFortWorldItemDefinition* ItemDefinition = nullptr;
     TSubclassOf<AFortPickup> PickupClass;
     int32 NumberToSpawn = 0;
-    FVector Position(ForceInit);
-    FVector Direction(ForceInit);
+    TGameValue<FVector> Position;
+    TGameValue<FVector> Direction;
     int32 OverrideMaxStackCount = 0;
     uint32 bToss = 0;
     uint32 bRandomRotation = 0;

@@ -87,7 +87,7 @@ void AFortAthenaMapInfo::SpawnLlamas()
 
 FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const
 {
-    static auto PickSupplyDropLocation = Anchor::Function<FVector* (*)(const AFortAthenaMapInfo*, FVector*, const FVector&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
+    static auto PickSupplyDropLocation = Anchor::Function<TGameValue<FVector>* (*)(const AFortAthenaMapInfo*, TGameValue<FVector>*, const TGameValue<FVector>&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
         .String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location."))
         .Start()
         .Or()
@@ -95,14 +95,14 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
         .Start()
         .Get();
 
-    FVector Location;
+    TGameValue<FVector> Location;
 
-    return *PickSupplyDropLocation(this, &Location, Center, Radius, bDisableSupplyDropsSpawningOverWater, TraceStartZ, TraceEndZ);
+    return PickSupplyDropLocation(this, &Location, Center, Radius, bDisableSupplyDropsSpawningOverWater, TraceStartZ, TraceEndZ)->Get();
 }
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
-    static auto SpawnSupplyDropAtLocation = Anchor::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const FVector&, const FRotator&, UClass*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"))
+    static auto SpawnSupplyDropAtLocation = Anchor::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const TGameValue<FVector>&, const TGameValue<FRotator>&, UClass*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"))
         .String(TEXT("SupplyDropSpawn"))
         .Caller()
         .Or()

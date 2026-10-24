@@ -143,30 +143,30 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
     }
 }
 
-void AFortPlayerPawnAthena::ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+void AFortPlayerPawnAthena::ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound)
 {
-    AFortPlayerPawn::ServerHandlePickup_Implementation(Pickup, InFlyTime / GetPickupSpeedMultiplier(), InStartDirection, bPlayPickupSound);
+    AFortPlayerPawn::ServerHandlePickup_Implementation(Pickup, InFlyTime / GetPickupSpeedMultiplier(), GameStartDirection.Get(), bPlayPickupSound);
 }
 
-void AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+void AFortPlayerPawnAthena::ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound)
 {
-    ServerHandlePickup_Implementation(Pickup, InFlyTime, InStartDirection, bPlayPickupSound);
+    ServerHandlePickup_Implementation(Pickup, InFlyTime, GameStartDirection, bPlayPickupSound);
 
-    if (Pickup && !Pickup->IsPendingKill() && Pickup->GetPickupLocationData().PickupTarget == this)
+    if (Pickup && !Pickup->IsPendingKill() && Pickup->GetPickupLocationData().GetPickupTarget() == this)
         Pickup->SetSwapItemGuid(Swap);
 }
 
-void AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+void AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound)
 {
-    ServerHandlePickupWithSwap_Implementation(Pickup, Swap, InFlyTime, InStartDirection, bPlayPickupSound);
+    ServerHandlePickupWithSwap_Implementation(Pickup, Swap, InFlyTime, GameStartDirection, bPlayPickupSound);
 }
 
 void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params)
 {
-    if (Params.bUseRequestedSwap)
-        return ServerHandlePickupWithRequestedSwap_Implementation(Pickup, Params.SwapWithItem, Params.FlyTime, Params.Direction, Params.bPlayPickupSound);
+    if (Params.GetUseRequestedSwap())
+        return ServerHandlePickupWithRequestedSwap_Implementation(Pickup, Params.GetSwapWithItem(), Params.GetFlyTime(), Params.GetDirection(), Params.GetPlayPickupSound());
 
-    ServerHandlePickup_Implementation(Pickup, Params.FlyTime, Params.Direction, Params.bPlayPickupSound);
+    ServerHandlePickup_Implementation(Pickup, Params.GetFlyTime(), Params.GetDirection(), Params.GetPlayPickupSound());
 }
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)

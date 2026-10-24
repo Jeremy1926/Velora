@@ -53,9 +53,9 @@ struct FSpawnItemVariantParams
 
     int32 GetNumberToSpawn() const;
 
-    const FVector& GetPosition() const;
+    FVector GetPosition() const;
 
-    const FVector& GetDirection() const;
+    FVector GetDirection() const;
 
     int32 GetOverrideMaxStackCount() const;
 
@@ -122,15 +122,15 @@ public:
 
     void execGetAIDirector(FFrame& Stack, void* const Z_Param__Result);
 
-    static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
+    static AFortPickup* K2_SpawnPickupInWorld(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection, int32 OverrideMaxStackCount, bool bToss);
 
     void execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_Param__Result);
 
-    static AFortPickup* K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const FVector& Position, const FVector& Direction, int32 OverrideMaxStackCount, bool bToss);
+    static AFortPickup* K2_SpawnPickupInWorldWithClass(UObject* WorldContextObject, UFortWorldItemDefinition* ItemDefinition, TSubclassOf<AFortPickup> PickupClass, int32 NumberToSpawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection, int32 OverrideMaxStackCount, bool bToss);
 
     void execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void* const Z_Param__Result);
 
-    static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const FVector& Position, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
+    static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const TGameValue<FVector>& GamePosition, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
 
     void execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, void* const Z_Param__Result);
 

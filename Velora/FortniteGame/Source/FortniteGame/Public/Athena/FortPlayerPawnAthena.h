@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Pawns/FortPlayerPawn.h"
+#include "Math/Vector.h"
 
 struct FFortPickupRequestInfo;
 struct FGameplayEffectContextHandle;
@@ -15,11 +16,11 @@ public:
 
     void OnPlayerPawnReady();
 
-    void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
+    void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound);
 
-    void ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
+    void ServerHandlePickupWithSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound);
 
-    void ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
+    void ServerHandlePickupWithRequestedSwap_Implementation(AFortPickup* Pickup, const FGuid& Swap, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound);
 
     void ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params);
 
