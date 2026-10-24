@@ -75,7 +75,7 @@ namespace Scanner
     {
         auto Function = (UFunction*)StaticFindObject(nullptr, nullptr, FunctionPath);
 
-        return FCode(Function ? std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) : nullptr, true);
+        return FCode(Function ? Anchor::Private::Unhooked(std::bit_cast<const uint8_t*>(Function->GetNativeFunc())) : nullptr, true);
     }
 
     inline FCode Native(const TCHAR* FunctionPath)
@@ -202,7 +202,7 @@ namespace Anchor
         {
             auto& Chain = static_cast<ChainType&>(*this);
 
-            return Chain.IsActive() ? Chain.At(FCode(Function ? std::bit_cast<const uint8_t*>(Function->GetNativeFunc()) : nullptr, true)) : Chain;
+            return Chain.IsActive() ? Chain.At(FCode(Function ? Anchor::Private::Unhooked(std::bit_cast<const uint8_t*>(Function->GetNativeFunc())) : nullptr, true)) : Chain;
         }
 
         ChainType& Native(const TCHAR* FunctionPath)

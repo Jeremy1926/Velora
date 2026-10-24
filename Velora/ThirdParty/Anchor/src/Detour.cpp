@@ -26,6 +26,15 @@ namespace Anchor
 
             return Target;
         }
+
+        void Hooked(const void* Hook, const void* Original)
+        {
+            if (Unhooked((const uint8_t*)Hook) == Hook && NumHookedCalls < 1024)
+            {
+                HookedCalls[NumHookedCalls][0] = (const uint8_t*)Hook;
+                HookedCalls[NumHookedCalls++][1] = Unhooked((const uint8_t*)Original);
+            }
+        }
     }
 
     void* Detour(const wchar_t* Name, void* Target, void* Function)
@@ -68,11 +77,7 @@ namespace Anchor
         auto Original = (void*)(Call + 5 + *(int32_t*)(Call + 1));
         *(int32_t*)(Call + 1) = (int32_t)((uint8_t*)Jump - (Call + 5));
 
-        if (Private::NumHookedCalls < 1024)
-        {
-            Private::HookedCalls[Private::NumHookedCalls][0] = (const uint8_t*)Jump;
-            Private::HookedCalls[Private::NumHookedCalls++][1] = (const uint8_t*)Private::Unhooked((const uint8_t*)Original);
-        }
+        Private::Hooked(Jump, Original);
 
         VirtualProtect((LPVOID)(Call + 1), sizeof(int32_t), Protect, &Protect);
         FlushInstructionCache(GetCurrentProcess(), Call, 5);
@@ -100,11 +105,7 @@ namespace Anchor
         auto Original = *Entry;
         *Entry = Function;
 
-        if (Private::Unhooked((const uint8_t*)Function) == Function && Private::NumHookedCalls < 1024)
-        {
-            Private::HookedCalls[Private::NumHookedCalls][0] = (const uint8_t*)Function;
-            Private::HookedCalls[Private::NumHookedCalls++][1] = Private::Unhooked((const uint8_t*)Original);
-        }
+        Private::Hooked(Function, Original);
 
         VirtualProtect(Entry, sizeof(void*), Protect, &Protect);
 

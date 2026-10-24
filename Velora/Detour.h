@@ -298,6 +298,7 @@ public:
         UE_LOG(LogVelora, Log, TEXT("Hooked %s, was 0x%llX"), this->Name, std::bit_cast<const uint8_t*>(Exec) - Scanner::Base());
 
         Function->SetNativeFunc((Native)Detour);
+        Anchor::Private::Hooked(std::bit_cast<const void*>((Native)Detour), std::bit_cast<const void*>(Exec));
 
         return (FunctionType)Exec;
     }
