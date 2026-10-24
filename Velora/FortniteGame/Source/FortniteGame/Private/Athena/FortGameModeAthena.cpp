@@ -992,8 +992,11 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
     {
         for (auto& ExternalGroups : *ExternalSupportedAthenaLootTierGroups)
         {
-            if (ExternalGroups.Value.Contains(LootTierGroup))
-                return LootTierGroup;
+            for (int32 GroupIndex = 0; GroupIndex < ExternalGroups.Value.Num(); GroupIndex++)
+            {
+                if (TGameLayout<FName>::Load((uint8*)ExternalGroups.Value.GetData() + GroupIndex * TGameLayout<FName>::Size()) == LootTierGroup)
+                    return LootTierGroup;
+            }
         }
     }
 
