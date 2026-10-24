@@ -104,6 +104,13 @@ const FConversationParticipantRequirement* UFortConversationTaskNode_DataDrivenS
         .Find("mov rdx, rsi; mov rcx, rdi; call 0x*; test rax, rax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_DataDrivenService"), 0)
+        .Find("mov rdx, rsi; mov rcx, rdi; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return CheckForFailedRequirements(this, Context);
