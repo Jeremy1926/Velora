@@ -17,6 +17,8 @@ public:
 
     void StepExplicitProperty(void* const Result, UProperty* Property);
 
+    UField*& GetPropertyChainForCompiledIn();
+
     FORCEINLINE void StepCompiledIn(void* const Result)
     {
         if (Code)
@@ -25,8 +27,9 @@ public:
         }
         else
         {
-            auto Property = (UProperty*)PropertyChainForCompiledIn;
-            PropertyChainForCompiledIn = FField::StaticClass() ? (UField*)((FField*)PropertyChainForCompiledIn)->Next : PropertyChainForCompiledIn->Next;
+            auto& PropertyChain = GetPropertyChainForCompiledIn();
+            auto Property = (UProperty*)PropertyChain;
+            PropertyChain = FField::StaticClass() ? (UField*)((FField*)PropertyChain)->Next : PropertyChain->Next;
             StepExplicitProperty(Result, Property);
         }
     }

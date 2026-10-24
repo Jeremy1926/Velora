@@ -2,6 +2,7 @@
 #include "UObject/Stack.h"
 #include "UObject/ScriptDelegates.h"
 #include "UObject/UObjectGlobals.h"
+#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 void FFrame::Step(UObject* Context, void* const Result)
@@ -30,9 +31,19 @@ void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
         .Find("mov [*+0x80], rax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("mov [*+0x88], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     StepExplicitProperty(this, Result, Property);
+}
+
+UField*& FFrame::GetPropertyChainForCompiledIn()
+{
+    return *(UField**)((uint8*)&PropertyChainForCompiledIn + (FEngineVersion::Current().GetChangelist() >= 19598943 ? sizeof(uint8*) : 0));
 }
 
 template<>
