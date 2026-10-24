@@ -221,7 +221,13 @@ void ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted()
         .Get();
 
     if (OnResurrectionCompleted)
+    {
         OnResurrectionCompleted(this);
+
+        return;
+    }
+
+    ProcessEvent(FindFunctionChecked(FName(TEXT("OnResurrectionCompleted"))), nullptr);
 }
 
 void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn* PlayerPawn)
