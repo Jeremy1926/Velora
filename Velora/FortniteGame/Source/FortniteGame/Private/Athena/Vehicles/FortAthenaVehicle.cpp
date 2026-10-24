@@ -129,7 +129,13 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
         .Or()
         .Pattern("F3 0F 58 2D ? ? ? ? E9")
         .Target()
+        .Or()
+        .If(UE::LWC::IsEnabled())
+        .Pattern("F2 0F 58 25 ? ? ? ? F2 0F 59 05")
+        .Target()
         .Get();
+
+    static auto EncodedRotationXValue = !EncodedRotationX ? 0.0 : UE::LWC::IsEnabled() ? *(const double*)EncodedRotationX : (double)*(const float*)EncodedRotationX;
 
     auto PrimitiveComponent = Cast<UPrimitiveComponent>(GetRootComponent());
 
@@ -137,7 +143,7 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
         return;
 
     const auto StateRotation = InState.GetRotation();
-    auto Rotation = !bEncodedRotation ? StateRotation : EncodedRotationX && *(const float*)EncodedRotationX == 0.3f ? FQuat(StateRotation.X - 0.3f, StateRotation.Y / -0.75f, StateRotation.Z + 0.15f, StateRotation.W / 1.1f) : FQuat(StateRotation.X - 2.5f, StateRotation.Y / 0.3f, StateRotation.Z + 2.0f, StateRotation.W / -1.2f);
+    auto Rotation = !bEncodedRotation ? StateRotation : EncodedRotationXValue == (double)0.3f ? FQuat(StateRotation.X - 0.3f, StateRotation.Y / -0.75f, StateRotation.Z + 0.15f, StateRotation.W / 1.1f) : FQuat(StateRotation.X - 2.5f, StateRotation.Y / 0.3f, StateRotation.Z + 2.0f, StateRotation.W / -1.2f);
 
     PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.GetTranslation(), Rotation.Rotator(), false, true);
     PrimitiveComponent->SetPhysicsLinearVelocity(InState.GetLinearVelocity(), false, NAME_None);
