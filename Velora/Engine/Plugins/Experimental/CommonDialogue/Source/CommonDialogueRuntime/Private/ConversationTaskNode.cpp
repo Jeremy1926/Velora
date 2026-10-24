@@ -103,6 +103,11 @@ EConversationRequirementResult UConversationTaskNode::IsRequirementSatisfied(con
     if (auto GrantPlayerBounty = Cast<UFortConversationTaskNode_GrantPlayerBounty>(this))
         return GrantPlayerBounty->IsRequirementSatisfied_Implementation(Context);
 
+    auto UpgradeItem = Cast<UFortConversationTaskNode_UpgradeItem>(this);
+
+    if (UpgradeItem && Anchor::At((const void*)Scanner::Virtual<EConversationRequirementResult (*)(const UConversationTaskNode*, const FConversationContext&)>(this, IsRequirementSatisfied_Implementation.Slot)).Is("xor al, al; ret"))
+        return UpgradeItem->IsRequirementSatisfied_Implementation(Context);
+
     return IsRequirementSatisfied_Implementation(this, Context);
 }
 

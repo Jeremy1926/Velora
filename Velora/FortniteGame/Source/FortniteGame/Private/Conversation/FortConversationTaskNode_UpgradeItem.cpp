@@ -82,6 +82,16 @@ TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FC
     return UpgradedItemRow ? FindServicePrice(PricingKey, (int32)UpgradedItemRow->GetUpgradedWeaponDef()->GetRarity()) : UpgradePrice;
 }
 
+EConversationRequirementResult UFortConversationTaskNode_UpgradeItem::IsRequirementSatisfied_Implementation(const FConversationContext& Context) const
+{
+    auto UpgradedItemRow = GetUpgradedItemRow(Context);
+
+    if (!UpgradedItemRow)
+        return EConversationRequirementResult::FailedButVisible;
+
+    return CanPlayerAffordPrice(Context, GetUpgradePrice(Context, UpgradedItemRow)) ? EConversationRequirementResult::Passed : EConversationRequirementResult::FailedButVisible;
+}
+
 FConversationTaskResult UFortConversationTaskNode_UpgradeItem::ExecuteTaskNode_Implementation(const FConversationContext& Context) const
 {
     auto PlayerController = UFortConversationContextLibrary::GetParticipantPlayerController(Context);
