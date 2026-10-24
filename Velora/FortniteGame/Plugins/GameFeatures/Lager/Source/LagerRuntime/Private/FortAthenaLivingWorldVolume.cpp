@@ -40,6 +40,17 @@ void AFortAthenaLivingWorldVolume::EnablePointProvider()
     static auto DiagSceneClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.SceneComponent"));
     UE_LOG(LogVelora, Display, TEXT("diag lager vol %s cls %s scene %p init %d outer %s"), *GetNameSafe(this), *GetNameSafe(GetClass()), DiagSceneClass ? FindComponentByClass(DiagSceneClass) : nullptr, (int32)IsActorInitialized(), *GetNameSafe(GetOuter()));
 
+    static int32 DiagSceneCount = 0;
+    static auto DiagBrushProperty = GetClass()->FindPropertyByName(FName(TEXT("BrushComponent")));
+    auto DiagScene = DiagSceneClass ? (USceneComponent*)FindComponentByClass(DiagSceneClass) : nullptr;
+
+    if (DiagScene && DiagSceneCount++ < 6)
+    {
+        const FVector DiagLocation = DiagScene->GetComponentLocation();
+        const FBoxSphereBounds DiagBounds = DiagScene->GetBounds();
+        UE_LOG(LogVelora, Display, TEXT("diag lager scene %s %s loc %.0f %.0f %.0f r %.0f brush %p"), *GetNameSafe(DiagScene), *GetNameSafe(DiagScene->GetClass()), DiagLocation.X, DiagLocation.Y, DiagLocation.Z, DiagBounds.SphereRadius, DiagBrushProperty ? *DiagBrushProperty->ContainerPtrToValuePtr<UObject*>(this) : nullptr);
+    }
+
     if (WaterLevelIndex != -1.0f)
     {
         const float WaterLevelIndexMin = GetWaterLevelIndexMin().GetValueAtLevel(0.0f);
