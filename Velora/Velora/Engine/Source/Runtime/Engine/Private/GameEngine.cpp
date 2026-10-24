@@ -187,25 +187,23 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         static float DiagStormTime = 0.0f;
         static int32 DiagStormPhase = -1;
+        static auto DiagPausedOffset = Anchor::Offset(TEXT("AFortGameModeAthena::bStormDamagePaused"))
+            .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:SafeZoneInsideChecks"))
+            .Find("jmp 0x*")
+            .Target()
+            .Find("cmp [rcx+0x*], *")
+            .Disp();
 
-        if (FEngineVersion::Current().GetChangelist() == 18335626 && GameMode && Cast<AFortGameStateAthena>(World->GetGameState()) && World->GetTimeSeconds() >= DiagStormTime)
+        if (DiagPausedOffset > 0 && GameMode && Cast<AFortGameStateAthena>(World->GetGameState()) && World->GetTimeSeconds() >= DiagStormTime)
         {
             DiagStormTime = World->GetTimeSeconds() + 2.0f;
 
             static auto DiagMutatorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayMutator"));
-            static auto DiagStormDamagePaused = (UBoolProperty*)GameMode->GetClass()->FindPropertyByName(FName(TEXT("bStormDamagePaused")));
             static auto DiagIsInsideSafeZone = (UBoolProperty*)((UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawnAthena")))->FindPropertyByName(FName(TEXT("bIsInsideSafeZone")));
-            auto DiagGetSafeZoneMaxZ = (float (*)(AFortGameModeAthena*))(Anchor::Base() + 0x5F1C31C);
-            auto DiagIsInCurrentSafeZoneInternal = (bool (*)(AFortGameModeAthena*, const float*, float))(Anchor::Base() + 0x5F2202C);
-            auto DiagGetPawnTickSubsystem = (const uint8* (*)(UWorld*))(Anchor::Base() + 0x1057AEC);
             auto DiagGameState = Cast<AFortGameStateAthena>(World->GetGameState());
-            auto DiagSubsystem = DiagGetPawnTickSubsystem(World);
-            auto DiagPawns = DiagSubsystem ? *(AActor* const* const*)(DiagSubsystem + 0x58) : nullptr;
-            const int32 DiagPawnCount = DiagSubsystem ? *(const int32*)(DiagSubsystem + 0x60) : -1;
-            const float DiagMaxZ = DiagGetSafeZoneMaxZ(GameMode);
             const int32 DiagPhase = (int32)DiagGameState->GetGamePhase();
 
-            UE_LOG(LogVelora, Display, TEXT("diag storm phase %d paused %d raw paused byte %d maxz %f subsystem %p pawns %d indicator %p"), DiagPhase, DiagStormDamagePaused ? (int32)DiagStormDamagePaused->GetPropertyValue_InContainer(GameMode) : -1, (int32)*((uint8*)GameMode + 0xF28), DiagMaxZ, DiagSubsystem, DiagPawnCount, GameMode->GetSafeZoneIndicator());
+            UE_LOG(LogVelora, Display, TEXT("diag storm phase %d raw paused byte %d at 0x%X indicator %p"), DiagPhase, (int32)*((uint8*)GameMode + DiagPausedOffset), (uint32)DiagPausedOffset, GameMode->GetSafeZoneIndicator());
 
             if (DiagPhase != DiagStormPhase)
             {
@@ -229,17 +227,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 if (!DiagPawn)
                     continue;
 
-                bool bDiagRegistered = false;
-
-                for (int32 Index = 0; DiagPawns && Index < DiagPawnCount; Index++)
-                    bDiagRegistered |= DiagPawns[Index] == DiagPawn;
-
-                const FVector DiagLocation = DiagPawn->GetActorLocation();
-                const float DiagPoint[3] = { (float)DiagLocation.X, (float)DiagLocation.Y, (float)DiagLocation.Z };
                 auto DiagHealthSet = (const uint8*)DiagPawn->GetHealthSet();
                 static auto DiagHealth = DiagHealthSet ? ((UObject*)DiagHealthSet)->GetClass()->FindPropertyByName(FName(TEXT("Health"))) : nullptr;
 
-                UE_LOG(LogVelora, Display, TEXT("diag storm pawn %s z %f inside check %d inside flag %d registered %d health %f"), *GetNameSafe(DiagPawn), DiagPoint[2], (int32)DiagIsInCurrentSafeZoneInternal(GameMode, DiagPoint, DiagMaxZ), DiagIsInsideSafeZone ? (int32)DiagIsInsideSafeZone->GetPropertyValue_InContainer(DiagPawn) : -1, (int32)bDiagRegistered, DiagHealthSet && DiagHealth ? *(const float*)(DiagHealthSet + DiagHealth->GetOffset_ForInternal() + 0xC) : -1.0f);
+                UE_LOG(LogVelora, Display, TEXT("diag storm pawn %s z %f inside flag %d health %f"), *GetNameSafe(DiagPawn), DiagPawn->GetActorLocation().Z, DiagIsInsideSafeZone ? (int32)DiagIsInsideSafeZone->GetPropertyValue_InContainer(DiagPawn) : -1, DiagHealthSet && DiagHealth ? *(const float*)(DiagHealthSet + DiagHealth->GetOffset_ForInternal() + 0xC) : -1.0f);
             }
         }
 

@@ -1069,7 +1069,6 @@ TArray<FFortCustomRepNodeClassMapping>& AFortGameModeAthena::GetGlobalRepGraphNo
 void AFortGameModeAthena::SetStormDamagePaused(bool bPause)
 {
     DETOUR(AFortGameModeAthena, SetStormDamagePaused, Anchor::Hook()
-        .If(FEngineVersion::Current().GetChangelist() == 18335626)
         .Exec(TEXT("/Script/FortniteGame.FortAthenaMutator_Storm:PauseStormDamage"))
         .Find("mov rcx, [rsi+0x*]; call 0x*")
         .Find("call 0x*")
@@ -1077,7 +1076,14 @@ void AFortGameModeAthena::SetStormDamagePaused(bool bPause)
         .Optional()
         .Inline());
 
-    UE_LOG(LogVelora, Display, TEXT("diag storm SetStormDamagePaused %d was %d caller 0x%llX time %f"), (int32)bPause, (int32)*((uint8*)this + 0xF28), (unsigned long long)((const uint8*)_ReturnAddress() - Anchor::Base()), GetWorld() ? GetWorld()->GetTimeSeconds() : -1.0f);
+    static auto DiagPausedOffset = Anchor::Offset(TEXT("AFortGameModeAthena::bStormDamagePaused"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:SafeZoneInsideChecks"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("cmp [rcx+0x*], *")
+        .Disp();
+
+    UE_LOG(LogVelora, Display, TEXT("diag storm SetStormDamagePaused %d was %d caller 0x%llX time %f"), (int32)bPause, DiagPausedOffset > 0 ? (int32)*((uint8*)this + DiagPausedOffset) : -1, (unsigned long long)((const uint8*)_ReturnAddress() - Anchor::Base()), GetWorld() ? GetWorld()->GetTimeSeconds() : -1.0f);
 
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
