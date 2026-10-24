@@ -228,6 +228,12 @@ FGlobalActorReplicationInfo& FGlobalActorReplicationInfoMap::Get(AActor* const& 
         .Find("mov rcx, [*+0x*]; lea rdx, [*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"), [](const Anchor::FCode& Entry) { return Entry.Has("mov edx, 0x10; lea ecx, [rdx+0x20]; call 0x*; mov *, rax; test rax, rax; jz 0x*; mov rcx, [*+0x*]"); })
+        .Find("mov edx, 0x10; lea ecx, [rdx+0x20]; call 0x*")
+        .Find("mov rcx, [*+0x*]; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return Get(this, Actor);
