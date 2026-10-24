@@ -92,6 +92,7 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetSpawnedActorP
         .Or()
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActorDestroyed")))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Optional()
         .Find("mov r14d, r15d; lea r12, [rbx+0x*]")
         .Find("lea r12, [rbx+0x*]")
         .Disp();
