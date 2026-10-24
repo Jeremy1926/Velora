@@ -156,22 +156,33 @@ bool IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRad
 
 bool IFortAthenaLivingWorldPointProviderInterface::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const
 {
+    TGameValue<FVector> GameOutPosition(OutPosition);
+    TGameValue<FRotator> GameOutRotation(OutRotation);
+    bool bValidLocation = false;
+
     if (HasActorDensityComputationRadius())
     {
-        static auto GetValidLocationWithRadius = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, float, FVector&, FRotator&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
+        static auto GetValidLocationWithRadius = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, float, TGameValue<FVector>&, TGameValue<FRotator>&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
             .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
             .Find("call [rax+0x*]")
             .Get();
 
-        return GetValidLocationWithRadius(this, PointFilter, ActorDensityComputationRadius, OutPosition, OutRotation);
+        bValidLocation = GetValidLocationWithRadius(this, PointFilter, ActorDensityComputationRadius, GameOutPosition, GameOutRotation);
+    }
+    else
+    {
+        static auto GetValidLocation = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, TGameValue<FVector>&, TGameValue<FRotator>&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
+            .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+            .Find("call [rax+0x*]")
+            .Get();
+
+        bValidLocation = GetValidLocation(this, PointFilter, GameOutPosition, GameOutRotation);
     }
 
-    static auto GetValidLocation = Anchor::VirtualFunction<bool (*)(const IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules&, FVector&, FRotator&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetValidLocation"))
-        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
-        .Find("call [rax+0x*]")
-        .Get();
+    OutPosition = GameOutPosition.Get();
+    OutRotation = GameOutRotation.Get();
 
-    return GetValidLocation(this, PointFilter, OutPosition, OutRotation);
+    return bValidLocation;
 }
 
 void IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags(FGameplayTagContainer& FilterTags) const
@@ -186,7 +197,7 @@ void IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags(FGameplayTagCo
 
 void IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor(AActor* SpawnedActor, const FVector& PositionFromProvider) const
 {
-    static auto OnSpawnedActor = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, AActor*, const FVector&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor"))
+    static auto OnSpawnedActor = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, AActor*, const TGameValue<FVector>&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::OnSpawnedActor"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
         .Find("call [rax+0x*]")
         .Get();

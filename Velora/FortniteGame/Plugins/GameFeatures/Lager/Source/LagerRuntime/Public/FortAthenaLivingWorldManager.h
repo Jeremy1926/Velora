@@ -81,22 +81,32 @@ public:
         int32 ActorCountToSpawn;
     };
 
-    struct FLivingWorldTagPreRegistration
-    {
-        FGameplayTag Tag;
-        int32 PreRegistrationHandle;
-    };
-
     struct FLivingWorldPendingActorSpawnEventRequest
     {
         struct FRequestInfo
         {
-            FVector Location;
-            TWeakObjectPtr<AActor> Actor;
-            FScriptInterface PointProvider;
-            int32 RequestID;
-            int32 PreRegistrationHandle;
-            TArray<FLivingWorldTagPreRegistration, TInlineAllocator<1>> TagPreRegistrations;
+            FRequestInfo();
+
+            void SetLocation(const FVector& InLocation);
+
+            FScriptInterface& GetPointProvider();
+
+            int32& GetRequestID();
+
+            int32& GetPreRegistrationHandle();
+
+        private:
+            template<typename LocationType>
+            struct TLayout
+            {
+                LocationType Location;
+                TWeakObjectPtr<AActor> Actor;
+                FScriptInterface PointProvider;
+                int32 RequestID;
+                int32 PreRegistrationHandle;
+            };
+
+            alignas(void*) uint8 Data[0x50];
         };
 
         FLivingWorldEventRequestData RequestData;

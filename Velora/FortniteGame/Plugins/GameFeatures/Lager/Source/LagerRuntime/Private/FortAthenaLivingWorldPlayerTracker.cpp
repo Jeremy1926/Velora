@@ -28,7 +28,19 @@ void TBVTree<FSimpleBVTreeElement>::RecreateTree(const TArray<FSimpleBVTreeEleme
 
     Nodes.Reset();
     NodeBoundingBoxes.Reset();
-    Elements = InElements;
+
+    if (UE::LWC::IsEnabled())
+    {
+        auto& GameElements = (TArray<TSimpleBVTreeElement<FVector3d>>&)Elements;
+        GameElements.Reset();
+
+        for (auto& Element : InElements)
+            GameElements.Add({ Element.Index, FVector3d(Element.Location) });
+    }
+    else
+    {
+        Elements = InElements;
+    }
 
     CreateCommonInternal(this);
 }
@@ -166,7 +178,7 @@ void FFortAthenaLivingWorldPlayerTracker::RefreshTree(UWorld* World, const AFort
 
 void FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange(const FVector& Origin, float MaxRadius, const TArrayView<const float>& SquaredRadii, const TArrayView<int32>& OutNumberOfPlayerInRadius, TArray<FSimpleBVTreeElement>& ScratchPad)
 {
-    static auto GetNumberOfPlayerPawnInRange = Anchor::Function<void (*)(FFortAthenaLivingWorldPlayerTracker*, const FVector&, float, const TArrayView<const float>&, const TArrayView<int32>&, TArray<FSimpleBVTreeElement>&)>(TEXT("FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange"))
+    static auto GetNumberOfPlayerPawnInRange = Anchor::Function<void (*)(FFortAthenaLivingWorldPlayerTracker*, const TGameValue<FVector>&, float, const TArrayView<const float>&, const TArrayView<int32>&, TArray<FSimpleBVTreeElement>&)>(TEXT("FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))

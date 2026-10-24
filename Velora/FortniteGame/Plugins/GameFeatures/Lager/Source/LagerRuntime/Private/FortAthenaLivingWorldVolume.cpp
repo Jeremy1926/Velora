@@ -192,7 +192,7 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
     return GameState->GetSafeZoneRadius() >= FMath::Max(FMath::Sqrt(DeltaX * DeltaX + DeltaY * DeltaY) - FMath::Sqrt(PointsRadiusSquared), 0.0f);
 }
 
-bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const
+bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, TGameValue<FVector>& GameOutPosition, TGameValue<FRotator>& GameOutRotation) const
 {
     DETOUR(AFortAthenaLivingWorldVolume, GetValidLocation, Anchor::Hook()
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
@@ -238,8 +238,8 @@ bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorld
     if (ValidPoints->Num() <= 0)
         return false;
 
-    OutPosition = (*ValidPoints)[FMath::Min((int32)(FMath::FRand() * ValidPoints->Num()), ValidPoints->Num() - 1)];
-    OutRotation = Volume->GetActorRotation();
+    GameOutPosition = (*ValidPoints)[FMath::Min((int32)(FMath::FRand() * ValidPoints->Num()), ValidPoints->Num() - 1)];
+    GameOutRotation = Volume->GetActorRotation();
 
     return true;
 }

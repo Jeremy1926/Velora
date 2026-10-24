@@ -32,7 +32,7 @@ public:
 
     bool IsEnabled(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter) const;
 
-    bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, FVector& OutPosition, FRotator& OutRotation) const;
+    bool GetValidLocation(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, float ActorDensityComputationRadius, TGameValue<FVector>& GameOutPosition, TGameValue<FRotator>& GameOutRotation) const;
 
     AFortGameStateAthena*& GetCachedGameState() const;
 

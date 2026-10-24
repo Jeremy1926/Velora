@@ -56,7 +56,7 @@ bool FFortAthenaLivingWorldDensityGrid::IsInitialized() const
 
 FIntVector FFortAthenaLivingWorldDensityGrid::GetCellCoordinates(const FVector& Location) const
 {
-    static auto GetCellCoordinates = Anchor::Function<FIntVector* (*)(const FFortAthenaLivingWorldDensityGrid*, FIntVector*, const FVector*)>(TEXT("FFortSpatialGrid::GetCellCoordinates"))
+    static auto GetCellCoordinates = Anchor::Function<FIntVector* (*)(const FFortAthenaLivingWorldDensityGrid*, FIntVector*, const TGameValue<FVector>*)>(TEXT("FFortSpatialGrid::GetCellCoordinates"))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("movaps xmm2, xmm0; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
@@ -84,7 +84,9 @@ FIntVector FFortAthenaLivingWorldDensityGrid::GetCellCoordinates(const FVector& 
 
     FIntVector Cell{ 0, 0, 0 };
 
-    return *GetCellCoordinates(this, &Cell, &Location);
+    const TGameValue<FVector> GameLocation(Location);
+
+    return *GetCellCoordinates(this, &Cell, &GameLocation);
 }
 
 bool FFortAthenaLivingWorldDensityGrid::AddActor(AActor* InActor, float DensityValue, float DensityRange)

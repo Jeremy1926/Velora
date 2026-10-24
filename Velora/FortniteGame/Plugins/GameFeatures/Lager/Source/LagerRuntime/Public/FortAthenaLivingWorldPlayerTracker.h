@@ -13,11 +13,14 @@ class AFortPlayerPawn;
 class UScriptStruct;
 class UWorld;
 
-struct FSimpleBVTreeElement
+template<typename LocationType>
+struct TSimpleBVTreeElement
 {
     int32 Index;
-    FVector Location;
+    LocationType Location;
 };
+
+using FSimpleBVTreeElement = TSimpleBVTreeElement<FVector>;
 
 template<typename ElementType>
 class TBVTree
