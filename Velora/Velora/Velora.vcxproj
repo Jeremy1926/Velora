@@ -250,6 +250,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetworkObjectList.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\NetConnection.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Channel.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ControlChannel.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ActorChannel.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\PackageMapClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Public\Net\DataBunch.h" />

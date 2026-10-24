@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Net/DataBunch.h"
 #include "HAL/UnrealMemory.h"
+#include "UObject/CoreNet.h"
 #include "Scanner.h"
 
 int32 FOutBunch::GetTypeSize()
@@ -88,6 +89,20 @@ void FOutBunch::Reset()
         .Get();
 
     Reset(this);
+}
+
+void FOutBunch::Serialize(void* V, int64 Length)
+{
+    static auto Serialize = Anchor::VirtualFunction<void (*)(FOutBunch*, void*, int64)>(TEXT("FBitWriter::Serialize"))
+        .VirtualStartHas(*(const void* const* const*)this, "mov rbx, rcx; lea rdi, [r8*8]; mov rcx, [rcx+0x*]")
+        .Get();
+
+    Serialize(this, V, Length);
+}
+
+void FOutBunch::SetPackageMap(UPackageMap* InPackageMap)
+{
+    *(UPackageMap**)((uint8_t*)this + FNetBitWriter::GetTypeSize() - sizeof(UPackageMap*)) = InPackageMap;
 }
 
 void FOutBunch::SetNext(FOutBunch* InNext)

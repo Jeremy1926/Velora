@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Engine/ActorChannel.h"
+#include "Engine/ControlChannel.h"
 #include "Engine/NetConnection.h"
 #include "Engine/NetDriver.h"
 #include "GameFramework/Actor.h"
@@ -7,6 +8,7 @@
 #include "Net/DataBunch.h"
 #include "UObject/NameTypes.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 UNetConnection* UChannel::GetConnection() const
@@ -172,6 +174,46 @@ int64 UChannel::Close(EChannelCloseReason Reason)
         .Get();
 
     return Close(this, Reason);
+}
+
+UClass* UControlChannel::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.ControlChannel"));
+
+    return Class;
+}
+
+int64 UControlChannel::SendDestructionInfo(FActorDestructionInfo* DestructionInfo)
+{
+    auto Connection = GetConnection();
+    const auto State = Connection->GetState();
+
+    if (GetClosing() || (State != USOCK_Open && State != USOCK_Pending))
+        return 0;
+
+    auto ObjOuter = DestructionInfo->GetObjOuter().Get();
+
+    if (!ObjOuter)
+        return 0;
+
+    auto PackageMap = Connection->GetPackageMap();
+    auto InfoBunch = new FOutBunch();
+    InfoBunch->SetPackageMap(PackageMap);
+    InfoBunch->SetReliable(true);
+
+    uint8 MessageType = 22;
+    InfoBunch->Serialize(&MessageType, 1);
+
+    uint8 Reason = (uint8)DestructionInfo->GetReason();
+    InfoBunch->Serialize(&Reason, 1);
+
+    PackageMap->WriteObject(*(FArchive*)InfoBunch, ObjOuter, DestructionInfo->GetNetGUID(), DestructionInfo->GetPathName());
+    SendBunch(InfoBunch, false);
+
+    const int64 NumBits = InfoBunch->GetNumBits();
+    delete InfoBunch;
+
+    return NumBits;
 }
 
 AActor* UActorChannel::GetActor() const

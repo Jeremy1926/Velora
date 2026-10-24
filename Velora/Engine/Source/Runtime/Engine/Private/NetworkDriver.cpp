@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Engine/NetDriver.h"
 #include "Engine/ActorChannel.h"
+#include "Engine/ControlChannel.h"
 #include "Engine/Engine.h"
 #include "Engine/Level.h"
 #include "Engine/NetConnection.h"
@@ -17,6 +18,7 @@
 #include "Misc/EngineVersion.h"
 #include "Misc/Parse.h"
 #include "Net/RepLayout.h"
+#include "Templates/Casts.h"
 #include "Templates/Sorting.h"
 #include "UObject/CoreNet.h"
 #include "UObject/UnrealType.h"
@@ -258,10 +260,14 @@ int64 UNetDriver::SendDestructionInfo(UNetConnection* Connection, FActorDestruct
 
     Connection->GetRepContextLevel() = (ULevel*)DestructionInfo->GetLevel().Get();
 
-    if (NetControlChannelDestructionInfo->GetInt() == 0 || Connection->IsReplay())
+    if (NetControlChannelDestructionInfo->GetInt() != 0 && !Connection->IsReplay())
     {
-        if (auto Channel = (UActorChannel*)Connection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally))
-            NumBits = Channel->SetChannelActorForDestroy(DestructionInfo);
+        if (auto ControlChannel = Cast<UControlChannel>(Connection->GetChannels()[0]))
+            NumBits = ControlChannel->SendDestructionInfo(DestructionInfo);
+    }
+    else if (auto Channel = (UActorChannel*)Connection->CreateChannelByName(FName(NAME_Actor), EChannelCreateFlags::OpenedLocally))
+    {
+        NumBits = Channel->SetChannelActorForDestroy(DestructionInfo);
     }
 
     Connection->GetRepContextActor() = nullptr;

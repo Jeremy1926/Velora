@@ -4,6 +4,7 @@
 #include "UObject/NameTypes.h"
 
 class UChannel;
+class UPackageMap;
 
 class FOutBunch
 {
@@ -23,6 +24,10 @@ public:
     int64 GetNumBits() const;
 
     void Reset();
+
+    void Serialize(void* V, int64 Length);
+
+    void SetPackageMap(UPackageMap* InPackageMap);
 
     void SetNext(FOutBunch* InNext);
 

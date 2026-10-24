@@ -278,6 +278,20 @@ UNetConnection* UChildConnection::GetParent() const
     return *Parent->ContainerPtrToValuePtr<UNetConnection*>(this);
 }
 
+TArray<UChannel*>& UNetConnection::GetChannels()
+{
+    static auto Channels = Anchor::Offset(TEXT("UNetConnection::Channels"))
+        .String(TEXT("UNetConnection::Close: %s, Channels: %i, Time: %s"))
+        .Find("mov rdx, [*+0x*]; cmp [rdx], *")
+        .Or()
+        .String(TEXT("UNetConnection::Close: %s, Channels: %i, Time: %s"))
+        .Start()
+        .Find("mov rdx, [*+0x*]; cmp [rdx], *")
+        .Disp();
+
+    return *(TArray<UChannel*>*)((uint8_t*)this + Channels);
+}
+
 bool UNetConnection::IsReplayReady() const
 {
     static auto IsReplayReady = Anchor::VirtualFunction<bool (*)(const UNetConnection*)>(TEXT("UNetConnection::IsReplayReady"))

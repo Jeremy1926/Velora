@@ -11,6 +11,7 @@
 class AActor;
 class ULevel;
 class UActorChannel;
+class UChannel;
 class UChildConnection;
 class UNetDriver;
 class UPackageMap;
@@ -52,6 +53,8 @@ public:
     int32& GetQueuedBits();
 
     bool IsReplay() const;
+
+    TArray<UChannel*>& GetChannels();
 
     bool IsReplayReady() const;
 
