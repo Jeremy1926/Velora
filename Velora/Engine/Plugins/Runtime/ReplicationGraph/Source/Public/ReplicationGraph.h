@@ -534,6 +534,8 @@ public:
 
     void AddGlobalGraphNode(UReplicationGraphNode* GraphNode);
 
+    void RemoveGlobalGraphNode(UReplicationGraphNode* GraphNode);
+
     void InitializeForWorld(UWorld* World);
 
     void InitGlobalActorClassSettings();

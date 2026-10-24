@@ -7,6 +7,7 @@
 #include "Athena/FortPlayerStateAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortSafeZoneIndicatorFuture.h"
+#include "Athena/Modifiers/SpecialRelevancyNode.h"
 #include "Athena/Vehicles/FortAthenaExitCraft.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
@@ -1437,6 +1438,25 @@ void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)
     }
 }
 
+void UFortReplicationGraph::OnSpecialRelevancyEnabled(bool bEnabled)
+{
+    static auto HighFrequencyPawnUpdates = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.HighFrequencyPawnUpdates"));
+
+    if (GetSpecialRelevancyEnabled() == bEnabled)
+        return;
+
+    GetSpecialRelevancyEnabled() = bEnabled;
+    SetAllSquadNodesEnabled(GetSpecialRelevancyEnabled());
+
+    if (HighFrequencyPawnUpdates->GetInt() <= 0)
+        return;
+
+    if (GetSpecialRelevancyEnabled())
+        AFortPlayerPawn::GetNotifyPawnHighFrequencyUpdateChange().RemoveAll(this);
+    else
+        AFortPlayerPawn::GetNotifyPawnHighFrequencyUpdateChange().AddUObject(this, &UFortReplicationGraph::OnPlayerPawnHighFrequencyChange);
+}
+
 void UFortReplicationGraph::OnGameStatePlaylistLoaded(FName PlaylistName, const FGameplayTagContainer& GameplayTags)
 {
     static auto InitializeForWorld = Anchor::VirtualFunction<void (*)(UReplicationGraph*, UWorld*)>(TEXT("UReplicationGraph::InitializeForWorld"))
@@ -1453,15 +1473,58 @@ void UFortReplicationGraph::OnGameStatePlaylistLoaded(FName PlaylistName, const 
     if (!GameMode || !GameState)
         return;
 
+    static auto CellSize = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.CellSize"));
+    static auto SpatialBiasX = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.SpatialBiasX"));
+    static auto SpatialBiasY = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.SpatialBiasY"));
+    static auto DisableSpatialRebuilds = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DisableSpatialrebuilds"));
+
     GameState->GetOnCurrentPlaylistLoaded().RemoveAll(this);
     GetClassToNodetoRouteTo().Reset();
     GetDisableSquadNodes() = false;
     GetDisableHighFrequencyPawnRouting() = false;
 
+    bool bSpecialRelevancyNode = false;
+    auto SpecialRelevancyMutator = AFortAthenaMutator_SpecialRelevancy::StaticClass() ? Cast<AFortAthenaMutator_SpecialRelevancy>(GameState->GetMutatorByClass_Implementation(nullptr, AFortAthenaMutator_SpecialRelevancy::StaticClass())) : nullptr;
+
+    if (SpecialRelevancyMutator)
+    {
+        if (auto RootGridNode = GetRootGridNode())
+        {
+            RemoveGlobalGraphNode(RootGridNode);
+            RootGridNode->TearDown();
+            GetRootGridNode() = nullptr;
+        }
+
+        UClass* NodeClass = SpecialRelevancyMutator->GetRootGridNodeClass();
+
+        if (NodeClass && !NodeClass->IsChildOf(UFortReplicationGraphNode_SpecialRelevancy::StaticClass()))
+            NodeClass = nullptr;
+
+        auto SpecialRelevancyNode = (UFortReplicationGraphNode_SpecialRelevancy*)NewObject<UReplicationGraphNode>(this, NodeClass);
+        SpecialRelevancyNode->GetOnSpecialRelevancyEnabled().AddUObject(this, &UFortReplicationGraph::OnSpecialRelevancyEnabled);
+        GetRootGridNode() = SpecialRelevancyNode;
+        InitNode(SpecialRelevancyNode);
+
+        SpecialRelevancyNode->GetCellSize() = CellSize->GetFloat();
+        TLWCGameLayout<float, double>::Store(SpecialRelevancyNode->GetSpatialBias(), SpatialBiasX->GetFloat());
+        TLWCGameLayout<float, double>::Store(SpecialRelevancyNode->GetSpatialBias() + TLWCGameLayout<float, double>::Size(), SpatialBiasY->GetFloat());
+
+        if (DisableSpatialRebuilds->GetInt())
+            SpecialRelevancyNode->AddToClassRebuildDenyList(AActor::StaticClass());
+
+        AddGlobalGraphNode(SpecialRelevancyNode);
+        bSpecialRelevancyNode = true;
+    }
+
     auto& GlobalRepGraphNodeClassesToAdd = GameMode->GetGlobalRepGraphNodeClassesToAdd();
 
     if (GlobalRepGraphNodeClassesToAdd.Num() <= 0)
+    {
+        if (bSpecialRelevancyNode)
+            InitializeForWorld(this, World);
+
         return;
+    }
 
     for (const auto& ClassMapping : GlobalRepGraphNodeClassesToAdd)
     {

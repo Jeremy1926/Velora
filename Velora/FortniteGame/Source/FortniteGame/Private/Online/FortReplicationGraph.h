@@ -181,6 +181,8 @@ public:
 
     void OnPlayerPawnHighFrequencyChange(AFortPlayerPawn* Pawn, bool bHighFreq);
 
+    void OnSpecialRelevancyEnabled(bool bEnabled);
+
     void OnPlayerControllerStateChanged(AFortPlayerController* PC, const FName& OldState, const FName& NewState);
 
     void OnPhysicsObjectComponentActivated(UFortPhysicsObjectComponent* Component);

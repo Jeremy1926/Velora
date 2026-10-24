@@ -562,6 +562,8 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Public\FortPlayerConversationComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\SpecialRelevancyNode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationChoiceWithPreviewNode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationContextLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationRequirement_HasService.h" />
@@ -584,6 +586,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_HireNPC.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_DuelNPC.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_FindActorByClass.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Modifiers\FortGameplayMutator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -917,6 +920,7 @@
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortPlayerConversationComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\SpecialRelevancyNode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationChoiceWithPreviewNode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationContextLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationRequirement_HasService.cpp" />

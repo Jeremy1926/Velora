@@ -7,11 +7,13 @@
 #include "Delegates/Delegate.h"
 #include "Math/Vector.h"
 #include "UObject/ScriptDelegates.h"
+#include "Templates/SubclassOf.h"
 
 class AController;
 class APlayerState;
 class AFortAthenaMapInfo;
 class AFortBroadcastSpectatorInfo;
+class AFortGameplayMutator;
 class AFortPawn;
 class AFortSafeZoneIndicator;
 class AFortVolumeManager;
@@ -58,6 +60,8 @@ public:
     static UClass* StaticClass();
 
     static TMulticastDelegate<void, APlayerState*>& GetNotifyOnPlayerStateAdded();
+
+    AFortGameplayMutator* GetMutatorByClass_Implementation(const AActor* ContextActor, TSubclassOf<AFortGameplayMutator> MutatorClass);
 
     static TMulticastDelegate<void, APlayerState*>& GetNotifyOnPlayerStateRemoved();
 

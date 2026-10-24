@@ -613,8 +613,17 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents">
       <UniqueIdentifier>{C24A7E4B-80C2-4B9E-B730-4CDCF3F7C2CC}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\Modifiers">
+      <UniqueIdentifier>{107D0AF6-AB82-484B-8650-F83225B7EB5B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Conversation">
       <UniqueIdentifier>{021B0BFB-8F7F-4D26-8272-C85C131812F9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\Modifiers">
+      <UniqueIdentifier>{FD2B3FB3-7B95-489B-98A8-753982791A3B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Modifiers">
+      <UniqueIdentifier>{C8FDCD60-2569-4B68-8C4F-C3D18FFFF07E}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1867,6 +1876,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\AI</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Modifiers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\SpecialRelevancyNode.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Modifiers</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationChoiceWithPreviewNode.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
     </ClInclude>
@@ -1932,6 +1947,9 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationTaskNode_FindActorByClass.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Conversation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Modifiers\FortGameplayMutator.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Modifiers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2862,6 +2880,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\SpecialRelevancyNode.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Modifiers</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationChoiceWithPreviewNode.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Conversation</Filter>

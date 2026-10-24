@@ -68,6 +68,17 @@ UClass* AFortGameStateAthena::StaticClass()
     return Class;
 }
 
+AFortGameplayMutator* AFortGameStateAthena::GetMutatorByClass_Implementation(const AActor* ContextActor, TSubclassOf<AFortGameplayMutator> MutatorClass)
+{
+    static auto GetMutatorByClass = Anchor::VirtualFunction<AFortGameplayMutator* (*)(AFortGameStateAthena*, const AActor*, TSubclassOf<AFortGameplayMutator>)>(TEXT("AFortGameStateAthena::GetMutatorByClass_Implementation"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("setnz *")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetMutatorByClass(this, ContextActor, MutatorClass);
+}
+
 TMulticastDelegate<void, APlayerState*>& AFortGameStateAthena::GetNotifyOnPlayerStateAdded()
 {
     static auto NotifyOnPlayerStateAdded = Anchor::Data<TMulticastDelegate<void, APlayerState*>*>(TEXT("AFortGameStateAthena::NotifyOnPlayerStateAdded"))

@@ -315,6 +315,12 @@ public:
         return 1;
     }
 
+    void Shrink()
+    {
+        if (ArrayMax != ArrayNum)
+            ResizeTo(ArrayNum);
+    }
+
     FORCEINLINE bool Contains(const ElementType& Item) const
     {
         for (const ElementType* Data = GetData(), *DataEnd = Data + ArrayNum; Data != DataEnd; ++Data)

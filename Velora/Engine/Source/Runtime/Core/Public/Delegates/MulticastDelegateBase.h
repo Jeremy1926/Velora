@@ -26,6 +26,50 @@ public:
         return false;
     }
 
+    int32 RemoveAll(const void* InUserObject)
+    {
+        int32 Result = 0;
+
+        if (InvocationListLockCount > 0)
+        {
+            for (auto& DelegateBaseRef : InvocationList)
+            {
+                auto DelegateInstance = DelegateBaseRef.GetDelegateInstanceProtected();
+
+                if (DelegateInstance && IDelegateInstance::HasSameObject(DelegateInstance, InUserObject))
+                {
+                    DelegateBaseRef.Unbind();
+                    ++Result;
+                }
+            }
+
+            if (Result > 0)
+                CompactionThreshold = 0;
+        }
+        else
+        {
+            for (int32 Index = 0; Index < InvocationList.Num();)
+            {
+                auto DelegateInstance = InvocationList[Index].GetDelegateInstanceProtected();
+
+                if (!DelegateInstance || IDelegateInstance::HasSameObject(DelegateInstance, InUserObject) || IDelegateInstance::IsCompactable(DelegateInstance))
+                {
+                    InvocationList.RemoveAtSwap(Index, 1, false);
+                    ++Result;
+                }
+                else
+                {
+                    ++Index;
+                }
+            }
+
+            CompactionThreshold = FMath::Max(2, 2 * InvocationList.Num());
+            InvocationList.Shrink();
+        }
+
+        return Result;
+    }
+
 protected:
     inline FMulticastDelegateBase()
         : CompactionThreshold(2)

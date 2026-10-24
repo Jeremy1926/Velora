@@ -3687,6 +3687,15 @@ void UReplicationGraph::AddGlobalGraphNode(UReplicationGraphNode* GraphNode)
     GetGlobalGraphNodes().Add(GraphNode);
 }
 
+void UReplicationGraph::RemoveGlobalGraphNode(UReplicationGraphNode* GraphNode)
+{
+    if (!GraphNode)
+        return;
+
+    GetGlobalGraphNodes().RemoveSwap(GraphNode);
+    GetPrepareForReplicationNodes().RemoveSwap(GraphNode);
+}
+
 void UReplicationGraph::InitializeForWorld(UWorld* World)
 {
     DETOUR(UReplicationGraph, InitializeForWorld, Anchor::Hook()
