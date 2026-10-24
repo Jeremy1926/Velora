@@ -35,14 +35,20 @@ FText::FText(const FText& Source)
 
 FText& FText::operator=(const FText& Source)
 {
-    static auto CopyAssign = Anchor::Function<FText& (*)(FText*, const FText&)>(TEXT("FText::operator=(const FText&)"))
+    static auto CopyAssign = Anchor::Optional<FText& (*)(FText*, const FText&)>(TEXT("FText::operator=(const FText&)"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Call()
         .Get();
 
-    return CopyAssign(this, Source);
+    if (CopyAssign)
+        return CopyAssign(this, Source);
+
+    TextData = Source.TextData;
+    Flags = Source.Flags;
+
+    return *this;
 }
 
 FText& FText::operator=(FText&& Source)
@@ -75,6 +81,8 @@ bool FText::IsEmpty() const
         .Find("mov r8d, *; *; call [*+0x*]")
         .Find("lea rcx, *; call 0x*")
         .Call()
+        .Or()
+        .Pattern("40 53 48 83 EC 20 48 8B D9 48 8B 09 48 8B 01 FF 50 38 48 8B C8 E8 ? ? ? ? 48 8B 0B 48 8B 01 FF 50 10 83 78 08 01 0F 9E C0")
         .Get();
 
     return IsEmpty(this);

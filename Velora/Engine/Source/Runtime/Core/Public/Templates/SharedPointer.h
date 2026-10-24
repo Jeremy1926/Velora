@@ -87,6 +87,13 @@ public:
     {
     }
 
+    FORCEINLINE TSharedRef& operator=(TSharedRef const& InSharedRef)
+    {
+        Object = InSharedRef.Object;
+        SharedReferenceCount = InSharedRef.SharedReferenceCount;
+        return *this;
+    }
+
     FORCEINLINE TSharedRef& operator=(TSharedRef&& InSharedRef)
     {
         FMemory::Memswap(this, &InSharedRef, sizeof(TSharedRef));
