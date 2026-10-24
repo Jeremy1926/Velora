@@ -137,6 +137,9 @@ void AFortPlayerControllerZone::OnPawnRevived(AController* EventInstigator)
         .Event(TEXT("ClientOnPawnRevived"))
         .Log(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Get();
 
     OnPawnRevived(this, EventInstigator);
@@ -149,12 +152,20 @@ void AFortPlayerControllerZone::ApplyDeathDurabilityPenalty(float DurabilityPena
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .SlotShift(this, sizeof(void*))
         .Is("mov r11, rsp; push r13; sub rsp, *; mov r13, rcx; movaps [rsp+*], xmm7; mov rcx, [rcx+*]; movaps xmm7, xmm1")
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .SlotShift(this, sizeof(void*))
+        .Is("mov r11, rsp; push r13; sub rsp, *; mov r13, rcx; movaps [rsp+*], xmm7; mov rcx, [rcx+*]; movaps xmm7, xmm1")
         .Get();
 
     static auto ApplyDeathDurabilityPenalty = Anchor::VirtualFunction<void (*)(AFortPlayerControllerZone*, float)>(TEXT("AFortPlayerControllerZone::OnPawnRevived"))
         .Event(TEXT("ClientOnPawnRevived"))
         .Log(TEXT("AFortPlayerControllerZone::ClientOnPawnRevived"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Get(sizeof(void*));
 
     if (bApplyDeathDurabilityPenalty)

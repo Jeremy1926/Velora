@@ -11,6 +11,11 @@ void UStat::ModifyStat(double Amount, EStatMod ModType)
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Find("mov r8b, 0x*")
         .Call(2)
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Find("mov r8b, 0x*")
+        .Call(2)
         .Get();
 
     auto& Version = FEngineVersion::Current();
@@ -26,6 +31,11 @@ UStat* UStatManager::AddOrGetStat(FName StatName, EStatRecordingPeriod HighestPe
     static auto AddOrGetStat = Anchor::Function<UStat* (*)(UStatManager*, FName, EStatRecordingPeriod)>(TEXT("UStatManager::AddOrGetStat"))
         .Event(TEXT("ClientOnPawnRevived"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Find("mov r8b, 0x*")
+        .Call()
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Find("mov r8b, 0x*")
         .Call()
         .Get();
