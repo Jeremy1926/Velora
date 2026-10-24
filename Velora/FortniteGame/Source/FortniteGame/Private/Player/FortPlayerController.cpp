@@ -51,14 +51,14 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Start()
         .Inline());
 
-    static auto ServerCreateBuildingActor = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FCreateBuildingActorData))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
+    static auto ServerCreateBuildingActor = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(const FCreateBuildingActorData&))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
         .If(((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))) != nullptr)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-    static auto ServerCreateBuildingActorClassData = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FBuildingClassData, FVector, FRotator, bool))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
+    static auto ServerCreateBuildingActorClassData = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FBuildingClassData, const TGameValue<FVector>&, const TGameValue<FRotator>&, bool))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
         .If(!((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
         .Find("call [rax+*]", 2)
@@ -969,12 +969,12 @@ UFortRegisteredPlayerInfo*& AFortPlayerController::GetMyPlayerInfo()
     return *MyPlayerInfo->ContainerPtrToValuePtr<UFortRegisteredPlayerInfo*>(this);
 }
 
-void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored)
+void AFortPlayerController::ServerCreateBuildingActor_Implementation(FBuildingClassData BuildingClassData, const TGameValue<FVector>& GameBuildLoc, const TGameValue<FRotator>& GameBuildRot, bool bMirrored)
 {
-    ServerCreateBuildingActorInternal(BuildingClassData, BuildLoc, BuildRot, bMirrored, 0.0f, false, false, false);
+    ServerCreateBuildingActorInternal(BuildingClassData, GameBuildLoc, GameBuildRot, bMirrored, 0.0f, false, false, false);
 }
 
-ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck)
+ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, const TGameValue<FVector>& GameBuildLoc, const TGameValue<FRotator>& GameBuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck)
 {
     DETOUR(AFortPlayerController, ServerCreateBuildingActorInternal, Anchor::Hook()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco")))
@@ -996,6 +996,9 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .IsTarget("xor eax, eax; ret*")
         .Optional()
         .AtCall());
+
+    FVector BuildLoc = GameBuildLoc.Get();
+    FRotator BuildRot = GameBuildRot.Get();
 
     static auto bHasBuildChecks = Anchor::Exists()
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
@@ -1183,14 +1186,14 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
     return nullptr;
 }
 
-void AFortPlayerController::ServerCreateBuildingActor_Implementation(FCreateBuildingActorData CreateBuildingData)
+void AFortPlayerController::ServerCreateBuildingActor_Implementation(const FCreateBuildingActorData& CreateBuildingData)
 {
     auto GameState = Cast<AFortGameStateZone>(GetWorld()->GetGameState());
 
     if (!GameState)
         return;
 
-    ServerCreateBuildingActor_Implementation(CreateBuildingData.GetBuildingClassData(GameState), CreateBuildingData.BuildLoc, CreateBuildingData.BuildRot, CreateBuildingData.bMirrored);
+    ServerCreateBuildingActor_Implementation(CreateBuildingData.GetBuildingClassData(GameState), CreateBuildingData.GetBuildLoc(), CreateBuildingData.GetBuildRot(), CreateBuildingData.GetMirrored());
 }
 
 void AFortPlayerController::ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit)
@@ -1411,7 +1414,7 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
 
 bool AFortPlayerController::IsBuildingRestricted(const FBuildingClassData& BuildingClassData, const FVector& BuildLoc, const FRotator& BuildRot) const
 {
-    static auto IsBuildingRestricted = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, const FBuildingClassData&, const FVector&, const FRotator&)>(TEXT("AFortPlayerController::IsBuildingRestricted"))
+    static auto IsBuildingRestricted = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, const FBuildingClassData&, const TGameValue<FVector>&, const TGameValue<FRotator>&)>(TEXT("AFortPlayerController::IsBuildingRestricted"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("*, 0xffffffff")
@@ -1483,7 +1486,7 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
 
 EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings, EFortBuildPreviewMarkerOptionalAdjustment& MarkerOptionalAdjustment)
 {
-    static auto CanPlaceBuildableClassInStructuralGrid = Anchor::VirtualFunction<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*)>(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"))
+    static auto CanPlaceBuildableClassInStructuralGrid = Anchor::VirtualFunction<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*)>(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"))
         .String(TEXT("Failed to find intersection point!"))
         .Start()
         .Find("call [r10+0x*]")
@@ -1502,10 +1505,17 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
     static auto bMarkerOptionalAdjustment = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildPreviewMarkerOptionalAdjustment")) != nullptr;
 
-    if (bMarkerOptionalAdjustment)
-        return CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, FVector&, FRotator&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
+    TGameValue<FVector> GameBuildLoc(BuildLoc);
+    TGameValue<FRotator> GameBuildRot(BuildRot);
 
-    return CanPlaceBuildableClassInStructuralGrid(this, BuildingClass, BuildLoc, BuildRot, bMirrored, ExistingBuildings);
+    const auto QueryResults = bMarkerOptionalAdjustment
+        ? CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment)
+        : CanPlaceBuildableClassInStructuralGrid(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings);
+
+    BuildLoc = GameBuildLoc.Get();
+    BuildRot = GameBuildRot.Get();
+
+    return QueryResults;
 }
 
 int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData BuildingClassData)
@@ -1543,7 +1553,7 @@ FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralG
 
 bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingActor, const FVector& Location, const FRotator& Rotation) const
 {
-    static auto HasPermissionToEditWorld = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, ABuildingActor*, const FVector&, const FRotator&)>(TEXT("AFortPlayerController::HasPermissionToEditWorld"))
+    static auto HasPermissionToEditWorld = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, ABuildingActor*, const TGameValue<FVector>&, const TGameValue<FRotator>&)>(TEXT("AFortPlayerController::HasPermissionToEditWorld"))
         .Event(TEXT("ServerRepairBuildingActor"))
         .Caller()
         .Find("call [*+0x*]", 2)

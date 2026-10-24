@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Building/BuildingSMActor.h"
+#include "Math/Quat.h"
+#include "Math/TransformVectorized.h"
 
 enum class EFortBuildingPersistentState : uint8;
 struct FReservedRandomValues;
@@ -28,7 +30,7 @@ struct FDynamicBuildingFoundationRepData
 {
     static UScriptStruct* StaticStruct();
 
-    FVector& GetTranslation();
+    void SetTranslation(const FVector& InTranslation);
 
     void SetRotation(const FQuat& InRotation);
 
@@ -40,7 +42,7 @@ class ABuildingFoundation : public ABuildingSMActor
 public:
     void PostUpdate(EFortBuildingPersistentState PersistentState, const FReservedRandomValues* ReservedRandomValues);
 
-    void SetDynamicFoundationTransform(const FTransform& NewTransform);
+    void SetDynamicFoundationTransform(const TGameValue<FTransform>& GameNewTransform);
 
     void execSetDynamicFoundationTransform(FFrame& Stack, void* const Z_Param__Result);
 
@@ -65,6 +67,4 @@ public:
     EDynamicFoundationType GetDynamicFoundationType() const;
 
     FName GetLevelToStream() const;
-
-    FTransform& GetDynamicFoundationTransform();
 };

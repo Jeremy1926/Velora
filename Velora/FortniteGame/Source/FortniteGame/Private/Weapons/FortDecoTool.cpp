@@ -13,7 +13,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVector& BuildingLocation, const FRotator& BuildingRotation, const FVector& Location, const FRotator& Rotation, EBuildingAttachmentType InBuildingAttachmentType, bool bSpawnDecoOnExtraPiece, const FVector& BuildingExtraPieceLocation)
+void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameValue<FVector>& GameBuildingLocation, const TGameValue<FRotator>& GameBuildingRotation, const TGameValue<FVector>& GameLocation, const TGameValue<FRotator>& GameRotation, EBuildingAttachmentType InBuildingAttachmentType, bool bSpawnDecoOnExtraPiece, const TGameValue<FVector>& GameBuildingExtraPieceLocation)
 {
     DETOUR(AFortDecoTool, ServerCreateBuildingAndSpawnDeco_Implementation, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(AFortPlayerController, ServerCreateBuildingActorInternal))
@@ -93,7 +93,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
         .Target()
         .Get();
 
-    static auto SpawnDecoInternal = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const FVector*, const FRotator*, ABuildingSMActor*, EBuildingAttachmentType, bool)>(TEXT("AFortDecoTool::SpawnDecoInternal"))
+    static auto SpawnDecoInternal = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, EBuildingAttachmentType, bool)>(TEXT("AFortDecoTool::SpawnDecoInternal"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
         .Find("call r10; test al, al")
         .Find("call [r10+0x*]")
@@ -144,10 +144,10 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
         return;
 
     FBuildingClassData BuildingClassData{ BuildingClass, -1, 0 };
-    FVector SnappedLocation = BuildingLocation;
+    FVector SnappedLocation = GameBuildingLocation.Get();
     SnappedLocation.Z = floorf(SnappedLocation.Z * (1.0f / 384.0f) + 0.5f) * 384.0f;
 
-    auto Building = PlayerController->ServerCreateBuildingActorInternal(BuildingClassData, SnappedLocation, BuildingRotation, false, GetWorld()->GetTimeSeconds(), false, bIgnoreCostCheck, false);
+    auto Building = PlayerController->ServerCreateBuildingActorInternal(BuildingClassData, SnappedLocation, GameBuildingRotation, false, GetWorld()->GetTimeSeconds(), false, bIgnoreCostCheck, false);
 
     if (!Building)
         return;
@@ -156,13 +156,13 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
 
     if (!bSpawnDecoOnExtraPieceParam)
     {
-        static auto ServerSpawnDeco_Implementation = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const FVector*, const FRotator*, ABuildingSMActor*, EBuildingAttachmentType)>(TEXT("AFortDecoTool::ServerSpawnDeco_Implementation"))
+        static auto ServerSpawnDeco_Implementation = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, EBuildingAttachmentType)>(TEXT("AFortDecoTool::ServerSpawnDeco_Implementation"))
             .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
             .Find("call *r10*; test al, al")
             .Find("call [r10+0x*]")
             .Get();
 
-        ServerSpawnDeco_Implementation(this, &Location, &Rotation, Building, InBuildingAttachmentType);
+        ServerSpawnDeco_Implementation(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType);
 
         return;
     }
@@ -180,7 +180,7 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
             .Target()
             .Get();
 
-        static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const FVector*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
+        static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const TGameValue<FVector>*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
             .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
             .Find("call *r10*; test al, al")
             .Find("call [r10+0x*]")
@@ -197,16 +197,16 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const FVecto
         if (!StructuralSupportSystem)
             return;
 
-        if (auto ExistingBuilding = GetExistingBuildingInGridLocation(StructuralSupportSystem, Building, &BuildingExtraPieceLocation))
-            SpawnDecoInternal(this, &BuildingExtraPieceLocation, &Rotation, ExistingBuilding, InBuildingAttachmentType, false);
+        if (auto ExistingBuilding = GetExistingBuildingInGridLocation(StructuralSupportSystem, Building, &GameBuildingExtraPieceLocation))
+            SpawnDecoInternal(this, &GameBuildingExtraPieceLocation, &GameRotation, ExistingBuilding, InBuildingAttachmentType, false);
 
         if (bGiveFreeDecoOnUndergroundPiece && bGiveFreeDecoOnUndergroundPiece->GetPropertyValue_InContainer(DecoItemDefinition))
-            SpawnDecoInternal(this, &Location, &Rotation, Building, InBuildingAttachmentType, true);
+            SpawnDecoInternal(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType, true);
 
         return;
     }
 
-    SpawnDecoInternal(this, &Location, &Rotation, Building, InBuildingAttachmentType, false);
+    SpawnDecoInternal(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType, false);
 }
 
 AFortPlayerController* AFortDecoTool::GetPlayerController() const

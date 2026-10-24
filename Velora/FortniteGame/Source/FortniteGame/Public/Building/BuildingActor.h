@@ -2,11 +2,13 @@
 
 #include "GameFramework/Actor.h"
 #include "Delegates/Delegate.h"
-#include "Engine/NetSerialization.h"
+#include "Math/Vector.h"
+#include "Math/Rotator.h"
 #include "GameplayTagContainer.h"
 
 class AController;
 class AFortGameStateZone;
+class UScriptStruct;
 struct FGameplayEffectContextHandle;
 
 enum class EFortBuildingType : uint8
@@ -49,14 +51,15 @@ struct FBuildingClassData
 
 struct FCreateBuildingActorData
 {
-    uint32 BuildingClassHandle;
-    FVector_NetQuantize10 BuildLoc;
-    FRotator BuildRot;
-    bool bMirrored;
-    float SyncKey;
-    FBuildingClassData BuildingClassData;
+    static UScriptStruct* StaticStruct();
 
-    FBuildingClassData GetBuildingClassData(AFortGameStateZone* GameState);
+    FVector GetBuildLoc() const;
+
+    FRotator GetBuildRot() const;
+
+    bool GetMirrored() const;
+
+    FBuildingClassData GetBuildingClassData(AFortGameStateZone* GameState) const;
 };
 
 class ABuildingActor : public AActor

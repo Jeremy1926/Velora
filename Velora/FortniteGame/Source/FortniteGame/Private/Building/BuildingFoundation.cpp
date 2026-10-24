@@ -18,21 +18,21 @@ UScriptStruct* FDynamicBuildingFoundationRepData::StaticStruct()
     return Struct;
 }
 
-FVector& FDynamicBuildingFoundationRepData::GetTranslation()
+void FDynamicBuildingFoundationRepData::SetTranslation(const FVector& InTranslation)
 {
     static auto Translation = StaticStruct()->FindPropertyByName(FName(TEXT("Translation")));
 
-    return *Translation->ContainerPtrToValuePtr<FVector>(this);
+    Translation->SetPropertyValue_InContainer<FVector>(this, InTranslation);
 }
 
 void FDynamicBuildingFoundationRepData::SetRotation(const FQuat& InRotation)
 {
     static auto Rotation = StaticStruct()->FindPropertyByName(FName(TEXT("Rotation")));
 
-    if (Rotation->GetSize() == sizeof(FQuat))
-        *Rotation->ContainerPtrToValuePtr<FQuat>(this) = InRotation;
+    if (Rotation->GetSize() == TGameLayout<FQuat>::Size())
+        Rotation->SetPropertyValue_InContainer<FQuat>(this, InRotation);
     else
-        *Rotation->ContainerPtrToValuePtr<FRotator>(this) = InRotation.Rotator();
+        Rotation->SetPropertyValue_InContainer<FRotator>(this, InRotation.Rotator());
 }
 
 EDynamicFoundationEnabledState& FDynamicBuildingFoundationRepData::GetEnabledState()
@@ -42,7 +42,7 @@ EDynamicFoundationEnabledState& FDynamicBuildingFoundationRepData::GetEnabledSta
     return *EnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this);
 }
 
-void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTransform)
+void ABuildingFoundation::SetDynamicFoundationTransform(const TGameValue<FTransform>& GameNewTransform)
 {
     DETOUR(ABuildingFoundation, SetDynamicFoundationTransform, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform"))
@@ -81,10 +81,13 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
         .Value();
 
     static auto DynamicFoundationRepData = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationRepData")));
+    static auto DynamicFoundationTransform = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationTransform")));
+
+    const FTransform NewTransform = GameNewTransform.Get();
 
     FlushNetDormancy();
 
-    GetDynamicFoundationTransform() = NewTransform;
+    DynamicFoundationTransform->SetPropertyValue_InContainer<FTransform>(this, NewTransform);
     *((uint8_t*)this + Offset) |= Mask;
 
     if (!DynamicFoundationRepData)
@@ -94,7 +97,7 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const FTransform& NewTra
     }
 
     auto& RepData = *DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this);
-    RepData.GetTranslation() = NewTransform.GetTranslation();
+    RepData.SetTranslation(NewTransform.GetTranslation());
     RepData.SetRotation(NewTransform.GetRotation());
 
     OnRep_DynamicFoundationRepData();
@@ -107,7 +110,7 @@ void ABuildingFoundation::execSetDynamicFoundationTransform(FFrame& Stack, void*
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.BuildingFoundation:SetDynamicFoundationTransform")));
 
-    FTransform NewTransform;
+    TGameValue<FTransform> NewTransform;
 
     Stack.StepCompiledIn(&NewTransform);
     Stack.Code += !!Stack.Code;
@@ -393,11 +396,4 @@ FName ABuildingFoundation::GetLevelToStream() const
     static auto LevelToStream = GetClass()->FindPropertyByName(FName(TEXT("LevelToStream")));
 
     return LevelToStream->GetPropertyValue_InContainer<FName>(this);
-}
-
-FTransform& ABuildingFoundation::GetDynamicFoundationTransform()
-{
-    static auto DynamicFoundationTransform = GetClass()->FindPropertyByName(FName(TEXT("DynamicFoundationTransform")));
-
-    return *DynamicFoundationTransform->ContainerPtrToValuePtr<FTransform>(this);
 }

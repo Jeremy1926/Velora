@@ -68,11 +68,11 @@ class AFortPlayerController : public APlayerController
 public:
     static UClass* StaticClass();
 
-    void ServerCreateBuildingActor_Implementation(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored);
+    void ServerCreateBuildingActor_Implementation(FBuildingClassData BuildingClassData, const TGameValue<FVector>& GameBuildLoc, const TGameValue<FRotator>& GameBuildRot, bool bMirrored);
 
-    void ServerCreateBuildingActor_Implementation(FCreateBuildingActorData CreateBuildingData);
+    void ServerCreateBuildingActor_Implementation(const FCreateBuildingActorData& CreateBuildingData);
 
-    ABuildingSMActor* ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, FVector BuildLoc, FRotator BuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck);
+    ABuildingSMActor* ServerCreateBuildingActorInternal(FBuildingClassData BuildingClassData, const TGameValue<FVector>& GameBuildLoc, const TGameValue<FRotator>& GameBuildRot, bool bMirrored, float SyncKey, bool bForceOverrideInteractBuildCheck, bool bIgnoreCostCheck, bool bIgnoreBuildingValidityCheck);
 
     void ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit);
 

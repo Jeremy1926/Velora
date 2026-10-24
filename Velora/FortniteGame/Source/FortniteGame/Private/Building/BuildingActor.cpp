@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Building/BuildingActor.h"
 #include "FortGameStateZone.h"
+#include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -197,10 +198,44 @@ bool ABuildingActor::GetDestroyed() const
     return bDestroyed->GetPropertyValue_InContainer(this);
 }
 
-FBuildingClassData FCreateBuildingActorData::GetBuildingClassData(AFortGameStateZone* GameState)
+UScriptStruct* FCreateBuildingActorData::StaticStruct()
 {
-    if (GameState && GameState->GetAllPlayerBuildableClasses().IsValidIndex(BuildingClassHandle))
-        BuildingClassData.BuildingClass = GameState->GetAllPlayerBuildableClasses()[BuildingClassHandle];
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.CreateBuildingActorData"));
 
-    return BuildingClassData;
+    return Struct;
+}
+
+FVector FCreateBuildingActorData::GetBuildLoc() const
+{
+    static auto BuildLoc = StaticStruct()->FindPropertyByName(FName(TEXT("BuildLoc")));
+
+    return BuildLoc->GetPropertyValue_InContainer<FVector>(this);
+}
+
+FRotator FCreateBuildingActorData::GetBuildRot() const
+{
+    static auto BuildRot = StaticStruct()->FindPropertyByName(FName(TEXT("BuildRot")));
+
+    return BuildRot->GetPropertyValue_InContainer<FRotator>(this);
+}
+
+bool FCreateBuildingActorData::GetMirrored() const
+{
+    static auto bMirrored = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bMirrored")));
+
+    return bMirrored->GetPropertyValue_InContainer(this);
+}
+
+FBuildingClassData FCreateBuildingActorData::GetBuildingClassData(AFortGameStateZone* GameState) const
+{
+    static auto BuildingClassHandle = StaticStruct()->FindPropertyByName(FName(TEXT("BuildingClassHandle")));
+    static auto BuildingClassData = StaticStruct()->FindPropertyByName(FName(TEXT("BuildingClassData")));
+
+    auto Result = *BuildingClassData->ContainerPtrToValuePtr<FBuildingClassData>(this);
+    const auto Handle = *BuildingClassHandle->ContainerPtrToValuePtr<uint32>(this);
+
+    if (GameState && GameState->GetAllPlayerBuildableClasses().IsValidIndex(Handle))
+        Result.BuildingClass = GameState->GetAllPlayerBuildableClasses()[Handle];
+
+    return Result;
 }

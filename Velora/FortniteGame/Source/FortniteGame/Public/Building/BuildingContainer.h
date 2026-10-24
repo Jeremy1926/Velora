@@ -13,10 +13,11 @@ struct FFortSearchBounceData
 {
     static UScriptStruct* StaticStruct();
 
-    void SetSearchingPawn(AFortPlayerPawn* InSearchingPawn);
+    void SetBounceNormal(const FVector& InBounceNormal);
 
-    FVector BounceNormal;
-    uint32 SearchAnimationCount;
+    uint32& GetSearchAnimationCount();
+
+    void SetSearchingPawn(AFortPlayerPawn* InSearchingPawn);
 };
 
 class ABuildingContainer : public ABuildingAutoNav

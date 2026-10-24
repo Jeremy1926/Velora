@@ -14,7 +14,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(const FVector& BuildingLocation, const FRotator& BuildingRotation, const FVector& Location, const FRotator& Rotation, EBuildingAttachmentType InBuildingAttachmentType, bool bSpawnDecoOnExtraPiece, const FVector& BuildingExtraPieceLocation)
+void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameValue<FVector>& GameBuildingLocation, const TGameValue<FRotator>& GameBuildingRotation, const TGameValue<FVector>& GameLocation, const TGameValue<FRotator>& GameRotation, EBuildingAttachmentType InBuildingAttachmentType, bool bSpawnDecoOnExtraPiece, const TGameValue<FVector>& GameBuildingExtraPieceLocation)
 {
     DETOUR(AFortDecoTool_ContextTrap, ServerCreateBuildingAndSpawnDeco_Implementation, Anchor::Hook()
         .If(!DETOUR_ORIGINAL(AFortPlayerController, ServerCreateBuildingActorInternal))
@@ -65,7 +65,7 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
         .Target()
         .Get();
 
-    static auto BuildExtraPieceForSupport = Anchor::Function<void (*)(AFortPlayerController*, UWorld*, UClass*, const FVector*, const FRotator*, bool, int32, EFortBuildPreviewMarkerOptionalAdjustment)>(TEXT("AFortPlayerController::BuildExtraPieceForSupport"))
+    static auto BuildExtraPieceForSupport = Anchor::Function<void (*)(AFortPlayerController*, UWorld*, UClass*, const TGameValue<FVector>*, const TGameValue<FRotator>*, bool, int32, EFortBuildPreviewMarkerOptionalAdjustment)>(TEXT("AFortPlayerController::BuildExtraPieceForSupport"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
         .Find("call *r10*; test al, al")
         .Find("call [r10+0x*]")
@@ -80,7 +80,7 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
 
     if (!ContextTrapItemDefinition)
     {
-        AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(BuildingLocation, BuildingRotation, Location, Rotation, InBuildingAttachmentType, bSpawnDecoOnExtraPiece, BuildingExtraPieceLocation);
+        AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(GameBuildingLocation, GameBuildingRotation, GameLocation, GameRotation, InBuildingAttachmentType, bSpawnDecoOnExtraPiece, GameBuildingExtraPieceLocation);
         return;
     }
 
@@ -143,7 +143,7 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
     if (!BuildingClass || !BuildingClass->IsChildOf(ABuildingSMActor::StaticClass()))
         return;
 
-    FVector SnappedLocation = BuildingLocation;
+    FVector SnappedLocation = GameBuildingLocation.Get();
     SnappedLocation.Z = floorf(SnappedLocation.Z * (1.0f / 384.0f) + 0.5f) * 384.0f;
 
     bool bForceOverrideInteractBuildCheck = false;
@@ -153,10 +153,15 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
 
     TArray<ABuildingActor*> ExistingBuildings;
     auto MarkerOptionalAdjustment = EFortBuildPreviewMarkerOptionalAdjustment::None;
-    FRotator BuildRotation = BuildingRotation;
+    FRotator BuildRotation = GameBuildingRotation.Get();
 
     if (PlayerController->CanPlaceBuildableClassInStructuralGrid(BuildingClass, SnappedLocation, BuildRotation, false, &ExistingBuildings, MarkerOptionalAdjustment) != EFortStructuralGridQueryResults::CanAdd)
-        BuildExtraPieceForSupport(PlayerController, GetWorld(), BuildingClass, &SnappedLocation, &BuildRotation, false, 0, EFortBuildPreviewMarkerOptionalAdjustment::FreeWallPieceOnBottom);
+    {
+        const TGameValue<FVector> GameSnappedLocation(SnappedLocation);
+        const TGameValue<FRotator> GameBuildRotation(BuildRotation);
+
+        BuildExtraPieceForSupport(PlayerController, GetWorld(), BuildingClass, &GameSnappedLocation, &GameBuildRotation, false, 0, EFortBuildPreviewMarkerOptionalAdjustment::FreeWallPieceOnBottom);
+    }
 
     const bool bIgnoreCostCheck = DoesItemDefinitionHaveGameplayTag(ContextTrapItemDefinition, &ExtraPieceCostIgnoreTag);
     const bool bIgnoreBuildingValidityCheck = DoesItemDefinitionHaveGameplayTag(ContextTrapItemDefinition, &BuildingValidityIgnoreTag);
@@ -172,18 +177,18 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
 
     if (!bSpawnDecoOnExtraPieceParam)
     {
-        static auto ServerSpawnDeco_Implementation = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const FVector*, const FRotator*, ABuildingSMActor*, EBuildingAttachmentType)>(TEXT("AFortDecoTool::ServerSpawnDeco_Implementation"))
+        static auto ServerSpawnDeco_Implementation = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, EBuildingAttachmentType)>(TEXT("AFortDecoTool::ServerSpawnDeco_Implementation"))
             .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
             .Find("call *r10*; test al, al")
             .Find("call [r10+0x*]")
             .Get();
 
-        ServerSpawnDeco_Implementation(this, &Location, &Rotation, Building, InBuildingAttachmentType);
+        ServerSpawnDeco_Implementation(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType);
 
         return;
     }
 
-    static auto SpawnDecoInternal = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const FVector*, const FRotator*, ABuildingSMActor*, EBuildingAttachmentType, bool)>(TEXT("AFortDecoTool::SpawnDecoInternal"))
+    static auto SpawnDecoInternal = Anchor::VirtualFunction<void (*)(AFortDecoTool*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, EBuildingAttachmentType, bool)>(TEXT("AFortDecoTool::SpawnDecoInternal"))
         .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
         .Find("call r10; test al, al")
         .Find("call [r10+0x*]")
@@ -208,7 +213,7 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
             .Target()
             .Get();
 
-        static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const FVector*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
+        static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const TGameValue<FVector>*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
             .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
             .Find("call *r10*; test al, al")
             .Find("call [r10+0x*]")
@@ -225,16 +230,16 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
         if (!StructuralSupportSystem)
             return;
 
-        if (auto ExistingBuilding = GetExistingBuildingInGridLocation(StructuralSupportSystem, Building, &BuildingExtraPieceLocation))
-            SpawnDecoInternal(this, &BuildingExtraPieceLocation, &Rotation, ExistingBuilding, InBuildingAttachmentType, false);
+        if (auto ExistingBuilding = GetExistingBuildingInGridLocation(StructuralSupportSystem, Building, &GameBuildingExtraPieceLocation))
+            SpawnDecoInternal(this, &GameBuildingExtraPieceLocation, &GameRotation, ExistingBuilding, InBuildingAttachmentType, false);
 
         if (bGiveFreeDecoOnUndergroundPiece && bGiveFreeDecoOnUndergroundPiece->GetPropertyValue_InContainer(DecoItemDefinition))
-            SpawnDecoInternal(this, &Location, &Rotation, Building, InBuildingAttachmentType, true);
+            SpawnDecoInternal(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType, true);
 
         return;
     }
 
-    SpawnDecoInternal(this, &Location, &Rotation, Building, InBuildingAttachmentType, false);
+    SpawnDecoInternal(this, &GameLocation, &GameRotation, Building, InBuildingAttachmentType, false);
 }
 
 UFortItemDefinition* AFortDecoTool_ContextTrap::GetContextTrapItemDefinition() const

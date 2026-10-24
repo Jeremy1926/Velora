@@ -169,11 +169,13 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
         const FVector SearcherLocation = Searcher->GetActorLocation();
         const FVector ContainerLocation = GetActorLocation();
 
-        SearchBounceData.BounceNormal = FVector(SearcherLocation.X - ContainerLocation.X, SearcherLocation.Y - ContainerLocation.Y, 0.0f);
-        SearchBounceData.BounceNormal.Normalize();
+        FVector BounceNormal(SearcherLocation.X - ContainerLocation.X, SearcherLocation.Y - ContainerLocation.Y, 0.0f);
+        BounceNormal.Normalize();
+
+        SearchBounceData.SetBounceNormal(BounceNormal);
     }
 
-    ++SearchBounceData.SearchAnimationCount;
+    ++SearchBounceData.GetSearchAnimationCount();
     SearchBounceData.SetSearchingPawn(Cast<AFortPlayerPawn>(Searcher));
     BounceContainer();
 
@@ -270,6 +272,20 @@ UScriptStruct* FFortSearchBounceData::StaticStruct()
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSearchBounceData"));
 
     return Struct;
+}
+
+void FFortSearchBounceData::SetBounceNormal(const FVector& InBounceNormal)
+{
+    static auto BounceNormal = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("BounceNormal"))) : nullptr;
+
+    TGameLayout<FVector>::Store(BounceNormal ? BounceNormal->ContainerPtrToValuePtr<void>(this) : (void*)this, InBounceNormal);
+}
+
+uint32& FFortSearchBounceData::GetSearchAnimationCount()
+{
+    static auto SearchAnimationCount = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("SearchAnimationCount"))) : nullptr;
+
+    return SearchAnimationCount ? *SearchAnimationCount->ContainerPtrToValuePtr<uint32>(this) : *(uint32*)((uint8*)this + TGameLayout<FVector>::Size());
 }
 
 void FFortSearchBounceData::SetSearchingPawn(AFortPlayerPawn* InSearchingPawn)
