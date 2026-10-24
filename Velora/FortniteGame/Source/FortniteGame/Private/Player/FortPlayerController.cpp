@@ -1477,6 +1477,12 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
+        .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Call()
+        .Find("mov r8, [rcx+0x*]; mov rcx, *; call r8")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Find("call [*+0x*]")
         .Get();
