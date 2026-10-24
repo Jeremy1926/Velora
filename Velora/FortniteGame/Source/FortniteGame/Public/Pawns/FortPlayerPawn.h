@@ -12,6 +12,7 @@ class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
 class AFortPlayerPetRepState;
+class IFortVehicleInterface;
 class UAthenaGliderItemDefinition;
 class UFortMontageItemDefinitionBase;
 class UFortWorldItem;
@@ -36,6 +37,21 @@ struct FVehiclePawnState
     AActor* GetVehicle() const;
 
     uint8 GetSeatIndex() const;
+};
+
+struct FFortPlayerPawnVehicleChangeParams
+{
+    uint8 bGotOutOfCar : 1;
+    uint8 bGotIntoCar : 1;
+    uint8 bChangedSeat : 1;
+    uint8 bChangedOverrideExit : 1;
+    uint8 bWasInDriverSeat : 1;
+    uint8 bIsInDriverSeat : 1;
+    uint8 bIsInTurretSeat : 1;
+    AActor* VehicleActor;
+    IFortVehicleInterface* VehicleInterface;
+    int32 PrevSeatIndex;
+    int32 NewSeatIndex;
 };
 
 struct FZiplinePawnState
@@ -82,6 +98,10 @@ public:
     AFortAthenaVehicle* ServerOnExitVehicle(ETryExitVehicleBehavior ExitForceBehavior);
 
     void OnRep_InVehicle();
+
+    void HandleInVehicleUpdate_ExitingVehicle(const FFortPlayerPawnVehicleChangeParams& VehicleChangeParams);
+
+    void HandleInVehicleUpdate_ChangingSeats(const FFortPlayerPawnVehicleChangeParams& VehicleChangeParams);
 
     FGuid* GetLastEquippedWeaponOrGadgetGUID();
 

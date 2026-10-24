@@ -202,6 +202,49 @@ void AFortPlayerPawn::OnRep_InVehicle()
     Original();
 }
 
+void AFortPlayerPawn::HandleInVehicleUpdate_ExitingVehicle(const FFortPlayerPawnVehicleChangeParams& VehicleChangeParams)
+{
+    DETOUR(AFortPlayerPawn, HandleInVehicleUpdate_ExitingVehicle, Anchor::Hook()
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("and qword ptr [*+0x*], 0x0; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    if (auto WeaponComponent = VehicleChangeParams.VehicleInterface ? VehicleChangeParams.VehicleInterface->GetSeatWeaponComponent(VehicleChangeParams.PrevSeatIndex) : nullptr)
+        WeaponComponent->OnPawnExitSeat(VehicleChangeParams.VehicleInterface, this, VehicleChangeParams.PrevSeatIndex);
+
+    Original(VehicleChangeParams);
+}
+
+void AFortPlayerPawn::HandleInVehicleUpdate_ChangingSeats(const FFortPlayerPawnVehicleChangeParams& VehicleChangeParams)
+{
+    DETOUR(AFortPlayerPawn, HandleInVehicleUpdate_ChangingSeats, Anchor::Hook()
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("test byte ptr [*], 0x4; jz 0x*; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("test byte ptr [*], 0x4; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("lea rdx, [*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    if (auto WeaponComponent = VehicleChangeParams.VehicleInterface ? VehicleChangeParams.VehicleInterface->GetSeatWeaponComponent(VehicleChangeParams.PrevSeatIndex) : nullptr)
+        WeaponComponent->OnPawnExitSeat(VehicleChangeParams.VehicleInterface, this, VehicleChangeParams.PrevSeatIndex);
+
+    Original(VehicleChangeParams);
+}
+
 FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()
 {
     static auto LastEquippedWeaponOrGadgetGUID = Anchor::Offset(TEXT("AFortPlayerPawn::LastEquippedWeaponOrGadgetGUID"))
