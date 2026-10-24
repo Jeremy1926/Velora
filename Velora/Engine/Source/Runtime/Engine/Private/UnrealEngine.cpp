@@ -101,6 +101,8 @@ bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName N
 UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
 {
     static auto FindNamedNetDriver = Anchor::Function<UNetDriver* (*)(UEngine*, UWorld*, FName)>(TEXT("UEngine::FindNamedNetDriver"))
+        .Pattern("40 53 48 83 EC 20 41 8B D8 E8 ? ? ? ? 48 85 C0 74 ? 48 63 88 ? ? 00 00 85 C9 7E ? 48 8B 90 ? ? 00 00")
+        .Or()
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("mov rcx, [0x*]")
         .Call()
