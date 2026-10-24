@@ -983,6 +983,18 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         .Target()
         .Find("mov r8, [0x*]")
         .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__UFortGameFeatureAction_LootTierGroups"), "lea rdx, [rcx+0x28]; mov ecx, [rcx+0x18]; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov r8, [0x*]")
+        .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__UFortGameFeatureAction_LootTierGroups"), "lea rdx, [rcx+0x28]; mov ecx, [rcx+0x18]; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .FirstOf("lea rcx, [0x*]; add *, *; mov r8d, *; call 0x*", "lea rcx, [0x*]; add *, *; lea r8, [*]; mov edx, *; call 0x*")
+        .Target()
         .Optional()
         .Get();
 
