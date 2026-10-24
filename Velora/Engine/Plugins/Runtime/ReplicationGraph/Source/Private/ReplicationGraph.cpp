@@ -2561,7 +2561,7 @@ TSharedPtr<FReplicationGraphGlobalData>& UReplicationGraph::GetGraphGlobals()
 
 float& UReplicationGraph::GetDestructInfoMaxDistanceSquared()
 {
-    return *(float*)(&GetGraphGlobals() + 1);
+    return *(float*)(&GetPendingConnectionManagers() + 1);
 }
 
 UReplicationGraph::FPrioritizationConstants& UReplicationGraph::GetPrioritizationConstants()
