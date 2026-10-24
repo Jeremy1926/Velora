@@ -128,6 +128,7 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Find("lea rdx, [rax+0x*]")
         .Get();
 
     if (bInlined)
