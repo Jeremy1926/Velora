@@ -13,7 +13,7 @@ namespace Anchor
 {
     namespace Private
     {
-        static const uint8_t* HookedCalls[256][2];
+        static const uint8_t* HookedCalls[1024][2];
         static int32_t NumHookedCalls = 0;
 
         const uint8_t* Unhooked(const uint8_t* Target)
@@ -68,7 +68,7 @@ namespace Anchor
         auto Original = (void*)(Call + 5 + *(int32_t*)(Call + 1));
         *(int32_t*)(Call + 1) = (int32_t)((uint8_t*)Jump - (Call + 5));
 
-        if (Private::NumHookedCalls < 256)
+        if (Private::NumHookedCalls < 1024)
         {
             Private::HookedCalls[Private::NumHookedCalls][0] = (const uint8_t*)Jump;
             Private::HookedCalls[Private::NumHookedCalls++][1] = (const uint8_t*)Private::Unhooked((const uint8_t*)Original);
@@ -99,6 +99,12 @@ namespace Anchor
 
         auto Original = *Entry;
         *Entry = Function;
+
+        if (Private::Unhooked((const uint8_t*)Function) == Function && Private::NumHookedCalls < 1024)
+        {
+            Private::HookedCalls[Private::NumHookedCalls][0] = (const uint8_t*)Function;
+            Private::HookedCalls[Private::NumHookedCalls++][1] = Private::Unhooked((const uint8_t*)Original);
+        }
 
         VirtualProtect(Entry, sizeof(void*), Protect, &Protect);
 

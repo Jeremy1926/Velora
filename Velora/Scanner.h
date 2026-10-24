@@ -499,7 +499,9 @@ namespace Anchor
                 snprintf(Add, sizeof(Add), "add rcx, 0x%x", (uint32_t)Property->GetOffset_ForInternal());
                 snprintf(Lea, sizeof(Lea), "lea rcx, [*+0x%x]", (uint32_t)Property->GetOffset_ForInternal());
 
-                return VTable[Index] >= Image && VTable[Index] < ImageEnd && (Anchor::At(VTable[Index]).Has(Add) || Anchor::At(VTable[Index]).Has(Lea));
+                auto Entry = Anchor::Private::Unhooked(VTable[Index]);
+
+                return Entry >= Image && Entry < ImageEnd && (Anchor::At(Entry).Has(Add) || Anchor::At(Entry).Has(Lea));
             };
 
             int64_t Found = 0;
@@ -547,7 +549,7 @@ namespace Anchor
 
             for (int32_t Index = 0; Anchor::IsCode(VTable[Index]); Index++)
             {
-                if (VTable[Index] >= Image && VTable[Index] < ImageEnd && Anchor::At(VTable[Index]).Has(Text))
+                if (auto Entry = Anchor::Private::Unhooked(VTable[Index]); Entry >= Image && Entry < ImageEnd && Anchor::At(Entry).Has(Text))
                 {
                     Found = Index * sizeof(void*);
                     break;
@@ -968,7 +970,7 @@ namespace Anchor
                 snprintf(Jump, sizeof(Jump), "jmp [*+0x%llx]", (unsigned long long)(Index * sizeof(void*)));
                 snprintf(Load, sizeof(Load), "mov r10, [*+0x%llx]; jmp r10", (unsigned long long)(Index * sizeof(void*)));
 
-                if (Anchor::At(VTable[Index]).Has(Call) || Anchor::At(VTable[Index]).Has(Jump) || Anchor::At(VTable[Index]).Has(Load))
+                if (auto Entry = Anchor::At(Anchor::Private::Unhooked((const uint8_t*)VTable[Index])); Entry.Has(Call) || Entry.Has(Jump) || Entry.Has(Load))
                 {
                     Found = Index * sizeof(void*);
                     break;
@@ -1018,7 +1020,7 @@ namespace Anchor
             auto& Chain = static_cast<ChainType&>(*this);
             auto VTableSlot = (Chain.*(&Scanner::TChainAccess<ChainType>::SlotValue))();
 
-            return Anchor::At(VTable && IsSlot(VTableSlot) ? VTable[VTableSlot / sizeof(void*)] : nullptr);
+            return Anchor::At(VTable && IsSlot(VTableSlot) ? Anchor::Private::Unhooked((const uint8_t*)VTable[VTableSlot / sizeof(void*)]) : nullptr);
         }
     };
 

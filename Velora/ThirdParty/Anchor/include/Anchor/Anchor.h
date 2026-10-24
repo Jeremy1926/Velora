@@ -84,18 +84,6 @@ namespace Anchor
     FCode CallTo(const void* Function);
     FCode Reference(const void* Target, std::string_view Instructions);
 
-    template<typename PredicateType>
-    int32_t FindSlot(const void* const* VTable, PredicateType Predicate, int32_t Index = 0)
-    {
-        for (; IsCode(VTable[Index]); Index++)
-        {
-            if (Predicate(At(VTable[Index])))
-                return Index * (int32_t)sizeof(void*);
-        }
-
-        return 0;
-    }
-
     namespace Private
     {
         inline uint64_t NullFunction()
@@ -108,6 +96,18 @@ namespace Anchor
         void** FindVTable(const wchar_t* Name);
         const uint8_t* Unhooked(const uint8_t* Target);
         void Written(const void* Address, size_t Size);
+    }
+
+    template<typename PredicateType>
+    int32_t FindSlot(const void* const* VTable, PredicateType Predicate, int32_t Index = 0)
+    {
+        for (; IsCode(VTable[Index]); Index++)
+        {
+            if (Predicate(At(Private::Unhooked((const uint8_t*)VTable[Index]))))
+                return Index * (int32_t)sizeof(void*);
+        }
+
+        return 0;
     }
 
     void* Detour(const wchar_t* Name, void* Target, void* Function);
@@ -247,7 +247,7 @@ namespace Anchor
 
             auto Found = VTable ? FindSlot(VTable, Predicate) : 0;
 
-            return IsSlot(Found) ? Enter(Found, Anchor::At(VTable[Found / sizeof(void*)])) : Advance(FCode());
+            return IsSlot(Found) ? Enter(Found, Anchor::At(Private::Unhooked((const uint8_t*)VTable[Found / sizeof(void*)]))) : Advance(FCode());
         }
 
         template<typename PredicateType>
@@ -278,7 +278,7 @@ namespace Anchor
                     return Advance(FCode());
             }
 
-            return Enter(Found, Anchor::At(VTable[Found / sizeof(void*)]).Find(CallText));
+            return Enter(Found, Anchor::At(Private::Unhooked((const uint8_t*)VTable[Found / sizeof(void*)])).Find(CallText));
         }
 
         template<typename... NameTypes>
