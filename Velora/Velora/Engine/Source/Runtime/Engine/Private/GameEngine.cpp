@@ -205,7 +205,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             const float DiagMaxZ = DiagGetSafeZoneMaxZ(GameMode);
             const int32 DiagPhase = (int32)DiagGameState->GetGamePhase();
 
-            UE_LOG(LogVelora, Display, TEXT("diag storm phase %d paused %d raw paused byte %d maxz %f subsystem %p pawns %d indicator %p"), DiagPhase, DiagStormDamagePaused ? (int32)DiagStormDamagePaused->GetPropertyValue_InContainer(GameMode) : -1, (int32)*((uint8*)GameMode + 0xF28), DiagMaxZ, DiagSubsystem, DiagPawnCount, GameMode->GetSafeZoneIndicator());
+            UE_LOG(LogVelora, Display, TEXT("diag storm phase %d paused %d maxz %f subsystem %p pawns %d indicator %p"), DiagPhase, DiagStormDamagePaused ? (int32)DiagStormDamagePaused->GetPropertyValue_InContainer(GameMode) : -1, DiagMaxZ, DiagSubsystem, DiagPawnCount, GameMode->GetSafeZoneIndicator());
 
             if (DiagPhase != DiagStormPhase)
             {

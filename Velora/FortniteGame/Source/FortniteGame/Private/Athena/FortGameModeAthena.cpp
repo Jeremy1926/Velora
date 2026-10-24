@@ -39,7 +39,6 @@
 #include "FortKismetLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "Misc/EngineVersion.h"
 #include "GameFramework/GameStateBase.h"
 #include "Math/UnrealMathUtility.h"
 #include "HAL/IConsoleManager.h"
@@ -49,7 +48,6 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
-#include <intrin.h>
 
 UClass* AFortGameModeAthena::StaticClass()
 {
@@ -1064,31 +1062,4 @@ TArray<FFortCustomRepNodeClassMapping>& AFortGameModeAthena::GetGlobalRepGraphNo
     static auto GlobalRepGraphNodeClassesToAdd = StaticClass()->FindPropertyByName(FName(TEXT("GlobalRepGraphNodeClassesToAdd")));
 
     return *GlobalRepGraphNodeClassesToAdd->ContainerPtrToValuePtr<TArray<FFortCustomRepNodeClassMapping>>(this);
-}
-
-void AFortGameModeAthena::SetStormDamagePaused(bool bPause)
-{
-    DETOUR(AFortGameModeAthena, SetStormDamagePaused, Anchor::Hook()
-        .If(FEngineVersion::Current().GetChangelist() == 18335626)
-        .Exec(TEXT("/Script/FortniteGame.FortAthenaMutator_Storm:PauseStormDamage"))
-        .Find("mov rcx, [rsi+0x*]; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Optional()
-        .Inline());
-
-    UE_LOG(LogVelora, Display, TEXT("diag storm SetStormDamagePaused %d was %d caller 0x%llX time %f"), (int32)bPause, (int32)*((uint8*)this + 0xF28), (unsigned long long)((const uint8*)_ReturnAddress() - Anchor::Base()), GetWorld() ? GetWorld()->GetTimeSeconds() : -1.0f);
-
-    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
-    {
-        static auto DiagStormMutatorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaMutator_Storm"));
-        static auto DiagSpecialEventMutatorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaMutator_SpecialEvent"));
-        auto ObjectItem = GUObjectArray.IndexToObject(Index);
-        auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
-
-        if (Object && ((DiagStormMutatorClass && Object->IsA(DiagStormMutatorClass)) || (DiagSpecialEventMutatorClass && Object->IsA(DiagSpecialEventMutatorClass))))
-            UE_LOG(LogVelora, Display, TEXT("diag storm pause mutator candidate %s %s"), *GetNameSafe(Object), *GetNameSafe(Object->GetClass()));
-    }
-
-    Original(bPause);
 }
