@@ -532,7 +532,7 @@ void AFortAthenaVehicle::RepairAllDamageableParts(float NewHealth)
     for (auto& Part : DamageableParts)
     {
         if (Part.ConfigIndex >= 0 && Part.ConfigIndex < PartConfigs.Num())
-            Part.Health = bHasNewHealth ? FMath::Min(NewHealth, PartConfigs[Part.ConfigIndex].MaxHealth) : PartConfigs[Part.ConfigIndex].MaxHealth;
+            Part.Health = bHasNewHealth ? FMath::Min(NewHealth, PartConfigs[Part.ConfigIndex].GetMaxHealth()) : PartConfigs[Part.ConfigIndex].GetMaxHealth();
     }
 
     OnRep_DamageableParts(PrevDamageableParts);
@@ -564,16 +564,16 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
 
         for (int32 ConfigIndex = 0; ConfigIndex < PartConfigs.Num(); ConfigIndex++)
         {
-            const int32 ShapeIndex = BodySetup->GetAggGeom().GetElementIndexByName(PartConfigs[ConfigIndex].ShapeName);
+            const int32 ShapeIndex = BodySetup->GetAggGeom().GetElementIndexByName(PartConfigs[ConfigIndex].GetShapeName());
 
             if (ShapeIndex == INDEX_NONE)
                 continue;
 
             FVehicleDamageablePart Part;
             Part.ConfigIndex = ConfigIndex;
-            Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].BoneName) : INDEX_NONE;
+            Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].GetBoneName()) : INDEX_NONE;
             Part.ShapeIndex = ShapeIndex;
-            Part.Health = PartConfigs[ConfigIndex].GetbStartsDisabled() ? 0.0f : PartConfigs[ConfigIndex].MaxHealth;
+            Part.Health = PartConfigs[ConfigIndex].GetbStartsDisabled() ? 0.0f : PartConfigs[ConfigIndex].GetMaxHealth();
 
             DamageableParts.Add(Part);
         }

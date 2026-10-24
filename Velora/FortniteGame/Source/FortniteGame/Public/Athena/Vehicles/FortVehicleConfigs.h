@@ -14,9 +14,11 @@ struct FVehicleDamageablePartConfig
 
     bool GetbStartsDisabled() const;
 
-    FName ShapeName;
-    FName BoneName;
-    float MaxHealth;
+    FName GetShapeName() const;
+
+    FName GetBoneName() const;
+
+    float GetMaxHealth() const;
 };
 
 class UFortVehicleConfigs : public UObject

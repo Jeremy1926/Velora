@@ -32,6 +32,27 @@ bool FVehicleDamageablePartConfig::GetbStartsDisabled() const
     return bStartsDisabled && *bStartsDisabled->ContainerPtrToValuePtr<bool>(this);
 }
 
+FName FVehicleDamageablePartConfig::GetShapeName() const
+{
+    static auto ShapeName = StaticStruct()->FindPropertyByName(FName(TEXT("ShapeName")));
+
+    return TGameLayout<FName>::Load(ShapeName->ContainerPtrToValuePtr<FName>(this));
+}
+
+FName FVehicleDamageablePartConfig::GetBoneName() const
+{
+    static auto BoneName = StaticStruct()->FindPropertyByName(FName(TEXT("BoneName")));
+
+    return TGameLayout<FName>::Load(BoneName->ContainerPtrToValuePtr<FName>(this));
+}
+
+float FVehicleDamageablePartConfig::GetMaxHealth() const
+{
+    static auto MaxHealth = StaticStruct()->FindPropertyByName(FName(TEXT("MaxHealth")));
+
+    return *MaxHealth->ContainerPtrToValuePtr<float>(this);
+}
+
 int32 FVehicleDamageablePartConfig::GetTypeSize()
 {
     static auto TypeSize = StaticStruct()->GetPropertiesSize();
