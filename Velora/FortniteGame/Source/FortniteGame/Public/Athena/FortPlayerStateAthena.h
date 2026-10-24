@@ -32,7 +32,7 @@ struct FDeathInfo
 
     float* GetDistance();
 
-    FVector* GetDeathLocation();
+    void SetDeathLocation(const FVector& InDeathLocation);
 
     void SetInitialized(bool bInInitialized);
 

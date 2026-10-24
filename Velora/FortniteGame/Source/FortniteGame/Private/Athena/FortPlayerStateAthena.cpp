@@ -59,11 +59,12 @@ float* FDeathInfo::GetDistance()
     return Distance ? Distance->ContainerPtrToValuePtr<float>(this) : nullptr;
 }
 
-FVector* FDeathInfo::GetDeathLocation()
+void FDeathInfo::SetDeathLocation(const FVector& InDeathLocation)
 {
     static auto DeathLocation = StaticStruct()->FindPropertyByName(FName(TEXT("DeathLocation")));
 
-    return DeathLocation ? DeathLocation->ContainerPtrToValuePtr<FVector>(this) : nullptr;
+    if (DeathLocation)
+        DeathLocation->SetPropertyValue_InContainer<FVector>(this, InDeathLocation);
 }
 
 void FDeathInfo::SetInitialized(bool bInInitialized)

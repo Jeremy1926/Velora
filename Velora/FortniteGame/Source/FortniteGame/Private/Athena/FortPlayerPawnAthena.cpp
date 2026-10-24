@@ -290,8 +290,7 @@ void AFortPlayerPawnAthena::InitializeDeathInfoOnPawnDeath(const FGameplayTagCon
     if (auto Distance = DeathInfo.GetDistance(); Distance && FinisherPawn)
         *Distance = FinisherPawn->GetDistanceTo(this);
 
-    if (auto DeathLocation = DeathInfo.GetDeathLocation())
-        *DeathLocation = GetActorLocation();
+    DeathInfo.SetDeathLocation(GetActorLocation());
 
     if (auto DeathCircumstance = DeathInfo.GetDeathCircumstance())
         *DeathCircumstance = AFortPlayerStateAthena::ToDeathCircumstance(this);

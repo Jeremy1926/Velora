@@ -72,7 +72,7 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
         return;
     }
 
-    static auto MakeNoiseEventAtLocation = Anchor::Function<void (*)(AActor*, float, const FVector&, FName)>(TEXT("UFortAIFunctionLibrary::MakeNoiseEventAtLocation"))
+    static auto MakeNoiseEventAtLocation = Anchor::Function<void (*)(AActor*, float, const TGameValue<FVector>&, FName)>(TEXT("UFortAIFunctionLibrary::MakeNoiseEventAtLocation"))
         .Native(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
         .Get();
 

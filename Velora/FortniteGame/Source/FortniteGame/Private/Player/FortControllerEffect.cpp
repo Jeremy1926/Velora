@@ -149,32 +149,32 @@ void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AC
     static auto CustomFeedMessageTag = StaticClass()->FindPropertyByName(FName(TEXT("CustomFeedMessageTag")));
     static auto AdditionalLocalSpaceContextOriginOffset = StaticClass()->FindPropertyByName(FName(TEXT("AdditionalLocalSpaceContextOriginOffset")));
 
-    TriggerCustomFeedMessage(TargetController, CustomFeedMessageTag->GetPropertyValue_InContainer<FGameplayTag>(this), *AdditionalLocalSpaceContextOriginOffset->ContainerPtrToValuePtr<FVector>(this));
+    TriggerCustomFeedMessage(TargetController, CustomFeedMessageTag->GetPropertyValue_InContainer<FGameplayTag>(this), AdditionalLocalSpaceContextOriginOffset->GetPropertyValue_InContainer<FVector>(this));
 }
 
 void UFortControllerEffect_TriggerCustomFeedMessage::TriggerCustomFeedMessage(AController* TargetController, const FGameplayTag& CustomFeedMessageTag, const FVector& LocalSpaceContextOriginOffset)
 {
     static auto CustomFeedMessageComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateComponent_CustomFeedMessage"));
     static auto NetMulticastTriggerCustomFeedMessageWithContext = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateComponent_CustomFeedMessage:NetMulticastTriggerCustomFeedMessageWithContext"));
-
-    struct FortPlayerStateComponent_CustomFeedMessage_eventNetMulticastTriggerCustomFeedMessageWithContext_Parms
-    {
-        FGameplayTag CustomFeedMessageGeneratorID;
-        TWeakObjectPtr<APlayerState> OwningPlayerState;
-        FVector OriginLocation;
-    };
+    static auto CustomFeedMessageGeneratorID = NetMulticastTriggerCustomFeedMessageWithContext ? NetMulticastTriggerCustomFeedMessageWithContext->FindPropertyByName(FName(TEXT("CustomFeedMessageGeneratorID"))) : nullptr;
+    static auto Context = NetMulticastTriggerCustomFeedMessageWithContext ? NetMulticastTriggerCustomFeedMessageWithContext->FindPropertyByName(FName(TEXT("Context"))) : nullptr;
+    static auto ContextStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.CustomFeedMessageContext"));
+    static auto OwningPlayerState = ContextStruct ? ContextStruct->FindPropertyByName(FName(TEXT("OwningPlayerState"))) : nullptr;
+    static auto OriginLocation = ContextStruct ? ContextStruct->FindPropertyByName(FName(TEXT("OriginLocation"))) : nullptr;
 
     auto PlayerState = TargetController ? TargetController->GetPlayerState() : nullptr;
     auto Pawn = TargetController ? TargetController->GetPawn() : nullptr;
     auto CustomFeedMessageComponent = PlayerState && CustomFeedMessageComponentClass ? PlayerState->FindComponentByClass(CustomFeedMessageComponentClass) : nullptr;
 
-    if (!CustomFeedMessageComponent || !NetMulticastTriggerCustomFeedMessageWithContext)
+    if (!CustomFeedMessageComponent || !NetMulticastTriggerCustomFeedMessageWithContext || !CustomFeedMessageGeneratorID || !Context || !OwningPlayerState || !OriginLocation)
         return;
 
-    FortPlayerStateComponent_CustomFeedMessage_eventNetMulticastTriggerCustomFeedMessageWithContext_Parms Parms;
-    Parms.CustomFeedMessageGeneratorID = CustomFeedMessageTag;
-    Parms.OwningPlayerState = PlayerState;
-    Parms.OriginLocation = Pawn ? Pawn->GetTransform().TransformPosition(LocalSpaceContextOriginOffset) : FVector(ForceInit);
+    alignas(16) uint8 Parms[0x40] = {};
+    auto ContextData = Context->ContainerPtrToValuePtr<uint8>(Parms);
 
-    CustomFeedMessageComponent->CallRemoteFunction(NetMulticastTriggerCustomFeedMessageWithContext, &Parms, nullptr, nullptr);
+    CustomFeedMessageGeneratorID->SetPropertyValue_InContainer<FGameplayTag>(Parms, CustomFeedMessageTag);
+    *OwningPlayerState->ContainerPtrToValuePtr<TWeakObjectPtr<APlayerState>>(ContextData) = PlayerState;
+    OriginLocation->SetPropertyValue_InContainer<FVector>(ContextData, Pawn ? Pawn->GetTransform().TransformPosition(LocalSpaceContextOriginOffset) : FVector(ForceInit));
+
+    CustomFeedMessageComponent->CallRemoteFunction(NetMulticastTriggerCustomFeedMessageWithContext, Parms, nullptr, nullptr);
 }

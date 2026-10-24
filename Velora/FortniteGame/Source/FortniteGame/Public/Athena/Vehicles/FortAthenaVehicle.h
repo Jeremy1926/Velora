@@ -6,12 +6,19 @@
 #include "Math/Vector.h"
 #include "Math/Quat.h"
 
+class UScriptStruct;
+
 struct FReplicatedAthenaVehiclePhysicsState
 {
-    FVector Translation;
-    FQuat Rotation;
-    FVector LinearVelocity;
-    FVector AngularVelocity;
+    static UScriptStruct* StaticStruct();
+
+    FVector GetTranslation() const;
+
+    FQuat GetRotation() const;
+
+    FVector GetLinearVelocity() const;
+
+    FVector GetAngularVelocity() const;
 };
 
 struct FVehicleDamageablePart

@@ -262,14 +262,14 @@ UFortHealthSet* AFortPawn::GetHealthSet() const
 
 void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent)
 {
-    static auto LaunchCharacterJump = Anchor::Optional<void (*)(AFortPawn*, const FVector&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
+    static auto LaunchCharacterJump = Anchor::Optional<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
         .Native(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
         .Get();
 
     if (LaunchCharacterJump)
         return LaunchCharacterJump(this, LaunchVelocity, bXYOverride, bZOverride, bIgnoreFallDamage, bPlayFeedbackEvent);
 
-    static auto VirtualLaunchCharacterJump = Anchor::VirtualFunction<void (*)(AFortPawn*, const FVector&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
+    static auto VirtualLaunchCharacterJump = Anchor::VirtualFunction<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
         .Exec(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
         .Find("mov [*+0x20], *")
         .Find("call [*+0x*]")

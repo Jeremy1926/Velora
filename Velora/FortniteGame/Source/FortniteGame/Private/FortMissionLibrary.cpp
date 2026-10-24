@@ -27,8 +27,8 @@ void UFortMissionLibrary::execTeleportPlayerPawn(FFrame& Stack, void* const Z_Pa
 
     UObject* WorldContextObject = nullptr;
     AFortPlayerPawn* PlayerPawn = nullptr;
-    FVector DestLocation(ForceInit);
-    FRotator DestRotation(ForceInit);
+    TGameValue<FVector> DestLocation;
+    TGameValue<FRotator> DestRotation;
     uint32 bIgnoreCollision = 0;
     uint32 bIgnoreSupplementalKillVolumeSweep = 0;
 
@@ -42,5 +42,5 @@ void UFortMissionLibrary::execTeleportPlayerPawn(FFrame& Stack, void* const Z_Pa
     Stack.StepCompiledIn(&bIgnoreSupplementalKillVolumeSweep);
     Stack.Code += !!Stack.Code;
 
-    *(bool*)Z_Param__Result = TeleportPlayerPawn(WorldContextObject, PlayerPawn, DestLocation, DestRotation, !!bIgnoreCollision, !!bIgnoreSupplementalKillVolumeSweep);
+    *(bool*)Z_Param__Result = TeleportPlayerPawn(WorldContextObject, PlayerPawn, DestLocation.Get(), DestRotation.Get(), !!bIgnoreCollision, !!bIgnoreSupplementalKillVolumeSweep);
 }

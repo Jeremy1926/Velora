@@ -60,16 +60,16 @@ FBoxSphereBounds USceneComponent::GetBounds() const
 
 FBoxSphereBounds USceneComponent::CalcLocalBounds() const
 {
-    static auto CalcLocalBounds = Anchor::VirtualFunction<FBoxSphereBounds* (*)(const USceneComponent*, FBoxSphereBounds*)>(TEXT("USceneComponent::CalcLocalBounds"))
+    static auto CalcLocalBounds = Anchor::VirtualFunction<TGameValue<FBoxSphereBounds>* (*)(const USceneComponent*, TGameValue<FBoxSphereBounds>*)>(TEXT("USceneComponent::CalcLocalBounds"))
         .String(TEXT("HeldObject.Placement.Mesh"))
         .Start()
         .Find("mov rax, [rcx]; call [rax+0x*]; lea rcx, [*+0x*]; call 0x*; mov rcx, [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get();
 
-    FBoxSphereBounds Result;
+    TGameValue<FBoxSphereBounds> Result;
 
-    return *CalcLocalBounds(this, &Result);
+    return CalcLocalBounds(this, &Result)->Get();
 }
 
 void USceneComponent::K2_SetWorldLocationAndRotation(FVector NewLocation, FRotator NewRotation, bool bSweep, bool bTeleport)

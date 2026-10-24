@@ -368,7 +368,7 @@ float UFortKismetLibrary::GetServerWorldTimeSeconds(const UObject* WorldContextO
 
 void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise)
 {
-    static auto BroadcastAbilityImpactAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, UObject*, const FVector&, float, FName, bool)>(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation"))
+    static auto BroadcastAbilityImpactAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, UObject*, const TGameValue<FVector>&, float, FName, bool)>(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastAbilityImpactAtLocation"))
         .Get();
 
@@ -377,7 +377,7 @@ void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextO
 
 void UFortKismetLibrary::BroadcastSoundAtLocation(UObject* WorldContextObject, USoundBase* InSound, const FVector& Location, float VolumeMultiplier, float PitchMultiplier)
 {
-    static auto BroadcastSoundAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, const FVector&, float, float)>(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation"))
+    static auto BroadcastSoundAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, const TGameValue<FVector>&, float, float)>(TEXT("UFortKismetLibrary::BroadcastSoundAtLocation"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastSoundAtLocation"))
         .Get();
 

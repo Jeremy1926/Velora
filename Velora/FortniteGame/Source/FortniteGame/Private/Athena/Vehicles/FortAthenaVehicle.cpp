@@ -76,17 +76,52 @@ const TCHAR* AFortAthenaVehicle::GetServerFunctionPath(const TCHAR* FunctionName
     return Path;
 }
 
-void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState)
+UScriptStruct* FReplicatedAthenaVehiclePhysicsState::StaticStruct()
 {
-    static auto bEncodedRotation = []
+    static auto Struct = []
     {
-        auto PhysicsState = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedPhysicsPawnState"));
+        auto PhysicsState = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedPhysicsPawnState"));
 
         if (!PhysicsState)
-            PhysicsState = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaVehiclePhysicsState"));
+            PhysicsState = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaVehiclePhysicsState"));
 
-        return PhysicsState->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
+        return PhysicsState ? PhysicsState : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ReplicatedAthenaSMVehiclePhysicsState"));
     }();
+
+    return Struct;
+}
+
+FVector FReplicatedAthenaVehiclePhysicsState::GetTranslation() const
+{
+    static auto Translation = StaticStruct()->FindPropertyByName(FName(TEXT("Translation")));
+
+    return Translation->GetPropertyValue_InContainer<FVector>(this);
+}
+
+FQuat FReplicatedAthenaVehiclePhysicsState::GetRotation() const
+{
+    static auto Rotation = StaticStruct()->FindPropertyByName(FName(TEXT("Rotation")));
+
+    return Rotation->GetPropertyValue_InContainer<FQuat>(this);
+}
+
+FVector FReplicatedAthenaVehiclePhysicsState::GetLinearVelocity() const
+{
+    static auto LinearVelocity = StaticStruct()->FindPropertyByName(FName(TEXT("LinearVelocity")));
+
+    return LinearVelocity->GetPropertyValue_InContainer<FVector>(this);
+}
+
+FVector FReplicatedAthenaVehiclePhysicsState::GetAngularVelocity() const
+{
+    static auto AngularVelocity = StaticStruct()->FindPropertyByName(FName(TEXT("AngularVelocity")));
+
+    return AngularVelocity->GetPropertyValue_InContainer<FVector>(this);
+}
+
+void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState)
+{
+    static auto bEncodedRotation = FReplicatedAthenaVehiclePhysicsState::StaticStruct()->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
 
     static auto EncodedRotationX = Anchor::Address()
         .Pattern("F3 0F 58 2D ? ? ? ? F3 0F 58 0D")
@@ -101,11 +136,12 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
     if (!PrimitiveComponent)
         return;
 
-    auto Rotation = !bEncodedRotation ? InState.Rotation : EncodedRotationX && *(const float*)EncodedRotationX == 0.3f ? FQuat(InState.Rotation.X - 0.3f, InState.Rotation.Y / -0.75f, InState.Rotation.Z + 0.15f, InState.Rotation.W / 1.1f) : FQuat(InState.Rotation.X - 2.5f, InState.Rotation.Y / 0.3f, InState.Rotation.Z + 2.0f, InState.Rotation.W / -1.2f);
+    const auto StateRotation = InState.GetRotation();
+    auto Rotation = !bEncodedRotation ? StateRotation : EncodedRotationX && *(const float*)EncodedRotationX == 0.3f ? FQuat(StateRotation.X - 0.3f, StateRotation.Y / -0.75f, StateRotation.Z + 0.15f, StateRotation.W / 1.1f) : FQuat(StateRotation.X - 2.5f, StateRotation.Y / 0.3f, StateRotation.Z + 2.0f, StateRotation.W / -1.2f);
 
-    PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.Translation, Rotation.Rotator(), false, true);
-    PrimitiveComponent->SetPhysicsLinearVelocity(InState.LinearVelocity, false, NAME_None);
-    PrimitiveComponent->SetPhysicsAngularVelocityInRadians(InState.AngularVelocity, false, NAME_None);
+    PrimitiveComponent->K2_SetWorldLocationAndRotation(InState.GetTranslation(), Rotation.Rotator(), false, true);
+    PrimitiveComponent->SetPhysicsLinearVelocity(InState.GetLinearVelocity(), false, NAME_None);
+    PrimitiveComponent->SetPhysicsAngularVelocityInRadians(InState.GetAngularVelocity(), false, NAME_None);
 }
 
 void AFortAthenaVehicle::ServerUpdateInputParams_Implementation(const FReplicatedAthenaVehicleInputState& InState)
