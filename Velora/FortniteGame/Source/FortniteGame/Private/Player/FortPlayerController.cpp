@@ -1269,6 +1269,10 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Caller()
         .Find("mov rax, [0x*]; mov [*], rax; mov rax, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("lea rdx, [0x*]")
+        .Target()
         .Get();
 
     static auto BuildingLocked = Anchor::Data<const FText*>(TEXT("BuildingLocked"))
@@ -1286,6 +1290,10 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Caller()
         .Find("mov rax, [0x*]; mov [*], rax; mov rax, [0x*]", 2)
         .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("lea rdx, [0x*]", 2)
+        .Target()
         .Get();
 
     static auto UnableToAffordRepair = Anchor::Data<const FText*>(TEXT("UnableToAffordRepair"))
@@ -1302,6 +1310,10 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Event(TEXT("ServerRepairBuildingActor"))
         .Caller()
         .Find("mov rax, [0x*]; mov [*], rax; mov rax, [0x*]", 3)
+        .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("lea rdx, [0x*]", 3)
         .Target()
         .Get();
 
@@ -1563,6 +1575,10 @@ bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingAct
         .Event(TEXT("ServerRepairBuildingActor"))
         .Caller()
         .Find("call [*+0x*]", 2)
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; mov rcx, [*]; mov *b, al")
+        .Find("mov *, [rcx+0x*]")
         .Get();
 
     return HasPermissionToEditWorld(this, BuildingActor, Location, Rotation);
@@ -1574,6 +1590,9 @@ bool AFortPlayerController::CanAffordToRepair(ABuildingSMActor* BuildingActorToR
         .Event(TEXT("ServerRepairBuildingActor"))
         .Caller()
         .Find("call [*+0x*]; test al, al; jz *; mov rdx, *; mov rcx, *; call 0x*")
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; test al, al; jz 0x*; mov rax, [*]; mov rcx, *; mov edx, [0x*]")
         .Get();
 
     return CanAffordToRepair(this, BuildingActorToRepair);
