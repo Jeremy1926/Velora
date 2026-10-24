@@ -21,6 +21,15 @@ TMulticastDelegate<void, ABuildingActor*, float>& ABuildingActor::GetNotifyBuild
         .Target()
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .Pattern("0F 57 D2 F3 0F 11 89 ? ? ? ? F3 0F 51 D1 48 8D 91 ? ? ? ? E8")
+        .Find("call 0x*")
+        .Target()
+        .Find("movsxd rdi, eax; mov rbp, rdx; jns 0x*")
+        .Find("jns 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyBuildingNetCullDistChange;
