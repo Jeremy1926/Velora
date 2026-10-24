@@ -55,6 +55,12 @@ bool UFortConversationTaskNode_Service::CanPlayerAffordPrice(const FConversation
         .Find("lea r8, [rsp+0x*]; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_DataDrivenService"), 0)
+        .Find("call 0x*; test al, al; jnz 0x*; mov al, bl; jmp 0x*; mov rdx, rsi; mov rcx, rdi; call 0x*; test rax, rax")
+        .Target()
         .Get();
 
     TOptional<int32> InPrice = Price;
