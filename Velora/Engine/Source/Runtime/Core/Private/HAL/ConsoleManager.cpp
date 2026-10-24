@@ -87,6 +87,16 @@ void IConsoleVariable::Set(int32 InValue, EConsoleVariableFlags SetBy)
     Set(*FString::FromInt(InValue), SetBy);
 }
 
+void IConsoleVariable::SetOnChangedCallback(const FConsoleVariableDelegate& Callback)
+{
+    static auto SetOnChangedCallback = Anchor::VirtualFunction<void (*)(IConsoleVariable*, const FConsoleVariableDelegate&)>(TEXT("IConsoleVariable::SetOnChangedCallback"))
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r8b, *; call [rax+0x*]; test rax, rax; jz 0x*; mov r8, [rax]")
+        .Find("call [r8+0x*]")
+        .Get();
+
+    SetOnChangedCallback(this, Callback);
+}
+
 int32 IConsoleVariable::GetInt() const
 {
     static auto GetInt = Anchor::VirtualFunction<int32 (*)(const IConsoleVariable*)>(TEXT("IConsoleVariable::GetInt"))

@@ -20,6 +20,7 @@ class AFortInventory;
 class AFortLiveSpectatorController;
 class AFortPawn;
 class AFortPickup;
+class AFortPlayerController;
 class AFortPlayerPawn;
 class AFortPlayerPetRepState;
 class AFortPlayerState;
@@ -27,6 +28,8 @@ class AFortPlayerStateAthena;
 class AFortTeamHealthInfo;
 class AFortTeamPrivateInfo;
 class AFortWeapon;
+class IConsoleVariable;
+class UFortPhysicsObjectComponent;
 class APlayerState;
 class UFortReplicationGraphNode_AlwaysRelevantForSquad;
 class UFortReplicationGraphNode_AlwaysRelevantForTeam;
@@ -177,6 +180,14 @@ public:
     void OnVehicleChanged(AFortPlayerPawn* Pawn, AActor* NewVehicle, AActor* PrevVehicle);
 
     void OnPlayerPawnHighFrequencyChange(AFortPlayerPawn* Pawn, bool bHighFreq);
+
+    void OnPlayerControllerStateChanged(AFortPlayerController* PC, const FName& OldState, const FName& NewState);
+
+    void OnPhysicsObjectComponentActivated(UFortPhysicsObjectComponent* Component);
+
+    void OnPhysicsObjectComponentDeactivated(UFortPhysicsObjectComponent* Component);
+
+    static void OnChangeOverrideActorDiscoveryBudget(IConsoleVariable* CVar);
 
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);

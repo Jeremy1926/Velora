@@ -491,6 +491,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\ProjectileMovementComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortProjectileMovementComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortHeldObjectComponent.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortPhysicsObjectComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortPawnComponent_Disguise.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_SpawnedVehicle.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Cosmetics\AthenaSprayItemDefinition.h" />
@@ -858,6 +859,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortProjectileMovementComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortHeldObjectComponent.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortPhysicsObjectComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortPawnComponent_Disguise.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_SpawnedVehicle.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaSprayItemDefinition.cpp" />

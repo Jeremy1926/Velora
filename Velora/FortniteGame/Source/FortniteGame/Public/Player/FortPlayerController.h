@@ -7,8 +7,11 @@
 #include "Misc/Guid.h"
 #include "UObject/AssetPtr.h"
 #include "Containers/Map.h"
+#include "Delegates/Delegate.h"
+#include "UObject/NameTypes.h"
 
 class ABuildingSMActor;
+class AFortPlayerController;
 class AFortInventory;
 class AFortPawn;
 class AFortPlayerPawn;
@@ -53,6 +56,11 @@ enum class EFortBuildPreviewMarkerOptionalAdjustment : uint8
     None,
     FreeWallPieceOnTop,
     FreeWallPieceOnBottom,
+};
+
+struct FFortPlayerControllerEvents
+{
+    static TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>& GetOnPlayerStateChangedEvent();
 };
 
 class AFortPlayerController : public APlayerController

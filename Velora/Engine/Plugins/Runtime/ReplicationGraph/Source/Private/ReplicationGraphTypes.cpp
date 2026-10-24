@@ -116,6 +116,11 @@ void FGlobalActorReplicationInfo::SetCullDistanceSquared(float InCullDistanceSqu
     *(float*)(Settings + (FName::IsOutlineNumber() ? offsetof(TClassReplicationInfoLayout<NAME_INDEX>, CullDistance) : offsetof(TClassReplicationInfoLayout<FName>, CullDistance))) = FMath::Sqrt(InCullDistanceSquared);
 }
 
+void FGlobalActorReplicationInfo::SetReplicationPeriodFrame(uint16 InReplicationPeriodFrame)
+{
+    *(uint16*)(GetSettings() + offsetof(TClassReplicationInfoLayout<FName>, ReplicationPeriodFrame)) = InReplicationPeriodFrame;
+}
+
 FGlobalActorReplicationEvents& FGlobalActorReplicationInfo::GetEvents()
 {
     static auto DormancyFlush = Anchor::Offset(TEXT("FGlobalActorReplicationEvents::DormancyFlush"))

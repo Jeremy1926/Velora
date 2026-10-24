@@ -209,6 +209,8 @@ struct FGlobalActorReplicationInfo
 
     void SetCullDistanceSquared(float InCullDistanceSquared);
 
+    void SetReplicationPeriodFrame(uint16 InReplicationPeriodFrame);
+
 private:
     const uint8* GetSettings() const;
 };

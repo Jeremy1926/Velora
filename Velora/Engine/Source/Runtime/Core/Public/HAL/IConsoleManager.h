@@ -2,6 +2,7 @@
 
 #include "HAL/Platform.h"
 #include "CoreGlobals.h"
+#include "Delegates/Delegate.h"
 
 template <class T>
 class TConsoleVariableData
@@ -36,6 +37,10 @@ enum EConsoleVariableFlags
     ECVF_SetByCode = 0x8000000
 };
 
+class IConsoleVariable;
+
+DECLARE_DELEGATE_OneParam(FConsoleVariableDelegate, IConsoleVariable*);
+
 class IConsoleObject
 {
 public:
@@ -48,6 +53,8 @@ public:
     void Set(const TCHAR* InValue, EConsoleVariableFlags SetBy);
 
     void Set(int32 InValue, EConsoleVariableFlags SetBy);
+
+    void SetOnChangedCallback(const FConsoleVariableDelegate& Callback);
 
     int32 GetInt() const;
 

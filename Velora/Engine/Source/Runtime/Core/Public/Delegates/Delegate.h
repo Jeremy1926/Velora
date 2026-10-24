@@ -6,6 +6,8 @@
 #define FUNC_DECLARE_MULTICAST_DELEGATE(MulticastDelegateName, ...) \
     typedef TMulticastDelegate<__VA_ARGS__> MulticastDelegateName;
 
+#define DECLARE_DELEGATE_OneParam(DelegateName, Param1Type) typedef TDelegate<void(Param1Type)> DelegateName;
+
 #define DECLARE_DELEGATE_RetVal_ThreeParams(ReturnValueType, DelegateName, Param1Type, Param2Type, Param3Type) typedef TDelegate<ReturnValueType(Param1Type, Param2Type, Param3Type)> DelegateName;
 
 #define DECLARE_MULTICAST_DELEGATE(DelegateName) FUNC_DECLARE_MULTICAST_DELEGATE(DelegateName, void)

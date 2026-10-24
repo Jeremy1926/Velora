@@ -13,6 +13,7 @@
 #include "Building/BuildingActor.h"
 #include "Building/BuildingContainer.h"
 #include "Building/BuildingGameplayActorSpawnChip.h"
+#include "Components/FortPhysicsObjectComponent.h"
 #include "Containers/Set.h"
 #include "Containers/UnrealString.h"
 #include "Engine/NetConnection.h"
@@ -41,6 +42,7 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Player/FortLiveBroadcastController.h"
 #include "Player/FortLiveSpectatorController.h"
+#include "Player/FortPlayerController.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortTeamHealthInfo.h"
 #include "Player/FortTeamPrivateInfo.h"
@@ -592,13 +594,20 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
     AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerSpawned);
     AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerDestroyed);
+    FFortPlayerControllerEvents::GetOnPlayerStateChangedEvent().AddUObject(this, &UFortReplicationGraph::OnPlayerControllerStateChanged);
     AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
     AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
+    UFortPhysicsObjectComponent::GetNotifyPhysicsObjectComponentActivated().AddUObject(this, &UFortReplicationGraph::OnPhysicsObjectComponentActivated);
+    UFortPhysicsObjectComponent::GetNotifyPhysicsObjectComponentDeactivated().AddUObject(this, &UFortReplicationGraph::OnPhysicsObjectComponentDeactivated);
 
     static auto HighFrequencyPawnUpdates = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.HighFrequencyPawnUpdates"));
 
     if (HighFrequencyPawnUpdates->GetInt() > 0)
         AFortPlayerPawn::GetNotifyPawnHighFrequencyUpdateChange().AddUObject(this, &UFortReplicationGraph::OnPlayerPawnHighFrequencyChange);
+
+    static auto OverrideActorDiscoveryBudget = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.OverrideActorDiscoveryBudget"));
+
+    OverrideActorDiscoveryBudget->SetOnChangedCallback(FConsoleVariableDelegate::CreateStatic(&UFortReplicationGraph::OnChangeOverrideActorDiscoveryBudget));
 
     GetRPC_Multicast_OpenChannelForClass().Reset();
 
@@ -1316,6 +1325,94 @@ void UFortReplicationGraph::OnPlayerPawnHighFrequencyChange(AFortPlayerPawn* Paw
 
         if (Pawn->GetOnDestroyed().bIsBound)
             Pawn->GetOnDestroyed().bIsBound = FSparseDelegateStorage::RemoveAll(Pawn, FName(TEXT("OnDestroyed")), this);
+    }
+}
+
+void UFortReplicationGraph::OnPlayerControllerStateChanged(AFortPlayerController* PC, const FName& OldState, const FName& NewState)
+{
+    static auto DynamicPlayerControllerFrequencies = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.DynamicPlayerControllerFrequencies"));
+    static auto PlayerControllerClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.PlayerController"));
+
+    if (DynamicPlayerControllerFrequencies->GetInt() <= 0)
+        return;
+
+    auto& GlobalInfo = GetGlobalActorReplicationInfoMap().Get(PC);
+    auto ControllerClass = NewState == FName(TEXT("Spectating")) ? PlayerControllerClass : PC->GetClass();
+    auto DefaultController = (AActor*)ControllerClass->GetDefaultObject();
+    const uint16 ReplicationPeriodFrame = GetReplicationPeriodFrameForFrequency(DefaultController->GetNetUpdateFrequency());
+
+    GlobalInfo.SetReplicationPeriodFrame(ReplicationPeriodFrame);
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (auto ActorInfo = ConnectionManager->GetActorInfoMap().Find(PC))
+            ActorInfo->ReplicationPeriodFrame = ReplicationPeriodFrame;
+    }
+}
+
+void UFortReplicationGraph::OnPhysicsObjectComponentActivated(UFortPhysicsObjectComponent* Component)
+{
+    static auto PhysicsObjectNetUpdateFrequencyOverride = IConsoleManager::Get().FindConsoleVariable(TEXT("FortPhysics.PhysicsObjectNetUpdateFrequencyOverride"));
+
+    if (!Component)
+        return;
+
+    AActor* Owner = Component->GetOwner();
+
+    if (!Owner || !IsActorValidForReplicationGather(Owner))
+        return;
+
+    const uint16 ReplicationPeriodFrame = GetReplicationPeriodFrameForFrequency(PhysicsObjectNetUpdateFrequencyOverride->GetFloat());
+    auto GlobalInfo = GetGlobalActorReplicationInfoMap().Find(Owner);
+
+    if (!GlobalInfo)
+        return;
+
+    GlobalInfo->SetReplicationPeriodFrame(ReplicationPeriodFrame);
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (auto ActorInfo = ConnectionManager->GetActorInfoMap().Find(Owner))
+            ActorInfo->ReplicationPeriodFrame = ReplicationPeriodFrame;
+    }
+}
+
+void UFortReplicationGraph::OnPhysicsObjectComponentDeactivated(UFortPhysicsObjectComponent* Component)
+{
+    if (!Component)
+        return;
+
+    AActor* Owner = Component->GetOwner();
+
+    if (!Owner || !IsActorValidForReplicationGather(Owner))
+        return;
+
+    const uint16 ReplicationPeriodFrame = GetReplicationPeriodFrameForFrequency(Component->GetInactivateStateNetUpdateFrequency());
+    auto GlobalInfo = GetGlobalActorReplicationInfoMap().Find(Owner);
+
+    if (!GlobalInfo)
+        return;
+
+    GlobalInfo->SetReplicationPeriodFrame(ReplicationPeriodFrame);
+
+    for (auto ConnectionManager : GetConnections())
+    {
+        if (auto ActorInfo = ConnectionManager->GetActorInfoMap().Find(Owner))
+            ActorInfo->ReplicationPeriodFrame = ReplicationPeriodFrame;
+    }
+}
+
+void UFortReplicationGraph::OnChangeOverrideActorDiscoveryBudget(IConsoleVariable* CVar)
+{
+    static auto OverrideActorDiscoveryBudget = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.OverrideActorDiscoveryBudget"));
+
+    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+    {
+        auto ObjectItem = GUObjectArray.IndexToObject(Index);
+        auto ReplicationGraph = ObjectItem && !ObjectItem->IsUnreachable() ? Cast<UFortReplicationGraph>((UObject*)ObjectItem->Object) : nullptr;
+
+        if (ReplicationGraph && !(ReplicationGraph->GetFlags() & RF_ClassDefaultObject))
+            ReplicationGraph->SetActorDiscoveryBudget(OverrideActorDiscoveryBudget->GetInt());
     }
 }
 

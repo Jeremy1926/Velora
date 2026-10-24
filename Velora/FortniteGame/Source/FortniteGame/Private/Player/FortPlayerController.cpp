@@ -788,6 +788,21 @@ void AFortPlayerController::execDropSpecificItem(FFrame& Stack, void* const Z_Pa
     DropSpecificItem(DropItemDef);
 }
 
+TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>& FFortPlayerControllerEvents::GetOnPlayerStateChangedEvent()
+{
+    static auto OnPlayerStateChangedEvent = Anchor::Data<TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>*>(TEXT("FFortPlayerControllerEvents::OnPlayerStateChangedEvent"))
+        .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *OnPlayerStateChangedEvent;
+}
+
 UClass* AFortPlayerController::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController"));
