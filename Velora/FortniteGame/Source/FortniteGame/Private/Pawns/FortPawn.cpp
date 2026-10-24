@@ -80,6 +80,10 @@ void AFortPawn::StopPerformingNativeAction(const FGameplayTag& ActionTag)
         .Start()
         .Log(TEXT("UFortAbilitySystemComponent::StopPerformingNativeAction"))
         .VirtualIs(TEXT("/Script/FortniteGame.Default__FortPawn"), "mov rcx, [rcx+0x*]; test rcx, rcx; jnz %t")
+        .Or()
+        .Strings(TEXT("Can't stop native action %s, not active!"), TEXT("Native Action Role(%s) Can't stop %s, not active!"))
+        .Start()
+        .VirtualIs(TEXT("/Script/FortniteGame.Default__FortPawn"), "sub rsp, 0x28; mov rcx, [rcx+0x*]; test rcx, rcx; jz 0x*; call %t")
         .Get();
 
     StopPerformingNativeAction(this, ActionTag);
