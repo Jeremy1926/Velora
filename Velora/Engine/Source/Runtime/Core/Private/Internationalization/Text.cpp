@@ -69,6 +69,8 @@ FText& FText::operator=(FText&& Source)
 bool FText::IsEmpty() const
 {
     static auto IsEmpty = Anchor::Function<bool (*)(const FText*)>(TEXT("FText::IsEmpty"))
+        .Pattern("40 53 48 83 EC 20 48 8B D9 48 8B 09 48 8B 01 FF 50 38 48 8B C8 E8 ? ? ? ? 48 8B 0B 48 8B 01 FF 50 10 83 78 08 01 0F 9E C0")
+        .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("mov r8d, *; *; call [*+0x*]")
@@ -81,8 +83,6 @@ bool FText::IsEmpty() const
         .Find("mov r8d, *; *; call [*+0x*]")
         .Find("lea rcx, *; call 0x*")
         .Call()
-        .Or()
-        .Pattern("40 53 48 83 EC 20 48 8B D9 48 8B 09 48 8B 01 FF 50 38 48 8B C8 E8 ? ? ? ? 48 8B 0B 48 8B 01 FF 50 10 83 78 08 01 0F 9E C0")
         .Get();
 
     return IsEmpty(this);
