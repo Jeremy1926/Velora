@@ -455,6 +455,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortTeamPrivateInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortLoadingScreenManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Analytics\FortAnalytics.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\Color.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\KismetSystemLibrary.h" />
@@ -832,6 +833,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortTeamPrivateInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\FortPlaylistManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortLoadingScreenManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Analytics\FortAnalytics.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAISystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\AthenaAIPerceptionManager.cpp" />
