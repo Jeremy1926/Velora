@@ -37,6 +37,9 @@ void AFortAthenaLivingWorldVolume::EnablePointProvider()
 
     UE_LOG(LogVelora, Display, TEXT("diag lager volume %s enable water %f min %f max %f query %p root %p manager %p"), *GetNameSafe(this), WaterLevelIndex, GetWaterLevelIndexMin().GetValueAtLevel(0.0f), GetWaterLevelIndexMax().GetValueAtLevel(0.0f), GetEnvironmentQuery(), GetRootComponent(), GetCachedLivingWorldManager() ? *GetCachedLivingWorldManager() : nullptr);
 
+    static auto DiagSceneClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.SceneComponent"));
+    UE_LOG(LogVelora, Display, TEXT("diag lager vol %s cls %s scene %p init %d outer %s"), *GetNameSafe(this), *GetNameSafe(GetClass()), DiagSceneClass ? FindComponentByClass(DiagSceneClass) : nullptr, (int32)IsActorInitialized(), *GetNameSafe(GetOuter()));
+
     if (WaterLevelIndex != -1.0f)
     {
         const float WaterLevelIndexMin = GetWaterLevelIndexMin().GetValueAtLevel(0.0f);
