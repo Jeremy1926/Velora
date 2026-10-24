@@ -9,6 +9,7 @@
 #include "Athena/FortSafeZoneIndicatorFuture.h"
 #include "Athena/Vehicles/FortAthenaExitCraft.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
+#include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Building/BuildingActor.h"
 #include "Building/BuildingContainer.h"
 #include "Building/BuildingGameplayActorSpawnChip.h"
@@ -50,6 +51,7 @@
 #include "Templates/Casts.h"
 #include "Templates/Function.h"
 #include "UObject/ScriptDelegates.h"
+#include "UObject/SparseDelegate.h"
 #include "UObject/Class.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/Stack.h"
@@ -575,6 +577,7 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortTeamPrivateInfo::GetNotifyPlayerAdded().AddUObject(this, &UFortReplicationGraph::OnPlayerAddedTeam);
     AFortTeamPrivateInfo::GetNotifyPlayerRemoved().AddUObject(this, &UFortReplicationGraph::OnPlayerRemovedTeam);
     AFortPawn::GetNotifyWeaponChange().AddUObject(this, &UFortReplicationGraph::OnPawnWeaponChange);
+    AFortPlayerPawn::GetVehicleStateChange().AddUObject(this, &UFortReplicationGraph::OnVehicleChanged);
     AFortPlayerPawn::GetNotifyPetStateChange().AddUObject(this, &UFortReplicationGraph::OnPetStateChange);
     AFortPlayerPawn::GetNotifyBalloonStateChange().AddUObject(this, &UFortReplicationGraph::OnBalloonStateChange);
     AFortPlayerPawn::GetNotifyPossessedPropStateChange().AddUObject(this, &UFortReplicationGraph::OnPossessedPropStateChange);
@@ -591,6 +594,11 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerDestroyed);
     AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
     AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
+
+    static auto HighFrequencyPawnUpdates = IConsoleManager::Get().FindConsoleVariable(TEXT("FortRepGraph.HighFrequencyPawnUpdates"));
+
+    if (HighFrequencyPawnUpdates->GetInt() > 0)
+        AFortPlayerPawn::GetNotifyPawnHighFrequencyUpdateChange().AddUObject(this, &UFortReplicationGraph::OnPlayerPawnHighFrequencyChange);
 
     GetRPC_Multicast_OpenChannelForClass().Reset();
 
@@ -1249,6 +1257,66 @@ void UFortReplicationGraph::OnActorNetCullDistanceChange(AActor* Actor)
 {
     if (Actor)
         OnCullDistSqChange(Actor, Actor->GetNetCullDistanceSquared());
+}
+
+void UFortReplicationGraph::OnVehicleChanged(AFortPlayerPawn* Pawn, AActor* NewVehicle, AActor* PrevVehicle)
+{
+    static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+
+    auto& GlobalActorReplicationInfoMap = GetGlobalActorReplicationInfoMap();
+
+    if (PrevVehicle)
+    {
+        GlobalActorReplicationInfoMap.RemoveDependentActor(Pawn, PrevVehicle);
+
+        auto VehicleInterface = (IFortVehicleInterface*)PrevVehicle->GetInterfaceAddress(FortVehicleInterface);
+
+        if (VehicleInterface && !VehicleInterface->ContainsPlayers() && PrevVehicle->GetOnDestroyed().bIsBound)
+            PrevVehicle->GetOnDestroyed().bIsBound = FSparseDelegateStorage::Remove(PrevVehicle, FName(TEXT("OnDestroyed")), this, FName(TEXT("OnVehicleDestroyed")));
+    }
+
+    if (NewVehicle && IsActorValidForReplication(NewVehicle))
+    {
+        GlobalActorReplicationInfoMap.AddDependentActor(Pawn, NewVehicle);
+
+        auto& PawnInfo = GlobalActorReplicationInfoMap.Get(Pawn);
+        GlobalActorReplicationInfoMap.Get(NewVehicle);
+
+        OnCullDistSqChange(NewVehicle, FMath::Max(NewVehicle->GetNetCullDistanceSquared(), PawnInfo.GetCullDistanceSquared()));
+
+        FScriptDelegate OnVehicleDestroyedDelegate;
+        OnVehicleDestroyedDelegate.BindUFunction(this, FName(TEXT("OnVehicleDestroyed")));
+
+        NewVehicle->GetOnDestroyed().bIsBound |= FSparseDelegateStorage::AddUnique(NewVehicle, FName(TEXT("OnDestroyed")), OnVehicleDestroyedDelegate);
+    }
+}
+
+void UFortReplicationGraph::OnPlayerPawnHighFrequencyChange(AFortPlayerPawn* Pawn, bool bHighFreq)
+{
+    if (GetDisableHighFrequencyPawnRouting())
+        return;
+
+    FNewReplicatedActorInfo ActorInfo(Pawn);
+
+    if (bHighFreq)
+    {
+        if (Pawn->GetTearOff())
+            return;
+
+        GetAlwaysRelevantNode()->NotifyAddNetworkActor(ActorInfo);
+
+        FScriptDelegate OnHighFrequencyPawnDestroyedDelegate;
+        OnHighFrequencyPawnDestroyedDelegate.BindUFunction(this, FName(TEXT("OnHighFrequencyPawnDestroyed")));
+
+        Pawn->GetOnDestroyed().bIsBound |= FSparseDelegateStorage::Add(Pawn, FName(TEXT("OnDestroyed")), OnHighFrequencyPawnDestroyedDelegate);
+    }
+    else
+    {
+        GetAlwaysRelevantNode()->NotifyRemoveNetworkActor(ActorInfo, true);
+
+        if (Pawn->GetOnDestroyed().bIsBound)
+            Pawn->GetOnDestroyed().bIsBound = FSparseDelegateStorage::RemoveAll(Pawn, FName(TEXT("OnDestroyed")), this);
+    }
 }
 
 void UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory(AActor* ParentActor, AFortInventory* Inventory)

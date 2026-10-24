@@ -44,6 +44,8 @@ public:
 
     void NotifyAddNetworkActor(const FNewReplicatedActorInfo& ActorInfo);
 
+    bool NotifyRemoveNetworkActor(const FNewReplicatedActorInfo& ActorInfo, bool bWarnIfNotFound = true);
+
     void TearDown();
 
     void CleanChildNodes();

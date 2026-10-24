@@ -500,6 +500,18 @@ void UReplicationGraphNode::NotifyAddNetworkActor(const FNewReplicatedActorInfo&
     NotifyAddNetworkActor(this, ActorInfo);
 }
 
+bool UReplicationGraphNode::NotifyRemoveNetworkActor(const FNewReplicatedActorInfo& ActorInfo, bool bWarnIfNotFound)
+{
+    static auto NotifyRemoveNetworkActor = Anchor::VirtualFunction<bool (*)(UReplicationGraphNode*, const FNewReplicatedActorInfo&, bool)>(TEXT("UReplicationGraphNode::NotifyRemoveNetworkActor"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x30)
+        .Get();
+
+    return NotifyRemoveNetworkActor(this, ActorInfo, bWarnIfNotFound);
+}
+
 void UReplicationGraphNode::TearDown()
 {
     static auto TearDown = Anchor::VirtualFunction<void (*)(UReplicationGraphNode*)>(TEXT("UReplicationGraphNode::TearDown"))

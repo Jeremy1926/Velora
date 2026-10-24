@@ -65,6 +65,10 @@ public:
 
     static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& GetNotifyPossessedPropStateChange();
 
+    static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& GetVehicleStateChange();
+
+    static TMulticastDelegate<void, AFortPlayerPawn*, bool>& GetNotifyPawnHighFrequencyUpdateChange();
+
     static FMulticastScriptDelegate* GetOnVehicleSpawnedEvent();
 
     FMulticastScriptDelegate& GetOnEnteredAircraft();

@@ -24,4 +24,6 @@ public:
     const UFortVehicleConfigs* GetVehicleConfigs() const;
 
     USkeletalMeshComponent* GetSkeletalMeshComponent() const;
+
+    bool ContainsPlayers() const;
 };

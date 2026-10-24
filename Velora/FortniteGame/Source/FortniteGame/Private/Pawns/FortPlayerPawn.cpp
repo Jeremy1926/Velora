@@ -73,6 +73,36 @@ TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::G
     return *NotifyPossessedPropStateChange;
 }
 
+TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::GetVehicleStateChange()
+{
+    static auto VehicleStateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>*>(TEXT("AFortPlayerPawn::VehicleStateChange"))
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("cmp eax, [rcx+0x*]; jnz 0x*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    return *VehicleStateChange;
+}
+
+TMulticastDelegate<void, AFortPlayerPawn*, bool>& AFortPlayerPawn::GetNotifyPawnHighFrequencyUpdateChange()
+{
+    static auto NotifyPawnHighFrequencyUpdateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, bool>*>(TEXT("AFortPlayerPawn::NotifyPawnHighFrequencyUpdateChange"))
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_NetMovementPrioritized"))
+        .Find("shr al, 0x1; and al, 0x1; cmp *, *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Get();
+
+    return *NotifyPawnHighFrequencyUpdateChange;
+}
+
 UScriptStruct* FVehiclePawnState::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehiclePawnState"));

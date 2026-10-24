@@ -73,3 +73,13 @@ USkeletalMeshComponent* IFortVehicleInterface::GetSkeletalMeshComponent() const
 
     return GetSkeletalMeshComponent(this);
 }
+
+bool IFortVehicleInterface::ContainsPlayers() const
+{
+    static auto ContainsPlayers = Anchor::VirtualFunction<bool (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::ContainsPlayers"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:ContainsPlayers"))
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return ContainsPlayers(this);
+}

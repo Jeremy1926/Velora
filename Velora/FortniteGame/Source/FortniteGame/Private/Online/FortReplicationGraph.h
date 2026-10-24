@@ -174,6 +174,10 @@ public:
 
     void OnActorNetCullDistanceChange(AActor* Actor);
 
+    void OnVehicleChanged(AFortPlayerPawn* Pawn, AActor* NewVehicle, AActor* PrevVehicle);
+
+    void OnPlayerPawnHighFrequencyChange(AFortPlayerPawn* Pawn, bool bHighFreq);
+
 private:
     void EnableDynamicSpatialFrequencyNode(bool bEnable);
 
