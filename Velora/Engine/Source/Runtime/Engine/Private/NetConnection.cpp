@@ -287,6 +287,9 @@ TArray<UChannel*>& UNetConnection::GetChannels()
         .String(TEXT("UNetConnection::Close: %s, Channels: %i, Time: %s"))
         .Start()
         .Find("mov rdx, [*+0x*]; cmp [rdx], *")
+        .Or()
+        .String(TEXT("UNetConnection::Close: %s, Channels: %i, Time: %s"))
+        .Find("mov rax, [*+0x*]; mov rcx, [rax]; test rcx, rcx; jz 0x*; mov rax, [rcx]; xor edx, edx; call [rax+0x*]")
         .Disp();
 
     return *(TArray<UChannel*>*)((uint8_t*)this + Channels);
