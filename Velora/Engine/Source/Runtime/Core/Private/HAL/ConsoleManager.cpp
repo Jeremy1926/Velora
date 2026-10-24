@@ -12,6 +12,11 @@ IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(
     .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
     .Last("mov rcx, [0x*]; test rcx, rcx")
     .Target()
+    .Or()
+    .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
+    .Last("call 0x*; mov rcx, [0x*]; mov rax, [rcx]")
+    .Find("mov rcx, [0x*]")
+    .Target()
     .Get();
 
 void IConsoleManager::SetupSingleton()
@@ -24,6 +29,10 @@ void IConsoleManager::SetupSingleton()
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Last("mov rcx, [0x*]; test rcx, rcx")
+        .Call()
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
+        .Last("call 0x*; mov rcx, [0x*]; mov rax, [rcx]")
         .Call()
         .Get();
 
