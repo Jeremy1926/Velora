@@ -322,6 +322,9 @@ bool AActor::IsPendingKillPending() const
         .Optional()
         .Find("xor al, al; cmp [*+0x*], al; jl *")
         .Find("cmp [*+0x*], al")
+        .Or()
+        .Pattern("32 C0 38 41 ? 7C ? F7 41 08 00 00 00 60 75 ? C3")
+        .Find("cmp [*+0x*], al")
         .Disp();
 
     if (SignedOffset > 0)
