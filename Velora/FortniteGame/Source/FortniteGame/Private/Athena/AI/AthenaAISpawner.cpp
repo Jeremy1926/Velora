@@ -21,6 +21,7 @@ void FOnPawnSpawnedDynamicEvent::ProcessMulticastDelegate(void* Parameters) cons
         .Start()
         .Find("call [rax+0x50]; lea rcx, [*+0x38]")
         .Find("call 0x*")
+        .Optional()
         .AtCall());
 
     auto Parms = (_Script_FortniteGame_eventOnPawnSpawnedDynamicEvent_Parms*)Parameters;
