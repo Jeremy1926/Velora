@@ -19,6 +19,15 @@ UClass* UFortControllerComponent_Aircraft::StaticClass()
 
 bool UFortControllerComponent_Aircraft::IsInAircraft() const
 {
+    static auto CurrentAircraft = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::CurrentAircraft"))
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:IsInAircraft"))
+        .Optional()
+        .Find("cmp qword ptr [rcx+0x*], 0x0; setnz al")
+        .Disp();
+
+    if (CurrentAircraft > 0)
+        return *(void**)((uint8_t*)this + CurrentAircraft) != nullptr;
+
     static auto InAircraft = Anchor::Offset(TEXT("UFortControllerComponent_Aircraft::IsInAircraft"))
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:IsInAircraft"))
         .FirstOf("movzx eax, byte ptr [rcx+0x*]", "mov al, [rcx+0x*]")
