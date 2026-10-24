@@ -281,7 +281,9 @@ public:
 
     uint8& GetSquadID();
 
-    bool& GetSpecialRelevancyEnabled();
+    bool GetSpecialRelevancyEnabled();
+
+    void SetSpecialRelevancyEnabled(bool bEnabled);
 
     TArray<AFortPlayerStateAthena*>& GetPlayerStates();
 
@@ -290,6 +292,11 @@ public:
     TArray<ABuildingContainer*>& GetContainers();
 
     FActorRepListRefView& GetReplicationActorList();
+
+private:
+    static int32 GetSpecialRelevancyEnabledOffset();
+
+    static uint8 GetSpecialRelevancyEnabledMask();
 };
 
 class UFortReplicationGraphNode_AlwaysRelevantForTeam : public UReplicationGraphNode

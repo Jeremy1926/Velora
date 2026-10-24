@@ -1118,7 +1118,7 @@ UFortReplicationGraphNode_AlwaysRelevantForSquad* UFortReplicationGraph::GetNode
 
     auto SquadNode = CreateNewNode<UFortReplicationGraphNode_AlwaysRelevantForSquad>();
     SquadNode->GetSquadID() = SquadID;
-    SquadNode->GetSpecialRelevancyEnabled() = GetSpecialRelevancyEnabled();
+    SquadNode->SetSpecialRelevancyEnabled(GetSpecialRelevancyEnabled());
     SquadMap.Add(SquadID, SquadNode);
 
     return SquadNode;
@@ -1457,7 +1457,7 @@ void UFortReplicationGraph::SetAllSquadNodesEnabled(bool bEnabled)
     for (const auto& Pair : GetSquadMap())
     {
         if (auto SquadNode = Pair.Value)
-            SquadNode->GetSpecialRelevancyEnabled() = bEnabled;
+            SquadNode->SetSpecialRelevancyEnabled(bEnabled);
     }
 }
 
@@ -1606,7 +1606,7 @@ UClass* UFortReplicationGraphNode_AlwaysRelevantForSquad::StaticClass()
 
 uint8& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSquadID()
 {
-    return *((uint8*)&GetSpecialRelevancyEnabled() - 1);
+    return *((uint8*)this + GetSpecialRelevancyEnabledOffset() - 1);
 }
 
 TArray<AFortPlayerStateAthena*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetPlayerStates()
@@ -1638,7 +1638,19 @@ FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetRepli
     return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
 }
 
-bool& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabled()
+bool UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabled()
+{
+    return (*((uint8*)this + GetSpecialRelevancyEnabledOffset()) & GetSpecialRelevancyEnabledMask()) != 0;
+}
+
+void UFortReplicationGraphNode_AlwaysRelevantForSquad::SetSpecialRelevancyEnabled(bool bEnabled)
+{
+    auto& Flags = *((uint8*)this + GetSpecialRelevancyEnabledOffset());
+
+    Flags = (Flags & ~GetSpecialRelevancyEnabledMask()) | (bEnabled ? GetSpecialRelevancyEnabledMask() : 0);
+}
+
+int32 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabledOffset()
 {
     static auto SpecialRelevancyEnabled = Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForSquad::bSpecialRelevancyEnabled"))
         .String(TEXT("Child: %s"))
@@ -1646,10 +1658,24 @@ bool& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabl
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
-        .Find("cmp byte ptr [rbx+0x*], 0x0")
+        .FirstOf("cmp byte ptr [rbx+0x*], 0x0", "test byte ptr [rbx+0x*], 0x*")
         .Disp();
 
-    return *(bool*)((uint8*)this + SpecialRelevancyEnabled);
+    return SpecialRelevancyEnabled;
+}
+
+uint8 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabledMask()
+{
+    static auto Mask = (uint8)Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForSquad::bSpecialRelevancyEnabled"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
+        .FirstOf("cmp byte ptr [rbx+0x*], 0x0", "test byte ptr [rbx+0x*], 0x*")
+        .Value();
+
+    return Mask ? Mask : 0xFF;
 }
 
 UClass* UFortReplicationGraphNode_Custom::StaticClass()
