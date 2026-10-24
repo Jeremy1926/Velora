@@ -21,6 +21,18 @@ bool FSparseDelegateStorage::Add(const UObject* DelegateOwner, const FName Deleg
         .Target()
         .Find("call 0x*; or [*], al")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:SetOwner"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/GameplayAbilities.Default__GameplayCueNotify_Actor"))
+        .Find("mov r9d, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rbp-0x*], r9d; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; or [*], al")
+        .Target()
         .Get();
 
     return Add(DelegateOwner, DelegateName, &Delegate);
