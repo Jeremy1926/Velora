@@ -37,7 +37,7 @@ public:
 
     static UFortServerBotManagerAthena* GetServerBotManager(UWorld* World);
 
-    AFortPlayerPawnAthena* SpawnBot(const FVector& InSpawnLocation, const FRotator& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData);
+    AFortPlayerPawnAthena* SpawnBot(const TGameValue<FVector>& InSpawnLocation, const TGameValue<FRotator>& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData);
 
     static const UFortAthenaAIBotCustomizationData* SpawningBotData;
 

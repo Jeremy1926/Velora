@@ -6,7 +6,7 @@
 class AFortWeaponRangedMountedCannon : public AFortWeapon
 {
 public:
-    void ServerFireActorInCannon_Implementation(const FVector& LaunchDir);
+    void ServerFireActorInCannon_Implementation(const TGameValue<FVector>& GameLaunchDir);
 
     bool ShouldFireRiderInCannon(const FVector& LaunchDir, bool bFireRider);
 };

@@ -79,9 +79,9 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortWorldMarkerD
     }
 }
 
-void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarkerRequest MarkerRequest)
+void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(const FFortClientMarkerRequest& MarkerRequest)
 {
-    DETOUR(UAthenaMarkerComponent, ServerAddMapMarker_Implementation, Anchor::Hook(static_cast<void (UAthenaMarkerComponent::*)(FFortClientMarkerRequest)>(&UAthenaMarkerComponent::ServerAddMapMarker_Implementation))
+    DETOUR(UAthenaMarkerComponent, ServerAddMapMarker_Implementation, Anchor::Hook(static_cast<void (UAthenaMarkerComponent::*)(const FFortClientMarkerRequest&)>(&UAthenaMarkerComponent::ServerAddMapMarker_Implementation))
         .Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:ServerAddMapMarker"))
         .Optional()
         .If([] { return ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaMarkerComponent:ServerAddMapMarker")))->FindPropertyByName(FName(TEXT("MarkerRequest"))) != nullptr; })
@@ -95,7 +95,7 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
 
     static auto ClientAddMarker = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.AthenaMarkerComponent:ClientAddMarker"));
     static auto MarkerDataStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortWorldMarkerData"));
-    static auto MarkerRequestStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortClientMarkerRequest"));
+    static auto MarkerRequestStruct = FFortClientMarkerRequest::StaticStruct();
 
     static auto BuildMarkerDataForActor = Anchor::Function<bool (*)(UAthenaMarkerComponent*, AActor*, FFortWorldMarkerData*)>(TEXT("UAthenaMarkerComponent::BuildMarkerDataForActor"))
         .String(TEXT("FortMarkableActorInterface"))
@@ -153,15 +153,15 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(FFortClientMarker
     else
         MarkerDataStruct->InitializeStruct(MarkerData);
 
-    if (MarkerRequest.MarkedActor)
-        BuildMarkerDataForActor(this, MarkerRequest.MarkedActor, MarkerData);
+    if (auto MarkedActor = MarkerRequest.GetMarkedActor())
+        BuildMarkerDataForActor(this, MarkedActor, MarkerData);
 
-    *MarkerID->ContainerPtrToValuePtr<FMarkerID>(MarkerData) = FMarkerID{ *PlayerId->ContainerPtrToValuePtr<int32>(PlayerState), MarkerRequest.InstanceId };
+    *MarkerID->ContainerPtrToValuePtr<FMarkerID>(MarkerData) = FMarkerID{ *PlayerId->ContainerPtrToValuePtr<int32>(PlayerState), MarkerRequest.GetInstanceId() };
     *Owner->ContainerPtrToValuePtr<AFortPlayerState*>(MarkerData) = PlayerState;
-    *MarkerType->ContainerPtrToValuePtr<EFortWorldMarkerType>(MarkerData) = MarkerRequest.MarkerType;
-    *WorldPosition->ContainerPtrToValuePtr<FVector>(MarkerData) = MarkerRequest.WorldPosition;
-    *WorldPositionOffset->ContainerPtrToValuePtr<FVector>(MarkerData) = MarkerRequest.WorldPositionOffset;
-    *WorldNormal->ContainerPtrToValuePtr<FVector>(MarkerData) = MarkerRequest.WorldNormal;
+    *MarkerType->ContainerPtrToValuePtr<EFortWorldMarkerType>(MarkerData) = MarkerRequest.GetMarkerType();
+    WorldPosition->SetPropertyValue_InContainer<FVector>(MarkerData, MarkerRequest.GetWorldPosition());
+    WorldPositionOffset->SetPropertyValue_InContainer<FVector>(MarkerData, MarkerRequest.GetWorldPositionOffset());
+    WorldNormal->SetPropertyValue_InContainer<FVector>(MarkerData, MarkerRequest.GetWorldNormal());
 
     if (RequestIncludeSquad)
         bIncludeSquad->SetPropertyValue_InContainer(MarkerData, RequestIncludeSquad->GetPropertyValue_InContainer(&MarkerRequest));
@@ -243,6 +243,65 @@ void UAthenaMarkerComponent::ServerRemoveMapMarker_Implementation(FMarkerID Mark
             }
         }
     }
+}
+
+UScriptStruct* FFortClientMarkerRequest::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortClientMarkerRequest"));
+
+    return Struct;
+}
+
+int32 FFortClientMarkerRequest::GetInstanceId() const
+{
+    static auto InstanceID = StaticStruct()->FindPropertyByName(FName(TEXT("InstanceID")));
+
+    return *InstanceID->ContainerPtrToValuePtr<int32>(this);
+}
+
+EFortWorldMarkerType FFortClientMarkerRequest::GetMarkerType() const
+{
+    static auto MarkerType = StaticStruct()->FindPropertyByName(FName(TEXT("MarkerType")));
+
+    return *MarkerType->ContainerPtrToValuePtr<EFortWorldMarkerType>(this);
+}
+
+FVector FFortClientMarkerRequest::GetWorldPosition() const
+{
+    static auto WorldPosition = []
+    {
+        auto WorldPosition = StaticStruct()->FindPropertyByName(FName(TEXT("WorldPosition")));
+
+        return WorldPosition ? WorldPosition : StaticStruct()->FindPropertyByName(FName(TEXT("BasePosition")));
+    }();
+
+    return WorldPosition->GetPropertyValue_InContainer<FVector>(this);
+}
+
+FVector FFortClientMarkerRequest::GetWorldPositionOffset() const
+{
+    static auto WorldPositionOffset = []
+    {
+        auto WorldPositionOffset = StaticStruct()->FindPropertyByName(FName(TEXT("WorldPositionOffset")));
+
+        return WorldPositionOffset ? WorldPositionOffset : StaticStruct()->FindPropertyByName(FName(TEXT("BasePositionOffset")));
+    }();
+
+    return WorldPositionOffset->GetPropertyValue_InContainer<FVector>(this);
+}
+
+FVector FFortClientMarkerRequest::GetWorldNormal() const
+{
+    static auto WorldNormal = StaticStruct()->FindPropertyByName(FName(TEXT("WorldNormal")));
+
+    return WorldNormal->GetPropertyValue_InContainer<FVector>(this);
+}
+
+AActor* FFortClientMarkerRequest::GetMarkedActor() const
+{
+    static auto MarkedActor = StaticStruct()->FindPropertyByName(FName(TEXT("MarkedActor")));
+
+    return *MarkedActor->ContainerPtrToValuePtr<AActor*>(this);
 }
 
 FFortWorldMarkerContainer& UAthenaMarkerComponent::GetMarkerStream()

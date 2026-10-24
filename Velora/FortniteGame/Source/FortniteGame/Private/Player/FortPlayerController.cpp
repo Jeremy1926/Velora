@@ -528,14 +528,14 @@ AActor* AFortPlayerController::SpawnToyInstance(UClass* ToyClass, const FTransfo
         *OwningPawn->ContainerPtrToValuePtr<APawn*>(ToyInstance) = PlayerState ? PlayerState->GetCurrentPawn() : nullptr;
 
     if (auto InitialSpawnPosition = ToyClass->FindPropertyByName(FName(TEXT("InitialSpawnPosition"))))
-        *InitialSpawnPosition->ContainerPtrToValuePtr<FVector>(ToyInstance) = ToyInstance->GetActorLocation();
+        InitialSpawnPosition->SetPropertyValue_InContainer<FVector>(ToyInstance, ToyInstance->GetActorLocation());
 
     if (auto ProjectileMovement = ToyClass->FindPropertyByName(FName(TEXT("ProjectileMovement"))))
     {
         if (auto ProjectileMovementComponent = *ProjectileMovement->ContainerPtrToValuePtr<UObject*>(ToyInstance))
         {
             if (auto Velocity = ProjectileMovementComponent->GetClass()->FindPropertyByName(FName(TEXT("Velocity"))))
-                *Velocity->ContainerPtrToValuePtr<FVector>(ProjectileMovementComponent) = FVector(0.f, 0.f, 0.f);
+                Velocity->SetPropertyValue_InContainer<FVector>(ProjectileMovementComponent, FVector(0.f, 0.f, 0.f));
         }
     }
 
@@ -582,13 +582,13 @@ void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Pa
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")));
 
     UClass* ToyClass = nullptr;
-    FTransform SpawnPosition;
+    TGameValue<FTransform> SpawnPosition;
 
     Stack.StepCompiledIn(&ToyClass);
     Stack.StepCompiledIn(&SpawnPosition);
     Stack.Code += !!Stack.Code;
 
-    *(AActor**)Z_Param__Result = SpawnToyInstance(ToyClass, SpawnPosition);
+    *(AActor**)Z_Param__Result = SpawnToyInstance(ToyClass, SpawnPosition.Get());
 }
 
 TArray<AActor*>& AFortPlayerController::GetActiveToyInstances()

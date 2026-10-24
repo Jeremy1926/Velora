@@ -43,7 +43,7 @@ void UFortHeldObjectComponent::PickupHeldObject(AFortPlayerPawn* PlayerPawn)
     const FRotator OwnerRotation = Owner->GetActorRotation();
     const FRotator PawnRotation = PlayerPawn->GetActorRotation();
 
-    GetObjectPickupRotation() = FRotator{ FRotator::NormalizeAxis(OwnerRotation.Pitch - PawnRotation.Pitch), FRotator::NormalizeAxis(OwnerRotation.Yaw - PawnRotation.Yaw), FRotator::NormalizeAxis(OwnerRotation.Roll - PawnRotation.Roll) };
+    SetObjectPickupRotation(FRotator{ FRotator::NormalizeAxis(OwnerRotation.Pitch - PawnRotation.Pitch), FRotator::NormalizeAxis(OwnerRotation.Yaw - PawnRotation.Yaw), FRotator::NormalizeAxis(OwnerRotation.Roll - PawnRotation.Roll) });
 
     SetDroppedFromWeaponSwap(false);
     SetupOwningPawn(PlayerPawn);
@@ -476,14 +476,14 @@ void UFortHeldObjectComponent::execThrowHeldObject(FFrame& Stack, void* const Z_
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:ThrowHeldObject")));
 
-    FVector DetachLocation;
-    FRotator ThrowDirection;
+    TGameValue<FVector> DetachLocation;
+    TGameValue<FRotator> ThrowDirection;
 
     Stack.StepCompiledIn(&DetachLocation);
     Stack.StepCompiledIn(&ThrowDirection);
     Stack.Code += !!Stack.Code;
 
-    ThrowHeldObject(DetachLocation, ThrowDirection);
+    ThrowHeldObject(DetachLocation.Get(), ThrowDirection.Get());
 }
 
 void UFortHeldObjectComponent::execOnThrowComplete(FFrame& Stack, void* const Z_Param__Result)
@@ -548,10 +548,10 @@ void UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed(FFrame& S
     float Damage = 0.f;
     AController* InstigatedBy = nullptr;
     AActor* DamageCauser = nullptr;
-    FVector HitLocation;
+    TGameValue<FVector> HitLocation;
     UPrimitiveComponent* FHitComponent = nullptr;
     FName BoneName(NAME_None);
-    FVector Momentum;
+    TGameValue<FVector> Momentum;
 
     Stack.StepCompiledIn(&DamagedActor);
     Stack.StepCompiledIn(&Damage);
@@ -563,7 +563,7 @@ void UFortHeldObjectComponent::execHandleOwnerAsBuildingActorDestroyed(FFrame& S
     Stack.StepCompiledIn(&Momentum);
     Stack.Code += !!Stack.Code;
 
-    HandleOwnerAsBuildingActorDestroyed(DamagedActor, Damage, InstigatedBy, DamageCauser, HitLocation, FHitComponent, BoneName, Momentum);
+    HandleOwnerAsBuildingActorDestroyed(DamagedActor, Damage, InstigatedBy, DamageCauser, HitLocation.Get(), FHitComponent, BoneName, Momentum.Get());
 }
 
 TAssetPtr<UFortWeaponItemDefinition>& UFortHeldObjectComponent::GetEquippedWeaponItemDefinition()
@@ -644,11 +644,18 @@ void UFortHeldObjectComponent::SetOwningPawn(AFortPlayerPawn* NewOwningPawn)
         *OwningPawn->ContainerPtrToValuePtr<TWeakObjectPtr<AFortPlayerPawn>>(this) = NewOwningPawn;
 }
 
-FRotator& UFortHeldObjectComponent::GetObjectPickupRotation()
+FRotator UFortHeldObjectComponent::GetObjectPickupRotation() const
 {
     static auto ObjectPickupRotation = StaticClass()->FindPropertyByName(FName(TEXT("ObjectPickupRotation")));
 
-    return *ObjectPickupRotation->ContainerPtrToValuePtr<FRotator>(this);
+    return ObjectPickupRotation->GetPropertyValue_InContainer<FRotator>(this);
+}
+
+void UFortHeldObjectComponent::SetObjectPickupRotation(const FRotator& InObjectPickupRotation)
+{
+    static auto ObjectPickupRotation = StaticClass()->FindPropertyByName(FName(TEXT("ObjectPickupRotation")));
+
+    ObjectPickupRotation->SetPropertyValue_InContainer<FRotator>(this, InObjectPickupRotation);
 }
 
 TWeakObjectPtr<AFortPlayerPawn>& UFortHeldObjectComponent::GetPreviousOwningPawn()

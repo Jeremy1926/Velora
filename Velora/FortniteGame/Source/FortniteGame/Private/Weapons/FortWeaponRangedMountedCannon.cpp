@@ -9,7 +9,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(const FVector& LaunchDir)
+void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(const TGameValue<FVector>& GameLaunchDir)
 {
     DETOUR(AFortWeaponRangedMountedCannon, ServerFireActorInCannon_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"))
@@ -20,7 +20,7 @@ void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(cons
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon")));
 
-    ShouldFireRiderInCannon(LaunchDir, true);
+    ShouldFireRiderInCannon(GameLaunchDir.Get(), true);
 }
 
 bool AFortWeaponRangedMountedCannon::ShouldFireRiderInCannon(const FVector& LaunchDir, bool bFireRider)

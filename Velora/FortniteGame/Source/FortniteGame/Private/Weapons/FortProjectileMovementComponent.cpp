@@ -53,14 +53,14 @@ void UFortProjectileMovementComponent::SetVelocity(const FVector& InReplicatedVe
             Owner->FlushNetDormancy();
 
         ++*((uint8*)this + ReplicatedVelocityCount);
-        *(FVector*)((uint8*)this + ReplicatedVelocity) = InReplicatedVelocity;
+        TGameLayout<FVector>::Store((uint8*)this + ReplicatedVelocity, InReplicatedVelocity);
 
         OnReplicatedVelocityChanged(this);
 
         return;
     }
 
-    static auto SetVelocity = Anchor::Function<void (*)(UFortProjectileMovementComponent*, const FVector&)>(TEXT("UFortProjectileMovementComponent::SetVelocity"))
+    static auto SetVelocity = Anchor::Function<void (*)(UFortProjectileMovementComponent*, const TGameValue<FVector>&)>(TEXT("UFortProjectileMovementComponent::SetVelocity"))
         .Native(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
         .Get();
 

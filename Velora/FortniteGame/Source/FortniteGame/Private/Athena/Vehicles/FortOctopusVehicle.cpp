@@ -6,7 +6,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 
-void AFortOctopusVehicle::ServerUpdateTowhook_Implementation(FVector_NetQuantizeNormal InNetTowhookAimDir)
+void AFortOctopusVehicle::ServerUpdateTowhook_Implementation(const TGameValue<FVector>& GameNetTowhookAimDir)
 {
     DETOUR(AFortOctopusVehicle, ServerUpdateTowhook_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.FortOctopusVehicle:ServerUpdateTowhook"))
@@ -19,5 +19,5 @@ void AFortOctopusVehicle::ServerUpdateTowhook_Implementation(FVector_NetQuantize
 
     static auto NetTowhookAimDir = GetClass()->FindPropertyByName(FName(TEXT("NetTowhookAimDir")));
 
-    *NetTowhookAimDir->ContainerPtrToValuePtr<FVector_NetQuantizeNormal>(this) = InNetTowhookAimDir;
+    NetTowhookAimDir->SetPropertyValue_InContainer<FVector>(this, GameNetTowhookAimDir.Get());
 }

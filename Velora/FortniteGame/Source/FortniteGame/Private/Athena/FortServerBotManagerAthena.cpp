@@ -81,7 +81,7 @@ UFortServerBotManagerAthena* UFortServerBotManagerAthena::GetServerBotManager(UW
     return ServerBotManager ? *ServerBotManager : nullptr;
 }
 
-AFortPlayerPawnAthena* UFortServerBotManagerAthena::SpawnBot(const FVector& InSpawnLocation, const FRotator& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData)
+AFortPlayerPawnAthena* UFortServerBotManagerAthena::SpawnBot(const TGameValue<FVector>& InSpawnLocation, const TGameValue<FRotator>& InSpawnRotation, const UFortAthenaAIBotCustomizationData* InBotData, const FFortAthenaAIBotRunTimeCustomizationData& InRuntimeBotData)
 {
     DETOUR(UFortServerBotManagerAthena, SpawnBot, Anchor::Hook()
         .If(!::Anchor::Exists()

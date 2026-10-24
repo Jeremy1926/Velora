@@ -46,12 +46,19 @@ struct FFortWorldMarkerContainer : public FFastArraySerializer
 
 struct FFortClientMarkerRequest
 {
-    int32 InstanceId;
-    EFortWorldMarkerType MarkerType;
-    FVector WorldPosition;
-    FVector WorldPositionOffset;
-    FVector WorldNormal;
-    AActor* MarkedActor;
+    static UScriptStruct* StaticStruct();
+
+    int32 GetInstanceId() const;
+
+    EFortWorldMarkerType GetMarkerType() const;
+
+    FVector GetWorldPosition() const;
+
+    FVector GetWorldPositionOffset() const;
+
+    FVector GetWorldNormal() const;
+
+    AActor* GetMarkedActor() const;
 };
 
 class UAthenaMarkerComponent : public UActorComponent
@@ -63,7 +70,7 @@ public:
 
     void ServerAddMapMarker_Implementation(FFortWorldMarkerData MarkerData);
 
-    void ServerAddMapMarker_Implementation(FFortClientMarkerRequest MarkerRequest);
+    void ServerAddMapMarker_Implementation(const FFortClientMarkerRequest& MarkerRequest);
 
     void ServerRemoveMapMarker_Implementation(FMarkerID MarkerID);
 

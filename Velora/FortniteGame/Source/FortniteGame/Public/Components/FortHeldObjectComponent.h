@@ -102,7 +102,9 @@ public:
 
     void SetOwningPawn(AFortPlayerPawn* NewOwningPawn);
 
-    FRotator& GetObjectPickupRotation();
+    FRotator GetObjectPickupRotation() const;
+
+    void SetObjectPickupRotation(const FRotator& InObjectPickupRotation);
 
     TWeakObjectPtr<AFortPlayerPawn>& GetPreviousOwningPawn();
 

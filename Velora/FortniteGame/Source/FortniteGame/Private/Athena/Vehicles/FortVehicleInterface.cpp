@@ -4,14 +4,14 @@
 
 FTransform IFortVehicleInterface::GetExitSocketTransform(const int32 SeatIndex, const int32 SocketIndex) const
 {
-    static auto GetExitSocketTransform = Anchor::VirtualFunction<FTransform* (*)(const IFortVehicleInterface*, FTransform*, int32, int32)>(TEXT("IFortVehicleInterface::GetExitSocketTransform"))
+    static auto GetExitSocketTransform = Anchor::VirtualFunction<TGameValue<FTransform>* (*)(const IFortVehicleInterface*, TGameValue<FTransform>*, int32, int32)>(TEXT("IFortVehicleInterface::GetExitSocketTransform"))
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
         .Find("call [*+0x*]")
         .Get();
 
-    FTransform Result;
+    TGameValue<FTransform> Result;
 
-    return *GetExitSocketTransform(this, &Result, SeatIndex, SocketIndex);
+    return GetExitSocketTransform(this, &Result, SeatIndex, SocketIndex)->Get();
 }
 
 AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
