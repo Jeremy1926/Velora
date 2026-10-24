@@ -666,6 +666,9 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
         .Has("jz 0x*; call 0x*; and qword ptr [*], 0x0; mov rcx, [rsp+0x*]; test rcx, rcx")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Has("jz 0x*; call 0x*; and qword ptr [*], 0x0; lea rcx, [rsp+0x*]; call 0x*; lea r11, [rsp+0x*]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld")));
 
@@ -1043,6 +1046,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
         .Find("setnz *; add [*+0x20], *; lea rax, [rbp-0x*]; cmp rdi, rax; jz *; mov rcx, [rdi]; test rcx, rcx; jz *; call 0x*; mov [rdi], rsi; mov [rdi+0x8], rsi; mov rbx, [rsp+0x*]; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Find("setnz *; mov [rbp-0x*], *; add [*+0x20], *; mov rcx, rdi; call 0x*; mov rcx, [rbp-0x*]; test rcx, rcx; jz 0x*; call 0x*; mov rbx, [rsp+0x*]; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
 
