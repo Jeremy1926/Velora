@@ -190,7 +190,7 @@ AFortAthenaVehicle* AFortPlayerPawn::ServerOnExitVehicle(ETryExitVehicleBehavior
 void AFortPlayerPawn::OnRep_InVehicle()
 {
     DETOUR(AFortPlayerPawn, OnRep_InVehicle, Anchor::Hook()
-        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
         .Body(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle"))
         .Inline());
 
