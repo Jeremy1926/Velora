@@ -352,11 +352,11 @@ int32& UCraftingObjectComponent::GetPendingPickupHeldCount()
     return *PendingPickupHeldCount->ContainerPtrToValuePtr<int32>(this);
 }
 
-const FVector& UCraftingObjectComponent::GetIngredientSpawnOffset() const
+FVector UCraftingObjectComponent::GetIngredientSpawnOffset() const
 {
     static auto IngredientSpawnOffset = StaticClass()->FindPropertyByName(FName(TEXT("IngredientSpawnOffset")));
 
-    return *IngredientSpawnOffset->ContainerPtrToValuePtr<FVector>(this);
+    return IngredientSpawnOffset->GetPropertyValue_InContainer<FVector>(this);
 }
 
 bool UCraftingObjectComponent::GetGiveIngredientsToCraftingObject() const

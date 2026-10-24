@@ -10,12 +10,15 @@ class ABuildingProp;
 class UFortVehicleItemDefinition;
 enum class ESpawnActorCollisionHandlingMethod : uint8;
 
-struct FVehiclePropReplacementData
+template<typename VectorType, typename RotatorType>
+struct TVehiclePropReplacementData
 {
     TSoftObjectPtr<UFortVehicleItemDefinition> FortVehicleItemDefinition;
-    FVector TransOffset;
-    FRotator RotOffset;
+    VectorType TransOffset;
+    RotatorType RotOffset;
 };
+
+using FVehiclePropReplacementData = TVehiclePropReplacementData<FVector, FRotator>;
 
 class UFortValetGameFeatureData : public UPrimaryDataAsset
 {

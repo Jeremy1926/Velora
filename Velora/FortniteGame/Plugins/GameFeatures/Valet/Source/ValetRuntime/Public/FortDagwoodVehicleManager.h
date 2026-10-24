@@ -2,13 +2,13 @@
 
 #include "Components/ActorComponent.h"
 #include "Containers/Array.h"
+#include "FortValetGameFeatureData.h"
 
 class AActor;
 class ABuildingActor;
 class AFortAthenaVehicleSpawner;
 class UFortVehicleItemDefinition;
 struct FFrame;
-struct FVehiclePropReplacementData;
 enum class ESpawnActorCollisionHandlingMethod : uint8;
 
 class UFortDagwoodVehicleManager : public UActorComponent

@@ -60,7 +60,7 @@ public:
 
     int32& GetPendingPickupHeldCount();
 
-    const FVector& GetIngredientSpawnOffset() const;
+    FVector GetIngredientSpawnOffset() const;
 
     bool GetGiveIngredientsToCraftingObject() const;
 
