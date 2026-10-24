@@ -9,6 +9,11 @@ const FEngineVersion& FEngineVersion::Current()
         .Last("call 0x*")
         .Last("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Engine Version: %s"))
+        .Start()
+        .Find("call 0x*; lea r8d, [*]; mov rcx, rax")
+        .Target()
         .Get();
 
     return Current();
