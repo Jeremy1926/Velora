@@ -85,6 +85,16 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             (*ServerEsportsAnalyticsProvider)->StartSession();
         }
 
+        static auto bCloseOnPlayAttempt = Anchor::Optional<bool*>(TEXT("AntiCheatVars::bCloseOnPlayAttempt"))
+            .String(TEXT("PollingVHK"))
+            .Start()
+            .Find("mov byte ptr [0x*], 0x1")
+            .Target()
+            .Get();
+
+        if (bCloseOnPlayAttempt)
+            *bCloseOnPlayAttempt = false;
+
         if (auto LocalPlayer = GameInstance->GetFirstGamePlayer())
         {
             if (auto PlayerController = LocalPlayer->GetPlayerController())
