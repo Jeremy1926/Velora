@@ -8,6 +8,9 @@ void APlayerController::SendClientAdjustment()
 {
     static auto SendClientAdjustment = Anchor::VirtualFunction<void (*)(APlayerController*)>(TEXT("APlayerController::SendClientAdjustment"))
         .FieldVirtual(TEXT("/Script/Engine.Default__PlayerController"), "push *; sub rsp, *; mov *, [rcx+%x]; cmp [rcx+%x], *; jz *; cmp qword ptr [rcx+%x], 0x0", GetClass()->FindPropertyByName(FName(TEXT("Pawn"))), GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn"))), GetClass()->FindPropertyByName(FName(TEXT("SpectatorPawn"))))
+        .Or()
+        .Event(TEXT("ClientRecvServerAckFrame"))
+        .InVirtual(TEXT("/Script/Engine.Default__PlayerController"), TEXT("APlayerController::SendClientAdjustment"))
         .Get();
 
     SendClientAdjustment(this);
