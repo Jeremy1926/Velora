@@ -220,6 +220,7 @@ FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()
         .Target()
         .Find("or eax, [*+0x*]; or eax, [*+0x*]; or eax, [*+0x*]; jz 0x*; movups xmm0, [*+0x*]")
         .Find("movups xmm0, [*+0x*]")
+        .Optional()
         .Disp();
 
     return LastEquippedWeaponOrGadgetGUID ? (FGuid*)((uint8*)this + LastEquippedWeaponOrGadgetGUID) : nullptr;

@@ -31,6 +31,7 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
             static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
                 .String(TEXT("Unable to spawn class '%s' due to client/server context."))
                 .Last("call 0x*; test al, al")
+                .Optional()
                 .AtCall();
 
             if (!CanCreateInCurrentContext)
