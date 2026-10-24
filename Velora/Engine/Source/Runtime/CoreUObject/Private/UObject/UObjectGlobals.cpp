@@ -98,7 +98,7 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
                 UObject* Template;
                 FObjectInstancingGraph* InstanceGraph;
                 void* ExternalPackage;
-                uint8 PropertyInitCallback[0x40];
+                alignas(16) uint8 PropertyInitCallback[0x40];
                 void* SubobjectOverrides;
             } Params { Class, InOuter, GameName, SetFlags, InternalSetFlags, bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype, Template, InstanceGraph, nullptr };
 
