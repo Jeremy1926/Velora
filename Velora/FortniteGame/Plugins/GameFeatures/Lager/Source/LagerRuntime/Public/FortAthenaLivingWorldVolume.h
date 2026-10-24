@@ -40,7 +40,7 @@ public:
 
     bool* GetbIsEnabled();
 
-    TArray<FVector>* GetClusteredEnvironmentQueryResults();
+    void SetClusteredEnvironmentQueryResults(const TArray<FVector>& InClusteredEnvironmentQueryResults);
 
     float* GetPointProviderMaxRadiusSqr();
 
@@ -50,5 +50,9 @@ public:
 
     const FScalableFloat& GetWaterLevelIndexMax() const;
 
-    TArray<FVector>& GetPoints() const;
+    int32 GetPointsOffset() const;
+
+    TArray<FVector> GetPoints() const;
+
+    void SetPoints(const TArray<FVector>& InPoints);
 };

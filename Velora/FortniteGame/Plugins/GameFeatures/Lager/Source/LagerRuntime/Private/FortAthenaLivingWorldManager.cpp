@@ -109,6 +109,10 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetEncounterInst
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; lea rcx, [rsi+0x*]; call 0x*")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; lea rcx, [r14+0x*]; call 0x*")
         .Optional()
         .Disp();
 
@@ -161,6 +165,81 @@ float& UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetRespawnTime(
 int32& UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetActorCount()
 {
     return *(int32*)((uint8*)this + GetRespawnTimeOffset() + sizeof(float));
+}
+
+UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::FLivingWorldEventRuntimeData()
+{
+    memset(Data, 0, sizeof(Data));
+
+    GetActivationTime() = -1.0f;
+}
+
+int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetSpawnedCountOffset()
+{
+    static auto SpawnedCount = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::SpawnedCount"))
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Optional()
+        .Find("mov r9d, r14d; mov r8, r12; mov rdx, rdi; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("sub ecx, [r14+0x*]")
+        .Disp();
+
+    return SpawnedCount > 0 ? SpawnedCount : (int32)sizeof(float);
+}
+
+int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetTotalPointProviderWeightOffset()
+{
+    static auto TotalPointProviderWeight = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::TotalPointProviderWeight"))
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("mov [rsp+0x20], rcx; lea r9, [*+0x*]; mov rcx, *; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("addss xmm0, [rsi+0x*]; add rbx, 0x*; movss [rsi+0x*], xmm0")
+        .Optional()
+        .Disp();
+
+    return TotalPointProviderWeight > 0 ? TotalPointProviderWeight : (int32)(sizeof(float) + sizeof(int32));
+}
+
+int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetDensityComputationRangeOffset()
+{
+    static auto DensityComputationRange = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::DensityComputationRange"))
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Optional()
+        .Find("movss xmm2, dword ptr [r12+0x*]; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
+        .Disp();
+
+    return DensityComputationRange > 0 ? DensityComputationRange : (int32)(sizeof(float) + sizeof(int32) + sizeof(float));
+}
+
+float& UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetActivationTime()
+{
+    return *(float*)Data;
+}
+
+int32& UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetSpawnedCount()
+{
+    return *(int32*)(Data + GetSpawnedCountOffset());
+}
+
+float& UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetTotalPointProviderWeight()
+{
+    return *(float*)(Data + GetTotalPointProviderWeightOffset());
+}
+
+float& UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetDensityComputationRange()
+{
+    return *(float*)(Data + GetDensityComputationRangeOffset());
 }
 
 UClass* UFortAthenaLivingWorldManager::StaticClass()
@@ -224,6 +303,11 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
         .Find("test ecx, ecx; jle 0x*; lea r14, [rsi+0x*]")
         .Find("lea r14, [rsi+0x*]")
         .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("test ecx, ecx; jle 0x*; lea rsi, [r14+0x*]")
+        .Find("lea rsi, [r14+0x*]")
+        .Or()
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() <= 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("test ecx, ecx; jle 0x*; lea rsi, [rbp+0x*]")
@@ -241,6 +325,11 @@ int32 UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequestsOffset()
         .Optional()
         .Find("test ecx, ecx; jle 0x*; lea r12, [r13+0x*]")
         .Find("lea r12, [r13+0x*]")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("test ecx, ecx; jle 0x*; lea r12, [r14+0x*]")
+        .Find("lea r12, [r14+0x*]")
         .Disp();
 
     return PendingActorSpawnEventRequests;
@@ -429,7 +518,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         if (ActorCount <= 0)
             continue;
 
-        const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event, EncounterInstance).DensityComputationRange : 0.0f, GetMaxActorDensity());
+        const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event, EncounterInstance).GetDensityComputationRange() : 0.0f, GetMaxActorDensity());
         auto PointProvider = GetRandomPointProvider(EventData->GetProviderFiltersTagQuery(), PointFilter, EncounterInstance, FindOrCreateEventRuntimeData(Event, EncounterInstance));
 
         if (!PointProvider)
@@ -454,7 +543,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         EventRequest.ActorCountToSpawn = ActorCount;
 
         PendingEventRequests.Add(EventRequest);
-        FindOrCreateEventRuntimeData(Event, EncounterInstance).SpawnedCount += ActorCount;
+        FindOrCreateEventRuntimeData(Event, EncounterInstance).GetSpawnedCount() += ActorCount;
 
         if (auto CategoryRuntimeData = FindOrCreateCategoryRuntimeData(Category))
             CategoryRuntimeData->GameSpawnedCount += ActorCount;
@@ -571,9 +660,9 @@ void UFortAthenaLivingWorldManager::UpdateActorsInfo()
         if (auto ActorDensityGrid = GetActorDensityGrid())
             ActorDensityGrid->UpdateActor(Actor);
 
-        for (auto& TagDensityToUpdate : ActorToUpdateInfo.TagDensityToUpdate)
+        for (const auto& TagDensityToUpdate : ActorToUpdateInfo.TagDensityToUpdate)
         {
-            if (auto TagDensityGrid = FindTagDensityGrid(TagDensityToUpdate))
+            if (auto TagDensityGrid = GetTagDensityGrid(TagDensityToUpdate))
                 TagDensityGrid->UpdateActor(Actor);
         }
 
@@ -962,10 +1051,10 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(UDataTable* EventTable, 
         if (IsDeactivated > 0 && *(bool*)((uint8*)&RuntimeData + IsDeactivated))
             continue;
 
-        if (RuntimeData.ActivationTime == -1.0f)
-            RuntimeData.ActivationTime = FMath::FRand() * (Event->GetActivationMaxDelay() - Event->GetActivationMinDelay()) + Event->GetActivationMinDelay() + TimeSeconds;
+        if (RuntimeData.GetActivationTime() == -1.0f)
+            RuntimeData.GetActivationTime() = FMath::FRand() * (Event->GetActivationMaxDelay() - Event->GetActivationMinDelay()) + Event->GetActivationMinDelay() + TimeSeconds;
 
-        if (TimeSeconds < RuntimeData.ActivationTime)
+        if (TimeSeconds < RuntimeData.GetActivationTime())
             continue;
 
         ActiveEvents.Add(Event);
@@ -1002,7 +1091,7 @@ int32 UFortAthenaLivingWorldManager::GetEventBudget(FFortAthenaLivingWorldEvent*
     if (MaxSpawnedCount.Num() && Event->GetMaxSpawnedCount(SafeZonePhase) == -1)
         return Budget;
 
-    return FMath::Min(Budget, FMath::Max(0, Event->GetMaxSpawnedCount(SafeZonePhase) - FindOrCreateEventRuntimeData(Event, EncounterInstance).SpawnedCount));
+    return FMath::Min(Budget, FMath::Max(0, Event->GetMaxSpawnedCount(SafeZonePhase) - FindOrCreateEventRuntimeData(Event, EncounterInstance).GetSpawnedCount()));
 }
 
 int32 UFortAthenaLivingWorldManager::GetTotalEncounterInstanceActorCount(UFortAthenaLivingWorldEncounterInstance* EncounterInstance)
@@ -1118,7 +1207,7 @@ AActor* UFortAthenaLivingWorldManager::GetRandomPointProvider(const FGameplayTag
 
     if (bFromRuntimeData)
     {
-        const float Pick = FMath::FRand() * RuntimeData.TotalPointProviderWeight;
+        const float Pick = FMath::FRand() * RuntimeData.GetTotalPointProviderWeight();
         float Weight = 0.0f;
 
         for (auto& ProviderFiltersEntry : *(TRuntimeSizedArray<FPointProviderFilterEntry>*)((uint8*)&RuntimeData + ProviderFiltersEntries))
@@ -1191,7 +1280,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
     auto PointProviderInterface = PointProvider ? (IFortAthenaLivingWorldPointProviderInterface*)PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) : nullptr;
     const int32 ActorCount = EventData ? FMath::Min(EventRequest.ActorCountToSpawn, EventData->GetActorDescriptions().Num()) : 0;
     auto EncounterInstance = EventRequest.EncounterInstance.Get();
-    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event, EncounterInstance).DensityComputationRange : 0.0f, GetMaxActorDensity());
+    const FFortAthenaLivingWorldPointProviderFilterRules PointFilter(Event, EventData, ActorCount, FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() ? FindOrCreateEventRuntimeData(Event, EncounterInstance).GetDensityComputationRange() : 0.0f, GetMaxActorDensity());
     const auto SpawnedCallback = TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned);
     auto Config = GetConfig();
     auto DensityComputationDistance = Config ? Config->GetDensityComputationDistance() : nullptr;
@@ -1308,7 +1397,7 @@ bool UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(const FLivingW
 
     const int32 SpawnedCount = PendingSpawnRequests.Num() + SpawnedActors.Num();
 
-    FindOrCreateEventRuntimeData(Event, EncounterInstance).SpawnedCount -= ActorCount - SpawnedCount;
+    FindOrCreateEventRuntimeData(Event, EncounterInstance).GetSpawnedCount() -= ActorCount - SpawnedCount;
 
     if (auto CategoryRuntimeData = FindOrCreateCategoryRuntimeData(EventRequest.Category))
         CategoryRuntimeData->GameSpawnedCount -= ActorCount - SpawnedCount;
@@ -1719,6 +1808,10 @@ TQueue<UFortAthenaLivingWorldManager::FLivingWorldActorUpdateInfo>* UFortAthenaL
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea rcx, [r13+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r14+0x*]; lea rdx, [rbp-0x*]; call 0x*")
         .Optional()
         .Disp();
 
@@ -1799,14 +1892,33 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea rbx, [rcx+0x*]; movaps [rax-0x*], xmm6; mov rsi, rcx")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea rbx, [rcx+0x*]; movaps [rax-0x*], xmm6; mov r14, rcx")
         .Optional()
         .Disp();
 
     return ActorDensityGrid > 0 ? (FFortAthenaLivingWorldDensityGrid*)((uint8*)this + ActorDensityGrid) : nullptr;
 }
 
-FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::FindTagDensityGrid(const FGameplayTag& Tag)
+FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetTagDensityGrid(const FGameplayTag& Tag)
 {
+    static auto NativeGetTagDensityGrid = Anchor::Optional<FFortAthenaLivingWorldDensityGrid* (*)(UFortAthenaLivingWorldManager*, const TGameValue<FGameplayTag>*)>(TEXT("UFortAthenaLivingWorldManager::GetTagDensityGrid"))
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rdx, rsi; mov rcx, rbx; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [rsi+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (NativeGetTagDensityGrid)
+    {
+        const TGameValue<FGameplayTag> GameTag(Tag);
+
+        return NativeGetTagDensityGrid(this, &GameTag);
+    }
+
     static auto TagDensityGrids = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::TagDensityGrids"))
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
@@ -1871,6 +1983,11 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("movss xmm2, dword ptr [r14+0x*]; lea rdx, [rsp+0x*]; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("movss xmm2, dword ptr [r12+0x*]; lea rdx, [rbp-0x*]; mov rcx, rbx; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();

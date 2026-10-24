@@ -205,6 +205,90 @@ private:
     }
 };
 
+template<>
+class TArray<FGameplayTag, TInlineAllocator<1>>
+{
+public:
+    FORCEINLINE TArray()
+        : SecondaryData(nullptr)
+        , ArrayNum(0)
+        , ArrayMax(1)
+    {
+    }
+
+    TArray(const TArray& Other)
+        : TArray()
+    {
+        CopyToEmpty(Other);
+    }
+
+    ~TArray()
+    {
+        if (SecondaryData)
+            FMemory::Free(SecondaryData);
+    }
+
+    TArray& operator=(const TArray& Other)
+    {
+        if (this != &Other)
+            CopyToEmpty(Other);
+
+        return *this;
+    }
+
+    FORCEINLINE int32 Num() const
+    {
+        return ArrayNum;
+    }
+
+    FORCEINLINE const FGameplayTag operator[](int32 Index) const
+    {
+        return TGameLayout<FGameplayTag>::Load(GetData() + Index * FGameplayTag::GetTypeSize());
+    }
+
+    FORCEINLINE TArray<FGameplayTag>::TConstIterator begin() const
+    {
+        return TArray<FGameplayTag>::TConstIterator(GetData());
+    }
+
+    FORCEINLINE TArray<FGameplayTag>::TConstIterator end() const
+    {
+        return TArray<FGameplayTag>::TConstIterator(GetData() + ArrayNum * FGameplayTag::GetTypeSize());
+    }
+
+private:
+    FORCEINLINE uint8* GetData() const
+    {
+        return SecondaryData ? SecondaryData : (uint8*)InlineData;
+    }
+
+    void CopyToEmpty(const TArray& Other)
+    {
+        const int32 NewMax = Other.ArrayNum <= 1 ? 1 : DefaultCalculateSlackReserve(Other.ArrayNum, FGameplayTag::GetTypeSize(), true);
+
+        if (NewMax <= 1 && SecondaryData)
+        {
+            FMemory::Free(SecondaryData);
+            SecondaryData = nullptr;
+        }
+        else if (NewMax > 1 && NewMax != ArrayMax)
+        {
+            SecondaryData = (uint8*)FMemory::Realloc(SecondaryData, NewMax * FGameplayTag::GetTypeSize());
+        }
+
+        ArrayNum = Other.ArrayNum;
+        ArrayMax = NewMax;
+
+        if (ArrayNum)
+            memcpy(GetData(), Other.GetData(), ArrayNum * FGameplayTag::GetTypeSize());
+    }
+
+    alignas(void*) uint8 InlineData[sizeof(FGameplayTag)];
+    uint8* SecondaryData;
+    int32 ArrayNum;
+    int32 ArrayMax;
+};
+
 struct FGameplayTagContainer
 {
     FORCEINLINE bool HasTag(const FGameplayTag& TagToCheck) const

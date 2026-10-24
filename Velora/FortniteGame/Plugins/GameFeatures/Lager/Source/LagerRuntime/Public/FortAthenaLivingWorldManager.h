@@ -141,10 +141,24 @@ public:
 
     struct FLivingWorldEventRuntimeData
     {
-        float ActivationTime = -1.0f;
-        int32 SpawnedCount = 0;
-        float TotalPointProviderWeight = 0.0f;
-        float DensityComputationRange = 0.0f;
+        FLivingWorldEventRuntimeData();
+
+        static int32 GetSpawnedCountOffset();
+
+        static int32 GetTotalPointProviderWeightOffset();
+
+        static int32 GetDensityComputationRangeOffset();
+
+        float& GetActivationTime();
+
+        int32& GetSpawnedCount();
+
+        float& GetTotalPointProviderWeight();
+
+        float& GetDensityComputationRange();
+
+    private:
+        alignas(float) uint8 Data[0x14];
     };
 
     struct FLivingWorldActorUpdateInfo
@@ -272,7 +286,7 @@ public:
 
     FFortAthenaLivingWorldDensityGrid* GetActorDensityGrid();
 
-    FFortAthenaLivingWorldDensityGrid* FindTagDensityGrid(const FGameplayTag& Tag);
+    FFortAthenaLivingWorldDensityGrid* GetTagDensityGrid(const FGameplayTag& Tag);
 
     TArray<AActor*>* GetSpawnedPawns();
 

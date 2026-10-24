@@ -170,6 +170,15 @@ FFortAthenaLivingWorldCategory*& UFortAthenaLivingWorldEncounterInstance::GetCat
         .Find("call 0x*")
         .Target()
         .Find("mov [rcx+0x*], rdx")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov r9, *; mov r8, *; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rax; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rcx+0x*], rdx")
         .Disp();
 
     return *(FFortAthenaLivingWorldCategory**)((uint8*)this + Category);
@@ -220,6 +229,12 @@ void* UFortAthenaLivingWorldEncounterInstance::GetEventRuntimeDataMap()
         .Find("call 0x*")
         .Target()
         .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*; mov r8, [rsp+0x*]; lea r9, [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov r9, *; mov r8, *; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*; mov r8, [rbp-0x*]; lea r9, [*+0x*]")
         .Disp();
 
     return (uint8*)this + EventRuntimeDataMap;

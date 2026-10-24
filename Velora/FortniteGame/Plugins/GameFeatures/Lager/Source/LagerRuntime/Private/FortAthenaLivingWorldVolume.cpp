@@ -115,13 +115,10 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
     }
     else if (Result.IsValid())
     {
-        auto& Points = GetPoints();
+        TArray<FVector> Points;
         auto PointProviderMaxRadiusSqr = GetPointProviderMaxRadiusSqr();
-        auto ClusteredEnvironmentQueryResults = GetClusteredEnvironmentQueryResults();
         auto CachedLivingWorldManager = GetCachedLivingWorldManager();
         const FVector Location = GetActorLocation();
-
-        Points.Empty();
 
         for (int32 Index = 0; Index < Result->Items.Num(); Index++)
         {
@@ -133,8 +130,15 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
                 *PointProviderMaxRadiusSqr = FMath::Max(*PointProviderMaxRadiusSqr, (Location.X - Point.X) * (Location.X - Point.X) + (Location.Y - Point.Y) * (Location.Y - Point.Y));
         }
 
-        if (ClusteredEnvironmentQueryResults && CachedLivingWorldManager && *CachedLivingWorldManager && Points.Num() > 0 && GetWorld())
-            (*CachedLivingWorldManager)->ClusterPoints(Points, *ClusteredEnvironmentQueryResults);
+        SetPoints(Points);
+
+        if (CachedLivingWorldManager && *CachedLivingWorldManager && Points.Num() > 0 && GetWorld())
+        {
+            TArray<FVector> ClusteredEnvironmentQueryResults;
+
+            (*CachedLivingWorldManager)->ClusterPoints(Points, ClusteredEnvironmentQueryResults);
+            SetClusteredEnvironmentQueryResults(ClusteredEnvironmentQueryResults);
+        }
     }
 
     auto bIsEnabled = GetbIsEnabled();
@@ -167,7 +171,7 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
 
     auto Volume = (const AFortAthenaLivingWorldVolume*)((const uint8*)this - PointerOffset);
     auto GameState = Volume->GetCachedGameState();
-    auto& Points = Volume->GetPoints();
+    const auto Points = Volume->GetPoints();
     auto SpawnLimiter = FFortAthenaLivingWorldPointProviderSpawnLimiter::Get(Volume);
 
     if (SpawnLimiter && !SpawnLimiter->CanSpawn(PointFilter.GetExpectedSpawnCount()))
@@ -214,7 +218,7 @@ bool AFortAthenaLivingWorldVolume::GetValidLocation(const FFortAthenaLivingWorld
 
     auto Volume = (const AFortAthenaLivingWorldVolume*)((const uint8*)this - PointerOffset);
     auto GameState = Volume->GetCachedGameState();
-    auto& Points = Volume->GetPoints();
+    const auto Points = Volume->GetPoints();
     const TArray<FVector>* ValidPoints = &Points;
     TArray<FVector> SafeZonePoints;
 
@@ -270,7 +274,7 @@ bool* AFortAthenaLivingWorldVolume::GetbIsEnabled()
     return bIsEnabled > 0 ? (bool*)((uint8*)this + bIsEnabled) : nullptr;
 }
 
-TArray<FVector>* AFortAthenaLivingWorldVolume::GetClusteredEnvironmentQueryResults()
+void AFortAthenaLivingWorldVolume::SetClusteredEnvironmentQueryResults(const TArray<FVector>& InClusteredEnvironmentQueryResults)
 {
     static auto InterfaceClusteredEnvironmentQueryResults = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::ClusteredEnvironmentQueryResults"))
         .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
@@ -285,7 +289,22 @@ TArray<FVector>* AFortAthenaLivingWorldVolume::GetClusteredEnvironmentQueryResul
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
 
-    return InterfaceClusteredEnvironmentQueryResults > 0 ? (TArray<FVector>*)((uint8*)this + PointerOffset + InterfaceClusteredEnvironmentQueryResults) : nullptr;
+    if (InterfaceClusteredEnvironmentQueryResults <= 0)
+        return;
+
+    auto ClusteredEnvironmentQueryResults = (uint8*)this + PointerOffset + InterfaceClusteredEnvironmentQueryResults;
+
+    if (!UE::LWC::IsEnabled())
+    {
+        *(TArray<FVector>*)ClusteredEnvironmentQueryResults = InClusteredEnvironmentQueryResults;
+        return;
+    }
+
+    auto& GameClusteredEnvironmentQueryResults = *(TArray<FVector3d>*)ClusteredEnvironmentQueryResults;
+    GameClusteredEnvironmentQueryResults.Empty();
+
+    for (auto& ClusteredEnvironmentQueryResult : InClusteredEnvironmentQueryResults)
+        GameClusteredEnvironmentQueryResults.Add(FVector3d(ClusteredEnvironmentQueryResult));
 }
 
 float* AFortAthenaLivingWorldVolume::GetPointProviderMaxRadiusSqr()
@@ -295,8 +314,14 @@ float* AFortAthenaLivingWorldVolume::GetPointProviderMaxRadiusSqr()
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
-        .Optional()
         .Find("sqrtss xmm0, [rbx+0x*]")
+        .Or()
+        .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Optional()
+        .Find("sqrtss xmm1, [rbx+0x*]")
         .Disp();
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
@@ -326,7 +351,7 @@ const FScalableFloat& AFortAthenaLivingWorldVolume::GetWaterLevelIndexMax() cons
     return *WaterLevelIndexMax->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
-TArray<FVector>& AFortAthenaLivingWorldVolume::GetPoints() const
+int32 AFortAthenaLivingWorldVolume::GetPointsOffset() const
 {
     static auto CachedGameState = GetClass()->FindPropertyByName(FName(TEXT("CachedGameState")));
 
@@ -335,14 +360,53 @@ TArray<FVector>& AFortAthenaLivingWorldVolume::GetPoints() const
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
-        .Optional()
         .Find("cmp byte ptr [rbx+0x*], 0x0; jz 0x*; lea r1?, [rbx+0x*]")
         .Find("lea r1?, [rbx+0x*]")
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnActorSpawnedResult__DelegateSignature")))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Optional()
+        .Find("cmp [rdi+0x*], bl; jz 0x*; lea r10, [rdi+0x*]")
+        .Find("lea r10, [rdi+0x*]")
         .Disp();
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
     static auto Points = InterfacePoints > 0 ? (int32)PointerOffset + InterfacePoints : CachedGameState->GetOffset_ForInternal() + (int32)sizeof(AFortGameStateAthena*);
 
-    return *(TArray<FVector>*)((uint8*)this + Points);
+    return Points;
+}
+
+TArray<FVector> AFortAthenaLivingWorldVolume::GetPoints() const
+{
+    auto GamePoints = (const uint8*)this + GetPointsOffset();
+
+    if (!UE::LWC::IsEnabled())
+        return *(const TArray<FVector>*)GamePoints;
+
+    TArray<FVector> Points;
+
+    for (auto& Point : *(const TArray<FVector3d>*)GamePoints)
+        Points.Add((FVector)Point);
+
+    return Points;
+}
+
+void AFortAthenaLivingWorldVolume::SetPoints(const TArray<FVector>& InPoints)
+{
+    auto GamePoints = (uint8*)this + GetPointsOffset();
+
+    if (!UE::LWC::IsEnabled())
+    {
+        *(TArray<FVector>*)GamePoints = InPoints;
+        return;
+    }
+
+    auto& Points = *(TArray<FVector3d>*)GamePoints;
+    Points.Empty();
+
+    for (auto& Point : InPoints)
+        Points.Add(FVector3d(Point));
 }
