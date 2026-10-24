@@ -215,11 +215,13 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
 
 void ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted()
 {
-    static auto OnResurrectionCompleted = Anchor::Function<void (*)(ABuildingGameplayActorSpawnMachine*)>(TEXT("ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted"))
+    static auto OnResurrectionCompleted = Anchor::Optional<void (*)(ABuildingGameplayActorSpawnMachine*)>(TEXT("ABuildingGameplayActorSpawnMachine::OnResurrectionCompleted"))
+        .If(!Scanner::Event(TEXT("OnResurrectionCompleted")).Has("cmp dl, [rcx+0x*]"))
         .Event(TEXT("OnResurrectionCompleted"))
         .Get();
 
-    OnResurrectionCompleted(this);
+    if (OnResurrectionCompleted)
+        OnResurrectionCompleted(this);
 }
 
 void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn* PlayerPawn)
