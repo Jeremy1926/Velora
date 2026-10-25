@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "FortCheatManager.h"
 #include "Athena/FortGameModeAthena.h"
-#include "Athena/FortGameStateAthena.h"
 #include "Engine/World.h"
 #include "Misc/Parse.h"
 #include "Templates/Casts.h"
@@ -45,18 +44,11 @@ bool UFortCheatManager::ProcessConsoleExec(const TCHAR* Cmd, FOutputDevice& Ar, 
 
     if (FParse::Command(&Stream, TEXT("StartAircraft")))
     {
-        StartAircraft();
+        if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
+            GameMode->StartAircraftPhase(false);
+
         return true;
     }
 
     return Original(Cmd, Ar, Executor);
-}
-
-void UFortCheatManager::StartAircraft()
-{
-    auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
-    auto GameState = GameMode ? Cast<AFortGameStateAthena>(GetWorld()->GetGameState()) : nullptr;
-
-    if (GameState && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
-        GameMode->StartAircraftPhase(false);
 }
