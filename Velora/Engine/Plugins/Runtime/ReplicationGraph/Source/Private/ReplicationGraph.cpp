@@ -2905,6 +2905,16 @@ void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicatio
         {
             FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
 
+            static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
+
+            if (DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
+            {
+                FGlobalActorReplicationInfo& DiagGlobalData = GetGlobalActorReplicationInfoMap().Get(Actor);
+
+                if (DiagGlobalData.GetForceNetUpdateFrame() > ConnectionData.LastRepFrameNum)
+                    UE_LOG(LogVelora, Display, TEXT("diag rep pending %s frame %u force %u last %u next %u period %u dormant %d wantsdormant %d channel %d"), *GetNameSafe(Actor), FrameNum, DiagGlobalData.GetForceNetUpdateFrame(), ConnectionData.LastRepFrameNum, ConnectionData.NextReplicationFrameNum, (uint32)ConnectionData.ReplicationPeriodFrame, (int32)ConnectionData.bDormantOnConnection, (int32)DiagGlobalData.GetWantsToBeDormant(), ConnectionData.Channel ? 1 : 0);
+            }
+
             if (ConnectionData.bDormantOnConnection)
                 continue;
 
@@ -3002,6 +3012,8 @@ void UReplicationGraph::ReplicateActorsForConnection(UNetConnection* NetConnecti
 
         if (!NetConnection->IsNetReady(false))
         {
+            UE_LOG(LogVelora, Display, TEXT("diag rep saturated frame %u at %d of %d queued %d"), FrameNum, ActorIdx + 1, PrioritizedReplicationList.Items.Num(), NetConnection->GetQueuedBits());
+
             HandleStarvedActorList(PrioritizedReplicationList, ActorIdx + 1, ConnectionActorInfoMap, FrameNum);
             NotifyConnectionSaturated(*ConnectionManager);
             break;
