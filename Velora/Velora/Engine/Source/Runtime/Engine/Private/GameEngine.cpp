@@ -14,6 +14,12 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortServerBotManagerAthena.h"
+#include "Items/FortInventory.h"
+#include "Items/FortResourceItemDefinition.h"
+#include "Items/FortWorldItem.h"
+#include "Pawns/FortPlayerPawn.h"
+#include "FortGameData.h"
+#include "FortKismetLibrary.h"
 #include "GameplayEffectTypes.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
 #include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
@@ -241,6 +247,18 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                         auto Offset = FMath::VRand() * FMath::FRandRange(0.f, SafeZoneRadius->GetValueAtLevel(5.f) * 0.5f);
 
                         Pawn->TeleportTo(FVector(Center.X + Offset.X, Center.Y + Offset.Y, Pawn->GetActorLocation().Z), Pawn->GetActorRotation(), false, true);
+
+                        auto MyFortPawn = PlayerController->GetMyFortPawn();
+
+                        for (auto ResourceType : { EFortResourceType::Wood, EFortResourceType::Stone, EFortResourceType::Metal })
+                        {
+                            if (auto ResourceItemDefinition = UFortGameData::Get()->GetResourceItemDefinition(ResourceType))
+                            {
+                                auto ResourceItem = (UFortWorldItem*)PlayerController->K2_FindExistingItemForDefinition(ResourceItemDefinition, false);
+
+                                UFortKismetLibrary::K2_GiveItemToPlayer(PlayerController, ResourceItemDefinition, ResourceItemDefinition->GetMaxStackSize(MyFortPawn ? MyFortPawn->GetAbilitySystemComponent() : nullptr) - (ResourceItem ? ResourceItem->GetItemEntry().GetCount() : 0));
+                            }
+                        }
                     }
                     else
                     {
