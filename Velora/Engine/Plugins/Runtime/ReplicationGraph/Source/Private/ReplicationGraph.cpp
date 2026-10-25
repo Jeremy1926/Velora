@@ -27,6 +27,9 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+AActor* GDiagRepWatchActor = nullptr;
+int32 GDiagRepWatchBudget = 0;
+
 UClass* UNetReplicationGraphConnection::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ReplicationGraph.NetReplicationGraphConnection"));
@@ -680,6 +683,9 @@ void UReplicationGraphNode_ConnectionDormancyNode::ConditionalGatherDormantActor
 
         if (ConnectionActorInfo.bDormantOnConnection)
         {
+            if (Actor == GDiagRepWatchActor && GDiagRepWatchBudget-- > 0)
+                UE_LOG(LogVelora, Display, TEXT("diag rep watch %s dormant removed from connection list frame %u"), *GetNameSafe(Actor), Params.GetReplicationFrameNum());
+
             if (ConnectionActorInfo.CullDistanceSquared <= 0.f)
             {
                 auto& GlobalInfo = GlobalActorReplicationInfoMap->Get(Actor);
@@ -722,6 +728,9 @@ bool ContainsReverse(const FActorRepListRefView& List, AActor* Actor)
 
 void UReplicationGraphNode_ConnectionDormancyNode::NotifyActorDormancyFlush(AActor* Actor)
 {
+    if (Actor == GDiagRepWatchActor && GDiagRepWatchBudget-- > 0)
+        UE_LOG(LogVelora, Display, TEXT("diag rep watch %s flush back to connection list"), *GetNameSafe(Actor));
+
     const FName StreamingLevelName = FNewReplicatedActorInfo::GetStreamingLevelNameOfActor(Actor);
 
     if (StreamingLevelName == FName(NAME_None))
@@ -2905,6 +2914,9 @@ void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicatio
         {
             FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
 
+            if (Actor == GDiagRepWatchActor && GDiagRepWatchBudget-- > 0)
+                UE_LOG(LogVelora, Display, TEXT("diag rep watch %s gathered frame %u dormant %d last %u next %u period %u force %u channel %d"), *GetNameSafe(Actor), FrameNum, (int32)ConnectionData.bDormantOnConnection, ConnectionData.LastRepFrameNum, ConnectionData.NextReplicationFrameNum, (uint32)ConnectionData.ReplicationPeriodFrame, GetGlobalActorReplicationInfoMap().Get(Actor).GetForceNetUpdateFrame(), ConnectionData.Channel ? 1 : 0);
+
             if (ConnectionData.bDormantOnConnection)
                 continue;
 
@@ -3247,10 +3259,8 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
         BitsWritten = ActorInfo.Channel->ReplicateActor();
     }
 
-    static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
-
-    if (BitsWritten > 0 && DiagLastRepFrameNum > 0 && DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
-        UE_LOG(LogVelora, Display, TEXT("diag rep sent %s frame %u bits %lld prev %u period %u force %u wantsdormant %d spawnacked %d"), *GetNameSafe(Actor), FrameNum, BitsWritten, DiagLastRepFrameNum, (uint32)ActorInfo.ReplicationPeriodFrame, GlobalActorInfo.GetForceNetUpdateFrame(), (int32)bWantsToGoDormant, ActorInfo.Channel ? (int32)ActorInfo.Channel->GetSpawnAcked() : -1);
+    if (Actor == GDiagRepWatchActor && GDiagRepWatchBudget-- > 0)
+        UE_LOG(LogVelora, Display, TEXT("diag rep watch %s replicated frame %u bits %lld prev %u period %u force %u wantsdormant %d"), *GetNameSafe(Actor), FrameNum, BitsWritten, DiagLastRepFrameNum, (uint32)ActorInfo.ReplicationPeriodFrame, GlobalActorInfo.GetForceNetUpdateFrame(), (int32)bWantsToGoDormant);
 
     if (!(BitsWritten > 0))
         GetFrameReplicationStats().NumReplicatedCleanActors++;

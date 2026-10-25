@@ -440,11 +440,6 @@ void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
     if (CVarSetNetDormancyEnabled && CVarSetNetDormancyEnabled->GetValueOnAnyThread() == 0)
         return;
 
-    static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
-
-    if (DiagBuildingActorClass && Actor && Actor->IsA(DiagBuildingActorClass))
-        UE_LOG(LogVelora, Display, TEXT("diag rep flush %s repframe %u initial %d"), *GetNameSafe(Actor), GetReplicationFrame(), (int32)bWasDormInitial);
-
     if (auto ReplicationDriver = GetReplicationDriver())
     {
         ReplicationDriver->FlushNetDormancy(Actor, bWasDormInitial);

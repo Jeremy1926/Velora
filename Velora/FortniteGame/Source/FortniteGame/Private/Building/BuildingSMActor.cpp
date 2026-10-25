@@ -18,6 +18,9 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+extern AActor* GDiagRepWatchActor;
+extern int32 GDiagRepWatchBudget;
+
 UClass* ABuildingSMActor::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingSMActor"));
@@ -130,6 +133,10 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 {
     if (!InstigatorPawn || !HasAuthority())
         return;
+
+    GDiagRepWatchActor = this;
+    GDiagRepWatchBudget = 300;
+    UE_LOG(LogVelora, Display, TEXT("diag rep watch %s hit damage %.1f dormancy %d"), *GetNameSafe(this), Damage, (int32)GetNetDormancy());
 
     auto PlayerController = Cast<AFortPlayerController>(InstigatorPawn->GetController());
 
