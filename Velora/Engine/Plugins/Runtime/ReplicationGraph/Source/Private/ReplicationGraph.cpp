@@ -2666,12 +2666,32 @@ FFrameReplicationStats& UReplicationGraph::GetFrameReplicationStats()
 
 bool& UReplicationGraph::GetWasConnectionSaturated()
 {
-    return *(bool*)(&GetFrameReplicationStats() + 1);
+    static auto bWasConnectionSaturated = Anchor::Offset(TEXT("UReplicationGraph::bWasConnectionSaturated"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movdqu [rcx+0x*], xmm0; mov byte ptr [rcx+0x*], 0x0")
+        .Find("mov byte ptr [rcx+0x*], 0x0")
+        .Disp();
+
+    return *(bool*)((uint8*)this + bWasConnectionSaturated);
 }
 
 uint32& UReplicationGraph::GetReplicationGraphFrame()
 {
-    return *(uint32*)((uint8*)&GetWasConnectionSaturated() + sizeof(uint32));
+    static auto ReplicationGraphFrame = Anchor::Offset(TEXT("UReplicationGraph::ReplicationGraphFrame"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movdqu [rcx+0x*], xmm0")
+        .Find("call 0x*")
+        .Target()
+        .Find("inc dword ptr [rax+0x*]")
+        .Disp();
+
+    return *(uint32*)((uint8*)this + ReplicationGraphFrame);
 }
 
 int32& UReplicationGraph::GetActorDiscoveryMaxBitsPerFrame()
