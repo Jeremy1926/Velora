@@ -217,6 +217,15 @@ void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule Ro
     K2_DetachFromActor(this, LocationRule, RotationRule, ScaleRule);
 }
 
+void AActor::SetActorEnableCollision(bool bNewActorEnableCollision)
+{
+    static auto SetActorEnableCollision = Anchor::Function<void (*)(AActor*, bool)>(TEXT("AActor::SetActorEnableCollision"))
+        .Native(TEXT("/Script/Engine.Actor:SetActorEnableCollision"))
+        .Get();
+
+    SetActorEnableCollision(this, bNewActorEnableCollision);
+}
+
 ENetDormancy AActor::GetNetDormancy() const
 {
     static auto NetDormancy = GetClass()->FindPropertyByName(FName(TEXT("NetDormancy")));

@@ -59,6 +59,8 @@ public:
 
     void K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule RotationRule, EDetachmentRule ScaleRule);
 
+    void SetActorEnableCollision(bool bNewActorEnableCollision);
+
     ENetDormancy GetNetDormancy() const;
 
     float GetNetUpdateFrequency() const;

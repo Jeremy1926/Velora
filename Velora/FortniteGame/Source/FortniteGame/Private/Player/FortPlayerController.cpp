@@ -41,6 +41,7 @@
 #include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Misc/Parse.h"
 #include "GUI.h"
 #include "Scanner.h"
@@ -478,6 +479,31 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
     {
         if (auto FortPawn = Cast<AFortPawn>(GetPawn()))
             FortPawn->SetIsInvulnerable(!FortPawn->GetIsInvulnerable());
+    }
+    else if (FParse::Command(&Stream, TEXT("Fly")))
+    {
+        if (auto Character = Cast<ACharacter>(GetPawn()))
+        {
+            auto CharacterMovement = Character->GetCharacterMovement();
+
+            if (CharacterMovement && CharacterMovement->GetCheatFlying())
+            {
+                Character->ClientCheatWalk();
+                Character->ClientCheatWalk_Implementation();
+            }
+            else
+            {
+                Character->ClientCheatFly();
+                Character->ClientCheatFly_Implementation();
+            }
+        }
+    }
+    else if (FParse::Command(&Stream, TEXT("FlySpeed")))
+    {
+        auto Character = Cast<ACharacter>(GetPawn());
+
+        if (auto CharacterMovement = Character ? Character->GetCharacterMovement() : nullptr)
+            CharacterMovement->SetMaxFlySpeed((float)_wtof(Stream));
     }
 }
 

@@ -310,6 +310,7 @@
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemLog.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\GameplayAbilities\Source\GameplayAbilities\Public\AbilitySystemComponent.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Character.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\CharacterMovementComponent.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\DataTable.h" />
     <ClInclude Include="..\Engine\Source\Runtime\GameplayTags\Classes\GameplayTagsManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Math\BoxSphereBounds.h" />
@@ -683,6 +684,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\ActorReplication.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SceneComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ActorComponent.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CharacterMovementComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerController.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CheatManager.cpp" />

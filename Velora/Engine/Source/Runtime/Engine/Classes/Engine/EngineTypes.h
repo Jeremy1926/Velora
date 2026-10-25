@@ -144,6 +144,18 @@ enum class EDetachmentRule : uint8
     KeepWorld,
 };
 
+enum EMovementMode
+{
+    MOVE_None,
+    MOVE_Walking,
+    MOVE_NavWalking,
+    MOVE_Falling,
+    MOVE_Swimming,
+    MOVE_Flying,
+    MOVE_Custom,
+    MOVE_MAX,
+};
+
 struct FAttachmentTransformRules
 {
     FAttachmentTransformRules(EAttachmentRule InLocationRule, EAttachmentRule InRotationRule, EAttachmentRule InScaleRule, bool bInWeldSimulatedBodies)

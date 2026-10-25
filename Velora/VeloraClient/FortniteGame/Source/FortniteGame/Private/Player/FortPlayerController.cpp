@@ -3,6 +3,8 @@
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/Console.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Misc/Parse.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -14,6 +16,14 @@ void AFortPlayerController::Cheat(const FString& Msg)
         .Inline());
 
     auto Stream = *Msg;
+
+    if (FParse::Command(&Stream, TEXT("FlySpeed")))
+    {
+        auto Character = (ACharacter*)GetPawn();
+
+        if (auto CharacterMovement = Character ? Character->GetCharacterMovement() : nullptr)
+            CharacterMovement->SetMaxFlySpeed((float)_wtof(Stream));
+    }
 
     if (!FParse::Command(&Stream, TEXT("Help")))
     {

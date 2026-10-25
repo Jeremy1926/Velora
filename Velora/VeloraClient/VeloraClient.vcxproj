@@ -244,6 +244,10 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CheatManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameInstance.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Player.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CharacterMovementComponent.cpp" />
+    <ClCompile Include="Engine\Source\Runtime\Engine\Private\Actor.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />
     <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
