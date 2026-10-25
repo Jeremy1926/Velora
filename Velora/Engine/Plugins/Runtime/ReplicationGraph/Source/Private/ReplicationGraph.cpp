@@ -2671,18 +2671,9 @@ bool& UReplicationGraph::GetWasConnectionSaturated()
 
 uint32& UReplicationGraph::GetReplicationGraphFrame()
 {
-    static auto ReplicationGraphFrame = Anchor::Offset(TEXT("UReplicationGraph::ReplicationGraphFrame"))
-        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
-        .Start()
-        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
-        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
-        .Find("movdqu [rcx+0x*], xmm0")
-        .Find("call 0x*")
-        .Target()
-        .Find("inc dword ptr [rax+0x*]")
-        .Disp();
+    auto FrameReplicationStatsEnd = (uint8*)(&GetFrameReplicationStats() + 1);
 
-    return *(uint32*)((uint8*)this + ReplicationGraphFrame);
+    return *(uint32*)((uint8*)&GetWasConnectionSaturated() == FrameReplicationStatsEnd ? FrameReplicationStatsEnd + sizeof(uint32) : FrameReplicationStatsEnd);
 }
 
 int32& UReplicationGraph::GetActorDiscoveryMaxBitsPerFrame()
