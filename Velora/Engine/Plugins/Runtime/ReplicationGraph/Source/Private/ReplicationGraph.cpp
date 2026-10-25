@@ -2998,13 +2998,7 @@ void UReplicationGraph::ReplicateActorsForConnection(UNetConnection* NetConnecti
 
         FGlobalActorReplicationInfo& GlobalActorInfo = *RepItem.GlobalData;
 
-        const uint32 DiagLastRepFrameNum = ActorInfo.LastRepFrameNum;
-        const int64 DiagBits = ReplicateSingleActor(Actor, ActorInfo, GlobalActorInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
-
-        static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
-
-        if (DiagBits > 0 && DiagLastRepFrameNum > 0 && DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
-            UE_LOG(LogVelora, Display, TEXT("diag rep sent %s frame %u bits %lld prev %u period %u next %u force %u wantsdormant %d"), *GetNameSafe(Actor), FrameNum, DiagBits, DiagLastRepFrameNum, (uint32)ActorInfo.ReplicationPeriodFrame, ActorInfo.NextReplicationFrameNum, GlobalActorInfo.GetForceNetUpdateFrame(), (int32)GlobalActorInfo.GetWantsToBeDormant());
+        ReplicateSingleActor(Actor, ActorInfo, GlobalActorInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
 
         if (!NetConnection->IsNetReady(false))
         {
@@ -3214,6 +3208,7 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
     }
 
     GetFrameReplicationStats().NumReplicatedActors++;
+    const uint32 DiagLastRepFrameNum = ActorInfo.LastRepFrameNum;
     ActorInfo.LastRepFrameNum = FrameNum;
     ActorInfo.NextReplicationFrameNum = FrameNum + ActorInfo.ReplicationPeriodFrame;
 
@@ -3251,6 +3246,11 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
     {
         BitsWritten = ActorInfo.Channel->ReplicateActor();
     }
+
+    static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
+
+    if (BitsWritten > 0 && DiagLastRepFrameNum > 0 && DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
+        UE_LOG(LogVelora, Display, TEXT("diag rep sent %s frame %u bits %lld prev %u period %u force %u wantsdormant %d spawnacked %d"), *GetNameSafe(Actor), FrameNum, BitsWritten, DiagLastRepFrameNum, (uint32)ActorInfo.ReplicationPeriodFrame, GlobalActorInfo.GetForceNetUpdateFrame(), (int32)bWantsToGoDormant, ActorInfo.Channel ? (int32)ActorInfo.Channel->GetSpawnAcked() : -1);
 
     if (!(BitsWritten > 0))
         GetFrameReplicationStats().NumReplicatedCleanActors++;
