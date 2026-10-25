@@ -11,7 +11,7 @@ FOnUpdateCheckComplete& UUpdateManager::OnUpdateCheckComplete()
         .Target()
         .Find("jmp 0x*")
         .Target()
-        .Find("mov rcx, [rbx]; add rcx, 0x*")
+        .Find("mov rcx, [r*]; add rcx, 0x*")
         .Find("add rcx, 0x*")
         .Imm();
 
