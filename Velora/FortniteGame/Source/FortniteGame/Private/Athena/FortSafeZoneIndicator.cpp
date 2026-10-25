@@ -152,6 +152,22 @@ void AFortSafeZoneIndicator::SetNextNextCenter(const FVector& InNextNextCenter)
     NextNextCenter->SetPropertyValue_InContainer<FVector>(this, InNextNextCenter);
 }
 
+void AFortSafeZoneIndicator::SetNextCenter(const FVector& InNextCenter)
+{
+    static auto NextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextCenter")));
+
+    if (NextCenter)
+        NextCenter->SetPropertyValue_InContainer<FVector>(this, InNextCenter);
+}
+
+void AFortSafeZoneIndicator::SetRadius(float InRadius)
+{
+    static auto Radius = GetClass()->FindPropertyByName(FName(TEXT("Radius")));
+
+    if (Radius)
+        *Radius->ContainerPtrToValuePtr<float>(this) = InRadius;
+}
+
 AFortSafeZoneIndicatorFuture* AFortSafeZoneIndicator::GetFutureReplicator() const
 {
     static auto FutureReplicator = GetClass()->FindPropertyByName(FName(TEXT("FutureReplicator")));

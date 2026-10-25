@@ -12,6 +12,7 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortServerBotManagerAthena.h"
 #include "GameplayEffectTypes.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
@@ -218,16 +219,19 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             FGUI::bStartBus = false;
 
-            if (Config::bLategame && GameMode && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones && GameMode->GetSafeZoneIndicator() && GameMode->GetSafeZonePhase() < 5)
+            auto MapInfo = Config::bLategame && GameMode && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
+            auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
+            auto SafeZoneIndicator = SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
+
+            if (SafeZoneIndicator && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameMode->GetSafeZonePhase() < 5)
             {
+                SafeZoneIndicator->SetNextCenter(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 4 * TGameLayout<FVector>::Size()));
+                SafeZoneIndicator->SetRadius(SafeZoneRadius->GetValueAtLevel(4.f));
                 GameMode->SetSafeZonePhase(4);
                 GameMode->StartNewSafeZonePhase(-1);
             }
 
-            auto MapInfo = Config::bLategame && GameMode && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft ? GameState->GetMapInfo() : nullptr;
-            auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
-
-            if (SafeZoneRadius && GameMode->GetSafeZoneLocations().Num() > 5)
+            if (SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft)
             {
                 auto Center = TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 5 * TGameLayout<FVector>::Size());
 
