@@ -12,6 +12,8 @@ public:
 
     static void SetTitle(const TCHAR* InTitle);
 
+    static bool bStartBus;
+
 private:
     static LRESULT WINAPI WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 

@@ -209,6 +209,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
+            if (FGUI::bStartBus && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
+                GameState->SetWarmupCountdownEndTime(GameState->GetServerWorldTimeSeconds());
+
+            FGUI::bStartBus = false;
+
             switch (GameState->GetGamePhase())
             {
             case EAthenaGamePhase::Aircraft:

@@ -539,6 +539,14 @@ AFortVolumeManager* AFortGameStateAthena::GetVolumeManager() const
     return *VolumeManager->ContainerPtrToValuePtr<AFortVolumeManager*>(this);
 }
 
+void AFortGameStateAthena::SetWarmupCountdownEndTime(float InWarmupCountdownEndTime)
+{
+    static auto WarmupCountdownEndTime = GetClass()->FindPropertyByName(FName(TEXT("WarmupCountdownEndTime")));
+
+    if (WarmupCountdownEndTime)
+        *WarmupCountdownEndTime->ContainerPtrToValuePtr<float>(this) = InWarmupCountdownEndTime;
+}
+
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));

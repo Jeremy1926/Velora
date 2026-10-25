@@ -25,6 +25,7 @@ UINT FGUI::ResizeHeight = 0;
 SRWLOCK FGUI::TitleLock = SRWLOCK_INIT;
 TCHAR FGUI::Title[128] = TEXT("Velora");
 bool FGUI::bTitleChanged = true;
+bool FGUI::bStartBus = false;
 
 void FGUI::Run()
 {
@@ -326,6 +327,21 @@ void FGUI::Draw()
 
             ImGui::EndTabBar();
         }
+
+        const auto& Style = ImGui::GetStyle();
+        static char Command[256] = {};
+
+        ImGui::SetCursorPosY(ImGui::GetWindowHeight() - Style.WindowPadding.y - ImGui::GetFrameHeight() - Style.ItemSpacing.y - Style.SeparatorSize);
+        ImGui::Separator();
+
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Execute").x - ImGui::CalcTextSize("Start Bus").x - Style.FramePadding.x * 4.f - Style.ItemSpacing.x * 2.f);
+        ImGui::InputTextWithHint("##Command", "Console command", Command, sizeof(Command));
+        ImGui::SameLine();
+        ImGui::Button("Execute");
+        ImGui::SameLine();
+
+        if (ImGui::Button("Start Bus"))
+            bStartBus = true;
     }
 
     ImGui::End();
