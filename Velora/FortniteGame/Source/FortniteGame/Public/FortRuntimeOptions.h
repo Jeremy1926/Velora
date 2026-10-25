@@ -12,6 +12,4 @@ public:
     float GetBRServerMaxTickRate() const;
 
     bool GetDisableReplicationGraph() const;
-
-    void SetEnableManualBroadcasterStart(bool bInEnableManualBroadcasterStart);
 };

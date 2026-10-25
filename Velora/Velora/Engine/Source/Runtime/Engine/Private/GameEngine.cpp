@@ -20,7 +20,6 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "FortGameData.h"
 #include "FortKismetLibrary.h"
-#include "FortRuntimeOptions.h"
 #include "GameplayEffectTypes.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
 #include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
@@ -80,8 +79,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (auto DisableGameplayCues = IConsoleManager::Get().FindConsoleVariable(TEXT("AbilitySystem.DisableGameplayCues")))
             DisableGameplayCues->Set(TEXT("1"), ECVF_SetByCode);
-
-        UFortRuntimeOptions::StaticClass()->GetDefaultObject<UFortRuntimeOptions>()->SetEnableManualBroadcasterStart(false);
 
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
