@@ -467,7 +467,11 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
 {
     if (GetCheatManager())
+    {
+        UE_LOG(LogFort, Log, TEXT("ServerCheat (%s): [%s]"), *GetName(), *Msg);
+
         ClientMessage(ConsoleCommand(Msg, true));
+    }
 }
 
 void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)

@@ -6,4 +6,6 @@ class UCheatManager : public UObject
 {
 public:
     static UClass* StaticClass();
+
+    void InitCheatManager();
 };

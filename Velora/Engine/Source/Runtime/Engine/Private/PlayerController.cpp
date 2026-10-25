@@ -64,6 +64,7 @@ void APlayerController::AddCheats(bool bForce)
         return;
 
     SetCheatManager(NewObject<UCheatManager>(this, GetCheatClass()));
+    GetCheatManager()->InitCheatManager();
 }
 
 FString APlayerController::ConsoleCommand(const FString& Command, bool bWriteToLog)
