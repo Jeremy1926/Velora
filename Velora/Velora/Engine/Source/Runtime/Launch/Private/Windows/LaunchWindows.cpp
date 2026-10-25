@@ -9,6 +9,7 @@
 #include "Scanner.h"
 #include "Detour.h"
 #include "Config.h"
+#include "GUI.h"
 #include "MinHook.h"
 
 #pragma warning(disable: 4073)
@@ -76,6 +77,9 @@ void Main()
     {
         UE_LOG(LogVelora, Error, TEXT("Could not enable hooks (%hs)"), MH_StatusToString(Status));
     }
+
+    if (Config::bGUI)
+        FGUI::Run();
 }
 
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)

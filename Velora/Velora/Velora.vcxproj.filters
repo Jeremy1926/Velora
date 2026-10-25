@@ -460,6 +460,15 @@
     <Filter Include="ThirdParty\Anchor\src">
       <UniqueIdentifier>{DD7212DD-4D52-430C-9555-69646ADE0DF7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty\imgui">
+      <UniqueIdentifier>{A82080B2-E414-4B85-9DDF-D46B680E9566}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\imgui\backends">
+      <UniqueIdentifier>{A275A401-E497-4426-9D70-7602FE053A3D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\Ubuntu">
+      <UniqueIdentifier>{2A226773-8CBA-4F98-9E94-8C8EB162F9D3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\Core\Private\Internationalization">
       <UniqueIdentifier>{aeda20c3-d2b9-4432-a3d0-d76a44f6a6da}</UniqueIdentifier>
     </Filter>
@@ -661,6 +670,34 @@
     <ClInclude Include="..\ThirdParty\Anchor\include\Anchor\Anchor.h">
       <Filter>ThirdParty\Anchor\include</Filter>
     </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imconfig.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imgui_internal.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_rectpack.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_textedit.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\imstb_truetype.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h">
+      <Filter>ThirdParty\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_win32.h">
+      <Filter>ThirdParty\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\Ubuntu\Ubuntu.h">
+      <Filter>ThirdParty\Ubuntu</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\Platform.h">
       <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
     </ClInclude>
@@ -1981,6 +2018,25 @@
     <ClCompile Include="..\ThirdParty\Anchor\src\Detour.cpp">
       <Filter>ThirdParty\Anchor\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_tables.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>ThirdParty\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>ThirdParty\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
     </ClCompile>

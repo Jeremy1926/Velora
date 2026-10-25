@@ -10,4 +10,5 @@ namespace Config
     constexpr int32 WarmupRequiredPlayerCount = 1;
     constexpr bool bRestartAfterMatch = true;
     constexpr bool bConsole = true;
+    constexpr bool bGUI = true;
 }
