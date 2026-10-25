@@ -94,6 +94,13 @@ TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::G
         .Target()
         .Find("lea rcx, [0x*]; mov r8, *; mov rdx, *; call 0x*")
         .Target()
+        .Or()
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("mov r8, [*]; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *VehicleStateChange;
