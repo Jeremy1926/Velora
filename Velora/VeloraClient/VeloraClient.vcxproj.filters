@@ -261,12 +261,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameViewportClient.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\InputSettings.h">
-      <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\InputCore\Classes\InputCoreTypes.h">
-      <Filter>Engine\Source\Runtime\InputCore\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\Engine</Filter>
     </ClInclude>
@@ -353,9 +347,6 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UnrealEngine.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UserInterface\InputSettings.cpp">
-      <Filter>Engine\Source\Runtime\Engine\Private\UserInterface</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>

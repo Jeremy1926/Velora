@@ -188,8 +188,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\ScriptViewportClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\GameViewportClient.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\Console.h" />
-    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\InputSettings.h" />
-    <ClInclude Include="..\Engine\Source\Runtime\InputCore\Classes\InputCoreTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\BlueprintFunctionLibrary.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Kismet\GameplayStatics.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Engine\EngineBaseTypes.h" />
@@ -242,7 +240,6 @@
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectGlobals.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UnrealEngine.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameViewportClient.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\UserInterface\InputSettings.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogCategory.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\GameEngine.cpp" />
