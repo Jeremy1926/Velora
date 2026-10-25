@@ -648,7 +648,15 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
-    static auto AttemptSpawnResources = THook(TEXT("ABuildingSMActor::AttemptSpawnResources"), &ABuildingSMActor::AttemptSpawnResources)
+    static auto AttemptSpawnResources = THook(TEXT("ABuildingSMActor::AttemptSpawnResources"), (void (ABuildingSMActor::*)(AFortPawn*, float, bool))&ABuildingSMActor::AttemptSpawnResources)
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingSMActorAttemptSpawnResourcesParams")))
+        .String("OwnedBuildingDamaged")
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("ABuildingSMActor::AttemptSpawnResources"))
+        .InChildVTablesCounted(ABuildingSMActor::StaticClass());
+
+    static auto AttemptSpawnResourcesParams = THook(TEXT("ABuildingSMActor::AttemptSpawnResources"), (void (ABuildingSMActor::*)(const FBuildingSMActorAttemptSpawnResourcesParams&))&ABuildingSMActor::AttemptSpawnResources)
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingSMActorAttemptSpawnResourcesParams")) != nullptr)
         .String("OwnedBuildingDamaged")
         .Find("call [*+0x*]", 2)
         .LogSlot(TEXT("ABuildingSMActor::AttemptSpawnResources"))

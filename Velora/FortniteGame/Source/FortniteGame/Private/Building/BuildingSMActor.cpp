@@ -262,6 +262,11 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
     }
 }
 
+void ABuildingSMActor::AttemptSpawnResources(const FBuildingSMActorAttemptSpawnResourcesParams& Params)
+{
+    AttemptSpawnResources(Params.InstigatorPawn, Params.ActualDamageDealt, Params.bJustHitWeakspot);
+}
+
 float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
 {
     static auto DetermineMaxResourcesToSpawn = Anchor::VirtualFunction<float (*)(ABuildingSMActor*, bool)>(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))

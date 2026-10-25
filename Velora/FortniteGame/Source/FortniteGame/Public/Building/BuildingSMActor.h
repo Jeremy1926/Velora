@@ -15,6 +15,14 @@ enum class EBuildingReplacementType : uint8
     BRT_MAX
 };
 
+struct FBuildingSMActorAttemptSpawnResourcesParams
+{
+    AFortPawn* InstigatorPawn;
+    FGameplayTagContainer Tags;
+    float ActualDamageDealt;
+    bool bJustHitWeakspot;
+};
+
 class ABuildingSMActor : public ABuildingActor
 {
 public:
@@ -39,6 +47,8 @@ public:
     UObject* GetEditModePatternData() const;
 
     void AttemptSpawnResources(AFortPawn* InstigatorPawn, float Damage, bool bJustHitWeakspot);
+
+    void AttemptSpawnResources(const FBuildingSMActorAttemptSpawnResourcesParams& Params);
 
     float DetermineMaxResourcesToSpawn(bool bRandomize);
 
