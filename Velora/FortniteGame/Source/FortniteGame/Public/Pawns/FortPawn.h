@@ -38,6 +38,10 @@ public:
 
     void SetIsDBNO(bool bInIsDBNO);
 
+    bool GetIsInvulnerable() const;
+
+    void SetIsInvulnerable(bool bInIsInvulnerable);
+
     bool GetWasDBNOOnDeath() const;
 
     void SetPlayedDying(bool bInPlayedDying);

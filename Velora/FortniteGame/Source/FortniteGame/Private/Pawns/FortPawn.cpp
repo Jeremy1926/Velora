@@ -115,6 +115,20 @@ void AFortPawn::SetIsDBNO(bool bInIsDBNO)
     bIsDBNO->SetPropertyValue_InContainer(this, bInIsDBNO);
 }
 
+bool AFortPawn::GetIsInvulnerable() const
+{
+    static auto bIsInvulnerable = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsInvulnerable")));
+
+    return bIsInvulnerable->GetPropertyValue_InContainer(this);
+}
+
+void AFortPawn::SetIsInvulnerable(bool bInIsInvulnerable)
+{
+    static auto bIsInvulnerable = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsInvulnerable")));
+
+    bIsInvulnerable->SetPropertyValue_InContainer(this, bInIsInvulnerable);
+}
+
 bool AFortPawn::GetWasDBNOOnDeath() const
 {
     static auto bWasDBNOOnDeath = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bWasDBNOOnDeath")));

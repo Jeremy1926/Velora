@@ -474,6 +474,11 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
 
     if (FParse::Command(&Stream, TEXT("StartAircraft")))
         FGUI::bStartBus = true;
+    else if (FParse::Command(&Stream, TEXT("God")))
+    {
+        if (auto FortPawn = Cast<AFortPawn>(GetPawn()))
+            FortPawn->SetIsInvulnerable(!FortPawn->GetIsInvulnerable());
+    }
 }
 
 void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)
