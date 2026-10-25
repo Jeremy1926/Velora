@@ -171,7 +171,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\EngineVersion.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDevice.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h" />
-    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsConsoleOutputDevice.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\UnrealNames.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectMacros.h" />
@@ -236,7 +235,6 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Windows\WindowsConsoleOutputDevice.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />

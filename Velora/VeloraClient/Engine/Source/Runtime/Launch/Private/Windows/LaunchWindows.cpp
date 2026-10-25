@@ -1,8 +1,6 @@
 #include "pch.h"
 #include <ctime>
 #include "Misc/EngineVersion.h"
-#include "Misc/OutputDeviceRedirector.h"
-#include "Windows/WindowsConsoleOutputDevice.h"
 #include "Logging/LogCategory.h"
 #include "CoreGlobals.h"
 #include "Scanner.h"
@@ -15,15 +13,6 @@
 static auto bGameLayoutDecided = []
 {
     FName::IsOutlineNumber();
-
-    return true;
-}();
-
-static auto bOutputDevicesRegistered = []
-{
-    auto LogConsole = new FWindowsConsoleOutputDevice();
-    LogConsole->ExcludeCategory(FName(TEXT("LogVelora")));
-    GLog->AddOutputDevice(LogConsole);
 
     return true;
 }();

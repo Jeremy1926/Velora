@@ -213,9 +213,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Misc\OutputDeviceRedirector.h">
       <Filter>Engine\Source\Runtime\Core\Public\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\Core\Public\Windows\WindowsConsoleOutputDevice.h">
-      <Filter>Engine\Source\Runtime\Core\Public\Windows</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\UObject\NameTypes.h">
       <Filter>Engine\Source\Runtime\Core\Public\UObject</Filter>
     </ClInclude>
@@ -338,9 +335,6 @@
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Windows\WindowsConsoleOutputDevice.cpp">
-      <Filter>Engine\Source\Runtime\Core\Private\Windows</Filter>
     </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>
