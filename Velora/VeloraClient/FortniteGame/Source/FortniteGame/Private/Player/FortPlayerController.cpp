@@ -31,6 +31,6 @@ void AFortPlayerController::Cheat(const FString& Msg)
         Line += Command[1];
 
         if (Console)
-            Console->Serialize(*Line, ELogVerbosity::Log, FName());
+            Console->Serialize(*Line, ELogVerbosity::Log, FName(NAME_None));
     }
 }
