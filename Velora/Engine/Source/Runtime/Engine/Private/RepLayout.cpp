@@ -32,6 +32,37 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data)
 
 void FRepLayout::ClearSharedSerializationForRPC()
 {
+    static auto SharedInfoRPC = Anchor::Offset(TEXT("FRepLayout::SharedInfoRPC"))
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Optional()
+        .Find("mov r*, [rbp-0x*]; lea rcx, [r*+0x*]; call 0x*; and dword ptr [r*+0x*], 0x0")
+        .Find("lea rcx, [r*+0x*]")
+        .Disp();
+
+    if (SharedInfoRPC > 0)
+    {
+        static auto Reset = Anchor::Function<void (*)(void*)>(TEXT("FRepSerializationSharedInfo::Reset"))
+            .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+            .Start()
+            .Find("mov r*, [rbp-0x*]; lea rcx, [r*+0x*]; call 0x*; and dword ptr [r*+0x*], 0x0")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto SharedInfoRPCParmsChanged = Anchor::Offset(TEXT("FRepLayout::SharedInfoRPCParmsChanged"))
+            .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+            .Start()
+            .Find("mov r*, [rbp-0x*]; lea rcx, [r*+0x*]; call 0x*; and dword ptr [r*+0x*], 0x0")
+            .Find("and dword ptr [r*+0x*], 0x0")
+            .Disp();
+
+        Reset((uint8*)this + SharedInfoRPC);
+        *(int32*)((uint8*)this + SharedInfoRPCParmsChanged) = 0;
+
+        return;
+    }
+
     static auto ClearSharedSerializationForRPC = Anchor::Function<void (*)(FRepLayout*)>(TEXT("FRepLayout::ClearSharedSerializationForRPC"))
         .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
         .Start()
