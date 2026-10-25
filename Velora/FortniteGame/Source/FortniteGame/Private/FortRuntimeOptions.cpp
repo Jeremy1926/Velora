@@ -29,3 +29,11 @@ bool UFortRuntimeOptions::GetDisableReplicationGraph() const
 
     return bDisableReplicationGraph->GetPropertyValue_InContainer(this);
 }
+
+void UFortRuntimeOptions::SetEnableManualBroadcasterStart(bool bInEnableManualBroadcasterStart)
+{
+    static auto bEnableManualBroadcasterStart = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bEnableManualBroadcasterStart")));
+
+    if (bEnableManualBroadcasterStart)
+        bEnableManualBroadcasterStart->SetPropertyValue_InContainer(this, bInEnableManualBroadcasterStart);
+}
