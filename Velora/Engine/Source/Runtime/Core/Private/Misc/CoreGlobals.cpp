@@ -47,6 +47,10 @@ bool& GIsGameThreadIdInitialized = *Anchor::Data<bool*>(TEXT("GIsGameThreadIdIni
     .String(TEXT("GameThread"), "lea rcx, [0x*]; call 0x*")
     .Last("mov [0x*], *l")
     .Target()
+    .Or()
+    .String(TEXT("GameThread"), "lea rcx, [0x*]; call 0x*")
+    .Last("mov [0x*], r*b")
+    .Target()
     .Get();
 
 uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
