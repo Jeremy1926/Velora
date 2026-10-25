@@ -278,6 +278,13 @@ UFortHealthSet* AFortPawn::GetHealthSet() const
     return *HealthSet->ContainerPtrToValuePtr<UFortHealthSet*>(this);
 }
 
+UFortMovementSet* AFortPawn::GetMovementSet() const
+{
+    static auto MovementSet = GetClass()->FindPropertyByName(FName(TEXT("MovementSet")));
+
+    return *MovementSet->ContainerPtrToValuePtr<UFortMovementSet*>(this);
+}
+
 void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent)
 {
     static auto LaunchCharacterJump = Anchor::Optional<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))

@@ -9,6 +9,7 @@
 class AFortWeapon;
 class UAbilitySystemComponent;
 class UFortHealthSet;
+class UFortMovementSet;
 class UFortItemDefinition;
 class UFortWeaponItemDefinition;
 struct FFrame;
@@ -69,6 +70,8 @@ public:
     void OnRep_LastReplicatedEmoteExecuted(const UFortItemDefinition* PreviousValue = nullptr);
 
     UFortHealthSet* GetHealthSet() const;
+
+    UFortMovementSet* GetMovementSet() const;
 
     void LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent);
 

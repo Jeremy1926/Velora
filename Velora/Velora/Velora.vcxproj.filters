@@ -1605,6 +1605,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortHealthSet.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortMovementSet.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortFeedbackManager.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -2460,6 +2463,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortHealthSet.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortFeedbackManager.cpp">

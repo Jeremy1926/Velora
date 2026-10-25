@@ -16,6 +16,10 @@ struct FGameplayAttributeData
 
     float GetCurrentValue() const;
 
+    virtual void SetCurrentValue(float NewValue);
+
+    virtual void SetBaseValue(float NewValue);
+
 protected:
     float BaseValue;
     float CurrentValue;

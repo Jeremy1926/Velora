@@ -23,6 +23,7 @@
 #include "Weapons/FortWeap_BuildingTool.h"
 #include "Weapons/FortWeap_EditingTool.h"
 #include "Abilities/FortGameplayAbility.h"
+#include "Abilities/FortMovementSet.h"
 #include "AI/FortAIFunctionLibrary.h"
 #include "Analytics/FortAnalytics.h"
 #include "FortGameData.h"
@@ -500,10 +501,15 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
     }
     else if (FParse::Command(&Stream, TEXT("FlySpeed")))
     {
-        auto Character = Cast<ACharacter>(GetPawn());
+        auto FortPawn = Cast<AFortPawn>(GetPawn());
 
-        if (auto CharacterMovement = Character ? Character->GetCharacterMovement() : nullptr)
-            CharacterMovement->SetMaxFlySpeed((float)_wtof(Stream));
+        if (auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr)
+        {
+            auto FlySpeed = (float)_wtof(Stream);
+
+            MovementSet->GetFlySpeed().SetBaseValue(FlySpeed);
+            MovementSet->GetFlySpeed().SetCurrentValue(FlySpeed);
+        }
     }
 }
 

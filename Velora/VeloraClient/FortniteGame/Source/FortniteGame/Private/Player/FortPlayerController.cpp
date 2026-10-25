@@ -3,8 +3,8 @@
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
 #include "Engine/Console.h"
-#include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Pawns/FortPawn.h"
+#include "Abilities/FortMovementSet.h"
 #include "Misc/Parse.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -19,10 +19,15 @@ void AFortPlayerController::Cheat(const FString& Msg)
 
     if (FParse::Command(&Stream, TEXT("FlySpeed")))
     {
-        auto Character = (ACharacter*)GetPawn();
+        auto FortPawn = (AFortPawn*)GetPawn();
 
-        if (auto CharacterMovement = Character ? Character->GetCharacterMovement() : nullptr)
-            CharacterMovement->SetMaxFlySpeed((float)_wtof(Stream));
+        if (auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr)
+        {
+            auto FlySpeed = (float)_wtof(Stream);
+
+            MovementSet->GetFlySpeed().SetBaseValue(FlySpeed);
+            MovementSet->GetFlySpeed().SetCurrentValue(FlySpeed);
+        }
     }
 
     if (!FParse::Command(&Stream, TEXT("Help")))

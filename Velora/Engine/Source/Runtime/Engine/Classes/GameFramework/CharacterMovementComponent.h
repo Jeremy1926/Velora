@@ -11,6 +11,4 @@ public:
     bool GetCheatFlying() const;
 
     void SetCheatFlying(bool bInCheatFlying);
-
-    void SetMaxFlySpeed(float InMaxFlySpeed);
 };

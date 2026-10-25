@@ -33,3 +33,13 @@ float FGameplayAttributeData::GetCurrentValue() const
 {
     return CurrentValue;
 }
+
+void FGameplayAttributeData::SetCurrentValue(float NewValue)
+{
+    CurrentValue = NewValue;
+}
+
+void FGameplayAttributeData::SetBaseValue(float NewValue)
+{
+    BaseValue = NewValue;
+}

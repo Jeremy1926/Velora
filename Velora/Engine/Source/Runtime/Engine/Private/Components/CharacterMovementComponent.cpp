@@ -27,10 +27,3 @@ void UCharacterMovementComponent::SetCheatFlying(bool bInCheatFlying)
 
     bCheatFlying->SetPropertyValue_InContainer(this, bInCheatFlying);
 }
-
-void UCharacterMovementComponent::SetMaxFlySpeed(float InMaxFlySpeed)
-{
-    static auto MaxFlySpeed = GetClass()->FindPropertyByName(FName(TEXT("MaxFlySpeed")));
-
-    *MaxFlySpeed->ContainerPtrToValuePtr<float>(this) = InMaxFlySpeed;
-}
