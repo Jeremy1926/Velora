@@ -180,6 +180,11 @@ FString FName::ToString() const
         .String(TEXT("Failed to find function %s in %s"))
         .Start()
         .Call(3)
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetStringLibrary:Conv_NameToString"))
+        .Find("mov [rbp+0x*], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FString Out;
