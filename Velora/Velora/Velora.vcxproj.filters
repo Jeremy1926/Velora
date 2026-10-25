@@ -634,12 +634,56 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Modifiers">
       <UniqueIdentifier>{C8FDCD60-2569-4B68-8C4F-C3D18FFFF07E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Plugins\Online">
+      <UniqueIdentifier>{0D21A89F-1874-45A4-BF19-A26F283919EB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Online\OnlineFramework">
+      <UniqueIdentifier>{402EB47A-CAEF-4BF8-84B3-55626F34A743}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Online\OnlineFramework\Source">
+      <UniqueIdentifier>{48BDD335-BAB1-4E98-8A40-2DEE257213F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Online\OnlineFramework\Source\Hotfix">
+      <UniqueIdentifier>{A64D889F-25E3-4570-8D69-5262ABFF2C76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Private">
+      <UniqueIdentifier>{9DFF6205-E017-4264-9FFE-2039469C511E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Public">
+      <UniqueIdentifier>{5561A3D8-555E-42CD-8E12-52ABC32B34D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\EntityActor">
+      <UniqueIdentifier>{262C027A-EE3C-4C6F-A8C7-39927C1F7921}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\EntityActor\Source">
+      <UniqueIdentifier>{77BB9C8E-9056-4D21-9ED4-D524F3E52F50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\EntityActor\Source\EntityActor">
+      <UniqueIdentifier>{0DF13CBA-4A4A-4760-B52D-852AF1042D40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\EntityActor\Source\EntityActor\Private">
+      <UniqueIdentifier>{4E69BD0D-849D-4699-B021-D0FD6105EDD5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Plugins\Runtime\EntityActor\Source\EntityActor\Public">
+      <UniqueIdentifier>{50709725-3C80-42CE-96A0-3F74A24DC4BE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Velora">
+      <UniqueIdentifier>{675534A1-66A1-499B-8B63-F2CC5D6C5D84}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="..\Scanner.h" />
-    <ClInclude Include="..\Detour.h" />
-    <ClInclude Include="..\Config.h" />
+    <ClInclude Include="pch.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Scanner.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Detour.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Config.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\Zydis\Zydis.h">
       <Filter>ThirdParty\Zydis</Filter>
     </ClInclude>
@@ -697,7 +741,9 @@
     <ClInclude Include="..\ThirdParty\Ubuntu\Ubuntu.h">
       <Filter>ThirdParty\Ubuntu</Filter>
     </ClInclude>
-    <ClInclude Include="GUI.h" />
+    <ClInclude Include="GUI.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Core\Public\HAL\Platform.h">
       <Filter>Engine\Source\Runtime\Core\Public\HAL</Filter>
     </ClInclude>
@@ -1993,7 +2039,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="pch.cpp">
+      <Filter>Velora</Filter>
+    </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\buffer.c">
       <Filter>ThirdParty\MinHook\src</Filter>
     </ClCompile>
@@ -2036,7 +2084,9 @@
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_win32.cpp">
       <Filter>ThirdParty\imgui\backends</Filter>
     </ClCompile>
-    <ClCompile Include="GUI.cpp" />
+    <ClCompile Include="GUI.cpp">
+      <Filter>Velora</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\EngineVersion.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
     </ClCompile>

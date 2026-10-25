@@ -133,11 +133,20 @@
     <Filter Include="ThirdParty\Anchor\src">
       <UniqueIdentifier>{56CE2A97-B390-438E-9E11-631496E637DD}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Velora">
+      <UniqueIdentifier>{965FA01E-FD87-4CCC-AA65-6C966F4DDF30}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="..\Scanner.h" />
-    <ClInclude Include="..\Detour.h" />
+    <ClInclude Include="pch.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Scanner.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Detour.h">
+      <Filter>Velora</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\Zydis\Zydis.h">
       <Filter>ThirdParty\Zydis</Filter>
     </ClInclude>
@@ -296,7 +305,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="pch.cpp">
+      <Filter>Velora</Filter>
+    </ClCompile>
     <ClCompile Include="..\ThirdParty\MinHook\src\buffer.c">
       <Filter>ThirdParty\MinHook\src</Filter>
     </ClCompile>
