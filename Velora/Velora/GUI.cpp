@@ -319,6 +319,7 @@ void FGUI::Draw()
             {
                 ImGui::Dummy(ImVec2(0.f, ImGui::GetStyle().ItemSpacing.y * 2.f));
 
+                ImGui::Checkbox("Lategame", &Config::bLategame);
                 ImGui::Checkbox("Infinite Ammo", &Config::bInfiniteAmmo);
                 ImGui::Checkbox("Infinite Materials", &Config::bInfiniteMaterials);
 

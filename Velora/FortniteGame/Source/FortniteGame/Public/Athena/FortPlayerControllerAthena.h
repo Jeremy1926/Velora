@@ -38,6 +38,8 @@ public:
 
     void ServerRestartPlayer_Implementation();
 
+    void ServerAttemptAircraftJump(const FRotator& ClientRotation);
+
     void OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher);
 
     bool GetMarkedAlive() const;

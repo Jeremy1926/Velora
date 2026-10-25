@@ -108,6 +108,8 @@ public:
 
     int32 GetSafeZonePhase() const;
 
+    void SetSafeZonePhase(int32 InSafeZonePhase);
+
     AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
 
     TArray<FVector>& GetSafeZoneLocations();

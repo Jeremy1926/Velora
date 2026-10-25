@@ -5,6 +5,7 @@
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "Components/FortControllerComponent_Aircraft.h"
 #include "Components/FortControllerComponent_InventoryService.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "GameplayEffectTypes.h"
@@ -76,6 +77,28 @@ void AFortPlayerControllerAthena::ServerRestartPlayer_Implementation()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
     Super::ServerRestartPlayer_Implementation();
+}
+
+void AFortPlayerControllerAthena::ServerAttemptAircraftJump(const FRotator& ClientRotation)
+{
+    if (auto AircraftComponent = UFortControllerComponent_Aircraft::StaticClass() ? FindComponentByClass<UFortControllerComponent_Aircraft>() : nullptr)
+    {
+        AircraftComponent->ServerAttemptAircraftJump_Implementation(TGameValue<FRotator>(ClientRotation));
+        return;
+    }
+
+    static auto ServerAttemptAircraftJump = Anchor::VirtualFunction<void (*)(AFortPlayerControllerAthena*, TGameValue<FRotator>)>(TEXT("AFortPlayerControllerAthena::ServerAttemptAircraftJump_Implementation"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:ServerAttemptAircraftJump"))
+        .Find("call r8; test al, al")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:ServerAttemptAircraftJump"))
+        .Find("call [*+0x*]; test al, al")
+        .Find("call [*+0x*]")
+        .Get();
+
+    if (ServerAttemptAircraftJump)
+        ServerAttemptAircraftJump(this, TGameValue<FRotator>(ClientRotation));
 }
 
 void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)

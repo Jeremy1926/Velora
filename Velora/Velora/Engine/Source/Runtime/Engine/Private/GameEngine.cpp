@@ -3,13 +3,17 @@
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "Player/FortPlayerController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortServerBotManagerAthena.h"
+#include "GameplayEffectTypes.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
 #include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
 #include "Building/BGAConsumableSpawner.h"
@@ -213,6 +217,31 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 GameState->SetWarmupCountdownEndTime(GameState->GetServerWorldTimeSeconds());
 
             FGUI::bStartBus = false;
+
+            auto MapInfo = Config::bLategame && GameMode && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft ? GameState->GetMapInfo() : nullptr;
+            auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
+
+            if (SafeZoneRadius && GameMode->GetSafeZoneLocations().Num() > 5)
+            {
+                auto Center = TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 5 * TGameLayout<FVector>::Size());
+
+                for (auto PlayerState : GameState->GetPlayerArray())
+                {
+                    auto PlayerController = PlayerState ? Cast<AFortPlayerControllerAthena>(PlayerState->GetOwner()) : nullptr;
+
+                    if (!PlayerController || PlayerController->GetPawn())
+                        continue;
+
+                    PlayerController->ServerAttemptAircraftJump(PlayerController->GetControlRotation());
+
+                    if (auto Pawn = PlayerController->GetPawn())
+                    {
+                        auto Offset = FMath::VRand() * FMath::FRandRange(0.f, SafeZoneRadius->GetValueAtLevel(5.f) * 0.5f);
+
+                        Pawn->TeleportTo(FVector(Center.X + Offset.X, Center.Y + Offset.Y, Pawn->GetActorLocation().Z), Pawn->GetActorRotation(), false, true);
+                    }
+                }
+            }
 
             switch (GameState->GetGamePhase())
             {

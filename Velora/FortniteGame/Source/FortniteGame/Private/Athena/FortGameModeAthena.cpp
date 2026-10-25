@@ -46,6 +46,7 @@
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -823,11 +824,16 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
 void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
 {
     DETOUR(AFortGameModeAthena, StartNewSafeZonePhase, Anchor::Hook()
-        .If(AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("FutureReplicator"))) != nullptr)
         .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Start()
+        .Or()
+        .FieldPattern("FF 86 %o", AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePhase"))))
         .Start()
         .Optional()
         .Inline());
+
+    if (Config::bLategame && !GetSafeZonePhase())
+        SetSafeZonePhase(4);
 
     Original(NewSafeZonePhase);
 
@@ -835,12 +841,16 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
 
     auto SafeZoneIndicator = GetSafeZoneIndicator();
     auto FutureReplicator = SafeZoneIndicator ? SafeZoneIndicator->GetFutureReplicator() : nullptr;
+
+    if (!FutureReplicator)
+        return;
+
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
     auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
     auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
     auto& SafeZoneLocations = GetSafeZoneLocations();
 
-    if (!FutureReplicator || !SafeZoneRadius || !SafeZoneLocations.Num())
+    if (!SafeZoneRadius || !SafeZoneLocations.Num())
         return;
 
     const int32 NextSafeZoneIndex = NewSafeZonePhase < 0 ? GetSafeZonePhase() : GetSafeZonePhase() + 1;
@@ -859,6 +869,13 @@ int32 AFortGameModeAthena::GetSafeZonePhase() const
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
     return *SafeZonePhase->ContainerPtrToValuePtr<int32>(this);
+}
+
+void AFortGameModeAthena::SetSafeZonePhase(int32 InSafeZonePhase)
+{
+    static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
+
+    *SafeZonePhase->ContainerPtrToValuePtr<int32>(this) = InSafeZonePhase;
 }
 
 AFortSafeZoneIndicator* AFortGameModeAthena::GetSafeZoneIndicator() const
