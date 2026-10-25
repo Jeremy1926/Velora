@@ -2,6 +2,7 @@
 #include "FortCheatManager.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "Misc/Parse.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -40,7 +41,29 @@ bool UFortCheatManager::ProcessConsoleExec(const TCHAR* Cmd, FOutputDevice& Ar, 
         .LogSlot(TEXT("UObject::ProcessConsoleExec"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortCheatManager")));
 
+    static const TCHAR* Commands[][2] =
+    {
+        { TEXT("Help"), TEXT("Lists every cheat command with what it does") },
+        { TEXT("StartAircraft"), TEXT("Starts the battle bus right now (AFortGameModeAthena::StartAircraftPhase)") },
+    };
+
     auto Stream = Cmd;
+
+    if (FParse::Command(&Stream, TEXT("Help")))
+    {
+        auto PlayerController = (APlayerController*)GetOuter();
+
+        for (auto& Command : Commands)
+        {
+            FString Line(Command[0]);
+            Line += TEXT(" - ");
+            Line += Command[1];
+
+            PlayerController->ClientMessage(Line);
+        }
+
+        return true;
+    }
 
     if (FParse::Command(&Stream, TEXT("StartAircraft")))
     {
