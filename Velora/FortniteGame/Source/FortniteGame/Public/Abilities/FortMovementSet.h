@@ -6,4 +6,6 @@ class UFortMovementSet : public UAttributeSet
 {
 public:
     FFortGameplayAttributeData& GetFlySpeed();
+
+    FFortGameplayAttributeData& GetSpeedMultiplier();
 };

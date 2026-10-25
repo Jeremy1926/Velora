@@ -208,4 +208,5 @@ inline const TCHAR* const GCheatCommands[][2] =
     { TEXT("God"), TEXT("Toggles god mode, you take no damage (AFortPawn::bIsInvulnerable)") },
     { TEXT("Fly"), TEXT("Toggles flying, Epic's Fly cheat (ACharacter::ClientCheatFly)") },
     { TEXT("FlySpeed"), TEXT("Sets how fast you fly, e.g. cheat flyspeed 2000 (MovementSet FlySpeed)") },
+    { TEXT("Speed"), TEXT("Multiplies how fast you move, e.g. cheat speed 2, cheat speed 1 resets (MovementSet SpeedMultiplier)") },
 };

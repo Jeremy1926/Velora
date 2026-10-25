@@ -9,3 +9,10 @@ FFortGameplayAttributeData& UFortMovementSet::GetFlySpeed()
 
     return *FlySpeed->ContainerPtrToValuePtr<FFortGameplayAttributeData>(this);
 }
+
+FFortGameplayAttributeData& UFortMovementSet::GetSpeedMultiplier()
+{
+    static auto SpeedMultiplier = GetClass()->FindPropertyByName(FName(TEXT("SpeedMultiplier")));
+
+    return *SpeedMultiplier->ContainerPtrToValuePtr<FFortGameplayAttributeData>(this);
+}

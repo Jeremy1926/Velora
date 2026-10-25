@@ -511,6 +511,18 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
             MovementSet->GetFlySpeed().SetCurrentValue(FlySpeed);
         }
     }
+    else if (FParse::Command(&Stream, TEXT("Speed")))
+    {
+        auto FortPawn = Cast<AFortPawn>(GetPawn());
+
+        if (auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr)
+        {
+            auto SpeedMultiplier = (float)_wtof(Stream);
+
+            MovementSet->GetSpeedMultiplier().SetBaseValue(SpeedMultiplier);
+            MovementSet->GetSpeedMultiplier().SetCurrentValue(SpeedMultiplier);
+        }
+    }
 }
 
 void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)
