@@ -37,7 +37,7 @@ static auto bOutputDevicesRegistered = []
     LogFile->IncludeCategory(FName(TEXT("LogVelora")));
     GLog->AddOutputDevice(LogFile);
 
-    if (Config::bConsole)
+    if (Config::bConsole && !Config::bGUI)
     {
         auto LogConsole = new FWindowsConsoleOutputDevice();
         LogConsole->ExcludeCategory(FName(TEXT("LogVelora")));
