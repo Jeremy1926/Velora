@@ -1965,6 +1965,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Modifiers</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator_GameModeBase.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Modifiers</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\SpecialRelevancyNode.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\Modifiers</Filter>
     </ClInclude>
@@ -2992,6 +2995,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\FortAthenaMutator_GameModeBase.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Modifiers</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\SpecialRelevancyNode.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\Modifiers</Filter>

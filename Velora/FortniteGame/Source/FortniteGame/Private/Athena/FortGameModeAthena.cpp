@@ -12,6 +12,7 @@
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/AI/AthenaAISystem.h"
 #include "Athena/AI/AthenaAIPerceptionManager.h"
+#include "Athena/Modifiers/FortAthenaMutator_GameModeBase.h"
 #include "Athena/FortServerBotManagerAthena.h"
 #include "Online/FortGameSession.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
@@ -234,7 +235,14 @@ bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
             auto VolumeManager = GameStateAthena->GetVolumeManager();
 
             if (GameStateAthena->AreAllAdditionalPlaylistLevelsLoaded() && GameStateAthena->AreAllAdditionalPlaylistLevelsVisible() && (!VolumeManager || !VolumeManager->IsInSpawningStartup()))
+            {
+                auto GameModeBaseMutator = AFortAthenaMutator_GameModeBase::StaticClass() ? Cast<AFortAthenaMutator_GameModeBase>(GameStateAthena->GetMutatorByClass_Implementation(this, AFortAthenaMutator_GameModeBase::StaticClass())) : nullptr;
+
+                if (GameModeBaseMutator && GameModeBaseMutator->GetAutomaticallyFinishInitialization())
+                    GameModeBaseMutator->FinishMutatorInitializationAndUnpauseWarmup();
+
                 return CountReadyPlayers() >= GetWarmupRequiredPlayerCount();
+            }
         }
     }
 

@@ -574,6 +574,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\FortAthenaMutator_GameModeBase.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Modifiers\SpecialRelevancyNode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationChoiceWithPreviewNode.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Conversation\FortConversationContextLibrary.h" />
@@ -951,6 +952,7 @@
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\FortniteConversation\Source\FortniteConversationRuntime\Private\FortPlayerConversationComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotAffiliation.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AI\FortAthenaAISpawnerDataComponent_AIBotConversation.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\FortAthenaMutator_GameModeBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Modifiers\SpecialRelevancyNode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationChoiceWithPreviewNode.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Conversation\FortConversationContextLibrary.cpp" />
