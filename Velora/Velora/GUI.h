@@ -10,6 +10,8 @@ class FGUI
 public:
     static void Run();
 
+    static void SetTitle(const TCHAR* InTitle);
+
 private:
     static LRESULT WINAPI WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam);
 
@@ -31,4 +33,7 @@ private:
     static ID3D11RenderTargetView* RenderTargetView;
     static UINT ResizeWidth;
     static UINT ResizeHeight;
+    static SRWLOCK TitleLock;
+    static TCHAR Title[128];
+    static bool bTitleChanged;
 };

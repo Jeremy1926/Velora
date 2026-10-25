@@ -34,6 +34,7 @@
 #include "Analytics/FortAnalytics.h"
 #include "CoreGlobals.h"
 #include "Config.h"
+#include "GUI.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -241,6 +242,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         TCHAR Title[128];
         swprintf_s(Title, TEXT("Velora (%s): %s"), *Build, State);
         SetConsoleTitleW(Title);
+        FGUI::SetTitle(Title);
 
         LastState = State;
     }

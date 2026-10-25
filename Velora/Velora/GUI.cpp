@@ -7,7 +7,6 @@
 #include "backends/imgui_impl_win32.h"
 #include "ThirdParty/Ubuntu/Ubuntu.h"
 #include "Logging/LogMacros.h"
-#include "Misc/EngineVersion.h"
 #include "Scanner.h"
 
 #pragma comment(lib, "d3d11")
@@ -22,6 +21,9 @@ IDXGISwapChain* FGUI::SwapChain = nullptr;
 ID3D11RenderTargetView* FGUI::RenderTargetView = nullptr;
 UINT FGUI::ResizeWidth = 0;
 UINT FGUI::ResizeHeight = 0;
+SRWLOCK FGUI::TitleLock = SRWLOCK_INIT;
+TCHAR FGUI::Title[128] = TEXT("Velora");
+bool FGUI::bTitleChanged = true;
 
 void FGUI::Run()
 {
@@ -29,21 +31,10 @@ void FGUI::Run()
 
     const float Scale = ImGui_ImplWin32_GetDpiScaleForMonitor(MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
-    auto& Version = FEngineVersion::Current();
-    auto Branch = Version.GetBranch();
-    auto Release = wcsstr(*Branch, TEXT("Release-"));
-
-    TCHAR Title[64];
-
-    if (Release && iswdigit(Release[8]))
-        swprintf_s(Title, TEXT("Velora (FN %s)"), Release + 8);
-    else
-        swprintf_s(Title, TEXT("Velora (CL %u)"), Version.GetChangelist());
-
     WNDCLASSEXW WindowClass = { sizeof(WindowClass), CS_CLASSDC, &FGUI::WindowProc, 0, 0, (HINSTANCE)&__ImageBase, nullptr, nullptr, nullptr, nullptr, TEXT("Velora"), nullptr };
     RegisterClassExW(&WindowClass);
 
-    auto Window = CreateWindowExW(0, WindowClass.lpszClassName, Title, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, (int)(600 * Scale), (int)(450 * Scale), nullptr, nullptr, WindowClass.hInstance, nullptr);
+    auto Window = CreateWindowExW(0, WindowClass.lpszClassName, TEXT("Velora"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, (int)(600 * Scale), (int)(450 * Scale), nullptr, nullptr, WindowClass.hInstance, nullptr);
 
     BOOL bDarkMode = TRUE;
     DwmSetWindowAttribute(Window, DWMWA_USE_IMMERSIVE_DARK_MODE, &bDarkMode, sizeof(bDarkMode));
@@ -91,6 +82,16 @@ void FGUI::Run()
         if (bQuit)
             break;
 
+        AcquireSRWLockExclusive(&TitleLock);
+
+        if (bTitleChanged)
+        {
+            SetWindowTextW(Window, Title);
+            bTitleChanged = false;
+        }
+
+        ReleaseSRWLockExclusive(&TitleLock);
+
         if (bSwapChainOccluded && SwapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED)
         {
             Sleep(10);
@@ -129,6 +130,16 @@ void FGUI::Run()
     DestroyDevice();
     DestroyWindow(Window);
     UnregisterClassW(WindowClass.lpszClassName, WindowClass.hInstance);
+}
+
+void FGUI::SetTitle(const TCHAR* InTitle)
+{
+    AcquireSRWLockExclusive(&TitleLock);
+
+    wcscpy_s(Title, InTitle);
+    bTitleChanged = true;
+
+    ReleaseSRWLockExclusive(&TitleLock);
 }
 
 LRESULT WINAPI FGUI::WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LParam)
