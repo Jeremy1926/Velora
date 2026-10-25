@@ -214,7 +214,6 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 {
                     PlayerController->SetInfiniteAmmo(Config::bInfiniteAmmo);
                     PlayerController->SetBuildFree(Config::bInfiniteMaterials);
-                    PlayerController->AddCheats(true);
                 }
             }
         }

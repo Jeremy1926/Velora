@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GameFramework/Controller.h"
-#include "Containers/UnrealString.h"
 
 class UCheatManager;
 
@@ -21,8 +20,4 @@ public:
     UClass* GetCheatClass() const;
 
     void AddCheats(bool bForce = false);
-
-    FString ConsoleCommand(const FString& Command, bool bWriteToLog = true);
-
-    void ClientMessage(const FString& S, FName Type = NAME_None, float MsgLifeTime = 0.f);
 };

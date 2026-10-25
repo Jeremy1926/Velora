@@ -64,35 +64,4 @@ void APlayerController::AddCheats(bool bForce)
         return;
 
     SetCheatManager(NewObject<UCheatManager>(this, GetCheatClass()));
-    GetCheatManager()->InitCheatManager();
-}
-
-FString APlayerController::ConsoleCommand(const FString& Command, bool bWriteToLog)
-{
-    static auto ConsoleCommand = Anchor::VirtualFunction<FString* (*)(APlayerController*, FString*, const FString&, bool)>(TEXT("APlayerController::ConsoleCommand"))
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCheatAll"))
-        .Find("call [rax+*]", 2)
-        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
-        .Find("mov r9b, 0x1")
-        .Find("call [*+0x*]")
-        .Or()
-        .FieldVirtual(TEXT("/Script/Engine.Default__PlayerController"), "push rbx; sub rsp, 0x20; mov rcx, [rcx+%x]; xor eax, eax; mov rbx, rdx; test rcx, rcx", GetClass()->FindPropertyByName(FName(TEXT("Player"))))
-        .Get();
-
-    FString Result;
-
-    if (ConsoleCommand)
-        ConsoleCommand(this, &Result, Command, bWriteToLog);
-
-    return Result;
-}
-
-void APlayerController::ClientMessage(const FString& S, FName Type, float MsgLifeTime)
-{
-    static auto ClientMessage = Anchor::Function<void (*)(APlayerController*, const FString&, FName, float)>(TEXT("APlayerController::ClientMessage"))
-        .Event(TEXT("ClientMessage"))
-        .Get();
-
-    if (ClientMessage)
-        ClientMessage(this, S, Type, MsgLifeTime);
 }

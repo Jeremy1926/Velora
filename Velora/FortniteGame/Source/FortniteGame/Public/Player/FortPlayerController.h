@@ -168,6 +168,8 @@ public:
 
     void ServerCheat_Implementation(const FString& Msg);
 
+    void Cheat(const FString& Msg);
+
     AActor* SpawnToyInstance(UClass* ToyClass, const FTransform& SpawnPosition);
 
     void execSpawnToyInstance(FFrame& Stack, void* const Z_Param__Result);
@@ -197,4 +199,10 @@ public:
     void SetInfiniteAmmo(bool bInInfiniteAmmo);
 
     void SetBuildFree(bool bInBuildFree);
+};
+
+inline const TCHAR* const GCheatCommands[][2] =
+{
+    { TEXT("Help"), TEXT("Lists every cheat command with what it does") },
+    { TEXT("StartAircraft"), TEXT("Starts the battle bus right now, same as Start Bus in the GUI") },
 };

@@ -374,6 +374,8 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Player.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />
+    <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Logging</Filter>
     </ClCompile>

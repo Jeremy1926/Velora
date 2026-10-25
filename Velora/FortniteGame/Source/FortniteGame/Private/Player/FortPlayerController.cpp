@@ -41,6 +41,8 @@
 #include "UObject/Stack.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "Misc/Parse.h"
+#include "GUI.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -466,12 +468,12 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 
 void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
 {
-    if (GetCheatManager())
-    {
-        UE_LOG(LogFort, Log, TEXT("ServerCheat (%s): [%s]"), *GetName(), *Msg);
+    UE_LOG(LogFort, Log, TEXT("ServerCheat (%s): [%s]"), *GetName(), *Msg);
 
-        ClientMessage(ConsoleCommand(Msg, true));
-    }
+    auto Stream = *Msg;
+
+    if (FParse::Command(&Stream, TEXT("StartAircraft")))
+        FGUI::bStartBus = true;
 }
 
 void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)
