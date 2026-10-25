@@ -191,4 +191,8 @@ public:
     void SetAirSpawnControlRotation(const FRotator& InAirSpawnControlRotation);
 
     AFortInventory* GetViewTargetInventory() const;
+
+    void SetInfiniteAmmo(bool bInInfiniteAmmo);
+
+    void SetBuildFree(bool bInBuildFree);
 };

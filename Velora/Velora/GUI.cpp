@@ -7,6 +7,7 @@
 #include "backends/imgui_impl_win32.h"
 #include "ThirdParty/Ubuntu/Ubuntu.h"
 #include "Logging/LogMacros.h"
+#include "Config.h"
 #include "Scanner.h"
 
 #pragma comment(lib, "d3d11")
@@ -313,6 +314,9 @@ void FGUI::Draw()
         {
             if (ImGui::BeginTabItem("Main"))
             {
+                ImGui::Checkbox("Infinite Ammo", &Config::bInfiniteAmmo);
+                ImGui::Checkbox("Infinite Materials", &Config::bInfiniteMaterials);
+
                 ImGui::EndTabItem();
             }
 

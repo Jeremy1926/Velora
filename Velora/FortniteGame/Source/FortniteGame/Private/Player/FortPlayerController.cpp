@@ -1799,3 +1799,19 @@ AFortInventory* AFortPlayerController::GetViewTargetInventory() const
 
     return *ViewTargetInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
 }
+
+void AFortPlayerController::SetInfiniteAmmo(bool bInInfiniteAmmo)
+{
+    static auto bInfiniteAmmo = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bInfiniteAmmo")));
+
+    if (bInfiniteAmmo)
+        bInfiniteAmmo->SetPropertyValue_InContainer(this, bInInfiniteAmmo);
+}
+
+void AFortPlayerController::SetBuildFree(bool bInBuildFree)
+{
+    static auto bBuildFree = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bBuildFree")));
+
+    if (bBuildFree)
+        bBuildFree->SetPropertyValue_InContainer(this, bInBuildFree);
+}

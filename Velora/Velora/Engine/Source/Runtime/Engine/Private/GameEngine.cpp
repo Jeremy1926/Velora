@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
+#include "Player/FortPlayerController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortServerBotManagerAthena.h"
@@ -191,6 +192,18 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         {
             if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
                 LivingWorldManager->TickComponent(DeltaSeconds);
+        }
+
+        if (auto GameStateBase = World->GetGameState())
+        {
+            for (auto PlayerState : GameStateBase->GetPlayerArray())
+            {
+                if (auto PlayerController = PlayerState ? Cast<AFortPlayerController>(PlayerState->GetOwner()) : nullptr)
+                {
+                    PlayerController->SetInfiniteAmmo(Config::bInfiniteAmmo);
+                    PlayerController->SetBuildFree(Config::bInfiniteMaterials);
+                }
+            }
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))

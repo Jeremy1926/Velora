@@ -11,4 +11,6 @@ namespace Config
     constexpr bool bRestartAfterMatch = true;
     constexpr bool bConsole = true;
     constexpr bool bGUI = true;
+    inline bool bInfiniteAmmo = false;
+    inline bool bInfiniteMaterials = false;
 }
