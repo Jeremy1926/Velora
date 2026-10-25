@@ -278,6 +278,8 @@ void FGUI::SetupStyle(float Scale)
     Colors[ImGuiCol_ScrollbarGrabHovered] = ImColor(61, 61, 61);
     Colors[ImGuiCol_ScrollbarGrabActive] = ImColor(71, 71, 71);
     Colors[ImGuiCol_CheckMark] = ImColor(232, 232, 232);
+    Colors[ImGuiCol_CheckboxSelectedBg] = ImColor(38, 38, 38);
+    Colors[ImGuiCol_InputTextCursor] = ImColor(220, 220, 220);
     Colors[ImGuiCol_SliderGrab] = ImColor(92, 92, 92);
     Colors[ImGuiCol_SliderGrabActive] = ImColor(112, 112, 112);
     Colors[ImGuiCol_Button] = ImColor(51, 51, 51);
