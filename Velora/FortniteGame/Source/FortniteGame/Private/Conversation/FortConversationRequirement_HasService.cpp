@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortConversationRequirement_HasService.h"
 #include "Conversation/FortConversationContextLibrary.h"
-#include "Conversation/FortNPCConversationParticipantComponent.h"
+#include "Conversation/FortNonPlayerConversationParticipantComponent.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -18,9 +18,9 @@ EConversationRequirementResult UFortConversationRequirement_HasService::IsRequir
 {
     static auto ServiceTag = StaticClass()->FindPropertyByName(FName(TEXT("ServiceTag")));
 
-    auto NPCConversationParticipantComponent = Cast<UFortNPCConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context));
+    auto NonPlayerConversationParticipantComponent = Cast<UFortNonPlayerConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context));
 
-    if (NPCConversationParticipantComponent && NPCConversationParticipantComponent->GetSupportedServices().HasTag(ServiceTag->GetPropertyValue_InContainer<FGameplayTag>(this)))
+    if (NonPlayerConversationParticipantComponent && NonPlayerConversationParticipantComponent->HasServiceData() && NonPlayerConversationParticipantComponent->GetSupportedServices().HasTag(ServiceTag->GetPropertyValue_InContainer<FGameplayTag>(this)))
         return EConversationRequirementResult::Passed;
 
     return EConversationRequirementResult::FailedAndHidden;

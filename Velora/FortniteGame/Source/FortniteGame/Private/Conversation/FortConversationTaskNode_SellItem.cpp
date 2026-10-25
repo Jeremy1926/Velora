@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Conversation/FortConversationTaskNode_SellItem.h"
 #include "Conversation/FortConversationContextLibrary.h"
-#include "Conversation/FortNPCConversationParticipantComponent.h"
+#include "Conversation/FortNonPlayerConversationParticipantComponent.h"
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortLootPackage.h"
@@ -50,7 +50,7 @@ FConversationSellTaskMemory* UFortConversationTaskNode_SellItem::GetSellingData(
 {
     struct FSellingDataEntry
     {
-        TWeakObjectPtr<UFortNPCConversationParticipantComponent> NPCComponent;
+        TWeakObjectPtr<UFortNonPlayerConversationParticipantComponent> NPCComponent;
         int32 SellSlot;
         FConversationSellTaskMemory SellingData;
     };
@@ -61,7 +61,7 @@ FConversationSellTaskMemory* UFortConversationTaskNode_SellItem::GetSellingData(
     static auto LootLevel = NPCSaleInventoryRow->FindPropertyByName(FName(TEXT("LootLevel")));
     static auto LootTags = NPCSaleInventoryRow->FindPropertyByName(FName(TEXT("LootTags")));
 
-    auto NPCComponent = Cast<UFortNPCConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context));
+    auto NPCComponent = Cast<UFortNonPlayerConversationParticipantComponent>(UFortConversationContextLibrary::GetParticipantComponentNPC(Context));
 
     if (!NPCComponent)
         return nullptr;

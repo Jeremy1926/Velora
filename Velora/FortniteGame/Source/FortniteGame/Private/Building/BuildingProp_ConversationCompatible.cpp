@@ -46,8 +46,13 @@ bool ABuildingProp_ConversationCompatible::ServerOnAttemptInteract(const FIntera
 
     auto Actor = (ABuildingProp_ConversationCompatible*)((uint8*)this - PointerOffset);
 
-    if (auto PlayerController = Cast<AFortPlayerController>(InteractType.GetController()))
-        UConversationLibrary::StartConversation(ParticipantComponent->GetConversationEntryTag(), PlayerController, ParticipantComponent->GetInteractorParticipantTag(), Actor, ParticipantComponent->GetSelfParticipantTag());
+    auto PlayerController = Cast<AFortPlayerController>(InteractType.GetController());
+
+    if (!PlayerController)
+        return bResult;
+
+    ParticipantComponent->InitializeServices();
+    UConversationLibrary::StartConversation(ParticipantComponent->GetConversationEntryTag(), PlayerController, ParticipantComponent->GetInteractorParticipantTag(), Actor, ParticipantComponent->GetSelfParticipantTag());
 
     return bResult;
 }

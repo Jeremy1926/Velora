@@ -42,8 +42,11 @@ bool ABuildingGameplayActorConversationCompatible::ServerOnAttemptInteract(const
     auto PlayerController = Cast<AFortPlayerController>(InteractType.GetController());
     auto ParticipantComponent = PlayerController ? Actor->FindComponentByClass<UFortNonPlayerConversationParticipantComponent>() : nullptr;
 
-    if (ParticipantComponent && CanStartConversationWith(ParticipantComponent, PlayerController))
-        UConversationLibrary::StartConversation(ParticipantComponent->GetConversationEntryTag(), PlayerController, ParticipantComponent->GetInteractorParticipantTag(), Actor, ParticipantComponent->GetSelfParticipantTag());
+    if (!ParticipantComponent || !CanStartConversationWith(ParticipantComponent, PlayerController))
+        return bResult;
+
+    ParticipantComponent->InitializeServices();
+    UConversationLibrary::StartConversation(ParticipantComponent->GetConversationEntryTag(), PlayerController, ParticipantComponent->GetInteractorParticipantTag(), Actor, ParticipantComponent->GetSelfParticipantTag());
 
     return bResult;
 }
