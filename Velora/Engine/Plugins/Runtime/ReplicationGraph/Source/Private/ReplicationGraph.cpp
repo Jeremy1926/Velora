@@ -2905,16 +2905,6 @@ void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicatio
         {
             FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
 
-            static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
-
-            if (DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
-            {
-                FGlobalActorReplicationInfo& DiagGlobalData = GetGlobalActorReplicationInfoMap().Get(Actor);
-
-                if (DiagGlobalData.GetForceNetUpdateFrame() > ConnectionData.LastRepFrameNum)
-                    UE_LOG(LogVelora, Display, TEXT("diag rep pending %s frame %u force %u last %u next %u period %u dormant %d wantsdormant %d channel %d"), *GetNameSafe(Actor), FrameNum, DiagGlobalData.GetForceNetUpdateFrame(), ConnectionData.LastRepFrameNum, ConnectionData.NextReplicationFrameNum, (uint32)ConnectionData.ReplicationPeriodFrame, (int32)ConnectionData.bDormantOnConnection, (int32)DiagGlobalData.GetWantsToBeDormant(), ConnectionData.Channel ? 1 : 0);
-            }
-
             if (ConnectionData.bDormantOnConnection)
                 continue;
 
@@ -3008,7 +2998,13 @@ void UReplicationGraph::ReplicateActorsForConnection(UNetConnection* NetConnecti
 
         FGlobalActorReplicationInfo& GlobalActorInfo = *RepItem.GlobalData;
 
-        ReplicateSingleActor(Actor, ActorInfo, GlobalActorInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
+        const uint32 DiagLastRepFrameNum = ActorInfo.LastRepFrameNum;
+        const int64 DiagBits = ReplicateSingleActor(Actor, ActorInfo, GlobalActorInfo, ConnectionActorInfoMap, *ConnectionManager, FrameNum);
+
+        static auto DiagBuildingActorClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));
+
+        if (DiagBits > 0 && DiagLastRepFrameNum > 0 && DiagBuildingActorClass && Actor->IsA(DiagBuildingActorClass))
+            UE_LOG(LogVelora, Display, TEXT("diag rep sent %s frame %u bits %lld prev %u period %u next %u force %u wantsdormant %d"), *GetNameSafe(Actor), FrameNum, DiagBits, DiagLastRepFrameNum, (uint32)ActorInfo.ReplicationPeriodFrame, ActorInfo.NextReplicationFrameNum, GlobalActorInfo.GetForceNetUpdateFrame(), (int32)GlobalActorInfo.GetWantsToBeDormant());
 
         if (!NetConnection->IsNetReady(false))
         {
