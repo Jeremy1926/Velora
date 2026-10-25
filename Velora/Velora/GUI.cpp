@@ -314,7 +314,7 @@ void FGUI::Draw()
         {
             if (ImGui::BeginTabItem("Main"))
             {
-                ImGui::Spacing();
+                ImGui::Dummy(ImVec2(0.f, ImGui::GetStyle().ItemSpacing.y * 2.f));
 
                 ImGui::Checkbox("Infinite Ammo", &Config::bInfiniteAmmo);
                 ImGui::Checkbox("Infinite Materials", &Config::bInfiniteMaterials);
