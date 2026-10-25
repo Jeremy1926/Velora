@@ -3,6 +3,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "Player/FortPlayerController.h"
