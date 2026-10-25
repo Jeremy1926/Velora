@@ -35,22 +35,6 @@ void AFortAthenaLivingWorldVolume::EnablePointProvider()
     auto WaterSubsystem = UWaterSubsystem::GetWaterSubsystem(GetWorld());
     const float WaterLevelIndex = WaterSubsystem ? WaterSubsystem->GetOceanFloodHeight() / 384.0f : -1.0f;
 
-    UE_LOG(LogVelora, Display, TEXT("diag lager volume %s enable water %f min %f max %f query %p root %p manager %p"), *GetNameSafe(this), WaterLevelIndex, GetWaterLevelIndexMin().GetValueAtLevel(0.0f), GetWaterLevelIndexMax().GetValueAtLevel(0.0f), GetEnvironmentQuery(), GetRootComponent(), GetCachedLivingWorldManager() ? *GetCachedLivingWorldManager() : nullptr);
-
-    static auto DiagSceneClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.SceneComponent"));
-    UE_LOG(LogVelora, Display, TEXT("diag lager vol %s cls %s scene %p init %d outer %s"), *GetNameSafe(this), *GetNameSafe(GetClass()), DiagSceneClass ? FindComponentByClass(DiagSceneClass) : nullptr, (int32)IsActorInitialized(), *GetNameSafe(GetOuter()));
-
-    static int32 DiagSceneCount = 0;
-    static auto DiagBrushProperty = GetClass()->FindPropertyByName(FName(TEXT("BrushComponent")));
-    auto DiagScene = DiagSceneClass ? (USceneComponent*)FindComponentByClass(DiagSceneClass) : nullptr;
-
-    if (DiagScene && DiagSceneCount++ < 6)
-    {
-        const FVector DiagLocation = DiagScene->GetComponentLocation();
-        const FBoxSphereBounds DiagBounds = DiagScene->GetBounds();
-        UE_LOG(LogVelora, Display, TEXT("diag lager scene %s %s loc %.0f %.0f %.0f r %.0f brush %p"), *GetNameSafe(DiagScene), *GetNameSafe(DiagScene->GetClass()), DiagLocation.X, DiagLocation.Y, DiagLocation.Z, DiagBounds.SphereRadius, DiagBrushProperty ? *DiagBrushProperty->ContainerPtrToValuePtr<UObject*>(this) : nullptr);
-    }
-
     if (WaterLevelIndex != -1.0f)
     {
         const float WaterLevelIndexMin = GetWaterLevelIndexMin().GetValueAtLevel(0.0f);
@@ -156,8 +140,6 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
     }
 
     auto bIsEnabled = GetbIsEnabled();
-
-    UE_LOG(LogVelora, Display, TEXT("diag lager volume %s query finished valid %d points %d enabled %d"), *GetNameSafe(this), Result.IsValid() ? 1 : 0, GetPoints().Num(), bIsEnabled ? (int32)*bIsEnabled : -1);
 
     if (GetPoints().Num() > 0 && GetWorld() && (!bIsEnabled || *bIsEnabled))
         UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
