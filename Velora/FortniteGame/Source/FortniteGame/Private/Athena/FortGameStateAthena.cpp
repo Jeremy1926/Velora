@@ -547,6 +547,14 @@ void AFortGameStateAthena::SetWarmupCountdownEndTime(float InWarmupCountdownEndT
         *WarmupCountdownEndTime->ContainerPtrToValuePtr<float>(this) = InWarmupCountdownEndTime;
 }
 
+void AFortGameStateAthena::SetSafeZonesStartTime(float InSafeZonesStartTime)
+{
+    static auto SafeZonesStartTime = GetClass()->FindPropertyByName(FName(TEXT("SafeZonesStartTime")));
+
+    if (SafeZonesStartTime)
+        *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this) = InSafeZonesStartTime;
+}
+
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 {
     static auto CurrentPlaylistData = GetClass()->FindPropertyByName(FName(TEXT("CurrentPlaylistData")));

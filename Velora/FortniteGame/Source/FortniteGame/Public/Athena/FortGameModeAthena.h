@@ -104,6 +104,8 @@ public:
 
     void StartNewSafeZonePhase(int32 NewSafeZonePhase);
 
+    bool StartSafeZonesPhase(bool bForce);
+
     void SetSafeZoneIndicatorShrinkTimes();
 
     int32 GetSafeZonePhase() const;

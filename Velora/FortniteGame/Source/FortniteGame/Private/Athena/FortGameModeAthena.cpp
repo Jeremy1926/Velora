@@ -860,6 +860,16 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
     FutureReplicator->ForceNetUpdate();
 }
 
+bool AFortGameModeAthena::StartSafeZonesPhase(bool bForce)
+{
+    static auto StartSafeZonesPhase = Anchor::Function<bool (*)(AFortGameModeAthena*, bool)>(TEXT("AFortGameModeAthena::StartSafeZonesPhase"))
+        .String(TEXT("AFortGameModeAthena::StartSafeZonesPhase: Skipping SafeZone*"))
+        .Start()
+        .Get();
+
+    return StartSafeZonesPhase(this, bForce);
+}
+
 int32 AFortGameModeAthena::GetSafeZonePhase() const
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));

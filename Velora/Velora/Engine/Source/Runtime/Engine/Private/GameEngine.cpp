@@ -221,19 +221,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             auto MapInfo = Config::bLategame && GameMode && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
             auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
-            auto SafeZoneIndicator = SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
-
-            if (SafeZoneIndicator && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameMode->GetSafeZonePhase() < 5)
-            {
-                SafeZoneIndicator->SetNextCenter(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 4 * TGameLayout<FVector>::Size()));
-                SafeZoneIndicator->SetRadius(SafeZoneRadius->GetValueAtLevel(4.f));
-                GameMode->SetSafeZonePhase(4);
-                GameMode->StartNewSafeZonePhase(-1);
-            }
 
             if (SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft)
             {
                 auto Center = TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 5 * TGameLayout<FVector>::Size());
+                auto bAllJumped = true;
 
                 for (auto PlayerState : GameState->GetPlayerArray())
                 {
@@ -250,7 +242,27 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
                         Pawn->TeleportTo(FVector(Center.X + Offset.X, Center.Y + Offset.Y, Pawn->GetActorLocation().Z), Pawn->GetActorRotation(), false, true);
                     }
+                    else
+                    {
+                        bAllJumped = false;
+                    }
                 }
+
+                if (bAllJumped)
+                {
+                    GameState->SetSafeZonesStartTime(GameState->GetServerWorldTimeSeconds());
+                    GameMode->StartSafeZonesPhase(false);
+                }
+            }
+
+            auto SafeZoneIndicator = SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
+
+            if (SafeZoneIndicator && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameMode->GetSafeZonePhase() < 5)
+            {
+                SafeZoneIndicator->SetNextCenter(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 4 * TGameLayout<FVector>::Size()));
+                SafeZoneIndicator->SetRadius(SafeZoneRadius->GetValueAtLevel(4.f));
+                GameMode->SetSafeZonePhase(4);
+                GameMode->StartNewSafeZonePhase(-1);
             }
 
             switch (GameState->GetGamePhase())

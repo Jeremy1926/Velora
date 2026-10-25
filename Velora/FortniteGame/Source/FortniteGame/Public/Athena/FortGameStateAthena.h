@@ -125,6 +125,8 @@ public:
 
     void SetWarmupCountdownEndTime(float InWarmupCountdownEndTime);
 
+    void SetSafeZonesStartTime(float InSafeZonesStartTime);
+
     void OnRep_CurrentPlaylistData();
 
     void OnRep_CurrentPlaylistInfo();
