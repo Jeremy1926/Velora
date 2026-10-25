@@ -106,6 +106,8 @@ public:
 
     bool StartSafeZonesPhase(bool bForce);
 
+    void StartAircraftPhase(bool bSkippedWarmup);
+
     void SetSafeZoneIndicatorShrinkTimes();
 
     int32 GetSafeZonePhase() const;

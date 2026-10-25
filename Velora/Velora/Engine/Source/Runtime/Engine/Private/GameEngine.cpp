@@ -214,14 +214,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 {
                     PlayerController->SetInfiniteAmmo(Config::bInfiniteAmmo);
                     PlayerController->SetBuildFree(Config::bInfiniteMaterials);
+                    PlayerController->AddCheats(true);
                 }
             }
         }
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
-            if (FGUI::bStartBus && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
-                GameState->SetWarmupCountdownEndTime(GameState->GetServerWorldTimeSeconds());
+            if (FGUI::bStartBus && GameMode && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
+                GameMode->StartAircraftPhase(false);
 
             FGUI::bStartBus = false;
 

@@ -253,6 +253,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Pawn.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Controller.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerController.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\CheatManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\WorldSettings.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameNetworkManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\SceneComponent.h" />
@@ -372,6 +373,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortAbilitySystemComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRegisteredPlayerInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortRuntimeOptions.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortCheatManager.h" />
     <ClInclude Include="..\Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Public\UpdateManager.h" />
     <ClInclude Include="..\Engine\Plugins\Runtime\EntityActor\Source\EntityActor\Public\SimObject.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Items\FortAccountItemDefinition.h" />
@@ -684,6 +686,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\ActorComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\PlayerController.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\CheatManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\WorldSettings.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\GameNetworkManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Level.cpp" />
@@ -776,6 +779,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortGameplayAbility.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRegisteredPlayerInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortRuntimeOptions.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortCheatManager.cpp" />
     <ClCompile Include="..\Engine\Plugins\Online\OnlineFramework\Source\Hotfix\Private\UpdateManager.cpp" />
     <ClCompile Include="..\Engine\Plugins\Runtime\EntityActor\Source\EntityActor\Private\SimObject.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Cosmetics\AthenaDanceItemDefinition.cpp" />

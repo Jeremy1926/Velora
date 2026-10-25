@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <cwctype>
 #include "Misc/Parse.h"
 #include "Scanner.h"
 
@@ -25,4 +26,24 @@ bool FParse::Value(const TCHAR* Stream, const TCHAR* Match, int32& Value)
         .Get();
 
     return ParseValue(Stream, Match, Value);
+}
+
+bool FParse::Command(const TCHAR** Stream, const TCHAR* Match, bool bParseMightTriggerExecution)
+{
+    while (**Stream == TEXT(' ') || **Stream == 9)
+        (*Stream)++;
+
+    const int32 MatchLen = (int32)wcslen(Match);
+
+    if (_wcsnicmp(*Stream, Match, MatchLen) == 0 && !iswalnum((*Stream)[MatchLen]))
+    {
+        *Stream += MatchLen;
+
+        while (**Stream == TEXT(' ') || **Stream == 9)
+            (*Stream)++;
+
+        return true;
+    }
+
+    return false;
 }

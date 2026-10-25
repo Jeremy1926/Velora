@@ -119,6 +119,12 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .LogSlot(TEXT("AFortPlayerController::ServerRemoveInventoryStateValue_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
+    static auto ServerCheat = THook(TEXT("AFortPlayerController::ServerCheat_Implementation"), &AFortPlayerController::ServerCheat_Implementation)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCheat"))
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerController::ServerCheat_Implementation"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
+
     static auto bGameServerPlayEmoteItem = Anchor::Exists()
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerPlayEmoteItem"))
         .Find("call [rax+*]", 2)
@@ -456,6 +462,12 @@ void AFortPlayerController::ServerRemoveInventoryStateValue_Implementation(FGuid
 
         return;
     }
+}
+
+void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
+{
+    if (GetCheatManager())
+        ClientMessage(ConsoleCommand(Msg, true));
 }
 
 void AFortPlayerController::ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset)

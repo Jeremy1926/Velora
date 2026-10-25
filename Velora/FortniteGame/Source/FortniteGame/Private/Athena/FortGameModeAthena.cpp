@@ -878,6 +878,16 @@ bool AFortGameModeAthena::StartSafeZonesPhase(bool bForce)
     return StartSafeZonesPhase(this, bForce);
 }
 
+void AFortGameModeAthena::StartAircraftPhase(bool bSkippedWarmup)
+{
+    static auto StartAircraftPhase = Anchor::Function<void (*)(AFortGameModeAthena*, bool)>(TEXT("AFortGameModeAthena::StartAircraftPhase"))
+        .String(TEXT("AFortGameModeAthena::StartAircraftPhase: Initiating aircraft phase*"))
+        .Start()
+        .Get();
+
+    StartAircraftPhase(this, bSkippedWarmup);
+}
+
 int32 AFortGameModeAthena::GetSafeZonePhase() const
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));

@@ -166,6 +166,8 @@ public:
 
     void ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset);
 
+    void ServerCheat_Implementation(const FString& Msg);
+
     AActor* SpawnToyInstance(UClass* ToyClass, const FTransform& SpawnPosition);
 
     void execSpawnToyInstance(FFrame& Stack, void* const Z_Param__Result);

@@ -123,8 +123,6 @@ public:
 
     void SetCurrentPlaylistName(FName PlaylistName);
 
-    void SetWarmupCountdownEndTime(float InWarmupCountdownEndTime);
-
     void SetSafeZonesStartTime(float InSafeZonesStartTime);
 
     void OnRep_CurrentPlaylistData();
