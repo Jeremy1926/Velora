@@ -218,6 +218,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             FGUI::bStartBus = false;
 
+            if (Config::bLategame && GameMode && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones && GameMode->GetSafeZoneIndicator() && GameMode->GetSafeZonePhase() < 5)
+            {
+                GameMode->SetSafeZonePhase(4);
+                GameMode->StartNewSafeZonePhase(-1);
+            }
+
             auto MapInfo = Config::bLategame && GameMode && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft ? GameState->GetMapInfo() : nullptr;
             auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
 

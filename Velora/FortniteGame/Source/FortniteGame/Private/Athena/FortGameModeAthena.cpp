@@ -46,7 +46,6 @@
 #include "Logging/LogMacros.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
-#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -831,9 +830,6 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
         .Start()
         .Optional()
         .Inline());
-
-    if (Config::bLategame && !GetSafeZonePhase())
-        SetSafeZonePhase(4);
 
     Original(NewSafeZonePhase);
 
