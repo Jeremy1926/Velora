@@ -285,6 +285,18 @@ UFortMovementSet* AFortPawn::GetMovementSet() const
     return *MovementSet->ContainerPtrToValuePtr<UFortMovementSet*>(this);
 }
 
+void AFortPawn::SetCustomTimeDilation(float InCustomTimeDilation)
+{
+    static auto SetCustomTimeDilation = Anchor::Function<void (*)(AFortPawn*, float)>(TEXT("AFortPawn::SetCustomTimeDilation"))
+        .Body(TEXT("/Script/FortniteGame.FortMovementSet:OnRep_SpeedMultiplier"))
+        .Find("movaps xmm1, xmm0; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SetCustomTimeDilation(this, InCustomTimeDilation);
+}
+
 void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent)
 {
     static auto LaunchCharacterJump = Anchor::Optional<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))

@@ -2,12 +2,20 @@
 #include "Abilities/FortMovementSet.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 
-FFortGameplayAttributeData& UFortMovementSet::GetFlySpeed()
+UClass* UFortMovementSet::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMovementSet"));
+
+    return Class;
+}
+
+FFortGameplayAttributeData* UFortMovementSet::GetFlySpeed()
 {
     static auto FlySpeed = GetClass()->FindPropertyByName(FName(TEXT("FlySpeed")));
 
-    return *FlySpeed->ContainerPtrToValuePtr<FFortGameplayAttributeData>(this);
+    return FlySpeed ? FlySpeed->ContainerPtrToValuePtr<FFortGameplayAttributeData>(this) : nullptr;
 }
 
 FFortGameplayAttributeData& UFortMovementSet::GetSpeedMultiplier()

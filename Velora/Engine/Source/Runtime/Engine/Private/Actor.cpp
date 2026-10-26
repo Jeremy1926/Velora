@@ -100,6 +100,13 @@ bool AActor::CanBeDamaged() const
     return bCanBeDamaged->GetPropertyValue_InContainer(this);
 }
 
+void AActor::SetCanBeDamaged(bool bInCanBeDamaged)
+{
+    static auto bCanBeDamaged = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bCanBeDamaged")));
+
+    bCanBeDamaged->SetPropertyValue_InContainer(this, bInCanBeDamaged);
+}
+
 FVector AActor::GetActorForwardVector() const
 {
     return GetActorRotation().Vector();

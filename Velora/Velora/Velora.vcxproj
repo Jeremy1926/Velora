@@ -389,6 +389,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIFunctionLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortHealthSet.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortMovementSet.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Movement\FortMovementComp_Character.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortAIPerceptionSystem.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortFeedbackManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameState.h" />
@@ -829,6 +830,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortAbilitySystemComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortHealthSet.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Movement\FortMovementComp_Character.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortAIPerceptionSystem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortFeedbackManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameState.cpp" />

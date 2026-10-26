@@ -479,7 +479,12 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
     else if (FParse::Command(&Stream, TEXT("God")))
     {
         if (auto FortPawn = Cast<AFortPawn>(GetPawn()))
-            FortPawn->SetIsInvulnerable(!FortPawn->GetIsInvulnerable());
+        {
+            auto bInvulnerable = !FortPawn->GetIsInvulnerable();
+
+            FortPawn->SetIsInvulnerable(bInvulnerable);
+            FortPawn->SetCanBeDamaged(!bInvulnerable);
+        }
     }
     else if (FParse::Command(&Stream, TEXT("Fly")))
     {
@@ -502,14 +507,16 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
     else if (FParse::Command(&Stream, TEXT("FlySpeed")))
     {
         auto FortPawn = Cast<AFortPawn>(GetPawn());
+        auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr;
+        auto FlySpeed = (float)_wtof(Stream);
 
-        if (auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr)
+        if (auto FlySpeedAttribute = MovementSet ? MovementSet->GetFlySpeed() : nullptr)
         {
-            auto FlySpeed = (float)_wtof(Stream);
-
-            MovementSet->GetFlySpeed().SetBaseValue(FlySpeed);
-            MovementSet->GetFlySpeed().SetCurrentValue(FlySpeed);
+            FlySpeedAttribute->SetBaseValue(FlySpeed);
+            FlySpeedAttribute->SetCurrentValue(FlySpeed);
         }
+        else if (auto CharacterMovement = FortPawn ? FortPawn->GetCharacterMovement() : nullptr)
+            CharacterMovement->SetMaxFlySpeed(FlySpeed);
     }
     else if (FParse::Command(&Stream, TEXT("Speed")))
     {
@@ -521,6 +528,9 @@ void AFortPlayerController::ServerCheat_Implementation(const FString& Msg)
 
             MovementSet->GetSpeedMultiplier().SetBaseValue(SpeedMultiplier);
             MovementSet->GetSpeedMultiplier().SetCurrentValue(SpeedMultiplier);
+
+            if (!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:SetMovementSpeedMultiplier")))
+                FortPawn->SetCustomTimeDilation(FMath::Max(SpeedMultiplier, 0.0f));
         }
     }
 }

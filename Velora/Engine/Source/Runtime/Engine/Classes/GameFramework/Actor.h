@@ -49,6 +49,8 @@ public:
 
     bool CanBeDamaged() const;
 
+    void SetCanBeDamaged(bool bInCanBeDamaged);
+
     FVector GetActorForwardVector() const;
 
     void SetLifeSpan(float InLifespan);

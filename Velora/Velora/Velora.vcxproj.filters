@@ -382,6 +382,12 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Abilities">
       <UniqueIdentifier>{3C451855-D476-486C-AAE7-38BF4CCDEF21}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Movement">
+      <UniqueIdentifier>{495E392A-E20C-40AD-9736-94D3DFDAD768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Movement">
+      <UniqueIdentifier>{BB729D58-7AA7-400C-A9C8-DE734350C44E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Analytics">
       <UniqueIdentifier>{7507820F-DAFA-429F-A49F-08C973F7FCED}</UniqueIdentifier>
     </Filter>
@@ -1608,6 +1614,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Abilities\FortMovementSet.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Abilities</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Movement\FortMovementComp_Character.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Movement</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortFeedbackManager.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -2467,6 +2476,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Movement\FortMovementComp_Character.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Movement</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortFeedbackManager.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>

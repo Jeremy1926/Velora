@@ -68,8 +68,6 @@ void ACharacter::ClientCheatWalk_Implementation()
     DETOUR(ACharacter, ClientCheatWalk_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/Engine.Character:ClientCheatWalk"))
         .FindEither("jmp [rax+*]", "call [rax+*]")
-        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
-        .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena")));
 
     SetActorEnableCollision(true);
@@ -86,8 +84,6 @@ void ACharacter::ClientCheatFly_Implementation()
     DETOUR(ACharacter, ClientCheatFly_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/Engine.Character:ClientCheatFly"))
         .FindEither("jmp [rax+*]", "call [rax+*]")
-        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
-        .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena")));
 
     SetActorEnableCollision(true);

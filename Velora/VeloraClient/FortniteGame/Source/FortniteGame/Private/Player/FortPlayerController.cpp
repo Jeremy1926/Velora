@@ -5,6 +5,8 @@
 #include "Engine/Console.h"
 #include "Pawns/FortPawn.h"
 #include "Abilities/FortMovementSet.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "UObject/UObjectGlobals.h"
 #include "Misc/Parse.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -20,14 +22,16 @@ void AFortPlayerController::Cheat(const FString& Msg)
     if (FParse::Command(&Stream, TEXT("FlySpeed")))
     {
         auto FortPawn = (AFortPawn*)GetPawn();
+        auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr;
+        auto FlySpeed = (float)_wtof(Stream);
 
-        if (auto MovementSet = FortPawn ? FortPawn->GetMovementSet() : nullptr)
+        if (auto FlySpeedAttribute = MovementSet ? MovementSet->GetFlySpeed() : nullptr)
         {
-            auto FlySpeed = (float)_wtof(Stream);
-
-            MovementSet->GetFlySpeed().SetBaseValue(FlySpeed);
-            MovementSet->GetFlySpeed().SetCurrentValue(FlySpeed);
+            FlySpeedAttribute->SetBaseValue(FlySpeed);
+            FlySpeedAttribute->SetCurrentValue(FlySpeed);
         }
+        else if (auto CharacterMovement = FortPawn ? FortPawn->GetCharacterMovement() : nullptr)
+            CharacterMovement->SetMaxFlySpeed(FlySpeed);
     }
     else if (FParse::Command(&Stream, TEXT("Speed")))
     {
@@ -39,6 +43,9 @@ void AFortPlayerController::Cheat(const FString& Msg)
 
             MovementSet->GetSpeedMultiplier().SetBaseValue(SpeedMultiplier);
             MovementSet->GetSpeedMultiplier().SetCurrentValue(SpeedMultiplier);
+
+            if (!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:SetMovementSpeedMultiplier")))
+                FortPawn->SetCustomTimeDilation(FMath::Max(SpeedMultiplier, 0.0f));
         }
     }
 

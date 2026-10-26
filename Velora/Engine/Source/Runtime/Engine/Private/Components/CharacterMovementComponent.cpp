@@ -27,3 +27,24 @@ void UCharacterMovementComponent::SetCheatFlying(bool bInCheatFlying)
 
     bCheatFlying->SetPropertyValue_InContainer(this, bInCheatFlying);
 }
+
+EMovementMode UCharacterMovementComponent::GetMovementMode() const
+{
+    static auto MovementMode = GetClass()->FindPropertyByName(FName(TEXT("MovementMode")));
+
+    return (EMovementMode)*MovementMode->ContainerPtrToValuePtr<uint8>(this);
+}
+
+float UCharacterMovementComponent::GetMaxFlySpeed() const
+{
+    static auto MaxFlySpeed = GetClass()->FindPropertyByName(FName(TEXT("MaxFlySpeed")));
+
+    return *MaxFlySpeed->ContainerPtrToValuePtr<float>(this);
+}
+
+void UCharacterMovementComponent::SetMaxFlySpeed(float InMaxFlySpeed)
+{
+    static auto MaxFlySpeed = GetClass()->FindPropertyByName(FName(TEXT("MaxFlySpeed")));
+
+    *MaxFlySpeed->ContainerPtrToValuePtr<float>(this) = InMaxFlySpeed;
+}

@@ -11,4 +11,10 @@ public:
     bool GetCheatFlying() const;
 
     void SetCheatFlying(bool bInCheatFlying);
+
+    EMovementMode GetMovementMode() const;
+
+    float GetMaxFlySpeed() const;
+
+    void SetMaxFlySpeed(float InMaxFlySpeed);
 };

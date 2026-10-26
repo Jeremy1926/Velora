@@ -73,6 +73,8 @@ public:
 
     UFortMovementSet* GetMovementSet() const;
 
+    void SetCustomTimeDilation(float InCustomTimeDilation);
+
     void LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverride, bool bZOverride, bool bIgnoreFallDamage, bool bPlayFeedbackEvent);
 
     void SetGravityMultiplier(float NewGravityVal);

@@ -5,7 +5,9 @@
 class UFortMovementSet : public UAttributeSet
 {
 public:
-    FFortGameplayAttributeData& GetFlySpeed();
+    static UClass* StaticClass();
+
+    FFortGameplayAttributeData* GetFlySpeed();
 
     FFortGameplayAttributeData& GetSpeedMultiplier();
 };

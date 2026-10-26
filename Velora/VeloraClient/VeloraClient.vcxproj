@@ -252,6 +252,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Math\UnrealMath.cpp" />
     <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Movement\FortMovementComp_Character.cpp" />
     <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Pawns\FortPawn.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogCategory.cpp" />
