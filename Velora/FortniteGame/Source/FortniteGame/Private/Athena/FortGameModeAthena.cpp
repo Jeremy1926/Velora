@@ -932,6 +932,16 @@ void AFortGameModeAthena::StartSafeZones()
     SafeZoneIndicator->InitializeWithMapDefaultPhases();
     SetSafeZonePhase(-1);
     StartNewSafeZonePhase(-1);
+    SafeZoneInsideChecks();
+}
+
+void AFortGameModeAthena::SafeZoneInsideChecks()
+{
+    static auto SafeZoneInsideChecks = Anchor::Function<void (*)(AFortGameModeAthena*)>(TEXT("AFortGameModeAthena::SafeZoneInsideChecks"))
+        .Body(TEXT("/Script/FortniteGame.FortGameModeAthena:SafeZoneInsideChecks"))
+        .Get();
+
+    SafeZoneInsideChecks(this);
 }
 
 FString& AFortGameModeAthena::SetUpdateSafeZonesPhaseReason(FString& Reason, const TCHAR* InReason)

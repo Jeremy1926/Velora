@@ -106,6 +106,8 @@ public:
 
     void StartSafeZones();
 
+    void SafeZoneInsideChecks();
+
     static FString& SetUpdateSafeZonesPhaseReason(FString& Reason, const TCHAR* InReason);
 
     bool StartSafeZonesPhase(bool bForce);
