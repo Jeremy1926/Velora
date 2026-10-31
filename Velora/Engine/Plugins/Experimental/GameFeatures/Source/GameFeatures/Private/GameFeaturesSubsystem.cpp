@@ -2,6 +2,7 @@
 #include "GameFeaturesSubsystem.h"
 #include "Containers/Map.h"
 #include "Containers/UnrealString.h"
+#include "Templates/TypeCompatibleBytes.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -26,18 +27,6 @@ UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
 
 void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGameFeatureData*>& OutActivePluginFeatureDatas)
 {
-    static auto GetGameFeatureDataForActivePlugins = Anchor::Optional<void (*)(UGameFeaturesSubsystem*, TArray<const UGameFeatureData*>&)>(TEXT("UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins"))
-        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/GameFeatures.GameFeaturePluginIdentifier")) != nullptr)
-        .String(TEXT(" - Adding preload object: '%s'"))
-        .Caller()
-        .Find("movaps [rbp+0x*], xmm0; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Get();
-
-    if (GetGameFeatureDataForActivePlugins)
-        return GetGameFeatureDataForActivePlugins(this, OutActivePluginFeatureDatas);
-
     static auto CurrentState = (int32)Anchor::Offset(TEXT("UGameFeaturePluginStateMachine::CurrentState"))
         .String(TEXT(" - Adding preload object: '%s'"))
         .Caller()
@@ -118,18 +107,28 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .Disp();
 
     static auto GameFeaturePluginStateMachines = GetClass()->FindPropertyByName(FName(TEXT("GameFeaturePluginStateMachines")));
+    static auto GameFeaturePluginIdentifier = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameFeatures.GameFeaturePluginIdentifier"));
 
-    if (CurrentState <= 0 || GameFeatureData <= 0 || !GameFeaturePluginStateMachines)
+    if (CurrentState <= 0 || GameFeatureData <= 0 || !GameFeaturePluginStateMachines || (GameFeaturePluginIdentifier && GameFeaturePluginIdentifier->GetPropertiesSize() != sizeof(TAlignedBytes<0x28, 8>)))
         return;
 
-    for (auto& StateMachinePair : *GameFeaturePluginStateMachines->ContainerPtrToValuePtr<TMap<FString, UObject*>>(this))
+    auto AddActivePlugin = [&](UObject* StateMachine)
     {
-        auto StateMachine = StateMachinePair.Value;
-
         if (!StateMachine || (bByteState ? *((uint8_t*)StateMachine + CurrentState) : *(int32*)((uint8_t*)StateMachine + CurrentState)) != Active)
-            continue;
+            return;
 
         if (auto FeatureData = *(const UGameFeatureData**)((uint8_t*)StateMachine + GameFeatureData))
             OutActivePluginFeatureDatas.Add(FeatureData);
+    };
+
+    if (GameFeaturePluginIdentifier)
+    {
+        for (auto& StateMachinePair : *GameFeaturePluginStateMachines->ContainerPtrToValuePtr<TMap<TAlignedBytes<0x28, 8>, UObject*>>(this))
+            AddActivePlugin(StateMachinePair.Value);
+    }
+    else
+    {
+        for (auto& StateMachinePair : *GameFeaturePluginStateMachines->ContainerPtrToValuePtr<TMap<FString, UObject*>>(this))
+            AddActivePlugin(StateMachinePair.Value);
     }
 }
