@@ -988,6 +988,16 @@ EClassRepNodeMapping UFortReplicationGraph::GetInstanceDynamicRepNodeMapping(AAc
         .Find("cmp eax, 0x7; jnz 0x*; mov rdx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp eax, 0x7; jnz 0x*; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetInstanceDynamicRepNodeMapping(this, Actor);
