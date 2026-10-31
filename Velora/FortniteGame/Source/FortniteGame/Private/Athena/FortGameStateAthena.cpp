@@ -355,6 +355,10 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass())
         .FieldPattern("66 C7 ? %o 01 00", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
         .Start()
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")) || ABuildingItemWeaponUpgradeActor::StaticClass())
+        .FieldPattern("C6 83 ? ? 00 00 00 C6 83 %o 01 48 8B BB", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+        .Start()
         .Inline());
 
     if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
