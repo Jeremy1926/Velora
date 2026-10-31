@@ -344,6 +344,9 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\ConsoleManager.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\HAL</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\UObject</Filter>
     </ClCompile>

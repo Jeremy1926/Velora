@@ -9,6 +9,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Misc/OutputDeviceRedirector.h"
 #include "CoreGlobals.h"
+#include "HAL/IConsoleManager.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -40,6 +41,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
     if (auto PlayerController = LocalPlayer ? LocalPlayer->GetPlayerController() : nullptr)
         PlayerController->AddCheats(true);
+
+    static auto AllowEncryption = IConsoleManager::Get().FindConsoleVariable(TEXT("net.AllowEncryption"));
+
+    if (AllowEncryption && AllowEncryption->GetInt() == 2)
+        AllowEncryption->Set(TEXT("1"), ECVF_SetByCode);
 
     Original(DeltaSeconds, bIdleMode);
 }

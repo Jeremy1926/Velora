@@ -234,6 +234,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\CoreGlobals.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\OutputDeviceRedirector.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\UnrealMemory.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\HAL\ConsoleManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\UObject\UnrealNames.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Class.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\Field.cpp" />
