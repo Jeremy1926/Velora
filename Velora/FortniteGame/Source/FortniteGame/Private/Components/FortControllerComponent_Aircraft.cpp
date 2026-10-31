@@ -58,6 +58,11 @@ void UFortControllerComponent_Aircraft::ServerAttemptAircraftJump_Implementation
         .Find("call r8; test al, al")
         .Find("call [*+0x*]")
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Aircraft:ServerAttemptAircraftJump"))
+        .Find("setnz *")
+        .Find("call [*+0x*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft"), "ret*")
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Aircraft")));
 
