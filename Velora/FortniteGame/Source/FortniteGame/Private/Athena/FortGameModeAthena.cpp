@@ -53,6 +53,15 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+PATCH(AFortGameModeAthena, HandlePostSafeZonePhaseChanged, Anchor::Patch()
+    .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:HandlePostSafeZonePhaseChanged"))
+    .Optional()
+    .Find("jmp 0x*")
+    .Target()
+    .Find("call 0x*; test al, al; jz 0x*")
+    .Find("test al, al")
+    .JumpOver("jz 0x*"))
+
 UClass* AFortGameModeAthena::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameModeAthena"));
