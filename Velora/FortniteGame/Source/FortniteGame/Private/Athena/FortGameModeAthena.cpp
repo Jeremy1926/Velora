@@ -692,7 +692,13 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 
     static auto ServerReviveFromDBNO = THook(TEXT("AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation"), &AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO"))
+        .Has("call [rax+*]; test al, al")
         .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerReviveFromDBNO"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]")
         .LogSlot(TEXT("AFortPlayerPawn::ServerReviveFromDBNO_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 

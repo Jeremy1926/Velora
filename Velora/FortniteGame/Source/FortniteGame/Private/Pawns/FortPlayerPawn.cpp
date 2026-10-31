@@ -359,7 +359,12 @@ void AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation(bool bForce)
 {
     static auto ServerEquipLastWeaponOrGadget = Anchor::VirtualFunction<void (*)(AFortPlayerPawn*, bool)>(TEXT("AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation"))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
+        .Has("call [rax+*]; test al, al")
         .Find("call [rax+*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]")
         .Get();
 
     ServerEquipLastWeaponOrGadget(this, bForce);
