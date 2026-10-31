@@ -2,6 +2,7 @@
 #include "Player/FortPlayerControllerZone.h"
 #include "Player/FortPlayerState.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "FortGlobals.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayTagContainer.h"
@@ -71,7 +72,17 @@ FSimpleMulticastDelegate& AFortPlayerControllerZone::GetOnPlayerPlaceChanged()
 
 void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn* P)
 {
+    auto bInitializeGameplay = P && !GetAcknowledgedPawn();
+
     Super::ServerAcknowledgePossession_Implementation(P);
+
+    if (bInitializeGameplay && UFortGlobals::HasInitializePlayerGameplayAbilities())
+    {
+        static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
+
+        if (auto PlayerState = GetPlayerState())
+            UFortGlobals::InitializePlayerGameplayAbilities((IAbilitySystemInterface*)PlayerState->GetInterfaceAddress(AbilitySystemInterface));
+    }
 }
 
 void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()

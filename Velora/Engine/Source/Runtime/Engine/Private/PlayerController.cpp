@@ -37,6 +37,13 @@ void APlayerController::ServerRestartPlayer_Implementation()
     ServerRestartPlayer(this);
 }
 
+APawn* APlayerController::GetAcknowledgedPawn() const
+{
+    static auto AcknowledgedPawn = GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn")));
+
+    return *AcknowledgedPawn->ContainerPtrToValuePtr<APawn*>(this);
+}
+
 UCheatManager* APlayerController::GetCheatManager() const
 {
     static auto CheatManager = GetClass()->FindPropertyByName(FName(TEXT("CheatManager")));

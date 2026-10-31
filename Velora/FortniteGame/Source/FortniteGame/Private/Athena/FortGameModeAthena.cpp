@@ -318,6 +318,12 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
         static auto AbilitySystemInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.AbilitySystemInterface"));
 
+        static auto bServerAcknowledgePossessionStripped = Anchor::Exists()
+            .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+            .Find("call [rax+*]", 2)
+            .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
+            .Get();
+
         if (auto AbilitySet = UFortGameData::Get()->GetAthenaPlayerAbilitySet())
         {
             for (auto& GameplayAbility : AbilitySet->GetGameplayAbilities())
@@ -326,11 +332,7 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                     PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
             }
 
-            if (bInitializeGameplay && UFortGlobals::HasInitializePlayerGameplayAbilities())
-            {
-                UFortGlobals::InitializePlayerGameplayAbilities((IAbilitySystemInterface*)PlayerState->GetInterfaceAddress(AbilitySystemInterface));
-            }
-            else if (bInitializeGameplay)
+            if (bInitializeGameplay && (!UFortGlobals::HasInitializePlayerGameplayAbilities() || !bServerAcknowledgePossessionStripped))
             {
                 TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor;
 

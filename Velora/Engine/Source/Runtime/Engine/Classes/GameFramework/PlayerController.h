@@ -13,6 +13,8 @@ public:
 
     void ServerRestartPlayer_Implementation();
 
+    APawn* GetAcknowledgedPawn() const;
+
     UCheatManager* GetCheatManager() const;
 
     void SetCheatManager(UCheatManager* InCheatManager);
