@@ -13,6 +13,15 @@ void FRepLayout::SendPropertiesForRPC(UFunction* Function, UActorChannel* Channe
         .Find("xor r8d, r8d; call 0x*; mov rcx, [rbp+0x*]; lea rdx, [rbp-0x*]; mov r8, r*; call 0x*")
         .Find("call 0x*", 3)
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("and dword ptr [rsp+0x*], 0x0")
+        .Find("call 0x*")
+        .Target()
+        .Find("xor r8d, r8d; call 0x*; mov rcx, [rbp+0x*]; lea rdx, [rsp+0x*]; mov r8, r*; call 0x*")
+        .Find("call 0x*", 3)
+        .Target()
         .Get();
 
     SendPropertiesForRPC(this, Function, Channel, Writer, Data);
@@ -24,6 +33,12 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data)
         .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
         .Start()
         .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
+        .Target()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("mov rdx, [rbp+0x*]; mov rcx, [rbp-0x*]; call 0x*; lea rax, [rbp-0x*]; mov r9, r*")
+        .Find("call 0x*")
         .Target()
         .Get();
 
@@ -68,6 +83,12 @@ void FRepLayout::ClearSharedSerializationForRPC()
         .Start()
         .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
         .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("mov rdx, [rbp+0x*]; mov rcx, [rbp-0x*]; call 0x*; lea rax, [rbp-0x*]; mov r9, r*")
+        .Find("call 0x*", 3)
         .Target()
         .Get();
 
