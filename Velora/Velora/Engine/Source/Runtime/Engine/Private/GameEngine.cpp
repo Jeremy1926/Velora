@@ -274,8 +274,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             }
 
             auto SafeZoneIndicator = SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
+            static auto SafeZonePhase = AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
-            if (SafeZoneIndicator && DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) && GameMode->GetSafeZonePhase() < 5)
+            if (SafeZoneIndicator && (DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) || !SafeZonePhase) && GameMode->GetSafeZonePhase() < 5)
             {
                 SafeZoneIndicator->SetNextCenter(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 4 * TGameLayout<FVector>::Size()));
                 SafeZoneIndicator->SetRadius(SafeZoneRadius->GetValueAtLevel(4.f));
