@@ -16,6 +16,42 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UScriptStruct* FFortSafeZonePhaseInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZonePhaseInfo"));
+
+    return Struct;
+}
+
+int32 FFortSafeZonePhaseInfo::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+int32 FFortSafeZonePhaseInfo::GetStormDamageLevel() const
+{
+    static auto StormDamageLevel = StaticStruct()->FindPropertyByName(FName(TEXT("StormDamageLevel")));
+
+    return StormDamageLevel ? *StormDamageLevel->ContainerPtrToValuePtr<int32>(this) : -1;
+}
+
+void FFortSafeZonePhaseInfo::SetStormDamageLevel(int32 InStormDamageLevel)
+{
+    static auto StormDamageLevel = StaticStruct()->FindPropertyByName(FName(TEXT("StormDamageLevel")));
+
+    if (StormDamageLevel)
+        *StormDamageLevel->ContainerPtrToValuePtr<int32>(this) = InStormDamageLevel;
+}
+
+int32& FFortSafeZonePhaseInfo::GetMegaStormGridCellThickness()
+{
+    static auto MegaStormGridCellThickness = StaticStruct()->FindPropertyByName(FName(TEXT("MegaStormGridCellThickness")));
+
+    return *MegaStormGridCellThickness->ContainerPtrToValuePtr<int32>(this);
+}
+
 UClass* AFortSafeZoneIndicator::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneIndicator"));
@@ -32,16 +68,21 @@ void AFortSafeZoneIndicator::InitializeWithMapDefaultPhases()
     auto Definition = MapInfo ? MapInfo->GetSafeZoneDefinition() : nullptr;
     auto& SafeZonePhases = GetSafeZonePhases();
 
-    SafeZonePhases.Empty();
+    SafeZonePhases.RemoveAt(0, SafeZonePhases.Num());
 
     if (!Definition)
         return;
 
     const float PhaseCount = ((const FScalableFloat*)(Definition + Count))->GetValueAtLevel(0.0f);
-    FFortSafeZonePhaseInfo SafeZonePhase;
 
-    for (int32 PhaseIndex = 0; (float)PhaseIndex < PhaseCount && ConstructMapDefaultPhase(PhaseIndex, SafeZonePhase); PhaseIndex++)
-        SafeZonePhases.Add(SafeZonePhase);
+    for (int32 PhaseIndex = 0; (float)PhaseIndex < PhaseCount; PhaseIndex++)
+    {
+        if (!ConstructMapDefaultPhase(PhaseIndex, SafeZonePhases[SafeZonePhases.AddUninitialized()]))
+        {
+            SafeZonePhases.RemoveAt(PhaseIndex);
+            break;
+        }
+    }
 }
 
 void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
@@ -58,14 +99,14 @@ void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
     if (InPhaseIndex < 0 || InPhaseIndex >= SafeZonePhases.Num())
         return;
 
-    const FFortSafeZonePhaseInfo SafeZonePhase = SafeZonePhases[InPhaseIndex];
+    auto& SafeZonePhase = SafeZonePhases[InPhaseIndex];
     const FVector Center = (FVector)SafeZonePhase.Center;
 
     PreviousCenter->SetPropertyValue_InContainer<FVector>(this, InPhaseIndex ? GetNextCenter() : Center);
     *PreviousRadius->ContainerPtrToValuePtr<float>(this) = InPhaseIndex ? GetRadius() : SafeZonePhase.Radius;
     SetNextCenter(Center);
     *NextRadius->ContainerPtrToValuePtr<float>(this) = SafeZonePhase.Radius;
-    *NextMegaStormGridCellThickness->ContainerPtrToValuePtr<int32>(this) = SafeZonePhase.MegaStormGridCellThickness;
+    *NextMegaStormGridCellThickness->ContainerPtrToValuePtr<int32>(this) = SafeZonePhase.GetMegaStormGridCellThickness();
     SetCurrentPhase(InPhaseIndex);
     bSafezoneEventDriven->SetPropertyValue_InContainer(this, SafeZonePhase.WaitTime < 0.0f);
 
@@ -103,13 +144,13 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
         return ((const FScalableFloat*)(Definition + Offset))->GetValueAtLevel((float)PhaseToConstruct);
     };
 
-    OutConstructedPhase = {};
+    memset(&OutConstructedPhase, 0, FFortSafeZonePhaseInfo::GetTypeSize());
     OutConstructedPhase.Center = FVector3d(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + PhaseToConstruct * TGameLayout<FVector>::Size()));
     OutConstructedPhase.Radius = PhaseToConstruct ? GetValueAtPhase(Radius) : FMath::Max(MapInfo->GetSafeZoneStartingRadius().GetValueAtLevel(0.0f), GetValueAtPhase(Radius));
     OutConstructedPhase.WaitTime = GetValueAtPhase(WaitTime);
     OutConstructedPhase.ShrinkTime = GetValueAtPhase(ShrinkTime);
-    OutConstructedPhase.StormDamageLevel = PhaseToConstruct;
-    OutConstructedPhase.MegaStormGridCellThickness = FMath::RoundToInt(GetValueAtPhase(MegaStormGridCellThickness));
+    OutConstructedPhase.SetStormDamageLevel(PhaseToConstruct);
+    OutConstructedPhase.GetMegaStormGridCellThickness() = FMath::RoundToInt(GetValueAtPhase(MegaStormGridCellThickness));
 
     return true;
 }
@@ -126,7 +167,7 @@ int32 AFortSafeZoneIndicator::GetPhaseDamageLevel() const
     auto& SafeZonePhases = GetSafeZonePhases();
     const int32 CurrentPhase = GetCurrentPhase();
 
-    return CurrentPhase >= 0 && CurrentPhase < SafeZonePhases.Num() ? SafeZonePhases[CurrentPhase].StormDamageLevel : -1;
+    return CurrentPhase >= 0 && CurrentPhase < SafeZonePhases.Num() ? SafeZonePhases[CurrentPhase].GetStormDamageLevel() : -1;
 }
 
 void AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter(float InRadius, const FVector& InLocation)

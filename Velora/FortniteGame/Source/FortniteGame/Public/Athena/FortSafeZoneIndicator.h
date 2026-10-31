@@ -3,20 +3,29 @@
 #include "GameFramework/Actor.h"
 
 class AFortSafeZoneIndicatorFuture;
+class UScriptStruct;
 
 struct FFortSafeZonePhaseInfo
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    int32 GetStormDamageLevel() const;
+
+    void SetStormDamageLevel(int32 InStormDamageLevel);
+
+    int32& GetMegaStormGridCellThickness();
+
     FVector3d Center;
     float Radius;
     float WaitTime;
     float ShrinkTime;
-    int32 StormDamageLevel;
-    int32 PlayerCap;
-    float TimeBetweenStormCapDamage;
-    float StormCapDamagePerTick;
-    float StormCampingIncrementTimeAfterDelay;
-    float StormCampingInitialDelayTime;
-    int32 MegaStormGridCellThickness;
+};
+
+template<>
+class TArray<FFortSafeZonePhaseInfo, FDefaultAllocator> : public TRuntimeSizedArray<FFortSafeZonePhaseInfo>
+{
 };
 
 class AFortSafeZoneIndicator : public AActor
