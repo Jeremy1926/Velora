@@ -80,9 +80,16 @@ float UWorld::GetTimeSeconds() const
     static auto TimeSeconds = Anchor::Offset(TEXT("UWorld::TimeSeconds"))
         .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
         .Find("movss xmm0, dword ptr [rax+*]")
+        .Or()
+        .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("movsd xmm0, qword ptr [rax+*]")
         .Disp();
+    static auto bDoubleTimeSeconds = Anchor::Exists()
+        .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("movsd xmm0, qword ptr [rax+*]")
+        .Get();
 
-    return *(float*)((uint8_t*)this + TimeSeconds);
+    return bDoubleTimeSeconds ? (float)*(double*)((uint8_t*)this + TimeSeconds) : *(float*)((uint8_t*)this + TimeSeconds);
 }
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
