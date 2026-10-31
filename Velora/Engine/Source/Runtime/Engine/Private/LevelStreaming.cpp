@@ -22,6 +22,12 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Find("jz 0x*")
         .Target()
         .Find("mov byte ptr [*+0x*], 0x2")
+        .Or()
+        .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; mov r9d, 0x3")
+        .Find("mov byte ptr [*+0x*], 0x2")
+        .Or()
+        .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; mov r9d, 0x3")
+        .Last("mov byte ptr [*+0x*], 0x2")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
