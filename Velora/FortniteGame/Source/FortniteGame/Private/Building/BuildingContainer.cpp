@@ -191,6 +191,12 @@ void ABuildingContainer::SetContainerSearched(AFortPawn* Searcher)
         .Entry(this)
         .Find("xor edx, edx")
         .Find("jmp [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_bAlreadySearched"))
+        .Find("jmp [*]")
+        .Entry(this)
+        .Find("xor edx, edx; call [*+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     SetContainerSearched(this, Searcher);
