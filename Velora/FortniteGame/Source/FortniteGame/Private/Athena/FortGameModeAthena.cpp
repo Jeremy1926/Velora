@@ -245,7 +245,7 @@ bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
         .Find("call [rax+*]")
         .HasVirtual(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "call 0x*; xor al, al")
         .Optional()
-        .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")));
+        .InChildVTables(StaticClass()));
 
     if (GetWorldIsReady() && GetMatchState() == MatchState::WaitingToStart)
     {
@@ -536,7 +536,7 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Log(TEXT("AFortGameMode::OnGivenMatchAssignment"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameMode"))
         .LogSlot(TEXT("AFortGameMode::OnGivenMatchAssignment"))
-        .InVTable(TEXT("/Script/FortniteGame.Default__FortGameModeAthena")));
+        .InChildVTables(StaticClass()));
 
     static auto Restart = THook(TEXT("AFortGameSession::Restart"), &AFortGameSession::Restart)
         .String(TEXT("FortGameModeAthena: Set AthenaGamePhase to [EndGame]."))
