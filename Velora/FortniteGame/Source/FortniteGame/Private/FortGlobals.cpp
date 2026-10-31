@@ -5,6 +5,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Scanner.h"
 
 UClass* UFortGlobals::StaticClass()
 {
@@ -16,6 +17,26 @@ UClass* UFortGlobals::StaticClass()
 UFortGlobals* UFortGlobals::Get()
 {
     return Cast<UFortGlobals>(GEngine->GetGameSingleton());
+}
+
+bool UFortGlobals::HasInitializePlayerGameplayAbilities()
+{
+    static auto bHasInitializePlayerGameplayAbilities = Anchor::Exists()
+        .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Get();
+
+    return bHasInitializePlayerGameplayAbilities;
+}
+
+void UFortGlobals::InitializePlayerGameplayAbilities(IAbilitySystemInterface* PlayerStateOrProxy)
+{
+    static auto InitializePlayerGameplayAbilities = Anchor::Function<void (*)(IAbilitySystemInterface*)>(TEXT("UFortGlobals::InitializePlayerGameplayAbilities"))
+        .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Get();
+
+    InitializePlayerGameplayAbilities(PlayerStateOrProxy);
 }
 
 FString* UFortGlobals::GetBRMapFullName()

@@ -31,6 +31,7 @@
 #include "FortniteGame.h"
 #include "FortGameData.h"
 #include "FortGameFeatureData.h"
+#include "FortGlobals.h"
 #include "Engine/DataTable.h"
 #include "Abilities/FortAbilitySet.h"
 #include "Abilities/FortAbilitySystemComponent.h"
@@ -325,7 +326,11 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
                     PlayerState->GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(GameplayAbility.GetDefaultObject(), 1, INDEX_NONE, AbilitySet));
             }
 
-            if (bInitializeGameplay)
+            if (bInitializeGameplay && UFortGlobals::HasInitializePlayerGameplayAbilities())
+            {
+                UFortGlobals::InitializePlayerGameplayAbilities((IAbilitySystemInterface*)PlayerState->GetInterfaceAddress(AbilitySystemInterface));
+            }
+            else if (bInitializeGameplay)
             {
                 TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor;
 
