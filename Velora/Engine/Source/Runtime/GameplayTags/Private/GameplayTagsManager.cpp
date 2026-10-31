@@ -52,6 +52,11 @@ FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorI
         .Start()
         .Find("xor r9d, r9d; lea rdx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("Gameplay tag not found (marking incompatible): %s"))
+        .Start()
+        .Find("xor r9d, r9d; call 0x*")
+        .Call()
         .Get();
 
     FGameplayTag Result;
