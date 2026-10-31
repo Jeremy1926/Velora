@@ -169,6 +169,11 @@ const TMap<FGameplayTag, TArray<FGuid>>& UConversationRegistry::GetEntryTagToEnt
         .Optional()
         .Find("mov rax, [rbp+0x*]; add rax, 0x*; mov [rbp-0x*], rax")
         .Find("add rax, 0x*")
+        .Or()
+        .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
+        .Start()
+        .Optional()
+        .Find("add r12, 0x*; mov [rbp-0x*], r12")
         .Imm();
 
     static auto EntryTagToEntryList = EntryTagToEntryListAdd > 0 ? EntryTagToEntryListAdd : Anchor::Offset(TEXT("UConversationRegistry::EntryTagToEntryList"))
