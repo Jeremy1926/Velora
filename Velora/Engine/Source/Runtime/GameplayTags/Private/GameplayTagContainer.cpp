@@ -37,14 +37,17 @@ FString FGameplayTagContainer::ToStringSimple(bool bQuoted) const
 
 FString FGameplayTagContainer::ToString() const
 {
-    static auto ToString = Anchor::Function<FString* (*)(const FGameplayTagContainer*, FString*)>(TEXT("FGameplayTagContainer::ToString"))
+    static auto ToString = Anchor::Optional<FString* (*)(const FGameplayTagContainer*, FString*)>(TEXT("FGameplayTagContainer::ToString"))
         .String(TEXT("ability tag: %s"))
-        .Last("call 0x*")
+        .Last("lea rcx, [r*+0x*]; lea rdx, [rsp+0x*]; call 0x*; cmp dword ptr [rax+0x8], 0x0")
+        .Find("call 0x*")
         .Target()
         .Get();
 
     FString Result;
-    ToString(this, &Result);
+
+    if (ToString)
+        ToString(this, &Result);
 
     return Result;
 }
