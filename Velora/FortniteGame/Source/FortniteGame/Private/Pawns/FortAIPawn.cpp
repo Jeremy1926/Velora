@@ -30,6 +30,13 @@ void AFortAIPawn::HandleDeathNotifications()
 {
     DETOUR(AFortAIPawn, HandleDeathNotifications, Anchor::Hook()
         .String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i."))
+        .Start()
+        .Is("push rbx; sub rsp, *; mov eax, [rsp+0x*]; lea rdx, [0x*]")
+        .Caller()
+        .Caller()
+        .InVirtual(TEXT("/Script/FortniteGame.Default__FortAIPawn"), TEXT("AFortAIPawn::Destroyed"), TEXT("AFortAIPawn::HandleOutOfHealth"))
+        .Or()
+        .String(TEXT("Failed to find spawn group info on enemy pawn death for pawn %s. Associated Mission Name: %s. Group GUID is %s. Num active groups %i."))
         .Caller()
         .InVirtual(TEXT("/Script/FortniteGame.Default__FortAIPawn"), TEXT("AFortAIPawn::Destroyed"), TEXT("AFortAIPawn::HandleOutOfHealth"))
         .AtCall());
