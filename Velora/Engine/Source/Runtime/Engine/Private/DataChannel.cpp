@@ -313,6 +313,12 @@ void UActorChannel::SetChannelActor(AActor* InActor, ESetChannelActorFlags Flags
         .Target()
         .Or()
         .Pattern("40 55 53 56 57 41 54 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 45 33 E4 48 8D 3D ? ? ? ? 44 89 A5 ? ? ? ? 48 8B D9 48 8B 41 28 45 8B F8 48 8B F2 45 8B F4 48 8B 48 58 48 85 C9 74 ? 4C 39 A1 ? ? ? ? 74 ? 48 85 D2 74")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .FindCallToString(TEXT("Created channel %i of type %s"))
+        .Find("call 0x*", 3)
+        .Target()
         .Get();
 
     SetChannelActor(this, InActor, Flags);
