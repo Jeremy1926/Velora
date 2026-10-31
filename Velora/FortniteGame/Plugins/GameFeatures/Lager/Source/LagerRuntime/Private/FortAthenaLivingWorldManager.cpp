@@ -230,6 +230,11 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeData::GetDensityCom
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Optional()
         .Find("movss xmm2, dword ptr [r15+0x*]; lea rdx, [rbp-0x*]; mov rcx, rdi; call 0x*")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Optional()
+        .Find("movss xmm2, dword ptr [r15+0x*]; lea rcx, [rdi+0x*]; lea rdx, [rbp-0x*]; call 0x*")
         .Disp();
 
     return DensityComputationRange > 0 ? DensityComputationRange : (int32)(sizeof(float) + sizeof(int32) + sizeof(float));
@@ -1823,6 +1828,10 @@ TQueue<UFortAthenaLivingWorldManager::FLivingWorldActorUpdateInfo>* UFortAthenaL
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea rcx, [r14+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r15+0x*]; lea rdx, [rbp-0x*]; call 0x*")
         .Optional()
         .Disp();
 
@@ -2026,6 +2035,12 @@ float UFortAthenaLivingWorldManager::GetActorDensity(const FVector& Location, fl
         .If(!GetActorDensity && !GetGridActorDensity)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("lea rcx, [rbx+0x*]; mov eax, [rax+0x8]; lea rdx, [rsp+0x*]; movsd [rsp+0x*], xmm0; mov [rsp+0x*], eax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .If(!GetActorDensity && !GetGridActorDensity)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("movss xmm2, dword ptr [r15+0x*]; lea rcx, [rdi+0x*]; lea rdx, [rbp-0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
