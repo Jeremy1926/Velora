@@ -961,6 +961,8 @@ UReplicationGraphNode* UReplicationGraphNode_GridCell::GetDynamicNode()
         .Find("call 0x*")
         .Target()
         .Find("cmp qword ptr [rcx+0x*], 0x0")
+        .Or()
+        .Pattern("48 83 B9 ? ? 00 00 00 48 8B F2 48 8B D9 75 ? 48 8B B9 ? ? 00 00 48 85 FF 74")
         .Disp();
 
     auto& Node = *(UReplicationGraphNode**)((uint8*)this + DynamicNode);
@@ -1000,6 +1002,9 @@ TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>& UReplication
         .Target()
         .Find("call 0x*")
         .Target()
+        .Find("mov rdi, [rcx+0x*]")
+        .Or()
+        .Pattern("48 83 B9 ? ? 00 00 00 48 8B F2 48 8B D9 75 ? 48 8B B9 ? ? 00 00 48 85 FF 74")
         .Find("mov rdi, [rcx+0x*]")
         .Disp();
 
