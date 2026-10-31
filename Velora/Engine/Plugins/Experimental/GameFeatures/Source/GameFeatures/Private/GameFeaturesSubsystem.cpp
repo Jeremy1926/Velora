@@ -93,6 +93,15 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .Find("jz 0x*")
         .Target()
         .Find("mov *, [*+0x*]")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("movaps [rbp+0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp byte ptr [*+0x*], 0x*")
+        .Is("cmp byte ptr [*+0x*], 0x*; jnz *; mov *, [*+0x*]")
+        .Find("mov *, [*+0x*]")
         .Disp();
 
     static auto GameFeaturePluginStateMachines = GetClass()->FindPropertyByName(FName(TEXT("GameFeaturePluginStateMachines")));
