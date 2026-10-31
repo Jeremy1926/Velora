@@ -1143,6 +1143,12 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
                 .FindCall(Anchor::Address()
                     .Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
                     .Get())
+                .Or()
+                .String(TEXT("AFortAthenaAIBotController::TryBuildConstructionInternal: BuildPreviewMarkerExtraPiece didn't build when we tried."))
+                .Start()
+                .FindCall(Anchor::Address()
+                    .Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
+                    .Get())
                 .Get();
 
             const FTransform SpawnTransform(BuildRot, BuildLoc, FVector(1.0f, 1.0f, 1.0f));
