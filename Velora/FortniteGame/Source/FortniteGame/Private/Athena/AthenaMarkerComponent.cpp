@@ -98,14 +98,14 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(const FFortClient
     static auto MarkerRequestStruct = FFortClientMarkerRequest::StaticStruct();
 
     static auto BuildMarkerDataForActor = Anchor::Function<bool (*)(UAthenaMarkerComponent*, AActor*, FFortWorldMarkerData*)>(TEXT("UAthenaMarkerComponent::BuildMarkerDataForActor"))
-        .String(TEXT("FortMarkableActorInterface"))
-        .Start()
-        .Caller()
-        .Or()
         .Exec(TEXT("/Script/FortniteGame.AthenaMarkerComponent:MarkActorOnClient"))
         .Find("lea r8, [rsp+0x*]; mov rdx, *; mov rcx, *; call 0x*; test al, al")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("FortMarkableActorInterface"))
+        .Start()
+        .Caller()
         .Get();
     static auto MarkerID = MarkerDataStruct->FindPropertyByName(FName(TEXT("MarkerID")));
     static auto Owner = MarkerDataStruct->FindPropertyByName(FName(TEXT("Owner")));
