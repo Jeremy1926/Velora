@@ -227,6 +227,25 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
     }
 }
 
+void ABuildingFoundation::HandleFoundationEnabledChanged()
+{
+    DETOUR(ABuildingFoundation, HandleFoundationEnabledChanged, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("call 0x*; jmp 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
+
+    if (FoundationEnabledState && *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Disabled)
+        return;
+
+    Original();
+}
+
 void ABuildingFoundation::execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(ABuildingFoundation, execSetDynamicFoundationEnabled, Anchor::Hook()

@@ -48,6 +48,8 @@ public:
 
     void SetDynamicFoundationEnabled(bool bEnabled);
 
+    void HandleFoundationEnabledChanged();
+
     void execSetDynamicFoundationEnabled(FFrame& Stack, void* const Z_Param__Result);
 
     void SelectAndStreamInLevel(const FReservedRandomValues* ReservedRandomValues);
