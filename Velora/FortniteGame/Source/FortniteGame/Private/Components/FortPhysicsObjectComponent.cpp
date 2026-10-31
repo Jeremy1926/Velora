@@ -25,6 +25,16 @@ TMulticastDelegate<void, UFortPhysicsObjectComponent*>& UFortPhysicsObjectCompon
         .Find("mov rdx, *; lea rcx, [0x*]; call 0x*")
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.ActorComponent:Deactivate"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPhysicsObjectComponent"))
+        .Find("test byte ptr [*+0x*], 0x20; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("mov rdx, *; lea rcx, [0x*]; call 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPhysicsObjectComponentDeactivated;
