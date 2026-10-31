@@ -192,6 +192,7 @@ bool UWorld::Listen(FURL& InURL)
     DETOUR(UWorld, Listen, Anchor::Hook()
         .String(TEXT("LoadMap: failed to Listen(%s)"))
         .Last("call 0x*; test al, al")
+        .Is("call 0x*; test al, al; jnz *")
         .Optional()
         .AtCall());
 
