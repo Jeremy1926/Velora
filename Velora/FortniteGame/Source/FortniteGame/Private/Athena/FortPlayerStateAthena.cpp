@@ -267,6 +267,18 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov rcx, [*+0x*]; test rcx, rcx; jz 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyRebootCardSpawned;
