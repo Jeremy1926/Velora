@@ -5,6 +5,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
 UClass* UFortPawnComponent_Convert::StaticClass()
@@ -18,6 +19,8 @@ void UFortPawnComponent_Convert::ConvertPawn(AFortPawn* PawnToConvert)
 {
     static auto bCanBeConverted = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bCanBeConverted")));
     static auto ConverterPlayerState = StaticClass()->FindPropertyByName(FName(TEXT("ConverterPlayerState")));
+    static auto ConverterPlayerInfo = StaticClass()->FindPropertyByName(FName(TEXT("ConverterPlayerInfo")));
+    static auto ConverterPlayerInfoState = ConverterPlayerInfo ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ConverterPlayerInfo")))->FindPropertyByName(FName(TEXT("ConverterPlayerState"))) : nullptr;
 
     if (!PawnToConvert)
         return;
@@ -27,7 +30,7 @@ void UFortPawnComponent_Convert::ConvertPawn(AFortPawn* PawnToConvert)
     if (!ConvertedPawnConvertComponent || !bCanBeConverted->GetPropertyValue_InContainer(ConvertedPawnConvertComponent))
         return;
 
-    auto PlayerState = *ConverterPlayerState->ContainerPtrToValuePtr<AFortPlayerState*>(ConvertedPawnConvertComponent);
+    auto PlayerState = ConverterPlayerState ? *ConverterPlayerState->ContainerPtrToValuePtr<AFortPlayerState*>(ConvertedPawnConvertComponent) : ConverterPlayerInfoState->ContainerPtrToValuePtr<TWeakObjectPtr<AFortPlayerState>>(ConverterPlayerInfo->ContainerPtrToValuePtr<void>(ConvertedPawnConvertComponent))->Get();
 
     if (PlayerState && PlayerState->GetCurrentPawn() && PlayerState->GetCurrentPawn() == GetOwner())
         return;
