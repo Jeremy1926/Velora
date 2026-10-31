@@ -31,6 +31,11 @@ bool AFortAthenaPatrolPathPointProvider::IsEnabled(const FFortAthenaLivingWorldP
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Is("push rbx; sub rsp, 0x20; mov edx, [rdx]; mov rbx, rcx; add rcx, 0x*; call 0x*; test al, al; jz 0x*; cmp qword ptr [rbx+0x*], 0x0; jz 0x*; lea rcx, [rbx-0x*]; call 0x*; xor al, al")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Is("sub rsp, 0x28; cmp qword ptr [rcx+0x*], 0x0; jz 0x*; add rcx, 0x*; call 0x*; xor al, al*")
         .Optional()
         .Inline());
 
@@ -83,6 +88,12 @@ bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivin
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("cmp byte ptr [*+0x1], 0x0; jz 0x*; lea rcx, [*-0x*]; mov rax, [rcx]; call [rax+0x*]")
+        .Or()
+        .If(!IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius() && !FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("cmp byte ptr [*+0x1], 0x0; jz 0x*; lea rcx, [*-0x*]; call 0x*")
         .Optional()
         .Inline());
     DETOUR(AFortAthenaPatrolPathPointProvider, GetValidLocation, Anchor::Hook(static_cast<bool (AFortAthenaPatrolPathPointProvider::*)(const FFortAthenaLivingWorldPointProviderFilterRules&, TGameValue<FVector>&, TGameValue<FRotator>&) const>(&AFortAthenaPatrolPathPointProvider::GetValidLocation))
@@ -172,6 +183,12 @@ bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivin
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("cmp byte ptr [*+0x5], 0x0; jz 0x*; lea rcx, [rbx-0x*]; call 0x*")
+        .Or()
+        .If(IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("cmp byte ptr [*+0x1], 0x0; jz 0x*; lea rcx, [*-0x*]; call 0x*")
         .Optional()
         .Inline());
 
@@ -297,7 +314,14 @@ void AFortAthenaPatrolPathPointProvider::DisablePointProvider()
         .Target()
         .Is("sub rsp, 0x28; test rcx, rcx; jz 0x*; mov rax, [rcx]; call [rax+0x*]")
         .Optional()
-        .Inline());
+        .Inline(), Anchor::Hook()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:OnSpawnedActor"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaPatrolPathPointProvider"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Find("test byte ptr [*+0x*], 0x4; jz 0x*; test rdi, rdi; jz 0x*; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Optional()
+        .AtCall());
 
     UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(this);
 }

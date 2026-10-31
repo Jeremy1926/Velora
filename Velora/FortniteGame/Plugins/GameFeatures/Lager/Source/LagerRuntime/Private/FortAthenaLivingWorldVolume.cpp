@@ -84,6 +84,10 @@ void AFortAthenaLivingWorldVolume::execOnCurrentPlaylistLoaded(FFrame& Stack, vo
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
         .Has("setnz al; add [*+0x20], rax; test rcx, rcx; jz 0x*; call 0x*")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
+        .Has("add [*+0x20], rax; call 0x*; mov rcx, [rbp-0x*]")
         .Optional()
         .InExec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded")));
 
@@ -159,6 +163,12 @@ bool AFortAthenaLivingWorldVolume::IsEnabled(const FFortAthenaLivingWorldPointPr
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
         .Has("call 0x*; test al, al; jz 0x*; cmp [rbx+0x*], rsi; jz 0x*; lea rcx, [rbx-0x*]; call 0x*")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:IsEnabled"))
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/LagerRuntime.Default__FortAthenaLivingWorldVolume"), TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface"))
+        .Has("cmp [rcx+0x*], rdi; jz 0x*; add rcx, 0x*; call 0x*")
         .Optional()
         .Inline());
 
