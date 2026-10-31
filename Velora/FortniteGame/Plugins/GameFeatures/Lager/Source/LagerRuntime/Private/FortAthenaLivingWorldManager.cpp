@@ -330,6 +330,11 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("test ecx, ecx; jle 0x*; lea rsi, [rbp+0x*]")
         .Find("lea rsi, [rbp+0x*]")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("xor r14d, r14d; mov [rsp+0x*], eax; test ecx, ecx; jle 0x*; lea *, [*+0x*]")
+        .Find("lea *, [*+0x*]")
         .Disp();
 
     return EventInstances;
