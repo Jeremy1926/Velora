@@ -129,6 +129,15 @@ void UFortControllerComponent_TransientQuests::OnTransientQuestGranted(const UFo
         .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     if (GrantedQuestDef)
