@@ -141,11 +141,6 @@ void ABuildingFoundation::PostUpdate(EFortBuildingPersistentState PersistentStat
         SetDynamicFoundationTransform(GetTransform());
 
     Original(PersistentState, ReservedRandomValues);
-
-    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
-
-    if (FoundationEnabledState && *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) == EDynamicFoundationEnabledState::Disabled && GetLevelToStream() != NAME_None)
-        StreamOutMyBuilding();
 }
 
 void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
