@@ -50,6 +50,13 @@ TOptional<int32> UFortConversationTaskNode_UpgradeItem::GetUpgradePrice(const FC
         .Find("mov r9, rax; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode_UpgradeItem"), 0)
+        .Find("mov r9, rax; lea rdx, [rsp+0x*]; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     TOptional<int32> UpgradePrice;
