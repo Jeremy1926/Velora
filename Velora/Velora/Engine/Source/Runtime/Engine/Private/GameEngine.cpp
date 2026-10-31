@@ -80,6 +80,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         if (auto DisableGameplayCues = IConsoleManager::Get().FindConsoleVariable(TEXT("AbilitySystem.DisableGameplayCues")))
             DisableGameplayCues->Set(TEXT("1"), ECVF_SetByCode);
 
+        if (auto AllowEncryption = IConsoleManager::Get().FindConsoleVariable(TEXT("net.AllowEncryption")))
+            AllowEncryption->Set(TEXT("1"), ECVF_SetByCode);
+
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 
