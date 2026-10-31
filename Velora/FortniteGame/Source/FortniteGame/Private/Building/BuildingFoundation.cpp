@@ -100,7 +100,10 @@ void ABuildingFoundation::SetDynamicFoundationTransform(const TGameValue<FTransf
     RepData.SetTranslation(NewTransform.GetTranslation());
     RepData.SetRotation(NewTransform.GetRotation());
 
-    OnRep_DynamicFoundationRepData();
+    static auto FoundationEnabledState = GetClass()->FindPropertyByName(FName(TEXT("FoundationEnabledState")));
+
+    if (!FoundationEnabledState || *FoundationEnabledState->ContainerPtrToValuePtr<EDynamicFoundationEnabledState>(this) != EDynamicFoundationEnabledState::Disabled)
+        OnRep_DynamicFoundationRepData();
 }
 
 void ABuildingFoundation::execSetDynamicFoundationTransform(FFrame& Stack, void* const Z_Param__Result)
@@ -192,7 +195,9 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
         if (DynamicFoundationRepData)
         {
             DynamicFoundationRepData->ContainerPtrToValuePtr<FDynamicBuildingFoundationRepData>(this)->GetEnabledState() = State;
-            OnRep_DynamicFoundationRepData();
+
+            if (bEnabled)
+                OnRep_DynamicFoundationRepData();
         }
         else
         {
