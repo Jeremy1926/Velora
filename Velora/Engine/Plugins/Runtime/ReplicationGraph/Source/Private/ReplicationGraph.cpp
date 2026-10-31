@@ -2460,9 +2460,11 @@ TArray<UReplicationGraphNode_TearOff_ForConnection::FTearOffActorInfo>& UReplica
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
         .Find("lea rcx, [rdi+0x*]; call 0x*")
+        .Optional()
         .Disp();
+    static auto TearOffActorsProperty = TearOffActors ? nullptr : StaticClass()->FindPropertyByName(FName(TEXT("TearOffActors")));
 
-    return *(TArray<FTearOffActorInfo>*)((uint8*)this + TearOffActors);
+    return *(TArray<FTearOffActorInfo>*)((uint8*)this + (TearOffActorsProperty ? TearOffActorsProperty->GetOffset_ForInternal() : TearOffActors));
 }
 
 FActorRepListRefView& UReplicationGraphNode_TearOff_ForConnection::GetReplicationActorList()
