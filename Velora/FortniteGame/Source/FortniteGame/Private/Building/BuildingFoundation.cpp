@@ -3,6 +3,7 @@
 #include "FortGameState.h"
 #include "FortWorldManager.h"
 #include "Engine/World.h"
+#include "Misc/EngineVersion.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -234,6 +235,14 @@ void ABuildingFoundation::HandleFoundationEnabledChanged()
         .Find("jmp 0x*")
         .Target()
         .Find("call 0x*; jmp 0x*")
+        .Target()
+        .Or()
+        .If(FEngineVersion::Current().GetMajor() > 4)
+        .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov rcx, rdi; call 0x*; mov rcx, [rbp+0x*]; xor rcx, rsp")
+        .Find("call 0x*")
         .Target()
         .Optional()
         .Inline());
