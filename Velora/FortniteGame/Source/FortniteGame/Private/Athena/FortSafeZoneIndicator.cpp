@@ -114,6 +114,21 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
     return true;
 }
 
+int32 AFortSafeZoneIndicator::GetPhaseDamageLevel() const
+{
+    DETOUR(AFortSafeZoneIndicator, GetPhaseDamageLevel, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:GetPhaseDamageLevel"))
+        .Optional()
+        .Find("call 0x*")
+        .Target()
+        .Inline());
+
+    auto& SafeZonePhases = GetSafeZonePhases();
+    const int32 CurrentPhase = GetCurrentPhase();
+
+    return CurrentPhase >= 0 && CurrentPhase < SafeZonePhases.Num() ? SafeZonePhases[CurrentPhase].StormDamageLevel : -1;
+}
+
 void AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter(float InRadius, const FVector& InLocation)
 {
     static auto SetSafeZoneRadiusAndCenter = Anchor::Function<void (*)(AFortSafeZoneIndicator*, float, const TGameValue<FVector>*)>(TEXT("AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter"))

@@ -30,6 +30,8 @@ public:
 
     bool ConstructMapDefaultPhase(int32 PhaseToConstruct, FFortSafeZonePhaseInfo& OutConstructedPhase) const;
 
+    int32 GetPhaseDamageLevel() const;
+
     void SetSafeZoneRadiusAndCenter(float InRadius, const FVector& InLocation);
 
     void OffsetShrinkTimesFromServerTime(float Offset);
