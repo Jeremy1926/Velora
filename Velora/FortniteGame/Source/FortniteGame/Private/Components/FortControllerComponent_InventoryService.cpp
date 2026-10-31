@@ -142,7 +142,8 @@ FScalableFloat& UFortControllerComponent_InventoryService::GetShouldDropCurrency
 int32& UFortControllerComponent_InventoryService::GetTotalCurrencyEarnedInMatch()
 {
     static auto TotalCurrencyEarnedData = GetClass()->FindPropertyByName(FName(TEXT("TotalCurrencyEarnedData")));
+    static auto CurrencyTrackedData = TotalCurrencyEarnedData ? TotalCurrencyEarnedData : GetClass()->FindPropertyByName(FName(TEXT("GlobalCurrencyTrackedData")));
     static auto TotalCurrencyEarnedInMatch = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.GlobalCurrencyTrackedData")))->FindPropertyByName(FName(TEXT("TotalCurrencyEarnedInMatch")));
 
-    return *TotalCurrencyEarnedInMatch->ContainerPtrToValuePtr<int32>(TotalCurrencyEarnedData->ContainerPtrToValuePtr<void>(this));
+    return *TotalCurrencyEarnedInMatch->ContainerPtrToValuePtr<int32>(CurrencyTrackedData->ContainerPtrToValuePtr<void>(this));
 }
