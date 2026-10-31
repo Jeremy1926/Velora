@@ -54,7 +54,17 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Target()
         .Get();
 
-    return StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
+    auto Object = StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
+
+    if (!Object && OrigInName && FString(OrigInName).StartsWith(TEXT("/Script/FortniteGame.")))
+    {
+        FString MovedName(TEXT("/Script/FortniteAI."));
+        MovedName += OrigInName + wcslen(TEXT("/Script/FortniteGame."));
+
+        Object = StaticFindObject(ObjectClass, InObjectPackage, *MovedName, ExactClass);
+    }
+
+    return Object;
 }
 
 UObject* StaticLoadObject(UClass* Class, UObject* InOuter, const TCHAR* Name, const TCHAR* Filename, uint32 LoadFlags, UPackageMap* Sandbox, bool bAllowObjectReconciliation, FUObjectSerializeContext* InSerializeContext)
