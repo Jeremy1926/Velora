@@ -13,6 +13,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Engine/CurveTable.h"
 #include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
 #include "Misc/CoreMiscDefines.h"
 #include "Templates/Casts.h"
 #include "UObject/AssetPtr.h"
@@ -119,6 +120,14 @@ EAthenaGamePhaseStep AFortGameStateAthena::GetGamePhaseStep() const
 int32 AFortGameStateAthena::GetSafeZonePhase() const
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
+    static auto bPlaylistStoppedSafeZonePhases = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPlaylistStoppedSafeZonePhases")));
+
+    if (!SafeZonePhase)
+    {
+        auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+        return SafeZoneIndicator ? FMath::Max(SafeZoneIndicator->GetCurrentPhase() + (bPlaylistStoppedSafeZonePhases && bPlaylistStoppedSafeZonePhases->GetPropertyValue_InContainer(this) ? 1 : 0), 0) : 0;
+    }
 
     return *SafeZonePhase->ContainerPtrToValuePtr<uint8>(this);
 }

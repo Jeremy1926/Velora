@@ -168,6 +168,13 @@ void AFortSafeZoneIndicator::SetRadius(float InRadius)
         *Radius->ContainerPtrToValuePtr<float>(this) = InRadius;
 }
 
+int32 AFortSafeZoneIndicator::GetCurrentPhase() const
+{
+    static auto CurrentPhase = GetClass()->FindPropertyByName(FName(TEXT("CurrentPhase")));
+
+    return *CurrentPhase->ContainerPtrToValuePtr<int32>(this);
+}
+
 AFortSafeZoneIndicatorFuture* AFortSafeZoneIndicator::GetFutureReplicator() const
 {
     static auto FutureReplicator = GetClass()->FindPropertyByName(FName(TEXT("FutureReplicator")));

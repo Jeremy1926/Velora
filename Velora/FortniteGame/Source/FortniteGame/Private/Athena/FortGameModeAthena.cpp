@@ -917,6 +917,13 @@ int32 AFortGameModeAthena::GetSafeZonePhase() const
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
+    if (!SafeZonePhase)
+    {
+        auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+        return SafeZoneIndicator ? SafeZoneIndicator->GetCurrentPhase() : 0;
+    }
+
     return *SafeZonePhase->ContainerPtrToValuePtr<int32>(this);
 }
 
@@ -924,7 +931,8 @@ void AFortGameModeAthena::SetSafeZonePhase(int32 InSafeZonePhase)
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
-    *SafeZonePhase->ContainerPtrToValuePtr<int32>(this) = InSafeZonePhase;
+    if (SafeZonePhase)
+        *SafeZonePhase->ContainerPtrToValuePtr<int32>(this) = InSafeZonePhase;
 }
 
 AFortSafeZoneIndicator* AFortGameModeAthena::GetSafeZoneIndicator() const

@@ -33,5 +33,7 @@ public:
 
     void SetRadius(float InRadius);
 
+    int32 GetCurrentPhase() const;
+
     AFortSafeZoneIndicatorFuture* GetFutureReplicator() const;
 };
