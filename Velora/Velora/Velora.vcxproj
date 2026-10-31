@@ -248,7 +248,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\WeakObjectPtr.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\ObjectKey.h" />
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNet.h" />
-    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreOnline.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Actor.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Pawn.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Controller.h" />

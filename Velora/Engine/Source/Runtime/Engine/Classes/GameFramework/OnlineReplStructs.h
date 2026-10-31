@@ -1,16 +1,21 @@
 #pragma once
 
 #include "Containers/Array.h"
-#include "UObject/CoreOnline.h"
 
-struct FUniqueNetIdRepl : public FUniqueNetIdWrapper
+class UScriptStruct;
+
+struct alignas(8) FUniqueNetIdRepl
 {
-    virtual ~FUniqueNetIdRepl()
-    {
-    }
+    FUniqueNetIdRepl();
+
+    FUniqueNetIdRepl(const FUniqueNetIdRepl&) = delete;
+
+    ~FUniqueNetIdRepl();
 
     FUniqueNetIdRepl& operator=(const FUniqueNetIdRepl& Other);
 
-protected:
-    TArray<uint8> ReplicationBytes;
+    static UScriptStruct* StaticStruct();
+
+private:
+    uint8 Data[0x30];
 };

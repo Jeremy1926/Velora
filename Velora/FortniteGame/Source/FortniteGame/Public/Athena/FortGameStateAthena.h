@@ -42,9 +42,19 @@ enum class EFortSafeZoneState : uint8
 
 struct FGameMemberInfo : public FFastArraySerializerItem
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FUniqueNetIdRepl& GetMemberUniqueId();
+
     uint8 SquadId;
     uint8 TeamIndex;
-    FUniqueNetIdRepl MemberUniqueId;
+};
+
+template<>
+class TArray<FGameMemberInfo, FDefaultAllocator> : public TRuntimeSizedArray<FGameMemberInfo>
+{
 };
 
 struct FGameMemberInfoArray : public FFastArraySerializer

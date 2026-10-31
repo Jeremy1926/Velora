@@ -685,6 +685,27 @@ bool AFortGameStateAthena::AmmoDroppedFromContainersForWeaponPickup()
     return bAmmoDroppedFromContainersForWeaponPickup && bAmmoDroppedFromContainersForWeaponPickup->GetInt() == 1;
 }
 
+UScriptStruct* FGameMemberInfo::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.GameMemberInfo"));
+
+    return Struct;
+}
+
+int32 FGameMemberInfo::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FUniqueNetIdRepl& FGameMemberInfo::GetMemberUniqueId()
+{
+    static auto MemberUniqueId = StaticStruct()->FindPropertyByName(FName(TEXT("MemberUniqueId")));
+
+    return *MemberUniqueId->ContainerPtrToValuePtr<FUniqueNetIdRepl>(this);
+}
+
 UScriptStruct* FGameMemberInfoArray::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.GameMemberInfoArray"));

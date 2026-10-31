@@ -993,9 +993,6 @@
     <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreNet.h">
       <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\Source\Runtime\CoreUObject\Public\UObject\CoreOnline.h">
-      <Filter>Engine\Source\Runtime\CoreUObject\Public\UObject</Filter>
-    </ClInclude>
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Actor.h">
       <Filter>Engine\Source\Runtime\Engine\Classes\GameFramework</Filter>
     </ClInclude>

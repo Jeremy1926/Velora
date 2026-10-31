@@ -401,13 +401,17 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
         return;
 
     auto& GameMemberInfoArray = GameState->GetGameMemberInfoArray();
-    auto Member = new(GameMemberInfoArray.GetMembers()) FGameMemberInfo();
+    auto& Members = GameMemberInfoArray.GetMembers();
+    auto& Member = Members[Members.AddUninitialized()];
 
-    Member->SquadId = PlayerState->GetSquadId();
-    Member->TeamIndex = PlayerState->GetTeamIndex();
-    Member->MemberUniqueId = PlayerState->GetUniqueId();
+    FMemory::Memzero(&Member, FGameMemberInfo::GetTypeSize());
+    FGameMemberInfo::StaticStruct()->InitializeStruct(&Member);
 
-    GameMemberInfoArray.MarkItemDirty(*Member);
+    Member.SquadId = PlayerState->GetSquadId();
+    Member.TeamIndex = PlayerState->GetTeamIndex();
+    Member.GetMemberUniqueId() = PlayerState->GetUniqueId();
+
+    GameMemberInfoArray.MarkItemDirty(Member);
 }
 
 void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController)
