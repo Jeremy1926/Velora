@@ -856,6 +856,7 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
 void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
 {
     DETOUR(AFortGameModeAthena, StartNewSafeZonePhase, Anchor::Hook()
+        .If(AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePhase"))))
         .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
         .Start()
         .Or()
