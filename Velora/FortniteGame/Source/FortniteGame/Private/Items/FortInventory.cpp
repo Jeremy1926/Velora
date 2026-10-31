@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Items/FortInventory.h"
+#include "Misc/EngineVersion.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
@@ -77,6 +78,12 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
         .Find("jnz 0x*")
         .Target()
         .Find("call 0x*; test eax, eax")
+        .Call()
+        .Has("xor r9d, r9d; mov r8d, *; mov rdx, rax; mov rcx, *")
+        .Or()
+        .If(FEngineVersion::Current().GetMajor() > 4)
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov rcx, r*; call 0x*; test eax, eax; jnz 0x*")
         .Call()
         .Has("xor r9d, r9d; mov r8d, *; mov rdx, rax; mov rcx, *")
         .Get();
