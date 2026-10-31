@@ -117,6 +117,10 @@ void UEngine::ForceGarbageCollection(bool bFullPurge)
         .Pattern("48 89 5C 24 08 57 48 83 EC 20 40 8A FA 48 8B D9 E8 ? ? ? ? F3 0F 58 05 ? ? ? ? 32 C0 F3 0F 11 83 ? ? ? ? 38 83 ? ? ? ? 75 ? 40 84 FF 75 ? 88 83")
         .Or()
         .Pattern("48 89 5C 24 08 57 48 83 EC 20 40 8A FA 48 8B D9 E8 ? ? ? ? F3 0F 58 05 ? ? ? ? 32 C0 F3 0F 11 83 ? ? ? ? 38 83 ? ? ? ? 74 ? B0 01 88 83")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:CollectGarbage"))
+        .Find("jmp 0x*")
+        .Target()
         .Get();
 
     ForceGarbageCollection(this, bFullPurge);
