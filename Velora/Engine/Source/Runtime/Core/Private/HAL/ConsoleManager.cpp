@@ -85,6 +85,13 @@ void IConsoleVariable::Set(const TCHAR* InValue, EConsoleVariableFlags SetBy)
         .Find("call [rax+0x*]")
         .Or()
         .String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f"))
+        .Is("call 0x*")
+        .Last("mov r8d, 0x9000000")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov *, [rax+0x*]")
+        .Or()
+        .String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f"))
         .Last("call [rax+0x*]")
         .Get();
 
