@@ -185,6 +185,11 @@ const TMap<FGameplayTag, TArray<FGuid>>& UConversationRegistry::GetEntryTagToEnt
         .Start()
         .Find("mov r13, [rbp+0x*]; lea r12, [rdi+0x*]")
         .Find("lea r12, [rdi+0x*]")
+        .Or()
+        .String(TEXT("UConversationRegistry::BuildDependenciesGraph - Dependencies already built"))
+        .Start()
+        .Find("mov eax, [*+0x8]; cmp eax, [*+0x34]", 3)
+        .Last("lea *, [rsi+0x*]")
         .Disp();
 
     return *(const TMap<FGameplayTag, TArray<FGuid>>*)((const uint8*)this + EntryTagToEntryList);
