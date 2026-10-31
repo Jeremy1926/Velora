@@ -53,6 +53,11 @@ public:
         return false;
     }
 
+    virtual bool CanBeUsedOnPanicThread() const
+    {
+        return false;
+    }
+
 protected:
     bool bSuppressEventTag;
     bool bAutoEmitLineTerminator;
