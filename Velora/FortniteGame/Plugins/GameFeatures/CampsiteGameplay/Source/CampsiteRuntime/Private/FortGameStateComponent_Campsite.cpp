@@ -91,6 +91,9 @@ void UFortGameStateComponent_Campsite::execClaimUnusedBotName(FFrame& Stack, voi
         .If(StaticClass())
         .Exec(TEXT("/Script/CampsiteRuntime.FortGameStateComponent_Campsite:ClaimUnusedBotName"))
         .Find("setnz *; add [*+0x20], *; test rcx, rcx; jz *; call 0x*; add rsp, *; pop *; ret")
+        .Or()
+        .Exec(TEXT("/Script/CampsiteRuntime.FortGameStateComponent_Campsite:ClaimUnusedBotName"))
+        .Find("setnz *; add [*+0x20], *; mov *, [rsp+0x*]; test *, *; jz *")
         .Optional()
         .InExec(TEXT("/Script/CampsiteRuntime.FortGameStateComponent_Campsite:ClaimUnusedBotName")));
 
