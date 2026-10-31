@@ -1792,6 +1792,11 @@ bool AFortPlayerController::IsPlayerAlive()
         .Start()
         .Find("mov rax, [r14]; mov rcx, r14; call [rax+0x*]; test al, al")
         .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("mov rax, [r15]; mov rcx, r15; call [rax+0x*]; test al, al")
+        .Find("call [rax+0x*]")
         .Get();
 
     return IsPlayerAlive(this);
