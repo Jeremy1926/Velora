@@ -47,7 +47,7 @@ public:
 
     TArray<FUniqueNetIdRepl>& GetPlayerIdsForResurrection();
 
-    uint8 GetSquadId() const;
+    int32 GetSquadId() const;
 
     ESpawnMachineState GetSpawnMachineState() const;
 

@@ -468,11 +468,11 @@ TArray<FUniqueNetIdRepl>& ABuildingGameplayActorSpawnMachine::GetPlayerIdsForRes
     return *PlayerIdsForResurrection->ContainerPtrToValuePtr<TArray<FUniqueNetIdRepl>>(this);
 }
 
-uint8 ABuildingGameplayActorSpawnMachine::GetSquadId() const
+int32 ABuildingGameplayActorSpawnMachine::GetSquadId() const
 {
     static auto SquadId = GetClass()->FindPropertyByName(FName(TEXT("SquadId")));
 
-    return *SquadId->ContainerPtrToValuePtr<uint8>(this);
+    return SquadId ? *SquadId->ContainerPtrToValuePtr<uint8>(this) : INDEX_NONE;
 }
 
 ESpawnMachineState ABuildingGameplayActorSpawnMachine::GetSpawnMachineState() const
