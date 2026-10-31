@@ -16,6 +16,14 @@ void UStat::ModifyStat(double Amount, EStatMod ModType)
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Find("mov r8b, 0x*")
         .Call(2)
+        .Is("movd xmm1, edx; cvtdq2pd xmm1, xmm1; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Event(TEXT("ClientOnPawnRevived"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Find("mov r8b, 0x*")
+        .Call(2)
         .Get();
 
     auto& Version = FEngineVersion::Current();
