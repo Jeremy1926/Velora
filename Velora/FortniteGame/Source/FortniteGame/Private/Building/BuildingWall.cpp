@@ -87,6 +87,9 @@ void ABuildingWall::SetIsDoorOpen(EDoorOpenStyle InDoorOpenStyle, AFortPawn* Int
         .Or()
         .Pattern("41 B6 03 4D 8B F8 40 8A FA 48 8B F1 44 38 B1 ? ? ? ? 0F 85")
         .Start()
+        .Or()
+        .Pattern("41 BE 03 00 00 00 4D 8B F8 40 8A FA 48 8B F1 44 38 B1 ? ? ? ? 0F 85")
+        .Start()
         .Get();
 
     SetIsDoorOpen(this, InDoorOpenStyle, InteractingPawn);
