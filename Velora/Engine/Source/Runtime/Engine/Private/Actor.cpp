@@ -68,6 +68,10 @@ void AActor::GetAttachedActors(TArray<AActor*>& OutActors, bool bResetArray) con
 bool AActor::IsNetStartupActor() const
 {
     static auto bNetStartup = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetStartup")));
+    static auto bNetTemporary = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bNetTemporary")));
+
+    if (!bNetStartup)
+        return *((const uint8*)this + bNetTemporary->GetOffset_ForInternal() + bNetTemporary->GetByteOffset()) & (bNetTemporary->GetFieldMask() << 1);
 
     return bNetStartup->GetPropertyValue_InContainer(this);
 }
