@@ -11,11 +11,11 @@ UClass* UFortAthenaLivingWorldConfigData::StaticClass()
     return Class;
 }
 
-TSoftObjectPtr<UDataTable>& UFortAthenaLivingWorldConfigData::GetCategoryTable()
+TSoftObjectPtr<UDataTable>* UFortAthenaLivingWorldConfigData::GetCategoryTable()
 {
     static auto CategoryTable = GetClass()->FindPropertyByName(FName(TEXT("CategoryTable")));
 
-    return *CategoryTable->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(this);
+    return CategoryTable ? CategoryTable->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(this) : nullptr;
 }
 
 FScalableFloat& UFortAthenaLivingWorldConfigData::GetMaxActorCount()

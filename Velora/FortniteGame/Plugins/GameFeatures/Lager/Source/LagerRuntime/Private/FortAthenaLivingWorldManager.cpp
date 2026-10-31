@@ -433,7 +433,7 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
 void UFortAthenaLivingWorldManager::GenerateEvents()
 {
     auto Config = GetConfig();
-    auto CategoryTable = Config ? Config->GetCategoryTable().LoadSynchronous() : nullptr;
+    auto CategoryTable = Config && Config->GetCategoryTable() ? Config->GetCategoryTable()->LoadSynchronous() : nullptr;
 
     if (!CategoryTable || !GetCachedGameState())
         return;

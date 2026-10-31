@@ -10,7 +10,7 @@ class UFortAthenaLivingWorldConfigData : public UDataAsset
 public:
     static UClass* StaticClass();
 
-    TSoftObjectPtr<UDataTable>& GetCategoryTable();
+    TSoftObjectPtr<UDataTable>* GetCategoryTable();
 
     FScalableFloat& GetMaxActorCount();
 
