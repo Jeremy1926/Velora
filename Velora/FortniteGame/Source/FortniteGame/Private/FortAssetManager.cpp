@@ -50,6 +50,10 @@ UFortGameData* UFortAssetManager::GetGameData()
         .Call()
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Call()
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; call 0x*; mov rdi, rax; mov rbx, [rax+0x*]")
         .Get();
 
     return GetGameData(this);
