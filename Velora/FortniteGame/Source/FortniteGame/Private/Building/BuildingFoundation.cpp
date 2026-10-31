@@ -201,8 +201,14 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
         OnRep_FoundationEnabled(bOldEnabled);
     }
 
-    if (!bEnabled || !(*((uint8_t*)this + Offset) & Mask) || bConditionalFoundation->GetPropertyValue_InContainer(this) || GetLevelToStream() != NAME_None)
+    if (!(*((uint8_t*)this + Offset) & Mask) || bConditionalFoundation->GetPropertyValue_InContainer(this) || bEnabled == (GetLevelToStream() != NAME_None))
         return;
+
+    if (!bEnabled)
+    {
+        StreamOutMyBuilding();
+        return;
+    }
 
     if (auto GameState = Cast<AFortGameState>(GetWorld()->GetGameState()))
     {
@@ -245,6 +251,21 @@ void ABuildingFoundation::SelectAndStreamInLevel(const FReservedRandomValues* Re
         .Get();
 
     SelectAndStreamInLevel(this, ReservedRandomValues);
+}
+
+bool ABuildingFoundation::StreamOutMyBuilding()
+{
+    static auto bNeverStreamOut = GetClass()->FindPropertyByName(FName(TEXT("bNeverStreamOut")));
+
+    if (!bNeverStreamOut || !bNeverStreamOut->GetOffset_ForInternal())
+        return false;
+
+    static auto StreamOutMyBuilding = Anchor::Function<bool (*)(ABuildingFoundation*)>(TEXT("ABuildingFoundation::StreamOutMyBuilding"))
+        .FieldPattern("80 B9 %o 00 48 8B D9", bNeverStreamOut)
+        .Start()
+        .Get();
+
+    return StreamOutMyBuilding(this);
 }
 
 void ABuildingFoundation::OnRep_DynamicFoundationTransform()

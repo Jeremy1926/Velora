@@ -52,6 +52,8 @@ public:
 
     void SelectAndStreamInLevel(const FReservedRandomValues* ReservedRandomValues);
 
+    bool StreamOutMyBuilding();
+
     void OnRep_DynamicFoundationTransform();
 
     void OnRep_DynamicFoundationRepData();
