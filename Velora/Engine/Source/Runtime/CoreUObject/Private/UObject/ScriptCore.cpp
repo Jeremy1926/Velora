@@ -14,6 +14,11 @@ void FFrame::Step(UObject* Context, void* const Result)
         .Target()
         .Or()
         .Pattern("48 8B 41 20 4C 8B D2 48 8B D1 44 0F B6 08 48 FF C0 48 89 41 20 41 8B C1 4C 8D 0D ? ? ? ? 49 8B CA 49 FF 24 C1")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("mov rdx, [*+0x18]; lea r8, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Step(this, Context, Result);
