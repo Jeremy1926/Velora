@@ -54,4 +54,8 @@ public:
     const FScalableFloat* GetSupplyDropMaxPlacementHeight() const;
 
     const FScalableFloat* GetSafeZoneRadius() const;
+
+    const FScalableFloat& GetSafeZoneStartingRadius() const;
+
+    const uint8* GetSafeZoneDefinition() const;
 };

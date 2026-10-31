@@ -1,9 +1,16 @@
 #include "pch.h"
 #include "Athena/FortSafeZoneIndicator.h"
+#include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortGameModeAthena.h"
+#include "Athena/FortGameStateAthena.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameplayEffectTypes.h"
 #include "Math/UnrealMathUtility.h"
+#include "Templates/Casts.h"
+#include "Templates/UnrealTemplate.h"
 #include "UObject/Class.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -14,6 +21,112 @@ UClass* AFortSafeZoneIndicator::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneIndicator"));
 
     return Class;
+}
+
+void AFortSafeZoneIndicator::InitializeWithMapDefaultPhases()
+{
+    static auto Count = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition")))->FindPropertyByName(FName(TEXT("Count")))->GetOffset_ForInternal();
+
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+    auto Definition = MapInfo ? MapInfo->GetSafeZoneDefinition() : nullptr;
+    auto& SafeZonePhases = GetSafeZonePhases();
+
+    SafeZonePhases.Empty();
+
+    if (!Definition)
+        return;
+
+    const float PhaseCount = ((const FScalableFloat*)(Definition + Count))->GetValueAtLevel(0.0f);
+    FFortSafeZonePhaseInfo SafeZonePhase;
+
+    for (int32 PhaseIndex = 0; (float)PhaseIndex < PhaseCount && ConstructMapDefaultPhase(PhaseIndex, SafeZonePhase); PhaseIndex++)
+        SafeZonePhases.Add(SafeZonePhase);
+}
+
+void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
+{
+    static auto PreviousCenter = GetClass()->FindPropertyByName(FName(TEXT("PreviousCenter")));
+    static auto PreviousRadius = GetClass()->FindPropertyByName(FName(TEXT("PreviousRadius")));
+    static auto NextRadius = GetClass()->FindPropertyByName(FName(TEXT("NextRadius")));
+    static auto NextMegaStormGridCellThickness = GetClass()->FindPropertyByName(FName(TEXT("NextMegaStormGridCellThickness")));
+    static auto bSafezoneEventDriven = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bSafezoneEventDriven")));
+    static auto OnSafeZonePhaseChanged = GetClass()->FindPropertyByName(FName(TEXT("OnSafeZonePhaseChanged")));
+
+    auto& SafeZonePhases = GetSafeZonePhases();
+
+    if (InPhaseIndex < 0 || InPhaseIndex >= SafeZonePhases.Num())
+        return;
+
+    const FFortSafeZonePhaseInfo SafeZonePhase = SafeZonePhases[InPhaseIndex];
+    const FVector Center = (FVector)SafeZonePhase.Center;
+
+    PreviousCenter->SetPropertyValue_InContainer<FVector>(this, InPhaseIndex ? GetNextCenter() : Center);
+    *PreviousRadius->ContainerPtrToValuePtr<float>(this) = InPhaseIndex ? GetRadius() : SafeZonePhase.Radius;
+    SetNextCenter(Center);
+    *NextRadius->ContainerPtrToValuePtr<float>(this) = SafeZonePhase.Radius;
+    *NextMegaStormGridCellThickness->ContainerPtrToValuePtr<int32>(this) = SafeZonePhase.MegaStormGridCellThickness;
+    SetCurrentPhase(InPhaseIndex);
+    bSafezoneEventDriven->SetPropertyValue_InContainer(this, SafeZonePhase.WaitTime < 0.0f);
+
+    if (SafeZonePhase.WaitTime >= 0.0f)
+    {
+        OffsetShrinkTimesFromServerTime(SafeZonePhase.WaitTime);
+        SetShrinkDuration(SafeZonePhase.ShrinkTime);
+    }
+
+    if (!InPhaseIndex)
+        SetSafeZoneRadiusAndCenter(SafeZonePhase.Radius, Center);
+
+    ForceNetUpdate();
+    OnSafeZonePhaseChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(nullptr);
+}
+
+bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FFortSafeZonePhaseInfo& OutConstructedPhase) const
+{
+    static auto SafeZoneDefinition = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition"));
+    static auto Radius = SafeZoneDefinition->FindPropertyByName(FName(TEXT("Radius")))->GetOffset_ForInternal();
+    static auto WaitTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("WaitTime")))->GetOffset_ForInternal();
+    static auto ShrinkTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("ShrinkTime")))->GetOffset_ForInternal();
+    static auto MegaStormGridCellThickness = SafeZoneDefinition->FindPropertyByName(FName(TEXT("MegaStormGridCellThickness")))->GetOffset_ForInternal();
+
+    auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+    auto Definition = MapInfo ? MapInfo->GetSafeZoneDefinition() : nullptr;
+
+    if (!GameMode || !Definition || PhaseToConstruct < 0 || PhaseToConstruct >= GameMode->GetSafeZoneLocations().Num())
+        return false;
+
+    auto GetValueAtPhase = [&](int32 Offset)
+    {
+        return ((const FScalableFloat*)(Definition + Offset))->GetValueAtLevel((float)PhaseToConstruct);
+    };
+
+    OutConstructedPhase = {};
+    OutConstructedPhase.Center = FVector3d(TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + PhaseToConstruct * TGameLayout<FVector>::Size()));
+    OutConstructedPhase.Radius = PhaseToConstruct ? GetValueAtPhase(Radius) : FMath::Max(MapInfo->GetSafeZoneStartingRadius().GetValueAtLevel(0.0f), GetValueAtPhase(Radius));
+    OutConstructedPhase.WaitTime = GetValueAtPhase(WaitTime);
+    OutConstructedPhase.ShrinkTime = GetValueAtPhase(ShrinkTime);
+    OutConstructedPhase.StormDamageLevel = PhaseToConstruct;
+    OutConstructedPhase.MegaStormGridCellThickness = FMath::RoundToInt(GetValueAtPhase(MegaStormGridCellThickness));
+
+    return true;
+}
+
+void AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter(float InRadius, const FVector& InLocation)
+{
+    static auto SetSafeZoneRadiusAndCenter = Anchor::Function<void (*)(AFortSafeZoneIndicator*, float, const TGameValue<FVector>*)>(TEXT("AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter"))
+        .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:SetSafeZoneRadiusAndCenter"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    const TGameValue<FVector> Location(InLocation);
+
+    SetSafeZoneRadiusAndCenter(this, InRadius, &Location);
 }
 
 void AFortSafeZoneIndicator::OffsetShrinkTimesFromServerTime(float Offset)
@@ -168,11 +281,42 @@ void AFortSafeZoneIndicator::SetRadius(float InRadius)
         *Radius->ContainerPtrToValuePtr<float>(this) = InRadius;
 }
 
+float AFortSafeZoneIndicator::GetRadius()
+{
+    static auto Radius = GetClass()->FindPropertyByName(FName(TEXT("Radius")));
+
+    return *Radius->ContainerPtrToValuePtr<float>(this);
+}
+
+FVector AFortSafeZoneIndicator::GetNextCenter()
+{
+    static auto NextCenter = GetClass()->FindPropertyByName(FName(TEXT("NextCenter")));
+
+    return NextCenter->GetPropertyValue_InContainer<FVector>(this);
+}
+
 int32 AFortSafeZoneIndicator::GetCurrentPhase() const
 {
     static auto CurrentPhase = GetClass()->FindPropertyByName(FName(TEXT("CurrentPhase")));
 
     return *CurrentPhase->ContainerPtrToValuePtr<int32>(this);
+}
+
+void AFortSafeZoneIndicator::SetCurrentPhase(int32 InCurrentPhase)
+{
+    static auto CurrentPhase = GetClass()->FindPropertyByName(FName(TEXT("CurrentPhase")));
+
+    *CurrentPhase->ContainerPtrToValuePtr<int32>(this) = InCurrentPhase;
+}
+
+TArray<FFortSafeZonePhaseInfo>& AFortSafeZoneIndicator::GetSafeZonePhases() const
+{
+    static auto SafeZonePhases = Anchor::Offset(TEXT("AFortSafeZoneIndicator::SafeZonePhases"))
+        .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:GetSafeZonePhases"))
+        .Find("add rcx, 0x*")
+        .Imm();
+
+    return *(TArray<FFortSafeZonePhaseInfo>*)((uint8*)this + SafeZonePhases);
 }
 
 AFortSafeZoneIndicatorFuture* AFortSafeZoneIndicator::GetFutureReplicator() const

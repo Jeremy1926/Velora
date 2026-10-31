@@ -104,6 +104,10 @@ public:
 
     void StartNewSafeZonePhase(int32 NewSafeZonePhase);
 
+    void StartSafeZones();
+
+    static FString& SetUpdateSafeZonesPhaseReason(FString& Reason, const TCHAR* InReason);
+
     bool StartSafeZonesPhase(bool bForce);
 
     void StartAircraftPhase(bool bSkippedWarmup);

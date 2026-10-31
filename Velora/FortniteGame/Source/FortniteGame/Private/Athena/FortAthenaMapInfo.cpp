@@ -171,14 +171,29 @@ const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMaxPlacementHeight() cons
 
 const FScalableFloat* AFortAthenaMapInfo::GetSafeZoneRadius() const
 {
-    static auto SafeZoneDefinitions = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinitions")));
-    static auto SafeZoneDefinition = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinition")));
     static auto Radius = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition")))->FindPropertyByName(FName(TEXT("Radius")))->GetOffset_ForInternal();
 
+    auto Definition = GetSafeZoneDefinition();
+
+    return Definition ? (const FScalableFloat*)(Definition + Radius) : nullptr;
+}
+
+const FScalableFloat& AFortAthenaMapInfo::GetSafeZoneStartingRadius() const
+{
+    static auto SafeZoneStartingRadius = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneStartingRadius")));
+
+    return *SafeZoneStartingRadius->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+const uint8* AFortAthenaMapInfo::GetSafeZoneDefinition() const
+{
+    static auto SafeZoneDefinitions = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinitions")));
+    static auto SafeZoneDefinition = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinition")));
+
     if (!SafeZoneDefinitions)
-        return (const FScalableFloat*)(SafeZoneDefinition->ContainerPtrToValuePtr<uint8>(this) + Radius);
+        return SafeZoneDefinition->ContainerPtrToValuePtr<uint8>(this);
 
     auto& Definitions = *SafeZoneDefinitions->ContainerPtrToValuePtr<TArray<uint8>>(this);
 
-    return Definitions.Num() ? (const FScalableFloat*)(&Definitions[0] + Radius) : nullptr;
+    return Definitions.Num() ? &Definitions[0] : nullptr;
 }

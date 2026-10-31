@@ -139,6 +139,14 @@ AFortSafeZoneIndicator* AFortGameStateAthena::GetSafeZoneIndicator() const
     return SafeZoneIndicator ? *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this) : nullptr;
 }
 
+void AFortGameStateAthena::SetSafeZoneIndicator(AFortSafeZoneIndicator* InSafeZoneIndicator)
+{
+    static auto SafeZoneIndicator = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
+
+    if (SafeZoneIndicator)
+        *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this) = InSafeZoneIndicator;
+}
+
 float AFortGameStateAthena::GetSafeZonePauseTime() const
 {
     static auto SafeZonePauseTime = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));

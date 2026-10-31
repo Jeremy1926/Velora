@@ -4,10 +4,33 @@
 
 class AFortSafeZoneIndicatorFuture;
 
+struct FFortSafeZonePhaseInfo
+{
+    FVector3d Center;
+    float Radius;
+    float WaitTime;
+    float ShrinkTime;
+    int32 StormDamageLevel;
+    int32 PlayerCap;
+    float TimeBetweenStormCapDamage;
+    float StormCapDamagePerTick;
+    float StormCampingIncrementTimeAfterDelay;
+    float StormCampingInitialDelayTime;
+    int32 MegaStormGridCellThickness;
+};
+
 class AFortSafeZoneIndicator : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    void InitializeWithMapDefaultPhases();
+
+    void StartPhase(int32 InPhaseIndex);
+
+    bool ConstructMapDefaultPhase(int32 PhaseToConstruct, FFortSafeZonePhaseInfo& OutConstructedPhase) const;
+
+    void SetSafeZoneRadiusAndCenter(float InRadius, const FVector& InLocation);
 
     void OffsetShrinkTimesFromServerTime(float Offset);
 
@@ -33,7 +56,15 @@ public:
 
     void SetRadius(float InRadius);
 
+    float GetRadius();
+
+    FVector GetNextCenter();
+
     int32 GetCurrentPhase() const;
+
+    void SetCurrentPhase(int32 InCurrentPhase);
+
+    TArray<FFortSafeZonePhaseInfo>& GetSafeZonePhases() const;
 
     AFortSafeZoneIndicatorFuture* GetFutureReplicator() const;
 };

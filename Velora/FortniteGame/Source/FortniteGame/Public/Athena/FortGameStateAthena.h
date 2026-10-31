@@ -75,6 +75,8 @@ public:
 
     AFortSafeZoneIndicator* GetSafeZoneIndicator() const;
 
+    void SetSafeZoneIndicator(AFortSafeZoneIndicator* InSafeZoneIndicator);
+
     AFortBroadcastSpectatorInfo* GetBroadcastSpectatorInfo() const;
 
     float GetSafeZonePauseTime() const;

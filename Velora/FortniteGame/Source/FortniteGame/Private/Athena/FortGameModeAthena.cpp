@@ -40,6 +40,8 @@
 #include "GameplayEffectTypes.h"
 #include "FortKismetLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/GameEngine.h"
+#include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "Math/UnrealMathUtility.h"
@@ -865,11 +867,18 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
         .Optional()
         .Inline());
 
-    Original(NewSafeZonePhase);
+    static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (SafeZonePhase)
+        Original(NewSafeZonePhase);
+    else if (SafeZoneIndicator && NewSafeZonePhase < 0)
+        SafeZoneIndicator->StartPhase(GetSafeZonePhase() + 1);
+    else
+        return;
 
     UFortConversationTaskNode_ShowFutureStormCircle::HandleSafeZoneUpdated();
 
-    auto SafeZoneIndicator = GetSafeZoneIndicator();
     auto FutureReplicator = SafeZoneIndicator ? SafeZoneIndicator->GetFutureReplicator() : nullptr;
 
     if (!FutureReplicator)
@@ -892,6 +901,46 @@ void AFortGameModeAthena::StartNewSafeZonePhase(int32 NewSafeZonePhase)
     FutureReplicator->SetNextNextCenter(SafeZoneIndicator->GetNextNextCenter());
     FutureReplicator->GetNextNextRadius() = SafeZoneIndicator->GetNextNextRadius();
     FutureReplicator->ForceNetUpdate();
+}
+
+void AFortGameModeAthena::StartSafeZones()
+{
+    DETOUR(AFortGameModeAthena, StartSafeZones, Anchor::Hook()
+        .String(TEXT("&AFortGameModeAthena::HandlePostSafeZonePhaseChanged"))
+        .Start()
+        .Optional()
+        .Inline());
+
+    Original();
+
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (!GameState || !SafeZoneIndicator)
+        return;
+
+    GameState->SetSafeZoneIndicator(SafeZoneIndicator);
+    SafeZoneIndicator->InitializeWithMapDefaultPhases();
+    SetSafeZonePhase(-1);
+    StartNewSafeZonePhase(-1);
+}
+
+FString& AFortGameModeAthena::SetUpdateSafeZonesPhaseReason(FString& Reason, const TCHAR* InReason)
+{
+    DETOUR(AFortGameModeAthena, SetUpdateSafeZonesPhaseReason, Anchor::Hook()
+        .If(!AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePhase"))))
+        .String(TEXT("New safe zone phase will start"))
+        .Start()
+        .Optional()
+        .AtCallsTo(::Anchor::String(TEXT("New safe zone phase will start")).Find("call 0x*").Target()));
+
+    auto& Result = DetourAs<DetourType>(DETOUR_ORIGINAL(AFortGameModeAthena, SetUpdateSafeZonesPhaseReason))(Reason, InReason);
+    auto GameMode = InReason && !wcscmp(InReason, TEXT("New safe zone phase will start")) ? Cast<AFortGameModeAthena>(static_cast<UGameEngine*>(GEngine)->GetGameInstance()->GetWorld()->GetAuthGameMode()) : nullptr;
+
+    if (GameMode)
+        GameMode->StartNewSafeZonePhase(-1);
+
+    return Result;
 }
 
 bool AFortGameModeAthena::StartSafeZonesPhase(bool bForce)
@@ -934,6 +983,8 @@ void AFortGameModeAthena::SetSafeZonePhase(int32 InSafeZonePhase)
 
     if (SafeZonePhase)
         *SafeZonePhase->ContainerPtrToValuePtr<int32>(this) = InSafeZonePhase;
+    else if (auto SafeZoneIndicator = GetSafeZoneIndicator())
+        SafeZoneIndicator->SetCurrentPhase(InSafeZonePhase);
 }
 
 AFortSafeZoneIndicator* AFortGameModeAthena::GetSafeZoneIndicator() const
