@@ -69,6 +69,10 @@ USkeletalMeshComponent* IFortVehicleInterface::GetSkeletalMeshComponent() const
     static auto GetSkeletalMeshComponent = Anchor::VirtualFunction<USkeletalMeshComponent* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::GetSkeletalMeshComponent"))
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .Find("call [*+0x*]", 3)
+        .Is("call [*+0x*]; mov *, rax; test rax, rax")
+        .Or()
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call [*+0x*]; mov rbx, rax; test rax, rax")
         .Get();
 
     return GetSkeletalMeshComponent(this);
