@@ -119,6 +119,7 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Call(2)
         .Get();
     static auto PickupSourceTypeFlags = StaticClass()->FindPropertyByName(FName(TEXT("PickupSourceTypeFlags")));
+    static auto OwnerInstigator = StaticClass()->FindPropertyByName(FName(TEXT("OwnerInstigator")));
 
     if (bItemEntryByValue)
     {
@@ -136,15 +137,18 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         const int32 SpawnLocationOffset = sizeof(UWorld*) + FFortItemEntry::GetTypeSize();
         const int32 SpawnRotationOffset = SpawnLocationOffset + TGameLayout<FVector>::Size();
         const int32 AfterSpawnRotationOffset = SpawnRotationOffset + TGameLayout<FRotator>::Size();
+        const int32 OwnerInstigatorOffset = offsetof(decltype(AfterSpawnRotation), SourceTypeFlags);
+        const int32 OwnerInstigatorSize = OwnerInstigator ? OwnerInstigator->GetSize() : 0;
 
         TArray<uint8> CreationData;
-        CreationData.AddUninitialized(AfterSpawnRotationOffset + sizeof(AfterSpawnRotation));
+        CreationData.SetNum(AfterSpawnRotationOffset + OwnerInstigatorSize + sizeof(AfterSpawnRotation));
 
         *(UWorld**)CreationData.GetData() = World;
         auto ItemEntryCopy = new(CreationData.GetData() + sizeof(UWorld*)) FFortItemEntry(ItemEntry);
         TGameLayout<FVector>::Store(CreationData.GetData() + SpawnLocationOffset, SpawnLocation);
         TGameLayout<FRotator>::Store(CreationData.GetData() + SpawnRotationOffset, SpawnRotation);
-        memcpy(CreationData.GetData() + AfterSpawnRotationOffset, &AfterSpawnRotation, sizeof(AfterSpawnRotation));
+        memcpy(CreationData.GetData() + AfterSpawnRotationOffset, &AfterSpawnRotation, OwnerInstigatorOffset);
+        memcpy(CreationData.GetData() + AfterSpawnRotationOffset + OwnerInstigatorOffset + OwnerInstigatorSize, &AfterSpawnRotation.SourceTypeFlags, sizeof(AfterSpawnRotation) - OwnerInstigatorOffset);
 
         if (bWeakOwners)
         {
