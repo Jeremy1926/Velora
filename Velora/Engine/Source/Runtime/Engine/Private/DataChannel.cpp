@@ -281,14 +281,51 @@ bool UActorChannel::GetSpawnAcked() const
     return *((uint8_t*)Actor->ContainerPtrToValuePtr<AActor*>(this) + sizeof(AActor*) + sizeof(FNetworkGUID) + sizeof(float) + 2 * sizeof(double)) & 1;
 }
 
-bool& UActorChannel::GetHoldQueuedExportBunchesAndGUIDs()
+bool UActorChannel::GetHoldQueuedExportBunchesAndGUIDs()
 {
-    static auto bHoldQueuedExportBunchesAndGUIDs = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
+    static auto Offset = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x0; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
         .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
         .Disp();
 
-    return *(bool*)((uint8_t*)this + bHoldQueuedExportBunchesAndGUIDs);
+    static auto Mask = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x0; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
+        .Value();
+
+    return Mask ? !!(*((uint8_t*)this + Offset) & Mask) : *(bool*)((uint8_t*)this + Offset);
+}
+
+void UActorChannel::SetHoldQueuedExportBunchesAndGUIDs(bool bInHoldQueuedExportBunchesAndGUIDs)
+{
+    static auto Offset = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x0; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
+        .Disp();
+
+    static auto Mask = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x0; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
+        .Value();
+
+    if (!Mask)
+        *(bool*)((uint8_t*)this + Offset) = bInHoldQueuedExportBunchesAndGUIDs;
+    else if (bInHoldQueuedExportBunchesAndGUIDs)
+        *((uint8_t*)this + Offset) |= (uint8_t)Mask;
+    else
+        *((uint8_t*)this + Offset) &= (uint8_t)~Mask;
 }
 
 int64 UActorChannel::ReplicateActor()

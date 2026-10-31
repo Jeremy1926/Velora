@@ -3182,12 +3182,11 @@ int64 UReplicationGraph::ReplicateSingleActor_FastShared(AActor* Actor, FConnect
         OutBunch.SetChannel(ActorChannel);
         OutBunch.SetNext(nullptr);
 
-        auto& bHoldQueuedExportBunchesAndGUIDs = ActorChannel->GetHoldQueuedExportBunchesAndGUIDs();
-        const bool bOldHoldQueuedExportBunchesAndGUIDs = bHoldQueuedExportBunchesAndGUIDs;
+        const bool bOldHoldQueuedExportBunchesAndGUIDs = ActorChannel->GetHoldQueuedExportBunchesAndGUIDs();
 
-        bHoldQueuedExportBunchesAndGUIDs = true;
+        ActorChannel->SetHoldQueuedExportBunchesAndGUIDs(true);
         ActorChannel->SendBunch(&OutBunch, false);
-        bHoldQueuedExportBunchesAndGUIDs = bOldHoldQueuedExportBunchesAndGUIDs;
+        ActorChannel->SetHoldQueuedExportBunchesAndGUIDs(bOldHoldQueuedExportBunchesAndGUIDs);
 
         return OutBunch.GetNumBits();
     }();

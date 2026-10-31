@@ -43,7 +43,9 @@ public:
 
     bool GetSpawnAcked() const;
 
-    bool& GetHoldQueuedExportBunchesAndGUIDs();
+    bool GetHoldQueuedExportBunchesAndGUIDs();
+
+    void SetHoldQueuedExportBunchesAndGUIDs(bool bInHoldQueuedExportBunchesAndGUIDs);
 
     void Close();
 
