@@ -1081,6 +1081,7 @@ void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
         return;
 
     auto PlaylistContextTags = GameState->GetAthenaPlaylistContextTags();
+    auto OldNum = GetGameFeatureLootTierData().Num() + GetGameFeatureLootPackageData().Num();
 
     for (auto GameFeatureData : GameFeatureDatas)
     {
@@ -1090,6 +1091,9 @@ void AFortGameModeAthena::PerformAsyncLoadForGameFeatureLootData()
         GameFeatureData->GetLootTierDataForPlaylist(PlaylistContextTags, GetGameFeatureLootTierData());
         GameFeatureData->GetLootPackageDataForPlaylist(PlaylistContextTags, GetGameFeatureLootPackageData());
     }
+
+    if (GetGameFeatureLootTierData().Num() + GetGameFeatureLootPackageData().Num() == OldNum)
+        return;
 
     for (auto& LootTierData : GetGameFeatureLootTierData())
         LootTierData.LoadSynchronous();

@@ -2,6 +2,8 @@
 #include "FortGameMode.h"
 #include "FortGameInstance.h"
 #include "FortGameData.h"
+#include "Athena/FortGameModeAthena.h"
+#include "Templates/Casts.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "UObject/Class.h"
@@ -180,6 +182,11 @@ void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTa
 
     if (GetLootTierDataTables)
     {
+        static auto GameFeatureLootTierData = GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr;
+
+        if (auto AthenaGameMode = GameFeatureLootTierData ? Cast<AFortGameModeAthena>(const_cast<AFortGameMode*>(this)) : nullptr)
+            AthenaGameMode->PerformAsyncLoadForGameFeatureLootData();
+
         GetLootTierDataTables(this, OutLootTierDataTables);
         return;
     }
@@ -214,6 +221,11 @@ void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackage
 
     if (GetLootPackageDataTables)
     {
+        static auto GameFeatureLootTierData = GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("GameFeatureLootTierData"))) : nullptr;
+
+        if (auto AthenaGameMode = GameFeatureLootTierData ? Cast<AFortGameModeAthena>(const_cast<AFortGameMode*>(this)) : nullptr)
+            AthenaGameMode->PerformAsyncLoadForGameFeatureLootData();
+
         GetLootPackageDataTables(this, OutLootPackageDataTables);
         return;
     }

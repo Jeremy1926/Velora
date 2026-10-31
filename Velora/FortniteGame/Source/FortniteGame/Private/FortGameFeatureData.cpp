@@ -33,36 +33,62 @@ const TMap<FGameplayTag, FFortGameFeatureLootTableData>& UFortGameFeatureData::G
 
 void UFortGameFeatureData::GetLootTierDataForPlaylist(const FGameplayTagContainer& PlaylistTags, TArray<TSoftObjectPtr<UDataTable>>& InOutLootTierDatas) const
 {
+    auto AddLootTable = [&InOutLootTierDatas](const TSoftObjectPtr<UDataTable>& LootTable)
+    {
+        auto Table = LootTable.LoadSynchronous();
+
+        for (auto& ExistingLootTable : InOutLootTierDatas)
+        {
+            if (ExistingLootTable.LoadSynchronous() == Table)
+                return;
+        }
+
+        InOutLootTierDatas.Add(LootTable);
+    };
+
     bool bFoundOverride = false;
 
     for (auto& PlaylistOverride : GetPlaylistOverrideLootTableData())
     {
         if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value.LootTierData.IsNull())
         {
-            InOutLootTierDatas.Add(PlaylistOverride.Value.LootTierData);
+            AddLootTable(PlaylistOverride.Value.LootTierData);
             bFoundOverride = true;
         }
     }
 
     if (!bFoundOverride && !GetDefaultLootTableData().LootTierData.IsNull())
-        InOutLootTierDatas.Add(GetDefaultLootTableData().LootTierData);
+        AddLootTable(GetDefaultLootTableData().LootTierData);
 }
 
 void UFortGameFeatureData::GetLootPackageDataForPlaylist(const FGameplayTagContainer& PlaylistTags, TArray<TSoftObjectPtr<UDataTable>>& OutLootPackageDatas) const
 {
+    auto AddLootTable = [&OutLootPackageDatas](const TSoftObjectPtr<UDataTable>& LootTable)
+    {
+        auto Table = LootTable.LoadSynchronous();
+
+        for (auto& ExistingLootTable : OutLootPackageDatas)
+        {
+            if (ExistingLootTable.LoadSynchronous() == Table)
+                return;
+        }
+
+        OutLootPackageDatas.Add(LootTable);
+    };
+
     bool bFoundOverride = false;
 
     for (auto& PlaylistOverride : GetPlaylistOverrideLootTableData())
     {
         if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value.LootPackageData.IsNull())
         {
-            OutLootPackageDatas.Add(PlaylistOverride.Value.LootPackageData);
+            AddLootTable(PlaylistOverride.Value.LootPackageData);
             bFoundOverride = true;
         }
     }
 
     if (!bFoundOverride && !GetDefaultLootTableData().LootPackageData.IsNull())
-        OutLootPackageDatas.Add(GetDefaultLootTableData().LootPackageData);
+        AddLootTable(GetDefaultLootTableData().LootPackageData);
 }
 
 const TArray<FFortGameFeatureDataBaseDataTableOverrides>* UFortGameFeatureData::GetPlaylistBaseDataTableOverrides() const
