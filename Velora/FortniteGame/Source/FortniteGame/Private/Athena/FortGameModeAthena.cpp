@@ -1118,9 +1118,9 @@ FSimpleMulticastDelegate* AFortGameModeAthena::GetOnPlaylistLootTablesAppliedDel
     return OnPlaylistLootTablesAppliedDelegate ? (FSimpleMulticastDelegate*)((uint8*)this + OnPlaylistLootTablesAppliedDelegate) : nullptr;
 }
 
-TArray<FFortCustomRepNodeClassMapping>& AFortGameModeAthena::GetGlobalRepGraphNodeClassesToAdd()
+TArray<FFortCustomRepNodeClassMapping>* AFortGameModeAthena::GetGlobalRepGraphNodeClassesToAdd()
 {
     static auto GlobalRepGraphNodeClassesToAdd = StaticClass()->FindPropertyByName(FName(TEXT("GlobalRepGraphNodeClassesToAdd")));
 
-    return *GlobalRepGraphNodeClassesToAdd->ContainerPtrToValuePtr<TArray<FFortCustomRepNodeClassMapping>>(this);
+    return GlobalRepGraphNodeClassesToAdd ? GlobalRepGraphNodeClassesToAdd->ContainerPtrToValuePtr<TArray<FFortCustomRepNodeClassMapping>>(this) : nullptr;
 }

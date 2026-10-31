@@ -94,7 +94,7 @@ public:
 
     FSimpleMulticastDelegate* GetOnPlaylistLootTablesAppliedDelegate();
 
-    TArray<FFortCustomRepNodeClassMapping>& GetGlobalRepGraphNodeClassesToAdd();
+    TArray<FFortCustomRepNodeClassMapping>* GetGlobalRepGraphNodeClassesToAdd();
 
     TSubclassOf<AActor> GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const;
 

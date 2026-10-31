@@ -1539,9 +1539,9 @@ void UFortReplicationGraph::OnGameStatePlaylistLoaded(FName PlaylistName, const 
         bSpecialRelevancyNode = true;
     }
 
-    auto& GlobalRepGraphNodeClassesToAdd = GameMode->GetGlobalRepGraphNodeClassesToAdd();
+    auto GlobalRepGraphNodeClassesToAdd = GameMode->GetGlobalRepGraphNodeClassesToAdd();
 
-    if (GlobalRepGraphNodeClassesToAdd.Num() <= 0)
+    if (!GlobalRepGraphNodeClassesToAdd || GlobalRepGraphNodeClassesToAdd->Num() <= 0)
     {
         if (bSpecialRelevancyNode)
             InitializeForWorld(this, World);
@@ -1549,7 +1549,7 @@ void UFortReplicationGraph::OnGameStatePlaylistLoaded(FName PlaylistName, const 
         return;
     }
 
-    for (const auto& ClassMapping : GlobalRepGraphNodeClassesToAdd)
+    for (const auto& ClassMapping : *GlobalRepGraphNodeClassesToAdd)
     {
         if (!ClassMapping.NodeClass || !ClassMapping.NodeClass->IsChildOf(UFortReplicationGraphNode_Custom::StaticClass()))
             continue;
