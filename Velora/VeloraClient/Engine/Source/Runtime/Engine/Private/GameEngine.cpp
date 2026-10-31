@@ -42,10 +42,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
     if (auto PlayerController = LocalPlayer ? LocalPlayer->GetPlayerController() : nullptr)
         PlayerController->AddCheats(true);
 
-    static auto AllowEncryption = IConsoleManager::Get().FindConsoleVariable(TEXT("net.AllowEncryption"));
+    static auto bAllowEncryption = []
+    {
+        auto AllowEncryption = IConsoleManager::Get().FindConsoleVariable(TEXT("net.AllowEncryption"));
 
-    if (AllowEncryption && AllowEncryption->GetInt() == 2)
-        AllowEncryption->Set(TEXT("1"), ECVF_SetByCode);
+        if (AllowEncryption)
+            AllowEncryption->Set(TEXT("1"), ECVF_SetByCode);
+
+        return AllowEncryption != nullptr;
+    }();
 
     Original(DeltaSeconds, bIdleMode);
 }
