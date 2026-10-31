@@ -70,6 +70,11 @@ Native UFunction::GetNativeFunc() const
     static auto Func = Anchor::Offset(TEXT("UFunction::Func"))
         .String(TEXT("Failed to bind native function %s.%s"))
         .Start()
+        .Find("bt *, 0xa; j* 0x*; lea rax, [0x*]; mov [*+0x*], rax")
+        .Find("mov [*+0x*], rax")
+        .Or()
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
         .Find("mov [*+0x*], rax")
         .Disp();
 
@@ -79,6 +84,11 @@ Native UFunction::GetNativeFunc() const
 void UFunction::SetNativeFunc(Native InFunc)
 {
     static auto Func = Anchor::Offset(TEXT("UFunction::Func"))
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Find("bt *, 0xa; j* 0x*; lea rax, [0x*]; mov [*+0x*], rax")
+        .Find("mov [*+0x*], rax")
+        .Or()
         .String(TEXT("Failed to bind native function %s.%s"))
         .Start()
         .Find("mov [*+0x*], rax")
