@@ -399,7 +399,7 @@ void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
     auto& NextEventGenerationTime = GetNextEventGenerationTime();
     auto Config = GetConfig();
 
-    if (!World || !Config || NextEventGenerationTime < 0.0f)
+    if (!World || !Config || !Config->GetCategoryTable() || NextEventGenerationTime < 0.0f)
         return;
 
     auto PlayerTracker = GetPlayerTracker();
