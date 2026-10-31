@@ -58,6 +58,12 @@ FSimpleMulticastDelegate& AFortPlayerControllerZone::GetOnPlayerPlaceChanged()
         .Find("jnz 0x*")
         .Target()
         .Find("lea rcx, [*+0x*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateAthena:OnRep_Place"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov *, [*+0x*]; test *, *; jz 0x*")
+        .Find("lea rcx, [*+0x*]; call 0x*")
         .Disp();
 
     return *(FSimpleMulticastDelegate*)((uint8*)this + OnPlayerPlaceChanged);
