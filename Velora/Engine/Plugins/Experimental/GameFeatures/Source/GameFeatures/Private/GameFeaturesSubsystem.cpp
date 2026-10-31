@@ -4,6 +4,7 @@
 #include "Containers/UnrealString.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
@@ -25,6 +26,18 @@ UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
 
 void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGameFeatureData*>& OutActivePluginFeatureDatas)
 {
+    static auto GetGameFeatureDataForActivePlugins = Anchor::Optional<void (*)(UGameFeaturesSubsystem*, TArray<const UGameFeatureData*>&)>(TEXT("UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins"))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/GameFeatures.GameFeaturePluginIdentifier")) != nullptr)
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("movaps [rbp+0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (GetGameFeatureDataForActivePlugins)
+        return GetGameFeatureDataForActivePlugins(this, OutActivePluginFeatureDatas);
+
     static auto CurrentState = (int32)Anchor::Offset(TEXT("UGameFeaturePluginStateMachine::CurrentState"))
         .String(TEXT(" - Adding preload object: '%s'"))
         .Caller()
