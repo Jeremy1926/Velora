@@ -23,6 +23,12 @@ struct FReplicatedAthenaVehiclePhysicsState
 
 struct FVehicleDamageablePart
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    void SetbConsideredCriticalHit(bool bInConsideredCriticalHit);
+
     int32 ConfigIndex;
     int32 BoneIndex;
     int32 ShapeIndex;
@@ -81,9 +87,9 @@ public:
 
     void SetupToggleableShapeCollision();
 
-    void OnRep_DamageableParts(const TArray<FVehicleDamageablePart>& PrevDamageableParts);
+    void OnRep_DamageableParts(const TRuntimeSizedArray<FVehicleDamageablePart>& PrevDamageableParts);
 
-    TArray<FVehicleDamageablePart>& GetDamageableParts();
+    TRuntimeSizedArray<FVehicleDamageablePart>& GetDamageableParts();
 
     UPrimitiveComponent* GetVehicleBulletCollisionComponent() const;
 };

@@ -505,6 +505,14 @@ public:
     {
     }
 
+    TRuntimeSizedArray(const TRuntimeSizedArray& Other)
+        : ArrayNum(0)
+        , ArrayMax(0)
+    {
+        AddUninitialized(Other.Num());
+        memcpy(AllocatorInstance.GetAllocation(), Other.AllocatorInstance.GetAllocation(), Other.Num() * ElementType::GetTypeSize());
+    }
+
     ~TRuntimeSizedArray()
     {
         for (auto& Element : *this)

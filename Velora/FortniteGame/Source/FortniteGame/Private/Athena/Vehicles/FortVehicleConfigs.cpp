@@ -32,6 +32,13 @@ bool FVehicleDamageablePartConfig::GetbStartsDisabled() const
     return bStartsDisabled && *bStartsDisabled->ContainerPtrToValuePtr<bool>(this);
 }
 
+bool FVehicleDamageablePartConfig::GetbConsideredCriticalHit() const
+{
+    static auto bConsideredCriticalHit = StaticStruct()->FindPropertyByName(FName(TEXT("bConsideredCriticalHit")));
+
+    return bConsideredCriticalHit && *bConsideredCriticalHit->ContainerPtrToValuePtr<bool>(this);
+}
+
 FName FVehicleDamageablePartConfig::GetShapeName() const
 {
     static auto ShapeName = StaticStruct()->FindPropertyByName(FName(TEXT("ShapeName")));

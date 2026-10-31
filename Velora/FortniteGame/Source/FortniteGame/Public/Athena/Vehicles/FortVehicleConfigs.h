@@ -14,6 +14,8 @@ struct FVehicleDamageablePartConfig
 
     bool GetbStartsDisabled() const;
 
+    bool GetbConsideredCriticalHit() const;
+
     FName GetShapeName() const;
 
     FName GetBoneName() const;

@@ -119,6 +119,28 @@ FVector FReplicatedAthenaVehiclePhysicsState::GetAngularVelocity() const
     return AngularVelocity->GetPropertyValue_InContainer<FVector>(this);
 }
 
+UScriptStruct* FVehicleDamageablePart::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.VehicleDamageablePart"));
+
+    return Struct;
+}
+
+int32 FVehicleDamageablePart::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+void FVehicleDamageablePart::SetbConsideredCriticalHit(bool bInConsideredCriticalHit)
+{
+    static auto bConsideredCriticalHit = StaticStruct()->FindPropertyByName(FName(TEXT("bConsideredCriticalHit")));
+
+    if (bConsideredCriticalHit)
+        *bConsideredCriticalHit->ContainerPtrToValuePtr<bool>(this) = bInConsideredCriticalHit;
+}
+
 void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplicatedAthenaVehiclePhysicsState& InState)
 {
     static auto bEncodedRotation = FReplicatedAthenaVehiclePhysicsState::StaticStruct()->FindPropertyByName(FName(TEXT("SyncKey"))) != nullptr;
@@ -432,7 +454,7 @@ void AFortAthenaVehicle::AbsorbDamageIntoDamagablePart(float Damage, const FGame
         if (DamageableParts[Index].ShapeIndex != HitResult->GetElementIndex() || DamageableParts[Index].Health <= 0.0f)
             continue;
 
-        const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+        const TRuntimeSizedArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
 
         DamageableParts[Index].Health = FMath::Max(DamageableParts[Index].Health - Damage, 0.0f);
 
@@ -446,7 +468,7 @@ void AFortAthenaVehicle::AbsorbDamageIntoDamagablePart(float Damage, const FGame
 void AFortAthenaVehicle::DestroyAllDamageableParts()
 {
     auto& DamageableParts = GetDamageableParts();
-    const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+    const TRuntimeSizedArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
 
     for (auto& Part : DamageableParts)
     {
@@ -527,7 +549,7 @@ void AFortAthenaVehicle::RepairAllDamageableParts(float NewHealth)
 
     auto& DamageableParts = GetDamageableParts();
     const auto& PartConfigs = VehicleConfigs->GetDamageableParts();
-    const TArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
+    const TRuntimeSizedArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
 
     for (auto& Part : DamageableParts)
     {
@@ -569,33 +591,34 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
             if (ShapeIndex == INDEX_NONE)
                 continue;
 
-            FVehicleDamageablePart Part;
+            auto& Part = DamageableParts[DamageableParts.AddUninitialized()];
+
+            memset(&Part, 0, FVehicleDamageablePart::GetTypeSize());
             Part.ConfigIndex = ConfigIndex;
             Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].GetBoneName()) : INDEX_NONE;
             Part.ShapeIndex = ShapeIndex;
             Part.Health = PartConfigs[ConfigIndex].GetbStartsDisabled() ? 0.0f : PartConfigs[ConfigIndex].GetMaxHealth();
-
-            DamageableParts.Add(Part);
+            Part.SetbConsideredCriticalHit(PartConfigs[ConfigIndex].GetbConsideredCriticalHit());
         }
     }
 
     Original();
 }
 
-void AFortAthenaVehicle::OnRep_DamageableParts(const TArray<FVehicleDamageablePart>& PrevDamageableParts)
+void AFortAthenaVehicle::OnRep_DamageableParts(const TRuntimeSizedArray<FVehicleDamageablePart>& PrevDamageableParts)
 {
-    static auto OnRep_DamageableParts = Anchor::Function<void (*)(AFortAthenaVehicle*, const TArray<FVehicleDamageablePart>&)>(TEXT("AFortAthenaVehicle::OnRep_DamageableParts"))
+    static auto OnRep_DamageableParts = Anchor::Function<void (*)(AFortAthenaVehicle*, const TRuntimeSizedArray<FVehicleDamageablePart>&)>(TEXT("AFortAthenaVehicle::OnRep_DamageableParts"))
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .Get();
 
     OnRep_DamageableParts(this, PrevDamageableParts);
 }
 
-TArray<FVehicleDamageablePart>& AFortAthenaVehicle::GetDamageableParts()
+TRuntimeSizedArray<FVehicleDamageablePart>& AFortAthenaVehicle::GetDamageableParts()
 {
     static auto DamageableParts = StaticClass()->FindPropertyByName(FName(TEXT("DamageableParts")));
 
-    return *DamageableParts->ContainerPtrToValuePtr<TArray<FVehicleDamageablePart>>(this);
+    return *DamageableParts->ContainerPtrToValuePtr<TRuntimeSizedArray<FVehicleDamageablePart>>(this);
 }
 
 UPrimitiveComponent* AFortAthenaVehicle::GetVehicleBulletCollisionComponent() const
