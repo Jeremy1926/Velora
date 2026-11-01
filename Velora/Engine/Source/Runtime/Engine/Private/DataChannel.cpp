@@ -354,6 +354,13 @@ void UActorChannel::SetChannelActor(AActor* InActor, ESetChannelActorFlags Flags
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .FindCallToString(TEXT("Created channel %i of type %s"))
+        .Find("mov rdi, rax; test rax, rax; jz *; mov rcx, rax; call 0x*; test al, al; jnz *; xor edi, edi; test rdi, rdi; jz *; xor r8d, r8d; mov rdx, rsi; mov rcx, rdi; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .FindCallToString(TEXT("Created channel %i of type %s"))
         .Find("call 0x*", 3)
         .Target()
         .Get();
