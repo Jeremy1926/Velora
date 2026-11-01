@@ -289,6 +289,9 @@ TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDorm
 {
     static auto DestroyedStartupOrDormantActors = Anchor::Offset(TEXT("UNetDriver::DestroyedStartupOrDormantActors"))
         .String(TEXT("AddClientConnection: Added client connection: %s"))
+        .Find("lea r*, [*+0x???]; xor r8d, r8d; lea rdx, [r*+0x10]")
+        .Or()
+        .String(TEXT("AddClientConnection: Added client connection: %s"))
         .Find("lea r*, [*+0x???]")
         .Or()
         .String(TEXT("AddClientConnection: Added client connection: %s"))
