@@ -225,7 +225,7 @@ private:
 
     TClassMap<bool>& GetClassRebuildDenyList();
 
-    float& GetConnectionMaxZ();
+    float GetConnectionMaxZ();
 
     bool& GetDestroyDormantDynamicActors();
 

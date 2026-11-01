@@ -1120,14 +1120,18 @@ uint8* UReplicationGraphNode_GridSpatialization2D::GetSpatialBias()
     return (uint8*)&GetCellSize() + TLWCGameLayout<float, double>::Size();
 }
 
-float& UReplicationGraphNode_GridSpatialization2D::GetConnectionMaxZ()
+float UReplicationGraphNode_GridSpatialization2D::GetConnectionMaxZ()
 {
-    return *(float*)(GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size());
+    static auto bDoubleConnectionMaxZ = *(uint32*)(StaticClass()->GetDefaultObject<UReplicationGraphNode_GridSpatialization2D>()->GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size()) == 0;
+
+    auto ConnectionMaxZ = GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size();
+
+    return bDoubleConnectionMaxZ ? (float)*(double*)ConnectionMaxZ : *(float*)ConnectionMaxZ;
 }
 
 TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>& UReplicationGraphNode_GridSpatialization2D::GetCreateCellNodeOverride()
 {
-    return *(TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>*)((((uintptr_t)&GetConnectionMaxZ() + sizeof(float)) + 0xF) & ~(uintptr_t)0xF);
+    return *(TFunction<UReplicationGraphNode_GridCell*(UReplicationGraphNode_GridSpatialization2D*)>*)((((uintptr_t)GetSpatialBias() + 2 * TLWCGameLayout<float, double>::Size() + sizeof(float)) + 0xF) & ~(uintptr_t)0xF);
 }
 
 uint8* UReplicationGraphNode_GridSpatialization2D::GetGridBounds()
