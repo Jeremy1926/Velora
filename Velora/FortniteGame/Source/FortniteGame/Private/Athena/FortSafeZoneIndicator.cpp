@@ -45,6 +45,22 @@ void FFortSafeZonePhaseInfo::SetStormDamageLevel(int32 InStormDamageLevel)
         *StormDamageLevel->ContainerPtrToValuePtr<int32>(this) = InStormDamageLevel;
 }
 
+void FFortSafeZonePhaseInfo::SetDamageInfo(float InDamage, bool bInPercentageBasedDamage)
+{
+    static auto DamageInfo = StaticStruct()->FindPropertyByName(FName(TEXT("DamageInfo")));
+    static auto DamageInfoStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDamageInfo"));
+    static auto Damage = DamageInfoStruct ? DamageInfoStruct->FindPropertyByName(FName(TEXT("Damage"))) : nullptr;
+    static auto bPercentageBasedDamage = DamageInfoStruct ? (UBoolProperty*)DamageInfoStruct->FindPropertyByName(FName(TEXT("bPercentageBasedDamage"))) : nullptr;
+
+    if (!DamageInfo || !Damage || !bPercentageBasedDamage)
+        return;
+
+    auto Info = DamageInfo->ContainerPtrToValuePtr<void>(this);
+
+    *Damage->ContainerPtrToValuePtr<float>(Info) = InDamage;
+    bPercentageBasedDamage->SetPropertyValue_InContainer(Info, bInPercentageBasedDamage);
+}
+
 int32& FFortSafeZonePhaseInfo::GetMegaStormGridCellThickness()
 {
     static auto MegaStormGridCellThickness = StaticStruct()->FindPropertyByName(FName(TEXT("MegaStormGridCellThickness")));
@@ -83,6 +99,8 @@ void AFortSafeZoneIndicator::InitializeWithMapDefaultPhases()
             break;
         }
     }
+
+    SetPhaseCount(SafeZonePhases.Num());
 }
 
 void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
@@ -108,6 +126,7 @@ void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
     *NextRadius->ContainerPtrToValuePtr<float>(this) = SafeZonePhase.Radius;
     *NextMegaStormGridCellThickness->ContainerPtrToValuePtr<int32>(this) = SafeZonePhase.GetMegaStormGridCellThickness();
     SetCurrentPhase(InPhaseIndex);
+    SetCurrentDamageInfo(SafeZonePhase);
     bSafezoneEventDriven->SetPropertyValue_InContainer(this, SafeZonePhase.WaitTime < 0.0f);
 
     if (SafeZonePhase.WaitTime >= 0.0f)
@@ -130,6 +149,7 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
     static auto WaitTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("WaitTime")))->GetOffset_ForInternal();
     static auto ShrinkTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("ShrinkTime")))->GetOffset_ForInternal();
     static auto MegaStormGridCellThickness = SafeZoneDefinition->FindPropertyByName(FName(TEXT("MegaStormGridCellThickness")))->GetOffset_ForInternal();
+    static auto SafeZoneDamageAttribute = FFortSafeZonePhaseInfo::StaticStruct()->FindPropertyByName(FName(TEXT("DamageInfo"))) ? AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneDamageAttribute"))) : nullptr;
 
     auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -150,6 +170,10 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
     OutConstructedPhase.WaitTime = GetValueAtPhase(WaitTime);
     OutConstructedPhase.ShrinkTime = GetValueAtPhase(ShrinkTime);
     OutConstructedPhase.SetStormDamageLevel(PhaseToConstruct);
+
+    if (SafeZoneDamageAttribute)
+        OutConstructedPhase.SetDamageInfo(SafeZoneDamageAttribute->ContainerPtrToValuePtr<FScalableFloat>(GameState)->GetValueAtLevel((float)PhaseToConstruct), true);
+
     OutConstructedPhase.GetMegaStormGridCellThickness() = FMath::RoundToInt(GetValueAtPhase(MegaStormGridCellThickness));
 
     return true;
@@ -363,6 +387,23 @@ void AFortSafeZoneIndicator::SetCurrentPhase(int32 InCurrentPhase)
     static auto CurrentPhase = GetClass()->FindPropertyByName(FName(TEXT("CurrentPhase")));
 
     *CurrentPhase->ContainerPtrToValuePtr<int32>(this) = InCurrentPhase;
+}
+
+void AFortSafeZoneIndicator::SetPhaseCount(int32 InPhaseCount)
+{
+    static auto PhaseCount = GetClass()->FindPropertyByName(FName(TEXT("PhaseCount")));
+
+    if (PhaseCount)
+        *PhaseCount->ContainerPtrToValuePtr<int32>(this) = InPhaseCount;
+}
+
+void AFortSafeZoneIndicator::SetCurrentDamageInfo(const FFortSafeZonePhaseInfo& InPhase)
+{
+    static auto CurrentDamageInfo = GetClass()->FindPropertyByName(FName(TEXT("CurrentDamageInfo")));
+    static auto DamageInfo = FFortSafeZonePhaseInfo::StaticStruct()->FindPropertyByName(FName(TEXT("DamageInfo")));
+
+    if (CurrentDamageInfo && DamageInfo)
+        memcpy(CurrentDamageInfo->ContainerPtrToValuePtr<void>(this), DamageInfo->ContainerPtrToValuePtr<void>(&InPhase), CurrentDamageInfo->GetSize());
 }
 
 TArray<FFortSafeZonePhaseInfo>& AFortSafeZoneIndicator::GetSafeZonePhases() const

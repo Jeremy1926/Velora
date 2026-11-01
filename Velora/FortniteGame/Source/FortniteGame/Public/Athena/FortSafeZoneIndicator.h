@@ -15,6 +15,8 @@ struct FFortSafeZonePhaseInfo
 
     void SetStormDamageLevel(int32 InStormDamageLevel);
 
+    void SetDamageInfo(float InDamage, bool bInPercentageBasedDamage);
+
     int32& GetMegaStormGridCellThickness();
 
     FVector3d Center;
@@ -74,6 +76,10 @@ public:
     int32 GetCurrentPhase() const;
 
     void SetCurrentPhase(int32 InCurrentPhase);
+
+    void SetPhaseCount(int32 InPhaseCount);
+
+    void SetCurrentDamageInfo(const FFortSafeZonePhaseInfo& InPhase);
 
     TArray<FFortSafeZonePhaseInfo>& GetSafeZonePhases() const;
 
