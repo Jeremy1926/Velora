@@ -26,6 +26,9 @@ const FFieldNetCache* FClassNetCache::GetFromField(FFieldVariant Field) const
         .Target()
         .Get();
 
+    if (FFieldVariant::IsTaggedPointer())
+        return ((const FFieldNetCache* (*)(const FClassNetCache*, UPTRINT))GetFromField)(this, Field.ToTaggedPointer());
+
     return GetFromField(this, Field);
 }
 
