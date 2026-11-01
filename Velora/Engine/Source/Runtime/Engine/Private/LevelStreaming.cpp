@@ -28,6 +28,14 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Or()
         .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; mov r9d, 0x3")
         .Last("mov byte ptr [*+0x*], 0x2")
+        .Or()
+        .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; xor edx, edx; xor ecx, ecx")
+        .Start()
+        .CallSite()
+        .Find("mov dl, 0x2; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], dl")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
