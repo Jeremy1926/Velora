@@ -120,7 +120,7 @@ TMulticastDelegate<void, AFortLiveSpectatorController*>& AFortGameModeAthena::Ge
     return *NotifyLiveSpectatorJoined;
 }
 
-TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>& AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment()
+TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>* AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment()
 {
     static auto NotifyPlayerStateSquadAssignment = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>*>(TEXT("AFortGameModeAthena::NotifyPlayerStateSquadAssignment"))
         .String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d"))
@@ -128,9 +128,10 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>& AFortGameModeAthena::G
         .Caller()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Optional()
         .Get();
 
-    return *NotifyPlayerStateSquadAssignment;
+    return NotifyPlayerStateSquadAssignment;
 }
 
 TMulticastDelegate<void, TSubclassOf<AFortPawn>>& AFortGameModeAthena::GetNotifyNewAIClass()

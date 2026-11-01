@@ -38,7 +38,7 @@ public:
 
     static TMulticastDelegate<void, AFortLiveSpectatorController*>& GetNotifyLiveSpectatorJoined();
 
-    static TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>& GetNotifyPlayerStateSquadAssignment();
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>* GetNotifyPlayerStateSquadAssignment();
 
     static TMulticastDelegate<void, TSubclassOf<AFortPawn>>& GetNotifyNewAIClass();
 

@@ -598,7 +598,9 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
 
     GetDestructInfoMaxDistanceSquared() = DestructInfoMaxDist->GetFloat() * DestructInfoMaxDist->GetFloat();
 
-    AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment().AddUObject(this, &UFortReplicationGraph::OnPlayerStateSquadAssign);
+    if (auto NotifyPlayerStateSquadAssignment = AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment())
+        NotifyPlayerStateSquadAssignment->AddUObject(this, &UFortReplicationGraph::OnPlayerStateSquadAssign);
+
     AFortGameModeAthena::GetNotifyNewAIClass().AddUObject(this, &UFortReplicationGraph::OnAIClassAdditionRequest);
     AFortTeamPrivateInfo::GetNotifyPlayerAdded().AddUObject(this, &UFortReplicationGraph::OnPlayerAddedTeam);
     AFortTeamPrivateInfo::GetNotifyPlayerRemoved().AddUObject(this, &UFortReplicationGraph::OnPlayerRemovedTeam);
