@@ -2731,6 +2731,12 @@ TArray<UNetConnection*>& UReplicationGraph::GetConnectionsNeedingsPostTickDispat
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x40)
         .Find("lea rdi, [rcx+0x*]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x40)
+        .Find("lea rbx, [rcx+0x*]")
         .Disp();
 
     return *(TArray<UNetConnection*>*)((uint8*)this + ConnectionsNeedingsPostTickDispatchFlush);
