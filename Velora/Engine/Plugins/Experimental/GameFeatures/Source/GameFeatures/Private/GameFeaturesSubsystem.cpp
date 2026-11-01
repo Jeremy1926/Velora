@@ -121,7 +121,7 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
             OutActivePluginFeatureDatas.Add(FeatureData);
     };
 
-    if (GameFeaturePluginIdentifier)
+    if (GameFeaturePluginIdentifier && ((UMapProperty*)GameFeaturePluginStateMachines)->GetKeyProp()->GetSize() == sizeof(TAlignedBytes<0x28, 8>))
     {
         for (auto& StateMachinePair : *GameFeaturePluginStateMachines->ContainerPtrToValuePtr<TMap<TAlignedBytes<0x28, 8>, UObject*>>(this))
             AddActivePlugin(StateMachinePair.Value);

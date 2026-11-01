@@ -140,3 +140,20 @@ private:
 
     UProperty* Inner;
 };
+
+class UMapProperty : public UProperty
+{
+public:
+    FORCEINLINE UProperty* GetKeyProp() const
+    {
+        return GetProperty()->KeyProp;
+    }
+
+private:
+    FORCEINLINE const UMapProperty* GetProperty() const
+    {
+        return (const UMapProperty*)UProperty::GetProperty();
+    }
+
+    UProperty* KeyProp;
+};
