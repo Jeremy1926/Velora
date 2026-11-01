@@ -126,6 +126,12 @@ FString UEnum::GetNameStringByValue(int64 InValue) const
         .String(TEXT("Action Router - Player [%d]: Input Type[%s]"))
         .Last("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Action Router - Player [%d]: Input Type[%s]"))
+        .Start()
+        .CallSite()
+        .Last("call 0x*")
+        .Target()
         .Get();
 
     FString Result;
