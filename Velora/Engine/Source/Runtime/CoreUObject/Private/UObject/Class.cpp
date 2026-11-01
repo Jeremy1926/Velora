@@ -29,6 +29,9 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Or()
         .If(Version.GetMajor() <= 4 && Version.GetMinor() < 22)
         .Pattern("48 8B 41 58 48 85 C0 74 ? 0F 1F 80 00 00 00 00 48 39 50 18 74 ? 48 8B 40 50 48 85 C0 75 ? 33 C0 C3")
+        .Or()
+        .If(FField::StaticClass())
+        .Pattern("48 8B 41 70 48 85 C0 74 ? 39 50 20 74 ? 48 8B 40 40 EB ? C3")
         .Get();
 
     return FindPropertyByName(this, InName);
