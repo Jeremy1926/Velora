@@ -103,6 +103,10 @@ FOutputDeviceRedirector* GetGlobalLogSingleton()
         .String(TEXT("STAT_FEngineLoop_FlushThreadedLogs"))
         .Find("call 0x*; mov edx, r*; mov rcx, rax; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("STAT_FEngineLoop_FlushThreadedLogs"))
+        .Find("call 0x*; mov edx, 0x1; mov rcx, rax; call 0x*")
+        .Call()
         .Get();
 
     return GetGlobalLogSingleton();
