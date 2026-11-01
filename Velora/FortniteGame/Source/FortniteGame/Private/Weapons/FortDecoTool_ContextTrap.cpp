@@ -74,6 +74,15 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
         .Find("mov r8, rbx")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Find("call [*+0x*]; test eax, eax; jz 0x*")
+        .Find("mov r8, rdi")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     auto ContextTrapItemDefinition = GetContextTrapItemDefinition();
