@@ -45,6 +45,8 @@ FOutBunch::FOutBunch()
 {
     static auto Constructor = Anchor::Function<FOutBunch* (*)(FOutBunch*)>(TEXT("FOutBunch::FOutBunch"))
         .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 89 03 33 C0 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 8B C3 48 83 C4 20 5B C3")
+        .Or()
+        .Pattern("40 53 48 83 EC 20 33 D2 48 8B D9 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 89 03 33 C0 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 8B C3 48 83 C4 20 5B C3")
         .Get();
 
     Constructor(this);
