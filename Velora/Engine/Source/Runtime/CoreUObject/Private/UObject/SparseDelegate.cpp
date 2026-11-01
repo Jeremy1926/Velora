@@ -109,6 +109,8 @@ bool FSparseDelegateStorage::RemoveAll(const UObject* DelegateOwner, const FName
         .Target()
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .Pattern("48 89 5C 24 10 55 56 57 41 56 41 57 48 83 EC 20 4C 8B F1 4D 8B F8 48 8D 0D ? ? ? ? 8B DA 48 89 4C 24 68 33 FF FF 15")
         .Get();
 
     return RemoveAll(DelegateOwner, DelegateName, UserObject);
