@@ -43,6 +43,8 @@ bool FSparseDelegateStorage::Add(const UObject* DelegateOwner, const FName Deleg
         .Pattern("48 89 5C 24 08 89 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 8B EC 48 81 EC ? ? ? ? 48 8B D9 4D 8B E8 49 8B C8 33 FF E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8D 0D")
         .Or()
         .Pattern("48 89 5C 24 08 89 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 8B EC 48 81 EC ? ? ? ? 48 8B F9 4D 8B E8 49 8B C8 33 DB E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8D 0D")
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 74 24 18 89 54 24 10 55 57 41 55 41 56 41 57 48 8B EC 48 81 EC ? ? ? ? 48 8B F9 4D 8B E8 49 8B C8 33 DB E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8D 0D")
         .Get();
 
     return Add(DelegateOwner, DelegateName, &Delegate);
