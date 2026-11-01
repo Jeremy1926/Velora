@@ -45,6 +45,11 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data)
         .Start()
         .Find("call 0x*; lea rax, [rbp-0x*]; mov r9, r*; mov [rsp+0x*], rax")
         .Target()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rsp+0x*]; mov [rsp+0x*], rax")
+        .Target()
         .Get();
 
     BuildSharedSerializationForRPC(this, Data);
