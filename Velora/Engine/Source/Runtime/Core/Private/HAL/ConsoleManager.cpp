@@ -121,6 +121,15 @@ void IConsoleVariable::SetOnChangedCallback(const FConsoleVariableDelegate& Call
     static auto SetOnChangedCallback = Anchor::VirtualFunction<void (*)(IConsoleVariable*, const FConsoleVariableDelegate&)>(TEXT("IConsoleVariable::SetOnChangedCallback"))
         .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r8b, *; call [rax+0x*]; test rax, rax; jz 0x*; mov r8, [rax]")
         .Find("call [r8+0x*]")
+        .Or()
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r8b, *; call [rax+0x*]; mov r9, rax; test rax, rax; jz 0x*; mov rcx, [rax]; mov r8, [rcx+0x*]")
+        .Find("mov r8, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r8b, *; call [rax+0x*]; *; test rax, rax; jz 0x*; mov r8, [rax]")
+        .Find("call [r8+0x*]")
+        .Or()
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r12d, *; mov r8b, r12b; call [rax+0x*]; *; *; test rax, rax; jz 0x*; mov r8, [rax]")
+        .Find("call [r8+0x*]")
         .Get();
 
     SetOnChangedCallback(this, Callback);
