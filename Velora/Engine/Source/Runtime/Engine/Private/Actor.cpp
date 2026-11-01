@@ -536,6 +536,10 @@ UNetConnection* AActor::GetNetConnection() const
         .Start()
         .Find("call 0x*; lea rax, [rbp-0x*]; mov r9, r*; mov [rsp+0x*], rax")
         .Find("call [rax+0x*]; test rax, rax")
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call [rax+0x*]; test rax, rax; jz *; lea rcx, [rsp+0x*]")
         .Get();
 
     return GetNetConnection(this);
