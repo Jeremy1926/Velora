@@ -24,6 +24,11 @@ TMulticastDelegate<void, AFortPawn*, AFortWeapon*, AFortWeapon*>& AFortPawn::Get
         .Target()
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("EquipWeapon - Weapon %s is owned by %s but %s attempted to being equip it."))
+        .Find("mov r8, [*+0x*]; lea rcx, [0x*]; mov r9, *; mov rdx, *; call 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyWeaponChange;
