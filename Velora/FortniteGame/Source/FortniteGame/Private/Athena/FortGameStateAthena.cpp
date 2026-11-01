@@ -90,6 +90,12 @@ TMulticastDelegate<void, APlayerState*>& AFortGameStateAthena::GetNotifyOnPlayer
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameStateAthena"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rbp; mov [rsp+0x20], rsi; push rdi; sub rsp, 0x20; mov rbp, rcx; mov rbx, rdx; lea rcx, [0x*]; call 0x*")
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameStateAthena"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rbp; push rsi; push rdi; push r14; sub rsp, 0x20; mov eax, [0x*]; mov rbx, rdx")
+        .Find("jns 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyOnPlayerStateAdded;
