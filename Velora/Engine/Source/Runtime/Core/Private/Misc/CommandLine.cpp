@@ -14,6 +14,10 @@ const TCHAR* FCommandLine::Get()
         .Or()
         .String(TEXT("Attempting to get the command line but it hasn't been initialized yet."), "lea rax, [0x*]; lea r8, [0x*]; mov [rsp+0x20], rax; lea rcx, [0x*]; lea edx, [r9+0x2a]")
         .Caller()
+        .Or()
+        .String(TEXT("DUMPALLWARNINGS"))
+        .Last("call 0x*")
+        .Target()
         .Get();
 
     return Get();
