@@ -11,6 +11,7 @@ class ABuildingGameplayActor;
 class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
+class AFortPlayerPawn;
 class AFortPlayerPetRepState;
 class IFortVehicleInterface;
 class UAthenaGliderItemDefinition;
@@ -65,7 +66,7 @@ struct FFortClientObservedStatArray
 {
     static UScriptStruct* StaticStruct();
 
-    void SetStatManager(UStatManager* InStatManager);
+    void SetStatManager(UStatManager* InStatManager, AFortPlayerPawn* OwnerPawn);
 
     UStatManager* GetMyStatManager() const;
 };

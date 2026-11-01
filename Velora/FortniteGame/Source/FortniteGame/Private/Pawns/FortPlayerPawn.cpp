@@ -564,15 +564,19 @@ UScriptStruct* FFortClientObservedStatArray::StaticStruct()
     return Struct;
 }
 
-void FFortClientObservedStatArray::SetStatManager(UStatManager* InStatManager)
+void FFortClientObservedStatArray::SetStatManager(UStatManager* InStatManager, AFortPlayerPawn* OwnerPawn)
 {
-    static auto SetStatManager = Anchor::Function<void (*)(FFortClientObservedStatArray*, UStatManager*)>(TEXT("FFortClientObservedStatArray::SetStatManager"))
+    static auto SetStatManager = Anchor::Function<void (*)(FFortClientObservedStatArray*, UStatManager*, AFortPlayerPawn*)>(TEXT("FFortClientObservedStatArray::SetStatManager"))
         .FieldPattern("48 8D ? %o 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .FieldPattern("48 8D ? %o 45 33 C0 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
         .Find("call 0x*")
         .Target()
         .Get();
 
-    SetStatManager(this, InStatManager);
+    SetStatManager(this, InStatManager, OwnerPawn);
 }
 
 UStatManager* FFortClientObservedStatArray::GetMyStatManager() const
@@ -670,7 +674,7 @@ void AFortPlayerPawn::execUpdateGameStateModifiedGravity(FFrame& Stack, void* co
 
 void AFortPlayerPawn::SetClientObservedStatsFromAnotherPawn(AFortPlayerPawn* OtherPawn)
 {
-    GetClientObservedStats().SetStatManager(OtherPawn ? OtherPawn->GetClientObservedStats().GetMyStatManager() : nullptr);
+    GetClientObservedStats().SetStatManager(OtherPawn ? OtherPawn->GetClientObservedStats().GetMyStatManager() : nullptr, this);
 }
 
 void AFortPlayerPawn::execSetClientObservedStatsFromAnotherPawn(FFrame& Stack, void* const Z_Param__Result)
