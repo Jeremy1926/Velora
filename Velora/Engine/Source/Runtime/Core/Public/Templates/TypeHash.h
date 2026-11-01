@@ -1,6 +1,7 @@
 #pragma once
 
 #include "HAL/Platform.h"
+#include "Misc/EngineVersion.h"
 #include <type_traits>
 
 inline uint32 HashCombine(uint32 A, uint32 C)
@@ -21,11 +22,24 @@ inline uint32 HashCombine(uint32 A, uint32 C)
     return C;
 }
 
-inline uint32 PointerHash(const void* Key, uint32 C = 0)
+inline uint32 PointerHash(const void* Key)
 {
-    auto PtrInt = reinterpret_cast<UPTRINT>(Key) >> 4;
+    static auto& Version = FEngineVersion::Current();
 
-    return HashCombine((uint32)PtrInt, C);
+    auto PtrInt = (uint32)(reinterpret_cast<UPTRINT>(Key) >> 4);
+
+    if (Version.GetMajor() > 5 || (Version.GetMajor() == 5 && Version.GetMinor() >= 1))
+    {
+        PtrInt ^= PtrInt >> 16;
+        PtrInt *= 0x85ebca6b;
+        PtrInt ^= PtrInt >> 13;
+        PtrInt *= 0xc2b2ae35;
+        PtrInt ^= PtrInt >> 16;
+
+        return PtrInt;
+    }
+
+    return HashCombine(PtrInt, 0);
 }
 
 inline uint32 GetTypeHash(const int32 A)
