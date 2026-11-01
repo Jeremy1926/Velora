@@ -48,6 +48,9 @@ void FWeakObjectPtr::operator=(const UObject* Object)
     static auto MasterSerialNumber = Anchor::Data<volatile long*>(TEXT("FUObjectArray::MasterSerialNumber"))
         .Pattern("F0 0F C1 0D ? ? ? ? FF C1 89 4D ? 81 F9 E8 03 00 00")
         .Target()
+        .Or()
+        .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
+        .Target()
         .Get();
 
     ObjectIndex = (int32)Object->GetUniqueID();
