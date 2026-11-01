@@ -16,6 +16,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "UObject/ScriptDelegates.h"
+#include "UObject/Field.h"
 #include "Scanner.h"
 
 struct FPendingSwap
@@ -526,6 +527,10 @@ UScriptStruct* FFortPickupLocationData::StaticStruct()
 AFortPawn* FFortPickupLocationData::GetPickupTarget() const
 {
     static auto PickupTarget = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("PickupTarget"))) : nullptr;
+    static auto bWeakPickupTarget = PickupTarget && FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)PickupTarget + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
+
+    if (bWeakPickupTarget)
+        return (AFortPawn*)PickupTarget->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
 
     return PickupTarget ? *PickupTarget->ContainerPtrToValuePtr<AFortPawn*>(this) : *(AFortPawn* const*)this;
 }
