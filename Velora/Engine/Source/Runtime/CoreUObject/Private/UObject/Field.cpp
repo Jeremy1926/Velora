@@ -5,6 +5,9 @@
 FFieldClass* FField::StaticClass()
 {
     static auto StaticClass = Anchor::Optional<FFieldClass* (*)()>(TEXT("FField::StaticClass"))
+        .String(TEXT("FField"), "lea rdx, [0x*]; and qword ptr [rsp+0x20], 0x0; lea rcx, [0x*]; mov r9d, r8d; call 0x*")
+        .Start()
+        .Or()
         .String(TEXT("FField"))
         .Start()
         .Or()
