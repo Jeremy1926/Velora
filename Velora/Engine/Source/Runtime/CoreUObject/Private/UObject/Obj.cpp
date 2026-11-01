@@ -39,6 +39,10 @@ bool UObject::NeedsLoadForServer() const
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Start()
         .Find("call [rax+0x*]; test al, al")
+        .Or()
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Start()
+        .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
         .Get(sizeof(void*));
 
     return NeedsLoadForClient(this);
@@ -55,6 +59,10 @@ void UObject::PatchCanCreateInCurrentContext()
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Start()
         .Find("call [rax+0x*]; test al, al")
+        .Or()
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Start()
+        .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
         .Get();
 
     static auto bPatched = NeedsLoadForClientCall && Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), NeedsLoadForClientCall + 2, { (uint8_t)(NeedsLoadForClientCall[2] + sizeof(void*)) });
