@@ -176,6 +176,42 @@ namespace Anchor
         return Tables;
     }
 
+    static const std::vector<uint64_t>& Pointers()
+    {
+        static auto Table = []
+        {
+            std::vector<uint64_t> Table;
+            auto Image = Base();
+            auto Size = ImageSize();
+
+            for (auto Entry : References()[1])
+            {
+                auto Target = Entry >> 32;
+
+                if (Target % sizeof(uint64_t))
+                    continue;
+
+                for (auto& Section : Sections())
+                {
+                    if ((Section.Characteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_WRITE)) || Target < Section.VirtualAddress || Target + sizeof(uint64_t) > Section.VirtualAddress + Section.Misc.VirtualSize)
+                        continue;
+
+                    auto Value = *(uint64_t*)(Image + Target) - (uint64_t)Image;
+
+                    if (Value < Size)
+                        Table.push_back(Value << 32 | Target);
+                }
+            }
+
+            std::sort(Table.begin(), Table.end());
+            Table.erase(std::unique(Table.begin(), Table.end()), Table.end());
+
+            return Table;
+        }();
+
+        return Table;
+    }
+
     template<typename PredicateType>
     static const uint8_t* FindIndexed(int32_t Kind, const void* Target, PredicateType Predicate)
     {
@@ -316,7 +352,16 @@ namespace Anchor
                 Found = Image + (*Entry >> 32);
         }
 
-        return Found ? FindIndexed(3, Found, [Found](const uint8_t* Address) { return InCode(Address, 0, 7) && Address[0] == 0x0F && (Address[1] == 0x10 || Address[1] == 0x28) && (Address[2] & 0xC7) == 0x05 && Address + 7 + *(int32_t*)(Address + 3) == Found; }) : nullptr;
+        if (Found)
+            return FindIndexed(3, Found, [Found](const uint8_t* Address) { return InCode(Address, 0, 7) && Address[0] == 0x0F && (Address[1] == 0x10 || Address[1] == 0x28) && (Address[2] & 0xC7) == 0x05 && Address + 7 + *(int32_t*)(Address + 3) == Found; });
+
+        for (auto Entry : Pointers())
+        {
+            if (IsText(Image + (Entry >> 32)))
+                return FindReference(Image + (uint32_t)Entry);
+        }
+
+        return nullptr;
     }
 
     static const uint8_t* FindStringReference(const wchar_t* Text)
