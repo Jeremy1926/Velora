@@ -19,6 +19,16 @@ public:
 
     UObject* TryLoad() const;
 
+    FORCEINLINE void Reset()
+    {
+        AssetPathName = NAME_None;
+        SubPathString = FString();
+    }
+
+    static FSoftObjectPath GetOrCreateIDForObject(const UObject* Object);
+
+    static int32 GetCurrentTag();
+
 private:
     FName AssetPathName;
     FString SubPathString;

@@ -2,6 +2,8 @@
 #include "UObject/SoftObjectPath.h"
 #include "UObject/Object.h"
 #include "UObject/UObjectGlobals.h"
+#include "Templates/TypeCompatibleBytes.h"
+#include "Scanner.h"
 
 FString FSoftObjectPath::ToString() const
 {
@@ -38,4 +40,33 @@ UObject* FSoftObjectPath::TryLoad() const
         LoadedObject = LoadObject<UObject>(nullptr, *ToString());
 
     return LoadedObject;
+}
+
+FSoftObjectPath FSoftObjectPath::GetOrCreateIDForObject(const UObject* Object)
+{
+    static auto Construct = Anchor::Function<FSoftObjectPath* (*)(FSoftObjectPath*, const UObject*)>(TEXT("FSoftObjectPath::FSoftObjectPath"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("mov rdx, *; lea rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    TAlignedBytes<sizeof(FSoftObjectPath), alignof(FSoftObjectPath)> ResultBytes;
+    auto NativeResult = Construct((FSoftObjectPath*)&ResultBytes, Object);
+
+    FSoftObjectPath Result = *NativeResult;
+    NativeResult->~FSoftObjectPath();
+
+    return Result;
+}
+
+int32 FSoftObjectPath::GetCurrentTag()
+{
+    static auto CurrentTag = Anchor::Data<volatile long*>(TEXT("FSoftObjectPath::CurrentTag"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("lock cmpxchg [0x*], *")
+        .Target()
+        .Get();
+
+    return _InterlockedCompareExchange(CurrentTag, 0, 0);
 }

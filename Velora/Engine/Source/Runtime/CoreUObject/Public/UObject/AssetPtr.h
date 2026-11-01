@@ -11,6 +11,22 @@ template<class TObjectID>
 struct TPersistentObjectPtr
 {
 public:
+    FORCEINLINE void operator=(const UObject* Object)
+    {
+        if (Object)
+        {
+            ObjectID = TObjectID::GetOrCreateIDForObject(Object);
+            WeakPtr = Object;
+            TagAtLastTest = TObjectID::GetCurrentTag();
+        }
+        else
+        {
+            WeakPtr.Reset();
+            ObjectID.Reset();
+            TagAtLastTest = 0;
+        }
+    }
+
     FORCEINLINE UObject* Get() const
     {
         return WeakPtr.Get();

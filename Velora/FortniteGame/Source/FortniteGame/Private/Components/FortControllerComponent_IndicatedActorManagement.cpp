@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "Templates/Casts.h"
+#include "UObject/AssetPtr.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -97,10 +98,13 @@ FIndicatedActorInfoEntry::FIndicatedActorInfoEntry(AActor* InActor, float InStar
     }();
 
     static auto bWeakActor = Actor->IsWeakObjectProperty();
+    static auto bSoftActor = Actor->IsSoftObjectProperty();
 
     StaticStruct()->InitializeStruct(this);
 
-    if (bWeakActor)
+    if (bSoftActor)
+        *Actor->ContainerPtrToValuePtr<FSoftObjectPtr>(this) = InActor;
+    else if (bWeakActor)
         *Actor->ContainerPtrToValuePtr<FWeakObjectPtr>(this) = InActor;
     else
         *Actor->ContainerPtrToValuePtr<AActor*>(this) = InActor;
@@ -133,6 +137,10 @@ AActor* FIndicatedActorInfoEntry::GetActor() const
 {
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
     static auto bWeakActor = Actor->IsWeakObjectProperty();
+    static auto bSoftActor = Actor->IsSoftObjectProperty();
+
+    if (bSoftActor)
+        return (AActor*)Actor->ContainerPtrToValuePtr<FSoftObjectPtr>(this)->Get();
 
     if (bWeakActor)
         return (AActor*)Actor->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
@@ -186,10 +194,14 @@ FStenciledActorInfoEntry::FStenciledActorInfoEntry(AActor* InActor, float InStar
     static auto StartTime = StaticStruct()->FindPropertyByName(FName(TEXT("StartTime")));
     static auto EndTime = StaticStruct()->FindPropertyByName(FName(TEXT("EndTime")));
     static auto Data = StaticStruct()->FindPropertyByName(FName(TEXT("Data")));
+    static auto bSoftActor = Actor->IsSoftObjectProperty();
 
     StaticStruct()->InitializeStruct(this);
 
-    *Actor->ContainerPtrToValuePtr<AActor*>(this) = InActor;
+    if (bSoftActor)
+        *Actor->ContainerPtrToValuePtr<FSoftObjectPtr>(this) = InActor;
+    else
+        *Actor->ContainerPtrToValuePtr<AActor*>(this) = InActor;
     *StartTime->ContainerPtrToValuePtr<float>(this) = InStartTime;
     *EndTime->ContainerPtrToValuePtr<float>(this) = InEndTime;
 
@@ -218,6 +230,10 @@ int32 FStenciledActorInfoEntry::GetTypeSize()
 AActor* FStenciledActorInfoEntry::GetActor() const
 {
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
+    static auto bSoftActor = Actor->IsSoftObjectProperty();
+
+    if (bSoftActor)
+        return (AActor*)Actor->ContainerPtrToValuePtr<FSoftObjectPtr>(this)->Get();
 
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }

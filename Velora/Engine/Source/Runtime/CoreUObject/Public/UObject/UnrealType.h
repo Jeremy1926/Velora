@@ -24,6 +24,11 @@ public:
         return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
     }
 
+    FORCEINLINE bool IsSoftObjectProperty() const
+    {
+        return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("SoftObjectProperty"));
+    }
+
 private:
     FORCEINLINE void* ContainerVoidPtrToValuePtrInternal(void* ContainerPtr, int32 ArrayIndex) const
     {
