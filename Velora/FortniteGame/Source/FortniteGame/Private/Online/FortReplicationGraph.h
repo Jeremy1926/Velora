@@ -397,7 +397,7 @@ private:
 
     FActorRepListRefView& GetBroadcasterRelevancyActorList();
 
-    TArray<FFortAlwaysRelevantActorInfo>& GetPastViewedTargets();
+    TArray<FFortAlwaysRelevantActorInfo>* GetPastViewedTargets();
 };
 
 class UReplicationGraphNode_FortVolumeGrid : public UReplicationGraphNode

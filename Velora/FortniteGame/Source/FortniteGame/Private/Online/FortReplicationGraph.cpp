@@ -2369,9 +2369,11 @@ FActorRepListRefView& UFortReplicationGraphNode_LiveSpectator::GetBroadcasterRel
     return *(FActorRepListRefView*)((uint8*)this + BroadcasterRelevancyActorList);
 }
 
-TArray<FFortAlwaysRelevantActorInfo>& UFortReplicationGraphNode_LiveSpectator::GetPastViewedTargets()
+TArray<FFortAlwaysRelevantActorInfo>* UFortReplicationGraphNode_LiveSpectator::GetPastViewedTargets()
 {
-    return *(TArray<FFortAlwaysRelevantActorInfo>*)(&GetBroadcasterRelevancyActorList() + 1);
+    auto PastViewedTargets = (TArray<FFortAlwaysRelevantActorInfo>*)(&GetBroadcasterRelevancyActorList() + 1);
+
+    return (uint8*)(PastViewedTargets + 1) <= (uint8*)this + GetClass()->GetPropertiesSize() ? PastViewedTargets : nullptr;
 }
 
 void UFortReplicationGraphNode_LiveSpectator::GatherBroadcasterActorListsForConnection(const FConnectionGatherActorListParameters& Params)
@@ -2425,21 +2427,23 @@ void UFortReplicationGraphNode_LiveSpectator::GatherActorListsForConnection(cons
 
         ReplicationActorList.ConditionalAdd((AActor*)SpectatorController->GetViewTargetInventory());
 
-        auto& PastViewedTargets = GetPastViewedTargets();
-        auto LastData = PastViewedTargets.FindByKey(CurViewer.Connection);
-
-        if (!LastData)
-        {
-            FFortAlwaysRelevantActorInfo NewActorInfo = { CurViewer.Connection, nullptr, nullptr };
-            LastData = &PastViewedTargets[PastViewedTargets.Add(NewActorInfo)];
-        }
-
         AActor* ViewTarget = SpectatorController->GetFollowedPlayerPawn(true);
 
-        if (Cast<AFortPlayerPawn>(ViewTarget))
-            LastData->LastPawn = ViewTarget;
-        else
-            ViewTarget = LastData->LastPawn;
+        if (auto PastViewedTargets = GetPastViewedTargets())
+        {
+            auto LastData = PastViewedTargets->FindByKey(CurViewer.Connection);
+
+            if (!LastData)
+            {
+                FFortAlwaysRelevantActorInfo NewActorInfo = { CurViewer.Connection, nullptr, nullptr };
+                LastData = &(*PastViewedTargets)[PastViewedTargets->Add(NewActorInfo)];
+            }
+
+            if (Cast<AFortPlayerPawn>(ViewTarget))
+                LastData->LastPawn = ViewTarget;
+            else
+                ViewTarget = LastData->LastPawn;
+        }
 
         if (!ViewTarget || !IsActorValidForReplication(ViewTarget) || ProcessedViewTargets.Contains(ViewTarget))
             continue;
@@ -2449,10 +2453,13 @@ void UFortReplicationGraphNode_LiveSpectator::GatherActorListsForConnection(cons
         ProcessedViewTargets.Add(ViewTarget);
     }
 
-    GetPastViewedTargets().RemoveAll([](const FFortAlwaysRelevantActorInfo& RelActorInfo)
+    if (auto PastViewedTargets = GetPastViewedTargets())
     {
-        return RelActorInfo.Connection == nullptr;
-    });
+        PastViewedTargets->RemoveAll([](const FFortAlwaysRelevantActorInfo& RelActorInfo)
+        {
+            return RelActorInfo.Connection == nullptr;
+        });
+    }
 
     if (bIsBroadcaster)
         GatherBroadcasterActorListsForConnection(Params);
