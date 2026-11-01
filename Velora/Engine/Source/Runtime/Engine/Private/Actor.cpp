@@ -372,6 +372,13 @@ bool AActor::IsPendingKillPending() const
         .Find("call 0x*")
         .Target()
         .Find("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor"))
+        .Find("jmp [*+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__Actor"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("test byte ptr [rcx+0x*], 0x*; mov rbx, rcx; jnz *")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
@@ -390,6 +397,13 @@ bool AActor::IsPendingKillPending() const
         .Find("call 0x*")
         .Target()
         .Find("test byte ptr [*+0x*], 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_DestroyActor"))
+        .Find("jmp [*+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__Actor"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("test byte ptr [rcx+0x*], 0x*; mov rbx, rcx; jnz *")
         .Value();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
