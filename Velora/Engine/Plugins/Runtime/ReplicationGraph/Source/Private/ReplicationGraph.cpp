@@ -59,6 +59,21 @@ int32& UNetReplicationGraphConnection::GetConnectionOrderNum()
 
 int32& UNetReplicationGraphConnection::GetConnectionId()
 {
+    static auto bConnectionIdStoreGone = Anchor::Exists()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("lea r8, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], ecx")
+        .Is("mov [*+0x*], ecx; lea eax, [rcx+0x1]")
+        .Get();
+
+    if (bConnectionIdStoreGone)
+        return *(&GetConnectionOrderNum() + 1);
+
     static auto ConnectionId = Anchor::Offset(TEXT("UNetReplicationGraphConnection::ConnectionId"))
         .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
         .Start()
