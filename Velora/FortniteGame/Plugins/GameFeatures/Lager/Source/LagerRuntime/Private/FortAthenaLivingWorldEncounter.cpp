@@ -132,8 +132,9 @@ TSoftObjectPtr<UFortAthenaLivingWorldEncounter>& UFortAthenaLivingWorldEncounter
 TArray<FScriptInterface>& UFortAthenaLivingWorldEncounterInstance::GetOriginalPointProviders()
 {
     static auto OriginalPointProviders = GetClass()->FindPropertyByName(FName(TEXT("OriginalPointProviders")));
+    static auto AllowedPointProviders = GetClass()->FindPropertyByName(FName(TEXT("AllowedPointProviders")));
 
-    return *OriginalPointProviders->ContainerPtrToValuePtr<TArray<FScriptInterface>>(this);
+    return *(OriginalPointProviders ? OriginalPointProviders : AllowedPointProviders)->ContainerPtrToValuePtr<TArray<FScriptInterface>>(this);
 }
 
 TArray<FScriptInterface>& UFortAthenaLivingWorldEncounterInstance::GetRegisteredPointProviders()
