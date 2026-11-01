@@ -52,6 +52,16 @@ void FMemory::Free(void* Original)
         .Target()
         .Find("test rcx, rcx; jz *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; xor eax, eax")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Find("test rcx, rcx; jz *; call 0x*")
+        .Call()
         .Get();
 
     Free(Original);
