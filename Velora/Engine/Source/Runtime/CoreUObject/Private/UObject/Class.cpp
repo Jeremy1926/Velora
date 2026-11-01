@@ -41,6 +41,9 @@ void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
 {
     static auto InitializeStruct = Anchor::VirtualFunction<void (*)(const UStruct*, void*, int32)>(TEXT("UStruct::InitializeStruct"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9, [rcx+0x*]; mov r8d, 0x1")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
         .Get();
@@ -51,6 +54,9 @@ void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
 void UStruct::DestroyStruct(void* Dest, int32 ArrayDim) const
 {
     static auto DestroyStruct = Anchor::VirtualFunction<void (*)(const UStruct*, void*, int32)>(TEXT("UStruct::InitializeStruct"))
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9, [rcx+0x*]; mov r8d, 0x1")
+        .Or()
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
