@@ -227,7 +227,7 @@ FVector ABuildingContainer::GetLootSpawnLocation() const
 {
     static auto LootSpawnLocation = GetClass()->FindPropertyByName(FName(TEXT("LootSpawnLocation")));
 
-    return LootSpawnLocation->GetPropertyValue_InContainer<FVector>(this);
+    return LootSpawnLocation->GetSize() == sizeof(FVector) ? *LootSpawnLocation->ContainerPtrToValuePtr<FVector>(this) : LootSpawnLocation->GetPropertyValue_InContainer<FVector>(this);
 }
 
 EFortRarity& ABuildingContainer::GetHighestRarity()
