@@ -154,7 +154,40 @@ void AFortWeapon::OnUnEquip()
 
     Original();
 
+    FlushPendingUnequipRemovals();
+
+    auto Pawn = Cast<AFortPawn>(GetInstigator());
+
+    if (Pawn && Pawn->GetCurrentWeapon() == this)
+    {
+        GetPendingUnequipRemovals().AddUnique(FWeakObjectPtr(this));
+        return;
+    }
+
     AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason::Unequipped);
+}
+
+TArray<FWeakObjectPtr>& AFortWeapon::GetPendingUnequipRemovals()
+{
+    static TArray<FWeakObjectPtr> PendingUnequipRemovals;
+
+    return PendingUnequipRemovals;
+}
+
+void AFortWeapon::FlushPendingUnequipRemovals()
+{
+    auto& Pending = GetPendingUnequipRemovals();
+
+    for (int32 i = 0; i < Pending.Num(); i++)
+    {
+        auto Weapon = (AFortWeapon*)Pending[i].Get(true);
+        auto Pawn = Weapon ? Cast<AFortPawn>(Weapon->GetInstigator()) : nullptr;
+
+        if (Weapon && !(Pawn && Pawn->GetCurrentWeapon() == Weapon))
+            Weapon->AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason::Unequipped);
+    }
+
+    Pending.Empty();
 }
 
 void AFortWeapon::AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason Reason)

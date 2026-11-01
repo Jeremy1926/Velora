@@ -2,6 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Misc/Guid.h"
+#include "UObject/WeakObjectPtr.h"
 
 struct FFrame;
 class UFortItemDefinition;
@@ -46,6 +47,10 @@ public:
     void OnUnEquip();
 
     void AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason Reason);
+
+    static TArray<FWeakObjectPtr>& GetPendingUnequipRemovals();
+
+    static void FlushPendingUnequipRemovals();
 
     void RemoveGrantedAbilities();
 

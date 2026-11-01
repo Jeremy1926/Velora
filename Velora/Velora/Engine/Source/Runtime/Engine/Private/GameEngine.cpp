@@ -18,6 +18,7 @@
 #include "Items/FortResourceItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Weapons/FortWeapon.h"
 #include "FortGameData.h"
 #include "FortKismetLibrary.h"
 #include "GameplayEffectTypes.h"
@@ -338,6 +339,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         LastState = State;
     }
+
+    AFortWeapon::FlushPendingUnequipRemovals();
 
     Original(DeltaSeconds, bIdleMode);
 }
