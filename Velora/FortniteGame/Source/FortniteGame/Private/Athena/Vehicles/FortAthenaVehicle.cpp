@@ -294,6 +294,9 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
     static auto bInheritScale = Anchor::Offset(TEXT("UFortVehicleConfigs::bInheritScale"))
         .At(ForceEnterSeatBody)
         .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], r15b; cmovz r8, rcx")
         .Disp();
 
     static auto SnapToTargetNotIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetNotIncludingScale"))
@@ -301,11 +304,21 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
         .Last("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], r15b; cmovz r8, rcx")
+        .Last("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     static auto SnapToTargetIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetIncludingScale"))
         .At(ForceEnterSeatBody)
         .Find("cmp byte ptr [rax+0x*], 0x0; cmovz r8, rcx")
+        .Last("lea r8, [0x*]")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp byte ptr [rax+0x*], r15b; cmovz r8, rcx")
         .Last("lea r8, [0x*]")
         .Target()
         .Get();
