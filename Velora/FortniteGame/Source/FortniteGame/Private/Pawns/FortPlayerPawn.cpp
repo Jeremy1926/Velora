@@ -147,6 +147,11 @@ TMulticastDelegate<void, AFortPlayerPawn*, bool>& AFortPlayerPawn::GetNotifyPawn
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_NetMovementPrioritized"))
+        .Find("shr al, 0x1; and al, 0x1; cmp *, *; jz 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPawnHighFrequencyUpdateChange;
