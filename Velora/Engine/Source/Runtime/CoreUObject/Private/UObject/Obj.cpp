@@ -127,6 +127,18 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
         .Find("jnz 0x*")
         .Target()
         .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("mov r*, [r*+0x*]")
+        .Entry(TEXT("/Script/CoreUObject.Default__Object"))
+        .Find("call [*+0x*]; mov *, eax; test r*, al; jnz *")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("call [*+0x*]")
         .Get();
 
     return CallRemoteFunction(this, Function, Parms, OutParms, Stack);
