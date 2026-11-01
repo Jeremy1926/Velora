@@ -81,6 +81,8 @@ FSimpleMulticastDelegate& AFortPlayerControllerZone::GetOnPlayerPlaceChanged()
     return *(FSimpleMulticastDelegate*)((uint8*)this + OnPlayerPlaceChanged);
 }
 
+decltype(AFortPlayerControllerZone::GameServerAcknowledgePossession) AFortPlayerControllerZone::GameServerAcknowledgePossession = nullptr;
+
 void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn* P)
 {
     auto bInitializeGameplay = P && !GetAcknowledgedPawn();
@@ -94,6 +96,9 @@ void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn
         if (auto PlayerState = GetPlayerState())
             UFortGlobals::InitializePlayerGameplayAbilities((IAbilitySystemInterface*)PlayerState->GetInterfaceAddress(AbilitySystemInterface));
     }
+
+    if (GameServerAcknowledgePossession)
+        (this->*GameServerAcknowledgePossession)(P);
 }
 
 void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()

@@ -342,6 +342,10 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
             .Find("call [rax+*]", 2)
             .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
+            .Or()
+            .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+            .Find("call [rax+*]", 2)
+            .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
             .Get();
 
         if (auto AbilitySet = UFortGameData::Get()->GetAthenaPlayerAbilitySet())

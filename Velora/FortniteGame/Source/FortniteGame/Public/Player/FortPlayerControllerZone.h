@@ -36,6 +36,8 @@ public:
 
     void ServerAcknowledgePossession_Implementation(APawn* P);
 
+    static void (AFortPlayerControllerZone::*GameServerAcknowledgePossession)(APawn* P);
+
     void ServerRestartPlayer_Implementation();
 
     void OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher);

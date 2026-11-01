@@ -93,11 +93,16 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .LogSlot(TEXT("AFortPlayerController::ServerRepairBuildingActor_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
-    static auto ServerAcknowledgePossession = THook(TEXT("AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation"), &AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation)
+    static auto ServerAcknowledgePossession = AFortPlayerControllerZone::GameServerAcknowledgePossession = THook(TEXT("AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation"), &AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation)
         .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
