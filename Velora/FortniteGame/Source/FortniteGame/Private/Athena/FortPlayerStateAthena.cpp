@@ -373,6 +373,8 @@ bool AFortPlayerStateAthena::IsTeamOutOfGame() const
         .Pattern("48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 41 56 41 57 48 83 EC 20 48 8B F9 E8 ? ? ? ? 48 8B E8 48 85 C0 0F 84 ? ? ? ? 48 8B 98 ? ? ? ? 48 85 DB 74 ? E8 ? ? ? ? 48 8B 4B 10 48 8B D0 E8 ? ? ? ? 84 C0 75 02 33 DB 48 85 DB 0F 84 ? ? ? ? 48 8D 8F ? ? ? ? 48 8B 01 FF 50 28 8A D0 48 8B CB E8 ? ? ? ? 48 8B 38 48 63 40 08 4C 8D 34 C7 49 3B FE")
         .Or()
         .Pattern("48 89 5C 24 08 48 89 6C 24 18 56 57 41 56 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B E8 48 85 C0 0F 84 ? ? ? ? 48 8B B8 ? ? ? ? 48 85 FF 74 ? 48 8B CF E8 ? ? ? ? 84 C0 75 02 33 FF 48 85 FF 0F 84 ? ? ? ? 48 8D 8B ? ? ? ? 48 8B 01 FF 50 28 8A D0 48 8B CF E8 ? ? ? ? 48 8B 18 48 63 40 08 4C 8D 34 C3 49 3B DE")
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 6C 24 18 56 57 41 54 41 56 41 57 48 83 EC 20 48 8B F9 E8 ? ? ? ? 48 8B E8 48 85 C0 0F 84 ? ? ? ? 48 8B 98 ? ? ? ? 48 85 DB 74 ? 48 8B CB E8 ? ? ? ? 84 C0 75 02 33 DB 48 85 DB 0F 84 ? ? ? ? 48 8D 8F ? ? ? ? 48 8B 01 FF 50 28 8A D0 48 8B CB E8 ? ? ? ? 48 8B 38 48 63 40 08 4C 8D 34 C7 49 3B FE 0F 84")
         .Get();
 
     return IsTeamOutOfGame(this);
