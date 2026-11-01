@@ -289,7 +289,10 @@ void FFortSearchBounceData::SetBounceNormal(const FVector& InBounceNormal)
 {
     static auto BounceNormal = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("BounceNormal"))) : nullptr;
 
-    TGameLayout<FVector>::Store(BounceNormal ? BounceNormal->ContainerPtrToValuePtr<void>(this) : (void*)this, InBounceNormal);
+    if (BounceNormal && BounceNormal->GetSize() == sizeof(FVector))
+        *BounceNormal->ContainerPtrToValuePtr<FVector>(this) = InBounceNormal;
+    else
+        TGameLayout<FVector>::Store(BounceNormal ? BounceNormal->ContainerPtrToValuePtr<void>(this) : (void*)this, InBounceNormal);
 }
 
 uint32& FFortSearchBounceData::GetSearchAnimationCount()
