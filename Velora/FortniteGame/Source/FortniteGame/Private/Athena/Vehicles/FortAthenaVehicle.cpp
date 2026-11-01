@@ -160,6 +160,11 @@ void AFortAthenaVehicle::ServerUpdatePhysicsParams_Implementation(const FReplica
         .Pattern("F2 0F 59 05 ? ? ? ? 0F 54 CE F2 0F 58 25")
         .Find("addsd *, qword ptr [0x*]")
         .Target()
+        .Or()
+        .If(UE::LWC::IsEnabled())
+        .Pattern("F2 0F 59 05 ? ? ? ? 0F 54 CE F2 0F 58 25")
+        .Find("addsd *, [0x*]")
+        .Target()
         .Get();
 
     static auto EncodedRotationXValue = !EncodedRotationX ? 0.0 : UE::LWC::IsEnabled() ? *(const double*)EncodedRotationX : (double)*(const float*)EncodedRotationX;
