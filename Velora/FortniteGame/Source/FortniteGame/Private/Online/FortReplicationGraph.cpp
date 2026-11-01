@@ -616,8 +616,16 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortAthenaVehicle::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
     ASimObject::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
-    AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
-    AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
+
+    if (auto NotifySquadRebootCardSpawned = AFortPlayerStateAthena::GetNotifySquadRebootCardSpawned())
+        NotifySquadRebootCardSpawned->AddUObject(this, &UFortReplicationGraph::OnSquadRebootCardSpawned);
+    else
+        AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
+
+    if (auto NotifySquadRebootCardDestroyed = AFortPlayerStateAthena::GetNotifySquadRebootCardDestroyed())
+        NotifySquadRebootCardDestroyed->AddUObject(this, &UFortReplicationGraph::OnSquadRebootCardDestroyed);
+    else
+        AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
 
     if (AFortPlayerStateAthena::HasSquadSpecificContainers())
     {
@@ -1194,6 +1202,18 @@ void UFortReplicationGraph::OnRebootCardDestroyed(AFortPlayerStateAthena* PS, AB
         return;
 
     if (auto SquadNode = GetNodeForSquad(Card->GetSquadId()))
+        SquadNode->GetRebootCards().RemoveSwap(Card);
+}
+
+void UFortReplicationGraph::OnSquadRebootCardSpawned(uint8 SquadId, ABuildingGameplayActorSpawnChip* Card)
+{
+    if (auto SquadNode = GetNodeForSquad(SquadId))
+        SquadNode->GetRebootCards().AddUnique(Card);
+}
+
+void UFortReplicationGraph::OnSquadRebootCardDestroyed(uint8 SquadId, ABuildingGameplayActorSpawnChip* Card)
+{
+    if (auto SquadNode = GetNodeForSquad(SquadId))
         SquadNode->GetRebootCards().RemoveSwap(Card);
 }
 

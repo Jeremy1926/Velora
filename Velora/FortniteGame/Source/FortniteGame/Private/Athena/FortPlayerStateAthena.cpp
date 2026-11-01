@@ -331,6 +331,51 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
     return *NotifyRebootCardDestroyed;
 }
 
+TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* AFortPlayerStateAthena::GetNotifySquadRebootCardSpawned()
+{
+    static auto NotifySquadRebootCardSpawned = Anchor::Data<TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifySquadRebootCardSpawned"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov cl, [rax+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Optional()
+        .Get();
+
+    return NotifySquadRebootCardSpawned;
+}
+
+TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* AFortPlayerStateAthena::GetNotifySquadRebootCardDestroyed()
+{
+    static auto NotifySquadRebootCardDestroyed = Anchor::Data<TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifySquadRebootCardDestroyed"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8)
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov cl, [rax+0x*]; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Optional()
+        .Get();
+
+    return NotifySquadRebootCardDestroyed;
+}
+
 uint8 AFortPlayerStateAthena::GetSquadId() const
 {
     static auto SquadId = GetClass()->FindPropertyByName(FName(TEXT("SquadId")));

@@ -159,6 +159,10 @@ public:
 
     void OnRebootCardDestroyed(AFortPlayerStateAthena* PS, ABuildingGameplayActorSpawnChip* Card);
 
+    void OnSquadRebootCardSpawned(uint8 SquadId, ABuildingGameplayActorSpawnChip* Card);
+
+    void OnSquadRebootCardDestroyed(uint8 SquadId, ABuildingGameplayActorSpawnChip* Card);
+
     void OnPawnWeaponChange(AFortPawn* Pawn, AFortWeapon* NewWeapon, AFortWeapon* OldWeapon);
 
     void OnPetStateChange(AFortPlayerPawn* Pawn, AFortPlayerPetRepState* NewPet, AFortPlayerPetRepState* OldPet);

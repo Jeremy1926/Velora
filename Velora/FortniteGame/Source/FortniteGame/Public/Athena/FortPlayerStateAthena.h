@@ -67,6 +67,10 @@ public:
 
     static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& GetNotifyRebootCardDestroyed();
 
+    static TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* GetNotifySquadRebootCardSpawned();
+
+    static TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* GetNotifySquadRebootCardDestroyed();
+
     FDeathInfo& GetDeathInfo();
 
     void InitializeDeathInfo(const FDeathInfo& NewDeathInfo);
