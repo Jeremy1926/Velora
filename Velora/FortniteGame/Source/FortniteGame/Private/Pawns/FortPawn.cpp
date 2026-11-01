@@ -376,6 +376,9 @@ bool AFortPawn::UpdateSharedReplication()
         .Event(TEXT("FastSharedReplication"))
         .Caller()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+        .Or()
+        .Event(TEXT("FastSharedReplication"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
         .Get();
 
     return UpdateSharedReplication(this);
