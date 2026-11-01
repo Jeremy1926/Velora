@@ -616,8 +616,13 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortGameModeAthena::GetNotifyLiveSpectatorJoined().AddUObject(this, &UFortReplicationGraph::OnLiveSpectatorJoined);
     AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
     AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
-    AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerSpawned);
-    AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerDestroyed);
+
+    if (AFortPlayerStateAthena::HasSquadSpecificContainers())
+    {
+        AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerSpawned);
+        AFortPlayerStateAthena::GetNotifySquadSpecificContainerDestroyed().AddUObject(this, &UFortReplicationGraph::OnSquadSpecificContainerDestroyed);
+    }
+
     FFortPlayerControllerEvents::GetOnPlayerStateChangedEvent().AddUObject(this, &UFortReplicationGraph::OnPlayerControllerStateChanged);
     AFortGameModeAthena::GetNotifyAddReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyAddReplicatedNonPlayerInventory);
     AFortGameModeAthena::GetNotifyRemoveReplicatedNonPlayerInventory().AddUObject(this, &UFortReplicationGraph::OnNotifyRemoveReplicatedNonPlayerInventory);
@@ -1626,7 +1631,7 @@ TArray<AFortPlayerStateAthena*>& UFortReplicationGraphNode_AlwaysRelevantForSqua
 
 TArray<ABuildingGameplayActorSpawnChip*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetRebootCards()
 {
-    return *(TArray<ABuildingGameplayActorSpawnChip*>*)((uint8*)&GetContainers() - sizeof(TArray<ABuildingGameplayActorSpawnChip*>));
+    return *(TArray<ABuildingGameplayActorSpawnChip*>*)((AFortPlayerStateAthena::HasSquadSpecificContainers() ? (uint8*)&GetContainers() : (uint8*)&GetReplicationActorList()) - sizeof(TArray<ABuildingGameplayActorSpawnChip*>));
 }
 
 TArray<ABuildingContainer*>& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetContainers()

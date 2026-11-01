@@ -234,6 +234,13 @@ int32& AFortPlayerStateAthena::GetTeamKillScore()
     return *TeamKillScore->ContainerPtrToValuePtr<int32>(this);
 }
 
+bool AFortPlayerStateAthena::HasSquadSpecificContainers()
+{
+    static auto OnSquadSpecificContainerSpawned = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerStateAthena:OnSquadSpecificContainerSpawned"));
+
+    return OnSquadSpecificContainerSpawned != nullptr;
+}
+
 TMulticastDelegate<void, int32, ABuildingContainer*>& AFortPlayerStateAthena::GetNotifySquadSpecificContainerSpawned()
 {
     static auto NotifySquadSpecificContainerSpawned = Anchor::Data<TMulticastDelegate<void, int32, ABuildingContainer*>*>(TEXT("AFortPlayerStateAthena::NotifySquadSpecificContainerSpawned"))

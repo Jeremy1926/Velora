@@ -57,6 +57,8 @@ public:
 
     static int32 ToDeathCircumstance(AFortPlayerPawnAthena* Pawn);
 
+    static bool HasSquadSpecificContainers();
+
     static TMulticastDelegate<void, int32, ABuildingContainer*>& GetNotifySquadSpecificContainerSpawned();
 
     static TMulticastDelegate<void, int32, ABuildingContainer*>& GetNotifySquadSpecificContainerDestroyed();
