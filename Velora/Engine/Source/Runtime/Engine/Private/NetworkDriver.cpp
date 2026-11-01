@@ -254,6 +254,15 @@ bool& FActorDestructionInfo::GetIgnoreDistanceCulling()
 
 int64 UNetDriver::SendDestructionInfo(UNetConnection* Connection, FActorDestructionInfo* DestructionInfo)
 {
+    static auto SendDestructionInfo = Anchor::Function<int64 (*)(UNetDriver*, UNetConnection*, FActorDestructionInfo*)>(TEXT("UNetDriver::SendDestructionInfo"))
+        .String(TEXT("STAT_NetSendDestructionInfo"))
+        .Start()
+        .Optional()
+        .Get();
+
+    if (SendDestructionInfo)
+        return SendDestructionInfo(this, Connection, DestructionInfo);
+
     static auto NetControlChannelDestructionInfo = IConsoleManager::Get().FindConsoleVariable(TEXT("net.ControlChannelDestructionInfo"));
 
     int64 NumBits = 0;
