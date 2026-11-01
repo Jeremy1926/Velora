@@ -73,6 +73,10 @@ FBodyInstance* UPrimitiveComponent::GetBodyInstance(FName BoneName, bool bGetWel
         .Find("mov r10, [rcx+0x*]")
         .Or()
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("mov r9d, e*; mov r8b, 0x1; xor edx, edx; mov r10, [rcx+0x*]")
+        .Find("mov r10, [rcx+0x*]")
+        .Or()
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .Find("call [*+0x*]", 2)
         .Get();
 
