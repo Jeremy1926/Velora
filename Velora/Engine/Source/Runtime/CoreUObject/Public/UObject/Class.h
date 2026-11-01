@@ -50,6 +50,11 @@ public:
         return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->MinAlignment : GetStruct()->MinAlignment;
     }
 
+    FORCEINLINE UProperty* GetPropertyLink() const
+    {
+        return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertyLink : GetStruct()->PropertyLink;
+    }
+
     bool IsChildOf(const UStruct* SomeBase) const
     {
         for (const UStruct* Struct = this; Struct; Struct = Struct->GetSuperStruct())
@@ -73,6 +78,8 @@ private:
     UField* Children;
     int32 PropertiesSize;
     int32 MinAlignment;
+    TArray<uint8> Script;
+    UProperty* PropertyLink;
 };
 
 class UScriptStruct : public UStruct

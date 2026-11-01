@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "UObject/Field.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 FFieldClass* FField::StaticClass()
@@ -31,5 +33,21 @@ int32 FField::GetFieldSize()
         EObjectFlags FlagsPrivate;
     };
 
+    if (FFieldVariant::IsTaggedPointer())
+        return (int32)sizeof(FTaggedOwnerField);
+
     return FName::IsOutlineNumber() ? (int32)sizeof(FOutlineNumberField) : (int32)sizeof(FField);
+}
+
+bool FFieldVariant::IsTaggedPointer()
+{
+    static auto bTaggedPointer = []
+    {
+        auto PrimaryAssetType = FField::StaticClass() ? (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.PrimaryAssetType")) : nullptr;
+        auto Property = PrimaryAssetType ? (const FField*)PrimaryAssetType->GetPropertyLink() : nullptr;
+
+        return Property && *(const UPTRINT*)&Property->Owner == ((UPTRINT)PrimaryAssetType | 1);
+    }();
+
+    return bTaggedPointer;
 }

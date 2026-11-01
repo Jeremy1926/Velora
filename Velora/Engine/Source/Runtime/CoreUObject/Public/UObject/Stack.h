@@ -29,7 +29,7 @@ public:
         {
             auto& PropertyChain = GetPropertyChainForCompiledIn();
             auto Property = (UProperty*)PropertyChain;
-            PropertyChain = FField::StaticClass() ? (UField*)((FField*)PropertyChain)->Next : PropertyChain->Next;
+            PropertyChain = FField::StaticClass() ? (UField*)((FField*)PropertyChain)->GetNext() : PropertyChain->Next;
             StepExplicitProperty(Result, Property);
         }
     }
