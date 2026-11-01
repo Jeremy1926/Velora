@@ -231,6 +231,7 @@ void ABuildingFoundation::SetDynamicFoundationEnabled(bool bEnabled)
 void ABuildingFoundation::HandleFoundationEnabledChanged()
 {
     DETOUR(ABuildingFoundation, HandleFoundationEnabledChanged, Anchor::Hook()
+        .If(FEngineVersion::Current().GetMajor() > 4)
         .Exec(TEXT("/Script/FortniteGame.BuildingFoundation:OnRep_DynamicFoundationRepData"))
         .Find("jmp 0x*")
         .Target()
