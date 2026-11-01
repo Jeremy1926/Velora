@@ -55,14 +55,6 @@ void UNetDriver::SetNetServerMaxTickRate(int32 InNetServerMaxTickRate)
     *NetServerMaxTickRate->ContainerPtrToValuePtr<int32>(this) = InNetServerMaxTickRate;
 }
 
-void UNetDriver::SetClampListenServerTickRate(bool bInClampListenServerTickRate)
-{
-    static auto bClampListenServerTickRate = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bClampListenServerTickRate")));
-
-    if (bClampListenServerTickRate)
-        bClampListenServerTickRate->SetPropertyValue_InContainer(this, bInClampListenServerTickRate);
-}
-
 void UNetDriver::SetMaxClientRate(int32 InMaxClientRate)
 {
     static auto MaxClientRate = GetClass()->FindPropertyByName(FName(TEXT("MaxClientRate")));
