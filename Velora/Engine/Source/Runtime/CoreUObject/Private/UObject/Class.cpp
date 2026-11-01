@@ -185,6 +185,15 @@ UObject* UClass::InternalCreateDefaultObjectWrapper() const
         .Find("call 0x*")
         .Target()
         .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("Tried to UFortAIGoalProvider_EnvQuery::GetAssociatedPawnDefaultObject() on an unloaded pawn class '%s' in query '%s'."))
+        .Start()
+        .Find("mov dl, 0x1; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("jmp [rax+0x*]")
         .Get();
 
     return CreateDefaultObject(this);
