@@ -278,6 +278,9 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
     static auto OnActorsInitialized = Anchor::Offset(TEXT("UWorld::OnActorsInitialized"))
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea rcx, [*+0x*]; lea rdx, [*]; mov [*], *; mov [*], *; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
+        .Or()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; mov [*], *; lea rdx, [*]; mov [*], *; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
