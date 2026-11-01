@@ -3,6 +3,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
 FDeathInfo::FDeathInfo()
@@ -24,11 +25,15 @@ UScriptStruct* FDeathInfo::StaticStruct()
     return Struct;
 }
 
-AActor*& FDeathInfo::GetFinisherOrDowner()
+void FDeathInfo::SetFinisherOrDowner(AActor* InFinisherOrDowner)
 {
     static auto FinisherOrDowner = StaticStruct()->FindPropertyByName(FName(TEXT("FinisherOrDowner")));
+    static auto bWeakFinisherOrDowner = FinisherOrDowner->IsWeakObjectProperty();
 
-    return *FinisherOrDowner->ContainerPtrToValuePtr<AActor*>(this);
+    if (bWeakFinisherOrDowner)
+        *FinisherOrDowner->ContainerPtrToValuePtr<FWeakObjectPtr>(this) = InFinisherOrDowner;
+    else
+        *FinisherOrDowner->ContainerPtrToValuePtr<AActor*>(this) = InFinisherOrDowner;
 }
 
 AActor** FDeathInfo::GetDowner()

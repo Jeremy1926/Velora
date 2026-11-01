@@ -10,6 +10,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -95,9 +96,14 @@ FIndicatedActorInfoEntry::FIndicatedActorInfoEntry(AActor* InActor, float InStar
         return Data ? Data : StaticStruct()->FindPropertyByName(FName(TEXT("IndicatedActorData")));
     }();
 
+    static auto bWeakActor = Actor->IsWeakObjectProperty();
+
     StaticStruct()->InitializeStruct(this);
 
-    *Actor->ContainerPtrToValuePtr<AActor*>(this) = InActor;
+    if (bWeakActor)
+        *Actor->ContainerPtrToValuePtr<FWeakObjectPtr>(this) = InActor;
+    else
+        *Actor->ContainerPtrToValuePtr<AActor*>(this) = InActor;
     *StartTime->ContainerPtrToValuePtr<float>(this) = InStartTime;
     *EndTime->ContainerPtrToValuePtr<float>(this) = InEndTime;
 
@@ -126,6 +132,10 @@ int32 FIndicatedActorInfoEntry::GetTypeSize()
 AActor* FIndicatedActorInfoEntry::GetActor() const
 {
     static auto Actor = StaticStruct()->FindPropertyByName(FName(TEXT("Actor")));
+    static auto bWeakActor = Actor->IsWeakObjectProperty();
+
+    if (bWeakActor)
+        return (AActor*)Actor->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
 
     return *Actor->ContainerPtrToValuePtr<AActor*>(this);
 }

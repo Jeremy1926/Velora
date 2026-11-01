@@ -6,7 +6,6 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
-#include "UObject/Field.h"
 #include "Scanner.h"
 
 UClass* AFortPlayerState::StaticClass()
@@ -110,7 +109,7 @@ UFortAbilitySystemComponent*& AFortPlayerState::GetAbilitySystemComponent()
 AFortTeamPrivateInfo* AFortPlayerState::GetPlayerTeamPrivate() const
 {
     static auto PlayerTeamPrivate = GetClass()->FindPropertyByName(FName(TEXT("PlayerTeamPrivate")));
-    static auto bWeakPlayerTeamPrivate = FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)PlayerTeamPrivate + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
+    static auto bWeakPlayerTeamPrivate = PlayerTeamPrivate->IsWeakObjectProperty();
 
     if (bWeakPlayerTeamPrivate)
         return (AFortTeamPrivateInfo*)PlayerTeamPrivate->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();

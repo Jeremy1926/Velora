@@ -3,10 +3,14 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
 FGameplayAbilitySpec::FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 InLevel, int32 InInputID, UObject* InSourceObject)
 {
+    static auto SourceObjectProperty = StaticStruct()->FindPropertyByName(FName(TEXT("SourceObject")));
+    static auto bWeakSourceObject = SourceObjectProperty && SourceObjectProperty->IsWeakObjectProperty();
+
     FMemory::Memzero(this, sizeof(FGameplayAbilitySpec));
 
     StaticStruct()->InitializeStruct(this);
@@ -14,7 +18,11 @@ FGameplayAbilitySpec::FGameplayAbilitySpec(UGameplayAbility* InAbility, int32 In
     Ability = InAbility;
     Level = InLevel;
     InputID = InInputID;
-    SourceObject = InSourceObject;
+
+    if (bWeakSourceObject)
+        *SourceObjectProperty->ContainerPtrToValuePtr<FWeakObjectPtr>(this) = InSourceObject;
+    else
+        SourceObject = InSourceObject;
 
     Handle.GenerateNewHandle();
 }

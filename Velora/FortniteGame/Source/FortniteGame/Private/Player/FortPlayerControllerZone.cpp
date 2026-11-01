@@ -11,6 +11,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -31,6 +32,10 @@ AFortPlayerState* FFortPlayerDeathReport::GetKillerPlayerState() const
 AFortPawn* FFortPlayerDeathReport::GetKillerPawn() const
 {
     static auto KillerPawn = StaticStruct()->FindPropertyByName(FName(TEXT("KillerPawn")));
+    static auto bWeakKillerPawn = KillerPawn->IsWeakObjectProperty();
+
+    if (bWeakKillerPawn)
+        return (AFortPawn*)KillerPawn->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
 
     return *KillerPawn->ContainerPtrToValuePtr<AFortPawn*>(this);
 }

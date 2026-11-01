@@ -816,6 +816,10 @@ APawn* AFortPlayerPawn::GetTetherPawn() const
         return nullptr;
 
     static auto TetherPawn = TetherComponent->GetClass()->FindPropertyByName(FName(TEXT("TetherPawn")));
+    static auto bWeakTetherPawn = TetherPawn->IsWeakObjectProperty();
+
+    if (bWeakTetherPawn)
+        return (APawn*)TetherPawn->ContainerPtrToValuePtr<FWeakObjectPtr>(TetherComponent)->Get();
 
     return *TetherPawn->ContainerPtrToValuePtr<APawn*>(TetherComponent);
 }

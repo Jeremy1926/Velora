@@ -22,7 +22,7 @@ struct FDeathInfo
 
     static UScriptStruct* StaticStruct();
 
-    AActor*& GetFinisherOrDowner();
+    void SetFinisherOrDowner(AActor* InFinisherOrDowner);
 
     AActor** GetDowner();
 

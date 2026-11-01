@@ -276,7 +276,7 @@ void AFortPlayerPawnAthena::InitializeDeathInfoOnPawnDeath(const FGameplayTagCon
 
     FDeathInfo DeathInfo;
 
-    DeathInfo.GetFinisherOrDowner() = EventInstigator ? Cast<AFortPlayerStateAthena>(Finisher->GetPlayerState()) : PlayerState;
+    DeathInfo.SetFinisherOrDowner(EventInstigator ? Cast<AFortPlayerStateAthena>(Finisher->GetPlayerState()) : PlayerState);
     DeathInfo.SetDBNO(false);
 
     if (bPawnToDeathCause)

@@ -16,7 +16,6 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "UObject/ScriptDelegates.h"
-#include "UObject/Field.h"
 #include "Scanner.h"
 
 struct FPendingSwap
@@ -527,7 +526,7 @@ UScriptStruct* FFortPickupLocationData::StaticStruct()
 AFortPawn* FFortPickupLocationData::GetPickupTarget() const
 {
     static auto PickupTarget = StaticStruct() ? StaticStruct()->FindPropertyByName(FName(TEXT("PickupTarget"))) : nullptr;
-    static auto bWeakPickupTarget = PickupTarget && FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)PickupTarget + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
+    static auto bWeakPickupTarget = PickupTarget && PickupTarget->IsWeakObjectProperty();
 
     if (bWeakPickupTarget)
         return (AFortPawn*)PickupTarget->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
@@ -595,16 +594,29 @@ void AFortPickup::SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup)
 {
     static auto PawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("PawnWhoDroppedPickup")));
     static auto OnSetPawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("OnSetPawnWhoDroppedPickup")));
+    static auto bWeakPawnWhoDroppedPickup = PawnWhoDroppedPickup && PawnWhoDroppedPickup->IsWeakObjectProperty();
 
     if (!PawnWhoDroppedPickup)
         return;
 
-    auto& CurrentPawnWhoDroppedPickup = *PawnWhoDroppedPickup->ContainerPtrToValuePtr<AFortPawn*>(this);
+    if (bWeakPawnWhoDroppedPickup)
+    {
+        auto& CurrentPawnWhoDroppedPickup = *PawnWhoDroppedPickup->ContainerPtrToValuePtr<FWeakObjectPtr>(this);
 
-    if (CurrentPawnWhoDroppedPickup == InPawnWhoDroppedPickup)
-        return;
+        if (CurrentPawnWhoDroppedPickup.Get() == InPawnWhoDroppedPickup)
+            return;
 
-    CurrentPawnWhoDroppedPickup = InPawnWhoDroppedPickup;
+        CurrentPawnWhoDroppedPickup = InPawnWhoDroppedPickup;
+    }
+    else
+    {
+        auto& CurrentPawnWhoDroppedPickup = *PawnWhoDroppedPickup->ContainerPtrToValuePtr<AFortPawn*>(this);
+
+        if (CurrentPawnWhoDroppedPickup == InPawnWhoDroppedPickup)
+            return;
+
+        CurrentPawnWhoDroppedPickup = InPawnWhoDroppedPickup;
+    }
 
     if (OnSetPawnWhoDroppedPickup)
     {
