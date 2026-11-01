@@ -29,6 +29,8 @@ UScriptStruct* FScalableFloat::StaticStruct()
 float FScalableFloat::GetValueAtLevel(float Level, const FString* ContextString) const
 {
     static auto GetValueAtLevel = Anchor::Function<float (*)(const FScalableFloat*, float, const FString*)>(TEXT("FScalableFloat::GetValueAtLevel"))
+        .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 65 48 8B 04 25 58 00 00 00 48 8D 35 ? ? ? ? 48 8B F9 0F 29 74 24 ? B9 ? ? ? ? 49 8B D8 0F 28 F1")
+        .Or()
         .String(TEXT("FScalableFloat::GetValueAtLevel"))
         .Start()
         .Or()
