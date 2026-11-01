@@ -180,6 +180,9 @@ int32 UNetDriver::GetNetTag() const
     static auto NetTag = Anchor::Offset(TEXT("UNetDriver::NetTag"))
         .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
         .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
+        .Or()
+        .Pattern("C7 ? ? ? 00 00 98 3A 00 00")
+        .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
         .Disp();
 
     return *(int32*)((uint8_t*)this + NetTag);
@@ -189,6 +192,9 @@ void UNetDriver::SetNetTag(int32 InNetTag)
 {
     static auto NetTag = Anchor::Offset(TEXT("UNetDriver::NetTag"))
         .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
+        .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
+        .Or()
+        .Pattern("C7 ? ? ? 00 00 98 3A 00 00")
         .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
         .Disp();
 
