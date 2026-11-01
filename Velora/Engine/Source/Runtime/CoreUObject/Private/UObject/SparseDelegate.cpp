@@ -67,6 +67,15 @@ bool FSparseDelegateStorage::AddUnique(const UObject* DelegateOwner, const FName
         .Target()
         .Or()
         .Pattern("48 8B C4 48 89 58 08 48 89 70 18 89 50 10 55 57 41 54 41 56 41 57 48 8D 68 ? 48 81 EC ? ? ? ? 48 8B F9 4D 8B F8 49 8B C8 33 DB E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8D 0D ? ? ? ? 48 89 4D ? FF 15")
+        .Or()
+        .String(TEXT("OnEnterOverlap"))
+        .Find("mov [*-0x*], eax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return AddUnique(DelegateOwner, DelegateName, &Delegate);
