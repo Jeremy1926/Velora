@@ -20,6 +20,12 @@ AFortInventory* IFortInventoryOwnerInterface::GetWorldInventory()
     static auto GetWorldInventory = Anchor::VirtualFunction<AFortInventory* (*)(IFortInventoryOwnerInterface*)>(TEXT("IFortInventoryOwnerInterface::GetWorldInventory"))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:GetOverflowCountIfItemWasAddedToInventory"))
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:GetOverflowCountIfItemWasAddedToInventory"))
+        .Find("sbb rcx, rcx; and rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]")
         .Get();
 
     return GetWorldInventory(this);
