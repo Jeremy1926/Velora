@@ -66,6 +66,10 @@ void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9, [*]; mov r8d, *; mov rdx, rax")
+        .Find("call [*+0x*]")
         .Get();
 
     InitializeStruct(this, Dest, ArrayDim);
@@ -80,6 +84,10 @@ void UStruct::DestroyStruct(void* Dest, int32 ArrayDim) const
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, 0x1")
         .Find("call [*+0x*]")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9, [*]; mov r8d, *; mov rdx, rax")
+        .Find("call [*+0x*]")
         .Get(sizeof(void*));
 
     DestroyStruct(this, Dest, ArrayDim);
@@ -90,6 +98,12 @@ void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim
     static auto CopyScriptStruct = Anchor::Function<void (*)(const UScriptStruct*, void*, void const*, int32)>(TEXT("UScriptStruct::CopyScriptStruct"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r9d, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("mov r9, [*]; mov r8d, *; mov rdx, rax")
+        .Find("call [*+0x*]")
         .Find("call 0x*")
         .Target()
         .Get();
