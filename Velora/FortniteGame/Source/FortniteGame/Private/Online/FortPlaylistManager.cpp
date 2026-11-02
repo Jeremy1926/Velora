@@ -32,6 +32,9 @@ UObject* UFortPlaylistManager::GetAthenaPlaylist(FName PlaylistName)
         .Or()
         .Smallest(TEXT("UFortPlaylistManager::GetPlaylist: Unable to find playlist %s"))
         .Start()
+        .Or()
+        .String(TEXT("UFortPlaylistManager::GetPlaylist: Unable to find playlist %s"))
+        .Start()
         .Get();
 
     return GetAthenaPlaylist(this, PlaylistName);
