@@ -33,7 +33,7 @@ UObject* GetTransientPackage()
 
 UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const TCHAR* OrigInName, bool ExactClass)
 {
-    static auto StaticFindObject = Anchor::Function<UObject* (*)(UClass*, UObject*, const TCHAR*, bool)>(TEXT("StaticFindObject"))
+    static auto StaticFindObject = Anchor::Function<UObject* (*)(UClass*, UObject*, const void*, bool)>(TEXT("StaticFindObject"))
         .String(TEXT("Illegal call to StaticFindObject() while collecting garbage!"), "lea rax, [0x*]; mov r9d, 0x1; mov edx, 0x*; mov [rsp+0x20], rax; call 0x*; lea r9, [0x*]; mov r8d, 0x*; lea rdx, [0x*]; lea rcx, [0x*]; call 0x*; cmp *, 0xffffffffffffffff")
         .Start()
         .Or()
@@ -58,14 +58,27 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Target()
         .Get();
 
-    auto Object = StaticFindObject(ObjectClass, InObjectPackage, OrigInName, ExactClass);
+    static auto bNameView = Anchor::Exists()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("mov [r8], rax; mov dword ptr [r8+0x8], 0x1c")
+        .Get();
+
+    struct
+    {
+        const TCHAR* Data;
+        int32 Size;
+    } NameView { OrigInName, OrigInName ? (int32)wcslen(OrigInName) : 0 };
+
+    auto Object = StaticFindObject(ObjectClass, InObjectPackage, bNameView ? (const void*)&NameView : OrigInName, ExactClass);
 
     if (!Object && OrigInName && FString(OrigInName).StartsWith(TEXT("/Script/FortniteGame.")))
     {
         FString MovedName(TEXT("/Script/FortniteAI."));
         MovedName += OrigInName + wcslen(TEXT("/Script/FortniteGame."));
 
-        Object = StaticFindObject(ObjectClass, InObjectPackage, *MovedName, ExactClass);
+        NameView = { *MovedName, MovedName.Len() };
+
+        Object = StaticFindObject(ObjectClass, InObjectPackage, bNameView ? (const void*)&NameView : *MovedName, ExactClass);
     }
 
     return Object;
