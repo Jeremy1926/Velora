@@ -447,6 +447,8 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
         .Find("mov [rsp+0x20], rax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 56 41 57 48 83 EC 30 83 09 FF 45 8B F9 48 8B 6C 24 70 49 8B D8 C6 41 04 00 48 8B F2 48 8B F9 48 85 D2 74 ? 48 8B CA E8")
         .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
