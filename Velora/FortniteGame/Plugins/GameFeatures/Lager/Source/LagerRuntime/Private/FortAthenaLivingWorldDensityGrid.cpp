@@ -228,6 +228,11 @@ float FFortAthenaLivingWorldDensityGrid::GetActorDensityValue(AActor* InActor)
         .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea rbx, [rsi+0x*]; mov rdx, rdi; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return NativeGetActorDensityValue(this, InActor);
