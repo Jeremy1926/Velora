@@ -3,6 +3,8 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortAthenaAircraft.h"
+#include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Items/FortQuickBars.h"
@@ -10,6 +12,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayEffectTypes.h"
 #include "Templates/Casts.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CommandLine.h"
@@ -33,6 +36,25 @@ UFortGameStateComponent_BattleRoyaleGamePhaseLogic* UFortGameStateComponent_Batt
     auto GameState = World ? (AActor*)World->GetGameState() : nullptr;
 
     return GameState ? (UFortGameStateComponent_BattleRoyaleGamePhaseLogic*)GameState->FindComponentByClass(StaticClass()) : nullptr;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TickComponent(float DeltaTime)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+
+    if (!GameState)
+        return;
+
+    const EAthenaGamePhase GamePhase = GetGamePhase();
+    auto Playlist = GameState->GetCurrentPlaylist();
+
+    if (Playlist && HasSafeZoneAlreadyStarted(GamePhase, GameState->GetSafeZoneStartUp()))
+        UpdateSafeZonesPhase();
+
+    if (GamePhase == EAthenaGamePhase::Warmup)
+        UpdateWarmupPhase();
+    else if (GamePhase == EAthenaGamePhase::SafeZones && !Playlist)
+        UpdateSafeZonesPhase();
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandleMatchHasStarted()
@@ -62,6 +84,9 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartWarmupPhase()
         return false;
 
     auto Playlist = GameState->GetCurrentPlaylist();
+
+    if (GameState->GetSafeZoneStartUp() == ESafeZoneStartUp::StartsWithWarmUp)
+        StartSafeZones(false, false);
 
     if (GetGamePhase() == EAthenaGamePhase::Warmup)
         return true;
@@ -235,6 +260,9 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartAircraftPhase(bool
         PlayerController->ClientGotoState(FName(TEXT("Inactive")));
     }
 
+    if (GameState->GetSafeZoneStartUp() == ESafeZoneStartUp::StartsWithAirCraft)
+        StartSafeZones(false, false);
+
     SetGamePhase(EAthenaGamePhase::Aircraft);
 
     return true;
@@ -246,6 +274,127 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetupAircraft(AFortAthe
         SetAircraftIsLocked(true);
 
     GetAircrafts_GameState().Add(Aircraft);
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HasSafeZoneAlreadyStarted(EAthenaGamePhase InGamePhase, ESafeZoneStartUp SafeZoneStartUp)
+{
+    switch (InGamePhase)
+    {
+    case EAthenaGamePhase::Warmup:
+        return SafeZoneStartUp == ESafeZoneStartUp::StartsWithWarmUp;
+    case EAthenaGamePhase::Aircraft:
+        return SafeZoneStartUp == ESafeZoneStartUp::StartsWithWarmUp || SafeZoneStartUp == ESafeZoneStartUp::StartsWithAirCraft;
+    case EAthenaGamePhase::SafeZones:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartSafeZones(bool bForce, bool bStartSafeZonesPhase)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+
+    if (!MapInfo || MapInfo->GetSafeZoneCount() < 2)
+        return false;
+
+    if (!bForce && (GetGamePhase() == EAthenaGamePhase::SafeZones || (GameState->GetCurrentPlaylist() && HasSafeZoneAlreadyStarted(GetGamePhase(), GameState->GetSafeZoneStartUp()))))
+        return true;
+
+    GameState->SetSafeZonesStartTime(MapInfo->GetSafeZoneStartDelay().GetValueAtLevel(0.0f) + GameState->GetServerWorldTimeSeconds());
+
+    return bStartSafeZonesPhase ? StartSafeZonesPhase(bForce) : true;
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartSafeZonesPhase(bool bForce)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+
+    if (!MapInfo || MapInfo->GetSafeZoneCount() < 2)
+        return false;
+
+    if (GetGamePhase() != EAthenaGamePhase::SafeZones || bForce)
+        SetGamePhase(EAthenaGamePhase::SafeZones);
+
+    return true;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnInitialSafeZone()
+{
+    static auto SafeZoneIndicatorClass = StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicatorClass")));
+    static auto OnSafeZoneIndicatorSpawned = AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("OnSafeZoneIndicatorSpawned")));
+
+    auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
+    auto& SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (!GameMode)
+        return;
+
+    auto Class = *SafeZoneIndicatorClass->ContainerPtrToValuePtr<UClass*>(this);
+
+    FActorSpawnParameters SpawnParameters;
+    SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    SafeZoneIndicator = (AFortSafeZoneIndicator*)GetWorld()->SpawnActor(Class && Class->IsChildOf(AFortSafeZoneIndicator::StaticClass()) ? Class : nullptr, nullptr, nullptr, SpawnParameters);
+
+    if (!SafeZoneIndicator)
+        return;
+
+    if (OnSafeZoneIndicatorSpawned)
+        OnSafeZoneIndicatorSpawned->ContainerPtrToValuePtr<FMulticastScriptDelegate>(GameMode)->ProcessMulticastDelegate<UObject>(&SafeZoneIndicator);
+
+    SafeZoneIndicator->InitializeWithMapDefaultPhases();
+    GameMode->SetSafeZonePhase(-1);
+    GameMode->StartNewSafeZonePhase(-1);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateSafeZonesPhase()
+{
+    static auto bSafezoneEventDriven = (UBoolProperty*)AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("bSafezoneEventDriven")));
+    static auto bPausedForPreview = (UBoolProperty*)AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("bPausedForPreview")));
+    static auto PhaseCount = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("PhaseCount")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto GameMode = GameState ? Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()) : nullptr;
+
+    if (!GameMode)
+        return;
+
+    const float ServerWorldTimeSeconds = GameState->GetServerWorldTimeSeconds();
+
+    if (!GetSafeZoneIndicator() && ServerWorldTimeSeconds > GetSafeZonesStartTime())
+        SpawnInitialSafeZone();
+
+    const int32 SafeZonePhase = GameMode->GetSafeZonePhase();
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (IsSafeZoneTimerPaused() || !SafeZoneIndicator || GetPlaylistStoppedSafeZonePhases())
+        return;
+
+    const bool bStartNewSafeZonePhase = ServerWorldTimeSeconds >= SafeZoneIndicator->GetSafeZoneFinishShrinkTime() && !bSafezoneEventDriven->GetPropertyValue_InContainer(SafeZoneIndicator);
+
+    if (GetGamePhase() == EAthenaGamePhase::Warmup || GetGamePhase() == EAthenaGamePhase::Aircraft)
+    {
+        if (!bPausedForPreview->GetPropertyValue_InContainer(SafeZoneIndicator) && !SafeZonePhase && bStartNewSafeZonePhase)
+            GameMode->StartNewSafeZonePhase(-1);
+
+        bPausedForPreview->SetPropertyValue_InContainer(SafeZoneIndicator, true);
+        return;
+    }
+
+    bPausedForPreview->SetPropertyValue_InContainer(SafeZoneIndicator, false);
+
+    if (bStartNewSafeZonePhase && SafeZonePhase < *PhaseCount->ContainerPtrToValuePtr<int32>(SafeZoneIndicator) - 1)
+        GameMode->StartNewSafeZonePhase(-1);
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsSafeZoneTimerPaused() const
+{
+    static auto SafeZonePauseTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));
+
+    return *SafeZonePauseTime->ContainerPtrToValuePtr<float>(this) >= 0.0f;
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGamePhase InGamePhase)
@@ -361,4 +510,49 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZonesStartTime(f
     static auto SafeZonesStartTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonesStartTime")));
 
     *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this) = InSafeZonesStartTime;
+}
+
+float UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZonesStartTime() const
+{
+    static auto SafeZonesStartTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonesStartTime")));
+
+    return *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+AFortSafeZoneIndicator*& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZoneIndicator()
+{
+    static auto SafeZoneIndicator = StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
+
+    return *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this);
+}
+
+TArray<FVector>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZoneLocations()
+{
+    static auto SafeZoneLocations = Anchor::Offset(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SafeZoneLocations"))
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Find("cmp *, [*+0x*]; jnl 0x*; mov rax, [*+0x*]")
+        .Find("mov rax, [*+0x*]")
+        .Or()
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Find("cmp *, [rax]; jnl 0x*; mov rax, [*+0x*]")
+        .Find("mov rax, [*+0x*]")
+        .Disp();
+
+    return *(TArray<FVector>*)((uint8*)this + SafeZoneLocations);
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetPlaylistStoppedSafeZonePhases() const
+{
+    static auto bPlaylistStoppedSafeZonePhases = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistStoppedSafeZonePhases")));
+
+    return bPlaylistStoppedSafeZonePhases->GetPropertyValue_InContainer(this);
+}
+
+const FScalableFloat& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZoneDamageAttribute() const
+{
+    static auto SafeZoneDamageAttribute = StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneDamageAttribute")));
+
+    return *SafeZoneDamageAttribute->ContainerPtrToValuePtr<FScalableFloat>(this);
 }

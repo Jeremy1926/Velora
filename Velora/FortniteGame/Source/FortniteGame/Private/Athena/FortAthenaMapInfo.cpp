@@ -261,6 +261,22 @@ const FScalableFloat& AFortAthenaMapInfo::GetSafeZoneStartingRadius() const
     return *SafeZoneStartingRadius->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
+const FScalableFloat& AFortAthenaMapInfo::GetSafeZoneStartDelay() const
+{
+    static auto SafeZoneStartDelay = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneStartDelay")));
+
+    return *SafeZoneStartDelay->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+int32 AFortAthenaMapInfo::GetSafeZoneCount() const
+{
+    static auto Count = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition")))->FindPropertyByName(FName(TEXT("Count")))->GetOffset_ForInternal();
+
+    auto Definition = GetSafeZoneDefinition();
+
+    return Definition ? (int32)((const FScalableFloat*)(Definition + Count))->GetValueAtLevel(0.0f) : 0;
+}
+
 const uint8* AFortAthenaMapInfo::GetSafeZoneDefinition() const
 {
     static auto SafeZoneDefinitions = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDefinitions")));

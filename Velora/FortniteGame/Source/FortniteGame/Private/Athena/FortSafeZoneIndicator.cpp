@@ -149,7 +149,7 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
     static auto WaitTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("WaitTime")))->GetOffset_ForInternal();
     static auto ShrinkTime = SafeZoneDefinition->FindPropertyByName(FName(TEXT("ShrinkTime")))->GetOffset_ForInternal();
     static auto MegaStormGridCellThickness = SafeZoneDefinition->FindPropertyByName(FName(TEXT("MegaStormGridCellThickness")))->GetOffset_ForInternal();
-    static auto SafeZoneDamageAttribute = FFortSafeZonePhaseInfo::StaticStruct()->FindPropertyByName(FName(TEXT("DamageInfo"))) ? AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneDamageAttribute"))) : nullptr;
+    static auto DamageInfo = FFortSafeZonePhaseInfo::StaticStruct()->FindPropertyByName(FName(TEXT("DamageInfo")));
 
     auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
@@ -171,8 +171,8 @@ bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FF
     OutConstructedPhase.ShrinkTime = GetValueAtPhase(ShrinkTime);
     OutConstructedPhase.SetStormDamageLevel(PhaseToConstruct);
 
-    if (SafeZoneDamageAttribute)
-        OutConstructedPhase.SetDamageInfo(SafeZoneDamageAttribute->ContainerPtrToValuePtr<FScalableFloat>(GameState)->GetValueAtLevel((float)PhaseToConstruct), true);
+    if (auto SafeZoneDamageAttribute = DamageInfo ? GameState->GetSafeZoneDamageAttribute() : nullptr)
+        OutConstructedPhase.SetDamageInfo(SafeZoneDamageAttribute->GetValueAtLevel((float)PhaseToConstruct), true);
 
     OutConstructedPhase.GetMegaStormGridCellThickness() = FMath::RoundToInt(GetValueAtPhase(MegaStormGridCellThickness));
 
@@ -200,6 +200,12 @@ void AFortSafeZoneIndicator::SetSafeZoneRadiusAndCenter(float InRadius, const FV
         .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:SetSafeZoneRadiusAndCenter"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:SetSafeZoneRadiusAndCenter"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
         .Find("call 0x*")
         .Target()
         .Get();

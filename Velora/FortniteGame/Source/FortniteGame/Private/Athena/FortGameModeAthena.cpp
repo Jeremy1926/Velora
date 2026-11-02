@@ -1213,12 +1213,22 @@ AFortSafeZoneIndicator* AFortGameModeAthena::GetSafeZoneIndicator() const
 {
     static auto SafeZoneIndicator = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
 
+    if (!SafeZoneIndicator)
+    {
+        auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+        return GamePhaseLogic ? GamePhaseLogic->GetSafeZoneIndicator() : nullptr;
+    }
+
     return *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this);
 }
 
 TArray<FVector>& AFortGameModeAthena::GetSafeZoneLocations()
 {
     static auto SafeZoneLocations = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneLocations")));
+
+    if (!SafeZoneLocations)
+        return UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this)->GetSafeZoneLocations();
 
     return *SafeZoneLocations->ContainerPtrToValuePtr<TArray<FVector>>(this);
 }

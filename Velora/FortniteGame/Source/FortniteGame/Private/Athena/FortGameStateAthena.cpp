@@ -191,7 +191,14 @@ AFortSafeZoneIndicator* AFortGameStateAthena::GetSafeZoneIndicator() const
 {
     static auto SafeZoneIndicator = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneIndicator")));
 
-    return SafeZoneIndicator ? *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this) : nullptr;
+    if (!SafeZoneIndicator)
+    {
+        auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+        return GamePhaseLogic ? GamePhaseLogic->GetSafeZoneIndicator() : nullptr;
+    }
+
+    return *SafeZoneIndicator->ContainerPtrToValuePtr<AFortSafeZoneIndicator*>(this);
 }
 
 void AFortGameStateAthena::SetSafeZoneIndicator(AFortSafeZoneIndicator* InSafeZoneIndicator)
@@ -626,8 +633,32 @@ void AFortGameStateAthena::SetSafeZonesStartTime(float InSafeZonesStartTime)
 
     if (SafeZonesStartTime)
         *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this) = InSafeZonesStartTime;
-    else if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
         GamePhaseLogic->SetSafeZonesStartTime(InSafeZonesStartTime);
+}
+
+const FScalableFloat* AFortGameStateAthena::GetSafeZoneDamageAttribute() const
+{
+    static auto SafeZoneDamageAttribute = GetClass()->FindPropertyByName(FName(TEXT("SafeZoneDamageAttribute")));
+
+    if (!SafeZoneDamageAttribute)
+    {
+        auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+        return GamePhaseLogic ? &GamePhaseLogic->GetSafeZoneDamageAttribute() : nullptr;
+    }
+
+    return SafeZoneDamageAttribute->ContainerPtrToValuePtr<FScalableFloat>(this);
+}
+
+ESafeZoneStartUp AFortGameStateAthena::GetSafeZoneStartUp() const
+{
+    static auto SafeZoneStartUp = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("SafeZoneStartUp")));
+
+    auto Playlist = GetCurrentPlaylist();
+
+    return Playlist ? *SafeZoneStartUp->ContainerPtrToValuePtr<ESafeZoneStartUp>(Playlist) : ESafeZoneStartUp::UseDefaultGameBehavior;
 }
 
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)

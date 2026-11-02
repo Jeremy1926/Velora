@@ -5,10 +5,14 @@
 #include "UObject/WeakObjectPtrTemplates.h"
 
 class AFortAthenaAircraft;
+class AFortSafeZoneIndicator;
 class UObject;
+struct FScalableFloat;
+struct FVector;
 
 enum class EAthenaGamePhase : uint8;
 enum class EAthenaGamePhaseStep : uint8;
+enum class ESafeZoneStartUp : uint8;
 
 class UFortGameStateComponent_BattleRoyaleGamePhaseLogic : public UActorComponent
 {
@@ -16,6 +20,8 @@ public:
     static UClass* StaticClass();
 
     static UFortGameStateComponent_BattleRoyaleGamePhaseLogic* Get(const UObject* WorldContextObject);
+
+    void TickComponent(float DeltaTime);
 
     void HandleMatchHasStarted();
 
@@ -31,6 +37,18 @@ public:
 
     void SetupAircraft(AFortAthenaAircraft* Aircraft);
 
+    static bool HasSafeZoneAlreadyStarted(EAthenaGamePhase InGamePhase, ESafeZoneStartUp SafeZoneStartUp);
+
+    bool StartSafeZones(bool bForce, bool bStartSafeZonesPhase);
+
+    bool StartSafeZonesPhase(bool bForce);
+
+    void SpawnInitialSafeZone();
+
+    void UpdateSafeZonesPhase();
+
+    bool IsSafeZoneTimerPaused() const;
+
     void SetGamePhase(EAthenaGamePhase InGamePhase);
 
     void SetGameModeWillSkipAircraft(bool bInGameModeWillSkipAircraft);
@@ -39,7 +57,17 @@ public:
 
     EAthenaGamePhaseStep GetGamePhaseStep() const;
 
+    float GetSafeZonesStartTime() const;
+
     void SetSafeZonesStartTime(float InSafeZonesStartTime);
+
+    AFortSafeZoneIndicator*& GetSafeZoneIndicator();
+
+    TArray<FVector>& GetSafeZoneLocations();
+
+    bool GetPlaylistStoppedSafeZonePhases() const;
+
+    const FScalableFloat& GetSafeZoneDamageAttribute() const;
 
     float& GetWarmupCountdownStartTime();
 

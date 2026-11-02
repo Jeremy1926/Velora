@@ -19,6 +19,7 @@ class AFortSafeZoneIndicator;
 class AFortVolumeManager;
 class UFortWorldItemDefinition;
 class UScriptStruct;
+struct FScalableFloat;
 
 enum class EAthenaGamePhase : uint8
 {
@@ -31,6 +32,14 @@ enum class EAthenaGamePhase : uint8
 };
 
 enum class EAthenaGamePhaseStep : uint8;
+
+enum class ESafeZoneStartUp : uint8
+{
+    UseDefaultGameBehavior,
+    StartsWithWarmUp,
+    StartsWithAirCraft,
+    StartsWithNoAirCraft,
+};
 
 enum class EFortSafeZoneState : uint8
 {
@@ -136,6 +145,10 @@ public:
     void SetCurrentPlaylistName(FName PlaylistName);
 
     void SetSafeZonesStartTime(float InSafeZonesStartTime);
+
+    ESafeZoneStartUp GetSafeZoneStartUp() const;
+
+    const FScalableFloat* GetSafeZoneDamageAttribute() const;
 
     void OnRep_CurrentPlaylistData();
 

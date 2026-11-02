@@ -232,8 +232,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             if (auto GamePhaseLogicComponent = GamePhaseLogic && GameMode ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(GameState) : nullptr)
             {
-                if (GamePhaseLogicComponent->GetGamePhase() == EAthenaGamePhase::Warmup)
-                    GamePhaseLogicComponent->UpdateWarmupPhase();
+                GamePhaseLogicComponent->TickComponent(DeltaSeconds);
 
                 if (FGUI::bStartBus && GamePhaseLogicComponent->GetGamePhase() == EAthenaGamePhase::Warmup)
                     GamePhaseLogicComponent->StartAircraftPhase(false);

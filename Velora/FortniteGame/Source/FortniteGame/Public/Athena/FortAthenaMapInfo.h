@@ -68,5 +68,9 @@ public:
 
     const FScalableFloat& GetSafeZoneStartingRadius() const;
 
+    const FScalableFloat& GetSafeZoneStartDelay() const;
+
+    int32 GetSafeZoneCount() const;
+
     const uint8* GetSafeZoneDefinition() const;
 };
