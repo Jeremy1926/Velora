@@ -10,7 +10,7 @@ class AActor;
 class UPrimitiveComponent;
 class UScriptStruct;
 
-enum class ELevelCollectionType
+enum class ELevelCollectionType : uint8
 {
     DynamicSourceLevels,
     DynamicDuplicatedLevels,
