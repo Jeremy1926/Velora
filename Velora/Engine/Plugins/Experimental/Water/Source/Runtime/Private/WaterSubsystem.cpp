@@ -9,6 +9,11 @@ UWaterSubsystem* UWaterSubsystem::GetWaterSubsystem(const UWorld* InWorld)
         .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rcx, rax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/Water.BuoyancyManager:GetBuoyancyComponentManager"))
+        .Find("call 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return InWorld ? GetWaterSubsystem(InWorld) : nullptr;
