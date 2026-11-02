@@ -105,6 +105,8 @@ bool FSparseDelegateStorage::Remove(const UObject* DelegateOwner, const FName De
         .Target()
         .Or()
         .Pattern("48 89 5C 24 10 48 89 6C 24 18 56 57 41 54 41 56 41 57 48 83 EC 30 4C 8B E1 41 8B F9 48 8D 0D ? ? ? ? 4D 8B F8 48 89 4C 24 20 8B DA 33 F6 FF 15")
+        .Or()
+        .Pattern("48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41 57 48 83 EC 20 4C 8B F9 41 8B F9 48 8D 0D ? ? ? ? 4D 8B E0 8B DA 33 ED FF 15")
         .Get();
 
     return Remove(DelegateOwner, DelegateName, ObjectToRemove, FunctionNameToRemove);
