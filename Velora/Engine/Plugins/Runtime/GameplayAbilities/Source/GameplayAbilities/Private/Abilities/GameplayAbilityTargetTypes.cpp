@@ -20,6 +20,13 @@ void FAbilityReplicatedDataCache::Reset()
         .LogSlot(TEXT("UAbilitySystemComponent::ServerSetReplicatedTargetDataCancelled_Implementation"))
         .Entry(TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"))
         .Call(3)
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerSetReplicatedTargetDataCancelled"))
+        .Find("add [*+0x20], *")
+        .Find("mov rdi, [rax+0x*]", 2)
+        .LogSlot(TEXT("UAbilitySystemComponent::ServerSetReplicatedTargetDataCancelled_Implementation"))
+        .Entry(TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"))
+        .Call(4)
         .Get();
 
     Reset(this);
