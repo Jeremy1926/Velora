@@ -56,13 +56,13 @@ void FWeakObjectPtr::operator=(const UObject* Object)
     ObjectIndex = (int32)Object->GetUniqueID();
 
     auto ObjectItem = GUObjectArray.IndexToObject(ObjectIndex);
-    auto SerialNumber = ObjectItem->SerialNumber;
+    auto SerialNumber = ObjectItem->GetSerialNumber();
 
     if (!SerialNumber && MasterSerialNumber)
     {
         SerialNumber = _InterlockedIncrement(MasterSerialNumber);
 
-        if (auto ValueWas = _InterlockedCompareExchange((volatile long*)&ObjectItem->SerialNumber, SerialNumber, 0))
+        if (auto ValueWas = _InterlockedCompareExchange(ObjectItem->GetSerialNumberAddress(), SerialNumber, 0))
             SerialNumber = ValueWas;
     }
 

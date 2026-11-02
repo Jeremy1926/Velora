@@ -143,3 +143,40 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
 
     return StaticConstructObject_Internal(Class, InOuter, Name, SetFlags, InternalSetFlags, Template, bCopyTransientsFromClassDefaults, InstanceGraph, bAssumeTemplateIsArchetype);
 }
+
+const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
+{
+    static auto AllocateSerialNumber = Anchor::Address()
+        .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
+        .Get();
+
+    static auto NumElements = Anchor::At(AllocateSerialNumber).Last("mov e*, [0x*]").Cipher();
+    static auto Objects = Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher();
+
+    if (!NumElements.IsEncrypted() || !Objects.IsEncrypted())
+        return nullptr;
+
+    static FEncryptedLayout Layout
+    {
+        NumElements,
+        Objects,
+        Anchor::At(AllocateSerialNumber).Last("mov e*, [r*+0x*]").Cipher(TEXT("FUObjectItem::SerialNumber")),
+        Anchor::Cipher(TEXT("FUObjectItem::Flags"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov e*, [r*+0x*]; test e*, 0x*")
+            .Get(),
+        Anchor::Cipher(TEXT("FUObjectItem::Object"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov e*, [r*+0x*]; test e*, 0x*")
+            .Find("mov r*, [*]")
+            .Get()
+    };
+
+    return &Layout;
+}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Anchor/Anchor.h>
 #include "HAL/Platform.h"
 #include "Misc/EngineVersion.h"
 #include "UObject/ObjectMacros.h"
@@ -13,24 +14,27 @@ struct FUObjectItem
     int32 ClusterRootIndex;
     int32 SerialNumber;
 
-    FORCEINLINE int32 GetSerialNumber() const
-    {
-        return SerialNumber;
-    }
+    UObjectBase* GetObject() const;
+
+    int32 GetSerialNumber() const;
+
+    volatile long* GetSerialNumberAddress();
+
+    int32& GetFlags() const;
 
     FORCEINLINE void SetRootSet()
     {
-        Flags |= int32(EInternalObjectFlags::RootSet);
+        GetFlags() |= int32(EInternalObjectFlags::RootSet);
     }
 
     FORCEINLINE bool IsPendingKill() const
     {
-        return !!(Flags & int32(EInternalObjectFlags::PendingKill));
+        return !!(GetFlags() & int32(EInternalObjectFlags::PendingKill));
     }
 
     FORCEINLINE bool IsUnreachable() const
     {
-        return !!(Flags & int32(EInternalObjectFlags::Unreachable));
+        return !!(GetFlags() & int32(EInternalObjectFlags::Unreachable));
     }
 };
 
@@ -76,8 +80,22 @@ public:
 class FUObjectArray
 {
 public:
+    struct FEncryptedLayout
+    {
+        Anchor::FCipher NumElements;
+        Anchor::FCipher Objects;
+        Anchor::FCipher SerialNumber;
+        Anchor::FCipher Flags;
+        Anchor::FCipher Object;
+    };
+
+    static const FEncryptedLayout* GetEncryptedLayout();
+
     FORCEINLINE int32 GetObjectArrayNum() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->NumElements.Load<int32>(nullptr);
+
         auto& Version = FEngineVersion::Current();
 
         return Version.GetMajor() > 4 || Version.GetMinor() >= 21 ? ((const FChunkedFixedUObjectArray&)ObjObjects).Num() : ObjObjects.Num();
@@ -85,6 +103,9 @@ public:
 
     FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Index >= 0 && Index < GetObjectArrayNum() ? &Layout->Objects.Load<FUObjectItem**>(nullptr)[Index / (64 * 1024)][Index % (64 * 1024)] : nullptr;
+
         auto& Version = FEngineVersion::Current();
 
         if (Index < GetObjectArrayNum())
@@ -118,3 +139,31 @@ public:
 };
 
 extern FUObjectArray& GUObjectArray;
+
+FORCEINLINE UObjectBase* FUObjectItem::GetObject() const
+{
+    auto Layout = FUObjectArray::GetEncryptedLayout();
+
+    return Layout ? Layout->Object.Load<UObjectBase*>(this) : Object;
+}
+
+FORCEINLINE int32 FUObjectItem::GetSerialNumber() const
+{
+    auto Layout = FUObjectArray::GetEncryptedLayout();
+
+    return Layout ? Layout->SerialNumber.Load<int32>(this) : SerialNumber;
+}
+
+FORCEINLINE volatile long* FUObjectItem::GetSerialNumberAddress()
+{
+    auto Layout = FUObjectArray::GetEncryptedLayout();
+
+    return (volatile long*)(Layout ? (uint8*)this + Layout->SerialNumber.Offset : (uint8*)&SerialNumber);
+}
+
+FORCEINLINE int32& FUObjectItem::GetFlags() const
+{
+    auto Layout = FUObjectArray::GetEncryptedLayout();
+
+    return *(int32*)(Layout ? (uint8*)this + Layout->Flags.Offset : (uint8*)&Flags);
+}
