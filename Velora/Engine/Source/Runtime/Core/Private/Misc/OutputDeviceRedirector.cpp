@@ -20,6 +20,12 @@ void FOutputDeviceRedirector::AddOutputDevice(FOutputDevice* OutputDevice)
         .Start()
         .Find("lea rax, [0x*]; mov *, edx; mov *, rcx; mov [rcx], rax")
         .Target()
+        .Or()
+        .String(TEXT("Log file closed, %s"))
+        .Start()
+        .Caller()
+        .Find("lea rax, [0x*]; mov [rcx], rax")
+        .Target()
         .Get();
 
     auto Image = Anchor::Base();
