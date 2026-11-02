@@ -16,6 +16,10 @@ FTransform IFortVehicleInterface::GetExitSocketTransform(const int32 SeatIndex, 
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
         .Find("call [*+0x*]")
         .Get();
 
