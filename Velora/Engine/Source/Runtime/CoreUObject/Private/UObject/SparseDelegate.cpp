@@ -58,6 +58,8 @@ bool FSparseDelegateStorage::Add(const UObject* DelegateOwner, const FName Deleg
         .Find("call 0x*; or [*], al")
         .Target()
         .Or()
+        .Pattern("48 89 5C 24 08 89 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 8B EC 48 83 EC 70 48 8B F9 4D 8B F8 49 8B C8 33 DB E8 ? ? ? ? 84 C0 0F 84 ? ? ? ? 48 8D 0D")
+        .Or()
         .String(TEXT("&AGameplayCueNotify_Actor::OnOwnerDestroyed"))
         .Find("call 0x*", 2)
         .Target()
