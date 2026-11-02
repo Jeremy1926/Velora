@@ -93,6 +93,12 @@ USkeletalMeshComponent* IFortVehicleInterface::GetSkeletalMeshComponent() const
         .Or()
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .Find("call [*+0x*]; mov rbx, rax; test rax, rax")
+        .Or()
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("call 0x*; test rax, rax; jnz *")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("call [*+0x*]; mov rbx, rax; test rax, rax")
         .Get();
 
     return GetSkeletalMeshComponent(this);
