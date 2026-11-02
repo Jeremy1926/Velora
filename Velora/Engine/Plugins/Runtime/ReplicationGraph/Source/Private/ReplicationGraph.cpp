@@ -2712,6 +2712,12 @@ FFrameReplicationStats& UReplicationGraph::GetFrameReplicationStats()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("movdqu [rcx+0x*], xmm0")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("mov [rcx+0x*], rbx; mov [rcx+0x*], rbx")
         .Disp();
 
     return *(FFrameReplicationStats*)((uint8*)this + FrameReplicationStats);
@@ -2803,6 +2809,12 @@ int32 UReplicationGraph::ServerReplicateActors(float DeltaSeconds)
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "push rbp; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; push rbp; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp")
         .Optional()
         .InChildVTables(UReplicationGraph::StaticClass()));
 

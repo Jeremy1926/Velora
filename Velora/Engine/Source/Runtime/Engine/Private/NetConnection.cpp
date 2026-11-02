@@ -355,6 +355,17 @@ void UNetConnection::Close()
         .Find("mov rcx, [rcx+rax*8]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("mov [rcx+0x*], rbx; mov [rcx+0x*], rbx")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rcx+rax*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Close(this);
