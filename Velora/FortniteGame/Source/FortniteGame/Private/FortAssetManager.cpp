@@ -148,12 +148,30 @@ UGameDataCosmetics* UFortAssetManager::GetGameDataCosmetics()
 
 UObject* UFortAssetManager::GetAssetForPersistentName(const FString& PersistentName)
 {
-    static auto GetAssetForPersistentName = Anchor::Function<UObject* (*)(UFortAssetManager*, const FString&)>(TEXT("UFortAssetManager::GetAssetForPersistentName"))
+    static auto GetAssetForPersistentName = Anchor::Optional<UObject* (*)(UFortAssetManager*, const FString&)>(TEXT("UFortAssetManager::GetAssetForPersistentName"))
         .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
         .Find("call 0x*; lea rdx, [rsp+0x*]; mov rcx, rax; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
 
-    return GetAssetForPersistentName(this, PersistentName);
+    if (GetAssetForPersistentName)
+        return GetAssetForPersistentName(this, PersistentName);
+
+    struct FStringView
+    {
+        const TCHAR* DataPtr;
+        int32 Size;
+    };
+
+    static auto GetAssetForPersistentNameView = Anchor::Function<UObject* (*)(UFortAssetManager*, const FStringView*)>(TEXT("UFortAssetManager::GetAssetForPersistentName(FStringView)"))
+        .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
+        .Find("lea rdx, [rsp+0x*]; mov rcx, r8; *; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    const FStringView View{ *PersistentName, PersistentName.Len() };
+
+    return GetAssetForPersistentNameView(this, &View);
 }
