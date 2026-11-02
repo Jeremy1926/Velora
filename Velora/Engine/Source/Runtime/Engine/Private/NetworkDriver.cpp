@@ -325,6 +325,11 @@ uint32 UNetDriver::GetReplicationFrame() const
         .String(TEXT("STAT_ReplayPrioritizeTime"))
         .Last("inc [*]; inc [*]")
         .Find("inc [*]")
+        .Or()
+        .String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*"))
+        .Start()
+        .Find("add [*], r*d; add [*], r*d")
+        .Find("add [*], r*d")
         .Disp();
 
     return *(uint32*)((uint8_t*)this + ReplicationFrame);
@@ -346,6 +351,11 @@ void UNetDriver::SetReplicationFrame(uint32 InReplicationFrame)
         .String(TEXT("STAT_ReplayPrioritizeTime"))
         .Last("inc [*]; inc [*]")
         .Find("inc [*]")
+        .Or()
+        .String(TEXT("bPrioritizeActors and HasLevelStreamingFixes are both enabled*"))
+        .Start()
+        .Find("add [*], r*d; add [*], r*d")
+        .Find("add [*], r*d")
         .Disp();
 
     *(uint32*)((uint8_t*)this + ReplicationFrame) = InReplicationFrame;
