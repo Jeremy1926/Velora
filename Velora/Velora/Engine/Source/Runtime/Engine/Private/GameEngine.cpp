@@ -180,6 +180,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             {
                 FURL URL{};
                 World->Listen(URL);
+
+                if (!World->GetServerStreamingLevelsVisibility())
+                    World->SetServerStreamingLevelsVisibility(AServerStreamingLevelsVisibility::SpawnServerActor(World));
             }
 
             TCHAR WarmupRequiredPlayerCount[16];

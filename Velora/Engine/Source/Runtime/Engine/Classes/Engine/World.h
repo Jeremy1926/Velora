@@ -63,6 +63,12 @@ private:
     UNetDriver* NetDriver;
 };
 
+class AServerStreamingLevelsVisibility
+{
+public:
+    static AServerStreamingLevelsVisibility* SpawnServerActor(const UWorld* World);
+};
+
 class UWorld final : public UObject, public FNetworkNotify
 {
 public:
@@ -105,6 +111,10 @@ public:
     UNetDriver* GetNetDriver() const;
 
     UNetDriver* GetDemoNetDriver() const;
+
+    AServerStreamingLevelsVisibility* GetServerStreamingLevelsVisibility() const;
+
+    void SetServerStreamingLevelsVisibility(AServerStreamingLevelsVisibility* InServerStreamingLevelsVisibility);
 
     void SetNetDriver(UNetDriver* NewDriver);
 

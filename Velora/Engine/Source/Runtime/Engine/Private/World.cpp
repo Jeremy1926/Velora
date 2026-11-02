@@ -138,6 +138,39 @@ ENetMode UWorld::InternalGetNetMode() const
     return Original();
 }
 
+AServerStreamingLevelsVisibility* UWorld::GetServerStreamingLevelsVisibility() const
+{
+    static auto ServerStreamingLevelsVisibility = GetClass()->FindPropertyByName(FName(TEXT("ServerStreamingLevelsVisibility")));
+
+    return ServerStreamingLevelsVisibility ? *ServerStreamingLevelsVisibility->ContainerPtrToValuePtr<AServerStreamingLevelsVisibility*>(this) : nullptr;
+}
+
+void UWorld::SetServerStreamingLevelsVisibility(AServerStreamingLevelsVisibility* InServerStreamingLevelsVisibility)
+{
+    static auto ServerStreamingLevelsVisibility = GetClass()->FindPropertyByName(FName(TEXT("ServerStreamingLevelsVisibility")));
+
+    if (ServerStreamingLevelsVisibility)
+        *ServerStreamingLevelsVisibility->ContainerPtrToValuePtr<AServerStreamingLevelsVisibility*>(this) = InServerStreamingLevelsVisibility;
+}
+
+AServerStreamingLevelsVisibility* AServerStreamingLevelsVisibility::SpawnServerActor(const UWorld* World)
+{
+    static auto SpawnServerActor = Anchor::Function<AServerStreamingLevelsVisibility* (*)(const UWorld*)>(TEXT("AServerStreamingLevelsVisibility::SpawnServerActor"))
+        .String(TEXT("sorting actor list"))
+        .Find("test *, 0x60000000; jnz *; mov r8b, 0x1; lea rdx, [*]; call 0x*")
+        .Call()
+        .Reference("call 0x*; add *, 0x8")
+        .Start()
+        .Or()
+        .Pattern("48 83 EC 28 80 B9 ? ? 00 00 03 75 ? 48 81 C1 ? ? 00 00 45 84 C0 74 ? 4C 8B C2 45 33 C9")
+        .Reference("call 0x*; add *, 0x8")
+        .Start()
+        .Optional()
+        .Get();
+
+    return SpawnServerActor ? SpawnServerActor(World) : nullptr;
+}
+
 void UWorld::SetNetDriver(UNetDriver* NewDriver)
 {
     static auto NetDriver = GetClass()->FindPropertyByName(FName(TEXT("NetDriver")));
