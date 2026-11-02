@@ -36,6 +36,16 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Find("call 0x*")
         .Target()
         .Find("mov [*+0x*], dl")
+        .Or()
+        .String(TEXT("Failed to load package '%s'"), "lea rax, [0x*]; xor edx, edx; xor ecx, ecx")
+        .Start()
+        .CallSite()
+        .Find("mov dl, 0x2; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], dl")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
