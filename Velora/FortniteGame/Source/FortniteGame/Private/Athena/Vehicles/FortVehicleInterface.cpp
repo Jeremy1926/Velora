@@ -6,6 +6,11 @@ FTransform IFortVehicleInterface::GetExitSocketTransform(const int32 SeatIndex, 
 {
     static auto GetExitSocketTransform = Anchor::VirtualFunction<TGameValue<FTransform>* (*)(const IFortVehicleInterface*, TGameValue<FTransform>*, int32, int32)>(TEXT("IFortVehicleInterface::GetExitSocketTransform"))
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetExitSocketTransform"))
         .Find("call [*+0x*]")
         .Get();
 
@@ -18,6 +23,11 @@ AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
 {
     static auto GetPawnAtSeat = Anchor::VirtualFunction<AFortPlayerPawn* (*)(const IFortVehicleInterface*, int32)>(TEXT("IFortVehicleInterface::GetPawnAtSeat"))
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:GetPawnAtSeat"))
         .Find("call [rax+0x*]")
         .Get();
 
@@ -27,6 +37,11 @@ AFortPlayerPawn* IFortVehicleInterface::GetPawnAtSeat(const int32 SeatIdx) const
 UFortVehicleSeatWeaponComponent* IFortVehicleInterface::GetSeatWeaponComponent(const int32 SeatIndex) const
 {
     static auto GetSeatWeaponComponent = Anchor::VirtualFunction<UFortVehicleSeatWeaponComponent* (*)(const IFortVehicleInterface*, int32)>(TEXT("IFortVehicleInterface::GetSeatWeaponComponent"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetSeatWeaponComponent"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetSeatWeaponComponent"))
         .Find("call [*+0x*]")
         .Get();
@@ -47,6 +62,11 @@ const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
 void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
 {
     static auto SetForcedToAlwaysSpawn = Anchor::VirtualFunction<void (*)(IFortVehicleInterface*, bool)>(TEXT("IFortVehicleInterface::SetForcedToAlwaysSpawn"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:SetForcedToAlwaysSpawn"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:SetForcedToAlwaysSpawn"))
         .Find("call [*+0x*]")
         .Get();

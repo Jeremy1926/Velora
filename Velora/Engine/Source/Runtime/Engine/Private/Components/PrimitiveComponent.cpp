@@ -15,6 +15,11 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
 {
     static auto VirtualSetPhysicsLinearVelocity = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsLinearVelocity"))
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsLinearVelocity"))
         .Find("call [rax+0x*]")
         .Optional()
         .Get();
@@ -32,6 +37,11 @@ void UPrimitiveComponent::SetPhysicsLinearVelocity(FVector NewVel, bool bAddToCu
 void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, bool bAddToCurrent, FName BoneName)
 {
     static auto VirtualSetPhysicsAngularVelocityInRadians = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, TGameValue<FVector>, bool, FName)>(TEXT("UPrimitiveComponent::SetPhysicsAngularVelocityInRadians"))
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetPhysicsAngularVelocityInRadians"))
         .Find("call [rax+0x*]")
         .Optional()

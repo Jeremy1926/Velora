@@ -39,6 +39,11 @@ void ACharacter::LaunchCharacter(FVector LaunchVelocity, bool bXYOverride, bool 
 {
     static auto LaunchCharacter = Anchor::VirtualFunction<void (*)(ACharacter*, TGameValue<FVector>, bool, bool)>(TEXT("ACharacter::LaunchCharacter"))
         .Exec(TEXT("/Script/Engine.Character:LaunchCharacter"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Character:LaunchCharacter"))
         .Find("call [*+0x*]")
         .Get();
 

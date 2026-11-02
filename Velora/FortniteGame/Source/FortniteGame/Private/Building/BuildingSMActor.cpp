@@ -113,6 +113,11 @@ void ABuildingSMActor::RepairBuilding(AFortPlayerController* RepairingController
 {
     static auto RepairBuilding = Anchor::VirtualFunction<void (*)(ABuildingSMActor*, AFortPlayerController*, int32)>(TEXT("ABuildingSMActor::RepairBuilding"))
         .Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding"))
         .Find("call [*+0x*]")
         .Get();
 
