@@ -546,7 +546,11 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
             .Find("call 0x*")
             .Target()
             .Find("lea rdi, [rcx+0x*]")
-            .Disp();
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("setnz *")
+            .Find("add rcx, 0x*; add [*+0x20], *")
+            .Get();
 
         static auto FindExistingItemForDefinition = Anchor::VirtualFunction<UFortItem* (*)(const void*, const UFortItemDefinition*, bool)>(TEXT("IFortInventoryOwnerInterface::FindExistingItemForDefinition"))
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
