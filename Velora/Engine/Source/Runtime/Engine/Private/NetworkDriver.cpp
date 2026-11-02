@@ -190,6 +190,9 @@ void UNetDriver::ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const
         .Find("and dword ptr [rsp+0x*], 0x0")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String("ProcessRemoteFunctionForChannelPrivate")
+        .Start()
         .Get();
 
     ProcessRemoteFunctionForChannelPrivate(this, Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
