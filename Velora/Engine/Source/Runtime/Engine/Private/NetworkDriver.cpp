@@ -265,6 +265,9 @@ int64 UNetDriver::SendDestructionInfo(UNetConnection* Connection, FActorDestruct
     static auto SendDestructionInfo = Anchor::Function<int64 (*)(UNetDriver*, UNetConnection*, FActorDestructionInfo*)>(TEXT("UNetDriver::SendDestructionInfo"))
         .String(TEXT("STAT_NetSendDestructionInfo"))
         .Start()
+        .Or()
+        .String("STAT_NetSendDestructionInfo")
+        .Start()
         .Optional()
         .Get();
 
