@@ -16,6 +16,9 @@ void FGameplayEffectSpec::SetSetByCallerMagnitude(FName DataName, float Magnitud
 {
     static auto SetSetByCallerMagnitude = Anchor::Function<void (*)(FGameplayEffectSpec*, FName, float)>(TEXT("FGameplayEffectSpec::SetSetByCallerMagnitude"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignSetByCallerMagnitude"))
+        .Has("movaps xmm6, xmm2")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignSetByCallerMagnitude"))
         .Call()
         .Get();
 
