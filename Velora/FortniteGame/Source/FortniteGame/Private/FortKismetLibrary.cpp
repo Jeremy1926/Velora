@@ -1132,6 +1132,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
         .Find("setnz *; add [*+0x20], *; lea rax, [rbp-0x*]; cmp r14, rax; jz *; mov rcx, [r14]; test rcx, rcx; jz *; call 0x*; mov [r14], r15; mov [r14+0x8], r15; mov rbx, [rsp+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Find("setnz *; mov [rbp-0x*], *; add [*+0x20], *; mov rcx, rdi; call 0x*; mov rdx, [rbp-0x*]; test rdx, rdx; jz 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
 
