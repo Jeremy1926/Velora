@@ -99,6 +99,10 @@ EConnectionState UNetConnection::GetState() const
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("cmp dword ptr [*], 0x1")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov eax, [r*+0x*]; cmp eax, 0x4; jz *; cmp eax, 0x1")
         .Disp();
 
     return *(EConnectionState*)((uint8_t*)this + State);
