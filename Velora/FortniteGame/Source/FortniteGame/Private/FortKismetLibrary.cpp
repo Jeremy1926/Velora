@@ -1007,6 +1007,9 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayerByGuid(FFrame& Stack, void* 
     DETOUR(UFortKismetLibrary, execK2_RemoveItemFromPlayerByGuid, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
         .Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rsi], r14d; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")));
 
