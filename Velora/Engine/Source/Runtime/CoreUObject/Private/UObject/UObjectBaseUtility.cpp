@@ -24,6 +24,11 @@ UObject* UObjectBaseUtility::GetOutermost() const
 void* UObjectBaseUtility::GetInterfaceAddress(UClass* InterfaceClass)
 {
     static auto GetInterfaceAddress = Anchor::Function<void* (*)(UObjectBaseUtility*, UClass*)>(TEXT("UObjectBaseUtility::GetInterfaceAddress"))
+        .String(TEXT("STAT_McpItem_PostAdd"))
+        .Last("mov rdx, rax; mov rcx, *; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
         .Find("mov rdx, rax; mov rcx, *; call 0x*; mov rcx, rax; test rax, rax")
         .Find("call 0x*")
