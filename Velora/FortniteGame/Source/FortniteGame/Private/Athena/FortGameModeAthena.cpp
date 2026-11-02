@@ -605,7 +605,14 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
     if (auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState()))
     {
         if (auto MapInfo = GameState->GetMapInfo())
+        {
+            auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+            if (GamePhaseLogic && MapInfo->IsMapInfoValidForAircraft())
+                MapInfo->InitializeFlightPath(GameState, GamePhaseLogic, false, 0.0f, 0.0f, 360.0f);
+
             MapInfo->SpawnLlamas();
+        }
     }
 
     if (ABuildingItemCollectorActor::StaticClass())

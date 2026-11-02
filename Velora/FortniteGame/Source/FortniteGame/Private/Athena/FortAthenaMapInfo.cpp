@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortAthenaAircraft.h"
 #include "GameplayEffectTypes.h"
 #include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -85,6 +86,53 @@ void AFortAthenaMapInfo::SpawnLlamas()
     }
 }
 
+bool AFortAthenaMapInfo::IsMapInfoValidForAircraft() const
+{
+    static auto AircraftSpawnZone = GetClass()->FindPropertyByName(FName(TEXT("AircraftSpawnZone")));
+    static auto AircraftDropZone = GetClass()->FindPropertyByName(FName(TEXT("AircraftDropZone")));
+    static auto AircraftDropVolume = GetClass()->FindPropertyByName(FName(TEXT("AircraftDropVolume")));
+    static auto AircraftSpeed = GetClass()->FindPropertyByName(FName(TEXT("AircraftSpeed")));
+
+    auto AircraftClass = GetAircraftClass();
+
+    if (!AircraftClass || !AircraftClass->IsChildOf(AFortAthenaAircraft::StaticClass()))
+        return false;
+
+    if (!(AircraftSpeed->ContainerPtrToValuePtr<FScalableFloat>(this)->GetValueAtLevel(0.0f) > 0.0f))
+        return false;
+
+    auto SpawnZone = AircraftSpawnZone->ContainerPtrToValuePtr<double>(this);
+
+    if (!(SpawnZone[2] > SpawnZone[0]) || !(SpawnZone[3] > SpawnZone[1]))
+        return false;
+
+    if (*AircraftDropVolume->ContainerPtrToValuePtr<AActor*>(this))
+        return true;
+
+    auto DropZone = AircraftDropZone->ContainerPtrToValuePtr<double>(this);
+
+    if (!(DropZone[2] > DropZone[0]) || !(DropZone[3] > DropZone[1]))
+        return false;
+
+    auto IsInside = [SpawnZone](const double* Point)
+    {
+        return Point[0] > SpawnZone[0] && Point[0] < SpawnZone[2] && Point[1] > SpawnZone[1] && Point[1] < SpawnZone[3];
+    };
+
+    return IsInside(DropZone) && IsInside(DropZone + 2);
+}
+
+void AFortAthenaMapInfo::InitializeFlightPath(AFortGameStateAthena* GameState, UFortGameStateComponent_BattleRoyaleGamePhaseLogic* GamePhaseLogic, bool bForceDropCenterToFirstSafeZone, float PathMidpointSelectionRadiusMin, float PathMidpointSelectionRadiusMax, float LastStepPushCenterLine_Magnitude)
+{
+    static auto InitializeFlightPath = Anchor::Function<void (*)(AFortAthenaMapInfo*, AFortGameStateAthena*, UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, bool, float, float, float)>(TEXT("AFortAthenaMapInfo::InitializeFlightPath"))
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Caller()
+        .Get();
+
+    InitializeFlightPath(this, GameState, GamePhaseLogic, bForceDropCenterToFirstSafeZone, PathMidpointSelectionRadiusMin, PathMidpointSelectionRadiusMax, LastStepPushCenterLine_Magnitude);
+}
+
 FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const
 {
     static auto PickSupplyDropLocation = Anchor::Function<TGameValue<FVector>* (*)(const AFortAthenaMapInfo*, TGameValue<FVector>*, const TGameValue<FVector>&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
@@ -135,6 +183,13 @@ UClass* AFortAthenaMapInfo::GetLlamaClass() const
     static auto LlamaClass = GetClass()->FindPropertyByName(FName(TEXT("LlamaClass")));
 
     return LlamaClass ? *LlamaClass->ContainerPtrToValuePtr<UClass*>(this) : nullptr;
+}
+
+UClass* AFortAthenaMapInfo::GetAircraftClass() const
+{
+    static auto AircraftClass = GetClass()->FindPropertyByName(FName(TEXT("AircraftClass")));
+
+    return *AircraftClass->ContainerPtrToValuePtr<UClass*>(this);
 }
 
 const FScalableFloat& AFortAthenaMapInfo::GetLlamaQuantityMin() const

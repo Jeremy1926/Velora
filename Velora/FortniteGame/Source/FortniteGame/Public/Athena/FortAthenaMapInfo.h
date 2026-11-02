@@ -5,6 +5,8 @@
 #include "UObject/AssetPtr.h"
 
 class AFortAthenaSupplyDrop;
+class AFortGameStateAthena;
+class UFortGameStateComponent_BattleRoyaleGamePhaseLogic;
 class UScriptStruct;
 struct FScalableFloat;
 
@@ -35,11 +37,17 @@ public:
 
     void SpawnLlamas();
 
+    bool IsMapInfoValidForAircraft() const;
+
+    void InitializeFlightPath(AFortGameStateAthena* GameState, UFortGameStateComponent_BattleRoyaleGamePhaseLogic* GamePhaseLogic, bool bForceDropCenterToFirstSafeZone, float PathMidpointSelectionRadiusMin, float PathMidpointSelectionRadiusMax, float LastStepPushCenterLine_Magnitude);
+
     FVector PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const;
 
     AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
 
     UClass* GetLlamaClass() const;
+
+    UClass* GetAircraftClass() const;
 
     const FScalableFloat& GetLlamaQuantityMin() const;
 
