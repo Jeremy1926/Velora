@@ -227,12 +227,14 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
-            if (FGUI::bStartBus && GameMode && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
+            static auto GamePhaseLogic = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("GamePhaseLogic")));
+
+            if (FGUI::bStartBus && GameMode && !GamePhaseLogic && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
                 GameMode->StartAircraftPhase(false);
 
             FGUI::bStartBus = false;
 
-            auto MapInfo = Config::bLategame && GameMode && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
+            auto MapInfo = Config::bLategame && GameMode && !GamePhaseLogic && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
             auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
 
             if (SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft)
