@@ -209,7 +209,7 @@ FText FText::Format(FTextFormat Fmt, FFormatArgumentValue v1)
 
 FTextFormat::FTextFormat(const FText& InText)
 {
-    static auto Constructor = Anchor::Function<void (*)(FTextFormat*, const FText&)>(TEXT("FTextFormat::FTextFormat"))
+    static auto Constructor = Anchor::Function<void (*)(FTextFormat*, const FText&, uint8)>(TEXT("FTextFormat::FTextFormat"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
@@ -253,7 +253,7 @@ FTextFormat::FTextFormat(const FText& InText)
         .Call()
         .Get();
 
-    Constructor(this, InText);
+    Constructor(this, InText, 1);
 }
 
 FFormatArgumentValue::FFormatArgumentValue(const FText& Value)
