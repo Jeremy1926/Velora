@@ -1230,6 +1230,20 @@ TArray<TArray<UReplicationGraphNode_GridCell*>>& UReplicationGraphNode_GridSpati
         .Find("call 0x*", 2)
         .Target()
         .Find("lea rcx, [rbp+0x*]; call 0x*")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [rbp+0x*]; mov [rsp+0x*], ecx")
         .Disp();
 
     return *(TArray<TArray<UReplicationGraphNode_GridCell*>>*)((uint8*)this + Grid);
