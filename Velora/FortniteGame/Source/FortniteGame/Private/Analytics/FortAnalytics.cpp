@@ -15,6 +15,9 @@ TSharedPtr<IAnalyticsProvider> UFortAnalytics::CreateAnalyticsProvider(const FSt
         .Is("lea rdx, [0x*]; lea rcx, [rsp+0x*]; call 0x*; mov edx, 0x*")
         .Caller()
         .Or()
+        .String(TEXT("spectator"))
+        .Start()
+        .Or()
         .String("AnalyticsET")
         .Start()
         .Get();
