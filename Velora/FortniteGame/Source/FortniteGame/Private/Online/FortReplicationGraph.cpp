@@ -303,7 +303,16 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
         .Find("call 0x*")
         .Target()
         .Find("add rcx, 0x*")
-        .Imm();
+        .Imm()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [r10+0x*]; mov rdx, r11; call 0x*")
+        .Disp();
 
     return *(TClassMap<EClassRepNodeMapping>*)((uint8*)this + ClassRepNodePolicies);
 }
