@@ -48,11 +48,16 @@ void ABuildingSMActor::SetMirrored(bool bIsMirrored)
 
 ABuildingSMActor* ABuildingSMActor::ReplaceBuildingActor(EBuildingReplacementType ReplacementType, UClass* NewBuildingClass, int32 BuildingLevel, int32 RotationIterations, bool bMirrored, AFortPlayerController* PlayerController)
 {
-    static auto ReplaceBuildingActor = Anchor::VirtualFunction<ABuildingSMActor* (*)(ABuildingSMActor*, EBuildingReplacementType, UClass*, int32, int32, bool, AFortPlayerController*)>(TEXT("ABuildingSMActor::CanBePlayerEdited"))
+    static auto ReplaceBuildingActor = Anchor::VirtualFunction<ABuildingSMActor* (*)(ABuildingSMActor*, EBuildingReplacementType, UClass*, int32, int32, bool, AFortPlayerController*)>(TEXT("ABuildingSMActor::ReplaceBuildingActor"))
+        .String(TEXT("STAT_Fort_BuildingSMActorReplaceBuildingActor"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Or()
         .String(TEXT("EditHPBlocked"))
         .Start()
         .Find("call [rax+0x???]", 5)
-        .Get(-2 * (int64_t)sizeof(void*));
+        .SlotShift(TEXT("/Script/FortniteGame.Default__BuildingSMActor"), -2 * (int64_t)sizeof(void*))
+        .Get();
 
     return ReplaceBuildingActor(this, ReplacementType, NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
 }
