@@ -19,6 +19,11 @@ void FFrame::Step(UObject* Context, void* const Result)
         .Find("mov rdx, [*+0x18]; lea r8, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("mov rdx, [*+0x18]; lea r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Step(this, Context, Result);
