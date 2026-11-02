@@ -804,6 +804,9 @@ namespace Anchor
             case ZYDIS_MNEMONIC_ROL:
                 Bits = Shift ? Bits << Shift | Bits >> (Step.Width - Shift) : Bits;
                 break;
+            case ZYDIS_MNEMONIC_IMUL:
+                Bits *= Step.Operand;
+                break;
             case ZYDIS_MNEMONIC_BSWAP:
                 Bits = Step.Width >= 64 ? _byteswap_uint64(Bits) : _byteswap_ulong((unsigned long)Bits);
                 break;
@@ -1002,6 +1005,22 @@ namespace Anchor
             auto SourceRegister = bSource && Source.type == ZYDIS_OPERAND_TYPE_REGISTER ? Root(Source.reg.value) : 0u;
             bool bConstant = bSource && (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE || ((SourceRegister & Known) && !(SourceRegister & Tracked)));
             auto Constant = !bConstant ? 0ull : Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE ? (uint64_t)Source.imm.value.u : Constants[Bit(SourceRegister)];
+
+            if (Mnemonic == ZYDIS_MNEMONIC_IMUL && Instruction.Info.operand_count_visible == 3 && Register && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_REGISTER && Instruction.Operands[2].type == ZYDIS_OPERAND_TYPE_IMMEDIATE && (Root(Instruction.Operands[1].reg.value) & Tracked) && !(Tracked & (Tracked - 1)))
+            {
+                Add(ZYDIS_MNEMONIC_IMUL, Width, (uint64_t)Instruction.Operands[2].imm.value.s);
+                Tracked = Register;
+                Known &= ~Register;
+                continue;
+            }
+
+            if (Mnemonic == ZYDIS_MNEMONIC_IMUL && Instruction.Info.operand_count_visible == 2 && Register && SourceRegister && !(Tracked & (Tracked - 1)) && (((Register & Tracked) && (SourceRegister & Known)) || ((SourceRegister & Tracked) && (Register & Known))))
+            {
+                Add(ZYDIS_MNEMONIC_IMUL, Width, Constants[Bit((Register & Tracked) ? SourceRegister : Register)]);
+                Tracked = Register;
+                Known &= ~Register;
+                continue;
+            }
 
             if (Guard >= 0 && (Mnemonic == ZYDIS_MNEMONIC_INC || Mnemonic == ZYDIS_MNEMONIC_DEC) && Instruction.Info.operand_count_visible == 1 && (Register & Tracked))
             {
