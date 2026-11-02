@@ -72,6 +72,15 @@ void UPrimitiveComponent::GetOverlappingActors(TArray<AActor*>& OverlappingActor
         .Native(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rdx, *; mov rcx, *; call 0x*")
+        .Get();
+
+    if (bClassByAddress)
+        return ((void (*)(const UPrimitiveComponent*, TArray<AActor*>&, const TSubclassOf<AActor>*))GetOverlappingActors)(this, OverlappingActors, &ClassFilter);
+
     GetOverlappingActors(this, OverlappingActors, ClassFilter);
 }
 
