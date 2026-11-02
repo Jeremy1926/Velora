@@ -79,6 +79,11 @@ bool AFortGameState::AreAllAdditionalPlaylistLevelsVisible() const
 {
     static auto AreAllAdditionalPlaylistLevelsVisible = Anchor::Function<bool (*)(const AFortGameState*)>(TEXT("AFortGameState::AreAllAdditionalPlaylistLevelsVisible"))
         .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
+        .Find("lea rcx, [0x*]; call 0x*; mov rdx, rbx; call 0x*")
+        .Pattern("4C 63 8B ? ? 00 00 4C 8B 83 ? ? 00 00 44 8A 93 ? 01 00 00 49 C1 E1 04")
+        .Start()
+        .Or()
+        .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
         .Call(3)
         .Get();
 
