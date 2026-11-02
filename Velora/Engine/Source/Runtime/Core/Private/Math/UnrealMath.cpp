@@ -57,6 +57,8 @@ FRotator FQuat::Rotator() const
         .Or()
         .Native(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
         .Call()
+        .Or()
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:Quat_Rotator"))
         .Get();
 
     TGameValue<FRotator> Result;
