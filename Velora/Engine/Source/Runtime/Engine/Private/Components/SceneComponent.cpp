@@ -89,6 +89,10 @@ FVector USceneComponent::GetSocketLocation(FName InSocketName) const
 {
     static auto GetSocketLocation = Anchor::VirtualFunction<TGameValue<FVector>* (*)(const USceneComponent*, TGameValue<FVector>*, FName)>(TEXT("USceneComponent::GetSocketLocation"))
         .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
         .Find("call [*+0x*]")
         .Get();
 
