@@ -88,6 +88,10 @@ void AFortAthenaLivingWorldVolume::execOnCurrentPlaylistLoaded(FFrame& Stack, vo
         .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
         .Has("add [*+0x20], rax; call 0x*; mov rcx, [rbp-0x*]")
+        .Or()
+        .If(UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded"))
+        .Has("add [*+0x20], rax; mov rax, [*]; call [rax+0x*]; mov rbx, [rbp-0x*]; lea r*, [0x*]")
         .Optional()
         .InExec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:OnCurrentPlaylistLoaded")));
 
