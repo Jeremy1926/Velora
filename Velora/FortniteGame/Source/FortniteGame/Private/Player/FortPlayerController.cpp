@@ -67,6 +67,12 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"))
+        .Or()
+        .If(((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))) != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
+        .Find("add [*+0x20], *")
+        .Find("mov *, [rax+0x*]; call 0x*; mov rdx, rax; mov rcx, *; call *", 2)
+        .LogSlot(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
     static auto ServerCreateBuildingActorClassData = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FBuildingClassData, const TGameValue<FVector>&, const TGameValue<FRotator>&, bool))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
