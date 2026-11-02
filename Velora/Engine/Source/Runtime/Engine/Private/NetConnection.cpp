@@ -229,6 +229,13 @@ TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObje
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("lea rbx, [*+0x*]; mov [*], rax; lea r8, [*]; shr rax, 0x20; mov rcx, rbx")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("lea rdx, [rbp-0x*]; mov rcx, r*; call 0x*; mov *, [rbp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*+0x*]; movsxd rax, r*d; lea rcx, [rax+rax*2]")
         .Get();
 
     return *(TMap<TWeakObjectPtr<AActor>, UActorChannel*, TWeakObjectPtrMapKeyFuncs<TWeakObjectPtr<AActor>, UActorChannel*>>*)((uint8_t*)this + ActorChannels);
