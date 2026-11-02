@@ -21,6 +21,11 @@ bool AAIController::RunBehaviorTree(UBehaviorTree* BTAsset)
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
         .Find("call [rax+0x*]")
         .Get();
 

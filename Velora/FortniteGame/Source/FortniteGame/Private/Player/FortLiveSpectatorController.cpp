@@ -29,6 +29,12 @@ void AFortLiveSpectatorController::GetRemoteClientInfos(TArray<AFortBroadcastRem
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortLiveSpectatorController:ServerSetFollowedPlayer"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortLiveSpectatorController:ServerSetFollowedPlayer"))
         .Find("call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get(sizeof(void*));

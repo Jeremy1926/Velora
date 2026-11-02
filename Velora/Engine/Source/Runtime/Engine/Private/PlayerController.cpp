@@ -30,6 +30,11 @@ void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
         .Find("call [rax+*]", 2)
         .Or()
         .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
         .Find("call [rax+*]", 2)
         .Get(TEXT("/Script/Engine.Default__PlayerController"));
 

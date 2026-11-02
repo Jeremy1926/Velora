@@ -44,6 +44,11 @@ void ACharacter::LaunchCharacter(FVector LaunchVelocity, bool bXYOverride, bool 
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/Engine.Character:LaunchCharacter"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Character:LaunchCharacter"))
         .Find("call [*+0x*]")
         .Get();
 
