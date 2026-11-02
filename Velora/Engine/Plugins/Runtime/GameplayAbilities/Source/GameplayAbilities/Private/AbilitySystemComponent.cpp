@@ -204,6 +204,11 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
     }
 
     static auto BP_ApplyGameplayEffectToTarget = Anchor::Function<FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, UClass*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::BP_ApplyGameplayEffectToTarget"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; lea rdx, [*]; movss [rsp+0x20], xmm*; mov rcx, *; call 0x*")
+        .Call()
+        .Or()
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
         .Get();
 
