@@ -23,6 +23,7 @@ class UStatManager;
 struct FFrame;
 struct FGameplayTag;
 struct FScalableFloat;
+struct FWeakObjectPtr;
 
 enum class ETryExitVehicleBehavior : uint8
 {
@@ -58,6 +59,10 @@ struct FFortPlayerPawnVehicleChangeParams
 struct FZiplinePawnState
 {
     static UScriptStruct* StaticStruct();
+
+    FWeakObjectPtr& GetZipline();
+
+    FWeakObjectPtr* GetPreviousZipline();
 
     int32 GetAuthoritativeValue() const;
 };
@@ -126,6 +131,8 @@ public:
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
+    void execOnCapsuleBeginOverlap(FFrame& Stack, void* const Z_Param__Result);
+
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
     void ForceReviveFromDBNO(AController* EventInstigator);
@@ -151,6 +158,10 @@ public:
     void PopGliderOverride(const UAthenaGliderItemDefinition* InGliderToRemove);
 
     void execPopGliderOverride(FFrame& Stack, void* const Z_Param__Result);
+
+    void ForceOpenParachuteAndOverrideGlider(const UAthenaGliderItemDefinition* InGliderOverride, bool bInResetGliderOverrideOnLanding, bool bForceIntoGliderRedeploy);
+
+    void execForceOpenParachuteAndOverrideGlider(FFrame& Stack, void* const Z_Param__Result);
 
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 

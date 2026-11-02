@@ -74,6 +74,8 @@ struct FAssetPtr : public TPersistentObjectPtr<FStringAssetReference>
 
 struct FSoftObjectPtr : public TPersistentObjectPtr<FSoftObjectPath>
 {
+public:
+    using TPersistentObjectPtr<FSoftObjectPath>::operator=;
 };
 
 template<class T>

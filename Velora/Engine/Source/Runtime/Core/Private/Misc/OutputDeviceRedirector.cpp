@@ -15,9 +15,23 @@ void FOutputDeviceRedirector::AddOutputDevice(FOutputDevice* OutputDevice)
         .Caller()
         .Find("lea rax, [0x*]; mov *, rcx; mov [rcx], rax")
         .Target()
+        .Or()
+        .String(TEXT("Log file closed, %s"))
+        .Start()
+        .Find("lea rax, [0x*]; mov *, edx; mov *, rcx; mov [rcx], rax")
+        .Target()
+        .Or()
+        .String(TEXT("Log file closed, %s"))
+        .Start()
+        .Caller()
+        .Find("lea rax, [0x*]; mov [rcx], rax")
+        .Target()
         .Get();
 
-    if (OutputDevice && FileTearDown && FileVTable && FileVTable[5] == (void*)FileTearDown)
+    auto Image = Anchor::Base();
+    auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
+
+    if (OutputDevice && (uint64)(*(uint8* const*)OutputDevice - Image) >= Headers->OptionalHeader.SizeOfImage && FileTearDown && FileVTable && (FileVTable[5] == (void*)FileTearDown || (FileVTable[0] == (void*)FileTearDown && !Anchor::At(FileVTable[5]).Is("ret*"))))
     {
         auto VTable = *(void* const**)OutputDevice;
         auto RecordVTable = new void*[11];

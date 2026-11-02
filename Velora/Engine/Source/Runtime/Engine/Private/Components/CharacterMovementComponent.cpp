@@ -48,3 +48,10 @@ void UCharacterMovementComponent::SetMaxFlySpeed(float InMaxFlySpeed)
 
     *MaxFlySpeed->ContainerPtrToValuePtr<float>(this) = InMaxFlySpeed;
 }
+
+FVector UCharacterMovementComponent::GetVelocity() const
+{
+    static auto Velocity = GetClass()->FindPropertyByName(FName(TEXT("Velocity")));
+
+    return Velocity->GetPropertyValue_InContainer<FVector>(this);
+}

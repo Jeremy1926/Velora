@@ -13,6 +13,7 @@ class IFortInventoryOwnerInterface;
 class UScriptStruct;
 class UWorld;
 struct FFortItemEntry;
+struct FInteractionType;
 struct FRotator;
 
 enum class EFortPickupTossState : uint8
@@ -105,7 +106,11 @@ public:
 
     bool& GetTossedFromContainer();
 
+    AFortPawn* GetPawnWhoDroppedPickup() const;
+
     void SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup);
+
+    bool CanInteract(const FInteractionType& InteractionType);
 
     void SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 

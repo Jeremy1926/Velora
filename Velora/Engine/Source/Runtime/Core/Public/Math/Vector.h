@@ -72,6 +72,11 @@ struct FVector
         return X * X + Y * Y + Z * Z;
     }
 
+    FORCEINLINE bool IsNearlyZero(float Tolerance = 1.e-4f) const
+    {
+        return FMath::Abs(X) <= Tolerance && FMath::Abs(Y) <= Tolerance && FMath::Abs(Z) <= Tolerance;
+    }
+
     FORCEINLINE bool Normalize(float Tolerance = 1.e-8f)
     {
         const float SquareSum = X * X + Y * Y + Z * Z;

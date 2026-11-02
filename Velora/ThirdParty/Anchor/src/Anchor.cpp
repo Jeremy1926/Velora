@@ -540,7 +540,7 @@ namespace Anchor
         const uint8_t* Address;
     };
 
-    static bool Decode(const uint8_t* Address, FInstruction& Instruction)
+    static bool Decode(const uint8_t* Address, FInstruction& Instruction, bool bFormat = true)
     {
         static auto Decoder = []
         {
@@ -566,7 +566,7 @@ namespace Anchor
         if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(&Decoder, Address, ZYDIS_MAX_INSTRUCTION_LENGTH, &Instruction.Info, Instruction.Operands)))
             return false;
 
-        return ZYAN_SUCCESS(ZydisFormatterFormatInstruction(&Formatter, &Instruction.Info, Instruction.Operands, Instruction.Info.operand_count_visible, Instruction.Text, sizeof(Instruction.Text), (ZyanU64)Address, ZYAN_NULL));
+        return !bFormat || ZYAN_SUCCESS(ZydisFormatterFormatInstruction(&Formatter, &Instruction.Info, Instruction.Operands, Instruction.Info.operand_count_visible, Instruction.Text, sizeof(Instruction.Text), (ZyanU64)Address, ZYAN_NULL));
     }
 
     static bool Match(std::string_view Text, std::string_view Pattern)
@@ -1216,6 +1216,655 @@ namespace Anchor
         return Reference;
     }
 
+    struct FEncryptedBuilder
+    {
+        const uint8_t* Begin = nullptr;
+        const uint8_t* End = nullptr;
+        const uint8_t* Site = nullptr;
+        std::vector<int16_t> Cipher;
+    };
+
+    struct FEncryptedStrings
+    {
+        std::vector<std::array<uint8_t, 256>> Keystreams;
+        std::vector<FEncryptedBuilder> Builders;
+        std::vector<uint64_t> Stores;
+    };
+
+    static ZydisRegister LargestRegister(ZydisRegister Register)
+    {
+        return ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Register);
+    }
+
+    static uint64_t RegisterMask(uint32_t Bits)
+    {
+        return Bits >= 64 ? ~0ull : (1ull << Bits) - 1;
+    }
+
+    static bool IsGeneralRegister(ZydisRegister Register)
+    {
+        auto Class = ZydisRegisterGetClass(Register);
+
+        return (Class == ZYDIS_REGCLASS_GPR8 || Class == ZYDIS_REGCLASS_GPR16 || Class == ZYDIS_REGCLASS_GPR32 || Class == ZYDIS_REGCLASS_GPR64) && Register != ZYDIS_REGISTER_AH && Register != ZYDIS_REGISTER_CH && Register != ZYDIS_REGISTER_DH && Register != ZYDIS_REGISTER_BH;
+    }
+
+    static bool WritesGeneralRegister(const FInstruction& Instruction, bool (&Written)[ZYDIS_REGISTER_MAX_VALUE + 1])
+    {
+        bool bWrites = false;
+
+        for (uint8_t Index = 0; Index < Instruction.Info.operand_count; Index++)
+        {
+            auto& Operand = Instruction.Operands[Index];
+            auto Class = Operand.type == ZYDIS_OPERAND_TYPE_REGISTER ? ZydisRegisterGetClass(Operand.reg.value) : ZYDIS_REGCLASS_INVALID;
+
+            if ((Operand.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) && (Class == ZYDIS_REGCLASS_GPR8 || Class == ZYDIS_REGCLASS_GPR16 || Class == ZYDIS_REGCLASS_GPR32 || Class == ZYDIS_REGCLASS_GPR64))
+            {
+                Written[LargestRegister(Operand.reg.value)] = true;
+                bWrites = true;
+            }
+        }
+
+        return bWrites;
+    }
+
+    static bool IsKeyXor(const FInstruction& Instruction)
+    {
+        return Instruction.Info.mnemonic == ZYDIS_MNEMONIC_XOR && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY && Instruction.Operands[0].size == 8 && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_REGISTER;
+    }
+
+    static bool RunKeystream(const std::vector<FInstruction>& Body, ZydisRegister Input, ZydisRegister Output, uint64_t Key, uint8_t& Result)
+    {
+        uint64_t Registers[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+        bool Written[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+
+        auto Read = [&](const ZydisDecodedOperand& Operand, uint64_t& Value)
+        {
+            if (Operand.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                Value = Operand.imm.value.u;
+            else if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && IsGeneralRegister(Operand.reg.value))
+                Value = Registers[LargestRegister(Operand.reg.value)] & RegisterMask(Operand.size);
+            else
+                return false;
+
+            return true;
+        };
+
+        if (!IsGeneralRegister(Input) || !IsGeneralRegister(Output))
+            return false;
+
+        Registers[LargestRegister(Input)] = Key;
+
+        for (auto& Instruction : Body)
+        {
+            if (!WritesGeneralRegister(Instruction, Written))
+                continue;
+
+            auto& Destination = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+
+            if (Destination.type != ZYDIS_OPERAND_TYPE_REGISTER || !IsGeneralRegister(Destination.reg.value))
+                return false;
+
+            auto& Slot = Registers[LargestRegister(Destination.reg.value)];
+            auto Current = Slot & RegisterMask(Destination.size);
+            auto Mnemonic = Instruction.Info.mnemonic;
+            uint64_t Value = Current;
+            uint64_t Other = 0;
+
+            switch (Mnemonic)
+            {
+            case ZYDIS_MNEMONIC_MOV:
+            case ZYDIS_MNEMONIC_MOVZX:
+                if (!Read(Source, Value))
+                    return false;
+
+                break;
+            case ZYDIS_MNEMONIC_LEA:
+                if (Source.mem.base == ZYDIS_REGISTER_RIP)
+                    return false;
+
+                Value = Source.mem.disp.value;
+
+                if (Source.mem.base != ZYDIS_REGISTER_NONE)
+                    Value += Registers[LargestRegister(Source.mem.base)] & RegisterMask(ZydisRegisterGetWidth(ZYDIS_MACHINE_MODE_LONG_64, Source.mem.base));
+
+                if (Source.mem.index != ZYDIS_REGISTER_NONE)
+                    Value += (Registers[LargestRegister(Source.mem.index)] & RegisterMask(ZydisRegisterGetWidth(ZYDIS_MACHINE_MODE_LONG_64, Source.mem.index))) * Source.mem.scale;
+
+                break;
+            case ZYDIS_MNEMONIC_IMUL:
+                if (Instruction.Info.operand_count_visible == 3 ? !Read(Source, Value) || !Read(Instruction.Operands[2], Other) : Instruction.Info.operand_count_visible != 2 || !Read(Source, Other))
+                    return false;
+
+                Value *= Other;
+                break;
+            case ZYDIS_MNEMONIC_ADD:
+            case ZYDIS_MNEMONIC_SUB:
+            case ZYDIS_MNEMONIC_XOR:
+            case ZYDIS_MNEMONIC_AND:
+            case ZYDIS_MNEMONIC_OR:
+                if (!Read(Source, Other))
+                    return false;
+
+                Value = Mnemonic == ZYDIS_MNEMONIC_ADD ? Current + Other : Mnemonic == ZYDIS_MNEMONIC_SUB ? Current - Other : Mnemonic == ZYDIS_MNEMONIC_XOR ? Current ^ Other : Mnemonic == ZYDIS_MNEMONIC_AND ? Current & Other : Current | Other;
+                break;
+            case ZYDIS_MNEMONIC_NOT:
+                Value = ~Current;
+                break;
+            case ZYDIS_MNEMONIC_NEG:
+                Value = 0 - Current;
+                break;
+            case ZYDIS_MNEMONIC_INC:
+                Value = Current + 1;
+                break;
+            case ZYDIS_MNEMONIC_DEC:
+                Value = Current - 1;
+                break;
+            case ZYDIS_MNEMONIC_SHL:
+            case ZYDIS_MNEMONIC_SHR:
+            case ZYDIS_MNEMONIC_ROL:
+            case ZYDIS_MNEMONIC_ROR:
+            {
+                if (!Read(Source, Other))
+                    return false;
+
+                auto Count = Other & (Destination.size == 64 ? 63 : 31);
+                auto Rotate = Count % Destination.size;
+
+                Value = Mnemonic == ZYDIS_MNEMONIC_SHL ? Current << Count : Mnemonic == ZYDIS_MNEMONIC_SHR ? Current >> Count : !Rotate ? Current : Mnemonic == ZYDIS_MNEMONIC_ROL ? Current << Rotate | Current >> (Destination.size - Rotate) : Current >> Rotate | Current << (Destination.size - Rotate);
+                break;
+            }
+            default:
+                return false;
+            }
+
+            Value &= RegisterMask(Destination.size);
+            Slot = Destination.size >= 32 ? Value : (Slot & ~RegisterMask(Destination.size)) | Value;
+        }
+
+        Result = (uint8_t)Registers[LargestRegister(Output)];
+
+        return true;
+    }
+
+    static bool FindKeystream(const uint8_t* Site, std::array<uint8_t, 256>& Keystream)
+    {
+        std::vector<FInstruction> Body;
+        FInstruction Instruction;
+        auto Input = ZYDIS_REGISTER_NONE;
+        auto Address = Site + 5;
+        bool bLooped = false;
+
+        for (int32_t Count = 0; Count < 128; Count++)
+        {
+            if (!InCode(Address, 0, ZYDIS_MAX_INSTRUCTION_LENGTH) || !Decode(Address, Instruction, false))
+                return false;
+
+            auto Category = Instruction.Info.meta.category;
+
+            if (IsKeyXor(Instruction) && Input != ZYDIS_REGISTER_NONE)
+            {
+                for (int32_t Key = 0; Key < 256; Key++)
+                {
+                    uint8_t Low = 0;
+                    uint8_t High = 0;
+
+                    if (!RunKeystream(Body, Input, Instruction.Operands[1].reg.value, Key, Low) || !RunKeystream(Body, Input, Instruction.Operands[1].reg.value, Key | 0x5A5A00, High) || Low != High)
+                        return false;
+
+                    Keystream[Key] = Low;
+                }
+
+                return std::any_of(Keystream.begin(), Keystream.end(), [&](uint8_t Value) { return Value != Keystream[0]; });
+            }
+
+            if (IsKeyXor(Instruction))
+            {
+                Input = Instruction.Operands[1].reg.value;
+                Address += Instruction.Info.length;
+                continue;
+            }
+
+            if (Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET || Category == ZYDIS_CATEGORY_UNCOND_BR)
+                return false;
+
+            ZyanU64 Target = 0;
+
+            if (Category == ZYDIS_CATEGORY_COND_BR && Input != ZYDIS_REGISTER_NONE && !bLooped && ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Instruction.Operands[0], (ZyanU64)Address, &Target)) && (const uint8_t*)Target < Address)
+            {
+                bLooped = true;
+                Address = (const uint8_t*)Target;
+                continue;
+            }
+
+            if (Input != ZYDIS_REGISTER_NONE)
+                Body.push_back(Instruction);
+
+            Address += Instruction.Info.length;
+        }
+
+        return false;
+    }
+
+    static bool ReadBuilder(const uint8_t* Address, FEncryptedBuilder& Builder)
+    {
+        FInstruction Instruction;
+        bool bReturnsBuffer = false;
+
+        Builder.Begin = Address;
+        Builder.Cipher.clear();
+
+        for (int32_t Count = 0; Count < 1024 && InCode(Address, 0, ZYDIS_MAX_INSTRUCTION_LENGTH) && Decode(Address, Instruction, false); Count++, Address += Instruction.Info.length)
+        {
+            auto& Destination = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+
+            if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_RET)
+            {
+                Builder.End = Address + Instruction.Info.length;
+
+                return bReturnsBuffer && !Builder.Cipher.empty() && std::find(Builder.Cipher.begin(), Builder.Cipher.end(), -1) == Builder.Cipher.end();
+            }
+
+            if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Destination.type == ZYDIS_OPERAND_TYPE_MEMORY && Destination.mem.base == ZYDIS_REGISTER_RDX && Destination.mem.index == ZYDIS_REGISTER_NONE && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Destination.mem.disp.value >= 0 && Destination.mem.disp.value < 0x1000)
+            {
+                auto Offset = (size_t)Destination.mem.disp.value;
+                auto Size = (size_t)Destination.size / 8;
+
+                if (Builder.Cipher.size() < Offset + Size)
+                    Builder.Cipher.resize(Offset + Size, -1);
+
+                for (size_t Index = 0; Index < Size; Index++)
+                {
+                    if (Builder.Cipher[Offset + Index] != -1)
+                        return false;
+
+                    Builder.Cipher[Offset + Index] = (uint8_t)(Source.imm.value.u >> (Index * 8));
+                }
+
+                continue;
+            }
+
+            auto Mnemonic = Instruction.Info.mnemonic;
+            auto bMove = Mnemonic == ZYDIS_MNEMONIC_MOV;
+            auto bRegisters = Destination.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.type == ZYDIS_OPERAND_TYPE_REGISTER;
+            auto bReturns = bMove && bRegisters && Destination.reg.value == ZYDIS_REGISTER_RAX && Source.reg.value == ZYDIS_REGISTER_RDX;
+            auto bFrame = bMove && bRegisters && Destination.reg.value == ZYDIS_REGISTER_R11 && Source.reg.value == ZYDIS_REGISTER_RSP;
+            auto bSave = bMove && Destination.type == ZYDIS_OPERAND_TYPE_MEMORY && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && (Destination.mem.base == ZYDIS_REGISTER_RSP || Destination.mem.base == ZYDIS_REGISTER_R11);
+            auto bRestore = bMove && Destination.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.type == ZYDIS_OPERAND_TYPE_MEMORY && (Source.mem.base == ZYDIS_REGISTER_RSP || Source.mem.base == ZYDIS_REGISTER_R11);
+            auto bStack = (Mnemonic == ZYDIS_MNEMONIC_SUB || Mnemonic == ZYDIS_MNEMONIC_ADD) && Destination.type == ZYDIS_OPERAND_TYPE_REGISTER && Destination.reg.value == ZYDIS_REGISTER_RSP;
+
+            if (!bReturns && !bFrame && !bSave && !bRestore && !bStack && Mnemonic != ZYDIS_MNEMONIC_PUSH && Mnemonic != ZYDIS_MNEMONIC_POP)
+                return false;
+
+            bReturnsBuffer |= bReturns;
+        }
+
+        return false;
+    }
+
+    static bool ReadStores(const uint8_t* Address, size_t Size, std::vector<int16_t>& Cipher)
+    {
+        FInstruction Instruction;
+
+        if (!Decode(Address, Instruction, false) || Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_MEMORY || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_IMMEDIATE || Instruction.Operands[0].mem.index != ZYDIS_REGISTER_NONE)
+            return false;
+
+        auto Buffer = Instruction.Operands[0].mem.base;
+        auto Origin = Instruction.Operands[0].mem.disp.value;
+        uint64_t Values[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+        bool Known[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+
+        auto Missing = Size;
+
+        Cipher.assign(Size, -2);
+
+        for (int32_t Count = 0; Count < 512 && Missing && Decode(Address, Instruction, false); Count++, Address += Instruction.Info.length)
+        {
+            auto Category = Instruction.Info.meta.category;
+            auto& Destination = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+
+            if (Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET || Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR)
+                break;
+
+            if (Destination.type == ZYDIS_OPERAND_TYPE_MEMORY && Destination.mem.base == Buffer)
+            {
+                if (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV || Destination.mem.index != ZYDIS_REGISTER_NONE)
+                    break;
+
+                auto bKnown = Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE || (Source.type == ZYDIS_OPERAND_TYPE_REGISTER && IsGeneralRegister(Source.reg.value) && Known[LargestRegister(Source.reg.value)]);
+                auto Value = Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE ? Source.imm.value.u : bKnown ? Values[LargestRegister(Source.reg.value)] : 0;
+
+                for (int64_t Index = 0; Index < Destination.size / 8; Index++)
+                {
+                    auto Offset = Destination.mem.disp.value + Index - Origin;
+
+                    if (Offset < 0 || Offset >= (int64_t)Size)
+                        continue;
+
+                    Missing -= Cipher[Offset] == -2;
+                    Cipher[Offset] = bKnown ? (uint8_t)(Value >> (Index * 8)) : -1;
+                }
+
+                continue;
+            }
+
+            if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Destination.type == ZYDIS_OPERAND_TYPE_REGISTER && IsGeneralRegister(Destination.reg.value) && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                auto Register = LargestRegister(Destination.reg.value);
+                auto Value = Source.imm.value.u & RegisterMask(Destination.size);
+
+                Values[Register] = Destination.size >= 32 ? Value : (Values[Register] & ~RegisterMask(Destination.size)) | Value;
+                Known[Register] = Destination.size >= 32 || Known[Register];
+                continue;
+            }
+
+            bool Written[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+
+            if (!WritesGeneralRegister(Instruction, Written))
+                continue;
+
+            for (size_t Register = 0; Register <= ZYDIS_REGISTER_MAX_VALUE; Register++)
+                Known[Register] = Known[Register] && !Written[Register];
+        }
+
+        return !Missing;
+    }
+
+    static bool Decrypts(const std::array<uint8_t, 256>& Keystream, const std::vector<int16_t>& Cipher, std::span<const uint8_t> Plain)
+    {
+        if (Cipher.size() < Plain.size() || Cipher[0] < 0)
+            return false;
+
+        auto Key = (uint8_t)(Cipher[0] ^ Plain[0]);
+
+        for (size_t Index = 1; Index < Plain.size(); Index++)
+        {
+            Key = Keystream[Key];
+
+            if (Cipher[Index] >= 0 && (uint8_t)(Cipher[Index] ^ Key) != Plain[Index])
+                return false;
+        }
+
+        return true;
+    }
+
+    static const FEncryptedStrings& EncryptedStrings()
+    {
+        static auto Strings = []
+        {
+            FEncryptedStrings Strings;
+            std::vector<std::pair<std::array<uint8_t, 256>, int32_t>> Counts;
+            auto Image = Base();
+            auto& Calls = References()[0];
+            int32_t Found = 0;
+
+            for (auto Entry = Calls.begin(); Entry != Calls.end();)
+            {
+                auto Last = std::upper_bound(Entry, Calls.end(), *Entry | 0xFFFFFFFF);
+                auto Site = std::find_if(Entry, Last, [&](uint64_t Call) { return Image[(uint32_t)Call] == 0xE8 && InCode(Image + (uint32_t)Call, 0, 5); });
+                FEncryptedBuilder Builder;
+                std::array<uint8_t, 256> Keystream;
+
+                if (Site != Last && InCode(Image + (*Entry >> 32), 0, 16) && ReadBuilder(Image + (*Entry >> 32), Builder))
+                {
+                    Builder.Site = Image + (uint32_t)*Site;
+
+                    if (Found < 64 && FindKeystream(Builder.Site, Keystream))
+                    {
+                        auto Count = std::find_if(Counts.begin(), Counts.end(), [&](const auto& Pair) { return Pair.first == Keystream; });
+
+                        if (Count != Counts.end())
+                            Count->second++;
+                        else
+                            Counts.emplace_back(Keystream, 1);
+
+                        Found++;
+                    }
+
+                    Strings.Builders.push_back(std::move(Builder));
+                }
+
+                Entry = Last;
+            }
+
+            std::stable_sort(Counts.begin(), Counts.end(), [](const auto& A, const auto& B) { return A.second > B.second; });
+
+            for (auto& [Keystream, Count] : Counts)
+            {
+                if (Count >= 2)
+                    Strings.Keystreams.push_back(Keystream);
+            }
+
+            if (Strings.Keystreams.empty())
+                return FEncryptedStrings();
+
+            for (auto& Section : Sections())
+            {
+                if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                    continue;
+
+                auto Begin = Image + Section.VirtualAddress;
+                auto End = Begin + Section.Misc.VirtualSize;
+
+                for (auto Address = Begin; Address + 11 <= End; Address++)
+                {
+                    auto Mod = Address[1] >> 6;
+                    auto Rm = Address[1] & 7;
+
+                    if (Address[0] != 0xC7 || (Address[1] & 0x38) || Mod == 3 || (Mod == 0 && Rm == 5) || (Mod == 0 && Rm == 4 && (Address[2] & 7) == 5))
+                        continue;
+
+                    auto Immediate = Address + 2 + (Rm == 4) + (Mod == 1 ? 1 : Mod == 2 ? 4 : 0);
+
+                    Strings.Stores.push_back((uint64_t)*(const uint32_t*)Immediate << 32 | (uint32_t)(Address - Image));
+                }
+            }
+
+            std::sort(Strings.Stores.begin(), Strings.Stores.end());
+
+            return Strings;
+        }();
+
+        return Strings;
+    }
+
+    static bool IsWritable(const void* Address)
+    {
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+
+            if ((Section.Characteristics & IMAGE_SCN_MEM_WRITE) && !(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE) && Address >= Begin && Address < Begin + Section.Misc.VirtualSize)
+                return true;
+        }
+
+        return false;
+    }
+
+    static const std::vector<uint64_t>& WritablePointers()
+    {
+        static auto Table = []
+        {
+            std::vector<uint64_t> Table;
+            auto Image = Base();
+            auto Size = ImageSize();
+
+            for (auto& Section : Sections())
+            {
+                if (!(Section.Characteristics & IMAGE_SCN_MEM_WRITE) || (Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                    continue;
+
+                for (auto Slot = (uint64_t)Section.VirtualAddress; Slot + sizeof(uint64_t) <= (uint64_t)Section.VirtualAddress + Section.Misc.VirtualSize; Slot += sizeof(uint64_t))
+                {
+                    auto Value = *(uint64_t*)(Image + Slot) - (uint64_t)Image;
+
+                    if (Value < Size)
+                        Table.push_back(Value << 32 | Slot);
+                }
+            }
+
+            std::sort(Table.begin(), Table.end());
+
+            return Table;
+        }();
+
+        return Table;
+    }
+
+    static const uint8_t* FindEncryptedRecord(const uint8_t* Site, size_t Size)
+    {
+        uint64_t Values[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+        bool Known[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+        std::vector<std::pair<const uint8_t*, const uint8_t*>> Copies;
+        FInstruction Instruction;
+        auto Address = Site;
+
+        for (int32_t Count = 0; Count < 512 && Decode(Address, Instruction, false); Count++, Address += Instruction.Info.length)
+        {
+            auto Category = Instruction.Info.meta.category;
+            auto Mnemonic = Instruction.Info.mnemonic;
+            auto& Destination = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+            ZyanU64 Target = 0;
+
+            if (Count && (Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET || Category == ZYDIS_CATEGORY_UNCOND_BR))
+                break;
+
+            if (Mnemonic == ZYDIS_MNEMONIC_LEA && Destination.type == ZYDIS_OPERAND_TYPE_REGISTER && IsGeneralRegister(Destination.reg.value))
+            {
+                auto Register = LargestRegister(Destination.reg.value);
+                auto bRelative = Source.mem.base == ZYDIS_REGISTER_RIP && ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Source, (ZyanU64)Address, &Target));
+                auto bOffset = Source.mem.base != ZYDIS_REGISTER_NONE && Source.mem.base != ZYDIS_REGISTER_RIP && Known[LargestRegister(Source.mem.base)];
+
+                Values[Register] = bRelative ? Target : bOffset ? Values[LargestRegister(Source.mem.base)] + Source.mem.disp.value : 0;
+                Known[Register] = Source.mem.index == ZYDIS_REGISTER_NONE && (bRelative || bOffset);
+                continue;
+            }
+
+            auto bCopy = Mnemonic == ZYDIS_MNEMONIC_MOV || Mnemonic == ZYDIS_MNEMONIC_MOVUPS || Mnemonic == ZYDIS_MNEMONIC_MOVAPS || Mnemonic == ZYDIS_MNEMONIC_MOVDQU || Mnemonic == ZYDIS_MNEMONIC_MOVDQA || Mnemonic == ZYDIS_MNEMONIC_MOVSD || Mnemonic == ZYDIS_MNEMONIC_MOVQ || Mnemonic == ZYDIS_MNEMONIC_MOVD || Mnemonic == ZYDIS_MNEMONIC_VMOVUPS || Mnemonic == ZYDIS_MNEMONIC_VMOVAPS || Mnemonic == ZYDIS_MNEMONIC_VMOVDQU || Mnemonic == ZYDIS_MNEMONIC_VMOVDQA;
+
+            if (bCopy && Destination.type == ZYDIS_OPERAND_TYPE_MEMORY && Destination.mem.index == ZYDIS_REGISTER_NONE)
+            {
+                auto bRelative = Destination.mem.base == ZYDIS_REGISTER_RIP && ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Destination, (ZyanU64)Address, &Target));
+                auto bOffset = Destination.mem.base != ZYDIS_REGISTER_NONE && Destination.mem.base != ZYDIS_REGISTER_RIP && Known[LargestRegister(Destination.mem.base)];
+                auto Copy = (const uint8_t*)(bRelative ? Target : bOffset ? Values[LargestRegister(Destination.mem.base)] + Destination.mem.disp.value : 0);
+
+                if ((bRelative || bOffset) && IsWritable(Copy))
+                    Copies.emplace_back(Copy, Copy + Destination.size / 8);
+            }
+
+            bool Written[ZYDIS_REGISTER_MAX_VALUE + 1] = {};
+
+            if (!WritesGeneralRegister(Instruction, Written))
+                continue;
+
+            for (size_t Register = 0; Register <= ZYDIS_REGISTER_MAX_VALUE; Register++)
+                Known[Register] = Known[Register] && !Written[Register];
+        }
+
+        if (Copies.empty())
+            return nullptr;
+
+        std::sort(Copies.begin(), Copies.end());
+
+        auto Covered = Copies.front().first;
+
+        for (auto& [Begin, End] : Copies)
+        {
+            if (Begin <= Covered && End > Covered)
+                Covered = End;
+        }
+
+        if ((size_t)(Covered - Copies.front().first) < Size)
+            return nullptr;
+
+        auto& Slots = WritablePointers();
+        auto Key = (uint64_t)(Copies.front().first - Base()) << 32;
+
+        for (auto Entry = std::lower_bound(Slots.begin(), Slots.end(), Key); Entry != Slots.end() && (*Entry >> 32) == (Key >> 32); Entry++)
+        {
+            if (auto Reference = FindReference(Base() + (uint32_t)*Entry))
+                return (Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference;
+        }
+
+        return nullptr;
+    }
+
+    static std::vector<const uint8_t*> FindEncryptedStrings(std::span<const uint8_t> Plain, bool bPrefix)
+    {
+        auto& Strings = EncryptedStrings();
+        std::vector<const uint8_t*> Sites;
+        std::vector<int16_t> Cipher;
+
+        if (Plain.size() < 4)
+            return Sites;
+
+        for (auto& Keystream : Strings.Keystreams)
+        {
+            for (auto& Builder : Strings.Builders)
+            {
+                if ((bPrefix ? Builder.Cipher.size() >= Plain.size() : Builder.Cipher.size() == Plain.size()) && Decrypts(Keystream, Builder.Cipher, Plain))
+                    Sites.push_back(Builder.Site);
+            }
+
+            for (int32_t First = 0; First < 256; First++)
+            {
+                uint64_t Encrypted = 0;
+                auto Key = (uint8_t)First;
+
+                for (int32_t Index = 0; Index < 4; Index++, Key = Keystream[Key])
+                    Encrypted |= (uint64_t)(uint8_t)(Plain[Index] ^ Key) << (Index * 8);
+
+                for (auto Entry = std::lower_bound(Strings.Stores.begin(), Strings.Stores.end(), Encrypted << 32); Entry != Strings.Stores.end() && (*Entry >> 32) == Encrypted; Entry++)
+                {
+                    auto Store = Base() + (uint32_t)*Entry;
+                    auto Builder = std::upper_bound(Strings.Builders.begin(), Strings.Builders.end(), Store, [](const uint8_t* Address, const FEncryptedBuilder& Other) { return Address < Other.Begin; });
+
+                    if (Builder != Strings.Builders.begin() && Store < Builder[-1].End)
+                        continue;
+
+                    for (auto Start : { Store, Store - 1 })
+                    {
+                        if ((Start == Store || (Store[-1] & 0xF0) == 0x40) && ReadStores(Start, Plain.size(), Cipher) && Decrypts(Keystream, Cipher, Plain))
+                        {
+                            Sites.push_back(Start);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (auto& Site : Sites)
+        {
+            if (auto Record = FindEncryptedRecord(Site, Plain.size()))
+                Site = Record;
+        }
+
+        std::sort(Sites.begin(), Sites.end());
+        Sites.erase(std::unique(Sites.begin(), Sites.end()), Sites.end());
+
+        return Sites;
+    }
+
+    static std::vector<const uint8_t*> FindEncryptedStrings(const wchar_t* Text)
+    {
+        auto Length = wcslen(Text);
+        auto bPrefix = Text[Length - 1] == L'*';
+
+        return FindEncryptedStrings({ (const uint8_t*)Text, (bPrefix ? Length - 1 : Length + 1) * sizeof(wchar_t) }, bPrefix);
+    }
+
+    static std::vector<const uint8_t*> FindEncryptedStrings(const char* Text)
+    {
+        auto Length = strlen(Text);
+        auto bPrefix = Text[Length - 1] == '*';
+
+        return FindEncryptedStrings({ (const uint8_t*)Text, bPrefix ? Length - 1 : Length + 1 }, bPrefix);
+    }
+
     FCode String(const wchar_t* Text)
     {
         auto Reference = FindStringReference(Text);
@@ -1223,7 +1872,9 @@ namespace Anchor
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
 
-        return FCode(FindLogCaller(Reference));
+        auto Sites = Reference ? std::vector<const uint8_t*>() : FindEncryptedStrings(Text);
+
+        return FCode(FindLogCaller(Sites.empty() ? Reference : Sites.front()));
     }
 
     FCode String(const char* Text)
@@ -1233,7 +1884,9 @@ namespace Anchor
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
 
-        return FCode(FindLogCaller(Reference));
+        auto Sites = Reference ? std::vector<const uint8_t*>() : FindEncryptedStrings(Text);
+
+        return FCode(FindLogCaller(Sites.empty() ? Reference : Sites.front()));
     }
 
     FCode Smallest(const wchar_t* Text)
@@ -1279,6 +1932,22 @@ namespace Anchor
                         }
                     }
                 }
+            }
+        }
+
+        for (auto Site : Found ? std::vector<const uint8_t*>() : FindEncryptedStrings(Text))
+        {
+            auto Entry = FindFunction(Site);
+
+            if (!Entry)
+                continue;
+
+            auto EntrySize = FindFunctionEnd(Entry) - (Base() + Entry->BeginAddress);
+
+            if (!Found || EntrySize < FoundSize)
+            {
+                Found = Site;
+                FoundSize = EntrySize;
             }
         }
 

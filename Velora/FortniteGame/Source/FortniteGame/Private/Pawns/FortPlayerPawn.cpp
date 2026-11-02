@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
@@ -501,6 +502,21 @@ void AFortPlayerPawn::ServerHandlePickup_Implementation(AFortPickup* Pickup, flo
         Pickup->SetPickupTarget(this, InFlyTime, InStartDirection, bPlayPickupSound);
 }
 
+void AFortPlayerPawn::execOnCapsuleBeginOverlap(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execOnCapsuleBeginOverlap, Anchor::Hook()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:OnCapsuleBeginOverlap")));
+
+    static auto OtherActor = Stack.Node->FindPropertyByName(FName(TEXT("OtherActor")));
+
+    auto Actor = *OtherActor->ContainerPtrToValuePtr<AActor*>(Stack.Locals);
+
+    Original(Stack, Z_Param__Result);
+
+    if (auto PlayerPawnAthena = Cast<AFortPlayerPawnAthena>(this))
+        PlayerPawnAthena->OnCapsuleBeginOverlap(Actor);
+}
+
 void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInstigator)
 {
     if (CanReviveFromDBNO(EventInstigator))
@@ -603,6 +619,20 @@ UScriptStruct* FZiplinePawnState::StaticStruct()
     return Struct;
 }
 
+FWeakObjectPtr& FZiplinePawnState::GetZipline()
+{
+    static auto Zipline = StaticStruct()->FindPropertyByName(FName(TEXT("Zipline")));
+
+    return *Zipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this);
+}
+
+FWeakObjectPtr* FZiplinePawnState::GetPreviousZipline()
+{
+    static auto PreviousZipline = StaticStruct()->FindPropertyByName(FName(TEXT("PreviousZipline")));
+
+    return PreviousZipline ? PreviousZipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this) : nullptr;
+}
+
 int32 FZiplinePawnState::GetAuthoritativeValue() const
 {
     static auto AuthoritativeValue = StaticStruct()->FindPropertyByName(FName(TEXT("AuthoritativeValue")));
@@ -644,7 +674,16 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
     auto& ZiplineState = GetZiplineState();
 
     if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
+    {
+        auto OldZipline = ZiplineState.GetZipline();
+        auto PreviousZipline = ZiplineState.GetPreviousZipline();
+        auto OldPreviousZipline = PreviousZipline ? *PreviousZipline : OldZipline;
+
         memcpy(&ZiplineState, &InZiplineState, FZiplinePawnState::StaticStruct()->GetPropertiesSize());
+
+        if (PreviousZipline)
+            *PreviousZipline = ZiplineState.GetZipline() == OldZipline ? OldPreviousZipline : OldZipline;
+    }
 
     HandleZiplineStateChanged();
 }
@@ -813,6 +852,69 @@ void AFortPlayerPawn::execPopGliderOverride(FFrame& Stack, void* const Z_Param__
     Stack.Code += !!Stack.Code;
 
     PopGliderOverride(InGliderToRemove);
+}
+
+void AFortPlayerPawn::ForceOpenParachuteAndOverrideGlider(const UAthenaGliderItemDefinition* InGliderOverride, bool bInResetGliderOverrideOnLanding, bool bForceIntoGliderRedeploy)
+{
+    static auto ForceOpenParachuteAndOverrideGlider = Anchor::Optional<void (*)(AFortPlayerPawn*, const UAthenaGliderItemDefinition*, bool, bool)>(TEXT("AFortPlayerPawn::ForceOpenParachuteAndOverrideGlider"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("setnz r9b; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+    static auto BP_ForceOpenParachute = Anchor::Optional<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::BP_ForceOpenParachute"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Target()
+        .Get();
+    static auto SetInGliderRedeploy = Anchor::Optional<void (*)(AFortPlayerPawn*, bool)>(TEXT("AFortPlayerPawn::SetInGliderRedeploy"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Find("mov dl, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+    static auto bResetGliderOverrideOnLanding = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bResetGliderOverrideOnLanding")));
+
+    if (InGliderOverride)
+    {
+        PushGliderOverride(InGliderOverride);
+        bResetGliderOverrideOnLanding->SetPropertyValue_InContainer(this, bInResetGliderOverrideOnLanding);
+    }
+
+    if (ForceOpenParachuteAndOverrideGlider)
+    {
+        ForceOpenParachuteAndOverrideGlider(this, InGliderOverride, bInResetGliderOverrideOnLanding, bForceIntoGliderRedeploy);
+        return;
+    }
+
+    BP_ForceOpenParachute(this);
+
+    if (bForceIntoGliderRedeploy)
+        SetInGliderRedeploy(this, true);
+}
+
+void AFortPlayerPawn::execForceOpenParachuteAndOverrideGlider(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execForceOpenParachuteAndOverrideGlider, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("setnz r9b; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider")));
+
+    UAthenaGliderItemDefinition* InGliderOverride = nullptr;
+    uint32 bInResetGliderOverrideOnLanding = 0;
+    uint32 bForceIntoGliderRedeploy = 0;
+
+    Stack.StepCompiledIn(&InGliderOverride);
+    Stack.StepCompiledIn(&bInResetGliderOverrideOnLanding);
+    Stack.StepCompiledIn(&bForceIntoGliderRedeploy);
+    Stack.Code += !!Stack.Code;
+
+    ForceOpenParachuteAndOverrideGlider(InGliderOverride, !!bInResetGliderOverrideOnLanding, !!bForceIntoGliderRedeploy);
 }
 
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)

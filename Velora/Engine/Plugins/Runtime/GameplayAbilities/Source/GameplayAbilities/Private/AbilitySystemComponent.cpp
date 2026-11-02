@@ -186,6 +186,14 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
         .Find("movss [rsp+0x20], xmm*; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov dl, 0x1; sbb rcx, rcx; and rcx, *; call 0x*")
+        .Find("movss [rsp+0x20], xmm*; movsd [rsp+0x*], xmm*; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (ApplyGameplayEffectToTarget)

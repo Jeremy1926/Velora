@@ -21,6 +21,9 @@ void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
         .Or()
         .Pattern("48 8B 51 30 33 C0 48 85 D2 74 ? 8A 82 ? ? 00 00 C3")
         .Find("mov al, [*+0x*]")
+        .Or()
+        .Pattern("48 8B 41 30 48 85 C0 74 ? 8A 80 ? ? 00 00 C3")
+        .Find("mov al, [*+0x*]")
         .Disp();
 
     if (RunAsDedicated > 0)

@@ -411,7 +411,11 @@ TArray<FFortSafeZonePhaseInfo>& AFortSafeZoneIndicator::GetSafeZonePhases() cons
     static auto SafeZonePhases = Anchor::Offset(TEXT("AFortSafeZoneIndicator::SafeZonePhases"))
         .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:GetSafeZonePhases"))
         .Find("add rcx, 0x*")
-        .Imm();
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortSafeZoneIndicator:GetSafeZonePhases"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [rcx+0x*]")
+        .Get();
 
     return *(TArray<FFortSafeZonePhaseInfo>*)((uint8*)this + SafeZonePhases);
 }

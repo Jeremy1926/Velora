@@ -93,15 +93,20 @@ public:
 class IDelegateInstance
 {
 public:
-    static bool IsDestructorFirst();
+    static int32 GetLayout();
 
     template<typename CallableType>
     static decltype(auto) WithLayout(const void* Instance, CallableType&& Callable)
     {
-        if (IsDestructorFirst())
-            return Callable((TDelegateInstanceLayout<true>*)Instance, std::true_type());
+        auto Layout = GetLayout();
 
-        return Callable((TDelegateInstanceLayout<false>*)Instance, std::false_type());
+        if (Layout == 2)
+            return Callable((TDelegateInstanceLayout<true>*)Instance, std::integral_constant<int32, 2>());
+
+        if (Layout == 1)
+            return Callable((TDelegateInstanceLayout<true>*)Instance, std::integral_constant<int32, 1>());
+
+        return Callable((TDelegateInstanceLayout<false>*)Instance, std::integral_constant<int32, 0>());
     }
 
     static void Destroy(void* Instance)
