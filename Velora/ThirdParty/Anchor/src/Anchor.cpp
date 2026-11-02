@@ -605,6 +605,24 @@ namespace Anchor
         return PatternIndex == Pattern.size();
     }
 
+    static bool IsStackAdjustSwapped()
+    {
+        static auto bSwapped = FindPattern("48 83 C4 D8") != nullptr;
+
+        return bSwapped;
+    }
+
+    static bool MatchSwapped(const FInstruction& Instruction, std::string_view Pattern)
+    {
+        if ((Instruction.Info.mnemonic != ZYDIS_MNEMONIC_ADD && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_SUB) || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[0].reg.value != ZYDIS_REGISTER_RSP || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_IMMEDIATE || Instruction.Operands[1].imm.value.s >= 0 || !IsStackAdjustSwapped())
+            return false;
+
+        char Text[64];
+        snprintf(Text, sizeof(Text), "%s rsp, 0x%llx", Instruction.Info.mnemonic == ZYDIS_MNEMONIC_ADD ? "sub" : "add", (unsigned long long)-Instruction.Operands[1].imm.value.s);
+
+        return Match(Text, Pattern);
+    }
+
     static bool Matches(const uint8_t* Address, std::string_view Instructions)
     {
         FInstruction Instruction;
@@ -612,8 +630,9 @@ namespace Anchor
         for (;;)
         {
             auto Separator = Instructions.find("; ");
+            auto Pattern = Instructions.substr(0, Separator);
 
-            if (!Decode(Address, Instruction) || !Match(Instruction.Text, Instructions.substr(0, Separator)))
+            if (!Decode(Address, Instruction) || (!Match(Instruction.Text, Pattern) && !MatchSwapped(Instruction, Pattern)))
                 return false;
 
             if (Separator == std::string_view::npos)
