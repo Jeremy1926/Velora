@@ -22,6 +22,15 @@ void UGameplayStatics::GetAllActorsOfClass(const UObject* WorldContextObject, TS
         .Native(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass"))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; mov r8, *; call 0x*")
+        .Get();
+
+    if (bClassByAddress)
+        return ((void (*)(const UObject*, const TSubclassOf<AActor>*, TArray<AActor*>&))GetAllActorsOfClass)(WorldContextObject, &ActorClass, OutActors);
+
     GetAllActorsOfClass(WorldContextObject, ActorClass, OutActors);
 }
 
@@ -30,6 +39,15 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
     static auto BeginDeferredActorSpawnFromClass = Anchor::Function<AActor* (*)(const UObject*, TSubclassOf<AActor>, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*)>(TEXT("UGameplayStatics::BeginDeferredActorSpawnFromClass"))
         .Native(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
         .Get();
+
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; mov [rsp+0x28], *")
+        .Get();
+
+    if (bClassByAddress)
+        return ((AActor* (*)(const UObject*, const TSubclassOf<AActor>*, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*))BeginDeferredActorSpawnFromClass)(WorldContextObject, &ActorClass, SpawnTransform, CollisionHandlingOverride, Owner);
 
     return BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner);
 }
