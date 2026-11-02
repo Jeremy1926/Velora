@@ -81,6 +81,9 @@ FString UKismetSystemLibrary::GetPathName(const UObject* Object)
             .Find("xor r8d, r8d; lea rdx, [*]; call 0x*")
             .Find("call 0x*")
             .Target()
+            .Or()
+            .Pattern("48 8B DA 33 FF 48 89 3A 49 8B C0 48 89 7A 08 4C 8D 44 24 20 48 8D 54 24 40")
+            .Start()
             .Get();
 
         if (!Object)
