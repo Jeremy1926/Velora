@@ -8,7 +8,7 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
 {
     auto& Version = FEngineVersion::Current();
 
-    static auto FindPropertyByName = Anchor::Function<UProperty* (*)(const UStruct*, FName)>(TEXT("UStruct::FindPropertyByName"))
+    static auto FindPropertyByName = Anchor::Optional<UProperty* (*)(const UStruct*, FName)>(TEXT("UStruct::FindPropertyByName"))
         .If(FField::StaticClass())
         .Pattern("48 8B 49 70 48 85 C9 74 ? 4C 8B CA 49 C1 E9 20 48 8B 41 28")
         .Or()
@@ -34,7 +34,27 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Pattern("48 8B 41 70 48 85 C0 74 ? 39 50 20 74 ? 48 8B 40 40 EB ? C3")
         .Get();
 
-    return FindPropertyByName(this, InName);
+    if (FindPropertyByName)
+        return FindPropertyByName(this, InName);
+
+    static auto NamePrivate = Anchor::Offset(TEXT("FField::NamePrivate"))
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("cmp [*+0x*], e*; jz 0x*; mov *, [*+0x*]")
+        .Disp();
+
+    static auto PropertyLinkNext = Anchor::Offset(TEXT("FProperty::PropertyLinkNext"))
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("cmp [*+0x*], e*; jz 0x*; mov *, [*+0x*]")
+        .Find("mov *, [*+0x*]")
+        .Disp();
+
+    for (auto Property = GetPropertyLink(); Property; Property = *(UProperty* const*)((const uint8*)Property + PropertyLinkNext))
+    {
+        if (TGameLayout<FName>::Load((const uint8*)Property + NamePrivate) == InName)
+            return Property;
+    }
+
+    return nullptr;
 }
 
 void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
