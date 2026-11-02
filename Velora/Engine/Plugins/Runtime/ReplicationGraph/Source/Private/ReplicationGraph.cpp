@@ -2028,6 +2028,10 @@ UReplicationGraphNode_DynamicSpatialFrequency::FSettings& UReplicationGraphNode_
         .Pattern("48 C7 05 ? ? ? ? AA 0A 00 00")
         .Last("mov [0x*], rcx")
         .Target()
+        .Or()
+        .Pattern("48 C7 05 ? ? ? ? AA 0A 00 00")
+        .Find("movups [0x*], xmm0")
+        .Target()
         .Get();
 
     return *DefaultSettings;
