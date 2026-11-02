@@ -841,6 +841,7 @@ namespace Anchor
         std::vector<std::array<uint8_t, 256>> Keystreams;
         std::vector<FEncryptedBuilder> Builders;
         std::vector<uint64_t> Stores;
+        std::vector<uint32_t> Blobs;
     };
 
     static ZydisRegister LargestRegister(ZydisRegister Register)
@@ -1184,11 +1185,9 @@ namespace Anchor
         return !Missing;
     }
 
-    static bool Decrypts(const std::array<uint8_t, 256>& Keystream, const std::vector<int16_t>& Cipher, std::span<const uint8_t> Plain)
+    template<typename ByteType>
+    static bool Decrypts(const std::array<uint8_t, 256>& Keystream, const ByteType* Cipher, std::span<const uint8_t> Plain)
     {
-        if (Cipher.size() < Plain.size() || Cipher[0] < 0)
-            return false;
-
         auto Key = (uint8_t)(Cipher[0] ^ Plain[0]);
 
         for (size_t Index = 1; Index < Plain.size(); Index++)
@@ -1199,7 +1198,7 @@ namespace Anchor
                 return false;
         }
 
-        return true;
+        return Cipher[0] >= 0;
     }
 
     static const FEncryptedStrings& EncryptedStrings()
@@ -1210,43 +1209,71 @@ namespace Anchor
             std::vector<std::pair<std::array<uint8_t, 256>, int32_t>> Counts;
             auto Image = Base();
             auto& Calls = References()[0];
+            std::vector<const uint8_t*> Frequent;
             int32_t Found = 0;
+
+            auto IsCall = [&](uint64_t Call)
+            {
+                return Image[(uint32_t)Call] == 0xE8 && InCode(Image + (uint32_t)Call, 0, 5);
+            };
+
+            auto Sample = [&](const uint8_t* Site)
+            {
+                std::array<uint8_t, 256> Keystream;
+
+                if (Found >= 64 || !FindKeystream(Site, Keystream))
+                    return;
+
+                auto Count = std::find_if(Counts.begin(), Counts.end(), [&](const auto& Pair) { return Pair.first == Keystream; });
+
+                if (Count != Counts.end())
+                    Count->second++;
+                else
+                    Counts.emplace_back(Keystream, 1);
+
+                Found++;
+            };
 
             for (auto Entry = Calls.begin(); Entry != Calls.end();)
             {
                 auto Last = std::upper_bound(Entry, Calls.end(), *Entry | 0xFFFFFFFF);
-                auto Site = std::find_if(Entry, Last, [&](uint64_t Call) { return Image[(uint32_t)Call] == 0xE8 && InCode(Image + (uint32_t)Call, 0, 5); });
+                auto Site = std::find_if(Entry, Last, IsCall);
                 FEncryptedBuilder Builder;
-                std::array<uint8_t, 256> Keystream;
 
                 if (Site != Last && InCode(Image + (*Entry >> 32), 0, 16) && ReadBuilder(Image + (*Entry >> 32), Builder))
                 {
                     Builder.Site = Image + (uint32_t)*Site;
-
-                    if (Found < 64 && FindKeystream(Builder.Site, Keystream))
-                    {
-                        auto Count = std::find_if(Counts.begin(), Counts.end(), [&](const auto& Pair) { return Pair.first == Keystream; });
-
-                        if (Count != Counts.end())
-                            Count->second++;
-                        else
-                            Counts.emplace_back(Keystream, 1);
-
-                        Found++;
-                    }
-
+                    Sample(Builder.Site);
                     Strings.Builders.push_back(std::move(Builder));
+                }
+
+                if (std::count_if(Entry, Last, IsCall) >= 1024)
+                {
+                    for (int32_t Tried = 0; Site != Last && Tried < 16; Site = std::find_if(Site + 1, Last, IsCall), Tried++)
+                        Frequent.push_back(Image + (uint32_t)*Site);
                 }
 
                 Entry = Last;
             }
 
-            std::stable_sort(Counts.begin(), Counts.end(), [](const auto& A, const auto& B) { return A.second > B.second; });
-
-            for (auto& [Keystream, Count] : Counts)
+            for (int32_t Pass = 0; Pass < 2 && Strings.Keystreams.empty(); Pass++)
             {
-                if (Count >= 2)
-                    Strings.Keystreams.push_back(Keystream);
+                if (Pass)
+                {
+                    Counts.clear();
+                    Found = 0;
+
+                    for (auto Site : Frequent)
+                        Sample(Site);
+                }
+
+                std::stable_sort(Counts.begin(), Counts.end(), [](const auto& A, const auto& B) { return A.second > B.second; });
+
+                for (auto& [Keystream, Count] : Counts)
+                {
+                    if (Count >= 2)
+                        Strings.Keystreams.push_back(Keystream);
+                }
             }
 
             if (Strings.Keystreams.empty())
@@ -1275,6 +1302,22 @@ namespace Anchor
             }
 
             std::sort(Strings.Stores.begin(), Strings.Stores.end());
+
+            auto& Loads = References()[1];
+
+            for (auto& Section : Sections())
+            {
+                if (Section.Characteristics & IMAGE_SCN_MEM_EXECUTE)
+                    continue;
+
+                auto Entry = std::lower_bound(Loads.begin(), Loads.end(), (uint64_t)Section.VirtualAddress << 32);
+
+                for (; Entry != Loads.end() && (*Entry >> 32) < (uint64_t)Section.VirtualAddress + Section.Misc.VirtualSize; Entry++)
+                {
+                    if (Strings.Blobs.empty() || Strings.Blobs.back() != (uint32_t)(*Entry >> 32))
+                        Strings.Blobs.push_back((uint32_t)(*Entry >> 32));
+                }
+            }
 
             return Strings;
         }();
@@ -1417,7 +1460,7 @@ namespace Anchor
         {
             for (auto& Builder : Strings.Builders)
             {
-                if ((bPrefix ? Builder.Cipher.size() >= Plain.size() : Builder.Cipher.size() == Plain.size()) && Decrypts(Keystream, Builder.Cipher, Plain))
+                if ((bPrefix ? Builder.Cipher.size() >= Plain.size() : Builder.Cipher.size() == Plain.size()) && Decrypts(Keystream, Builder.Cipher.data(), Plain))
                     Sites.push_back(Builder.Site);
             }
 
@@ -1439,13 +1482,24 @@ namespace Anchor
 
                     for (auto Start : { Store, Store - 1 })
                     {
-                        if ((Start == Store || (Store[-1] & 0xF0) == 0x40) && ReadStores(Start, Plain.size(), Cipher) && Decrypts(Keystream, Cipher, Plain))
+                        if ((Start == Store || (Store[-1] & 0xF0) == 0x40) && ReadStores(Start, Plain.size(), Cipher) && Decrypts(Keystream, Cipher.data(), Plain))
                         {
                             Sites.push_back(Start);
                             break;
                         }
                     }
                 }
+            }
+        }
+
+        for (auto& Keystream : Sites.empty() ? Strings.Keystreams : std::vector<std::array<uint8_t, 256>>())
+        {
+            for (auto Blob : Strings.Blobs)
+            {
+                auto Reference = Blob + Plain.size() <= ImageSize() && Decrypts(Keystream, Base() + Blob, Plain) ? FindReference(Base() + Blob) : nullptr;
+
+                if (Reference)
+                    Sites.push_back((Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference);
             }
         }
 
