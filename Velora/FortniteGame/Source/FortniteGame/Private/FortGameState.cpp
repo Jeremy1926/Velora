@@ -97,6 +97,13 @@ AFortWorldManager* AFortGameState::GetWorldManager() const
     return *WorldManager->ContainerPtrToValuePtr<AFortWorldManager*>(this);
 }
 
+int32 AFortGameState::GetTeamCount() const
+{
+    static auto TeamCount = GetClass()->FindPropertyByName(FName(TEXT("TeamCount")));
+
+    return *TeamCount->ContainerPtrToValuePtr<int32>(this);
+}
+
 void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName, bool bIsServerOnly)
 {
     static auto StartStreamingAdditionalPlaylistLevel = Anchor::Function<void (*)(AFortGameState*, FName, bool)>(TEXT("AFortGameState::StartStreamingAdditionalPlaylistLevel"))

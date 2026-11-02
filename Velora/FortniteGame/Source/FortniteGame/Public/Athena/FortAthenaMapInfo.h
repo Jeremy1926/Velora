@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Athena/FortAthenaAircraft.h"
 #include "Containers/Array.h"
 #include "UObject/AssetPtr.h"
 
@@ -48,6 +49,8 @@ public:
     UClass* GetLlamaClass() const;
 
     UClass* GetAircraftClass() const;
+
+    TArray<FAircraftFlightInfo>& GetFlightInfos();
 
     const FScalableFloat& GetLlamaQuantityMin() const;
 

@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "Containers/Array.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 
+class AFortAthenaAircraft;
 class UObject;
 
 enum class EAthenaGamePhase : uint8;
@@ -19,6 +22,8 @@ public:
     bool StartWarmupPhase();
 
     void UpdateWarmupPhase();
+
+    void SpawnAircrafts();
 
     void SetGamePhase(EAthenaGamePhase InGamePhase);
 
@@ -39,4 +44,6 @@ public:
     float& GetWarmupEarlyCountdownDuration();
 
     float GetWarmupEarlyRequiredPlayerPercent() const;
+
+    TArray<TWeakObjectPtr<AFortAthenaAircraft>>& GetAircrafts_GameMode();
 };

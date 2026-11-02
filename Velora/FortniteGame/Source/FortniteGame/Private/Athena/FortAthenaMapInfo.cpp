@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "Athena/FortAthenaMapInfo.h"
-#include "Athena/FortAthenaAircraft.h"
 #include "GameplayEffectTypes.h"
 #include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -190,6 +189,13 @@ UClass* AFortAthenaMapInfo::GetAircraftClass() const
     static auto AircraftClass = GetClass()->FindPropertyByName(FName(TEXT("AircraftClass")));
 
     return *AircraftClass->ContainerPtrToValuePtr<UClass*>(this);
+}
+
+TArray<FAircraftFlightInfo>& AFortAthenaMapInfo::GetFlightInfos()
+{
+    static auto FlightInfos = GetClass()->FindPropertyByName(FName(TEXT("FlightInfos")));
+
+    return *FlightInfos->ContainerPtrToValuePtr<TArray<FAircraftFlightInfo>>(this);
 }
 
 const FScalableFloat& AFortAthenaMapInfo::GetLlamaQuantityMin() const

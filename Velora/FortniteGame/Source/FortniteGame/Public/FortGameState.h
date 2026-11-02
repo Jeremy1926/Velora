@@ -42,5 +42,7 @@ public:
 
     AFortWorldManager* GetWorldManager() const;
 
+    int32 GetTeamCount() const;
+
     void StartStreamingAdditionalPlaylistLevel(FName LevelName, bool bIsServerOnly);
 };

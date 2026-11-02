@@ -2,6 +2,7 @@
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/FortAthenaAircraft.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
@@ -66,6 +67,8 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartWarmupPhase()
 
     if (Playlist && bSkipAircraft->GetPropertyValue_InContainer(Playlist))
         SetGameModeWillSkipAircraft(true);
+    else
+        SpawnAircrafts();
 
     SetGamePhase(EAthenaGamePhase::Warmup);
 
@@ -103,6 +106,31 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateWarmupPhase()
 
     if (OnWarmupCountdownEndTimeUpdated)
         OnWarmupCountdownEndTimeUpdated->ContainerPtrToValuePtr<FMulticastScriptDelegate>(GameState)->ProcessMulticastDelegate<UObject>(&NewWarmupCountdownEndTime);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnAircrafts()
+{
+    static auto AirCraftBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
+
+    if (!Playlist)
+        return;
+
+    int32 AircraftCount = 1;
+
+    switch (*AirCraftBehavior->ContainerPtrToValuePtr<EAirCraftBehavior>(Playlist))
+    {
+    case EAirCraftBehavior::OpposingAirCraftForEachTeam:
+        AircraftCount = GameState->GetTeamCount();
+        break;
+    case EAirCraftBehavior::NoAircraft:
+        return;
+    }
+
+    for (int32 Index = 0; Index < AircraftCount; Index++)
+        GetAircrafts_GameMode().Add(AFortAthenaAircraft::SpawnAircraft(GameState->GetWorld(), Index));
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGamePhase InGamePhase)
@@ -176,6 +204,13 @@ float UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupEarlyRequired
         return *PlaylistWarmupEarlyRequiredPlayerPercent->ContainerPtrToValuePtr<float>(Playlist);
 
     return FParse::Param(FCommandLine::Get(), TEXT("nomcp")) ? 0.0f : *DefaultWarmupEarlyRequiredPlayerPercent->ContainerPtrToValuePtr<float>(this);
+}
+
+TArray<TWeakObjectPtr<AFortAthenaAircraft>>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircrafts_GameMode()
+{
+    static auto Aircrafts_GameMode = StaticClass()->FindPropertyByName(FName(TEXT("Aircrafts_GameMode")));
+
+    return *Aircrafts_GameMode->ContainerPtrToValuePtr<TArray<TWeakObjectPtr<AFortAthenaAircraft>>>(this);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZonesStartTime(float InSafeZonesStartTime)
