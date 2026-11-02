@@ -90,6 +90,11 @@ void ABuildingWall::SetIsDoorOpen(EDoorOpenStyle InDoorOpenStyle, AFortPawn* Int
         .Or()
         .Pattern("41 BE 03 00 00 00 4D 8B F8 40 8A FA 48 8B F1 44 38 B1 ? ? ? ? 0F 85")
         .Start()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.BuildingWall:OnNearDoorTriggerTouched"))
+        .Find("mov dl, 0x1; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetIsDoorOpen(this, InDoorOpenStyle, InteractingPawn);
