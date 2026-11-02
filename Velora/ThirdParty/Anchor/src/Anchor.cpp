@@ -822,7 +822,9 @@ namespace Anchor
         if (!Address || !Decode(Address, Instruction) || Instruction.Info.operand_count_visible != 2 || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
             return Result;
 
-        if (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOVZX && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOVSXD)
+        auto First = Instruction.Info.mnemonic;
+
+        if (First != ZYDIS_MNEMONIC_MOV && First != ZYDIS_MNEMONIC_MOVZX && First != ZYDIS_MNEMONIC_MOVSXD && First != ZYDIS_MNEMONIC_XOR && First != ZYDIS_MNEMONIC_ADD && First != ZYDIS_MNEMONIC_SUB)
             return Result;
 
         auto& Load = Instruction.Operands[1].mem;
@@ -891,6 +893,32 @@ namespace Anchor
                 Result.Steps[Result.Count++] = { (uint16_t)Mnemonic, (uint8_t)Width, Width >= 64 ? Operand : Operand & ((1ull << Width) - 1) };
         };
 
+        auto FirstWidth = Instruction.Operands[0].size;
+
+        if (First == ZYDIS_MNEMONIC_XOR || First == ZYDIS_MNEMONIC_ADD)
+        {
+            if (!(Tracked & Known))
+                return FCipher();
+
+            Add(First, FirstWidth, Constants[Bit(Tracked)]);
+        }
+        else if (First == ZYDIS_MNEMONIC_SUB)
+        {
+            Add(ZYDIS_MNEMONIC_NEG, FirstWidth, 0);
+
+            if (Tracked & Known)
+                Add(ZYDIS_MNEMONIC_ADD, FirstWidth, Constants[Bit(Tracked)]);
+        }
+
+        Known &= ~Tracked;
+
+        uint32_t HalfLow = 0;
+        uint32_t HalfHigh = 0;
+        bool bHalfShifted = false;
+        bool bHalfHighShifted = false;
+        uint64_t HalfLowXor = 0;
+        uint64_t HalfHighXor = 0;
+
         auto Next = Address + Instruction.Info.length;
 
         for (int32_t Remaining = 32; Remaining > 0 && Tracked && Decode(Next, Instruction); Remaining--, Next += Instruction.Info.length)
@@ -920,17 +948,80 @@ namespace Anchor
             auto Width = Destination.size;
             auto& Source = Instruction.Operands[1];
             bool bSource = Instruction.Info.operand_count_visible > 1;
+            auto SourceRegister = bSource && Source.type == ZYDIS_OPERAND_TYPE_REGISTER ? Root(Source.reg.value) : 0u;
+            bool bConstant = bSource && (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE || ((SourceRegister & Known) && !(SourceRegister & Tracked)));
+            auto Constant = !bConstant ? 0ull : Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE ? (uint64_t)Source.imm.value.u : Constants[Bit(SourceRegister)];
+
+            if (HalfLow && Register && (Register == HalfLow || Register == HalfHigh))
+            {
+                if (Register == HalfLow && Mnemonic == ZYDIS_MNEMONIC_SHL && bConstant && Constant == 32 && !bHalfShifted)
+                {
+                    bHalfShifted = true;
+                    continue;
+                }
+
+                if (Register == HalfLow && Mnemonic == ZYDIS_MNEMONIC_XOR && bHalfShifted && bConstant)
+                {
+                    HalfLowXor ^= Constant;
+                    continue;
+                }
+
+                if (Register == HalfHigh && Mnemonic == ZYDIS_MNEMONIC_SHR && bConstant && Constant == 32 && !bHalfHighShifted)
+                {
+                    bHalfHighShifted = true;
+                    continue;
+                }
+
+                if (Register == HalfHigh && Mnemonic == ZYDIS_MNEMONIC_XOR && bHalfHighShifted && bConstant)
+                {
+                    HalfHighXor ^= Constant;
+                    continue;
+                }
+
+                if (Mnemonic == ZYDIS_MNEMONIC_OR && (Register | SourceRegister) == (HalfLow | HalfHigh) && bHalfShifted && bHalfHighShifted && !(HalfLowXor & 0xFFFFFFFF) && !(HalfHighXor >> 32))
+                {
+                    Add(ZYDIS_MNEMONIC_ROL, 64, 32);
+
+                    if (HalfLowXor | HalfHighXor)
+                        Add(ZYDIS_MNEMONIC_XOR, 64, HalfLowXor | HalfHighXor);
+
+                    Tracked = Register;
+                    HalfLow = 0;
+                    continue;
+                }
+
+                break;
+            }
+
+            if (!HalfLow && Mnemonic == ZYDIS_MNEMONIC_MOV && Width == 32 && SourceRegister == Tracked && Source.size == 32 && !(Tracked & (Tracked - 1)) && Register && !(Register & Tracked))
+            {
+                HalfLow = Register;
+                HalfHigh = Tracked;
+                Known &= ~Register;
+                continue;
+            }
 
             if (Memory)
             {
-                if ((Mnemonic == ZYDIS_MNEMONIC_MOV || Mnemonic == ZYDIS_MNEMONIC_LEA) && (Root(Memory->mem.base) & Tracked) && Memory->mem.index != ZYDIS_REGISTER_NONE && !(Root(Memory->mem.index) & Tracked) && Memory->mem.disp.value)
+                auto Base = Root(Memory->mem.base);
+                auto Index = Root(Memory->mem.index);
+
+                if ((Mnemonic == ZYDIS_MNEMONIC_MOV || Mnemonic == ZYDIS_MNEMONIC_LEA) && (Base & Tracked) && Memory->mem.index != ZYDIS_REGISTER_NONE && !(Index & Tracked) && Memory->mem.disp.value)
                     Add(ZYDIS_MNEMONIC_ADD, 64, (uint64_t)Memory->mem.disp.value);
-                else if (Mnemonic == ZYDIS_MNEMONIC_LEA && (Root(Memory->mem.base) & Tracked) && Memory->mem.index == ZYDIS_REGISTER_NONE && (Register & Tracked))
+                else if (Mnemonic == ZYDIS_MNEMONIC_LEA && (Base & Tracked) && Memory->mem.index == ZYDIS_REGISTER_NONE && (Register & Tracked))
                 {
                     Add(ZYDIS_MNEMONIC_ADD, Width, (uint64_t)Memory->mem.disp.value);
                     Tracked = Register;
                     continue;
                 }
+                else if (Mnemonic == ZYDIS_MNEMONIC_LEA && (Base & Tracked) && Memory->mem.index != ZYDIS_REGISTER_NONE && !(Index & Tracked) && !(Index & Known) && !Memory->mem.disp.value && Register)
+                {
+                    Tracked = Register;
+                    Known &= ~Register;
+                    continue;
+                }
+                else if (Memory->mem.index != ZYDIS_REGISTER_NONE && Memory->mem.scale == 1 && !Memory->mem.disp.value && (((Base & Tracked) && (Index & Known) && !(Index & Tracked)) || ((Index & Tracked) && (Base & Known) && !(Base & Tracked))))
+                    Add(ZYDIS_MNEMONIC_ADD, 64, Constants[Bit(Base & Tracked ? Index : Base)]);
 
                 break;
             }
