@@ -1580,6 +1580,11 @@ bool AFortPlayerController::IsBuildingRestricted(const FBuildingClassData& Build
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; lea rcx, [*]; mov *, al")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
         .Find("call [*+0x*]")
         .Get();
 
@@ -1602,6 +1607,13 @@ bool AFortPlayerController::HasRequiredBuildingLevel(const FBuildingClassData& B
 bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortResourceType ResourceType) const
 {
     static auto HasRequiredBuildingLevel = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, int32, EFortResourceType)>(TEXT("AFortPlayerController::HasRequiredBuildingLevel"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; lea rcx, [*]; mov *, al")
+        .LogSlot(TEXT("AFortPlayerController::IsBuildingRestricted"))
+        .SlotShift(this, sizeof(void*))
+        .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("*, 0xffffffff")
