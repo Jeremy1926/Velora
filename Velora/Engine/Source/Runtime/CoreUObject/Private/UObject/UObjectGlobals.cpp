@@ -313,7 +313,7 @@ const UObjectBase::FEncryptedLayout* UObjectBase::GetEncryptedLayout()
             .Last("mov r*, [0x*]")
             .Last("mov *, [r*+0x*]")
             .Or()
-            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:DelayUntilNextTick"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:K2_ClearTimer"))
             .Find("lea rcx, [0x*]; mov edx, *; call 0x*")
             .Last("* e*, [r*+0x*]")
             .Get(),
