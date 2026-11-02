@@ -90,6 +90,11 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         .Find("and dword ptr [rsp+0x*], 0x0; lea rax, [0x*]; lea rcx, *; mov [rsp+0x*], rax")
         .Find("lea rax, [0x*]")
         .IsTarget("ret*")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rax, [0x*]; xor edi, edi")
+        .IsTarget("ret*")
         .Optional()
         .AtReference());
 
@@ -212,6 +217,13 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         .Target()
         .Find("lea rcx, [r*+0x*]; mov rdx, rdi; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rcx, [0x*]; mov [rsp+0x*], rcx")
+        .Target()
+        .Find("add rcx, 0x*; mov rdx, rdi; call 0x*")
+        .Call()
         .Get();
 
     static auto OnTeamWipedOut = Anchor::Offset(TEXT("ABuildingGameplayActorSpawnMachine::HandleOnTeamWipedOut"))
@@ -262,7 +274,13 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         .Find("lea rcx, [0x*]; mov [rsp+0x*], r*")
         .Target()
         .Find("lea rcx, [r*+0x*]; mov rdx, rdi; call 0x*")
-        .DispValue();
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rcx, [0x*]; mov [rsp+0x*], rcx")
+        .Target()
+        .Find("add rcx, 0x*; mov rdx, rdi; call 0x*")
+        .Get();
 
     if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
         RemoveAll((FMulticastDelegateBase<FWeakObjectPtr>*)((uint8_t*)GameMode + OnTeamWipedOut), this);
