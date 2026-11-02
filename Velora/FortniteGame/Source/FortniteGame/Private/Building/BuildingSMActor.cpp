@@ -59,6 +59,15 @@ ABuildingSMActor* ABuildingSMActor::ReplaceBuildingActor(EBuildingReplacementTyp
         .SlotShift(TEXT("/Script/FortniteGame.Default__BuildingSMActor"), -2 * (int64_t)sizeof(void*))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .String(TEXT("STAT_Fort_BuildingSMActorReplaceBuildingActor"))
+        .Start()
+        .Find("mov [*], *; jnz 0x*; mov *, [r8]; test *, *")
+        .Get();
+
+    if (bClassByAddress)
+        return ReplaceBuildingActor.As<ABuildingSMActor* (*)(ABuildingSMActor*, EBuildingReplacementType, UClass* const*, int32, int32, bool, AFortPlayerController*)>()(this, ReplacementType, &NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
+
     return ReplaceBuildingActor(this, ReplacementType, NewBuildingClass, BuildingLevel, RotationIterations, bMirrored, PlayerController);
 }
 
