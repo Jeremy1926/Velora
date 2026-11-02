@@ -66,6 +66,10 @@ UFortVehicleSeatWeaponComponent* IFortVehicleInterface::GetSeatWeaponComponent(c
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetSeatWeaponComponent"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetSeatWeaponComponent"))
         .Find("call [*+0x*]")
         .Get();
 
