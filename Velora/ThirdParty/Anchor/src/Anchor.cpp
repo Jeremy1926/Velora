@@ -826,10 +826,24 @@ namespace Anchor
         if (!Address || !Decode(Address, Instruction) || Instruction.Info.operand_count_visible != 2)
             return Result;
 
+        auto Start = Address;
+        auto KeyRegister = ZYDIS_REGISTER_NONE;
+        uint64_t Key = 0;
+
+        if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_REGISTER && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+        {
+            KeyRegister = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Instruction.Operands[0].reg.value);
+            Key = Instruction.Operands[0].size == 32 ? (uint32_t)Instruction.Operands[1].imm.value.u : (uint64_t)Instruction.Operands[1].imm.value.s;
+            Start += Instruction.Info.length;
+
+            if (!Decode(Start, Instruction) || Instruction.Info.operand_count_visible != 2 || (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_XOR && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_ADD && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_SUB) || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Instruction.Operands[0].reg.value) != KeyRegister)
+                return Result;
+        }
+
         if ((Instruction.Info.mnemonic == ZYDIS_MNEMONIC_BT || Instruction.Info.mnemonic == ZYDIS_MNEMONIC_TEST) && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
         {
             auto& Test = Instruction.Operands[0].mem;
-            Result.Offset = Test.base == ZYDIS_REGISTER_RIP ? (int64_t)(Address + Instruction.Info.length + Test.disp.value) : Test.disp.value;
+            Result.Offset = Test.base == ZYDIS_REGISTER_RIP ? (int64_t)(Start + Instruction.Info.length + Test.disp.value) : Test.disp.value;
             Result.Size = (uint8_t)(Instruction.Operands[0].size / 8);
 
             return Result;
@@ -844,7 +858,7 @@ namespace Anchor
             return Result;
 
         auto& Load = Instruction.Operands[1].mem;
-        Result.Offset = Load.base == ZYDIS_REGISTER_RIP ? (int64_t)(Address + Instruction.Info.length + Load.disp.value) : Load.disp.value;
+        Result.Offset = Load.base == ZYDIS_REGISTER_RIP ? (int64_t)(Start + Instruction.Info.length + Load.disp.value) : Load.disp.value;
         Result.Size = (uint8_t)(Instruction.Operands[1].size / 8);
 
         auto Root = [](ZydisRegister Register)
@@ -893,15 +907,21 @@ namespace Anchor
             }
         };
 
-        Walk(FindRange(Address).first, true, [&](const FInstruction& Previous)
+        Walk(FindRange(Start).first, true, [&](const FInstruction& Previous)
         {
-            if (Previous.Address >= Address)
+            if (Previous.Address >= Start)
                 return true;
 
             Remember(Previous);
 
             return false;
         });
+
+        if (KeyRegister != ZYDIS_REGISTER_NONE)
+        {
+            Constants[Bit(Root(KeyRegister))] = Key;
+            Known |= Root(KeyRegister);
+        }
 
         auto Add = [&](ZydisMnemonic Mnemonic, uint16_t Width, uint64_t Operand)
         {
@@ -936,7 +956,7 @@ namespace Anchor
         uint64_t HalfLowXor = 0;
         uint64_t HalfHighXor = 0;
 
-        auto Next = Address + Instruction.Info.length;
+        auto Next = Start + Instruction.Info.length;
 
         for (int32_t Remaining = 32; Remaining > 0 && Tracked && Decode(Next, Instruction); Remaining--, Next += Instruction.Info.length)
         {
