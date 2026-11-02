@@ -85,6 +85,9 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Last("call 0x*")
         .Target()
         .Call()
+        .Or()
+        .If(FField::StaticClass())
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 48 8B 79 70 8B DA 48 85 FF 74 ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 84 C0 74 ? 8B 47 20 3B C3 74 ? 48 8B 7F 40 EB")
         .Get();
 
     return FindPropertyByName(this, InName);
