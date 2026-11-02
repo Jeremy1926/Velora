@@ -116,6 +116,15 @@ void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>
         .Pattern("48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 ? 8B 59 08 45 33 F6 4C 8B EA 4C 8B F9 85 DB 7F")
         .Or()
         .Pattern("48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 ? 8B 59 08 4C 8B EA 4C 8B F9 85 DB")
+        .Or()
+        .Exec(TEXT("/Script/Engine.ActorComponent:Deactivate"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__ActorComponent"))
+        .Find("cmp byte ptr [*+0x*], 0x0; *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("lea rdx, [rbp+0x*]; mov [rbp+0x*], rbx; call 0x*")
+        .Call()
         .Get();
 
     ProcessMulticastDelegate(this, Parameters);
