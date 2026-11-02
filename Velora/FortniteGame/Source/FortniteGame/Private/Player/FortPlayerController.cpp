@@ -111,6 +111,11 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerController::ServerEditBuildingActor_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"))
+        .Find("add [*+0x20], *")
+        .Find("mov rbx, [rax+0x*]", 2)
+        .LogSlot(TEXT("AFortPlayerController::ServerEditBuildingActor_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
     static auto ServerEndEditingBuildingActor = THook(TEXT("AFortPlayerController::ServerEndEditingBuildingActor_Implementation"), &AFortPlayerController::ServerEndEditingBuildingActor_Implementation)
