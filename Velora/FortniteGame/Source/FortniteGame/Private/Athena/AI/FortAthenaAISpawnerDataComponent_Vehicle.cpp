@@ -21,6 +21,12 @@ void UFortAthenaAISpawnerDataComponent_Vehicle::PostOnSpawned(APawn* PawnAI)
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotInventory"))
         .LogSlot(TEXT("UFortAthenaAISpawnerDataComponent::PostOnSpawned"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_Vehicle"), "ret*")
+        .Or()
+        .String(TEXT("[%hs] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotInventory"))
+        .LogSlot(TEXT("UFortAthenaAISpawnerDataComponent::PostOnSpawned"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_Vehicle"), "ret*")
         .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_Vehicle")));
 
     auto Pawn = Cast<AFortPlayerPawn>(PawnAI);
