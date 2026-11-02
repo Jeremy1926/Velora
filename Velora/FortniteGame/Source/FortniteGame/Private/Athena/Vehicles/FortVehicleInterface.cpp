@@ -100,6 +100,10 @@ void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:SetForcedToAlwaysSpawn"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:SetForcedToAlwaysSpawn"))
         .Find("call [*+0x*]")
         .Get();
 
