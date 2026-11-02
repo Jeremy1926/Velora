@@ -46,6 +46,9 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Find("call 0x*")
         .Target()
         .Find("mov [*+0x*], dl")
+        .Or()
+        .Pattern("44 8A B9 ? ? ? ? 44 8A F2 4C 8B A1 ? ? ? ? 48 8B E9 88 91")
+        .Find("mov [*+0x*], dl")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
