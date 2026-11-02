@@ -1062,6 +1062,19 @@ UReplicationGraphNode_DormancyNode* UReplicationGraphNode_GridCell::GetDormancyN
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetDormancyNode(this);
@@ -1089,6 +1102,19 @@ UReplicationGraphNode_GridSpatialization2D::FActorCellInfo UReplicationGraphNode
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FActorCellInfo CellInfo;
@@ -1103,6 +1129,19 @@ void UReplicationGraphNode_GridSpatialization2D::GetGridNodesForActor(AActor* Ac
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
         .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
@@ -1190,6 +1229,13 @@ uint8* UReplicationGraphNode_GridSpatialization2D::GetGridBounds()
         .Find("call 0x*")
         .Target()
         .Find("cmp [rcx+0x*], al")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
         .Disp();
 
     return (uint8*)this + IsValid - 2 * TGameLayout<FVector>::Size();
@@ -1361,6 +1407,15 @@ void UReplicationGraphNode_GridSpatialization2D::PutStaticActorIntoCell(const FN
         .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     PutStaticActorIntoCell(this, ActorInfo, ActorRepInfo, bDormancyDriven);
@@ -1428,6 +1483,11 @@ void UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange(AActo
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x18)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x18)
         .Get();
 
     NotifyActorCullDistChange(this, Actor, GlobalInfo, OldDist);
@@ -1440,6 +1500,11 @@ void UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Dynamic(const 
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x20)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x20)
         .Get();
 
     AddActorInternal_Dynamic(this, ActorInfo);
@@ -1452,6 +1517,11 @@ void UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Static(const F
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x28)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x28)
         .Get();
 
     AddActorInternal_Static(this, ActorInfo, ActorRepInfo, bDormancyDriven);
@@ -1464,6 +1534,11 @@ void UReplicationGraphNode_GridSpatialization2D::AddActorInternal_Static_Impleme
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
         .Get();
 
     AddActorInternal_Static_Implementation(this, ActorInfo, ActorRepInfo, bDormancyDriven);
@@ -1476,6 +1551,11 @@ void UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Dynamic(con
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x38)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x38)
         .Get();
 
     RemoveActorInternal_Dynamic(this, ActorInfo);
@@ -1488,6 +1568,11 @@ void UReplicationGraphNode_GridSpatialization2D::RemoveActorInternal_Static(cons
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x40)
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x40)
         .Get();
 
     RemoveActorInternal_Static(this, ActorInfo, ActorRepInfo, bWasAddedAsDormantActor);
@@ -1771,6 +1856,16 @@ TArray<UReplicationGraphNode_GridCell*>& UReplicationGraphNode_GridSpatializatio
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rbx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
         .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
