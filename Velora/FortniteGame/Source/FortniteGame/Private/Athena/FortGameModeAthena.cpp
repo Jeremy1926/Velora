@@ -777,6 +777,13 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerSendZiplineState"))
+        .Optional()
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]", 2)
+        .LogSlot(TEXT("AFortPlayerPawn::ServerSendZiplineState_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"));
 
