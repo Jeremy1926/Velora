@@ -71,6 +71,11 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data, UE::Net::FNetTokenSt
         .Or()
         .String("BuildSharedSerializationForRPC")
         .Start()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call 0x*; mov r8, [rsp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
+        .Target()
         .Get();
 
     BuildSharedSerializationForRPC(this, Data, NetTokenStore);
@@ -178,6 +183,12 @@ void FRepLayout::ClearSharedSerializationForRPC()
         .String("BuildSharedSerializationForRPC")
         .Start()
         .CallSite()
+        .Find("jl 0x*; mov rcx, [rbp-0x*]; call 0x*")
+        .Call()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call 0x*; mov r8, [rsp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
         .Find("jl 0x*; mov rcx, [rbp-0x*]; call 0x*")
         .Call()
         .Get();
