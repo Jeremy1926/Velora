@@ -388,7 +388,7 @@ bool AActor::IsPendingKillPending() const
         .Find("test byte ptr [rcx+0x*], 0x*; mov rbx, rcx; jnz *")
         .Or()
         .Pattern("B0 01 84 41 ? 75 ? F7 41 08 00 00 00 60 75 ? 32 C0 C3")
-        .Find("test byte ptr [rcx+0x*], al")
+        .Find("test [rcx+0x*], al")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
