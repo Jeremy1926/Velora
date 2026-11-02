@@ -144,17 +144,26 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
     return StaticConstructObject_Internal(Class, InOuter, Name, SetFlags, InternalSetFlags, Template, bCopyTransientsFromClassDefaults, InstanceGraph, bAssumeTemplateIsArchetype);
 }
 
-const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
+static Anchor::FCipher HighHalf(Anchor::FCipher Cipher)
+{
+    Cipher.Offset += Cipher.Size / 2;
+    Cipher.Size /= 2;
+
+    return Cipher;
+}
+
+const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
 {
     static auto AllocateSerialNumber = Anchor::Address()
         .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
         .Get();
 
+    if (!AllocateSerialNumber)
+        return nullptr;
+
     static auto NumElements = Anchor::At(AllocateSerialNumber).Last("mov e*, [0x*]").Cipher();
     static auto Objects = Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher();
-
-    if (!NumElements.IsEncrypted() || !Objects.IsEncrypted())
-        return nullptr;
+    static auto bEncrypted = NumElements.IsEncrypted() && Objects.IsEncrypted();
 
     static auto PackedItem = Anchor::Address()
         .At(AllocateSerialNumber)
@@ -166,19 +175,46 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
         .Last("lea rdx, [r*+r*?4]")
         .Get();
 
+    if (!bEncrypted && (!PackedItem || NumElements.IsEncrypted() || Objects.IsEncrypted()))
+        return nullptr;
+
+    static auto ItemFlags = Anchor::Address()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov e*, [r*]; test e*, 0x*; jnz *; mov e*, [r*]; mov e*, [r*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*]; sar r*, 0x20; test e*, 0x*; jnz *; mov *, [r*]; mov *, [r*]")
+        .Get();
+
+    static auto PackedPointer = Anchor::At(ItemFlags).Find("or r*, r*; shl r*, 0x3").Get();
+    static auto PackedFlags = ItemFlags && PackedPointer && PackedPointer < Anchor::At(ItemFlags).Find("j*", 2).Get() ? ItemFlags : nullptr;
+
+    if (!bEncrypted && !PackedFlags)
+        return nullptr;
+
+    static auto Flags = Anchor::At(PackedFlags).Is("mov r*, [r*]; sar r*, 0x20") ? HighHalf(Anchor::At(PackedFlags).Cipher()) : Anchor::At(PackedFlags).Cipher();
+    static auto FirstLow = Anchor::At(PackedFlags).Find("mov e*, [r*]", 1).Cipher();
+    static auto SecondLow = Anchor::At(PackedFlags).Find("mov e*, [r*]", 2).Cipher();
+
     static FEncryptedLayout Layout
     {
         NumElements,
         Objects,
         Anchor::At(AllocateSerialNumber).Last("mov e*, [r*+0x*]").Cipher(TEXT("FUObjectItem::SerialNumber")),
-        Anchor::Cipher(TEXT("FUObjectItem::Flags"))
+        PackedFlags ? Flags : Anchor::Cipher(TEXT("FUObjectItem::Flags"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
             .Find("add [*+0x20], *")
             .Find("call 0x*")
             .Target()
             .Find("mov e*, [r*+0x*]; test e*, 0x*")
             .Get(),
-        Anchor::Cipher(TEXT("FUObjectItem::Object"))
+        PackedFlags ? (FirstLow.Offset != Flags.Offset ? FirstLow : SecondLow) : Anchor::Cipher(TEXT("FUObjectItem::Object"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
             .Find("add [*+0x20], *")
             .Find("call 0x*")
@@ -186,10 +222,18 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
             .Find("mov e*, [r*+0x*]; test e*, 0x*")
             .Find("mov r*, [*]")
             .Get(),
-        Anchor::At(AllocateSerialNumber).Last("shl r*, 0x5; add r*, [*]; jmp *; xor e*, e*; mov e*, [r*+0x*]").Get() ? 0x20 : PackedItem ? 0x14 : 0x18
+        Anchor::At(AllocateSerialNumber).Last("shl r*, 0x5; add r*, [*]; jmp *; xor e*, e*; mov e*, [r*+0x*]").Get() ? 0x20 : PackedItem ? 0x14 : 0x18,
+        PackedFlags != nullptr
     };
 
     return &Layout;
+}
+
+const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
+{
+    auto Layout = GetItemLayout();
+
+    return Layout && Layout->NumElements.IsEncrypted() && Layout->Objects.IsEncrypted() ? Layout : nullptr;
 }
 
 const UObjectBase::FEncryptedLayout* UObjectBase::GetEncryptedLayout()

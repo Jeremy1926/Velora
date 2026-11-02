@@ -88,7 +88,10 @@ public:
         Anchor::FCipher Flags;
         Anchor::FCipher Object;
         int32 Stride;
+        bool bPacked;
     };
+
+    static const FEncryptedLayout* GetItemLayout();
 
     static const FEncryptedLayout* GetEncryptedLayout();
 
@@ -104,8 +107,8 @@ public:
 
     FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
     {
-        if (auto Layout = GetEncryptedLayout())
-            return Index >= 0 && Index < GetObjectArrayNum() ? (FUObjectItem*)(Layout->Objects.Load<uint8**>(nullptr)[Index / (64 * 1024)] + Index % (64 * 1024) * Layout->Stride) : nullptr;
+        if (auto Layout = GetItemLayout())
+            return Index >= 0 && Index < GetObjectArrayNum() ? (FUObjectItem*)((GetEncryptedLayout() ? Layout->Objects.Load<uint8**>(nullptr) : (uint8**)((const FChunkedFixedUObjectArray&)ObjObjects).Objects)[Index / (64 * 1024)] + Index % (64 * 1024) * Layout->Stride) : nullptr;
 
         auto& Version = FEngineVersion::Current();
 
@@ -143,28 +146,31 @@ extern FUObjectArray& GUObjectArray;
 
 FORCEINLINE UObjectBase* FUObjectItem::GetObject() const
 {
-    auto Layout = FUObjectArray::GetEncryptedLayout();
+    auto Layout = FUObjectArray::GetItemLayout();
+
+    if (Layout && Layout->bPacked)
+        return (UObjectBase*)(((uint64)(Layout->Flags.Load<uint32>(this) & 0x3FFF) << 32 | Layout->Object.Load<uint32>(this)) << 3);
 
     return Layout ? Layout->Object.Load<UObjectBase*>(this) : Object;
 }
 
 FORCEINLINE int32 FUObjectItem::GetSerialNumber() const
 {
-    auto Layout = FUObjectArray::GetEncryptedLayout();
+    auto Layout = FUObjectArray::GetItemLayout();
 
     return Layout ? Layout->SerialNumber.Load<int32>(this) : SerialNumber;
 }
 
 FORCEINLINE volatile long* FUObjectItem::GetSerialNumberAddress()
 {
-    auto Layout = FUObjectArray::GetEncryptedLayout();
+    auto Layout = FUObjectArray::GetItemLayout();
 
     return (volatile long*)(Layout ? (uint8*)this + Layout->SerialNumber.Offset : (uint8*)&SerialNumber);
 }
 
 FORCEINLINE int32& FUObjectItem::GetFlags() const
 {
-    auto Layout = FUObjectArray::GetEncryptedLayout();
+    auto Layout = FUObjectArray::GetItemLayout();
 
     return *(int32*)(Layout ? (uint8*)this + Layout->Flags.Offset : (uint8*)&Flags);
 }
