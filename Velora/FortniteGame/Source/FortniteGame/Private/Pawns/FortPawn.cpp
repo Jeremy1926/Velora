@@ -394,6 +394,10 @@ void AFortPawn::UpdateCullDistance()
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortPawn:SetPawnVisibility"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:SetPawnVisibility"))
         .Find("call [rax+0x*]")
         .Get(sizeof(void*));
 
