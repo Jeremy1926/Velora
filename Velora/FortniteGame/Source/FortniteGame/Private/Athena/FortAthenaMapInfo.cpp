@@ -102,6 +102,16 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
 
 AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
 {
+    static auto SpawnSupplyDropAtLocationByRef = Anchor::Optional<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const TGameValue<FVector>&, const TGameValue<FRotator>&, UClass* const*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"))
+        .String(TEXT("AFortAthenaMutator_SupplyDrop::FortGameModeAthena_SpawnItemDeliverySupplyDrop found no locations in safe zone index %i. Locking spawning for %f seconds"))
+        .Start()
+        .Find("lea r9, [rsp+0x*]; movss [rsp+0x28], xmm*; lea r8, *; lea rdx, *; movss [rsp+0x20], xmm*; call 0x*")
+        .Call()
+        .Get();
+
+    if (SpawnSupplyDropAtLocationByRef)
+        return SpawnSupplyDropAtLocationByRef(this, SpawnLocation, SpawnRotation, &InSupplyDropClass, TraceStartZ, TraceEndZ);
+
     static auto SpawnSupplyDropAtLocation = Anchor::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const TGameValue<FVector>&, const TGameValue<FRotator>&, UClass*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropAtLocation"))
         .String(TEXT("SupplyDropSpawn"))
         .Caller()
