@@ -152,6 +152,14 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
 
 uint32 GetTypeHash(FNameEntryId Id)
 {
+    static auto GetComparisonIndex = Anchor::Optional<FNameEntryId* (*)(const FNameEntryId*, FNameEntryId*)>(TEXT("FName::GetComparisonIndex"))
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .Pattern("8B 09 85 C9 75 ? 89 0A 48 8B C2 C3")
+        .Get();
+
+    if (GetComparisonIndex)
+        GetComparisonIndex(&Id, &Id);
+
     const uint32 Block = Id.ToUnstableInt() >> 16;
     const uint32 Offset = Id.ToUnstableInt() & 0xFFFF;
 
