@@ -1108,6 +1108,10 @@ void UFortReplicationGraph::OnAIClassAdditionRequest(TSubclassOf<AFortPawn> NewA
         .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
         .Find("add [*+0x20], *")
         .Find("lea rdx, [*]; call 0x*; add rsp, 0x*; pop *; ret")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; call 0x*; mov rbx, [rsp+0x*]; add rsp, 0x*; pop *; ret")
         .Get();
 
     if (bClassByAddress && NewAIClass)
