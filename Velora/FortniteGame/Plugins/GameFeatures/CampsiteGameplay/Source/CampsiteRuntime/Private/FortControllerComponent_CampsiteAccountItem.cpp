@@ -34,6 +34,10 @@ void UFortControllerComponent_CampsiteAccountItem::BeginPlay()
         .If(StaticClass())
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx+0x10]; mov rdi, rcx; mov ecx, [rax+0x*]; bt ecx, 0x12")
         .LogSlot(TEXT("UActorComponent::BeginPlay"))
+        .Or()
+        .If(StaticClass())
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "push rbx; sub rsp, 0x20; mov rax, [rcx+0x10]; mov rbx, rcx; mov ecx, [rax+0x*]; bt ecx, 0x12")
+        .LogSlot(TEXT("UActorComponent::BeginPlay"))
         .InVTable(TEXT("/Script/CampsiteRuntime.Default__FortControllerComponent_CampsiteAccountItem")));
 
     Original();
