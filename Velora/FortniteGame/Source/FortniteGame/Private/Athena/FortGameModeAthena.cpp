@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "FortGameStateZone.h"
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortSafeZoneIndicator.h"
@@ -334,6 +335,22 @@ bool AFortGameModeAthena::ReadyToStartMatch_Implementation()
     }
 
     return false;
+}
+
+void AFortGameModeAthena::HandleMatchHasStarted()
+{
+    DETOUR(AFortGameModeAthena, HandleMatchHasStarted, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() != nullptr)
+        .String(TEXT("BugLoc"))
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__GameMode"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Inline());
+
+    Original();
+
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+        GamePhaseLogic->HandleMatchHasStarted();
 }
 
 int32 AFortGameModeAthena::CountReadyPlayers()

@@ -14,6 +14,14 @@ public:
 
     static UFortGameStateComponent_BattleRoyaleGamePhaseLogic* Get(const UObject* WorldContextObject);
 
+    void HandleMatchHasStarted();
+
+    bool StartWarmupPhase();
+
+    void SetGamePhase(EAthenaGamePhase InGamePhase);
+
+    void SetGameModeWillSkipAircraft(bool bInGameModeWillSkipAircraft);
+
     EAthenaGamePhase GetGamePhase() const;
 
     EAthenaGamePhaseStep GetGamePhaseStep() const;

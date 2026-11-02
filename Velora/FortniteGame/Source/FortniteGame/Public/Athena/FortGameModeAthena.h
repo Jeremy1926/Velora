@@ -54,6 +54,8 @@ public:
 
     bool ReadyToStartMatch_Implementation();
 
+    void HandleMatchHasStarted();
+
     int32 CountReadyPlayers();
 
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
