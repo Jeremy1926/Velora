@@ -17,10 +17,14 @@ public:
     FText();
 
     explicit FText(ENoInit)
+        : TextData()
+        , Flags(0)
     {
     }
 
     FText(const FText& Source);
+
+    ~FText();
 
     FText& operator=(const FText& Source);
 
@@ -33,7 +37,14 @@ public:
     static FText Format(FTextFormat Fmt, FFormatArgumentValue v1);
 
 private:
-    TSharedRef<ITextData, ESPMode::ThreadSafe> TextData;
+    static bool HasRefCountedTextData();
+
+    FORCEINLINE uint32& GetFlags()
+    {
+        return HasRefCountedTextData() ? *(uint32*)(TextData + sizeof(ITextData*)) : Flags;
+    }
+
+    alignas(void*) uint8 TextData[sizeof(TSharedRef<ITextData, ESPMode::ThreadSafe>)];
     uint32 Flags;
 };
 

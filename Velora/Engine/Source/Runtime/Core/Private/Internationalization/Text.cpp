@@ -1,10 +1,23 @@
 #include "pch.h"
 #include "Internationalization/Text.h"
 #include "Misc/EngineVersion.h"
+#include "HAL/UnrealMemory.h"
 #include "Templates/UnrealTemplate.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+bool FText::HasRefCountedTextData()
+{
+    static auto bRefCountedTextData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText")))->FindPropertyByName(FName(TEXT("ReturnValue")))->GetSize() < (int32)sizeof(FText);
+
+    return bRefCountedTextData;
+}
+
 FText::FText()
+    : TextData()
+    , Flags(0)
 {
     static auto Constructor = Anchor::Optional<void (*)(FText*)>(TEXT("FText::FText"))
         .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 10 48 89 13 48 8B 48 08 48 8B C3 48 89 4B 08 48 85 C9 74 04 F0 FF 41 08 C7 43 10 00 00 00 00 48 83 C4 20 5B C3")
@@ -38,13 +51,26 @@ FText::FText()
         .Get();
 
     *this = GetEmpty();
-    Flags = 0;
+    GetFlags() = 0;
 }
 
 FText::FText(const FText& Source)
     : FText()
 {
     *this = Source;
+}
+
+FText::~FText()
+{
+    if (!HasRefCountedTextData())
+    {
+        ((TSharedRef<ITextData, ESPMode::ThreadSafe>*)TextData)->~TSharedRef();
+
+        return;
+    }
+
+    if (auto Data = *(ITextData**)TextData)
+        (*(void (***)(ITextData*))Data)[2](Data);
 }
 
 FText& FText::operator=(const FText& Source)
@@ -59,7 +85,7 @@ FText& FText::operator=(const FText& Source)
     if (CopyAssign)
         return CopyAssign(this, Source);
 
-    TextData = Source.TextData;
+    *(TSharedRef<ITextData, ESPMode::ThreadSafe>*)TextData = *(const TSharedRef<ITextData, ESPMode::ThreadSafe>*)Source.TextData;
     Flags = Source.Flags;
 
     return *this;
@@ -74,8 +100,8 @@ FText& FText::operator=(FText&& Source)
     if (MoveAssign)
         return MoveAssign(this, Source);
 
-    TextData = MoveTemp(Source.TextData);
-    Flags = Source.Flags;
+    FMemory::Memswap(TextData, Source.TextData, HasRefCountedTextData() ? sizeof(ITextData*) : sizeof(TextData));
+    GetFlags() = Source.GetFlags();
 
     return *this;
 }
