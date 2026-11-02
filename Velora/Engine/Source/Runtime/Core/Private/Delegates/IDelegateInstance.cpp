@@ -94,7 +94,7 @@ bool IDelegateInstance::IsDestructorFirst()
                 if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x28]"))
                     return false;
 
-                if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rdx, [rax+0x30]"))
+                if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rdx, [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("add rsp, 0xffffffffffffffd8; mov rax, [rcx]; call [rax+0x30]"))
                     return true;
             }
         }
