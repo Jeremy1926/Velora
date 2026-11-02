@@ -44,6 +44,11 @@ bool UFortAthenaAISpawnerDataComponent_AIBotAffiliation::GetSquadID(int32* OutSq
 {
     static auto GetSquadID_Implementation = Anchor::VirtualFunction<bool (*)(UFortAthenaAISpawnerDataComponent_AIBotAffiliation*, int32*)>(TEXT("UFortAthenaAISpawnerDataComponent_AIBotAffiliation::GetSquadID_Implementation"))
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerDataComponent_AIBotAffiliation:GetSquadID"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerDataComponent_AIBotAffiliation:GetSquadID"))
         .Find("call [*+0x*]")
         .Get();
 
