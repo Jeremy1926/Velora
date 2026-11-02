@@ -196,6 +196,9 @@ void UNetDriver::ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const
         .Find("mov [rsp+0x58], r8d; mov r8, r*; mov [rsp+0x50], *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String("ProcessRemoteFunctionForChannelPrivate")
+        .Start()
         .Get();
 
     ProcessRemoteFunctionForChannelPrivate(this, Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
