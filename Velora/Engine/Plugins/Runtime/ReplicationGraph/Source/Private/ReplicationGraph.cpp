@@ -1933,6 +1933,17 @@ UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGraphNod
         .Target()
         .Find("lea rax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x40)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("inc *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rax, [0x*]; cmovnz rax, [rcx+0x*]")
+        .Target()
         .Get();
 
     return *DefaultSettings;
