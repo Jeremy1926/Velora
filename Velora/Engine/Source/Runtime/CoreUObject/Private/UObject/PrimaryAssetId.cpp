@@ -29,6 +29,13 @@ FPrimaryAssetId FPrimaryAssetId::ParseTypeAndName(const FString& TypeAndName)
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
+        .Find("lea rdx, [rsp+0x*]; movaps xmm0, [rsp+0x*]; mov rcx, rax")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     ParseTypeAndNameView(&Result, *TypeAndName, TypeAndName.Len());
