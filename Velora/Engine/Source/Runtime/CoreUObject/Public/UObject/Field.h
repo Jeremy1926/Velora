@@ -60,6 +60,7 @@ public:
     {
         Anchor::FCipher Next;
         Anchor::FCipher ClassPrivate;
+        Anchor::FCipher Owner;
     };
 
     static const FEncryptedLayout* GetEncryptedLayout();

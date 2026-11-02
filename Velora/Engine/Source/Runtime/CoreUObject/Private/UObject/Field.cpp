@@ -26,6 +26,15 @@ const FField::FEncryptedLayout* FField::GetEncryptedLayout()
             .Find("call 0x*")
             .Target()
             .Find("mov r*, [rcx+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FField::Owner"))
+            .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+            .Find("call 0x*; test al, al; jz 0x*")
+            .Call()
+            .Find("call 0x*; test al, al; jnz 0x*")
+            .Call()
+            .Call()
+            .Find("mov r*, [r*+0x*]; and r*, 0xfffffffffffffffe")
             .Get()
     };
 
@@ -156,8 +165,9 @@ bool FFieldVariant::IsTaggedPointer()
     {
         auto PrimaryAssetType = FField::StaticClass() ? (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.PrimaryAssetType")) : nullptr;
         auto Property = PrimaryAssetType ? (const FField*)PrimaryAssetType->GetPropertyLink() : nullptr;
+        auto Layout = FField::GetEncryptedLayout();
 
-        return Property && *(const UPTRINT*)&Property->Owner == ((UPTRINT)PrimaryAssetType | 1);
+        return Property && *(const UPTRINT*)(Layout ? (const uint8*)Property + Layout->Owner.Offset : (const uint8*)&Property->Owner) == ((UPTRINT)PrimaryAssetType | 1);
     }();
 
     return bTaggedPointer;
