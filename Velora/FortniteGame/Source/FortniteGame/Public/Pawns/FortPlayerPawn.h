@@ -23,7 +23,6 @@ class UStatManager;
 struct FFrame;
 struct FGameplayTag;
 struct FScalableFloat;
-struct FWeakObjectPtr;
 
 enum class ETryExitVehicleBehavior : uint8
 {
@@ -60,9 +59,11 @@ struct FZiplinePawnState
 {
     static UScriptStruct* StaticStruct();
 
-    FWeakObjectPtr& GetZipline();
+    UObject* GetZipline();
 
-    FWeakObjectPtr* GetPreviousZipline();
+    UObject* GetPreviousZipline();
+
+    void SetPreviousZipline(UObject* InPreviousZipline);
 
     int32 GetAuthoritativeValue() const;
 };

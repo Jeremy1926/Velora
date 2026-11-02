@@ -619,18 +619,37 @@ UScriptStruct* FZiplinePawnState::StaticStruct()
     return Struct;
 }
 
-FWeakObjectPtr& FZiplinePawnState::GetZipline()
+UObject* FZiplinePawnState::GetZipline()
 {
     static auto Zipline = StaticStruct()->FindPropertyByName(FName(TEXT("Zipline")));
+    static auto bWeakZipline = Zipline->IsWeakObjectProperty();
 
-    return *Zipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this);
+    if (bWeakZipline)
+        return Zipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
+
+    return *Zipline->ContainerPtrToValuePtr<UObject*>(this);
 }
 
-FWeakObjectPtr* FZiplinePawnState::GetPreviousZipline()
+UObject* FZiplinePawnState::GetPreviousZipline()
 {
     static auto PreviousZipline = StaticStruct()->FindPropertyByName(FName(TEXT("PreviousZipline")));
+    static auto bWeakPreviousZipline = PreviousZipline && PreviousZipline->IsWeakObjectProperty();
 
-    return PreviousZipline ? PreviousZipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this) : nullptr;
+    if (bWeakPreviousZipline)
+        return PreviousZipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
+
+    return PreviousZipline ? *PreviousZipline->ContainerPtrToValuePtr<UObject*>(this) : nullptr;
+}
+
+void FZiplinePawnState::SetPreviousZipline(UObject* InPreviousZipline)
+{
+    static auto PreviousZipline = StaticStruct()->FindPropertyByName(FName(TEXT("PreviousZipline")));
+    static auto bWeakPreviousZipline = PreviousZipline && PreviousZipline->IsWeakObjectProperty();
+
+    if (bWeakPreviousZipline)
+        *PreviousZipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this) = InPreviousZipline;
+    else if (PreviousZipline)
+        *PreviousZipline->ContainerPtrToValuePtr<UObject*>(this) = InPreviousZipline;
 }
 
 int32 FZiplinePawnState::GetAuthoritativeValue() const
@@ -676,13 +695,11 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
     if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
     {
         auto OldZipline = ZiplineState.GetZipline();
-        auto PreviousZipline = ZiplineState.GetPreviousZipline();
-        auto OldPreviousZipline = PreviousZipline ? *PreviousZipline : OldZipline;
+        auto OldPreviousZipline = ZiplineState.GetPreviousZipline();
 
         memcpy(&ZiplineState, &InZiplineState, FZiplinePawnState::StaticStruct()->GetPropertiesSize());
 
-        if (PreviousZipline)
-            *PreviousZipline = ZiplineState.GetZipline() == OldZipline ? OldPreviousZipline : OldZipline;
+        ZiplineState.SetPreviousZipline(ZiplineState.GetZipline() == OldZipline ? OldPreviousZipline : OldZipline);
     }
 
     HandleZiplineStateChanged();
