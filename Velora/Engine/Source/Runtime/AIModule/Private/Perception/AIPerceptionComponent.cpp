@@ -14,6 +14,15 @@ void UAIPerceptionComponent::GetPerceivedHostileActors(TArray<AActor*>& OutActor
 {
     static auto GetPerceivedHostileActors = Anchor::VirtualFunction<void (*)(const UAIPerceptionComponent*, TArray<AActor*>&)>(TEXT("UAIPerceptionComponent::GetPerceivedHostileActors"))
         .Exec(TEXT("/Script/AIModule.AIPerceptionComponent:GetPerceivedHostileActors"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.AIPerceptionComponent:GetPerceivedHostileActors"))
+        .Has("bt rax, 0x8")
+        .Find("add r*, rax; mov [r*+0x20], r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.AIPerceptionComponent:GetPerceivedHostileActors"))
         .Find("call [rax+0x*]")
         .Get();
 
