@@ -135,6 +135,12 @@ UGameDataCosmetics* UFortAssetManager::GetGameDataCosmetics()
         .Find("add [*+0x20], *")
         .Find("call 0x*; mov rcx, rax; call 0x*")
         .Call(2)
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortBannerUtilities:GetBannerColorCategoryName"))
+        .Find("call 0x*; mov rcx, rax; add rsp, *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Has("lea rdi, [rcx+0x*]; mov rsi, rcx; cmp qword ptr [rdi], 0x0")
         .Get();
 
     return GetGameDataCosmetics(this);
