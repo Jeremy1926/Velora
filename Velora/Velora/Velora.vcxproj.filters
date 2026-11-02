@@ -628,6 +628,12 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents">
       <UniqueIdentifier>{C24A7E4B-80C2-4B9E-B730-4CDCF3F7C2CC}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Athena\GameStateComponents">
+      <UniqueIdentifier>{899827C1-8782-4BEB-82C6-018D18A62F23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\GameStateComponents">
+      <UniqueIdentifier>{F2A7BC3F-DCA1-41BC-B3C7-2DC951B1FD51}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Athena\Modifiers">
       <UniqueIdentifier>{107D0AF6-AB82-484B-8650-F83225B7EB5B}</UniqueIdentifier>
     </Filter>
@@ -1280,6 +1286,9 @@
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents\FortControllerComponent_TransientQuests.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\ControllerComponents</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\GameStateComponents\FortGameStateComponent_BattleRoyaleGamePhaseLogic.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\GameStateComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Quests</Filter>
@@ -2422,6 +2431,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents\FortControllerComponent_TransientQuests.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\ControllerComponents</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\GameStateComponents\FortGameStateComponent_BattleRoyaleGamePhaseLogic.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\GameStateComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Quests</Filter>

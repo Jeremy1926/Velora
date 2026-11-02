@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/Vehicles/FortAthenaVehicleSpawner.h"
 #include "Athena/Vehicles/FortVehicleManager.h"
@@ -131,6 +132,13 @@ EAthenaGamePhase AFortGameStateAthena::GetGamePhase() const
 {
     static auto GamePhase = GetClass()->FindPropertyByName(FName(TEXT("GamePhase")));
 
+    if (!GamePhase)
+    {
+        auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+        return GamePhaseLogic ? GamePhaseLogic->GetGamePhase() : EAthenaGamePhase::None;
+    }
+
     return *GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
 }
 
@@ -144,6 +152,13 @@ int32 AFortGameStateAthena::GetTeamsLeft() const
 EAthenaGamePhaseStep AFortGameStateAthena::GetGamePhaseStep() const
 {
     static auto GamePhaseStep = GetClass()->FindPropertyByName(FName(TEXT("GamePhaseStep")));
+
+    if (!GamePhaseStep)
+    {
+        auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+        return GamePhaseLogic ? GamePhaseLogic->GetGamePhaseStep() : EAthenaGamePhaseStep{};
+    }
 
     return *GamePhaseStep->ContainerPtrToValuePtr<EAthenaGamePhaseStep>(this);
 }
@@ -602,6 +617,8 @@ void AFortGameStateAthena::SetSafeZonesStartTime(float InSafeZonesStartTime)
 
     if (SafeZonesStartTime)
         *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this) = InSafeZonesStartTime;
+    else if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+        GamePhaseLogic->SetSafeZonesStartTime(InSafeZonesStartTime);
 }
 
 void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
