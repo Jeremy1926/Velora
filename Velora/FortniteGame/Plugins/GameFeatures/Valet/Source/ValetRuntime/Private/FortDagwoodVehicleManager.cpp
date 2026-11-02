@@ -114,28 +114,19 @@ void UFortDagwoodVehicleManager::UpdatePropReplacement()
 
         auto VehicleSpawnerClass = GameFeatureData->GetVehicleSpawnerClass().LoadSynchronous();
 
-        auto SwapOutProps = [&](const auto& PropReplacements)
+        for (auto& PropReplacement : GameFeatureData->GetPropReplacements())
         {
-            for (auto& PropReplacement : PropReplacements)
-            {
-                auto PropClass = PropReplacement.Key.LoadSynchronous();
+            auto PropClass = PropReplacement.Key->LoadSynchronous();
 
-                if (!PropClass)
-                    continue;
+            if (!PropClass)
+                continue;
 
-                const FVehiclePropReplacementData PropReplacementData{ PropReplacement.Value.FortVehicleItemDefinition, (FVector)PropReplacement.Value.TransOffset, (FRotator)PropReplacement.Value.RotOffset };
-                TArray<AActor*> BuildingProps;
-                UGameplayStatics::GetAllActorsOfClass(Owner, PropClass, BuildingProps);
+            TArray<AActor*> BuildingProps;
+            UGameplayStatics::GetAllActorsOfClass(Owner, PropClass, BuildingProps);
 
-                for (auto BuildingProp : BuildingProps)
-                    SwapOutProp((ABuildingActor*)BuildingProp, VehicleSpawnerClass, PropReplacementData, GameFeatureData->GetSpawnActorCollisionHandlingMethod());
-            }
-        };
-
-        if (UE::LWC::IsEnabled())
-            SwapOutProps((const TMap<TSoftClassPtr<ABuildingProp>, TVehiclePropReplacementData<FVector3d, FRotator3d>>&)GameFeatureData->GetPropReplacements());
-        else
-            SwapOutProps(GameFeatureData->GetPropReplacements());
+            for (auto BuildingProp : BuildingProps)
+                SwapOutProp((ABuildingActor*)BuildingProp, VehicleSpawnerClass, PropReplacement.Value, GameFeatureData->GetSpawnActorCollisionHandlingMethod());
+        }
     }
 }
 

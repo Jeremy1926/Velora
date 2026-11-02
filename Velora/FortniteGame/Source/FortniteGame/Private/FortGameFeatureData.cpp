@@ -5,10 +5,73 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
+#include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+
+UScriptStruct* FFortGameFeatureLootTableData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameFeatureLootTableData"));
+
+    return Struct;
+}
+
+const TSoftObjectPtr<UDataTable>& FFortGameFeatureLootTableData::GetLootTierData() const
+{
+    static auto LootTierData = StaticStruct()->FindPropertyByName(FName(TEXT("LootTierData")));
+
+    return *LootTierData->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(this);
+}
+
+const TSoftObjectPtr<UDataTable>& FFortGameFeatureLootTableData::GetLootPackageData() const
+{
+    static auto LootPackageData = StaticStruct()->FindPropertyByName(FName(TEXT("LootPackageData")));
+
+    return *LootPackageData->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(this);
+}
+
+UScriptStruct* FFortGameFeatureDataBaseDataTableOverrides::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameFeatureDataBaseDataTableOverrides"));
+
+    return Struct;
+}
+
+int32 FFortGameFeatureDataBaseDataTableOverrides::GetTypeSize()
+{
+    return StaticStruct()->GetPropertiesSize();
+}
+
+const TSoftObjectPtr<UDataTable>& FFortGameFeatureDataBaseDataTableOverrides::GetBaseTable() const
+{
+    static auto BaseTable = StaticStruct()->FindPropertyByName(FName(TEXT("BaseTable")));
+
+    return *BaseTable->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(this);
+}
+
+TArray<TPair<FGameplayTag, const TSoftObjectPtr<UDataTable>*>> FFortGameFeatureDataBaseDataTableOverrides::GetPlaylistToOverrideTableMap() const
+{
+    static auto PlaylistToOverrideTableMap = StaticStruct()->FindPropertyByName(FName(TEXT("PlaylistToOverrideTableMap")));
+    static auto ValueAlignment = (int32)alignof(FSoftObjectPtr);
+    static auto PairAlignment = FMath::Max(ValueAlignment, (int32)sizeof(int32));
+    static auto ValueOffset = (FGameplayTag::GetTypeSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
+    static auto PairSize = (ValueOffset + TSoftObjectPtr<UDataTable>::GetTypeSize() + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
+
+    auto& Elements = *PlaylistToOverrideTableMap->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
+    auto ElementData = *PlaylistToOverrideTableMap->ContainerPtrToValuePtr<const uint8*>(this);
+    TArray<TPair<FGameplayTag, const TSoftObjectPtr<UDataTable>*>> Pairs;
+
+    for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
+    {
+        if (Elements.IsAllocated(Index))
+            Pairs.Add({ TGameLayout<FGameplayTag>::Load(ElementData + Index * ElementSize), (const TSoftObjectPtr<UDataTable>*)(ElementData + Index * ElementSize + ValueOffset) });
+    }
+
+    return Pairs;
+}
 
 UClass* UFortGameFeatureData::StaticClass()
 {
@@ -24,11 +87,26 @@ const FFortGameFeatureLootTableData& UFortGameFeatureData::GetDefaultLootTableDa
     return *DefaultLootTableData->ContainerPtrToValuePtr<FFortGameFeatureLootTableData>(this);
 }
 
-const TMap<FGameplayTag, FFortGameFeatureLootTableData>& UFortGameFeatureData::GetPlaylistOverrideLootTableData() const
+TArray<TPair<FGameplayTag, const FFortGameFeatureLootTableData*>> UFortGameFeatureData::GetPlaylistOverrideLootTableData() const
 {
     static auto PlaylistOverrideLootTableData = StaticClass()->FindPropertyByName(FName(TEXT("PlaylistOverrideLootTableData")));
+    static auto ValueAlignment = FFortGameFeatureLootTableData::StaticStruct()->GetMinAlignment();
+    static auto PairAlignment = FMath::Max(ValueAlignment, (int32)sizeof(int32));
+    static auto ValueOffset = (FGameplayTag::GetTypeSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
+    static auto PairSize = (ValueOffset + FFortGameFeatureLootTableData::StaticStruct()->GetPropertiesSize() + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
 
-    return *PlaylistOverrideLootTableData->ContainerPtrToValuePtr<TMap<FGameplayTag, FFortGameFeatureLootTableData>>(this);
+    auto& Elements = *PlaylistOverrideLootTableData->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
+    auto ElementData = *PlaylistOverrideLootTableData->ContainerPtrToValuePtr<const uint8*>(this);
+    TArray<TPair<FGameplayTag, const FFortGameFeatureLootTableData*>> Pairs;
+
+    for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
+    {
+        if (Elements.IsAllocated(Index))
+            Pairs.Add({ TGameLayout<FGameplayTag>::Load(ElementData + Index * ElementSize), (const FFortGameFeatureLootTableData*)(ElementData + Index * ElementSize + ValueOffset) });
+    }
+
+    return Pairs;
 }
 
 void UFortGameFeatureData::GetLootTierDataForPlaylist(const FGameplayTagContainer& PlaylistTags, TArray<TSoftObjectPtr<UDataTable>>& InOutLootTierDatas) const
@@ -50,15 +128,15 @@ void UFortGameFeatureData::GetLootTierDataForPlaylist(const FGameplayTagContaine
 
     for (auto& PlaylistOverride : GetPlaylistOverrideLootTableData())
     {
-        if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value.LootTierData.IsNull())
+        if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value->GetLootTierData().IsNull())
         {
-            AddLootTable(PlaylistOverride.Value.LootTierData);
+            AddLootTable(PlaylistOverride.Value->GetLootTierData());
             bFoundOverride = true;
         }
     }
 
-    if (!bFoundOverride && !GetDefaultLootTableData().LootTierData.IsNull())
-        AddLootTable(GetDefaultLootTableData().LootTierData);
+    if (!bFoundOverride && !GetDefaultLootTableData().GetLootTierData().IsNull())
+        AddLootTable(GetDefaultLootTableData().GetLootTierData());
 }
 
 void UFortGameFeatureData::GetLootPackageDataForPlaylist(const FGameplayTagContainer& PlaylistTags, TArray<TSoftObjectPtr<UDataTable>>& OutLootPackageDatas) const
@@ -80,22 +158,22 @@ void UFortGameFeatureData::GetLootPackageDataForPlaylist(const FGameplayTagConta
 
     for (auto& PlaylistOverride : GetPlaylistOverrideLootTableData())
     {
-        if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value.LootPackageData.IsNull())
+        if (PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key) && !PlaylistOverride.Value->GetLootPackageData().IsNull())
         {
-            AddLootTable(PlaylistOverride.Value.LootPackageData);
+            AddLootTable(PlaylistOverride.Value->GetLootPackageData());
             bFoundOverride = true;
         }
     }
 
-    if (!bFoundOverride && !GetDefaultLootTableData().LootPackageData.IsNull())
-        AddLootTable(GetDefaultLootTableData().LootPackageData);
+    if (!bFoundOverride && !GetDefaultLootTableData().GetLootPackageData().IsNull())
+        AddLootTable(GetDefaultLootTableData().GetLootPackageData());
 }
 
-const TArray<FFortGameFeatureDataBaseDataTableOverrides>* UFortGameFeatureData::GetPlaylistBaseDataTableOverrides() const
+const TRuntimeSizedArray<FFortGameFeatureDataBaseDataTableOverrides>* UFortGameFeatureData::GetPlaylistBaseDataTableOverrides() const
 {
     static auto PlaylistBaseDataTableOverrides = StaticClass()->FindPropertyByName(FName(TEXT("PlaylistBaseDataTableOverrides")));
 
-    return PlaylistBaseDataTableOverrides ? PlaylistBaseDataTableOverrides->ContainerPtrToValuePtr<TArray<FFortGameFeatureDataBaseDataTableOverrides>>(this) : nullptr;
+    return PlaylistBaseDataTableOverrides ? PlaylistBaseDataTableOverrides->ContainerPtrToValuePtr<TRuntimeSizedArray<FFortGameFeatureDataBaseDataTableOverrides>>(this) : nullptr;
 }
 
 void UFortGameFeatureData::GetActiveGameFeatureDatas(TArray<UFortGameFeatureData*>& OutGameFeatureDatas)
@@ -142,15 +220,15 @@ UDataTable* UFortGameFeatureData::GetPlaylistDataTable(const UObject* WorldConte
 
         for (auto& Override : *Overrides)
         {
-            if (Override.BaseTable.LoadSynchronous() != BaseTable)
+            if (Override.GetBaseTable().LoadSynchronous() != BaseTable)
                 continue;
 
-            for (auto& PlaylistOverride : Override.PlaylistToOverrideTableMap)
+            for (auto& PlaylistOverride : Override.GetPlaylistToOverrideTableMap())
             {
                 if (!PlaylistTags.GetGameplayTagArray().Contains(PlaylistOverride.Key))
                     continue;
 
-                if (auto OverrideTable = PlaylistOverride.Value.LoadSynchronous())
+                if (auto OverrideTable = PlaylistOverride.Value->LoadSynchronous())
                     return OverrideTable;
             }
         }
