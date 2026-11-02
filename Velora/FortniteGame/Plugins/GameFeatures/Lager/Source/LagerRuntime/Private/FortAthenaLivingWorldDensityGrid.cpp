@@ -255,6 +255,13 @@ float* FFortAthenaLivingWorldDensityGrid::GetActorDataDensityRange(AActor* InAct
         .Find("call 0x*")
         .Target()
         .Find("imul rcx, r10, 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; cmp eax, 0xffffffff; jz 0x*; cdqe; imul rdx, rax, 0x*")
+        .Find("imul rdx, rax, 0x*")
         .Optional()
         .Imm();
 
@@ -465,6 +472,14 @@ TMap<FObjectKey, int32>& FFortAthenaLivingWorldDensityGrid::GetActorToDataIndexM
         .Find("call 0x*")
         .Target()
         .Find("lea rdi, [rcx+0x*]; and dword ptr [*], 0x0; lea rcx, [*]; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; cmp eax, 0xffffffff")
+        .Target()
+        .Find("lea rcx, [rbx+0x*]; call 0x*")
         .Disp();
 
     return *(TMap<FObjectKey, int32>*)((uint8*)this + ActorToDataIndexMap);
@@ -488,6 +503,14 @@ TSparseArray<FFortAthenaLivingWorldDensityData>& FFortAthenaLivingWorldDensityGr
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
         .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [rbx+0x*]; mov edx, r10d; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, rbx; mov rdi, rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; cmp eax, 0xffffffff")
         .Target()
         .Find("lea rcx, [rbx+0x*]; mov edx, r10d; call 0x*")
         .Disp();
