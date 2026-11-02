@@ -20,6 +20,12 @@ void AFortFeedbackManager::TriggerEvent(FFortFeedbackHandle Handle, AFortPawn* I
         .Or()
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:TriggerFeedbackEvent"))
         .Call(3)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:TriggerFeedbackEvent"))
+        .Find("add [*+0x20], *")
+        .Find("mov rdx, rax; movss [rsp+0x20], xmm*; call 0x*")
+        .Call()
+        .Call(4)
         .Get();
 
     if (FName::IsOutlineNumber())
