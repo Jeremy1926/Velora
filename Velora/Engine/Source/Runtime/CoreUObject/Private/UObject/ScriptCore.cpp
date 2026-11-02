@@ -111,6 +111,19 @@ void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>
 
 UFunction* UObject::FindFunctionChecked(FName InName) const
 {
+    static auto FindFunctionByName = Anchor::Optional<UFunction* (*)(const UClass*, FName, int32)>(TEXT("UClass::FindFunctionByName"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("mov rcx, [rcx+0x10]; mov r8d, 0x1")
+        .Call()
+        .Get();
+
+    if (FindFunctionByName)
+        return FindFunctionByName(GetClass(), InName, 1);
+
     static auto FindFunctionChecked = Anchor::Function<UFunction* (*)(const UObject*, FName)>(TEXT("UObject::FindFunctionChecked"))
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
@@ -127,6 +140,14 @@ UFunction* UObject::FindFunctionChecked(FName InName) const
 void UObject::ProcessEvent(UFunction* Function, void* Parms)
 {
     static auto ProcessEvent = Anchor::VirtualFunction<void (*)(UObject*, UFunction*, void*)>(TEXT("UObject::ProcessEvent"))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("mov rcx, [rcx+0x10]; mov r8d, 0x1")
+        .Find("jmp [r*+0x*]")
+        .Or()
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
         .Target()
