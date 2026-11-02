@@ -113,6 +113,10 @@ int32 UFortAthenaLivingWorldManager::FLivingWorldEventInstance::GetEncounterInst
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; mov rdx, [rcx+0x*]; test rdx, rdx; jz 0x*; lea rcx, [r14+0x*]; call 0x*")
+        .Or()
+        .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rax, [rbx+0x*]; test rax, rax; jz 0x*; mov rdx, [rax+0x*]; test rdx, rdx; jz 0x*; mov rcx, r12; call 0x*")
         .Optional()
         .Disp();
 
@@ -1953,6 +1957,12 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetTagDensityG
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("mov rdx, rbx; mov rcx, rdi; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [rbx+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rdx, r14; mov rcx, rbx; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [r14+0x*]")
         .Find("call 0x*")
         .Target()
         .Get();
