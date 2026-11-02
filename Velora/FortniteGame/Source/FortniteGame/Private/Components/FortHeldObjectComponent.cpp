@@ -252,6 +252,9 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax; mov rax, [rcx+0x*]; test rax, rax; jnz *")
         .Get();
 
     if (bInlined)
@@ -260,6 +263,10 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
             .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("mov rax, [rcx+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax; mov rax, [rcx+0x*]; test rax, rax; jnz *")
             .Find("mov rax, [rcx+0x*]")
             .Disp();
 
@@ -284,7 +291,11 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
             .Find("jz 0x*")
             .Target()
             .Find("mov eax, [rcx+0x*]")
-            .Disp();
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax; mov rax, [rcx+0x*]; test rax, rax; jnz *")
+            .Find("add rcx, 0x*; call 0x*")
+            .Get();
 
         if (!CachedInstigator || !WeakInstigator)
             return nullptr;
