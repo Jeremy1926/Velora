@@ -158,11 +158,29 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
         .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
         .Get();
 
-    if (!AllocateSerialNumber)
+    static auto AllocateSerialNumberMember = Anchor::Address()
+        .If(!AllocateSerialNumber)
+        .Pattern("B8 01 00 00 00 F0 0F C1 01 8D 70 01 3D E7 03 00 00")
+        .Or()
+        .If(!AllocateSerialNumber)
+        .Pattern("B8 01 00 00 00 F0 0F C1 41 ? 8D 70 01 3D E7 03 00 00")
+        .Or()
+        .If(!AllocateSerialNumber)
+        .Pattern("B8 01 00 00 00 F0 0F C1 81 ? ? ? ? 8D 70 01 3D E7 03 00 00")
+        .Get();
+
+    static auto ObjectArray = Anchor::Address()
+        .If(AllocateSerialNumberMember != nullptr)
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:DelayUntilNextTick"))
+        .Find("lea rcx, [0x*]; mov edx, *; call 0x*")
+        .Target()
+        .Get();
+
+    if (!AllocateSerialNumber && !ObjectArray)
         return nullptr;
 
-    static auto NumElements = Anchor::At(AllocateSerialNumber).Last("mov e*, [0x*]").Cipher();
-    static auto Objects = Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher();
+    static auto NumElements = AllocateSerialNumber ? Anchor::At(AllocateSerialNumber).Last("mov e*, [0x*]").Cipher() : Anchor::At(AllocateSerialNumberMember).Start().Find("* e*, [rcx+0x*]").Cipher().Rebased(ObjectArray);
+    static auto Objects = AllocateSerialNumber ? Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher() : Anchor::At(AllocateSerialNumberMember).Start().Find("* r*, [rcx+0x*]").Cipher().Rebased(ObjectArray);
     static auto bEncrypted = NumElements.IsEncrypted() && Objects.IsEncrypted();
 
     static auto PackedItem = Anchor::Address()
@@ -206,7 +224,7 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
     {
         NumElements,
         Objects,
-        Anchor::At(AllocateSerialNumber).Last("mov e*, [r*+0x*]").Cipher(TEXT("FUObjectItem::SerialNumber")),
+        Anchor::At(AllocateSerialNumber ? AllocateSerialNumber : AllocateSerialNumberMember).Last("mov e*, [r*+0x*]").Cipher(TEXT("FUObjectItem::SerialNumber")),
         PackedFlags ? Flags : Anchor::Cipher(TEXT("FUObjectItem::Flags"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
             .Find("add [*+0x20], *")
@@ -251,15 +269,32 @@ const UObjectBase::FEncryptedLayout* UObjectBase::GetEncryptedLayout()
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValidClass"))
             .Find("add [*+0x20], *")
             .Find("mov e*, [rax+0x*]; bt e*, 0x1e")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+            .Find("mov e*, [rax+0x*]; bt e*, 0x1e")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+            .Find("bt dword ptr [rax+0x*], 0x1e")
             .Get(),
         Anchor::Cipher(TEXT("UObjectBase::InternalIndex"))
             .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
             .Last("mov r*, [0x*]")
             .Last("mov *, [r*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:DelayUntilNextTick"))
+            .Find("lea rcx, [0x*]; mov edx, *; call 0x*")
+            .Last("* e*, [r*+0x*]")
             .Get(),
         Anchor::Cipher(TEXT("UObjectBase::ClassPrivate"))
             .Exec(TEXT("/Script/Engine.GameplayStatics:GetObjectClass"))
             .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz *; mov *, [rax+0x*]")
+            .Find("mov *, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.GameplayStatics:GetObjectClass"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
             .Find("test rax, rax; jz *; mov *, [rax+0x*]")
             .Find("mov *, [rax+0x*]")
             .Get(),
@@ -273,10 +308,19 @@ const UObjectBase::FEncryptedLayout* UObjectBase::GetEncryptedLayout()
             .Find("call 0x*")
             .Target()
             .Find("mov eax, [rdx+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetObjectName"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+            .Find("mov eax, [rax+0x*]")
             .Get(),
         Anchor::Cipher(TEXT("UObjectBase::OuterPrivate"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetOuterObject"))
             .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz *; mov *, [rax+0x*]")
+            .Find("mov *, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetOuterObject"))
+            .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
             .Find("test rax, rax; jz *; mov *, [rax+0x*]")
             .Find("mov *, [rax+0x*]")
             .Get()

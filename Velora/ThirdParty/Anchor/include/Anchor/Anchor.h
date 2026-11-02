@@ -44,6 +44,14 @@ namespace Anchor
             return Count > 0;
         }
 
+        FCipher Rebased(const void* Base) const
+        {
+            auto Result = *this;
+            Result.Offset += (int64_t)Base;
+
+            return Result;
+        }
+
         template<typename ValueType>
         ValueType Load(const void* Object) const
         {
