@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "HAL/IConsoleManager.h"
 #include "Containers/UnrealString.h"
+#include "UObject/UObjectArray.h"
 #include "Scanner.h"
 
 IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(TEXT("IConsoleManager::Singleton"))
@@ -21,6 +22,11 @@ IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(
     .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
     .Last("call 0x*; mov rcx, [0x*]; jmp 0x*")
     .Find("mov rcx, [0x*]")
+    .Target()
+    .Or()
+    .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+    .String(TEXT("vm.OptimizeVMByteCode"), "lea rdx, [0x*]; call [rax+0x*]")
+    .Last("mov rcx, [0x*]; test rcx, rcx")
     .Target()
     .Get();
 
@@ -43,6 +49,11 @@ void IConsoleManager::SetupSingleton()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Last("call 0x*; mov rcx, [0x*]; jmp 0x*")
         .Call()
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("vm.OptimizeVMByteCode"), "lea rdx, [0x*]; call [rax+0x*]")
+        .Find("call 0x*; mov rcx, [0x*]; jmp 0x*")
+        .Call()
         .Get();
 
     SetupSingleton();
@@ -61,6 +72,10 @@ IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
         .Start()
         .Find("mov rcx, [0x*]; test rcx, rcx")
         .Find("call [*+0x*]")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("vm.OptimizeVMByteCode"), "lea rdx, [0x*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     return FindConsoleVariable(this, Name);
@@ -163,6 +178,10 @@ int32 IConsoleVariable::GetInt() const
         .Find("call [*+0x*]", 2)
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
+        .Find("call [*+0x*]", 2)
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Find("call [*+0x*]", 2)
         .Get();
 
