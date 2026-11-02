@@ -10,6 +10,7 @@
 #include "Player/FortPlayerController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortSafeZoneIndicator.h"
@@ -227,7 +228,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if (auto GameState = Cast<AFortGameStateAthena>(World->GetGameState()))
         {
-            static auto GamePhaseLogic = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("GamePhaseLogic")));
+            static auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass();
 
             if (FGUI::bStartBus && GameMode && !GamePhaseLogic && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
                 GameMode->StartAircraftPhase(false);
