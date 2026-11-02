@@ -159,6 +159,13 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("call [*+0x*]")
             .Get();
 
         static auto AttachToComponent = Anchor::Function<bool (*)(USceneComponent*, USceneComponent*, const FAttachmentTransformRules*, FName)>(TEXT("USceneComponent::AttachToComponent"))
@@ -167,6 +174,15 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
             .Find("add [*+0x20], *")
             .Find("call [*+0x*]")
             .Find("call 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("call [*+0x*]")
+            .Find("jmp 0x*")
             .Target()
             .Get();
 
