@@ -2897,6 +2897,13 @@ bool& UReplicationGraph::GetWasConnectionSaturated()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("and word ptr [rcx+0x*], 0x0")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("mov [rcx+0x*], rbx; mov [rcx+0x*], rbx")
+        .Find("mov [rcx+0x*], bx")
         .Disp();
 
     return *(bool*)((uint8*)this + bWasConnectionSaturated);
