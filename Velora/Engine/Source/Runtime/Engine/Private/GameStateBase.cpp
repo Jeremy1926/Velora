@@ -2,6 +2,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 TArray<APlayerState*>& AGameStateBase::GetPlayerArray()
@@ -18,5 +19,7 @@ float AGameStateBase::GetServerWorldTimeSeconds() const
         .Find("call [*+0x*]")
         .Get();
 
-    return GetServerWorldTimeSeconds(this);
+    static auto bDoubleTime = ((UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameStateBase:GetServerWorldTimeSeconds")))->FindPropertyByName(FName(TEXT("ReturnValue")))->GetSize() == (int32)sizeof(double);
+
+    return bDoubleTime ? (float)GetServerWorldTimeSeconds.As<double (*)(const AGameStateBase*)>()(this) : GetServerWorldTimeSeconds(this);
 }
