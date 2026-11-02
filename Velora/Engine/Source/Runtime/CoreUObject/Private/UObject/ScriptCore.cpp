@@ -43,6 +43,8 @@ void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
         .Target()
         .Or()
         .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 41 8B 40 30 49 8B D8 48 8B F2 48 8B F9 48 0F BA E0 08 72")
+        .Or()
+        .Pattern("41 8B 40 30 4D 8B C8 48 0F BA E0 08 73 ? 48 8B 81 80 00 00 00")
         .Get();
 
     StepExplicitProperty(this, Result, Property);
