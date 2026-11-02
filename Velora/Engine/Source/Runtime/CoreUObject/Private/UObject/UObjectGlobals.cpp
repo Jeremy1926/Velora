@@ -60,6 +60,12 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Target()
         .Or()
         .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("mov [r*], rax; mov dword ptr [r*+0x8], 0x1c")
+        .Find("mov r8, r*; xor r9d, r9d; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
         .Find("call 0x*")
         .Target()
         .Get();
@@ -70,6 +76,9 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Or()
         .String(TEXT("GlobalUMGSequenceTickManager"))
         .Find("mov dword ptr [rsp+0x*], 0x1c; mov [rsp+0x*], *")
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("mov [r*], rax; mov dword ptr [r*+0x8], 0x1c")
         .Get();
 
     struct
