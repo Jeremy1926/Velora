@@ -260,6 +260,14 @@ FTextFormat::FTextFormat(const FText& InText)
         .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
         .Find("lea rdx, [0x*]")
         .Call()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Call()
+        .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
+        .Find("lea rdx, [0x*]")
+        .Call()
         .Get();
 
     Constructor(this, InText, 1);
