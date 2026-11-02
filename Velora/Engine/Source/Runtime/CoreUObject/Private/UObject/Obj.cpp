@@ -178,6 +178,16 @@ bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* 
         .Entry(TEXT("/Script/CoreUObject.Default__Object"))
         .Find("test dword ptr [*], 0x400")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("jmp [r*+0x*]")
+        .Entry(TEXT("/Script/CoreUObject.Default__Object"))
+        .Find("test dword ptr [*], 0x400")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return CallRemoteFunction(this, Function, Parms, OutParms, Stack);
