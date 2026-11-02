@@ -153,6 +153,19 @@ TSharedPtr<FClassNetCacheMgr>& UNetDriver::GetNetCache()
     return *(TSharedPtr<FClassNetCacheMgr>*)((uint8_t*)this + NetCache);
 }
 
+UE::Net::FNetTokenStore* UNetDriver::GetNetTokenStore()
+{
+    static auto NetTokenStore = Anchor::Offset(TEXT("UNetDriver::NetTokenStore"))
+        .String("BuildSharedSerializationForRPC")
+        .Start()
+        .CallSite()
+        .Last("mov r8, [r*+0x*]")
+        .Optional()
+        .Disp();
+
+    return NetTokenStore > 0 ? *(UE::Net::FNetTokenStore**)((uint8_t*)this + NetTokenStore) : nullptr;
+}
+
 TSharedPtr<FRepLayout, ESPMode::ThreadSafe> UNetDriver::GetFunctionRepLayout(UFunction* Function)
 {
     static auto GetFunctionRepLayout = Anchor::Function<void (*)(UNetDriver*, TSharedPtr<FRepLayout, ESPMode::ThreadSafe>*, UFunction*)>(TEXT("UNetDriver::GetFunctionRepLayout"))
