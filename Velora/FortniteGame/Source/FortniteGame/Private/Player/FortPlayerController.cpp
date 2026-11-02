@@ -387,6 +387,10 @@ bool AFortPlayerController::CanServerTryAddToQuickBar() const
         .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
         .Start()
         .Has("call 0x*; cmp eax, 0x1; jmp 0x*")
+        .Or()
+        .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Has("call 0x*; cmp eax, r13d; jz 0x*")
         .Get();
 
     return !bAuthorityCheck && !bResultCheck;
