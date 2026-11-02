@@ -84,6 +84,11 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
     static auto VirtualMakeOutgoingSpec = Anchor::VirtualFunction<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, UClass*, float, FGameplayEffectContextHandle)>(TEXT("UAbilitySystemComponent::MakeOutgoingSpec"))
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
         .Find("setnz *")
+        .Find("add [*+0x20], *; mov rax, [*]; mov rbx, [rax+0x*]")
+        .Find("mov rbx, [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("setnz *")
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]")
         .Or()
@@ -100,7 +105,20 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
         .Optional()
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov [rsp+0x20], *; lea rdx, [*]; mov rcx, *; call *")
+        .Get();
+
     FGameplayEffectSpecHandle SpecHandle;
+
+    if (VirtualMakeOutgoingSpec && bClassByAddress)
+    {
+        VirtualMakeOutgoingSpec.As<FGameplayEffectSpecHandle* (*)(const UAbilitySystemComponent*, FGameplayEffectSpecHandle*, const TSubclassOf<UGameplayEffect>*, float, FGameplayEffectContextHandle)>()(this, &SpecHandle, &GameplayEffectClass, Level, MoveTemp(Context));
+
+        return SpecHandle;
+    }
 
     if (VirtualMakeOutgoingSpec)
     {
