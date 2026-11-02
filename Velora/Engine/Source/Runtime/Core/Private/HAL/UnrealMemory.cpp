@@ -95,6 +95,10 @@ void FMemory::Free(void* Original)
         .Is("test rcx, rcx; jz *; push rdi")
         .Or()
         .Pattern("48 85 C9 0F 84 ? ? ? ? 57 48 83 EC 70 4C 89 74 24 40 48 8B F9 4C 8B 35 ? ? ? ? 4D 85 F6 0F 84 ? ? ? ? 49 8B 06 4C 8B 40 48")
+        .Or()
+        .Pattern("48 85 C9 0F 84 ? ? ? ? 55 56 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 ? ? ? ? 4C 89 B4 24 ? ? ? ? 48 8B F1 4C 8B 35 ? ? ? ? 4D 85 F6")
+        .Or()
+        .Pattern("48 85 C9 74 ? 53 48 83 EC 20 48 8B D9 48 8B 0D ? ? ? ? 48 85 C9 75 ? E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B 01 48 8B D3 FF 50 48 48 83 C4 20 5B C3")
         .Get();
 
     Free(Original);
