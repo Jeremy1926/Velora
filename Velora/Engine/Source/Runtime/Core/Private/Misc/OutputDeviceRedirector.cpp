@@ -22,7 +22,10 @@ void FOutputDeviceRedirector::AddOutputDevice(FOutputDevice* OutputDevice)
         .Target()
         .Get();
 
-    if (OutputDevice && FileTearDown && FileVTable && (FileVTable[5] == (void*)FileTearDown || (FileVTable[0] == (void*)FileTearDown && !Anchor::At(FileVTable[5]).Is("ret*"))))
+    auto Image = Anchor::Base();
+    auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
+
+    if (OutputDevice && (uint64)(*(uint8* const*)OutputDevice - Image) >= Headers->OptionalHeader.SizeOfImage && FileTearDown && FileVTable && (FileVTable[5] == (void*)FileTearDown || (FileVTable[0] == (void*)FileTearDown && !Anchor::At(FileVTable[5]).Is("ret*"))))
     {
         auto VTable = *(void* const**)OutputDevice;
         auto RecordVTable = new void*[11];
