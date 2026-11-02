@@ -509,7 +509,7 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
         .Or()
         .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
         .Find("setnz *")
-        .Find("add [*+0x20], *")
+        .Find("add [*+0x20], *; mov rax, [r*]; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
