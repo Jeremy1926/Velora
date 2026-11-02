@@ -1891,12 +1891,24 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
     static auto bMarkerOptionalAdjustment = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildPreviewMarkerOptionalAdjustment")) != nullptr;
 
+    static auto bClassByAddress = Anchor::Exists()
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov rdi, [rax+0x*]; call 0x*")
+        .Find("lea rdx, [*]; mov [rsp+0x28], *; mov rcx, *; mov [rsp+0x20], *; call rdi")
+        .Get();
+
     TGameValue<FVector> GameBuildLoc(BuildLoc);
     TGameValue<FRotator> GameBuildRot(BuildRot);
 
-    const auto QueryResults = bMarkerOptionalAdjustment
-        ? CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment)
-        : CanPlaceBuildableClassInStructuralGrid(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings);
+    EFortStructuralGridQueryResults QueryResults;
+
+    if (bClassByAddress)
+        QueryResults = CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass* const*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, &BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
+    else if (bMarkerOptionalAdjustment)
+        QueryResults = CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
+    else
+        QueryResults = CanPlaceBuildableClassInStructuralGrid(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings);
 
     BuildLoc = GameBuildLoc.Get();
     BuildRot = GameBuildRot.Get();
