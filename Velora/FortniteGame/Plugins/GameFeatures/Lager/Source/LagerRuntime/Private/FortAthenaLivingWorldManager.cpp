@@ -342,8 +342,7 @@ int32 UFortAthenaLivingWorldManager::GetEventInstancesOffset()
         .Or()
         .If(StaticClass() && GetPendingActorSpawnEventRequestsOffset() > 0)
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
-        .Find("lea r14, [rsi+0x*]; mov byte ptr [rsp+0x*], r12b; mov rcx, r14")
-        .Find("lea r14, [rsi+0x*]")
+        .Find("lea r14, [rsi+0x*]; mov [rsp+0x*], r12b; mov rcx, r14")
         .Disp();
 
     return EventInstances;
