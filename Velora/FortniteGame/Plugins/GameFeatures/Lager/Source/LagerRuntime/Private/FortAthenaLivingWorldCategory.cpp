@@ -61,6 +61,7 @@ bool FFortAthenaLivingWorldCategory::IsRequiredByPlaylist(const FGameplayTagCont
         .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Is("mov [rsp+0x8], rbx")
         .Or()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")) != nullptr)
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
@@ -73,6 +74,7 @@ bool FFortAthenaLivingWorldCategory::IsRequiredByPlaylist(const FGameplayTagCont
         .Find("lea rdx, [*+0x*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Is("mov [rsp+0x8], rbx")
         .Get();
 
     if (IsCategoryActive)
