@@ -93,6 +93,8 @@ void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>
         .Call()
         .Or()
         .Pattern("48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 ? 8B 59 08 45 33 F6 4C 8B EA 4C 8B F9 85 DB 7F")
+        .Or()
+        .Pattern("48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 05 ? ? ? ? 48 33 C4 48 89 45 ? 8B 59 08 4C 8B EA 4C 8B F9 85 DB")
         .Get();
 
     ProcessMulticastDelegate(this, Parameters);
