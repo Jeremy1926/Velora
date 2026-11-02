@@ -67,9 +67,9 @@ uint64 FDelegateHandle::GenerateNewID()
     return Result;
 }
 
-bool IDelegateInstance::IsDestructorFirst()
+int32 IDelegateInstance::GetLayout()
 {
-    static auto bDestructorFirst = []
+    static auto Layout = []
     {
         auto Image = Anchor::Base();
         auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
@@ -83,7 +83,7 @@ bool IDelegateInstance::IsDestructorFirst()
             auto VTable = (const uint8* const*)(Image + Section->VirtualAddress);
             auto Count = (int64)(Section->Misc.VirtualSize / sizeof(void*));
 
-            for (int64 Index = 0; Index + 4 < Count; Index++)
+            for (int64 Index = 0; Index + 9 < Count; Index++)
             {
                 if (VTable[Index + 1] != VTable[Index] || VTable[Index + 2] != VTable[Index] || !Anchor::IsCode(VTable[Index]) || !Anchor::IsCode(VTable[Index + 3]) || !Anchor::IsCode(VTable[Index + 4]))
                     continue;
@@ -92,15 +92,30 @@ bool IDelegateInstance::IsDestructorFirst()
                     continue;
 
                 if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x28]"))
-                    return false;
+                    return 0;
 
                 if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rdx, [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("add rsp, 0xffffffffffffffd8; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rax, [rax+0x30]; lea rdx, [0x*]; cmp rax, rdx"))
-                    return true;
+                {
+                    auto CreateCopyThreadSafe = Anchor::At(VTable[Index + 9]);
+
+                    if (CreateCopyThreadSafe.Start().Get() != VTable[Index + 9])
+                        return 1;
+
+                    auto Lock = CreateCopyThreadSafe.Find("call [0x*]").Target();
+
+                    if (!Lock)
+                    {
+                        auto ScopeLock = CreateCopyThreadSafe.Call();
+                        Lock = ScopeLock.Get() && ScopeLock.Start().Get() == ScopeLock.Get() ? ScopeLock.Find("call [0x*]").Target() : nullptr;
+                    }
+
+                    return Lock && *(void* const*)Lock == (void*)EnterCriticalSection ? 2 : 1;
+                }
             }
         }
 
-        return false;
+        return 0;
     }();
 
-    return bDestructorFirst;
+    return Layout;
 }

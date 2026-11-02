@@ -25,7 +25,7 @@ public:
         if (&Other != this)
         {
             if (auto OtherInstance = Other.GetDelegateInstanceProtected())
-                IDelegateInstance::WithLayout(OtherInstance, [&](auto, auto bDestructorFirst) { ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>*)OtherInstance)->CreateCopy(*this); });
+                IDelegateInstance::WithLayout(OtherInstance, [&](auto, auto Layout) { ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(Layout)::value>*)OtherInstance)->CreateCopy(*this); });
             else
                 Unbind();
         }
@@ -37,7 +37,7 @@ public:
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseStaticDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>(InFunc); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseStaticDelegateInstance<RetValType(ParamTypes...), decltype(Layout)::value>(InFunc); });
 
         return Result;
     }
@@ -47,7 +47,7 @@ public:
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), decltype(bDestructorFirst)::value>(InUserObject, InFunc); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), decltype(Layout)::value>(InUserObject, InFunc); });
 
         return Result;
     }
@@ -57,7 +57,7 @@ public:
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto bDestructorFirst) { new (Result) TBaseFunctorDelegateInstance<RetValType(ParamTypes...), std::remove_reference_t<FunctorType>, decltype(bDestructorFirst)::value>(InFunctor); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseFunctorDelegateInstance<RetValType(ParamTypes...), std::remove_reference_t<FunctorType>, decltype(Layout)::value>(InFunctor); });
 
         return Result;
     }
@@ -79,7 +79,7 @@ public:
     {
         auto Instance = GetDelegateInstanceProtected();
 
-        return Instance && IDelegateInstance::WithLayout(Instance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(bDestructorFirst)::value>*)Instance)->ExecuteIfSafe(Forward<ParamTypes>(Params)...); });
+        return Instance && IDelegateInstance::WithLayout(Instance, [&](auto, auto Layout) { return ((IBaseDelegateInstance<RetValType(ParamTypes...), decltype(Layout)::value>*)Instance)->ExecuteIfSafe(Forward<ParamTypes>(Params)...); });
     }
 };
 
@@ -121,7 +121,7 @@ public:
         {
             auto DelegateInstance = this->GetDelegateInstanceProtectedHelper(LocalInvocationList[InvocationListIndex]);
 
-            if (!DelegateInstance || !IDelegateInstance::WithLayout(DelegateInstance, [&](auto, auto bDestructorFirst) { return ((IBaseDelegateInstance<void(ParamTypes...), decltype(bDestructorFirst)::value>*)DelegateInstance)->ExecuteIfSafe(Params...); }))
+            if (!DelegateInstance || !IDelegateInstance::WithLayout(DelegateInstance, [&](auto, auto Layout) { return ((IBaseDelegateInstance<void(ParamTypes...), decltype(Layout)::value>*)DelegateInstance)->ExecuteIfSafe(Params...); }))
                 NeedsCompaction = true;
         }
 

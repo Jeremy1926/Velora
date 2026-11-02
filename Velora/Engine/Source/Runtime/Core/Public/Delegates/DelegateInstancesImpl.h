@@ -5,11 +5,11 @@
 #include "Templates/UnrealTemplate.h"
 #include "UObject/WeakObjectPtr.h"
 
-template<bool bConst, class UserClass, typename FuncType, bool bDestructorFirst>
+template<bool bConst, class UserClass, typename FuncType, int32 Layout>
 class TBaseUObjectMethodDelegateInstance;
 
-template<class UserClass, bool bDestructorFirst, typename RetValType, typename... ParamTypes>
-class TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), bDestructorFirst> : public IBaseDelegateInstance<RetValType(ParamTypes...), bDestructorFirst>
+template<class UserClass, int32 Layout, typename RetValType, typename... ParamTypes>
+class TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), Layout> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
 {
 public:
     typedef RetValType (UserClass::*FMethodPtr)(ParamTypes...);
@@ -79,11 +79,11 @@ private:
     FMethodPtr MethodPtr;
 };
 
-template<typename FuncType, typename FunctorType, bool bDestructorFirst>
+template<typename FuncType, typename FunctorType, int32 Layout>
 class TBaseFunctorDelegateInstance;
 
-template<typename FunctorType, bool bDestructorFirst, typename RetValType, typename... ParamTypes>
-class TBaseFunctorDelegateInstance<RetValType(ParamTypes...), FunctorType, bDestructorFirst> : public IBaseDelegateInstance<RetValType(ParamTypes...), bDestructorFirst>
+template<typename FunctorType, int32 Layout, typename RetValType, typename... ParamTypes>
+class TBaseFunctorDelegateInstance<RetValType(ParamTypes...), FunctorType, Layout> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
 {
 public:
     explicit TBaseFunctorDelegateInstance(const FunctorType& InFunctor)
@@ -144,11 +144,11 @@ private:
     mutable FunctorType Functor;
 };
 
-template<typename FuncType, bool bDestructorFirst>
+template<typename FuncType, int32 Layout>
 class TBaseStaticDelegateInstance;
 
-template<bool bDestructorFirst, typename RetValType, typename... ParamTypes>
-class TBaseStaticDelegateInstance<RetValType(ParamTypes...), bDestructorFirst> : public IBaseDelegateInstance<RetValType(ParamTypes...), bDestructorFirst>
+template<int32 Layout, typename RetValType, typename... ParamTypes>
+class TBaseStaticDelegateInstance<RetValType(ParamTypes...), Layout> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
 {
 public:
     typedef RetValType (*FFuncPtr)(ParamTypes...);
