@@ -103,6 +103,15 @@ bool FSparseDelegateStorage::AddUnique(const UObject* DelegateOwner, const FName
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("OnEnterOverlap"))
+        .Find("mov [*+0x*], eax; lea rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return AddUnique(DelegateOwner, DelegateName, &Delegate);
