@@ -93,6 +93,10 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
         .String(TEXT("ClientOnConnected"), "lea rdx, [0x*]; lea rcx, [0x*]; jmp 0x*")
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ClientOnConnected"), "lea rdx, [0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (Constructor)
