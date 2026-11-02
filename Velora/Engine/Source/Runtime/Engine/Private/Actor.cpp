@@ -520,6 +520,15 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
         .Find("mov *, [rax+0x*]")
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; mov rcx, *; call 0x*")
+        .Get();
+
+    if (bClassByAddress)
+        return FindComponentByClass.As<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>*)>()(this, &ComponentClass);
+
     return FindComponentByClass(this, ComponentClass);
 }
 
