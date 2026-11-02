@@ -146,6 +146,13 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>* AFortGameModeAthena::G
 TMulticastDelegate<void, TSubclassOf<AFortPawn>>& AFortGameModeAthena::GetNotifyNewAIClass()
 {
     static auto NotifyNewAIClass = Anchor::Data<TMulticastDelegate<void, TSubclassOf<AFortPawn>>*>(TEXT("AFortGameModeAthena::NotifyNewAIClass"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; call 0x*; add rsp, 0x*; pop *; ret")
+        .Call()
+        .Find("mov rax, [0x*]")
+        .Target()
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
         .Find("mov rax, [0x*]")
         .Target()
