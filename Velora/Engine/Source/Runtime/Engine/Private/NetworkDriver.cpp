@@ -370,6 +370,11 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("xor r9d, r9d; call [*+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor r9d, r9d")
+        .Find("call [rax+0x*]")
         .Get();
 
     return InitListen(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
@@ -393,6 +398,11 @@ void UNetDriver::SetWorld(UWorld* InWorld)
         .Find("xor edx, edx; mov rcx, *")
         .Last("call *")
         .Is("call [*+0x*]")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call r8")
+        .Find("call [rax+0x*]")
         .Get();
 
     VirtualSetWorld(this, InWorld);
