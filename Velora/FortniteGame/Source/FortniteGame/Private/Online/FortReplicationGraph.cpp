@@ -303,7 +303,6 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
         .Find("call 0x*")
         .Target()
         .Find("add rcx, 0x*")
-        .Imm()
         .Or()
         .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
         .Start()
@@ -312,7 +311,7 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
         .Find("call 0x*")
         .Target()
         .Find("lea rcx, [r10+0x*]; mov rdx, r11; call 0x*")
-        .Disp();
+        .Get();
 
     return *(TClassMap<EClassRepNodeMapping>*)((uint8*)this + ClassRepNodePolicies);
 }
