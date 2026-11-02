@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ContentStreaming.h"
+#include "UObject/UObjectArray.h"
 #include "Scanner.h"
 
 FStreamingManagerCollection& IStreamingManager::Get()
@@ -13,6 +14,12 @@ FStreamingManagerCollection& IStreamingManager::Get()
         .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
         .Start()
         .Find("call 0x*; xor r8d, r8d; movaps xmm1, xmm*; mov rcx, [rax]")
+        .Target()
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Find("call 0x*; *; *; *; *; call [rdx+0x8]")
         .Target()
         .Get();
 
