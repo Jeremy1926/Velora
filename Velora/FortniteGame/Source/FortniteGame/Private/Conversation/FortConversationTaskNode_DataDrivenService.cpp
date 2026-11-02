@@ -111,6 +111,12 @@ const FConversationParticipantRequirement* UFortConversationTaskNode_DataDrivenS
         .Find("mov rdx, rsi; mov rcx, rdi; call 0x*; test rax, rax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("[%s]: Service has no cost set, returning FailedAndHidden"))
+        .Start()
+        .Find("mov rdx, *; mov rcx, *; call 0x*; test rax, rax; jz 0x*; mov al, [rax+0x10]")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return CheckForFailedRequirements(this, Context);
