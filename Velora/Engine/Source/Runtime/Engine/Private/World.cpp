@@ -217,13 +217,44 @@ void UWorld::SetNextSwitchCountdown(float InNextSwitchCountdown)
 
 FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType)
 {
-    static auto FindCollectionByType = Anchor::Function<FLevelCollection* (*)(UWorld*, ELevelCollectionType)>(TEXT("UWorld::FindCollectionByType"))
+    static auto FindCollectionByType = Anchor::Optional<FLevelCollection* (*)(UWorld*, ELevelCollectionType)>(TEXT("UWorld::FindCollectionByType"))
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("xor edx, edx; mov rcx, *")
         .Call()
         .Get();
 
-    return FindCollectionByType(this, InType);
+    if (FindCollectionByType)
+        return FindCollectionByType(this, InType);
+
+    static auto LevelCollections = Anchor::Offset(TEXT("UWorld::LevelCollections"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call r8")
+        .Find("call [rax+0x*]")
+        .Find("movsxd rax, dword ptr [r*+0x*]")
+        .Find("mov rcx, [r*+0x*]")
+        .Disp();
+
+    static auto LevelCollectionSize = Anchor::Offset(TEXT("FLevelCollection size"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call r8")
+        .Find("call [rax+0x*]")
+        .Find("imul r*, r*, 0x*")
+        .Imm();
+
+    if (LevelCollections <= 0 || LevelCollectionSize <= 0)
+        return nullptr;
+
+    auto& Collections = *(TArray<uint8>*)((uint8*)this + LevelCollections);
+
+    for (int32 Index = 0; Index < Collections.Num(); Index++)
+    {
+        auto Collection = (FLevelCollection*)(Collections.GetData() + Index * LevelCollectionSize);
+
+        if (Collection->GetType() == InType)
+            return Collection;
+    }
+
+    return nullptr;
 }
 
 void UWorld::InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context)
