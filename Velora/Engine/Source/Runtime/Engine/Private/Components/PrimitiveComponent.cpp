@@ -123,6 +123,10 @@ void UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::Type NewType)
 {
     static auto SetCollisionEnabled = Anchor::VirtualFunction<void (*)(UPrimitiveComponent*, ECollisionEnabled::Type)>(TEXT("UPrimitiveComponent::SetCollisionEnabled"))
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetCollisionEnabled"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:SetCollisionEnabled"))
         .Find("call [*+0x*]")
         .Get();
 
