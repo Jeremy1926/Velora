@@ -2030,6 +2030,16 @@ void UReplicationGraphNode_ConnectionDormancyNode::SetNumFramesUntilObsolete(uin
         .Target()
         .Find("mov edx, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DormancyNode"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("mov ecx, [0x*]")
+        .Target()
         .Get();
 
     *NumFramesUntilObsolete = NumFrames;
