@@ -180,7 +180,16 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
         return nullptr;
 
     static auto NumElements = AllocateSerialNumber ? Anchor::At(AllocateSerialNumber).Last("mov e*, [0x*]").Cipher() : Anchor::At(AllocateSerialNumberMember).Start().Find("* e*, [rcx+0x*]").Cipher().Rebased(ObjectArray);
-    static auto Objects = AllocateSerialNumber ? Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher() : Anchor::At(AllocateSerialNumberMember).Start().Find("* r*, [rcx+0x*]").Cipher().Rebased(ObjectArray);
+    static auto Objects = AllocateSerialNumber ? Anchor::At(AllocateSerialNumber).Last("mov r*, [0x*]").Cipher() : Anchor::Cipher(TEXT("FUObjectArray::Objects"))
+        .At(AllocateSerialNumberMember)
+        .Start()
+        .Find("* r*, [rcx+0x*]")
+        .Or()
+        .At(AllocateSerialNumberMember)
+        .Start()
+        .Find("* r*, [rcx]")
+        .Get()
+        .Rebased(ObjectArray);
     static auto bEncrypted = NumElements.IsEncrypted() && Objects.IsEncrypted();
 
     static auto PackedItem = Anchor::Address()
