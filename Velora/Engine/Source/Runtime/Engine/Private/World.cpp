@@ -83,9 +83,17 @@ float UWorld::GetTimeSeconds() const
         .Or()
         .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
         .Find("movsd xmm0, qword ptr [rax+*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("movsd xmm0, qword ptr [rax+*]")
         .Disp();
     static auto bDoubleTimeSeconds = Anchor::Exists()
         .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("movsd xmm0, qword ptr [rax+*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
         .Find("movsd xmm0, qword ptr [rax+*]")
         .Get();
 
