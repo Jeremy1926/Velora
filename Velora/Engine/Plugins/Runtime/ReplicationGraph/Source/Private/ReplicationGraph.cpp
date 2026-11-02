@@ -3974,7 +3974,13 @@ TSet<AActor*>& UReplicationGraph::GetActiveNetworkActors()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
         .Find("add rcx, 0x*")
-        .Imm();
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+        .Get();
 
     return *(TSet<AActor*>*)((uint8*)this + ActiveNetworkActors);
 }
