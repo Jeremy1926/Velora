@@ -139,6 +139,12 @@ void UConversationParticipantComponent::ServerAdvanceConversation_Implementation
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ServerAdvanceConversation"))
         .Find("call [*+0x*]")
         .IsVirtual(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ServerAdvanceConversation"))
+        .Find("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .IsVirtual(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"), "ret*")
         .Optional()
         .InChildVTables(StaticClass()));
 
