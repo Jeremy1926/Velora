@@ -130,6 +130,8 @@ ENetMode UWorld::InternalGetNetMode() const
         .Call()
         .Or()
         .Pattern("48 83 EC 28 48 83 79 38 00 4C 8B C1 75 ? 48 8B 91 F0 00 00 00")
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 75 ? 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75 ? 48 8B 81 ? ? 00 00 48 85 C0 74 ? 83 B8 34 01 00 00 01 74 ? 48 8B 01 FF 90 ? ? 00 00 84 C0 0F 85 ? ? ? ? B8 03 00 00 00 48 83 C4 28 C3")
         .Inline());
 
     if (GetNetDriver() != nullptr)
