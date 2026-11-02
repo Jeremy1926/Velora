@@ -59,6 +59,7 @@ public:
     struct FEncryptedLayout
     {
         Anchor::FCipher Next;
+        Anchor::FCipher ClassPrivate;
     };
 
     static const FEncryptedLayout* GetEncryptedLayout();

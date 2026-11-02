@@ -18,6 +18,14 @@ const FField::FEncryptedLayout* FField::GetEncryptedLayout()
             .Find("jz 0x*")
             .Target()
             .Find("mov rax, [rcx+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FField::ClassPrivate"))
+            .String(TEXT("FWeakObjectProperty"))
+            .Start()
+            .Reference("call 0x*; mov r*, r*; mov r*, r*; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov r*, [rcx+0x*]")
             .Get()
     };
 
@@ -77,6 +85,34 @@ const UProperty::FEncryptedLayout* UProperty::GetEncryptedLayout()
     };
 
     return &Layout;
+}
+
+bool UProperty::IsWeakObjectProperty() const
+{
+    static auto StaticClass = Anchor::Optional<FFieldClass* (*)()>(TEXT("FWeakObjectProperty::StaticClass"))
+        .If(FField::GetEncryptedLayout() != nullptr)
+        .String(TEXT("FWeakObjectProperty"))
+        .Start()
+        .Get();
+
+    if (auto Layout = FField::GetEncryptedLayout())
+        return StaticClass && Layout->ClassPrivate.Load<FFieldClass*>(this) == StaticClass();
+
+    return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
+}
+
+bool UProperty::IsSoftObjectProperty() const
+{
+    static auto StaticClass = Anchor::Optional<FFieldClass* (*)()>(TEXT("FSoftObjectProperty::StaticClass"))
+        .If(FField::GetEncryptedLayout() != nullptr)
+        .String(TEXT("FSoftObjectProperty"))
+        .Start()
+        .Get();
+
+    if (auto Layout = FField::GetEncryptedLayout())
+        return StaticClass && Layout->ClassPrivate.Load<FFieldClass*>(this) == StaticClass();
+
+    return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("SoftObjectProperty"));
 }
 
 FFieldClass* FField::StaticClass()

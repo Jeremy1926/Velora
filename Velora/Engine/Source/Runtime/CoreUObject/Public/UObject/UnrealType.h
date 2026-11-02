@@ -37,15 +37,9 @@ public:
         return GetProperty()->Offset_Internal;
     }
 
-    FORCEINLINE bool IsWeakObjectProperty() const
-    {
-        return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("WeakObjectProperty"));
-    }
+    bool IsWeakObjectProperty() const;
 
-    FORCEINLINE bool IsSoftObjectProperty() const
-    {
-        return FField::StaticClass() && TGameLayout<FName>::Load(*(const FName* const*)((const uint8*)this + sizeof(void*))) == FName(TEXT("SoftObjectProperty"));
-    }
+    bool IsSoftObjectProperty() const;
 
 private:
     FORCEINLINE void* ContainerVoidPtrToValuePtrInternal(void* ContainerPtr, int32 ArrayIndex) const
