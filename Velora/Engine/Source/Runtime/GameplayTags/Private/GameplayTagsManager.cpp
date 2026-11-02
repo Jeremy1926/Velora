@@ -44,6 +44,10 @@ void UGameplayTagsManager::InitializeManager()
 FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorIfNotFound) const
 {
     static auto RequestGameplayTag = Anchor::Function<FGameplayTag* (*)(const UGameplayTagsManager*, FGameplayTag*, FName, bool)>(TEXT("UGameplayTagsManager::RequestGameplayTag"))
+        .String(TEXT("GameplayCue.Athena.Ostrich.SelfDestructPrime"))
+        .Find("mov r9b, 0x1; lea rdx, *; mov rcx, *; mov r8d, [rax]; call 0x*")
+        .Call()
+        .Or()
         .String(TEXT("Gameplay tag not found (marking incompatible): %s"))
         .Last("xor r9d, r9d")
         .Call()
@@ -56,10 +60,6 @@ FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorI
         .String(TEXT("Gameplay tag not found (marking incompatible): %s"))
         .Start()
         .Find("xor r9d, r9d; call 0x*")
-        .Call()
-        .Or()
-        .String(TEXT("GameplayCue.Athena.Ostrich.SelfDestructPrime"))
-        .Find("mov r9b, 0x1; lea rdx, *; mov rcx, *; mov r8d, [rax]; call 0x*")
         .Call()
         .Get();
 
