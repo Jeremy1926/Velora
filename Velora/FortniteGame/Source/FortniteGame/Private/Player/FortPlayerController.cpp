@@ -1273,6 +1273,12 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("lea r*, [r*+0x*]; mov rax, [r*]")
+            .Find("mov r1?, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
             .Find("call [rax+0x*]", 2)
             .Get();
 
