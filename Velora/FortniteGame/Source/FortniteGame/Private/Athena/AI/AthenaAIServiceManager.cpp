@@ -11,7 +11,17 @@ UAthenaAIService* UAthenaAIServiceManager::CreateAIService(UClass* ServiceSubCla
         .Start()
         .Inline());
 
-    if (!ServiceSubClass)
+    static auto bClassByAddress = Anchor::Exists()
+        .String(TEXT("Creating AI Service of class %s"))
+        .Start()
+        .Find("mov *, [rdx]; *; mov *, rdx")
+        .Or()
+        .String(TEXT("Creating AI Service of class %s"))
+        .Start()
+        .Find("mov *, [rdx]; *; *; mov *, rdx")
+        .Get();
+
+    if (!ServiceSubClass || (bClassByAddress && !*(UClass**)ServiceSubClass))
         return nullptr;
 
     return Original(ServiceSubClass);
