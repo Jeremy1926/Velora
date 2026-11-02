@@ -78,6 +78,12 @@ TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGam
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetBalloonRope"))
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetBalloonRope"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyBalloonStateChange;
