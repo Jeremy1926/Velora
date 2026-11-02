@@ -128,6 +128,9 @@ int32& UNetConnection::GetQueuedBits()
         .LogSlot(TEXT("UNetConnection::IsNetReady"))
         .Entry(TEXT("/Script/Engine.Default__NetConnection"))
         .Find("mov [*], e*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov eax, [rcx+0x*]; shr eax, 0x2; test al, 0x1; jnz *; test dl, dl; jz *; mov eax, [rcx+0x*]; neg eax; mov [rcx+0x*], eax")
+        .Find("mov [*], e*")
         .Disp();
 
     return *(int32*)((uint8_t*)this + QueuedBits);
@@ -146,6 +149,9 @@ int32 UNetConnection::GetTickCount() const
         .LogSlot(TEXT("UNetConnection::IsNetReady"))
         .Entry(TEXT("/Script/Engine.Default__NetConnection"))
         .Find("mov [*], e*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov eax, [rcx+0x*]; shr eax, 0x2; test al, 0x1; jnz *; test dl, dl; jz *; mov eax, [rcx+0x*]; neg eax; mov [rcx+0x*], eax")
+        .Find("mov [*], e*")
         .Disp();
 
     return *(int32*)((uint8_t*)this + QueuedBits + sizeof(int32));
@@ -163,6 +169,9 @@ void UNetConnection::SetTickCount(int32 InTickCount)
         .Find("call [*]")
         .LogSlot(TEXT("UNetConnection::IsNetReady"))
         .Entry(TEXT("/Script/Engine.Default__NetConnection"))
+        .Find("mov [*], e*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov eax, [rcx+0x*]; shr eax, 0x2; test al, 0x1; jnz *; test dl, dl; jz *; mov eax, [rcx+0x*]; neg eax; mov [rcx+0x*], eax")
         .Find("mov [*], e*")
         .Disp();
 
