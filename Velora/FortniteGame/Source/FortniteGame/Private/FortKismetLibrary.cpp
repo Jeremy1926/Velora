@@ -77,6 +77,9 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
         .Find("xor esi, esi")
         .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rdi], rsi; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r14], r15; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
@@ -957,6 +960,9 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayer(FFrame& Stack, void* const 
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
         .Find("setnz *; add [*+0x20], *; cmp [rbp+0x*], rsi; jz *; call 0x*; mov rbx, [rsp+0x*]; mov [rdi], esi; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+        .Find("setnz *; add [*+0x20], *; cmp [rbp+0x*], r15; jz *; call 0x*; mov rbx, [rsp+0x*]; mov [r14], r15d; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")));
 
@@ -1011,6 +1017,9 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
         .Find("setnz *; add [*+0x20], *; mov [rdi], sil; call 0x*; mov rbx, [rsp+0x*]; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+        .Find("setnz *; add [*+0x20], *; mov [r14], r15b; call 0x*; mov rbx, [rsp+0x*]; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")));
 
@@ -1044,6 +1053,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
         .Find("xor esi, esi")
         .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rdi], rsi; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r14], r15; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")));
 
@@ -1102,6 +1114,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
         .Find("setnz *; mov [rbp-0x*], *; add [*+0x20], *; mov rcx, rdi; call 0x*; mov rbx, [rbp-0x*]; test rbx, rbx; jz 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Find("setnz *; add [*+0x20], *; lea rax, [rbp-0x*]; cmp r14, rax; jz *; mov rcx, [r14]; test rcx, rcx; jz *; call 0x*; mov [r14], r15; mov [r14+0x8], r15; mov rbx, [rsp+0x*]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
 
@@ -1155,6 +1170,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void*
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
         .Find("xor esi, esi")
         .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rdi], rsi; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r14], r15; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")));
 
