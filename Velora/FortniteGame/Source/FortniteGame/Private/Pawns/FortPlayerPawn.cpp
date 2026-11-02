@@ -815,6 +815,69 @@ void AFortPlayerPawn::execPopGliderOverride(FFrame& Stack, void* const Z_Param__
     PopGliderOverride(InGliderToRemove);
 }
 
+void AFortPlayerPawn::ForceOpenParachuteAndOverrideGlider(const UAthenaGliderItemDefinition* InGliderOverride, bool bInResetGliderOverrideOnLanding, bool bForceIntoGliderRedeploy)
+{
+    static auto ForceOpenParachuteAndOverrideGlider = Anchor::Optional<void (*)(AFortPlayerPawn*, const UAthenaGliderItemDefinition*, bool, bool)>(TEXT("AFortPlayerPawn::ForceOpenParachuteAndOverrideGlider"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("setnz r9b; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+    static auto BP_ForceOpenParachute = Anchor::Optional<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::BP_ForceOpenParachute"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Target()
+        .Get();
+    static auto SetInGliderRedeploy = Anchor::Optional<void (*)(AFortPlayerPawn*, bool)>(TEXT("AFortPlayerPawn::SetInGliderRedeploy"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Find("mov dl, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+    static auto bResetGliderOverrideOnLanding = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bResetGliderOverrideOnLanding")));
+
+    if (InGliderOverride)
+    {
+        PushGliderOverride(InGliderOverride);
+        bResetGliderOverrideOnLanding->SetPropertyValue_InContainer(this, bInResetGliderOverrideOnLanding);
+    }
+
+    if (ForceOpenParachuteAndOverrideGlider)
+    {
+        ForceOpenParachuteAndOverrideGlider(this, InGliderOverride, bInResetGliderOverrideOnLanding, bForceIntoGliderRedeploy);
+        return;
+    }
+
+    BP_ForceOpenParachute(this);
+
+    if (bForceIntoGliderRedeploy)
+        SetInGliderRedeploy(this, true);
+}
+
+void AFortPlayerPawn::execForceOpenParachuteAndOverrideGlider(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execForceOpenParachuteAndOverrideGlider, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("setnz r9b; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider"))
+        .Find("call 0x*; test bl, bl; jz 0x*")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:ForceOpenParachuteAndOverrideGlider")));
+
+    UAthenaGliderItemDefinition* InGliderOverride = nullptr;
+    uint32 bInResetGliderOverrideOnLanding = 0;
+    uint32 bForceIntoGliderRedeploy = 0;
+
+    Stack.StepCompiledIn(&InGliderOverride);
+    Stack.StepCompiledIn(&bInResetGliderOverrideOnLanding);
+    Stack.StepCompiledIn(&bForceIntoGliderRedeploy);
+    Stack.Code += !!Stack.Code;
+
+    ForceOpenParachuteAndOverrideGlider(InGliderOverride, !!bInResetGliderOverrideOnLanding, !!bForceIntoGliderRedeploy);
+}
+
 bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
 {
     static auto CanReviveFromDBNO = Anchor::VirtualFunction<bool (*)(AFortPlayerPawn*, AController*)>(TEXT("AFortPlayerPawn::CanReviveFromDBNO"))

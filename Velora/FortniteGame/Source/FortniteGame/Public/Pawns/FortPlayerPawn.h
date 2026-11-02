@@ -152,6 +152,10 @@ public:
 
     void execPopGliderOverride(FFrame& Stack, void* const Z_Param__Result);
 
+    void ForceOpenParachuteAndOverrideGlider(const UAthenaGliderItemDefinition* InGliderOverride, bool bInResetGliderOverrideOnLanding, bool bForceIntoGliderRedeploy);
+
+    void execForceOpenParachuteAndOverrideGlider(FFrame& Stack, void* const Z_Param__Result);
+
     void ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState);
 
     void HandleZiplineStateChanged();
