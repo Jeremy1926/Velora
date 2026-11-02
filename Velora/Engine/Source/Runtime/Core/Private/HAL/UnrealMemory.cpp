@@ -79,6 +79,18 @@ void FMemory::Free(void* Original)
         .Is("test rcx, rcx; jz *; push rbx")
         .Or()
         .Pattern("40 53 48 83 EC 20 48 8B D9 48 8B 0D ? ? ? ? 48 85 C9 75 ? E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 85 DB 74 ? 48 8B 01 48 8B D3 FF 50 ? 48 83 C4 20 5B C3")
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [rbp-0x*]; mov *, [rax]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("jnz 0x*")
+        .Target()
+        .Is("jmp 0x*")
+        .Target()
+        .Is("test rcx, rcx; jz *; push rdi")
         .Get();
 
     Free(Original);
