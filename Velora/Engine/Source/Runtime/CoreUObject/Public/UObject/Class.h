@@ -29,6 +29,16 @@ private:
 class UStruct : public UField
 {
 public:
+    struct FEncryptedLayout
+    {
+        Anchor::FCipher SuperStruct;
+        Anchor::FCipher PropertiesSize;
+        Anchor::FCipher MinAlignment;
+        Anchor::FCipher PropertyLink;
+    };
+
+    static const FEncryptedLayout* GetEncryptedLayout();
+
     UProperty* FindPropertyByName(FName InName) const;
 
     void InitializeStruct(void* Dest, int32 ArrayDim = 1) const;
@@ -37,21 +47,32 @@ public:
 
     FORCEINLINE UStruct* GetSuperStruct() const
     {
-        return GetStruct()->SuperStruct;
+        auto Layout = GetEncryptedLayout();
+
+        return Layout ? Layout->SuperStruct.Load<UStruct*>(this) : GetStruct()->SuperStruct;
     }
 
     FORCEINLINE int32 GetPropertiesSize() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->PropertiesSize.Load<int32>(this);
+
         return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertiesSize : GetStruct()->PropertiesSize;
     }
 
     FORCEINLINE int32 GetMinAlignment() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->MinAlignment.Load<int32>(this);
+
         return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->MinAlignment : GetStruct()->MinAlignment;
     }
 
     FORCEINLINE UProperty* GetPropertyLink() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->PropertyLink.Load<UProperty*>(this);
+
         return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertyLink : GetStruct()->PropertyLink;
     }
 

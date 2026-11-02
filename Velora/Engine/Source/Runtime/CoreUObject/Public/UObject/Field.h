@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Anchor/Anchor.h>
 #include "HAL/Platform.h"
 #include "UObject/NameTypes.h"
 #include "UObject/ObjectMacros.h"
@@ -55,12 +56,22 @@ class FField
     };
 
 public:
+    struct FEncryptedLayout
+    {
+        Anchor::FCipher Next;
+    };
+
+    static const FEncryptedLayout* GetEncryptedLayout();
+
     static FFieldClass* StaticClass();
 
     static int32 GetFieldSize();
 
     FORCEINLINE FField* GetNext() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->Next.Load<FField*>(this);
+
         return FFieldVariant::IsTaggedPointer() ? ((const FTaggedOwnerField*)this)->Next : Next;
     }
 

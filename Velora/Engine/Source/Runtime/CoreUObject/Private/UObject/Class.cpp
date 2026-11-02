@@ -4,6 +4,51 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+const UStruct::FEncryptedLayout* UStruct::GetEncryptedLayout()
+{
+    if (!FUObjectArray::GetEncryptedLayout())
+        return nullptr;
+
+    static FEncryptedLayout Layout
+    {
+        Anchor::Cipher(TEXT("UStruct::SuperStruct"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:DoesClassImplementInterface"))
+            .Find("add [*+0x20], *")
+            .Find("call 0x*; mov *l, al")
+            .Target()
+            .Find("mov r*, [r*+0x*]; test r*, r*; jnz *")
+            .Get(),
+        Anchor::Cipher(TEXT("UStruct::PropertiesSize"))
+            .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableRowFromName"))
+            .Find("add [*+0x20], *")
+            .Find("mov r9d, 0x1")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov ecx, [rcx+0x*]")
+            .Find("mov e*, [rdi+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("UStruct::MinAlignment"))
+            .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableRowFromName"))
+            .Find("add [*+0x20], *")
+            .Find("mov r9d, 0x1")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov ecx, [rcx+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("UStruct::PropertyLink"))
+            .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableColumnAsString"))
+            .Find("add [*+0x20], *")
+            .Find("call [r*+0x*]")
+            .Last("call 0x*")
+            .Target()
+            .Call()
+            .Find("mov r*, [rcx+0x*]")
+            .Get()
+    };
+
+    return &Layout;
+}
+
 UProperty* UStruct::FindPropertyByName(FName InName) const
 {
     auto& Version = FEngineVersion::Current();
@@ -32,6 +77,14 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Or()
         .If(FField::StaticClass())
         .Pattern("48 8B 41 70 48 85 C0 74 ? 39 50 20 74 ? 48 8B 40 40 EB ? C3")
+        .Or()
+        .If(GetEncryptedLayout() != nullptr)
+        .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableColumnAsString"))
+        .Find("add [*+0x20], *")
+        .Find("call [r*+0x*]")
+        .Last("call 0x*")
+        .Target()
+        .Call()
         .Get();
 
     return FindPropertyByName(this, InName);

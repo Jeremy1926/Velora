@@ -9,13 +9,31 @@
 class UProperty : public UField
 {
 public:
+    struct FEncryptedLayout
+    {
+        Anchor::FCipher ElementSize;
+        Anchor::FCipher Offset_Internal;
+        Anchor::FCipher ByteOffset;
+        Anchor::FCipher ByteMask;
+        Anchor::FCipher FieldMask;
+        Anchor::FCipher Inner;
+    };
+
+    static const FEncryptedLayout* GetEncryptedLayout();
+
     FORCEINLINE int32 GetSize() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->ElementSize.Load<int32>(this);
+
         return GetProperty()->ArrayDim * GetProperty()->ElementSize;
     }
 
     FORCEINLINE int32 GetOffset_ForInternal() const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return Layout->Offset_Internal.Load<int32>(this);
+
         return GetProperty()->Offset_Internal;
     }
 
@@ -32,6 +50,9 @@ public:
 private:
     FORCEINLINE void* ContainerVoidPtrToValuePtrInternal(void* ContainerPtr, int32 ArrayIndex) const
     {
+        if (auto Layout = GetEncryptedLayout())
+            return (uint8*)ContainerPtr + Layout->Offset_Internal.Load<int32>(this) + Layout->ElementSize.Load<int32>(this) * ArrayIndex;
+
         return (uint8*)ContainerPtr + GetProperty()->Offset_Internal + GetProperty()->ElementSize * ArrayIndex;
     }
 
@@ -85,9 +106,9 @@ class UBoolProperty : public UProperty
 public:
     FORCEINLINE bool GetPropertyValue(void const* A) const
     {
-        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetByteOffset();
 
-        return !!(*ByteValue & GetProperty()->FieldMask);
+        return !!(*ByteValue & GetFieldMask());
     }
 
     FORCEINLINE bool GetPropertyValue_InContainer(void const* A, int32 ArrayIndex = 0) const
@@ -97,9 +118,10 @@ public:
 
     FORCEINLINE void SetPropertyValue(void* A, bool Value) const
     {
-        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetByteOffset();
+        auto Layout = UProperty::GetEncryptedLayout();
 
-        *ByteValue = ((*ByteValue) & ~GetProperty()->FieldMask) | (Value ? GetProperty()->ByteMask : 0);
+        *ByteValue = ((*ByteValue) & ~GetFieldMask()) | (Value ? (Layout ? Layout->ByteMask.Load<uint8>(this) : GetProperty()->ByteMask) : 0);
     }
 
     FORCEINLINE void SetPropertyValue_InContainer(void* A, bool Value, int32 ArrayIndex = 0) const
@@ -109,12 +131,16 @@ public:
 
     FORCEINLINE uint8 GetByteOffset() const
     {
-        return GetProperty()->ByteOffset;
+        auto Layout = UProperty::GetEncryptedLayout();
+
+        return Layout ? Layout->ByteOffset.Load<uint8>(this) : GetProperty()->ByteOffset;
     }
 
     FORCEINLINE uint8 GetFieldMask() const
     {
-        return GetProperty()->FieldMask;
+        auto Layout = UProperty::GetEncryptedLayout();
+
+        return Layout ? *((const uint8*)this + Layout->FieldMask.Offset) : GetProperty()->FieldMask;
     }
 
 private:
@@ -134,7 +160,9 @@ class UArrayProperty : public UProperty
 public:
     FORCEINLINE UProperty* GetInner() const
     {
-        return GetProperty()->Inner;
+        auto Layout = UProperty::GetEncryptedLayout();
+
+        return Layout ? Layout->Inner.Load<UProperty*>(this) : GetProperty()->Inner;
     }
 
 private:

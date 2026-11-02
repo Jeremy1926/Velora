@@ -1,8 +1,83 @@
 #include "pch.h"
 #include "UObject/Field.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+const FField::FEncryptedLayout* FField::GetEncryptedLayout()
+{
+    if (!FUObjectArray::GetEncryptedLayout())
+        return nullptr;
+
+    static FEncryptedLayout Layout
+    {
+        Anchor::Cipher(TEXT("FField::Next"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+            .Find("test rax, rax; jz 0x*")
+            .Find("jz 0x*")
+            .Target()
+            .Find("mov rax, [rcx+0x*]")
+            .Get()
+    };
+
+    return &Layout;
+}
+
+const UProperty::FEncryptedLayout* UProperty::GetEncryptedLayout()
+{
+    if (!FUObjectArray::GetEncryptedLayout())
+        return nullptr;
+
+    static FEncryptedLayout Layout
+    {
+        Anchor::Cipher(TEXT("FProperty::ElementSize"))
+            .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Add"))
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("call [rax+0x*]")
+            .Find("mov e*, [r*+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FProperty::Offset_Internal"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+            .Find("test rax, rax; jz 0x*")
+            .Find("jz 0x*")
+            .Target()
+            .Find("jnb 0x*")
+            .Target()
+            .Find("mov e*, [rcx+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FBoolProperty::ByteOffset"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:SetBoolPropertyByName"))
+            .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz 0x*")
+            .Find("movzx e*, byte ptr [rax+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FBoolProperty::ByteMask"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:SetBoolPropertyByName"))
+            .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz 0x*")
+            .Find("mov *l, [rax+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FBoolProperty::FieldMask"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:SetBoolPropertyByName"))
+            .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz 0x*")
+            .Find("mov *l, [rax+0x*]")
+            .Find("mov *l, [rax+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("FArrayProperty::Inner"))
+            .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Add"))
+            .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov rcx, [rdx+0x*]")
+            .Get()
+    };
+
+    return &Layout;
+}
 
 FFieldClass* FField::StaticClass()
 {
