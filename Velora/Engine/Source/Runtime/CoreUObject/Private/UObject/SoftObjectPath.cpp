@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UObject/SoftObjectPath.h"
+#include "UObject/AssetPtr.h"
 #include "UObject/Object.h"
 #include "UObject/UObjectGlobals.h"
 #include "Templates/TypeCompatibleBytes.h"
@@ -69,4 +70,18 @@ int32 FSoftObjectPath::GetCurrentTag()
         .Get();
 
     return _InterlockedCompareExchange(CurrentTag, 0, 0);
+}
+
+template<>
+bool TPersistentObjectPtr<FSoftObjectPath>::HasTagAtLastTest()
+{
+    static auto bTagAtLastTest = !Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("add [*+0x20], *; call 0x*; mov rcx, [rax]; lea rdx, [rax+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("lea rcx, [rsi+0x10]; *; *; mov [rsi+0x8], r*; call 0x*")
+        .Get();
+
+    return bTagAtLastTest;
 }

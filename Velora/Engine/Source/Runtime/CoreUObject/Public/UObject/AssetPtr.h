@@ -11,19 +11,47 @@ template<class TObjectID>
 struct TPersistentObjectPtr
 {
 public:
+    FORCEINLINE TPersistentObjectPtr(const TPersistentObjectPtr& Other)
+        : WeakPtr(Other.WeakPtr)
+        , TagAtLastTest(Other.TagAtLastTest)
+    {
+        new(&GetObjectID()) TObjectID(Other.GetObjectID());
+    }
+
+    FORCEINLINE ~TPersistentObjectPtr()
+    {
+        GetObjectID().~TObjectID();
+    }
+
+    FORCEINLINE TPersistentObjectPtr& operator=(const TPersistentObjectPtr& Other)
+    {
+        WeakPtr = Other.WeakPtr;
+
+        if (HasTagAtLastTest())
+            TagAtLastTest = Other.TagAtLastTest;
+
+        GetObjectID() = Other.GetObjectID();
+
+        return *this;
+    }
+
     FORCEINLINE void operator=(const UObject* Object)
     {
         if (Object)
         {
-            ObjectID = TObjectID::GetOrCreateIDForObject(Object);
+            GetObjectID() = TObjectID::GetOrCreateIDForObject(Object);
             WeakPtr = Object;
-            TagAtLastTest = TObjectID::GetCurrentTag();
+
+            if (HasTagAtLastTest())
+                TagAtLastTest = TObjectID::GetCurrentTag();
         }
         else
         {
             WeakPtr.Reset();
-            ObjectID.Reset();
-            TagAtLastTest = 0;
+            GetObjectID().Reset();
+
+            if (HasTagAtLastTest())
+                TagAtLastTest = 0;
         }
     }
 
@@ -39,17 +67,22 @@ public:
 
     FORCEINLINE bool IsPending() const
     {
-        return !Get() && ObjectID.IsValid();
+        return !Get() && GetObjectID().IsValid();
     }
 
     FORCEINLINE bool IsNull() const
     {
-        return !IsValid() && !ObjectID.IsValid();
+        return !IsValid() && !GetObjectID().IsValid();
     }
 
     FORCEINLINE const TObjectID& GetUniqueID() const
     {
-        return ObjectID;
+        return GetObjectID();
+    }
+
+    static FORCEINLINE int32 GetTypeSize()
+    {
+        return HasTagAtLastTest() ? (int32)sizeof(TPersistentObjectPtr) : (int32)(sizeof(FWeakObjectPtr) + sizeof(TObjectID));
     }
 
     UObject* LoadSynchronous() const
@@ -63,10 +96,26 @@ public:
     }
 
 private:
+    static bool HasTagAtLastTest();
+
+    FORCEINLINE TObjectID& GetObjectID() const
+    {
+        return *(TObjectID*)(HasTagAtLastTest() ? ObjectID : (const uint8*)&TagAtLastTest);
+    }
+
     mutable FWeakObjectPtr WeakPtr;
     mutable int32 TagAtLastTest;
-    TObjectID ObjectID;
+    alignas(TObjectID) uint8 ObjectID[sizeof(TObjectID)];
 };
+
+template<>
+bool TPersistentObjectPtr<FSoftObjectPath>::HasTagAtLastTest();
+
+template<>
+FORCEINLINE bool TPersistentObjectPtr<FStringAssetReference>::HasTagAtLastTest()
+{
+    return true;
+}
 
 struct FAssetPtr : public TPersistentObjectPtr<FStringAssetReference>
 {
@@ -84,7 +133,7 @@ class TAssetPtr
 public:
     static int32 GetTypeSize()
     {
-        return IsSoftObjectPtr() ? (int32)sizeof(FSoftObjectPtr) : (int32)sizeof(FAssetPtr);
+        return IsSoftObjectPtr() ? FSoftObjectPtr::GetTypeSize() : FAssetPtr::GetTypeSize();
     }
 
     FORCEINLINE bool IsNull() const
