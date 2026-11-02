@@ -212,6 +212,11 @@ FString FName::ToString() const
         .Find("mov [rsp+0x*], eax; add [*+0x20], *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetStringLibrary:Conv_NameToString"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FString Out;
