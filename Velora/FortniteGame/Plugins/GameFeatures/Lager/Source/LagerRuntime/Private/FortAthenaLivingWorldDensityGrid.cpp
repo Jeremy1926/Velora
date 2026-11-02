@@ -19,6 +19,9 @@ bool FFortAthenaLivingWorldDensityGrid::HasActorDensityValues()
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea rcx, [r14+0x*]; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, r12; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
         .Get();
 
     return bHasActorDensityValues;
@@ -203,6 +206,11 @@ void FFortAthenaLivingWorldDensityGrid::RemoveActor(AActor* InActor)
         .Find("mov rdx, rdi; mov rcx, rbx; movaps xmm6, xmm0; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rdx, r*; mov rcx, r12; movaps xmm*, xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     NativeRemoveActor(this, InActor);
@@ -240,6 +248,11 @@ void FFortAthenaLivingWorldDensityGrid::UpdateActorDensityValue(AActor* InActor,
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea rcx, [r14+0x*]; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("mov rcx, r12; mov rdx, [rdx+0x*]; movaps xmm2, xmm0; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
