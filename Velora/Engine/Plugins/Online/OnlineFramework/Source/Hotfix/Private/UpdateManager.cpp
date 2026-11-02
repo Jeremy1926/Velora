@@ -29,6 +29,14 @@ FOnUpdateCheckComplete& UUpdateManager::OnUpdateCheckComplete()
         .Find("jmp 0x*")
         .Target()
         .Find("lea rbx, [rax+0x*]; mov byte ptr [rax+0x*], *")
+        .Or()
+        .String(TEXT("CheckComplete %s"))
+        .Start()
+        .Find("lea rax, [0x*]; mov rcx, rbx")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rsi, [rax+0x*]; mov byte ptr [rax+0x*], 0x0")
         .Get();
 
     return *(FOnUpdateCheckComplete*)((uint8*)this + UpdateCheckCompleteDelegates);
