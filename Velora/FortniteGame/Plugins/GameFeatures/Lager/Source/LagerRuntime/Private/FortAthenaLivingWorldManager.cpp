@@ -368,6 +368,10 @@ int32 UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequestsOffset()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("test ecx, ecx; jle 0x*; lea r15, [r13+0x*]")
         .Find("lea r15, [r13+0x*]")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rdi, [rcx+0x*]; movaps xmm0, *; mov rsi, rdx; mov r13, rcx")
         .Disp();
 
     return PendingActorSpawnEventRequests;
