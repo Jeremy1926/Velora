@@ -60,6 +60,10 @@ bool& GIsGameThreadIdInitialized = *Anchor::Data<bool*>(TEXT("GIsGameThreadIdIni
     .String(TEXT("GameThread"), "lea rcx, [0x*]; mov byte ptr [0x*], *; mov [0x*], eax")
     .Find("mov byte ptr [0x*], *")
     .Target()
+    .Or()
+    .String(TEXT("GameThread"), "lea r13, [0x*]; mov [0x*], *; mov rcx, r13; mov [0x*], eax")
+    .Find("mov [0x*], *")
+    .Target()
     .Get();
 
 uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
@@ -95,6 +99,10 @@ uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
     .Target()
     .Or()
     .String(TEXT("GameThread"), "lea rcx, [0x*]; mov byte ptr [0x*], *; mov [0x*], eax")
+    .Find("mov [0x*], eax")
+    .Target()
+    .Or()
+    .String(TEXT("GameThread"), "lea r13, [0x*]; mov [0x*], *; mov rcx, r13; mov [0x*], eax")
     .Find("mov [0x*], eax")
     .Target()
     .Get();
