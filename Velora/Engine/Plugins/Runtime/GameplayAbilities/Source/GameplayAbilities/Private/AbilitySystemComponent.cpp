@@ -69,6 +69,10 @@ FGameplayEffectContextHandle UAbilitySystemComponent::MakeEffectContext() const
         .Find("mov [*+0x20], *")
         .Find("call *")
         .Is("call [*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeEffectContext"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call [rax+0x*]")
         .Optional()
         .Get();
 
