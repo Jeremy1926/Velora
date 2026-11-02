@@ -85,6 +85,16 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Last("call 0x*")
         .Target()
         .Call()
+        .Or()
+        .If(GetEncryptedLayout() != nullptr)
+        .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableColumnAsString"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call [r*+0x*]")
+        .Last("call 0x*")
+        .Target()
+        .Find("mov edx, [rdx]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return FindPropertyByName(this, InName);
