@@ -7,7 +7,7 @@
 
 void FFrame::Step(UObject* Context, void* const Result)
 {
-    static auto Step = Anchor::Function<void (*)(FFrame*, UObject*, void*)>(TEXT("FFrame::Step"))
+    static auto Step = Anchor::Optional<void (*)(FFrame*, UObject*, void*)>(TEXT("FFrame::Step"))
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
         .Find("mov rdx, [rdx+0x18]; lea r8, *; call 0x*")
         .Find("call 0x*")
@@ -26,7 +26,21 @@ void FFrame::Step(UObject* Context, void* const Result)
         .Target()
         .Get();
 
-    Step(this, Context, Result);
+    if (Step)
+    {
+        Step(this, Context, Result);
+        return;
+    }
+
+    static auto GNatives = Anchor::Data<void (**)(UObject*, FFrame&, void*)>(TEXT("GNatives"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("movzx e*, byte ptr [rax]; lea r*, [0x*]")
+        .Find("lea r*, [0x*]")
+        .Target()
+        .Get();
+
+    auto B = *Code++;
+    GNatives[B](Context, *this, Result);
 }
 
 void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
