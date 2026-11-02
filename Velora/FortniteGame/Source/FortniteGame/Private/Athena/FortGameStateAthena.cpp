@@ -235,6 +235,11 @@ void AFortGameStateAthena::StartPlaylistTimer(float Seconds, bool bOption)
         .Start()
         .Find("cvttss2si eax, xmm0")
         .Find("*")
+        .Or()
+        .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
+        .Start()
+        .Find("cvttss2si r9d, xmm0")
+        .Find("*")
         .Disp();
 
     Original(Seconds, bOption);
