@@ -130,6 +130,23 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
 
 TArray<AActor*>& FGlobalActorReplicationInfo::GetParentActorList()
 {
+    static auto ParentActorList = Anchor::Offset(TEXT("FGlobalActorReplicationInfo::ParentActorList"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("test r8, r8; jz 0x*; mov rdx, *; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Find("mov r*, [r15+0x*]; movsxd rax, dword ptr [r15+0x*]; lea r*, [r*+rax*8]")
+        .Disp();
+
+    if (ParentActorList > 0)
+        return *(TArray<AActor*>*)((uint8*)this + ParentActorList);
+
     return *(&GetDependentActorList() + 1);
 }
 
