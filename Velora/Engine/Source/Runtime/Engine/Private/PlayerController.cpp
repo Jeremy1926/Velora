@@ -51,6 +51,28 @@ void APlayerController::ServerRestartPlayer_Implementation()
     ServerRestartPlayer(this);
 }
 
+void APlayerController::Reset()
+{
+    static auto Reset = Anchor::VirtualFunction<void (*)(APlayerController*)>(TEXT("APlayerController::Reset"))
+        .Event(TEXT("K2_OnReset"))
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Get();
+
+    if (Reset)
+        Reset(this);
+}
+
+void APlayerController::ClientGotoState(FName NewState)
+{
+    static auto ClientGotoState = Anchor::Function<void (*)(APlayerController*, FName)>(TEXT("APlayerController::ClientGotoState"))
+        .Event(TEXT("ClientGotoState"))
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx]; mov rdi, rcx; mov [rsp+0x38], edx; mov edx, [0x*]")
+        .Get();
+
+    if (ClientGotoState)
+        ClientGotoState(this, NewState);
+}
+
 APawn* APlayerController::GetAcknowledgedPawn() const
 {
     static auto AcknowledgedPawn = GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn")));

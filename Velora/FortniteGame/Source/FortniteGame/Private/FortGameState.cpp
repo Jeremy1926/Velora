@@ -113,3 +113,22 @@ void AFortGameState::StartStreamingAdditionalPlaylistLevel(FName LevelName, bool
 
     StartStreamingAdditionalPlaylistLevel(this, LevelName, bIsServerOnly);
 }
+
+void AFortGameState::StartMatchStartTimer()
+{
+    static auto MatchStartTime = GetClass()->FindPropertyByName(FName(TEXT("MatchStartTime")));
+    static auto RealMatchStartTime = GetClass()->FindPropertyByName(FName(TEXT("RealMatchStartTime")));
+
+    *MatchStartTime->ContainerPtrToValuePtr<float>(this) = GetServerWorldTimeSeconds();
+    *RealMatchStartTime->ContainerPtrToValuePtr<double>(this) = GetServerWorldRealTimeSeconds();
+}
+
+double AFortGameState::GetServerWorldRealTimeSeconds() const
+{
+    static auto GetServerWorldRealTimeSeconds = Anchor::Function<double (*)(const AFortGameState*)>(TEXT("AFortGameState::GetServerWorldRealTimeSeconds"))
+        .Native(TEXT("/Script/FortniteGame.FortGameState:GetServerWorldRealTimeSeconds"))
+        .Is("push rbx; sub rsp, 0x20; cmp byte ptr [0x*], 0x1")
+        .Get();
+
+    return GetServerWorldRealTimeSeconds ? GetServerWorldRealTimeSeconds(this) : GetServerWorldTimeSeconds();
+}

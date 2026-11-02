@@ -114,6 +114,10 @@ public:
 
     void OnRep_IsInsideSafeZone();
 
+    void SetIsInAnyStorm(bool bNewValue);
+
+    void OnRep_IsInAnyStorm();
+
     FGuid* GetLastEquippedWeaponOrGadgetGUID();
 
     void SetLastEquippedWeaponOrGadget(UFortWorldItem* Item);

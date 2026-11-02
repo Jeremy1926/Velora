@@ -188,6 +188,10 @@ public:
 
     AFortInventory*& GetWorldInventory();
 
+    AFortPlayerController*& GetLastDamager();
+
+    AFortPlayerController*& GetLastFallInstigator();
+
     UFortRegisteredPlayerInfo*& GetMyPlayerInfo();
 
     UStatManager* GetStatManager() const;

@@ -409,6 +409,26 @@ void AFortPlayerPawn::OnRep_IsInsideSafeZone()
     OnRep_IsInsideSafeZone(this);
 }
 
+void AFortPlayerPawn::SetIsInAnyStorm(bool bNewValue)
+{
+    static auto bIsInAnyStorm = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIsInAnyStorm")));
+
+    if (GetLocalRole() == ROLE_Authority && bIsInAnyStorm->GetPropertyValue_InContainer(this) != bNewValue)
+    {
+        bIsInAnyStorm->SetPropertyValue_InContainer(this, bNewValue);
+        OnRep_IsInAnyStorm();
+    }
+}
+
+void AFortPlayerPawn::OnRep_IsInAnyStorm()
+{
+    static auto OnRep_IsInAnyStorm = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::OnRep_IsInAnyStorm"))
+        .Body(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_IsInAnyStorm"))
+        .Get();
+
+    OnRep_IsInAnyStorm(this);
+}
+
 FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()
 {
     static auto LastEquippedWeaponOrGadgetGUID = Anchor::Offset(TEXT("AFortPlayerPawn::LastEquippedWeaponOrGadgetGUID"))

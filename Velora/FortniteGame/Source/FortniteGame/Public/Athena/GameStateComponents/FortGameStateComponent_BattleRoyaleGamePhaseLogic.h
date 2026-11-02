@@ -25,6 +25,12 @@ public:
 
     void SpawnAircrafts();
 
+    void TryToProceedToAircraftPhase();
+
+    bool StartAircraftPhase(bool bSkippedWarmup);
+
+    void SetupAircraft(AFortAthenaAircraft* Aircraft);
+
     void SetGamePhase(EAthenaGamePhase InGamePhase);
 
     void SetGameModeWillSkipAircraft(bool bInGameModeWillSkipAircraft);
@@ -46,4 +52,12 @@ public:
     float GetWarmupEarlyRequiredPlayerPercent() const;
 
     TArray<TWeakObjectPtr<AFortAthenaAircraft>>& GetAircrafts_GameMode();
+
+    TArray<TWeakObjectPtr<AFortAthenaAircraft>>& GetAircrafts_GameState();
+
+    void SetAircraftIsLocked(bool bInAircraftIsLocked);
+
+    float& GetAircraftStartTime();
+
+    double& GetAircraftRealStartTime();
 };

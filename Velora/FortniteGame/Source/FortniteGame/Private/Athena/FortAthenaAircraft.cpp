@@ -66,6 +66,32 @@ AFortAthenaAircraft* AFortAthenaAircraft::SpawnAircraft(UWorld* World, int32 Air
     return Aircraft;
 }
 
+void AFortAthenaAircraft::StartFlightPath(float StartTime)
+{
+    static auto StartFlightPath = Anchor::Function<void (*)(AFortAthenaAircraft*, float)>(TEXT("AFortAthenaAircraft::StartFlightPath"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaAircraft:StartFlightPath"))
+        .Get();
+
+    StartFlightPath(this, StartTime);
+}
+
+FMulticastScriptDelegate& AFortAthenaAircraft::GetOnDropZoneEntered()
+{
+    return (&GetOnDropZoneExited())[-1];
+}
+
+FMulticastScriptDelegate& AFortAthenaAircraft::GetOnDropZoneExited()
+{
+    static auto OnDropZoneExited = StaticClass()->FindPropertyByName(FName(TEXT("OnDropZoneExited")));
+
+    return *OnDropZoneExited->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+}
+
+FMulticastScriptDelegate& AFortAthenaAircraft::GetOnFlightEnded()
+{
+    return (&GetOnDropZoneExited())[1];
+}
+
 const FAircraftFlightInfo& AFortAthenaAircraft::GetFlightInfo() const
 {
     static auto FlightInfo = StaticClass()->FindPropertyByName(FName(TEXT("FlightInfo")));

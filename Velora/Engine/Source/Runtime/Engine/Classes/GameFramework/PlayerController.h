@@ -13,6 +13,10 @@ public:
 
     void ServerRestartPlayer_Implementation();
 
+    void Reset();
+
+    void ClientGotoState(FName NewState);
+
     APawn* GetAcknowledgedPawn() const;
 
     UCheatManager* GetCheatManager() const;

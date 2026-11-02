@@ -2,6 +2,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Containers/Array.h"
+#include "UObject/ScriptDelegates.h"
 
 class AFortAthenaMapInfo;
 class UScriptStruct;
@@ -33,6 +34,14 @@ public:
     static UClass* StaticClass();
 
     static AFortAthenaAircraft* SpawnAircraft(UWorld* World, int32 AircraftIndex);
+
+    void StartFlightPath(float StartTime);
+
+    FMulticastScriptDelegate& GetOnDropZoneEntered();
+
+    FMulticastScriptDelegate& GetOnDropZoneExited();
+
+    FMulticastScriptDelegate& GetOnFlightEnded();
 
     const FAircraftFlightInfo& GetFlightInfo() const;
 

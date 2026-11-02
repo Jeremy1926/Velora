@@ -3,9 +3,13 @@
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortAthenaAircraft.h"
+#include "Athena/FortPlayerControllerAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
+#include "Items/FortQuickBars.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 #include "Templates/Casts.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CommandLine.h"
@@ -95,7 +99,15 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateWarmupPhase()
         return;
     }
 
-    if (ServerWorldTimeSeconds >= WarmupCountdownEndTime || WarmupCountdownEndTime - ServerWorldTimeSeconds <= GetWarmupEarlyCountdownDuration())
+    if (ServerWorldTimeSeconds >= WarmupCountdownEndTime)
+    {
+        if (ServerWorldTimeSeconds > WarmupCountdownEndTime)
+            TryToProceedToAircraftPhase();
+
+        return;
+    }
+
+    if (WarmupCountdownEndTime - ServerWorldTimeSeconds <= GetWarmupEarlyCountdownDuration())
         return;
 
     if (GameMode->CountReadyPlayers() < FMath::CeilToInt(GameMode->GetMaxPlayerCount() * GetWarmupEarlyRequiredPlayerPercent()))
@@ -131,6 +143,109 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnAircrafts()
 
     for (int32 Index = 0; Index < AircraftCount; Index++)
         GetAircrafts_GameMode().Add(AFortAthenaAircraft::SpawnAircraft(GameState->GetWorld(), Index));
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TryToProceedToAircraftPhase()
+{
+    if (!StartAircraftPhase(false))
+        SetGamePhase(EAthenaGamePhase::None);
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartAircraftPhase(bool bSkippedWarmup)
+{
+    static auto PlaylistClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena"));
+    static auto bSkipAircraft = (UBoolProperty*)PlaylistClass->FindPropertyByName(FName(TEXT("bSkipAircraft")));
+    static auto AirCraftBehavior = PlaylistClass->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
+
+    if (!GameState || (Playlist && bSkipAircraft->GetPropertyValue_InContainer(Playlist)) || GetGamePhase() > EAthenaGamePhase::Aircraft)
+        return false;
+
+    if (GetGamePhase() == EAthenaGamePhase::Aircraft)
+        return true;
+
+    if (!Playlist)
+        return false;
+
+    auto World = GameState->GetWorld();
+    auto Behavior = *AirCraftBehavior->ContainerPtrToValuePtr<EAirCraftBehavior>(Playlist);
+
+    if (!bSkippedWarmup && Behavior != EAirCraftBehavior::NoAircraft)
+    {
+        const int32 AircraftCount = Behavior == EAirCraftBehavior::OpposingAirCraftForEachTeam ? GameState->GetTeamCount() : 1;
+        const float ServerWorldTimeSeconds = GameState->GetServerWorldTimeSeconds();
+
+        for (int32 Index = 0; Index < AircraftCount; Index++)
+        {
+            auto Aircraft = Index < GetAircrafts_GameMode().Num() ? GetAircrafts_GameMode()[Index].Get() : nullptr;
+
+            if (!Aircraft)
+                Aircraft = AFortAthenaAircraft::SpawnAircraft(World, Index);
+
+            if (!Aircraft)
+                return false;
+
+            SetupAircraft(Aircraft);
+            Aircraft->StartFlightPath(ServerWorldTimeSeconds);
+
+            FScriptDelegate OnAircraftEnteredDropZone;
+            OnAircraftEnteredDropZone.BindUFunction(this, FName(TEXT("OnAircraftEnteredDropZone")));
+            Aircraft->GetOnDropZoneEntered().AddUnique(OnAircraftEnteredDropZone);
+
+            FScriptDelegate OnAircraftExitedDropZone;
+            OnAircraftExitedDropZone.BindUFunction(this, FName(TEXT("OnAircraftExitedDropZone")));
+            Aircraft->GetOnDropZoneExited().AddUnique(OnAircraftExitedDropZone);
+
+            FScriptDelegate OnAircraftFlightEnded;
+            OnAircraftFlightEnded.BindUFunction(this, FName(TEXT("OnAircraftFlightEnded")));
+            Aircraft->GetOnFlightEnded().AddUnique(OnAircraftFlightEnded);
+        }
+
+        GetAircraftStartTime() = ServerWorldTimeSeconds;
+        GetAircraftRealStartTime() = GameState->GetServerWorldRealTimeSeconds();
+        GameState->StartMatchStartTimer();
+    }
+
+    for (auto PlayerState : GameState->GetPlayerArray())
+    {
+        auto PlayerController = PlayerState ? Cast<AFortPlayerControllerAthena>(PlayerState->GetOwner()) : nullptr;
+
+        if (!PlayerController)
+            continue;
+
+        PlayerController->GetLastDamager() = nullptr;
+        PlayerController->GetLastFallInstigator() = nullptr;
+
+        auto Pawn = PlayerController->GetPawn();
+
+        if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(Pawn))
+        {
+            PlayerPawn->SetIsInAnyStorm(false);
+            PlayerPawn->GetOnEnteredAircraft().ProcessMulticastDelegate<UObject>(nullptr);
+        }
+
+        PlayerController->ClientActivateSlot(EFortQuickBars::Primary, 0, 0.0f, true, false);
+
+        if (Pawn)
+            Pawn->Destroy();
+
+        PlayerController->Reset();
+        PlayerController->ClientGotoState(FName(TEXT("Inactive")));
+    }
+
+    SetGamePhase(EAthenaGamePhase::Aircraft);
+
+    return true;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetupAircraft(AFortAthenaAircraft* Aircraft)
+{
+    if (GetAircrafts_GameState().Num() == 0)
+        SetAircraftIsLocked(true);
+
+    GetAircrafts_GameState().Add(Aircraft);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGamePhase InGamePhase)
@@ -211,6 +326,34 @@ TArray<TWeakObjectPtr<AFortAthenaAircraft>>& UFortGameStateComponent_BattleRoyal
     static auto Aircrafts_GameMode = StaticClass()->FindPropertyByName(FName(TEXT("Aircrafts_GameMode")));
 
     return *Aircrafts_GameMode->ContainerPtrToValuePtr<TArray<TWeakObjectPtr<AFortAthenaAircraft>>>(this);
+}
+
+TArray<TWeakObjectPtr<AFortAthenaAircraft>>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircrafts_GameState()
+{
+    static auto Aircrafts_GameState = StaticClass()->FindPropertyByName(FName(TEXT("Aircrafts_GameState")));
+
+    return *Aircrafts_GameState->ContainerPtrToValuePtr<TArray<TWeakObjectPtr<AFortAthenaAircraft>>>(this);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftIsLocked(bool bInAircraftIsLocked)
+{
+    static auto bAircraftIsLocked = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked")));
+
+    bAircraftIsLocked->SetPropertyValue_InContainer(this, bInAircraftIsLocked);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraftStartTime()
+{
+    static auto AircraftStartTime = StaticClass()->FindPropertyByName(FName(TEXT("AircraftStartTime")));
+
+    return *AircraftStartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+double& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraftRealStartTime()
+{
+    static auto AircraftRealStartTime = StaticClass()->FindPropertyByName(FName(TEXT("AircraftRealStartTime")));
+
+    return *AircraftRealStartTime->ContainerPtrToValuePtr<double>(this);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZonesStartTime(float InSafeZonesStartTime)

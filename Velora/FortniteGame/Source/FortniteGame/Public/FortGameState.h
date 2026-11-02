@@ -45,4 +45,8 @@ public:
     int32 GetTeamCount() const;
 
     void StartStreamingAdditionalPlaylistLevel(FName LevelName, bool bIsServerOnly);
+
+    void StartMatchStartTimer();
+
+    double GetServerWorldRealTimeSeconds() const;
 };

@@ -1297,6 +1297,20 @@ AFortInventory*& AFortPlayerController::GetWorldInventory()
     return *WorldInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
 }
 
+AFortPlayerController*& AFortPlayerController::GetLastDamager()
+{
+    static auto LastDamager = GetClass()->FindPropertyByName(FName(TEXT("LastDamager")));
+
+    return *LastDamager->ContainerPtrToValuePtr<AFortPlayerController*>(this);
+}
+
+AFortPlayerController*& AFortPlayerController::GetLastFallInstigator()
+{
+    static auto LastFallInstigator = GetClass()->FindPropertyByName(FName(TEXT("LastFallInstigator")));
+
+    return *LastFallInstigator->ContainerPtrToValuePtr<AFortPlayerController*>(this);
+}
+
 UFortRegisteredPlayerInfo*& AFortPlayerController::GetMyPlayerInfo()
 {
     static auto MyPlayerInfo = GetClass()->FindPropertyByName(FName(TEXT("MyPlayerInfo")));

@@ -234,6 +234,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             {
                 if (GamePhaseLogicComponent->GetGamePhase() == EAthenaGamePhase::Warmup)
                     GamePhaseLogicComponent->UpdateWarmupPhase();
+
+                if (FGUI::bStartBus && GamePhaseLogicComponent->GetGamePhase() == EAthenaGamePhase::Warmup)
+                    GamePhaseLogicComponent->StartAircraftPhase(false);
             }
 
             if (FGUI::bStartBus && GameMode && !GamePhaseLogic && GameState->GetGamePhase() == EAthenaGamePhase::Warmup)
