@@ -305,6 +305,11 @@ bool UWorld::AreActorsInitialized() const
 {
     static auto AreActorsInitialized = Anchor::Function<bool (*)(const UWorld*)>(TEXT("UWorld::AreActorsInitialized"))
         .Pattern("33 C0 38 81 ? ? 00 00 7D ? 48 8B 49 30 48 85 C9 74 ? 39 81 ? ? 00 00 74 ? B0 01 C3")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortTimeOfDayManager:UpdatePostProcessVolumes"))
+        .Find("mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return AreActorsInitialized(this);
