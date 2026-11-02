@@ -128,6 +128,8 @@ ENetMode UWorld::InternalGetNetMode() const
         .Start()
         .Find("mov rcx, *; call 0x*; mov ebx, eax; lea eax, [rbx-0x1]")
         .Call()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 4C 8B C1 75 ? 48 8B 91 F0 00 00 00")
         .Inline());
 
     if (GetNetDriver() != nullptr)
