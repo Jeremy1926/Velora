@@ -27,6 +27,8 @@ FName::FName(EName N)
             .Pattern("48 89 5C 24 08 57 48 83 EC 20 48 63 DA 48 8B F9 E8 ? ? ? ? 8B 84 98 ? ? ? ? 48 8B 5C 24 30 89 07 48 8B C7")
             .Or()
             .Pattern("48 89 5C 24 08 57 48 83 EC 20 8B DA 48 8B F9 E8 ? ? ? ? 8B 84 98 ? ? ? ? 48 8B 5C 24 30 89 07 48 8B C7")
+            .Or()
+            .Pattern("48 89 5C 24 08 57 48 83 EC 20 80 3D ? ? ? ? 00 48 8B D9 48 8D 0D ? ? ? ? 8B FA 75 ? E8 ? ? ? ? 48 8B C8 C6 05 ? ? ? ? 01 8B 8C B9 ? ? ? ? 48 8B C3 89 0B")
             .Get();
 
         ComparisonIndex = NAME_None;
