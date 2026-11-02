@@ -156,6 +156,16 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
     if (!NumElements.IsEncrypted() || !Objects.IsEncrypted())
         return nullptr;
 
+    static auto PackedItem = Anchor::Address()
+        .At(AllocateSerialNumber)
+        .Last("lea r*, [r*+rdx?4]; mov e*, [r*+0x*]")
+        .Last("lea rdx, [r*+r*?4]")
+        .Or()
+        .At(AllocateSerialNumber)
+        .Last("lea r*, [r*+rdx?4]; jmp *; xor e*, e*; mov e*, [r*+0x*]")
+        .Last("lea rdx, [r*+r*?4]")
+        .Get();
+
     static FEncryptedLayout Layout
     {
         NumElements,
@@ -175,7 +185,8 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
             .Target()
             .Find("mov e*, [r*+0x*]; test e*, 0x*")
             .Find("mov r*, [*]")
-            .Get()
+            .Get(),
+        Anchor::At(AllocateSerialNumber).Last("shl r*, 0x5; add r*, [*]; jmp *; xor e*, e*; mov e*, [r*+0x*]").Get() ? 0x20 : PackedItem ? 0x14 : 0x18
     };
 
     return &Layout;

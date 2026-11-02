@@ -87,6 +87,7 @@ public:
         Anchor::FCipher SerialNumber;
         Anchor::FCipher Flags;
         Anchor::FCipher Object;
+        int32 Stride;
     };
 
     static const FEncryptedLayout* GetEncryptedLayout();
@@ -104,7 +105,7 @@ public:
     FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
     {
         if (auto Layout = GetEncryptedLayout())
-            return Index >= 0 && Index < GetObjectArrayNum() ? &Layout->Objects.Load<FUObjectItem**>(nullptr)[Index / (64 * 1024)][Index % (64 * 1024)] : nullptr;
+            return Index >= 0 && Index < GetObjectArrayNum() ? (FUObjectItem*)(Layout->Objects.Load<uint8**>(nullptr)[Index / (64 * 1024)] + Index % (64 * 1024) * Layout->Stride) : nullptr;
 
         auto& Version = FEngineVersion::Current();
 
