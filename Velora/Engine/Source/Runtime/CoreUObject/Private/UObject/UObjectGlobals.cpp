@@ -137,6 +137,9 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Find("mov rcx, r*; call 0x*; mov *, rax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("4C 8B 39 48 8D 05 ? ? ? ? 44 8B 71 70")
+        .Start()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
