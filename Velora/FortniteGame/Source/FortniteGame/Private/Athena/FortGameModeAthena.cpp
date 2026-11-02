@@ -873,7 +873,16 @@ TSubclassOf<AActor> AFortGameModeAthena::GetVehicleClassOverride(TSubclassOf<AAc
         .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Get();
+
     TSubclassOf<AActor> Result;
+
+    if (bClassByAddress)
+        return *((TSubclassOf<AActor>* (*)(const AFortGameModeAthena*, TSubclassOf<AActor>*, const TSubclassOf<AActor>*))GetVehicleClassOverride)(this, &Result, &DefaultVehicleClass);
 
     return *GetVehicleClassOverride(this, &Result, DefaultVehicleClass);
 }
