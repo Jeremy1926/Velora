@@ -117,6 +117,10 @@ EFunctionFlags UFunction::GetFunctionFlags() const
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("mov edx, [r*+0x*]; mov ecx, edx; and ecx, 0x80")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("test byte ptr [r*+0x*], 0x80")
         .Disp();
 
     return *(const EFunctionFlags*)((const uint8_t*)this + FunctionFlags);
