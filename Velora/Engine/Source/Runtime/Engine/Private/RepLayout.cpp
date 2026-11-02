@@ -59,6 +59,9 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data, UE::Net::FNetTokenSt
         .Start()
         .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rsp+0x*]; mov [rsp+0x*], rax")
         .Target()
+        .Or()
+        .String("BuildSharedSerializationForRPC")
+        .Start()
         .Get();
 
     BuildSharedSerializationForRPC(this, Data, NetTokenStore);
