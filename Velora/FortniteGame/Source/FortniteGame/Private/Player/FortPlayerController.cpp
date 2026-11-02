@@ -1006,6 +1006,16 @@ TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>& FF
 {
     static auto OnPlayerStateChangedEvent = Anchor::Data<TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>*>(TEXT("FFortPlayerControllerEvents::OnPlayerStateChangedEvent"))
         .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
         .Find("jmp [rax+0x*]")
@@ -1114,6 +1124,11 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("lea rcx, [rsi+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rcx, [r14+0x*]")
             .Disp();
 
         static auto FindItemInstancesFromDefinition = Anchor::VirtualFunction<int32 (*)(void*, UFortItemDefinition*, TArray<UFortItem*>*)>(TEXT("IFortInventoryOwnerInterface::FindItemInstancesFromDefinition"))
