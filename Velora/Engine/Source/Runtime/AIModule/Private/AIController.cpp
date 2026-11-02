@@ -16,6 +16,11 @@ bool AAIController::RunBehaviorTree(UBehaviorTree* BTAsset)
 {
     static auto RunBehaviorTree = Anchor::VirtualFunction<bool (*)(AAIController*, UBehaviorTree*)>(TEXT("AAIController::RunBehaviorTree"))
         .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.AIController:RunBehaviorTree"))
         .Find("call [rax+0x*]")
         .Get();
 

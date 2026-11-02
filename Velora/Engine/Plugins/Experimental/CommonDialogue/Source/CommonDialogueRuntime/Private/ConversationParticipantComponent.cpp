@@ -131,6 +131,12 @@ void UConversationParticipantComponent::ServerAdvanceConversation_Implementation
 {
     DETOUR(UConversationParticipantComponent, ServerAdvanceConversation_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ServerAdvanceConversation"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .IsVirtual(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ServerAdvanceConversation"))
         .Find("call [*+0x*]")
         .IsVirtual(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"), "ret*")
         .Optional()

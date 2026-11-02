@@ -320,6 +320,12 @@ void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverr
 
     static auto VirtualLaunchCharacterJump = Anchor::VirtualFunction<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
         .Exec(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("mov [*+0x20], *")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
         .Find("mov [*+0x20], *")
         .Find("call [*+0x*]")
         .Get();
@@ -371,6 +377,11 @@ TArray<AFortWeapon*>& AFortPawn::GetCurrentWeaponList()
 void AFortPawn::UpdateCullDistance()
 {
     static auto UpdateCullDistance = Anchor::VirtualFunction<void (*)(AFortPawn*)>(TEXT("AFortPawn::UpdateCullDistance"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:SetPawnVisibility"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortPawn:SetPawnVisibility"))
         .Find("call [rax+0x*]")
         .Get(sizeof(void*));

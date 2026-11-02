@@ -21,6 +21,11 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Impleme
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerStartCrafting_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerStartCrafting"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerStartCrafting"))
         .Find("call [rax+0x*]", 2)
         .Optional()
         .InVTable(TEXT("/Script/CraftingRuntime.Default__FortControllerComponent_CraftingNetworkEvents")));
@@ -40,6 +45,11 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Impleme
 void UFortControllerComponent_CraftingNetworkEvents::ServerPickupItemAndStartCrafting_Implementation(AActor* CraftingObject, AFortPickup* Pickup, const FName& CraftingFormulaName)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerPickupItemAndStartCrafting_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerPickupItemAndStartCrafting"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .Or()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerPickupItemAndStartCrafting"))
         .Find("call [rax+0x*]", 2)
         .Optional()
@@ -61,6 +71,11 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerCancelCrafting_Implem
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerCancelCrafting_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerCancelCrafting"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerCancelCrafting"))
         .Find("call [rax+0x*]", 2)
         .Optional()
         .InVTable(TEXT("/Script/CraftingRuntime.Default__FortControllerComponent_CraftingNetworkEvents")));
@@ -76,6 +91,11 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerClaimCraftingResults_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerClaimCraftingResults"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerClaimCraftingResults"))
         .Find("call [rax+0x*]", 2)
         .Optional()
         .InVTable(TEXT("/Script/CraftingRuntime.Default__FortControllerComponent_CraftingNetworkEvents")));
@@ -90,6 +110,11 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_
 void UFortControllerComponent_CraftingNetworkEvents::ServerEjectItems_Implementation(AActor* CraftingObject)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerEjectItems_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerEjectItems"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .Or()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerEjectItems"))
         .Find("call [rax+0x*]", 2)
         .Optional()

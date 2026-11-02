@@ -23,6 +23,12 @@ void AFortLiveSpectatorController::GetRemoteClientInfos(TArray<AFortBroadcastRem
 {
     static auto GetRemoteClientInfos = Anchor::VirtualFunction<void (*)(const AFortLiveSpectatorController*, TArray<AFortBroadcastRemoteClientInfo*>&)>(TEXT("AFortLiveSpectatorController::GetRemoteClientInfos"))
         .Exec(TEXT("/Script/FortniteGame.FortLiveSpectatorController:ServerSetFollowedPlayer"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortLiveSpectatorController:ServerSetFollowedPlayer"))
         .Find("call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get(sizeof(void*));

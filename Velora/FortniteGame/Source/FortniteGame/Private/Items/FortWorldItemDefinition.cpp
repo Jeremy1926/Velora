@@ -49,6 +49,11 @@ float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
 {
     static auto GetMaxDurability = Anchor::VirtualFunction<float (*)(const UFortWorldItemDefinition*, int32)>(TEXT("UFortWorldItemDefinition::GetMaxDurability"))
         .Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability"))
         .Find("call [*+0x*]")
         .Get();
 

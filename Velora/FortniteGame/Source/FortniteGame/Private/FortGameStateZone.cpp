@@ -72,6 +72,11 @@ bool AFortGameStateZone::IsRespawningAllowed(AFortPlayerState* PlayerState) cons
 {
     static auto IsRespawningAllowed = Anchor::VirtualFunction<bool (*)(const AFortGameStateZone*, AFortPlayerState*)>(TEXT("AFortGameStateZone::IsRespawningAllowed"))
         .Exec(TEXT("/Script/FortniteGame.FortGameStateZone:IsRespawningAllowed"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateZone:IsRespawningAllowed"))
         .Find("call [rax+0x*]")
         .Get();
 
