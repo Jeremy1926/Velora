@@ -298,6 +298,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     DETOUR(AFortGameModeAthena, SpawnDefaultPawnFor_Implementation, Anchor::Hook()
         .String(TEXT("SpawnDefaultPawnFor: Failed due to no world"))
         .Start()
+        .Or()
+        .String(TEXT("FortGameModeAthena:%hs: Failed due to no start spot."))
+        .Start()
         .Inline());
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(NewPlayer);
