@@ -149,6 +149,12 @@ void FRepLayout::ClearSharedSerializationForRPC()
         .Find("call 0x*; lea rax, [rbp-0x*]; mov r9, r*; mov [rsp+0x*], rax")
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .String("BuildSharedSerializationForRPC")
+        .Start()
+        .CallSite()
+        .Find("jl 0x*; mov rcx, [rbp-0x*]; call 0x*")
+        .Call()
         .Get();
 
     ClearSharedSerializationForRPC(this);
