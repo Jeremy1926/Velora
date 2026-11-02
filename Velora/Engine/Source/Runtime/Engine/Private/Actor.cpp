@@ -511,6 +511,13 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
         .Find("setnz *")
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov *, [rax+0x*]")
         .Get();
 
     return FindComponentByClass(this, ComponentClass);
