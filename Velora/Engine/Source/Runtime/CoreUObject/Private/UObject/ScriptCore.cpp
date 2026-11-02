@@ -131,6 +131,13 @@ void UObject::ProcessEvent(UFunction* Function, void* Parms)
         .Reference("mov ?dx, *")
         .Start()
         .Find("mov r*, [r*+0x*]")
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("jmp [r*+0x*]")
         .Get();
 
     ProcessEvent(this, Function, Parms);
