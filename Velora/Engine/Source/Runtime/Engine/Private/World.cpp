@@ -347,6 +347,18 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
         .Or()
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea rcx, [*+0x*]; mov [*], *; lea rdx, [*]; mov [*], *; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; *; lea rdx, [*]; call 0x*; lea r*, [*]; lea r*, [*]; call 0x*")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; *; *; lea rdx, [*]; call 0x*; lea r*, [*]; lea r*, [*]; call 0x*")
+        .Or()
+        .If(FUObjectArray::GetEncryptedLayout() != nullptr)
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; *; lea rdx, [*]; *; call 0x*; lea r*, [*]; lea r*, [*]; call 0x*")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
