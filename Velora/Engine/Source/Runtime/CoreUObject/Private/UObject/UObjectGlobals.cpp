@@ -180,3 +180,42 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetEncryptedLayout()
 
     return &Layout;
 }
+
+const UObjectBase::FEncryptedLayout* UObjectBase::GetEncryptedLayout()
+{
+    if (!FUObjectArray::GetEncryptedLayout())
+        return nullptr;
+
+    static FEncryptedLayout Layout
+    {
+        Anchor::Cipher(TEXT("UObjectBase::ObjectFlags"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+            .Find("add [*+0x20], *")
+            .Find("mov e*, [rax+0x*]; bt e*, 0x1e")
+            .Get(),
+        Anchor::Cipher(TEXT("UObjectBase::InternalIndex"))
+            .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
+            .Last("mov r*, [0x*]")
+            .Last("mov *, [r*+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("UObjectBase::ClassPrivate"))
+            .Exec(TEXT("/Script/Engine.GameplayStatics:GetObjectClass"))
+            .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz *; mov *, [rax+0x*]")
+            .Find("mov *, [rax+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("UObjectBase::NamePrivate"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetObjectName"))
+            .Find("add [*+0x20], *")
+            .Find("mov eax, [rax+0x*]")
+            .Get(),
+        Anchor::Cipher(TEXT("UObjectBase::OuterPrivate"))
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetOuterObject"))
+            .Find("add [*+0x20], *")
+            .Find("test rax, rax; jz *; mov *, [rax+0x*]")
+            .Find("mov *, [rax+0x*]")
+            .Get()
+    };
+
+    return &Layout;
+}
