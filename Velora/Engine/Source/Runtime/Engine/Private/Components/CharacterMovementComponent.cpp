@@ -8,6 +8,10 @@ void UCharacterMovementComponent::SetMovementMode(EMovementMode NewMovementMode,
 {
     static auto SetMovementMode = Anchor::VirtualFunction<void (*)(UCharacterMovementComponent*, EMovementMode, uint8)>(TEXT("UCharacterMovementComponent::SetMovementMode"))
         .Exec(TEXT("/Script/Engine.CharacterMovementComponent:SetMovementMode"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.CharacterMovementComponent:SetMovementMode"))
         .Find("call [rax+0x*]")
         .Get();
 
