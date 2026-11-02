@@ -170,6 +170,12 @@ void UNetDriver::ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const
         .Find("and dword ptr [rsp+0x*], 0x0")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov [rsp+0x58], r8d; mov r8, r*; mov [rsp+0x50], *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     ProcessRemoteFunctionForChannelPrivate(this, Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
