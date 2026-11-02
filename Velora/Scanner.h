@@ -109,6 +109,20 @@ namespace Scanner
             }
         }
 
+        for (size_t Index = 0; Exec.Get() && Index < Chunks.size() && Index < 64; Index++)
+        {
+            for (auto Pattern : { "setnz *; add r*, r*; mov [*+0x20], r*", "setnz *; add r*, r*; *; mov [*+0x20], r*", "setnz *; *; add r*, r*; mov [*+0x20], r*", "setnz *; *; add r*, r*; *; mov [*+0x20], r*", "setnz *; *; *; add r*, r*; mov [*+0x20], r*" })
+            {
+                if (auto Finish = Anchor::At(Chunks[Index]).Find(Pattern); Finish.Get())
+                {
+                    auto Body = Finish.Find("call 0x*");
+                    auto Return = Finish.Find("ret*");
+
+                    return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
+                }
+            }
+        }
+
         for (auto Finish = Exec.Find("mov [*+0x20], *"); Finish.Get(); Finish = Finish.Find("mov [*+0x20], *"))
         {
             if (!Finish.Is("mov [rsp*"))
@@ -122,12 +136,15 @@ namespace Scanner
     {
         auto Exec = Scanner::Exec(FunctionPath);
 
-        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *" })
+        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *", "setnz *; add r*, r*; mov [*+0x20], r*", "setnz *; add r*, r*; *; mov [*+0x20], r*" })
         {
             auto Finish = Exec.Find(Pattern);
 
             if (!Finish.Get())
                 continue;
+
+            if (Finish.Is("setnz *; add r*, r*"))
+                Finish = Finish.Find("mov [*+0x20], r*");
 
             for (auto Next = Finish.Is("cmp*") ? Finish.Find("mov [*+0x20], *").Find("*") : Finish.Find("*"); Next.Get(); Next = Next.Find("*"))
             {
