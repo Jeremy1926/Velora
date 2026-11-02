@@ -625,6 +625,10 @@ bool UNetDriver::IsServer() const
         .Last("call 0x*")
         .Target()
         .Find("call [rax+0x*]")
+        .Or()
+        .String("STAT_NetTickFlush")
+        .Start()
+        .Find("call [rax+0x*]")
         .Get();
 
     return IsServer(this);
