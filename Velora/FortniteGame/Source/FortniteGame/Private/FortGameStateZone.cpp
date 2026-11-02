@@ -4,7 +4,10 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* AFortGameStateZone::StaticClass()
 {
@@ -81,4 +84,82 @@ bool AFortGameStateZone::IsRespawningAllowed(AFortPlayerState* PlayerState) cons
         .Get();
 
     return IsRespawningAllowed(this, PlayerState);
+}
+
+UBuildingStructuralSupportSystem* AFortGameStateZone::GetStructuralSupportSystem() const
+{
+    static auto StructuralSupportSystem = GetClass()->FindPropertyByName(FName(TEXT("StructuralSupportSystem")));
+
+    return *StructuralSupportSystem->ContainerPtrToValuePtr<UBuildingStructuralSupportSystem*>(this);
+}
+
+UBuildingStructuralSupportSystem* UBuildingStructuralSupportSystem::GetCurrent(const UObject* WorldContextObject)
+{
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+    auto GameState = World ? Cast<AFortGameStateZone>(World->GetGameState()) : nullptr;
+
+    return GameState ? GameState->GetStructuralSupportSystem() : nullptr;
+}
+
+bool UBuildingStructuralSupportSystem::IsGridInitialized() const
+{
+    static auto GridBoundsIsValid = Anchor::Offset(TEXT("UBuildingStructuralSupportSystem::GridBounds.IsValid"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "push rbx; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rsp+0x98], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
+        .Find("movsd xmm1, qword ptr [rax+0x*]")
+        .Disp();
+
+    return *((const uint8*)this + GridBoundsIsValid) != 0;
+}
+
+TMulticastDelegate<void>& UBuildingStructuralSupportSystem::GetOnGridInitialized()
+{
+    static auto OnGridInitialized = Anchor::Offset(TEXT("UBuildingStructuralSupportSystem::OnGridInitialized"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "push rbx; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rsp+0x98], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
+        .Find("lea rcx, [rax+0x*]")
+        .Disp();
+
+    return *(TMulticastDelegate<void>*)((uint8*)this + OnGridInitialized);
+}
+
+void UFortCurieManager::NotifyAllCurieManagerComponentsRegistered()
+{
+    DETOUR(UFortCurieManager, NotifyAllCurieManagerComponentsRegistered, Anchor::Hook()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "push rbx; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rsp+0x98], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
+        .Optional()
+        .LogSlot(TEXT("UFortCurieManager::NotifyAllCurieManagerComponentsRegistered"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__FortCurieManager")));
+
+    if (auto StructuralSupportSystem = UBuildingStructuralSupportSystem::GetCurrent(this))
+    {
+        if (StructuralSupportSystem->IsGridInitialized())
+            HandleBuildingGridInitialized();
+        else
+            StructuralSupportSystem->GetOnGridInitialized().AddUObject(this, &UFortCurieManager::HandleBuildingGridInitialized);
+    }
+
+    Original();
+}
+
+void UFortCurieManager::HandleBuildingGridInitialized()
+{
+    static auto NotifyBuildingGridInitialized = Anchor::VirtualFunction<void (*)(UObject*, UBuildingStructuralSupportSystem*)>(TEXT("UFortCurieManagerComponent::NotifyBuildingGridInitialized"))
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; mov rax, rsp; push rbx; sub rsp, 0x*; movups xmm0, [rdx+0x*]")
+        .Get();
+
+    static auto FortCurieManagerComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortCurieManagerComponent"));
+
+    auto StructuralSupportSystem = UBuildingStructuralSupportSystem::GetCurrent(this);
+
+    for (auto CurieManagerComponent : GetCurieManagerComponents())
+    {
+        if (CurieManagerComponent && CurieManagerComponent->IsA(FortCurieManagerComponentClass))
+            NotifyBuildingGridInitialized(CurieManagerComponent, StructuralSupportSystem);
+    }
+}
+
+const TArray<UObject*>& UFortCurieManager::GetCurieManagerComponents() const
+{
+    static auto CurieManagerComponents = GetClass()->FindPropertyByName(FName(TEXT("CurieManagerComponents")));
+
+    return *CurieManagerComponents->ContainerPtrToValuePtr<TArray<UObject*>>(this);
 }
