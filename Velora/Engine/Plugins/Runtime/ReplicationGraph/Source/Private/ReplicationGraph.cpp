@@ -3806,7 +3806,7 @@ bool UReplicationGraph::ProcessRemoteFunction(AActor* Actor, UFunction* Function
                 SendPolicy = UNetDriver::ForceSend;
         }
 
-        RepLayout->BuildSharedSerializationForRPC(Parameters);
+        RepLayout->BuildSharedSerializationForRPC(Parameters, NetDriver->GetNetTokenStore());
 
         FGlobalActorReplicationInfo& GlobalInfo = GetGlobalActorReplicationInfoMap().Get(Actor);
 

@@ -45,9 +45,9 @@ void FRepLayout::SendPropertiesForRPC(UFunction* Function, UActorChannel* Channe
     SendPropertiesForRPC(this, Function, Channel, Writer, Data);
 }
 
-void FRepLayout::BuildSharedSerializationForRPC(void* Data)
+void FRepLayout::BuildSharedSerializationForRPC(void* Data, UE::Net::FNetTokenStore* NetTokenStore)
 {
-    static auto BuildSharedSerializationForRPC = Anchor::Function<void (*)(FRepLayout*, void*)>(TEXT("FRepLayout::BuildSharedSerializationForRPC"))
+    static auto BuildSharedSerializationForRPC = Anchor::Function<void (*)(FRepLayout*, void*, UE::Net::FNetTokenStore*)>(TEXT("FRepLayout::BuildSharedSerializationForRPC"))
         .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
         .Start()
         .Find("call 0x*; mov r8, [rbp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
@@ -70,7 +70,7 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data)
         .Target()
         .Get();
 
-    BuildSharedSerializationForRPC(this, Data);
+    BuildSharedSerializationForRPC(this, Data, NetTokenStore);
 }
 
 void FRepLayout::ClearSharedSerializationForRPC()

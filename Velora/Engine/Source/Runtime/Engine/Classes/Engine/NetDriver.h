@@ -143,6 +143,8 @@ namespace UE::Net
         PostTickDispatch,
         TickFlush,
     };
+
+    class FNetTokenStore;
 }
 
 class UReplicationSystem : public UObject
@@ -199,6 +201,8 @@ public:
     TSharedPtr<FNetGUIDCache>& GetGuidCache();
 
     TSharedPtr<FClassNetCacheMgr>& GetNetCache();
+
+    UE::Net::FNetTokenStore* GetNetTokenStore();
 
     TSharedPtr<FRepLayout, ESPMode::ThreadSafe> GetFunctionRepLayout(UFunction* Function);
 
