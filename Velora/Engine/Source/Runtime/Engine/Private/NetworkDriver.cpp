@@ -92,6 +92,13 @@ void UNetDriver::SetReplicationDriver(UReplicationDriver* NewReplicationDriver)
         .Find("mov rdx, rax; mov rcx, rbx; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .CallSite()
+        .Find("mov rdx, rax; mov rcx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetReplicationDriver(this, NewReplicationDriver);
