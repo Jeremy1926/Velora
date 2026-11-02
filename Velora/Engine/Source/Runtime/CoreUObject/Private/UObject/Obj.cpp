@@ -72,7 +72,7 @@ void UObject::PatchCanCreateInCurrentContext()
 
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)
 {
-    static auto GetArchetypeFromRequiredInfoImpl = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, bool)>(TEXT("GetArchetypeFromRequiredInfoImpl"))
+    static auto GetArchetypeFromRequiredInfoImpl = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, bool, void*)>(TEXT("GetArchetypeFromRequiredInfoImpl"))
         .String(TEXT("Component archetype is not the CDO nor a default subobject of my class. Me = %s, Component = %s, Archetype = %s"))
         .Last("xor r14b, r14b")
         .Call()
@@ -105,9 +105,13 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
         .Start()
         .Find("call 0x*; cmp r*, rax; jnz *")
         .Call()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"), "lea rax, [0x*]; cmovnz rax, r9")
+        .Find("call 0x*; xor r9d, r9d; cmp rbx, rax")
+        .Call()
         .Get();
 
-    return GetArchetypeFromRequiredInfoImpl(Class, Outer, Name, ObjectFlags, false);
+    return GetArchetypeFromRequiredInfoImpl(Class, Outer, Name, ObjectFlags, false, nullptr);
 }
 
 bool UObject::CallRemoteFunction(UFunction* Function, void* Parms, FOutParmRec* OutParms, FFrame* Stack)
