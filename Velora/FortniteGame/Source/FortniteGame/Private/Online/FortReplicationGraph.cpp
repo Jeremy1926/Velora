@@ -319,12 +319,26 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
 
 TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>& UFortReplicationGraph::GetFortTeamPrivateInfoMap()
 {
+    static auto ActorRepNodePolicies = Anchor::Offset(TEXT("UFortReplicationGraph::ActorRepNodePolicies"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Find("mov rdx, [r10+0x*]; cdqe; lea rcx, [rax+rax*2]")
+        .Disp();
+
+    if (ActorRepNodePolicies > 0)
+        return *(TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>*)((uint8*)this + ActorRepNodePolicies + sizeof(TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>));
+
     return *(TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>*)(&GetClassRepNodePolicies() + 1);
 }
 
 TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>& UFortReplicationGraph::GetSquadMap()
 {
-    return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)(&GetClassRepNodePolicies() + 1) + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
+    return *(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>*)((uint8*)&GetFortTeamPrivateInfoMap() + 2 * sizeof(TMap<uint8, UFortReplicationGraphNode_AlwaysRelevantForSquad*>));
 }
 
 bool& UFortReplicationGraph::GetSpecialRelevancyEnabled()
