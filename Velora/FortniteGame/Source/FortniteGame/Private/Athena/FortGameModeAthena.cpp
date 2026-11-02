@@ -877,6 +877,11 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
 TSubclassOf<AActor> AFortGameModeAthena::GetVehicleClassOverride(TSubclassOf<AActor> DefaultVehicleClass) const
 {
     static auto GetVehicleClassOverride = Anchor::Function<TSubclassOf<AActor>* (*)(const AFortGameModeAthena*, TSubclassOf<AActor>*, TSubclassOf<AActor>)>(TEXT("AFortGameModeAthena::GetVehicleClassOverride"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Call()
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
         .Get();
 
