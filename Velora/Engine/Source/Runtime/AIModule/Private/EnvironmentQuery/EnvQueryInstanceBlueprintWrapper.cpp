@@ -25,6 +25,13 @@ void UEnvQueryInstanceBlueprintWrapper::RunQuery(EEnvQueryRunMode::Type InRunMod
         .Find("add [*+0x20], *")
         .Find("call 0x*; lea rcx, [*]; call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov edx, *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     RunQuery(this, (uint8)InRunMode, &QueryRequest);
