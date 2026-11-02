@@ -233,7 +233,21 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToSel
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToSelf"))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToSelf"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov [rsp+0x20], *; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Get();
+
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+
+    if (bClassByAddress)
+    {
+        ((FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const TSubclassOf<UGameplayEffect>*, float, FGameplayEffectContextHandle))BP_ApplyGameplayEffectToSelf)(this, &ActiveGameplayEffectHandle, &GameplayEffectClass, Level, MoveTemp(EffectContext));
+
+        return ActiveGameplayEffectHandle;
+    }
+
     BP_ApplyGameplayEffectToSelf(this, &ActiveGameplayEffectHandle, GameplayEffectClass, Level, MoveTemp(EffectContext));
 
     return ActiveGameplayEffectHandle;
