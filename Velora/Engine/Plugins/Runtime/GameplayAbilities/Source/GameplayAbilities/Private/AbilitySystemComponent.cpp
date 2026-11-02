@@ -19,6 +19,14 @@ bool UAbilitySystemComponent::HasAttributeSetForAttribute(FGameplayAttribute Att
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
         .Find("call 0x*; test al, al; jz 0x*")
         .Call()
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*; test al, al; jz 0x*")
+        .Call()
         .Get();
 
     return HasAttributeSetForAttribute(this, Attribute);
@@ -35,6 +43,14 @@ void UAbilitySystemComponent::CaptureAttributeForGameplayEffect(FGameplayEffectA
         .Find("call 0x*; test al, al; jz 0x*")
         .Find("call 0x*; lea rdx, [*]; mov rcx, *; call 0x*")
         .Call(2)
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("movdqa [*], xmm0; call 0x*")
+        .Call()
         .Get();
 
     CaptureAttributeForGameplayEffect(this, OutCaptureSpec);
