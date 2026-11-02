@@ -29,6 +29,12 @@ bool FFortLoadingScreenManager::ShouldShowLoadingScreen()
         .Find("mov rbx, rcx; call 0x*; cmp dword ptr [rbx+0x*], 0x1")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Loading screen showing: %d. Reason: %s"))
+        .Start()
+        .Find("mov rdi, rcx; call 0x*; cmp dword ptr [rdi+0x*], 0x1")
+        .Find("call 0x*")
+        .Target()
         .Optional()
         .Inline());
 
