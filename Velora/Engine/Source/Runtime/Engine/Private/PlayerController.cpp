@@ -21,6 +21,11 @@ void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
 {
     static auto ServerAcknowledgePossession = Anchor::VirtualFunction<void (*)(APlayerController*, APawn*)>(TEXT("APlayerController::ServerAcknowledgePossession_Implementation"))
         .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
         .Find("call [rax+*]", 2)
         .Get(TEXT("/Script/Engine.Default__PlayerController"));
 
