@@ -49,6 +49,11 @@ bool ULevel::IsAssociatingLevel() const
         .Start()
         .Find("mov rsi, rdx")
         .Find("or byte ptr [rsi+0x*], 0x*")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("mov [*], rax; cmp [*], r*; jz 0x*; or byte ptr [r*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("ULevel::bIsAssociatingLevel"))
@@ -70,6 +75,11 @@ bool ULevel::IsAssociatingLevel() const
         .Start()
         .Find("mov rsi, rdx")
         .Find("or byte ptr [rsi+0x*], 0x*")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("mov [*], rax; cmp [*], r*; jz 0x*; or byte ptr [r*+0x*], 0x*")
+        .Find("or byte ptr [*+0x*], 0x*")
         .Value();
 
     return *((uint8_t*)this + Offset) & Mask;
