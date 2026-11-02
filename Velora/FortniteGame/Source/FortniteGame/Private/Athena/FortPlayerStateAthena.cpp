@@ -178,6 +178,12 @@ void AFortPlayerStateAthena::InitializeDeathInfo(const FDeathInfo& NewDeathInfo)
         .Find("lea rdx, [r*]; mov rcx, r*; call 0x*")
         .Call()
         .FieldHas("add rcx, %x", DeathInfo)
+        .Or()
+        .Event(TEXT("ClientReportDBNO"))
+        .CallSite()
+        .Find("mov rcx, [rsp+0x*]; lea rdx, [rsp+0x*]; call 0x*")
+        .Call()
+        .FieldHas("*+%x]*", DeathInfo)
         .Get();
 
     if (InitializeDeathInfo)
