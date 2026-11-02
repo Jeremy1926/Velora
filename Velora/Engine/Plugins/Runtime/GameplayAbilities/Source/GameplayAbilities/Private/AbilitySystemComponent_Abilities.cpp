@@ -34,6 +34,11 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
         .Start()
         .Find("lea rdx, [rbp+0x*]; mov r8, *; mov rcx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Start()
+        .Find("lea rdx, [rsp+0x*]; mov r8, *; mov rcx, *; call 0x*")
+        .Call()
         .Get();
 
     static auto InternalServerTryActiveAbility = Anchor::Hook(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), &UAbilitySystemComponent::InternalServerTryActiveAbility)
@@ -184,6 +189,14 @@ void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, b
         .Find("lea rdx, [rbp+0x*]; mov r8, *; mov rcx, *; call 0x*")
         .Call()
         .Find("mov r8b, 0x1; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Start()
+        .Find("lea rdx, [rsp+0x*]; mov r8, *; mov rcx, *; call 0x*")
+        .Call()
+        .Find("mov r8b, *; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
