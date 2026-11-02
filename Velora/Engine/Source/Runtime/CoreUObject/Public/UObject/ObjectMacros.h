@@ -36,6 +36,7 @@ enum EObjectFlags
     RF_NonPIEDuplicateTransient = 0x02000000,
     RF_Dynamic = 0x04000000,
     RF_WillBeLoaded = 0x08000000,
+    RF_HasExternalPackage = 0x10000000,
 };
 
 enum class EInternalObjectFlags : int32
