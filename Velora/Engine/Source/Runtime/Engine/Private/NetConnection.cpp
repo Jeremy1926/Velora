@@ -386,6 +386,8 @@ void UNetConnection::Close()
         .Find("mov rcx, [rcx+rax*8]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("40 53 48 83 EC 50 48 8B D9 BA 0E 00 00 00 48 8D 4C 24 20 E8 ? ? ? ? 48 8B D0 48 8B CB E8")
         .Get();
 
     Close(this);
