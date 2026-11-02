@@ -413,6 +413,9 @@ void UNetDriver::TickFlush(float DeltaSeconds)
         .String(TEXT("UDemoNetDriver::TickFlush: ReplayStreamer ERROR: %s"))
         .Last("call 0x*")
         .Target()
+        .Or()
+        .String("STAT_NetTickFlush")
+        .Start()
         .Log(TEXT("UNetDriver::TickFlush"))
         .Inline());
 
