@@ -374,6 +374,9 @@ int64 UActorChannel::SetChannelActorForDestroy(FActorDestructionInfo* DestructIn
     {
         static auto SetChannelActorForDestroy = Anchor::Function<int64 (*)(UActorChannel*, FActorDestructionInfo*)>(TEXT("UActorChannel::SetChannelActorForDestroy"))
             .Pattern("40 55 53 56 57 41 54 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 33 F6 4C 8B F2 F6 41 30 02 4C 8B F9 0F 85 ? ? ? ? 48 8B 41 28 44 8B 80 ? ? ? ? 41 83 E8 02 41 83 F8 01 0F 87")
+            .Or()
+            .Pattern("F6 41 30 02 4C 8B E1 0F 85 ? ? ? ? 48 8B 41 28")
+            .Start()
             .Get();
 
         return SetChannelActorForDestroy(this, DestructInfo);
