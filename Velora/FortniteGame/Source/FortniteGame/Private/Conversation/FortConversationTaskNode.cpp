@@ -29,6 +29,10 @@ const FGameplayTagContainer& UFortConversationTaskNode::GetNodeTags() const
 bool UFortConversationTaskNode::HasPreviewData(const FConversationContext& Context, const FClientConversationOptionEntry& Option) const
 {
     static auto HasPreviewData = Anchor::VirtualFunction<bool (*)(const UFortConversationTaskNode*, const FConversationContext&, const FClientConversationOptionEntry&)>(TEXT("UFortConversationTaskNode::HasPreviewData"))
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:GetDisplayAssetForChoice"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), 0x8)
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:OnPreviewedChoicePickedByUser"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), 0x8)
@@ -44,6 +48,10 @@ bool UFortConversationTaskNode::HasPreviewData(const FConversationContext& Conte
 void UFortConversationTaskNode::FillPreviewData(const FConversationContext& Context, const FClientConversationOptionEntry& Option, TArray<FConversationNodeParameterPair>& OutPreviewData) const
 {
     static auto FillPreviewData = Anchor::VirtualFunction<void (*)(const UFortConversationTaskNode*, const FConversationContext&, const FClientConversationOptionEntry&, TArray<FConversationNodeParameterPair>&)>(TEXT("UFortConversationTaskNode::FillPreviewData"))
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:GetDisplayAssetForChoice"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), 0x10)
+        .Or()
         .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:OnPreviewedChoicePickedByUser"))
         .Find("call [*+0x*]")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), 0x10)
