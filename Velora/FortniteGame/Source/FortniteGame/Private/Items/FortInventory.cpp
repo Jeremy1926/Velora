@@ -86,6 +86,11 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
         .Find("mov rcx, r*; call 0x*; test eax, eax; jnz 0x*")
         .Call()
         .Has("xor r9d, r9d; mov r8d, *; mov rdx, rax; mov rcx, *")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov rcx, r*; mov r*, al; call 0x*; test eax, eax; jnz 0x*")
+        .Call()
+        .Has("xor r9d, r9d; mov r8d, *; mov rdx, rax; mov rcx, *")
         .Get();
 
     return GetOverflowFromAddingItem(this, ItemEntry);
