@@ -114,6 +114,9 @@ double UNetConnection::GetLastReceiveTime() const
 int32& UNetConnection::GetQueuedBits()
 {
     static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov r8d, [rcx+0x*]; mov eax, 0x1; shr r8d, 0x2; mov r10b, dl; test al, r8b; jnz *; xor edx, edx")
+        .Find("lea r8, [rcx+0x*]")
+        .Or()
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("xor edx, edx")
@@ -129,6 +132,9 @@ int32& UNetConnection::GetQueuedBits()
 int32 UNetConnection::GetTickCount() const
 {
     static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov r8d, [rcx+0x*]; mov eax, 0x1; shr r8d, 0x2; mov r10b, dl; test al, r8b; jnz *; xor edx, edx")
+        .Find("lea r8, [rcx+0x*]")
+        .Or()
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("xor edx, edx")
@@ -144,6 +150,9 @@ int32 UNetConnection::GetTickCount() const
 void UNetConnection::SetTickCount(int32 InTickCount)
 {
     static auto QueuedBits = Anchor::Offset(TEXT("UNetConnection::QueuedBits"))
+        .VirtualMatch(TEXT("/Script/Engine.Default__NetConnection"), "sub rsp, 0x28; mov r8d, [rcx+0x*]; mov eax, 0x1; shr r8d, 0x2; mov r10b, dl; test al, r8b; jnz *; xor edx, edx")
+        .Find("lea r8, [rcx+0x*]")
+        .Or()
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("xor edx, edx")
