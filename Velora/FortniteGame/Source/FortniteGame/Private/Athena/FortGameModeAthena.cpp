@@ -1258,6 +1258,13 @@ int32& AFortGameModeAthena::GetWarmupRequiredPlayerCount()
     return *WarmupRequiredPlayerCount->ContainerPtrToValuePtr<int32>(this);
 }
 
+int32 AFortGameModeAthena::GetMaxPlayerCount() const
+{
+    static auto MaxPlayerCount = GetClass()->FindPropertyByName(FName(TEXT("MaxPlayerCount")));
+
+    return *MaxPlayerCount->ContainerPtrToValuePtr<int32>(this);
+}
+
 TArray<AFortPlayerControllerAthena*>& AFortGameModeAthena::GetAlivePlayers()
 {
     static auto AlivePlayers = GetClass()->FindPropertyByName(FName(TEXT("AlivePlayers")));

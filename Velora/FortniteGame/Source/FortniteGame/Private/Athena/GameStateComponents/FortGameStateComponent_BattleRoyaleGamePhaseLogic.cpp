@@ -1,11 +1,16 @@
 #include "pch.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortGameModeAthena.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "Templates/Casts.h"
+#include "Math/UnrealMathUtility.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "UObject/Class.h"
+#include "UObject/ScriptDelegates.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -27,6 +32,16 @@ UFortGameStateComponent_BattleRoyaleGamePhaseLogic* UFortGameStateComponent_Batt
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandleMatchHasStarted()
 {
+    if (!FParse::Param(FCommandLine::Get(), TEXT("nomcp")))
+    {
+        GetWarmupCountdownDuration() = 60.0f;
+    }
+    else
+    {
+        GetWarmupCountdownDuration() = 15.0f;
+        GetWarmupEarlyCountdownDuration() = 15.0f;
+    }
+
     StartWarmupPhase();
 }
 
@@ -55,6 +70,39 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartWarmupPhase()
     SetGamePhase(EAthenaGamePhase::Warmup);
 
     return true;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateWarmupPhase()
+{
+    static auto OnWarmupCountdownEndTimeUpdated = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("OnWarmupCountdownEndTimeUpdated")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto GameMode = GameState ? Cast<AFortGameModeAthena>(GameState->GetWorld()->GetAuthGameMode()) : nullptr;
+
+    if (!GameMode)
+        return;
+
+    const float ServerWorldTimeSeconds = GameState->GetServerWorldTimeSeconds();
+    auto& WarmupCountdownEndTime = GetWarmupCountdownEndTime();
+
+    if (WarmupCountdownEndTime < 0.0f)
+    {
+        GetWarmupCountdownStartTime() = ServerWorldTimeSeconds;
+        WarmupCountdownEndTime = ServerWorldTimeSeconds + GetWarmupCountdownDuration();
+        return;
+    }
+
+    if (ServerWorldTimeSeconds >= WarmupCountdownEndTime || WarmupCountdownEndTime - ServerWorldTimeSeconds <= GetWarmupEarlyCountdownDuration())
+        return;
+
+    if (GameMode->CountReadyPlayers() < FMath::CeilToInt(GameMode->GetMaxPlayerCount() * GetWarmupEarlyRequiredPlayerPercent()))
+        return;
+
+    float NewWarmupCountdownEndTime = ServerWorldTimeSeconds + GetWarmupEarlyCountdownDuration();
+    WarmupCountdownEndTime = NewWarmupCountdownEndTime;
+
+    if (OnWarmupCountdownEndTimeUpdated)
+        OnWarmupCountdownEndTimeUpdated->ContainerPtrToValuePtr<FMulticastScriptDelegate>(GameState)->ProcessMulticastDelegate<UObject>(&NewWarmupCountdownEndTime);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGamePhase InGamePhase)
@@ -86,6 +134,48 @@ EAthenaGamePhaseStep UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetGame
     static auto GamePhaseStep = StaticClass()->FindPropertyByName(FName(TEXT("GamePhaseStep")));
 
     return *GamePhaseStep->ContainerPtrToValuePtr<EAthenaGamePhaseStep>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupCountdownStartTime()
+{
+    static auto WarmupCountdownStartTime = StaticClass()->FindPropertyByName(FName(TEXT("WarmupCountdownStartTime")));
+
+    return *WarmupCountdownStartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupCountdownEndTime()
+{
+    static auto WarmupCountdownEndTime = StaticClass()->FindPropertyByName(FName(TEXT("WarmupCountdownEndTime")));
+
+    return *WarmupCountdownEndTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupCountdownDuration()
+{
+    static auto WarmupCountdownDuration = StaticClass()->FindPropertyByName(FName(TEXT("WarmupCountdownDuration")));
+
+    return *WarmupCountdownDuration->ContainerPtrToValuePtr<float>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupEarlyCountdownDuration()
+{
+    static auto WarmupEarlyCountdownDuration = StaticClass()->FindPropertyByName(FName(TEXT("WarmupEarlyCountdownDuration")));
+
+    return *WarmupEarlyCountdownDuration->ContainerPtrToValuePtr<float>(this);
+}
+
+float UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetWarmupEarlyRequiredPlayerPercent() const
+{
+    static auto PlaylistWarmupEarlyRequiredPlayerPercent = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("WarmupEarlyRequiredPlayerPercent")));
+    static auto DefaultWarmupEarlyRequiredPlayerPercent = StaticClass()->FindPropertyByName(FName(TEXT("DefaultWarmupEarlyRequiredPlayerPercent")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
+
+    if (Playlist && *PlaylistWarmupEarlyRequiredPlayerPercent->ContainerPtrToValuePtr<float>(Playlist) > 0.0f)
+        return *PlaylistWarmupEarlyRequiredPlayerPercent->ContainerPtrToValuePtr<float>(Playlist);
+
+    return FParse::Param(FCommandLine::Get(), TEXT("nomcp")) ? 0.0f : *DefaultWarmupEarlyRequiredPlayerPercent->ContainerPtrToValuePtr<float>(this);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZonesStartTime(float InSafeZonesStartTime)

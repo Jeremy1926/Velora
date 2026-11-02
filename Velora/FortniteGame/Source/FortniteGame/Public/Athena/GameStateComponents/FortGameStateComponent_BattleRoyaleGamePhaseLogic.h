@@ -18,6 +18,8 @@ public:
 
     bool StartWarmupPhase();
 
+    void UpdateWarmupPhase();
+
     void SetGamePhase(EAthenaGamePhase InGamePhase);
 
     void SetGameModeWillSkipAircraft(bool bInGameModeWillSkipAircraft);
@@ -27,4 +29,14 @@ public:
     EAthenaGamePhaseStep GetGamePhaseStep() const;
 
     void SetSafeZonesStartTime(float InSafeZonesStartTime);
+
+    float& GetWarmupCountdownStartTime();
+
+    float& GetWarmupCountdownEndTime();
+
+    float& GetWarmupCountdownDuration();
+
+    float& GetWarmupEarlyCountdownDuration();
+
+    float GetWarmupEarlyRequiredPlayerPercent() const;
 };

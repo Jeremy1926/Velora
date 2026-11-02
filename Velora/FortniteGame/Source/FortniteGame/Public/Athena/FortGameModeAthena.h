@@ -80,6 +80,8 @@ public:
 
     int32& GetWarmupRequiredPlayerCount();
 
+    int32 GetMaxPlayerCount() const;
+
     TArray<AFortPlayerControllerAthena*>& GetAlivePlayers();
 
     TArray<AFortAthenaAIBotController*>& GetAliveBots();
