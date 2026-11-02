@@ -603,6 +603,20 @@ UScriptStruct* FZiplinePawnState::StaticStruct()
     return Struct;
 }
 
+FWeakObjectPtr& FZiplinePawnState::GetZipline()
+{
+    static auto Zipline = StaticStruct()->FindPropertyByName(FName(TEXT("Zipline")));
+
+    return *Zipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this);
+}
+
+FWeakObjectPtr* FZiplinePawnState::GetPreviousZipline()
+{
+    static auto PreviousZipline = StaticStruct()->FindPropertyByName(FName(TEXT("PreviousZipline")));
+
+    return PreviousZipline ? PreviousZipline->ContainerPtrToValuePtr<FWeakObjectPtr>(this) : nullptr;
+}
+
 int32 FZiplinePawnState::GetAuthoritativeValue() const
 {
     static auto AuthoritativeValue = StaticStruct()->FindPropertyByName(FName(TEXT("AuthoritativeValue")));
@@ -644,7 +658,16 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
     auto& ZiplineState = GetZiplineState();
 
     if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
+    {
+        auto OldZipline = ZiplineState.GetZipline();
+        auto PreviousZipline = ZiplineState.GetPreviousZipline();
+        auto OldPreviousZipline = PreviousZipline ? *PreviousZipline : OldZipline;
+
         memcpy(&ZiplineState, &InZiplineState, FZiplinePawnState::StaticStruct()->GetPropertiesSize());
+
+        if (PreviousZipline)
+            *PreviousZipline = ZiplineState.GetZipline() == OldZipline ? OldPreviousZipline : OldZipline;
+    }
 
     HandleZiplineStateChanged();
 }
