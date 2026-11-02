@@ -207,7 +207,21 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
         .Get();
 
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; lea rdx, [*]; movss [rsp+0x20], xmm*; mov rcx, *; call 0x*")
+        .Get();
+
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+
+    if (bClassByAddress)
+    {
+        ((FActiveGameplayEffectHandle* (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle*, const TSubclassOf<UGameplayEffect>*, UAbilitySystemComponent*, float, FGameplayEffectContextHandle))BP_ApplyGameplayEffectToTarget)(this, &ActiveGameplayEffectHandle, &GameplayEffectClass, Target, Level, MoveTemp(Context));
+
+        return ActiveGameplayEffectHandle;
+    }
+
     BP_ApplyGameplayEffectToTarget(this, &ActiveGameplayEffectHandle, GameplayEffectClass, Target, Level, MoveTemp(Context));
 
     return ActiveGameplayEffectHandle;
