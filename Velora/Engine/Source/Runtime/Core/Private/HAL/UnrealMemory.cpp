@@ -91,6 +91,8 @@ void FMemory::Free(void* Original)
         .Is("jmp 0x*")
         .Target()
         .Is("test rcx, rcx; jz *; push rdi")
+        .Or()
+        .Pattern("48 85 C9 0F 84 ? ? ? ? 57 48 83 EC 70 4C 89 74 24 40 48 8B F9 4C 8B 35 ? ? ? ? 4D 85 F6 0F 84 ? ? ? ? 49 8B 06 4C 8B 40 48")
         .Get();
 
     Free(Original);
