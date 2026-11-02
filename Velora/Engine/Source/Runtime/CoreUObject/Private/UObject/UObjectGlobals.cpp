@@ -54,6 +54,12 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
         .Target()
         .Or()
         .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("mov dword ptr [rsp+0x*], 0x1c; mov [rsp+0x*], *")
+        .Find("lea r8, [rsp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
         .Find("call 0x*")
         .Target()
         .Get();
@@ -61,6 +67,9 @@ UObject* StaticFindObject(UClass* ObjectClass, UObject* InObjectPackage, const T
     static auto bNameView = Anchor::Exists()
         .String(TEXT("GlobalUMGSequenceTickManager"))
         .Find("mov [r8], rax; mov dword ptr [r8+0x8], 0x1c")
+        .Or()
+        .String(TEXT("GlobalUMGSequenceTickManager"))
+        .Find("mov dword ptr [rsp+0x*], 0x1c; mov [rsp+0x*], *")
         .Get();
 
     struct
