@@ -32,6 +32,8 @@ public:
 
     bool IsEmpty() const;
 
+    static int32 GetTypeSize();
+
     static FText Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments);
 
     static FText Format(FTextFormat Fmt, FFormatArgumentValue v1);

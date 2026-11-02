@@ -8,11 +8,16 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+int32 FText::GetTypeSize()
+{
+    static auto TypeSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText")))->FindPropertyByName(FName(TEXT("ReturnValue")))->GetSize();
+
+    return TypeSize;
+}
+
 bool FText::HasRefCountedTextData()
 {
-    static auto bRefCountedTextData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText")))->FindPropertyByName(FName(TEXT("ReturnValue")))->GetSize() < (int32)sizeof(FText);
-
-    return bRefCountedTextData;
+    return GetTypeSize() < (int32)sizeof(FText);
 }
 
 FText::FText()
@@ -319,5 +324,5 @@ FFormatArgumentValue::FFormatArgumentValue(const FText& Value)
 
     Type = 4;
     new (&TextValue) FText(Value);
-    bIsTextValueSet = true;
+    *(bool*)((uint8*)&TextValue + FText::GetTypeSize()) = true;
 }
