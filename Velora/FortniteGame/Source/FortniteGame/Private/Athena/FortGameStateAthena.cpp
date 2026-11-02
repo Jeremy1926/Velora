@@ -79,7 +79,20 @@ AFortGameplayMutator* AFortGameStateAthena::GetMutatorByClass_Implementation(con
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
         .Find("setnz *")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("setnz *")
+        .Find("mov *, [rax+0x*]")
         .Get();
+
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rcx, *; call *")
+        .Get();
+
+    if (bClassByAddress)
+        return GetMutatorByClass.As<AFortGameplayMutator* (*)(AFortGameStateAthena*, const AActor*, const TSubclassOf<AFortGameplayMutator>*)>()(this, ContextActor, &MutatorClass);
 
     return GetMutatorByClass(this, ContextActor, MutatorClass);
 }
