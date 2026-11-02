@@ -1480,6 +1480,15 @@ void AFortPlayerController::ServerBeginEditingBuildingActor_Implementation(ABuil
 
 void AFortPlayerController::ServerEditBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit, UClass* NewBuildingClass, uint8 RotationIterations, bool bMirrored)
 {
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [rbp-0x*]; mov r9b, *; mov [rsp+0x20], *; mov rcx, *; call rbx")
+        .Get();
+
+    if (bClassByAddress && NewBuildingClass)
+        NewBuildingClass = *(UClass**)NewBuildingClass;
+
     if (!BuildingActorToEdit || !BuildingActorToEdit->GetWorld() || (APlayerState*)BuildingActorToEdit->GetEditingPlayer() != GetPlayerState() || BuildingActorToEdit->GetDestroyed())
         return;
 
