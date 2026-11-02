@@ -34,6 +34,46 @@ namespace Anchor
         return Value > 0 && Value < 0x10000 && !(Value % sizeof(void*));
     }
 
+    class FCipher
+    {
+    public:
+        uint64_t Decrypt(uint64_t Value) const;
+
+        bool IsEncrypted() const
+        {
+            return Count > 0;
+        }
+
+        template<typename ValueType>
+        ValueType Load(const void* Object) const
+        {
+            uint64_t Value = 0;
+            memcpy(&Value, (const uint8_t*)Object + Offset, Size);
+            Value = Decrypt(Value);
+
+            ValueType Result;
+            memcpy(&Result, &Value, sizeof(Result));
+
+            return Result;
+        }
+
+        int64_t Offset = 0;
+        uint8_t Size = 0;
+
+    private:
+        friend class FCode;
+
+        struct FStep
+        {
+            uint16_t Mnemonic;
+            uint8_t Width;
+            uint64_t Operand;
+        };
+
+        FStep Steps[8] = {};
+        uint8_t Count = 0;
+    };
+
     class FCode
     {
     public:
@@ -55,6 +95,8 @@ namespace Anchor
         int64_t Imm(const wchar_t* Name) const;
         const uint8_t* Target() const;
         const uint8_t* Target(const wchar_t* Name) const;
+        FCipher Cipher() const;
+        FCipher Cipher(const wchar_t* Name) const;
 
         bool Is(std::string_view Instructions) const;
         bool Has(std::string_view Instructions) const;

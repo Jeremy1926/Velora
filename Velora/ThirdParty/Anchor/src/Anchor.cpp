@@ -768,6 +768,251 @@ namespace Anchor
         return FCode(Target()).Get(Name);
     }
 
+    uint64_t FCipher::Decrypt(uint64_t Value) const
+    {
+        for (uint8_t Index = 0; Index < Count; Index++)
+        {
+            auto& Step = Steps[Index];
+            auto Mask = Step.Width >= 64 ? ~0ull : (1ull << Step.Width) - 1;
+            auto Bits = Value & Mask;
+            auto Shift = Step.Operand % Step.Width;
+
+            switch (Step.Mnemonic)
+            {
+            case ZYDIS_MNEMONIC_XOR:
+                Bits ^= Step.Operand;
+                break;
+            case ZYDIS_MNEMONIC_ADD:
+                Bits += Step.Operand;
+                break;
+            case ZYDIS_MNEMONIC_SUB:
+                Bits -= Step.Operand;
+                break;
+            case ZYDIS_MNEMONIC_NOT:
+                Bits = ~Bits;
+                break;
+            case ZYDIS_MNEMONIC_NEG:
+                Bits = 0 - Bits;
+                break;
+            case ZYDIS_MNEMONIC_ROR:
+                Bits = Shift ? Bits >> Shift | Bits << (Step.Width - Shift) : Bits;
+                break;
+            case ZYDIS_MNEMONIC_ROL:
+                Bits = Shift ? Bits << Shift | Bits >> (Step.Width - Shift) : Bits;
+                break;
+            case ZYDIS_MNEMONIC_BSWAP:
+                Bits = Step.Width >= 64 ? _byteswap_uint64(Bits) : _byteswap_ulong((unsigned long)Bits);
+                break;
+            case ZYDIS_MNEMONIC_MOVSXD:
+                Bits = (uint64_t)(int64_t)(int32_t)Bits;
+                break;
+            }
+
+            Value = Bits & Mask;
+        }
+
+        return Value;
+    }
+
+    FCipher FCode::Cipher() const
+    {
+        FCipher Result;
+        FInstruction Instruction;
+
+        if (!Address || !Decode(Address, Instruction) || Instruction.Info.operand_count_visible != 2 || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
+            return Result;
+
+        if (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOVZX && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOVSXD)
+            return Result;
+
+        auto& Load = Instruction.Operands[1].mem;
+        Result.Offset = Load.base == ZYDIS_REGISTER_RIP ? (int64_t)(Address + Instruction.Info.length + Load.disp.value) : Load.disp.value;
+        Result.Size = (uint8_t)(Instruction.Operands[1].size / 8);
+
+        auto Root = [](ZydisRegister Register)
+        {
+            auto Largest = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Register);
+
+            return Largest >= ZYDIS_REGISTER_RAX && Largest <= ZYDIS_REGISTER_R15 ? 1u << (Largest - ZYDIS_REGISTER_RAX) : 0u;
+        };
+
+        auto Bit = [](uint32_t Mask)
+        {
+            unsigned long Index = 0;
+            _BitScanForward(&Index, Mask);
+
+            return Index;
+        };
+
+        uint64_t Constants[16] = {};
+        uint32_t Known = 0;
+        uint32_t Tracked = Root(Instruction.Operands[0].reg.value);
+        uint32_t Volatile = Root(ZYDIS_REGISTER_RAX) | Root(ZYDIS_REGISTER_RCX) | Root(ZYDIS_REGISTER_RDX) | Root(ZYDIS_REGISTER_R8) | Root(ZYDIS_REGISTER_R9) | Root(ZYDIS_REGISTER_R10) | Root(ZYDIS_REGISTER_R11);
+
+        auto Remember = [&](const FInstruction& Next)
+        {
+            auto& Destination = Next.Operands[0];
+
+            if (Next.Info.mnemonic == ZYDIS_MNEMONIC_CALL)
+            {
+                Known &= ~Volatile;
+                return;
+            }
+
+            if (!Next.Info.operand_count_visible || Destination.type != ZYDIS_OPERAND_TYPE_REGISTER || !(Destination.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) || !Root(Destination.reg.value))
+                return;
+
+            auto Register = Root(Destination.reg.value);
+
+            if (Next.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Next.Info.operand_count_visible == 2 && Next.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                Constants[Bit(Register)] = Destination.size == 32 ? (uint32_t)Next.Operands[1].imm.value.u : (uint64_t)Next.Operands[1].imm.value.s;
+                Known |= Register;
+            }
+            else
+            {
+                Known &= ~Register;
+            }
+        };
+
+        Walk(FindRange(Address).first, true, [&](const FInstruction& Previous)
+        {
+            if (Previous.Address >= Address)
+                return true;
+
+            Remember(Previous);
+
+            return false;
+        });
+
+        auto Add = [&](ZydisMnemonic Mnemonic, uint16_t Width, uint64_t Operand)
+        {
+            if (Result.Count < sizeof(Result.Steps) / sizeof(Result.Steps[0]))
+                Result.Steps[Result.Count++] = { (uint16_t)Mnemonic, (uint8_t)Width, Width >= 64 ? Operand : Operand & ((1ull << Width) - 1) };
+        };
+
+        auto Next = Address + Instruction.Info.length;
+
+        for (int32_t Remaining = 32; Remaining > 0 && Tracked && Decode(Next, Instruction); Remaining--, Next += Instruction.Info.length)
+        {
+            auto Category = Instruction.Info.meta.category;
+            auto Mnemonic = Instruction.Info.mnemonic;
+
+            if (Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET)
+                break;
+
+            const ZydisDecodedOperand* Memory = nullptr;
+            bool bReads = false;
+
+            for (ZyanU8 Index = 0; Index < Instruction.Info.operand_count_visible; Index++)
+            {
+                auto& Operand = Instruction.Operands[Index];
+
+                if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && ((Root(Operand.mem.base) | Root(Operand.mem.index)) & Tracked))
+                    Memory = &Operand;
+
+                if (Index && Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && (Root(Operand.reg.value) & Tracked))
+                    bReads = true;
+            }
+
+            auto& Destination = Instruction.Operands[0];
+            auto Register = Instruction.Info.operand_count_visible && Destination.type == ZYDIS_OPERAND_TYPE_REGISTER ? Root(Destination.reg.value) : 0u;
+            auto Width = Destination.size;
+            auto& Source = Instruction.Operands[1];
+            bool bSource = Instruction.Info.operand_count_visible > 1;
+
+            if (Memory)
+            {
+                if ((Mnemonic == ZYDIS_MNEMONIC_MOV || Mnemonic == ZYDIS_MNEMONIC_LEA) && (Root(Memory->mem.base) & Tracked) && Memory->mem.index != ZYDIS_REGISTER_NONE && !(Root(Memory->mem.index) & Tracked) && Memory->mem.disp.value)
+                    Add(ZYDIS_MNEMONIC_ADD, 64, (uint64_t)Memory->mem.disp.value);
+                else if (Mnemonic == ZYDIS_MNEMONIC_LEA && (Root(Memory->mem.base) & Tracked) && Memory->mem.index == ZYDIS_REGISTER_NONE && (Register & Tracked))
+                {
+                    Add(ZYDIS_MNEMONIC_ADD, Width, (uint64_t)Memory->mem.disp.value);
+                    Tracked = Register;
+                    continue;
+                }
+
+                break;
+            }
+
+            if (Mnemonic == ZYDIS_MNEMONIC_CDQE && (Tracked & Root(ZYDIS_REGISTER_RAX)))
+            {
+                Add(ZYDIS_MNEMONIC_MOVSXD, 64, 0);
+                continue;
+            }
+
+            if (!Register)
+            {
+                if (bReads)
+                    break;
+
+                continue;
+            }
+
+            if (Register & Tracked)
+            {
+                if ((Mnemonic == ZYDIS_MNEMONIC_XOR || Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB) && bSource && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    Add(Mnemonic, Width, (uint64_t)Source.imm.value.s);
+                else if ((Mnemonic == ZYDIS_MNEMONIC_XOR || Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB) && bSource && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && (Root(Source.reg.value) & Known) && !(Root(Source.reg.value) & Tracked))
+                    Add(Mnemonic, Width, Constants[Bit(Root(Source.reg.value))]);
+                else if (Mnemonic == ZYDIS_MNEMONIC_NOT || Mnemonic == ZYDIS_MNEMONIC_NEG || Mnemonic == ZYDIS_MNEMONIC_BSWAP)
+                    Add(Mnemonic, Width, 0);
+                else if ((Mnemonic == ZYDIS_MNEMONIC_ROR || Mnemonic == ZYDIS_MNEMONIC_ROL) && bSource && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    Add(Mnemonic, Width, Source.imm.value.u);
+                else if (Mnemonic == ZYDIS_MNEMONIC_MOVSXD && bSource && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Root(Source.reg.value) == Register)
+                    Add(ZYDIS_MNEMONIC_MOVSXD, 64, 0);
+                else if ((Mnemonic == ZYDIS_MNEMONIC_MOV || Mnemonic == ZYDIS_MNEMONIC_MOVZX || Mnemonic == ZYDIS_MNEMONIC_MOVSX || Mnemonic == ZYDIS_MNEMONIC_MOVSXD || Mnemonic == ZYDIS_MNEMONIC_LEA) && !bReads)
+                {
+                    Tracked &= ~Register;
+                    Remember(Instruction);
+                    continue;
+                }
+                else
+                    break;
+
+                Tracked = Register;
+                continue;
+            }
+
+            if (bReads)
+            {
+                if (Mnemonic == ZYDIS_MNEMONIC_MOV)
+                {
+                    Tracked |= Register;
+                    Known &= ~Register;
+                    continue;
+                }
+
+                if (Mnemonic == ZYDIS_MNEMONIC_MOVSXD)
+                    Add(ZYDIS_MNEMONIC_MOVSXD, 64, 0);
+                else if ((Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_XOR) && (Register & Known))
+                    Add(Mnemonic, Width, Constants[Bit(Register)]);
+                else
+                    break;
+
+                Tracked = Register;
+                Known &= ~Register;
+                continue;
+            }
+
+            Remember(Instruction);
+        }
+
+        return Result;
+    }
+
+    FCipher FCode::Cipher(const wchar_t* Name) const
+    {
+        auto Result = Cipher();
+
+        if (Result.Size)
+            Private::Log(ELogLevel::Log, L"Found %s offset 0x%llX (%d steps)", Name, Result.Offset, Result.Count);
+        else
+            Private::Log(ELogLevel::Error, L"Could not find %s", Name);
+
+        return Result;
+    }
+
     bool FCode::Is(std::string_view Instructions) const
     {
         return Address && Matches(Address, Instructions);

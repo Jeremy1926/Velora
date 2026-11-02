@@ -1191,4 +1191,18 @@ namespace Anchor
             return this->Code.Is("and *") ? ~this->Code.Imm() : this->Code.Imm();
         }
     };
+
+    class Cipher : public TChain<Cipher>
+    {
+    public:
+        explicit Cipher(const wchar_t* InName)
+            : TChain<Cipher>(InName)
+        {
+        }
+
+        FCipher Get() const
+        {
+            return this->bMissing ? FCipher() : this->Code.Cipher(this->Name);
+        }
+    };
 }
