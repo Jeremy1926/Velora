@@ -124,6 +124,12 @@ void FMemory::Free(void* Original)
         .Or()
         .Pattern("48 8B F9 48 8B 35 ? ? ? ? 48 85 F6 0F 84 ? ? ? ? 48 8B 06 4C 8B 40 48")
         .Start()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetStringLibrary:Conv_NameToString"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("mov rcx, [r*]; test rcx, rcx; jz *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Free(Original);
