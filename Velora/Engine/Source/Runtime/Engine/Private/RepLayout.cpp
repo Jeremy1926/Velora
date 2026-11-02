@@ -72,7 +72,6 @@ void FRepLayout::ClearSharedSerializationForRPC()
         .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
         .Start()
         .Find("lea rcx, [r*+0x*]; call 0x*; mov rcx, [rsp+0x*]; mov [r*+0x*], e*")
-        .Find("lea rcx, [r*+0x*]")
         .Disp();
 
     if (SharedInfoRPC > 0)
