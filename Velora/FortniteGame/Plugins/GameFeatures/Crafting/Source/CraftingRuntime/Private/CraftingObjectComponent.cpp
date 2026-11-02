@@ -24,6 +24,14 @@ UClass* UCraftingObjectComponent::StaticClass()
     return Class;
 }
 
+template<>
+UEnum* StaticEnum<ECraftingObjectState>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.ECraftingObjectState"));
+
+    return Enum;
+}
+
 void UCraftingObjectComponent::StartCrafting(AFortPlayerController* Instigator, const FName& FormulaRow)
 {
     static auto StartCrafting = Anchor::Function<void (*)(UCraftingObjectComponent*, AFortPlayerController*, const FName*)>(TEXT("UCraftingObjectComponent::StartCrafting"))
@@ -72,9 +80,11 @@ void UCraftingObjectComponent::CancelCrafting()
     if (!Owner || !Owner->HasAuthority() || GetCraftingObjectState() != ECraftingObjectState::Crafting || !HasStateChangeTimer())
         return;
 
+    static auto Resetting = (ECraftingObjectState)StaticEnum<ECraftingObjectState>()->GetValueByName(FName(TEXT("ECraftingObjectState::Resetting")));
+
     SendGameplayEvent(FGameplayTag::RequestGameplayTag(FName(TEXT("Event.Athena.Crafting.CraftingCancelled")), false), 0.0f);
     HandleCratingObjectResetting();
-    SetCraftingObjectState(ECraftingObjectState::Resetting);
+    SetCraftingObjectState(Resetting);
 }
 
 void UCraftingObjectComponent::ClaimCraftingResults()
@@ -84,8 +94,10 @@ void UCraftingObjectComponent::ClaimCraftingResults()
     if (!Owner || !Owner->HasAuthority())
         return;
 
+    static auto Resetting = (ECraftingObjectState)StaticEnum<ECraftingObjectState>()->GetValueByName(FName(TEXT("ECraftingObjectState::Resetting")));
+
     HandleCratingObjectResetting();
-    SetCraftingObjectState(ECraftingObjectState::Resetting);
+    SetCraftingObjectState(Resetting);
 }
 
 void UCraftingObjectComponent::EjectItems()
