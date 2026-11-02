@@ -14,6 +14,13 @@ void AFortOctopusVehicle::ServerUpdateTowhook_Implementation(const TGameValue<FV
         .Find("call [*+0x*]", 2)
         .LogSlot(TEXT("AFortOctopusVehicle::ServerUpdateTowhook_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortOctopusVehicle"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortOctopusVehicle:ServerUpdateTowhook"))
+        .Optional()
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("AFortOctopusVehicle::ServerUpdateTowhook_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortOctopusVehicle"), "ret*")
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortOctopusVehicle")));
 
