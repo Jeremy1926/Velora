@@ -4,6 +4,35 @@
 
 void FOutputDeviceRedirector::AddOutputDevice(FOutputDevice* OutputDevice)
 {
+    static auto FileTearDown = Anchor::Optional<void (*)(FOutputDevice*)>(TEXT("FOutputDeviceFile::TearDown"))
+        .String(TEXT("Log file closed, %s"))
+        .Start()
+        .Get();
+
+    static auto FileVTable = Anchor::Optional<void* const*>(TEXT("FOutputDeviceFile::VTable"))
+        .String(TEXT("Log file closed, %s"))
+        .Start()
+        .Caller()
+        .Find("lea rax, [0x*]; mov *, rcx; mov [rcx], rax")
+        .Target()
+        .Get();
+
+    if (OutputDevice && FileTearDown && FileVTable && FileVTable[5] == (void*)FileTearDown)
+    {
+        auto VTable = *(void* const**)OutputDevice;
+        auto RecordVTable = new void*[11];
+
+        RecordVTable[0] = VTable[0];
+        RecordVTable[1] = VTable[1];
+        RecordVTable[2] = VTable[2];
+        RecordVTable[3] = FileVTable[3];
+
+        for (int32 Index = 3; Index < 10; Index++)
+            RecordVTable[Index + 1] = VTable[Index];
+
+        *(void***)OutputDevice = RecordVTable;
+    }
+
     static auto AddOutputDevice = Anchor::Optional<void (*)(FOutputDeviceRedirector*, FOutputDevice*)>(TEXT("FOutputDeviceRedirector::AddOutputDevice"))
         .String(TEXT("NOCONSOLE"))
         .Call(3)
