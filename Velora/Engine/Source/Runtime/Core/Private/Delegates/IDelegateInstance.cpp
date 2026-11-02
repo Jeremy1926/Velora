@@ -88,13 +88,13 @@ bool IDelegateInstance::IsDestructorFirst()
                 if (VTable[Index + 1] != VTable[Index] || VTable[Index + 2] != VTable[Index] || !Anchor::IsCode(VTable[Index]) || !Anchor::IsCode(VTable[Index + 3]) || !Anchor::IsCode(VTable[Index + 4]))
                     continue;
 
-                if (!Anchor::At(VTable[Index]).Is("xor eax, eax; ret") || !Anchor::At(VTable[Index + 3]).Is("xor al, al; ret"))
+                if (!Anchor::At(VTable[Index]).Is("xor eax, eax; ret") || !Anchor::At(VTable[Index + 3]).Is("xor al, al; ret") && !Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rax, [rax+0x30]; lea rdx, [0x*]; cmp rax, rdx"))
                     continue;
 
                 if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x28]"))
                     return false;
 
-                if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rdx, [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("add rsp, 0xffffffffffffffd8; mov rax, [rcx]; call [rax+0x30]"))
+                if (Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rdx, [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("add rsp, 0xffffffffffffffd8; mov rax, [rcx]; call [rax+0x30]") || Anchor::At(VTable[Index + 4]).Is("sub rsp, 0x28; mov rax, [rcx]; mov rax, [rax+0x30]; lea rdx, [0x*]; cmp rax, rdx"))
                     return true;
             }
         }
