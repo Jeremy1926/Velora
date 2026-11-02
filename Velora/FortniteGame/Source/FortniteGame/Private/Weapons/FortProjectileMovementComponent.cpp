@@ -62,6 +62,11 @@ void UFortProjectileMovementComponent::SetVelocity(const FVector& InReplicatedVe
 
     static auto VirtualSetVelocity = Anchor::VirtualFunction<void (*)(UFortProjectileMovementComponent*, const TGameValue<FVector>&)>(TEXT("UFortProjectileMovementComponent::SetVelocity"))
         .Exec(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
+        .Find("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
         .Find("call [rax+0x*]")
         .Optional()
         .Get();
