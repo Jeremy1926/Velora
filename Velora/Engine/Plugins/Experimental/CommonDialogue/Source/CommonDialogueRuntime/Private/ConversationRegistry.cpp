@@ -96,6 +96,14 @@ UConversationRegistry* UConversationRegistry::GetFromWorld(const UWorld* World)
         .Entry(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"))
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientExecuteTaskAndSideEffects"))
+        .Find("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Entry(TEXT("/Script/CommonDialogueRuntime.Default__ConversationParticipantComponent"))
+        .Find("call 0x*", 4)
+        .Target()
         .Get();
 
     return World ? GetFromWorld(World) : nullptr;
