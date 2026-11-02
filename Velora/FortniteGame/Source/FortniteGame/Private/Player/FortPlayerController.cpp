@@ -1208,6 +1208,11 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("lea rdi, [r14+0x*]; mov rax, [rdi]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
             .Find("lea rcx, [rsi+0x*]")
             .Or()
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
@@ -1220,6 +1225,12 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("lea rdi, [r14+0x*]; mov rax, [rdi]")
+            .Find("mov rbx, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
             .Find("call [rax+0x*]", 2)
             .Get();
 
@@ -1228,6 +1239,12 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [rax+0x*]", 3)
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("call rbx")
+            .Find("call [rax+0x*]")
             .Get();
 
         if (!ItemDefinition || !InventoryOwner || !IsQuickbarItemType(GetItemType(ItemDefinition)))
