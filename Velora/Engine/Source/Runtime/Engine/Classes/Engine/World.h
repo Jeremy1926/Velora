@@ -52,6 +52,11 @@ public:
 struct FLevelCollection
 {
 public:
+    ELevelCollectionType GetType() const
+    {
+        return CollectionType;
+    }
+
     void SetNetDriver(UNetDriver* const InNetDriver)
     {
         NetDriver = InNetDriver;
