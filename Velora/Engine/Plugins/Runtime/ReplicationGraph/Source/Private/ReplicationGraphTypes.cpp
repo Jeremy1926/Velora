@@ -101,6 +101,17 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
         .Find("call 0x*", 3)
         .Target()
         .Find("lea r15, [rdi+0x*]; mov rsi, [r15]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("test r8, r8; jz 0x*; mov rdx, *; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r13, [r15+0x*]; mov rdx, r13")
         .Disp();
 
     return *(TArray<AActor*>*)((uint8*)this + DependentActorList);
