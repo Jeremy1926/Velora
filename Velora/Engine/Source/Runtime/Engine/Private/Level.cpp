@@ -47,6 +47,7 @@ bool ULevel::IsAssociatingLevel() const
         .Or()
         .String(TEXT("sorting actor list"))
         .Start()
+        .Find("mov rsi, rdx")
         .Find("or byte ptr [rsi+0x*], 0x*")
         .Disp();
 
@@ -67,6 +68,7 @@ bool ULevel::IsAssociatingLevel() const
         .Or()
         .String(TEXT("sorting actor list"))
         .Start()
+        .Find("mov rsi, rdx")
         .Find("or byte ptr [rsi+0x*], 0x*")
         .Value();
 
