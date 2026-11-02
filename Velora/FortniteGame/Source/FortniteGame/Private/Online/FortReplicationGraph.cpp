@@ -1092,6 +1092,15 @@ void UFortReplicationGraph::OnAlwaysRelevantStreamingActorAdded(AActor* Actor, F
 
 void UFortReplicationGraph::OnAIClassAdditionRequest(TSubclassOf<AFortPawn> NewAIClass)
 {
+    static auto bClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; call 0x*; add rsp, 0x*; pop *; ret")
+        .Get();
+
+    if (bClassByAddress && NewAIClass)
+        NewAIClass = *(UClass**)(UClass*)NewAIClass;
+
     if (NewAIClass && ((UClass*)NewAIClass)->IsChildOf(AFortPawn::StaticClass()))
         UFortReplicationGraphNode_DynamicSpatialFrequency::GetAIClasses().Set(NewAIClass, true);
 }
