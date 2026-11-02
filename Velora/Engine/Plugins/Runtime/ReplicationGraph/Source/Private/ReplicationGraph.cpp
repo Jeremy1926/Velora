@@ -1138,6 +1138,16 @@ float& UReplicationGraphNode_GridSpatialization2D::GetCellSize()
         .Target()
         .Find("mov cl, [rbx+0x*]")
         .Find("movss xmm0, dword ptr [rbx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r8b, [rbx+0x*]")
+        .Find("movss xmm0, dword ptr [rbx+0x*]")
         .Disp();
 
     return *(float*)((uint8*)this + CellSize);
@@ -1272,6 +1282,16 @@ TClassMap<bool>& UReplicationGraphNode_GridSpatialization2D::GetClassRebuildDeny
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
         .Find("call 0x*", 2)
         .Target()
+        .Find("add rcx, 0x*")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x30)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Has("mov r8b, [rbx+0x*]")
         .Find("add rcx, 0x*")
         .Imm();
 
