@@ -220,19 +220,49 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
     static auto FirstLow = Anchor::At(PackedFlags).Find("mov e*, [r*]", 1).Cipher();
     static auto SecondLow = Anchor::At(PackedFlags).Find("mov e*, [r*]", 2).Cipher();
 
+    static auto MemberFlags = Anchor::Address()
+        .If(AllocateSerialNumberMember != nullptr)
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*]; mov r*, 0x*; test r*, r*; jz 0x*")
+        .Or()
+        .If(AllocateSerialNumberMember != nullptr)
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*]; mov r*, 0x*; test r*, r*; jnz 0x*")
+        .Get();
+
+    static auto MemberLow = Anchor::Address()
+        .At(MemberFlags)
+        .Is("mov r*, [r*]; mov r*, 0x*; test r*, r*; jz 0x*")
+        .Find("jz 0x*")
+        .Target()
+        .FirstOf("mov *, 0x*; * *, [r*+0x*]", "* *, [r*+0x*]")
+        .Or()
+        .At(MemberFlags)
+        .Find("jnz 0x*")
+        .Find("* *, [r*+0x*]")
+        .Get();
+
     static FEncryptedLayout Layout
     {
         NumElements,
         Objects,
         Anchor::At(AllocateSerialNumber ? AllocateSerialNumber : AllocateSerialNumberMember).Last("mov e*, [r*+0x*]").Cipher(TEXT("FUObjectItem::SerialNumber")),
-        PackedFlags ? Flags : Anchor::Cipher(TEXT("FUObjectItem::Flags"))
+        MemberFlags ? HighHalf(Anchor::At(MemberFlags).Cipher()) : PackedFlags ? Flags : Anchor::Cipher(TEXT("FUObjectItem::Flags"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
             .Find("add [*+0x20], *")
             .Find("call 0x*")
             .Target()
             .Find("mov e*, [r*+0x*]; test e*, 0x*")
             .Get(),
-        PackedFlags ? (FirstLow.Offset != Flags.Offset ? FirstLow : SecondLow) : Anchor::Cipher(TEXT("FUObjectItem::Object"))
+        MemberLow ? Anchor::At(MemberLow).Cipher() : PackedFlags ? (FirstLow.Offset != Flags.Offset ? FirstLow : SecondLow) : Anchor::Cipher(TEXT("FUObjectItem::Object"))
             .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_SoftObjectReferenceToObject"))
             .Find("add [*+0x20], *")
             .Find("call 0x*")
@@ -241,7 +271,7 @@ const FUObjectArray::FEncryptedLayout* FUObjectArray::GetItemLayout()
             .Find("mov r*, [*]")
             .Get(),
         Anchor::At(AllocateSerialNumber).Last("shl r*, 0x5; add r*, [*]; jmp *; xor e*, e*; mov e*, [r*+0x*]").Get() ? 0x20 : PackedItem ? 0x14 : 0x18,
-        PackedFlags != nullptr
+        PackedFlags != nullptr || MemberLow != nullptr
     };
 
     return &Layout;
