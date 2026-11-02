@@ -44,6 +44,11 @@ const TRuntimeSizedArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditon
 {
     static auto AdditonalPlaylistLevels = Anchor::Offset(TEXT("AFortGameState::AdditonalPlaylistLevels"))
         .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
+        .Find("lea rcx, [0x*]; call 0x*; mov rdx, rbx; call 0x*")
+        .Pattern("4C 63 8B ? ? 00 00 4C 8B 83 ? ? 00 00 44 8A 93 ? 01 00 00 49 C1 E1 04")
+        .Find("mov r8, [rbx+0x*]")
+        .Or()
+        .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
         .Call(3)
         .Find("mov *, [rcx+0x*]")
         .Or()
