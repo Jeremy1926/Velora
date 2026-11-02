@@ -269,6 +269,23 @@ FFastSharedReplicationInfo*& FGlobalActorReplicationInfo::GetFastSharedReplicati
         .Find("call 0x*")
         .Target()
         .Find("mov r*, [r*+0x*]; test r*, r*; jz 0x*; lea rcx, [r*+0x8]; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("pop rdi; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rcx, [rax+r8*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*+0x*]; test r*, r*; jz 0x*; lea rcx, [r*+0x8]; call 0x*")
         .Disp();
 
     return *(FFastSharedReplicationInfo**)((uint8*)this + FastSharedReplicationInfo);
