@@ -823,7 +823,19 @@ namespace Anchor
         FCipher Result;
         FInstruction Instruction;
 
-        if (!Address || !Decode(Address, Instruction) || Instruction.Info.operand_count_visible != 2 || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
+        if (!Address || !Decode(Address, Instruction) || Instruction.Info.operand_count_visible != 2)
+            return Result;
+
+        if ((Instruction.Info.mnemonic == ZYDIS_MNEMONIC_BT || Instruction.Info.mnemonic == ZYDIS_MNEMONIC_TEST) && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+        {
+            auto& Test = Instruction.Operands[0].mem;
+            Result.Offset = Test.base == ZYDIS_REGISTER_RIP ? (int64_t)(Address + Instruction.Info.length + Test.disp.value) : Test.disp.value;
+            Result.Size = (uint8_t)(Instruction.Operands[0].size / 8);
+
+            return Result;
+        }
+
+        if (Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
             return Result;
 
         auto First = Instruction.Info.mnemonic;
