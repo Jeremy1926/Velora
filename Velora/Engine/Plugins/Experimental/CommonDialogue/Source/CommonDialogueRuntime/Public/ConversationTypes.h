@@ -101,42 +101,79 @@ struct FAdvanceConversationRequest
 
 struct FClientConversationMessage
 {
-    FClientConversationMessage() = default;
+    FClientConversationMessage();
 
     FClientConversationMessage(const FClientConversationMessage& Other);
+
+    ~FClientConversationMessage();
 
     FClientConversationMessage& operator=(const FClientConversationMessage& Other);
 
     static UScriptStruct* StaticStruct();
 
-    FGameplayTag SpeakerID;
-    FText ParticipantDisplayName;
-    FText Text;
-    TArray<FConversationNodeParameterPair> MetadataParameters;
+    FGameplayTag& GetSpeakerID() const;
+
+    FText& GetParticipantDisplayName() const;
+
+    FText& GetText() const;
+
+private:
+    alignas(void*) uint8 Data[0x48];
 };
 
 struct FClientConversationOptionEntry
 {
+    FClientConversationOptionEntry();
+
+    FClientConversationOptionEntry(const FClientConversationOptionEntry& Other);
+
+    ~FClientConversationOptionEntry();
+
+    FClientConversationOptionEntry& operator=(const FClientConversationOptionEntry& Other);
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FText& GetChoiceText() const;
+
+    EConversationChoiceType& GetChoiceType() const;
+
+    FConversationChoiceReference& GetChoiceReference() const;
+
+    TArray<FConversationNodeParameterPair>& GetExtraData() const;
+
     bool IsChoiceAvailable() const
     {
-        return ChoiceType != EConversationChoiceType::UserChoiceUnavailable;
+        return GetChoiceType() != EConversationChoiceType::UserChoiceUnavailable;
     }
 
     void SetChoiceAvailable(bool bIsAvailable)
     {
-        ChoiceType = bIsAvailable ? EConversationChoiceType::UserChoiceAvailable : EConversationChoiceType::UserChoiceUnavailable;
+        GetChoiceType() = bIsAvailable ? EConversationChoiceType::UserChoiceAvailable : EConversationChoiceType::UserChoiceUnavailable;
     }
 
     bool operator==(const FConversationChoiceReference& Other) const
     {
-        return ChoiceReference == Other;
+        return GetChoiceReference() == Other;
     }
 
-    FText ChoiceText;
-    FGameplayTagContainer ChoiceTags;
-    EConversationChoiceType ChoiceType = EConversationChoiceType::ServerOnly;
-    FConversationChoiceReference ChoiceReference;
-    TArray<FConversationNodeParameterPair> ExtraData;
+private:
+    alignas(void*) uint8 Data[0x70];
+};
+
+template<>
+class TArray<FClientConversationOptionEntry, FDefaultAllocator> : public TRuntimeSizedArray<FClientConversationOptionEntry>
+{
+public:
+    TArray()
+    {
+    }
+
+    TArray(const TArray& Other)
+    {
+        *this = Other;
+    }
 };
 
 struct FConversationParticipantEntry
@@ -160,21 +197,53 @@ struct FConversationParticipants
 
 struct FClientConversationMessagePayload
 {
-    FClientConversationMessage Message;
-    FConversationParticipants Participants;
-    FConversationNodeHandle CurrentNode;
-    TArray<FClientConversationOptionEntry> Options;
+    FClientConversationMessagePayload();
+
+    FClientConversationMessagePayload(const FClientConversationMessagePayload&) = delete;
+
+    ~FClientConversationMessagePayload();
+
+    static UScriptStruct* StaticStruct();
+
+    FClientConversationMessage& GetMessage() const;
+
+    FConversationParticipants& GetParticipants() const;
+
+    FConversationNodeHandle& GetCurrentNode() const;
+
+    TArray<FClientConversationOptionEntry>& GetOptions() const;
+
+private:
+    alignas(void*) uint8 Data[0x78];
 };
 
 struct FConversationBranchPoint
 {
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
     FConversationNodeHandle GetNodeHandle() const
     {
-        return ClientChoice.ChoiceReference.NodeReference;
+        return ClientChoice.GetChoiceReference().NodeReference;
     }
 
     TArray<FConversationNodeHandle> ReturnScopeStack;
     FClientConversationOptionEntry ClientChoice;
+};
+
+template<>
+class TArray<FConversationBranchPoint, FDefaultAllocator> : public TRuntimeSizedArray<FConversationBranchPoint>
+{
+public:
+    TArray()
+    {
+    }
+
+    TArray(const TArray& Other)
+    {
+        *this = Other;
+    }
 };
 
 struct FConversationBranchPointBuilder

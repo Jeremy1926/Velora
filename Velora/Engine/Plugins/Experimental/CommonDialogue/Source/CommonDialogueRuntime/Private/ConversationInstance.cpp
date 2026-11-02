@@ -16,6 +16,40 @@ UClass* UConversationInstance::StaticClass()
     return Class;
 }
 
+UConversationInstance::FCheckpoint::FCheckpoint()
+{
+    new(&GetScopeStack()) TArray<FConversationChoiceReference>();
+}
+
+UConversationInstance::FCheckpoint::FCheckpoint(const FCheckpoint& Other)
+    : ClientBranchPoint(Other.ClientBranchPoint)
+{
+    new(&GetScopeStack()) TArray<FConversationChoiceReference>(Other.GetScopeStack());
+}
+
+UConversationInstance::FCheckpoint::~FCheckpoint()
+{
+    GetScopeStack().~TArray();
+}
+
+UConversationInstance::FCheckpoint& UConversationInstance::FCheckpoint::operator=(const FCheckpoint& Other)
+{
+    ClientBranchPoint = Other.ClientBranchPoint;
+    GetScopeStack() = Other.GetScopeStack();
+
+    return *this;
+}
+
+int32 UConversationInstance::FCheckpoint::GetTypeSize()
+{
+    return FConversationBranchPoint::GetTypeSize() + sizeof(TArray<FConversationChoiceReference>);
+}
+
+TArray<FConversationChoiceReference>& UConversationInstance::FCheckpoint::GetScopeStack() const
+{
+    return *(TArray<FConversationChoiceReference>*)((uint8*)this + FConversationBranchPoint::GetTypeSize());
+}
+
 bool UConversationInstance::HasServerLayout()
 {
     auto Class = StaticClass();
@@ -87,7 +121,7 @@ void UConversationInstance::ServerStartConversation(FGameplayTag EntryPoint)
     const int32 StartingIndex = GetConversationRNG().RandRange(0, LegalStartingPoints.Num() - 1);
 
     FConversationBranchPoint StartingPoint;
-    StartingPoint.ClientChoice.ChoiceReference = FConversationChoiceReference(LegalStartingPoints[StartingIndex]);
+    StartingPoint.ClientChoice.GetChoiceReference() = FConversationChoiceReference(LegalStartingPoints[StartingIndex]);
 
     GetStartingBranchPoint() = StartingPoint;
     GetCurrentBranchPoint() = StartingPoint;
@@ -153,7 +187,7 @@ void UConversationInstance::ServerAdvanceConversation(const FAdvanceConversation
 
     for (const FConversationBranchPoint& BranchPoint : CandidateDestinations)
     {
-        auto TaskNode = Cast<UConversationTaskNode>(BranchPoint.ClientChoice.ChoiceReference.NodeReference.TryToResolve(Context));
+        auto TaskNode = Cast<UConversationTaskNode>(BranchPoint.ClientChoice.GetChoiceReference().NodeReference.TryToResolve(Context));
 
         if (!TaskNode || TaskNode->CheckRequirements(Context) == EConversationRequirementResult::Passed)
             ValidDestinations.Add(BranchPoint);
@@ -189,17 +223,17 @@ void UConversationInstance::ServerAbortConversation()
 void UConversationInstance::PauseConversationAndSendClientChoices(const FConversationContext& Context, const FClientConversationMessage& ClientMessage)
 {
     FClientConversationMessagePayload LastMessage;
-    LastMessage.Message = ClientMessage;
-    LastMessage.Options = GetCurrentUserChoices();
-    LastMessage.CurrentNode = Context.GetCurrentNodeHandle();
-    LastMessage.Participants = GetParticipantsCopy();
+    LastMessage.GetMessage() = ClientMessage;
+    LastMessage.GetOptions() = GetCurrentUserChoices();
+    LastMessage.GetCurrentNode() = Context.GetCurrentNodeHandle();
+    LastMessage.GetParticipants() = GetParticipantsCopy();
 
     FCheckpoint Checkpoint;
     Checkpoint.ClientBranchPoint = GetCurrentBranchPoint();
-    Checkpoint.ScopeStack = GetScopeStack();
+    Checkpoint.GetScopeStack() = GetScopeStack();
     GetClientBranchPoints().Add(Checkpoint);
 
-    for (const FConversationParticipantEntry& ParticipantEntry : LastMessage.Participants.List)
+    for (const FConversationParticipantEntry& ParticipantEntry : LastMessage.GetParticipants().List)
     {
         if (auto ParticipantComponent = ParticipantEntry.GetParticipantComponent())
             ParticipantComponent->SendClientConversationMessage(Context, LastMessage);
@@ -213,7 +247,7 @@ void UConversationInstance::ReturnToLastClientChoice(const FConversationContext&
         GetClientBranchPoints().RemoveAt(GetClientBranchPoints().Num() - 1);
 
         const FCheckpoint Checkpoint = GetClientBranchPoints()[GetClientBranchPoints().Num() - 1];
-        GetScopeStack() = Checkpoint.ScopeStack;
+        GetScopeStack() = Checkpoint.GetScopeStack();
         ModifyCurrentConversationNode(Checkpoint.ClientBranchPoint);
     }
 }
@@ -226,7 +260,7 @@ void UConversationInstance::ReturnToCurrentClientChoice(const FConversationConte
 
         GetClientBranchPoints().RemoveAt(GetClientBranchPoints().Num() - 1);
 
-        GetScopeStack() = Checkpoint.ScopeStack;
+        GetScopeStack() = Checkpoint.GetScopeStack();
         ModifyCurrentConversationNode(Checkpoint.ClientBranchPoint);
     }
 }
@@ -247,7 +281,7 @@ void UConversationInstance::ReturnToStart(const FConversationContext& Context)
 void UConversationInstance::ModifyCurrentConversationNode(const FConversationChoiceReference& NewChoice)
 {
     FConversationBranchPoint BranchPoint;
-    BranchPoint.ClientChoice.ChoiceReference = NewChoice;
+    BranchPoint.ClientChoice.GetChoiceReference() = NewChoice;
 
     ModifyCurrentConversationNode(BranchPoint);
 }
@@ -300,15 +334,15 @@ void UConversationInstance::SetNextChoices(const TArray<FConversationBranchPoint
 
     for (const FConversationBranchPoint& UserBranchPoint : GetCurrentBranchPoints())
     {
-        if (UserBranchPoint.ClientChoice.ChoiceType != EConversationChoiceType::ServerOnly)
+        if (UserBranchPoint.ClientChoice.GetChoiceType() != EConversationChoiceType::ServerOnly)
             GetCurrentUserChoices().Add(UserBranchPoint.ClientChoice);
     }
 
     if ((GetCurrentBranchPoints().Num() > 0 || GetScopeStack().Num() > 0) && GetCurrentUserChoices().Num() == 0)
     {
         FClientConversationOptionEntry DefaultChoice;
-        DefaultChoice.ChoiceText = UKismetTextLibrary::Conv_StringToText(FString(TEXT("Continue")));
-        DefaultChoice.ChoiceType = EConversationChoiceType::UserChoiceAvailable;
+        DefaultChoice.GetChoiceText() = UKismetTextLibrary::Conv_StringToText(FString(TEXT("Continue")));
+        DefaultChoice.GetChoiceType() = EConversationChoiceType::UserChoiceAvailable;
         GetCurrentUserChoices().Add(DefaultChoice);
     }
 }
@@ -317,7 +351,7 @@ const FConversationBranchPoint* UConversationInstance::FindBranchPointFromClient
 {
     for (const FConversationBranchPoint& BranchPoint : GetCurrentBranchPoints())
     {
-        if (BranchPoint.ClientChoice.ChoiceType != EConversationChoiceType::ServerOnly && BranchPoint.ClientChoice == InChoice)
+        if (BranchPoint.ClientChoice.GetChoiceType() != EConversationChoiceType::ServerOnly && BranchPoint.ClientChoice == InChoice)
             return &BranchPoint;
     }
 
@@ -418,9 +452,9 @@ FConversationBranchPoint& UConversationInstance::GetCurrentBranchPoint() const
     return *(FConversationBranchPoint*)GetLayoutMember(0xC0, 0xE8);
 }
 
-TArray<UConversationInstance::FCheckpoint>& UConversationInstance::GetClientBranchPoints() const
+TRuntimeSizedArray<UConversationInstance::FCheckpoint>& UConversationInstance::GetClientBranchPoints() const
 {
-    return *(TArray<FCheckpoint>*)GetLayoutMember(0x140, 0x168);
+    return *(TRuntimeSizedArray<FCheckpoint>*)GetLayoutMember(0x140, 0x168);
 }
 
 TArray<FConversationBranchPoint>& UConversationInstance::GetCurrentBranchPoints() const

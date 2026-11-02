@@ -11,8 +11,22 @@ class UConversationInstance : public UObject
 public:
     struct FCheckpoint
     {
+        FCheckpoint();
+
+        FCheckpoint(const FCheckpoint& Other);
+
+        ~FCheckpoint();
+
+        FCheckpoint& operator=(const FCheckpoint& Other);
+
+        static int32 GetTypeSize();
+
+        TArray<FConversationChoiceReference>& GetScopeStack() const;
+
         FConversationBranchPoint ClientBranchPoint;
-        TArray<FConversationChoiceReference> ScopeStack;
+
+    private:
+        alignas(void*) uint8 ScopeStack[sizeof(TArray<FConversationChoiceReference>)];
     };
 
     static UClass* StaticClass();
@@ -31,7 +45,7 @@ public:
 
     const FConversationChoiceReference& GetCurrentChoiceReference() const
     {
-        return GetCurrentBranchPoint().ClientChoice.ChoiceReference;
+        return GetCurrentBranchPoint().ClientChoice.GetChoiceReference();
     }
 
     FConversationNodeHandle GetCurrentNodeHandle() const
@@ -91,7 +105,7 @@ private:
 
     FConversationBranchPoint& GetCurrentBranchPoint() const;
 
-    TArray<FCheckpoint>& GetClientBranchPoints() const;
+    TRuntimeSizedArray<FCheckpoint>& GetClientBranchPoints() const;
 
     TArray<FConversationBranchPoint>& GetCurrentBranchPoints() const;
 

@@ -42,7 +42,7 @@ bool UFortConversationChoiceWithPreviewNode::GenerateChoice(const FConversationC
         PreviewedTaskNode->GatherChoices(BranchBuilder, PreviewContext);
 
         FClientConversationOptionEntry PreviewedOption;
-        PreviewedOption.ChoiceReference.NodeReference = DestinationGUID;
+        PreviewedOption.GetChoiceReference().NodeReference = DestinationGUID;
 
         if (BranchBuilder.Num() > 0)
             PreviewedOption = BranchBuilder.BranchPoints[0].ClientChoice;
@@ -50,7 +50,7 @@ bool UFortConversationChoiceWithPreviewNode::GenerateChoice(const FConversationC
         if (!PreviewedTaskNode->HasPreviewData(PreviewContext, PreviewedOption))
             continue;
 
-        PreviewedTaskNode->FillPreviewData(PreviewContext, PreviewedOption, ChoiceEntry.ExtraData);
+        PreviewedTaskNode->FillPreviewData(PreviewContext, PreviewedOption, ChoiceEntry.GetExtraData());
         break;
     }
 

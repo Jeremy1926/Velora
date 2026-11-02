@@ -255,8 +255,8 @@ void UConversationTaskNode::GenerateChoicesForDestinations(FConversationBranchPo
         if (BranchBuilder.Num() == StartingNumber && DestinationTaskNode->CheckRequirements(InContext) == EConversationRequirementResult::Passed)
         {
             FClientConversationOptionEntry DefaultChoice;
-            DefaultChoice.ChoiceReference.NodeReference = DestinationGUID;
-            DefaultChoice.ChoiceType = EConversationChoiceType::ServerOnly;
+            DefaultChoice.GetChoiceReference().NodeReference = DestinationGUID;
+            DefaultChoice.GetChoiceType() = EConversationChoiceType::ServerOnly;
 
             BranchBuilder.AddChoice(DestinationContext, DefaultChoice);
         }
@@ -301,7 +301,7 @@ void UConversationTaskNode::GatherStaticChoices(FConversationBranchPointBuilder&
 
         if (ChoiceNode->GenerateChoice(InContext, Choice))
         {
-            GatherStaticExtraData(InContext, Choice.ExtraData);
+            GatherStaticExtraData(InContext, Choice.GetExtraData());
             BranchBuilder.AddChoice(InContext, Choice);
         }
 

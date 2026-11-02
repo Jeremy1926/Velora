@@ -23,9 +23,9 @@ FConversationTaskResult UFortConversationTaskNode_Speech::ExecuteSpeechTaskNode(
         return FConversationTaskResult::AbortConversation();
 
     FClientConversationMessage Message;
-    Message.SpeakerID = SpeakerTag->GetPropertyValue_InContainer<FGameplayTag>(this);
-    Message.ParticipantDisplayName = GetParticipantNameStyled(Context, Message.SpeakerID);
-    Message.Text = GetMessage(Context);
+    Message.GetSpeakerID() = SpeakerTag->GetPropertyValue_InContainer<FGameplayTag>(this);
+    Message.GetParticipantDisplayName() = GetParticipantNameStyled(Context, Message.GetSpeakerID());
+    Message.GetText() = GetMessage(Context);
 
     return UConversationContextHelpers::PauseConversationAndSendClientChoices(Context, Message);
 }

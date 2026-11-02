@@ -200,14 +200,14 @@ void UFortConversationTaskNode_SellItem::GatherDynamicChoices(FConversationBranc
     const TOptional<int32> LootCost = GetLootCost(*SellingData);
 
     FClientConversationOptionEntry Choice;
-    Choice.ChoiceReference.NodeReference = GetNodeGuid();
-    Choice.ChoiceText = SellingData->LootRemainingForSale > 0 ? FText::Format(FTextFormat(GetBuyTextFormat()), FFormatArgumentValue(ItemDefinition->GetDisplayName())) : GetSoldOutTextFormat();
+    Choice.GetChoiceReference().NodeReference = GetNodeGuid();
+    Choice.GetChoiceText() = SellingData->LootRemainingForSale > 0 ? FText::Format(FTextFormat(GetBuyTextFormat()), FFormatArgumentValue(ItemDefinition->GetDisplayName())) : GetSoldOutTextFormat();
     Choice.SetChoiceAvailable(RequirementResult == EConversationRequirementResult::Passed);
-    Choice.ChoiceReference.NodeParameters.Add({ FString(TEXT("item")), UKismetSystemLibrary::GetPathName(ItemDefinition) });
-    Choice.ChoiceReference.NodeParameters.Add({ FString(TEXT("cost")), FString::FromInt(LootCost.IsSet() ? LootCost.GetValue() : 0) });
-    Choice.ChoiceReference.NodeParameters.Add({ FString(TEXT("stacksize")), FString::FromInt(SellingData->LootForSaleStackSize) });
-    Choice.ChoiceReference.NodeParameters.Add({ FString(TEXT("remaining")), FString::FromInt(SellingData->LootRemainingForSale) });
+    Choice.GetChoiceReference().NodeParameters.Add({ FString(TEXT("item")), UKismetSystemLibrary::GetPathName(ItemDefinition) });
+    Choice.GetChoiceReference().NodeParameters.Add({ FString(TEXT("cost")), FString::FromInt(LootCost.IsSet() ? LootCost.GetValue() : 0) });
+    Choice.GetChoiceReference().NodeParameters.Add({ FString(TEXT("stacksize")), FString::FromInt(SellingData->LootForSaleStackSize) });
+    Choice.GetChoiceReference().NodeParameters.Add({ FString(TEXT("remaining")), FString::FromInt(SellingData->LootRemainingForSale) });
 
-    GatherStaticExtraData(Context, Choice.ExtraData);
+    GatherStaticExtraData(Context, Choice.GetExtraData());
     BranchBuilder.AddChoice(Context, Choice);
 }

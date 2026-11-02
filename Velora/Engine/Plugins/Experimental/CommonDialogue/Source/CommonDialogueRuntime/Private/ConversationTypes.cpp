@@ -6,6 +6,7 @@
 #include "ConversationTaskNode.h"
 #include "GameFramework/Actor.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 
 UConversationNode* FConversationNodeHandle::TryToResolve(const FConversationContext& Context) const
@@ -13,21 +14,25 @@ UConversationNode* FConversationNodeHandle::TryToResolve(const FConversationCont
     return Context.ConversationRegistry ? Context.ConversationRegistry->GetRuntimeNodeFromGUID(NodeGUID) : nullptr;
 }
 
+FClientConversationMessage::FClientConversationMessage()
+{
+    StaticStruct()->InitializeStruct(this);
+}
+
 FClientConversationMessage::FClientConversationMessage(const FClientConversationMessage& Other)
+    : FClientConversationMessage()
 {
     *this = Other;
 }
 
+FClientConversationMessage::~FClientConversationMessage()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
 FClientConversationMessage& FClientConversationMessage::operator=(const FClientConversationMessage& Other)
 {
-    static auto MetadataParametersProperty = StaticStruct()->FindPropertyByName(FName(TEXT("MetadataParameters")));
-
-    SpeakerID = Other.SpeakerID;
-    ParticipantDisplayName = Other.ParticipantDisplayName;
-    Text = Other.Text;
-
-    if (MetadataParametersProperty)
-        MetadataParameters = Other.MetadataParameters;
+    StaticStruct()->CopyScriptStruct(this, &Other);
 
     return *this;
 }
@@ -37,6 +42,151 @@ UScriptStruct* FClientConversationMessage::StaticStruct()
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ClientConversationMessage"));
 
     return Struct;
+}
+
+FGameplayTag& FClientConversationMessage::GetSpeakerID() const
+{
+    static auto SpeakerID = StaticStruct()->FindPropertyByName(FName(TEXT("SpeakerID")));
+
+    return *SpeakerID->ContainerPtrToValuePtr<FGameplayTag>((void*)this);
+}
+
+FText& FClientConversationMessage::GetParticipantDisplayName() const
+{
+    static auto ParticipantDisplayName = StaticStruct()->FindPropertyByName(FName(TEXT("ParticipantDisplayName")));
+
+    return *ParticipantDisplayName->ContainerPtrToValuePtr<FText>((void*)this);
+}
+
+FText& FClientConversationMessage::GetText() const
+{
+    static auto Text = StaticStruct()->FindPropertyByName(FName(TEXT("Text")));
+
+    return *Text->ContainerPtrToValuePtr<FText>((void*)this);
+}
+
+FClientConversationOptionEntry::FClientConversationOptionEntry()
+{
+    StaticStruct()->InitializeStruct(this);
+}
+
+FClientConversationOptionEntry::FClientConversationOptionEntry(const FClientConversationOptionEntry& Other)
+    : FClientConversationOptionEntry()
+{
+    *this = Other;
+}
+
+FClientConversationOptionEntry::~FClientConversationOptionEntry()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
+FClientConversationOptionEntry& FClientConversationOptionEntry::operator=(const FClientConversationOptionEntry& Other)
+{
+    StaticStruct()->CopyScriptStruct(this, &Other);
+
+    return *this;
+}
+
+UScriptStruct* FClientConversationOptionEntry::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ClientConversationOptionEntry"));
+
+    return Struct;
+}
+
+int32 FClientConversationOptionEntry::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FText& FClientConversationOptionEntry::GetChoiceText() const
+{
+    static auto ChoiceText = StaticStruct()->FindPropertyByName(FName(TEXT("ChoiceText")));
+
+    return *ChoiceText->ContainerPtrToValuePtr<FText>((void*)this);
+}
+
+EConversationChoiceType& FClientConversationOptionEntry::GetChoiceType() const
+{
+    static auto ChoiceType = StaticStruct()->FindPropertyByName(FName(TEXT("ChoiceType")));
+
+    return *ChoiceType->ContainerPtrToValuePtr<EConversationChoiceType>((void*)this);
+}
+
+FConversationChoiceReference& FClientConversationOptionEntry::GetChoiceReference() const
+{
+    static auto ChoiceReference = StaticStruct()->FindPropertyByName(FName(TEXT("ChoiceReference")));
+
+    return *ChoiceReference->ContainerPtrToValuePtr<FConversationChoiceReference>((void*)this);
+}
+
+TArray<FConversationNodeParameterPair>& FClientConversationOptionEntry::GetExtraData() const
+{
+    static auto ExtraData = StaticStruct()->FindPropertyByName(FName(TEXT("ExtraData")));
+
+    return *ExtraData->ContainerPtrToValuePtr<TArray<FConversationNodeParameterPair>>((void*)this);
+}
+
+FClientConversationMessagePayload::FClientConversationMessagePayload()
+{
+    StaticStruct()->InitializeStruct(this);
+}
+
+FClientConversationMessagePayload::~FClientConversationMessagePayload()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
+UScriptStruct* FClientConversationMessagePayload::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ClientConversationMessagePayload"));
+
+    return Struct;
+}
+
+FClientConversationMessage& FClientConversationMessagePayload::GetMessage() const
+{
+    static auto Message = StaticStruct()->FindPropertyByName(FName(TEXT("Message")));
+
+    return *Message->ContainerPtrToValuePtr<FClientConversationMessage>((void*)this);
+}
+
+FConversationParticipants& FClientConversationMessagePayload::GetParticipants() const
+{
+    static auto Participants = StaticStruct()->FindPropertyByName(FName(TEXT("Participants")));
+
+    return *Participants->ContainerPtrToValuePtr<FConversationParticipants>((void*)this);
+}
+
+FConversationNodeHandle& FClientConversationMessagePayload::GetCurrentNode() const
+{
+    static auto CurrentNode = StaticStruct()->FindPropertyByName(FName(TEXT("CurrentNode")));
+
+    return *CurrentNode->ContainerPtrToValuePtr<FConversationNodeHandle>((void*)this);
+}
+
+TArray<FClientConversationOptionEntry>& FClientConversationMessagePayload::GetOptions() const
+{
+    static auto Options = StaticStruct()->FindPropertyByName(FName(TEXT("Options")));
+
+    return *Options->ContainerPtrToValuePtr<TArray<FClientConversationOptionEntry>>((void*)this);
+}
+
+UScriptStruct* FConversationBranchPoint::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ConversationBranchPoint"));
+
+    return Struct;
+}
+
+int32 FConversationBranchPoint::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
 }
 
 bool FConversationChoiceReference::operator==(const FConversationChoiceReference& Other) const
@@ -92,8 +242,8 @@ void FConversationBranchPointBuilder::AddChoice(const FConversationContext& InCo
     FConversationBranchPoint BranchPoint;
     BranchPoint.ClientChoice = InChoice;
 
-    if (!BranchPoint.ClientChoice.ChoiceReference.NodeReference.IsValid() && InContext.TaskBeingConsidered)
-        BranchPoint.ClientChoice.ChoiceReference.NodeReference = InContext.TaskBeingConsidered->GetNodeGuid();
+    if (!BranchPoint.ClientChoice.GetChoiceReference().NodeReference.IsValid() && InContext.TaskBeingConsidered)
+        BranchPoint.ClientChoice.GetChoiceReference().NodeReference = InContext.TaskBeingConsidered->GetNodeGuid();
 
     BranchPoint.ReturnScopeStack = InContext.ReturnScopeStack;
 

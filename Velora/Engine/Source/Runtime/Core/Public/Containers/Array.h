@@ -513,6 +513,19 @@ public:
         memcpy(AllocatorInstance.GetAllocation(), Other.AllocatorInstance.GetAllocation(), Other.Num() * ElementType::GetTypeSize());
     }
 
+    TRuntimeSizedArray& operator=(const TRuntimeSizedArray& Other)
+    {
+        if (this != &Other)
+        {
+            Reset();
+
+            for (auto& Element : Other)
+                Add(Element);
+        }
+
+        return *this;
+    }
+
     ~TRuntimeSizedArray()
     {
         for (auto& Element : *this)
@@ -550,6 +563,22 @@ public:
         }
 
         return OldNum;
+    }
+
+    int32 Add(const ElementType& Item)
+    {
+        const int32 Index = AddUninitialized(1);
+        new(&(*this)[Index]) ElementType(Item);
+
+        return Index;
+    }
+
+    void Reset()
+    {
+        for (auto& Element : *this)
+            Element.~ElementType();
+
+        ArrayNum = 0;
     }
 
     template<typename PredicateType>

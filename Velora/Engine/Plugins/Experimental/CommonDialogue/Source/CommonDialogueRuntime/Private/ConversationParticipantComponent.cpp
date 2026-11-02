@@ -157,22 +157,17 @@ void UConversationParticipantComponent::ServerAdvanceConversation_Implementation
 void UConversationParticipantComponent::ClientUpdateConversation(const FClientConversationMessagePayload& Message)
 {
     static auto ClientUpdateConversation = (UFunction*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ConversationParticipantComponent:ClientUpdateConversation"));
+    static auto MessageProperty = ClientUpdateConversation->FindPropertyByName(FName(TEXT("Message")));
 
-    static auto MetadataParametersProperty = FClientConversationMessage::StaticStruct()->FindPropertyByName(FName(TEXT("MetadataParameters")));
+    TArray<uint8> Parms;
+    Parms.AddUninitialized(ClientUpdateConversation->GetPropertiesSize());
 
-    FClientConversationMessagePayload Parms = Message;
+    ClientUpdateConversation->InitializeStruct(Parms.GetData());
+    FClientConversationMessagePayload::StaticStruct()->CopyScriptStruct(MessageProperty->ContainerPtrToValuePtr<void>(Parms.GetData()), &Message);
 
-    if (MetadataParametersProperty)
-    {
-        CallRemoteFunction(ClientUpdateConversation, &Parms, nullptr, nullptr);
-        return;
-    }
+    CallRemoteFunction(ClientUpdateConversation, Parms.GetData(), nullptr, nullptr);
 
-    alignas(FClientConversationMessagePayload) uint8 GameParms[0x68];
-    memcpy(GameParms, &Parms, 0x38);
-    memcpy(GameParms + 0x38, &Parms.Participants, 0x30);
-
-    CallRemoteFunction(ClientUpdateConversation, GameParms, nullptr, nullptr);
+    ClientUpdateConversation->DestroyStruct(Parms.GetData());
 }
 
 void UConversationParticipantComponent::ClientUpdateConversations(int32 InConversationsActive)
