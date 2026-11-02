@@ -1665,6 +1665,10 @@ void AFortPlayerController::ServerEditBuildingActor_Implementation(ABuildingSMAc
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [rbp-0x*]; mov r9b, *; mov [rsp+0x20], *; mov rcx, *; call rbx")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerEditBuildingActor"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [rbp-0x*]; mov r9b, *; mov [rsp+0x20], *; mov rcx, *; call rdi")
         .Get();
 
     if (bClassByAddress && NewBuildingClass)
