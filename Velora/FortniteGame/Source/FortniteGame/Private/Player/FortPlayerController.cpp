@@ -1408,6 +1408,15 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; lea rdx, [0x*]")
         .Find("lea rdx, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
+        .Find("lea rdx, [0x*]")
+        .Target()
         .Get();
 
     FText Message;
