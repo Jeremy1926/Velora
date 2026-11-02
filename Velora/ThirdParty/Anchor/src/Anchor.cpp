@@ -779,6 +779,10 @@ namespace Anchor
 
             switch (Step.Mnemonic)
             {
+            case ZYDIS_MNEMONIC_TEST:
+                if (!Bits)
+                    return 0;
+                break;
             case ZYDIS_MNEMONIC_XOR:
                 Bits ^= Step.Operand;
                 break;
@@ -824,7 +828,7 @@ namespace Anchor
 
         auto First = Instruction.Info.mnemonic;
 
-        if (First != ZYDIS_MNEMONIC_MOV && First != ZYDIS_MNEMONIC_MOVZX && First != ZYDIS_MNEMONIC_MOVSXD && First != ZYDIS_MNEMONIC_XOR && First != ZYDIS_MNEMONIC_ADD && First != ZYDIS_MNEMONIC_SUB)
+        if (First != ZYDIS_MNEMONIC_MOV && First != ZYDIS_MNEMONIC_MOVZX && First != ZYDIS_MNEMONIC_MOVSX && First != ZYDIS_MNEMONIC_MOVSXD && First != ZYDIS_MNEMONIC_XOR && First != ZYDIS_MNEMONIC_ADD && First != ZYDIS_MNEMONIC_SUB)
             return Result;
 
         auto& Load = Instruction.Operands[1].mem;
@@ -912,6 +916,7 @@ namespace Anchor
 
         Known &= ~Tracked;
 
+        int32_t Guard = -1;
         uint32_t HalfLow = 0;
         uint32_t HalfHigh = 0;
         bool bHalfShifted = false;
@@ -928,6 +933,20 @@ namespace Anchor
 
             if (Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET)
                 break;
+
+            if (Guard < 0 && Mnemonic == ZYDIS_MNEMONIC_TEST && Instruction.Info.operand_count_visible == 2 && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_REGISTER && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_REGISTER && Instruction.Operands[0].reg.value == Instruction.Operands[1].reg.value && Root(Instruction.Operands[0].reg.value) == Tracked)
+            {
+                FInstruction Jump;
+                auto JumpAddress = Next + Instruction.Info.length;
+
+                if (!Decode(JumpAddress, Jump) || (Jump.Info.mnemonic != ZYDIS_MNEMONIC_JNZ && Jump.Info.mnemonic != ZYDIS_MNEMONIC_JZ) || Jump.Operands[0].type != ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    break;
+
+                Guard = Result.Count;
+                Next = JumpAddress + Jump.Info.length + (Jump.Info.mnemonic == ZYDIS_MNEMONIC_JNZ ? Jump.Operands[0].imm.value.s : 0);
+                Instruction.Info.length = 0;
+                continue;
+            }
 
             const ZydisDecodedOperand* Memory = nullptr;
             bool bReads = false;
@@ -951,6 +970,20 @@ namespace Anchor
             auto SourceRegister = bSource && Source.type == ZYDIS_OPERAND_TYPE_REGISTER ? Root(Source.reg.value) : 0u;
             bool bConstant = bSource && (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE || ((SourceRegister & Known) && !(SourceRegister & Tracked)));
             auto Constant = !bConstant ? 0ull : Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE ? (uint64_t)Source.imm.value.u : Constants[Bit(SourceRegister)];
+
+            if (Guard >= 0 && (Mnemonic == ZYDIS_MNEMONIC_INC || Mnemonic == ZYDIS_MNEMONIC_DEC) && Instruction.Info.operand_count_visible == 1 && (Register & Tracked))
+            {
+                Add(Mnemonic == ZYDIS_MNEMONIC_INC ? ZYDIS_MNEMONIC_ADD : ZYDIS_MNEMONIC_SUB, Width, 1);
+                Tracked = Register;
+                continue;
+            }
+
+            if (Instruction.Info.meta.category == ZYDIS_CATEGORY_CMOV && Register && (SourceRegister & Tracked))
+            {
+                Tracked |= Register;
+                Known &= ~Register;
+                continue;
+            }
 
             if (HalfLow && Register && (Register == HalfLow || Register == HalfHigh))
             {
@@ -1087,6 +1120,13 @@ namespace Anchor
             }
 
             Remember(Instruction);
+        }
+
+        if (Guard >= 0 && Result.Count > Guard && Result.Count < sizeof(Result.Steps) / sizeof(Result.Steps[0]))
+        {
+            memmove(&Result.Steps[Guard + 1], &Result.Steps[Guard], (Result.Count - Guard) * sizeof(Result.Steps[0]));
+            Result.Steps[Guard] = { (uint16_t)ZYDIS_MNEMONIC_TEST, 64, 0 };
+            Result.Count++;
         }
 
         return Result;
