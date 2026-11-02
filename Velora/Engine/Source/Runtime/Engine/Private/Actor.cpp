@@ -146,6 +146,31 @@ bool AActor::TeleportTo(const FVector& DestLocation, const FRotator& DestRotatio
 
 void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool bWeldSimulatedBodies)
 {
+    static auto AttachToActor = Anchor::Optional<bool (*)(AActor*, AActor*, const FAttachmentTransformRules*, FName)>(TEXT("AActor::AttachToActor"))
+        .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov r10, [*+0x*]; mov rdx, rax; call r10")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov rdx, rax; call 0x*; mov rbx, [rsp+0x*]; mov rsi, [rsp+0x*]")
+        .Get();
+
+    if (AttachToActor)
+    {
+        const FAttachmentTransformRules AttachmentRules(LocationRule, RotationRule, ScaleRule, bWeldSimulatedBodies);
+
+        AttachToActor(this, ParentActor, &AttachmentRules, SocketName);
+
+        return;
+    }
+
     static auto bInlined = Anchor::Exists()
         .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
         .Find("setnz *")
