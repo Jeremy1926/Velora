@@ -21,6 +21,10 @@ FText::FText()
         .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 10 48 89 13 48 8B 48 08")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText"))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     *this = GetEmpty();
