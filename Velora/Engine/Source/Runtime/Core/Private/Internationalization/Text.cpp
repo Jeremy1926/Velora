@@ -25,6 +25,11 @@ FText::FText()
         .Exec(TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText"))
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetTextLibrary:GetEmptyText"))
+        .Find("add [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     *this = GetEmpty();
