@@ -54,6 +54,15 @@ UFortGameData* UFortAssetManager::GetGameData()
         .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
         .Call()
         .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; call 0x*; mov rdi, rax; mov rbx, [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, rax; add rsp, 0x28; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
         .Get();
 
     return GetGameData(this);
