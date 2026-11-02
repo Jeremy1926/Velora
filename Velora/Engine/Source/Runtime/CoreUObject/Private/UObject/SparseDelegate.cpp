@@ -49,6 +49,14 @@ bool FSparseDelegateStorage::Add(const UObject* DelegateOwner, const FName Deleg
         .Pattern("89 54 24 10 55 53 56 57 41 54 41 56 41 57 48 8B EC 48 83 EC 70 41 8B 50 08 33 DB 4D 8B F8 48 8B F9 85 D2 0F 84")
         .Or()
         .Pattern("48 89 5C 24 08 89 54 24 10 55 56 57 41 56 41 57 48 8B EC 48 83 EC 70 41 8B 50 08 33 DB 4D 8B F8 48 8B F9 85 D2 0F 84 CB 02 00 00")
+        .Or()
+        .String(TEXT("&AGameplayCueNotify_Actor::OnOwnerDestroyed"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("call 0x*; or [*], al")
+        .Target()
         .Get();
 
     return Add(DelegateOwner, DelegateName, &Delegate);
