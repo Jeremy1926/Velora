@@ -12,6 +12,8 @@ bool FParse::Param(const TCHAR* Stream, const TCHAR* Param)
         .String(TEXT("Multiprocess"))
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20 33 ED 48 8B F2 48 8B F9 66 39 29 74 ? 41 B0 01 E8")
         .Get();
 
     return ParseParam(Stream, Param);
