@@ -12,6 +12,10 @@
 #include "FortRegisteredPlayerInfo.h"
 #include "Items/FortQuickBars.h"
 #include "Items/FortPickup.h"
+#include "Items/FortInventory.h"
+#include "Items/FortItemDefinition.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "FortInteractInterface.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
 #include "Templates/Casts.h"
@@ -167,6 +171,35 @@ void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* P
         return ServerHandlePickupWithRequestedSwap_Implementation(Pickup, Params.GetSwapWithItem(), Params.GetFlyTime(), Params.GetDirection(), Params.GetPlayPickupSound());
 
     ServerHandlePickup_Implementation(Pickup, Params.GetFlyTime(), Params.GetDirection(), Params.GetPlayPickupSound());
+}
+
+void AFortPlayerPawnAthena::OnCapsuleBeginOverlap(AActor* OtherActor)
+{
+    static auto AutoResourceGathering = IConsoleManager::Get().FindConsoleVariable(TEXT("Athena.AutoResourceGathering"));
+
+    if (!AutoResourceGathering || !AutoResourceGathering->GetInt() || !HasAuthority() || GetIsDBNO())
+        return;
+
+    auto Pickup = Cast<AFortPickup>(OtherActor);
+
+    if (!Pickup || Pickup->GetPawnWhoDroppedPickup() == this || GetCharacterMovement()->GetVelocity().IsNearlyZero())
+        return;
+
+    auto ItemDefinition = Pickup->GetPrimaryPickupItemEntry().GetItemDefinition();
+
+    if (!ItemDefinition)
+        return;
+
+    static auto Ammo = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::Ammo")));
+    static auto Trap = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::Trap")));
+    static auto WorldResource = (EFortItemType)StaticEnum<EFortItemType>()->GetValueByName(FName(TEXT("EFortItemType::WorldResource")));
+    const auto ItemType = ItemDefinition->GetItemType();
+
+    if (ItemType != Ammo && ItemType != Trap && ItemType != WorldResource)
+        return;
+
+    if (Pickup->CanInteract(FInteractionType(this, ETInteractionType::IT_Simple)))
+        ServerHandlePickup_Implementation(Pickup, Pickup->GetFlyTime(), FVector(0.0f, 0.0f, 1.0f), true);
 }
 
 void AFortPlayerPawnAthena::ServerReviveFromDBNO_Implementation(AController* EventInstigator)

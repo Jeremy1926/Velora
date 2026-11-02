@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
@@ -499,6 +500,21 @@ void AFortPlayerPawn::ServerHandlePickup_Implementation(AFortPickup* Pickup, flo
 {
     if (Pickup && !Pickup->IsPendingKill())
         Pickup->SetPickupTarget(this, InFlyTime, InStartDirection, bPlayPickupSound);
+}
+
+void AFortPlayerPawn::execOnCapsuleBeginOverlap(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortPlayerPawn, execOnCapsuleBeginOverlap, Anchor::Hook()
+        .InExec(TEXT("/Script/FortniteGame.FortPlayerPawn:OnCapsuleBeginOverlap")));
+
+    static auto OtherActor = Stack.Node->FindPropertyByName(FName(TEXT("OtherActor")));
+
+    auto Actor = *OtherActor->ContainerPtrToValuePtr<AActor*>(Stack.Locals);
+
+    Original(Stack, Z_Param__Result);
+
+    if (auto PlayerPawnAthena = Cast<AFortPlayerPawnAthena>(this))
+        PlayerPawnAthena->OnCapsuleBeginOverlap(Actor);
 }
 
 void AFortPlayerPawn::ServerReviveFromDBNO_Implementation(AController* EventInstigator)

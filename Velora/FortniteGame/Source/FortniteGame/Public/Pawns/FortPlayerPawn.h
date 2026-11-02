@@ -131,6 +131,8 @@ public:
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
+    void execOnCapsuleBeginOverlap(FFrame& Stack, void* const Z_Param__Result);
+
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
     void ForceReviveFromDBNO(AController* EventInstigator);

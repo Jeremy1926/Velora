@@ -24,6 +24,8 @@ public:
 
     void ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params);
 
+    void OnCapsuleBeginOverlap(AActor* OtherActor);
+
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
     void ForceReviveFromDBNO(AController* EventInstigator);

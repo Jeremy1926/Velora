@@ -2,6 +2,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Engine/EngineTypes.h"
+#include "Math/Vector.h"
 
 class UCharacterMovementComponent : public UActorComponent
 {
@@ -17,4 +18,6 @@ public:
     float GetMaxFlySpeed() const;
 
     void SetMaxFlySpeed(float InMaxFlySpeed);
+
+    FVector GetVelocity() const;
 };

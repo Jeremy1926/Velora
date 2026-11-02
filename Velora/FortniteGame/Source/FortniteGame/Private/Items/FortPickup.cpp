@@ -9,6 +9,7 @@
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Pawns/FortPawn.h"
 #include "Weapons/FortWeapon.h"
+#include "FortInteractInterface.h"
 #include "Math/Rotator.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -625,6 +626,17 @@ bool& AFortPickup::GetTossedFromContainer()
     return *bTossedFromContainer->ContainerPtrToValuePtr<bool>(this);
 }
 
+AFortPawn* AFortPickup::GetPawnWhoDroppedPickup() const
+{
+    static auto PawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("PawnWhoDroppedPickup")));
+    static auto bWeakPawnWhoDroppedPickup = PawnWhoDroppedPickup && PawnWhoDroppedPickup->IsWeakObjectProperty();
+
+    if (bWeakPawnWhoDroppedPickup)
+        return (AFortPawn*)PawnWhoDroppedPickup->ContainerPtrToValuePtr<FWeakObjectPtr>(this)->Get();
+
+    return PawnWhoDroppedPickup ? *PawnWhoDroppedPickup->ContainerPtrToValuePtr<AFortPawn*>(this) : nullptr;
+}
+
 void AFortPickup::SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup)
 {
     static auto PawnWhoDroppedPickup = GetClass()->FindPropertyByName(FName(TEXT("PawnWhoDroppedPickup")));
@@ -659,6 +671,17 @@ void AFortPickup::SetPawnWhoDroppedPickup(AFortPawn* InPawnWhoDroppedPickup)
 
         OnSetPawnWhoDroppedPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(&SelfActor);
     }
+}
+
+bool AFortPickup::CanInteract(const FInteractionType& InteractionType)
+{
+    static auto CanInteract = Anchor::VirtualFunction<bool (*)(void*, const FInteractionType&)>(TEXT("AFortPickup::CanInteract"))
+        .String(TEXT("AFortPickup_CanInteract"))
+        .Start()
+        .SlotIn(StaticClass()->GetDefaultObject(false)->GetInterfaceAddress(IFortInteractInterface::StaticClass()))
+        .Get();
+
+    return CanInteract(GetInterfaceAddress(IFortInteractInterface::StaticClass()), InteractionType);
 }
 
 void AFortPickup::SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)

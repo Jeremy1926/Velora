@@ -3,6 +3,7 @@
 #include "HAL/Platform.h"
 
 class AController;
+class AFortPlayerPawn;
 class UClass;
 
 enum class ETInteractionType : uint8
@@ -16,11 +17,16 @@ enum class ETInteractionType : uint8
     IT_MAX
 };
 
-struct FInteractionType
+struct alignas(8) FInteractionType
 {
+    FInteractionType(AFortPlayerPawn* InRequestingPawn, ETInteractionType InInteractionType);
+
     AController* GetController() const;
 
     ETInteractionType InteractionType;
+
+private:
+    uint8 Data[0x7F];
 };
 
 class IFortInteractInterface
