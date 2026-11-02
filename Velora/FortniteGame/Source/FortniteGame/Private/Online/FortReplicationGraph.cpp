@@ -1655,6 +1655,9 @@ void UFortReplicationGraph::execOnGameStatePlaylistLoaded(FFrame& Stack, void* c
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded"))
         .Has("setnz al; add [*+0x20], rax; mov rbx, [rbp-0x*]; test rbx, rbx; jz 0x*; mov rdi, [0x*]; test rdi, rdi; jnz 0x*; mov rcx, rbx; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded"))
+        .Has("setnz al; add [*+0x20], rax; mov al, [0x*]; test al, al; cmovnz rcx, rdi; mov [rbp+0x*], rcx; jz 0x*; test rcx, rcx; jz 0x*; lea rcx, [rbp+0x*]; call 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded")));
 
