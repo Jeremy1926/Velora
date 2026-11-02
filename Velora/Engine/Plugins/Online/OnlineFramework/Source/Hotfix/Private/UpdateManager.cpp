@@ -46,6 +46,17 @@ FOnUpdateCheckComplete& UUpdateManager::OnUpdateCheckComplete()
         .Target()
         .Find("inc [rbx+0x*]; mov eax, [rbx+0x*]")
         .Find("mov rax, [rbx+0x*]")
+        .Or()
+        .String(TEXT("CheckComplete %s"))
+        .Start()
+        .Find("movss xmm3, *; lea rdx, [rbp-0x*]; lea rcx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rdx, [0x*]; movups [r8], xmm0")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Find("add rcx, 0x*; mov rbx, [rsp+0x*]; add rsp, 0x*; pop rdi; jmp 0x*")
         .Get();
 
     return *(FOnUpdateCheckComplete*)((uint8*)this + UpdateCheckCompleteDelegates);
