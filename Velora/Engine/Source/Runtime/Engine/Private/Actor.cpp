@@ -120,6 +120,10 @@ void AActor::SetLifeSpan(float InLifespan)
 {
     static auto SetLifeSpan = Anchor::VirtualFunction<void (*)(AActor*, float)>(TEXT("AActor::SetLifeSpan"))
         .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
         .Find("call [*+0x*]")
         .Get();
 
