@@ -42,6 +42,10 @@ uint64 FDelegateHandle::GenerateNewID()
         .Target()
         .Find("lock xadd [0x*], *")
         .Target()
+        .Or()
+        .Pattern("41 8B C0 F0 48 0F C1 05 ? ? ? ? 49 03 C0 75 0F 41 8B C0 F0 48 0F C1 05 ? ? ? ? 48 FF C0")
+        .Find("lock xadd [0x*], *")
+        .Target()
         .Get();
 
     if (!NextID)
