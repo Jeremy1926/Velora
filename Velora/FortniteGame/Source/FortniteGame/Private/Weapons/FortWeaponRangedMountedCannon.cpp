@@ -25,6 +25,14 @@ void AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation(cons
         .Find("call [*+0x*]", 2)
         .LogSlot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedMountedCannon:ServerFireActorInCannon"))
+        .Optional()
+        .Find("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("AFortWeaponRangedMountedCannon::ServerFireActorInCannon_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon"), "ret*")
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__FortWeaponRangedMountedCannon")));
 
