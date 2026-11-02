@@ -445,6 +445,16 @@ bool UFortKismetLibrary::PickLootDrops(TArray<FFortItemEntry>* OutLootToDrop, FN
 
 FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor(AActor* EffectTargetActor, TSubclassOf<UGameplayEffect> GameplayEffect, int32 GameplayEffectLevel, const FGameplayTagContainer& AdditionalContextTags)
 {
+    static auto ApplyGlobalEnvironmentGameplayEffectToActorByRef = Anchor::Optional<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, const TSubclassOf<UGameplayEffect>*, int32, const FGameplayTagContainer&)>(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Pattern("83 09 FF 45 8B ? ? 8B ? 24 80 00 00 00 ? 8B ? C6 41 04 00")
+        .Start()
+        .Get();
+
+    FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
+
+    if (ApplyGlobalEnvironmentGameplayEffectToActorByRef)
+        return *ApplyGlobalEnvironmentGameplayEffectToActorByRef(&ActiveGameplayEffectHandle, EffectTargetActor, &GameplayEffect, GameplayEffectLevel, AdditionalContextTags);
+
     static auto ApplyGlobalEnvironmentGameplayEffectToActor = Anchor::Function<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, UClass*, int32, const FGameplayTagContainer&)>(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor"))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor"))
         .Find("mov [rsp+0x20], rax; call 0x*")
@@ -454,7 +464,6 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
         .Pattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 56 41 57 48 83 EC 30 83 09 FF 45 8B F9 48 8B 6C 24 70 49 8B D8 C6 41 04 00 48 8B F2 48 8B F9 48 85 D2 74 ? 48 8B CA E8")
         .Get();
 
-    FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
     ApplyGlobalEnvironmentGameplayEffectToActor(&ActiveGameplayEffectHandle, EffectTargetActor, GameplayEffect, GameplayEffectLevel, AdditionalContextTags);
 
     return ActiveGameplayEffectHandle;
