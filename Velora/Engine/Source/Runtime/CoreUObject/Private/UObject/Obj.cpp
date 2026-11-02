@@ -23,6 +23,12 @@ UWorld* UObject::GetWorld() const
         .Find("call *")
         .Target()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameSession"))
+        .Or()
+        .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
+        .Start()
+        .Find("call 0x*; mov rcx, [0x*]; mov rdx, rax")
+        .Target()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameSession"))
         .Get();
 
     return GetWorld(this);
