@@ -408,6 +408,13 @@ bool AActor::IsPendingKillPending() const
         .Or()
         .Pattern("B0 01 84 41 ? 75 ? F7 41 08 00 00 00 60 75 ? 32 C0 C3")
         .Find("test [rcx+0x*], al")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Is("mov dl, 0x1; test [rcx+0x*], dl")
+        .Find("test [rcx+0x*], dl")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("AActor::bActorIsBeingDestroyed"))
@@ -444,6 +451,12 @@ bool AActor::IsPendingKillPending() const
         .Find("test byte ptr [rcx+0x*], 0x*; mov rbx, rcx; jnz *")
         .Or()
         .Pattern("B0 01 84 41 ? 75 ? F7 41 08 00 00 00 60 75 ? 32 C0 C3")
+        .Or()
+        .String(TEXT("Destroying %s, which doesn't have a valid world pointer"))
+        .Start()
+        .Find("call 0x*")
+        .Target()
+        .Is("mov dl, 0x1; test [rcx+0x*], dl")
         .Value();
 
     return (*((uint8_t*)this + Offset) & Mask) || IsPendingKill();
