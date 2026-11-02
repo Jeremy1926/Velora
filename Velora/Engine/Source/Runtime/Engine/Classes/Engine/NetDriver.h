@@ -135,6 +135,29 @@ private:
     int32 HashSize;
 };
 
+namespace UE::Net
+{
+    enum class EReplicationSystemSendPass : unsigned
+    {
+        Invalid,
+        PostTickDispatch,
+        TickFlush,
+    };
+}
+
+class UReplicationSystem : public UObject
+{
+public:
+    struct FSendUpdateParams
+    {
+        UE::Net::EReplicationSystemSendPass SendPass = UE::Net::EReplicationSystemSendPass::TickFlush;
+
+        float DeltaSeconds = 0.f;
+    };
+
+    void PreSendUpdate(float DeltaSeconds);
+};
+
 class UNetDriver : public UObject
 {
 public:
@@ -162,6 +185,8 @@ public:
     UReplicationDriver* GetReplicationDriver() const;
 
     void SetReplicationDriver(UReplicationDriver* NewReplicationDriver);
+
+    UReplicationSystem* GetReplicationSystem() const;
 
     FName GetNetDriverName() const;
 
@@ -210,6 +235,10 @@ public:
     static bool IsAdaptiveNetUpdateFrequencyEnabled();
 
     int32 ServerReplicateActors(float DeltaSeconds);
+
+    void UpdateIrisReplicationViews() const;
+
+    void SendClientMoveAdjustments();
 
 private:
     int32 ServerReplicateActors_PrepConnections(const float DeltaSeconds);

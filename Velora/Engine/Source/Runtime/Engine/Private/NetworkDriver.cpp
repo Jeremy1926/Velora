@@ -447,10 +447,138 @@ void UNetDriver::TickFlush(float DeltaSeconds)
 
     if (IsServer() && GetClientConnections().Num() > 0 && GetClientConnections()[0]->GetInternalAck() == false)
     {
-        ServerReplicateActors(DeltaSeconds);
+        if (UReplicationSystem* ReplicationSystem = GetReplicationSystem())
+        {
+            UpdateIrisReplicationViews();
+            SendClientMoveAdjustments();
+            ReplicationSystem->PreSendUpdate(DeltaSeconds);
+        }
+        else
+        {
+            ServerReplicateActors(DeltaSeconds);
+        }
     }
 
     Original(DeltaSeconds);
+}
+
+UReplicationSystem* UNetDriver::GetReplicationSystem() const
+{
+    static auto ReplicationSystem = Anchor::Offset(TEXT("UNetDriver::ReplicationSystem"))
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, [*+0x*]")
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, [*+0x*]")
+        .Optional()
+        .Disp();
+
+    return ReplicationSystem ? *(UReplicationSystem* const*)((const uint8*)this + ReplicationSystem) : nullptr;
+}
+
+void UNetDriver::UpdateIrisReplicationViews() const
+{
+    static auto UpdateIrisReplicationViews = Anchor::Function<void (*)(const UNetDriver*)>(TEXT("UNetDriver::UpdateIrisReplicationViews"))
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    UpdateIrisReplicationViews(this);
+}
+
+void UNetDriver::SendClientMoveAdjustments()
+{
+    for (UNetConnection* Connection : GetClientConnections())
+    {
+        if (Connection == nullptr || Connection->GetViewTarget() == nullptr)
+            continue;
+
+        if (APlayerController* PC = Connection->GetPlayerController())
+            PC->SendClientAdjustment();
+
+        for (UNetConnection* ChildConnection : Connection->GetChildren())
+        {
+            if (ChildConnection == nullptr)
+                continue;
+
+            if (APlayerController* PC = ChildConnection->GetPlayerController())
+                PC->SendClientAdjustment();
+        }
+    }
+}
+
+void UReplicationSystem::PreSendUpdate(float DeltaSeconds)
+{
+    static auto PreSendUpdateParams = Anchor::Optional<void (*)(UReplicationSystem*, const FSendUpdateParams&)>(TEXT("UReplicationSystem::PreSendUpdate"))
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; lea rdx, [*]; *; mov dword ptr [*], 0x2; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; lea rdx, [*]; *; mov dword ptr [*], 0x2; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    if (PreSendUpdateParams)
+        return PreSendUpdateParams(this, FSendUpdateParams { UE::Net::EReplicationSystemSendPass::TickFlush, DeltaSeconds });
+
+    static auto PreSendUpdate = Anchor::Function<void (*)(UReplicationSystem*, float)>(TEXT("UReplicationSystem::PreSendUpdate"))
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; movaps xmm1, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; movaps xmm1, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    PreSendUpdate(this, DeltaSeconds);
 }
 
 void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
