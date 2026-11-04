@@ -144,6 +144,8 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
         .Find("jnz 0x*")
         .Target()
         .Find("call [r8+0x*]")
+        .Or()
+        .VirtualStartHas(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortInventory"), TEXT("/Script/FortniteGame.FortInventoryInterface")), "cmp byte ptr [rcx-0x*], 0x3; mov rdi, rdx; mov rbx, rcx")
         .Optional()
         .Get();
 
