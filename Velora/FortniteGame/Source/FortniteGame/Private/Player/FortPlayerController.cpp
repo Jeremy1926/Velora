@@ -919,6 +919,13 @@ void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Pa
         .Is("xor eax, eax; ret")
         .Or()
         .StubExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
+        .Find("setnz *; add [*+0x20], *; cmp byte ptr [0x*], 0x0; jz 0x*; mov rcx, [rbp*]; test rcx, rcx; jz 0x*; call 0x*; and qword ptr [*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
+        .Find("xor ebp, ebp")
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov [rsi], rbp")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")));
 
