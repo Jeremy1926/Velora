@@ -46,6 +46,11 @@ UObject* FSoftObjectPath::TryLoad() const
 FSoftObjectPath FSoftObjectPath::GetOrCreateIDForObject(const UObject* Object)
 {
     static auto Construct = Anchor::Function<FSoftObjectPath* (*)(FSoftObjectPath*, const UObject*)>(TEXT("FSoftObjectPath::FSoftObjectPath"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetSoftObjectPath"))
+        .Find("add [*+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
         .Find("mov rdx, *; lea rcx, [*]; call 0x*")
         .Find("call 0x*")
