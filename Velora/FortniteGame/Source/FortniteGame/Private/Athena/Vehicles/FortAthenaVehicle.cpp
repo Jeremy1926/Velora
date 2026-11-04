@@ -725,6 +725,11 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .VirtualIs(TEXT("/Script/FortniteGame.Default__FortAthenaVehicle"), "lea rdx, [rcx+0x*]; jmp %t")
         .LogSlot(TEXT("AFortAthenaVehicle::SetupToggleableShapeCollision"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicle:RefreshDamageableParts"))
+        .Find("jmp 0x*")
+        .Target()
+        .Is("lea rdx, [rcx+0x*]; jmp 0x*")
         .Optional()
         .Inline());
 
