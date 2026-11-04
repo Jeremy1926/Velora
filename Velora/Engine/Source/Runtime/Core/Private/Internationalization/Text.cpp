@@ -130,6 +130,12 @@ bool FText::IsEmpty() const
         .Find("mov r8d, *; *; call [*+0x*]")
         .Find("lea rcx, *; call 0x*")
         .Call()
+        .Or()
+        .Pattern("83 EC 28 E8 ? ? ? ? 83 78 08 01 0F 9E C0 ? 83 ? ? C3")
+        .Start()
+        .Or()
+        .Pattern("83 C4 D8 E8 ? ? ? ? 83 78 08 01 0F 9E C0 ? 83 ? ? C3")
+        .Start()
         .Get();
 
     return IsEmpty(this);
