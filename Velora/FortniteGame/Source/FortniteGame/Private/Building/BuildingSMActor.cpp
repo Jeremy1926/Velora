@@ -41,6 +41,11 @@ void ABuildingSMActor::SetMirrored(bool bIsMirrored)
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .FindSlotCall(SetCurrentBuildingLevel)
         .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("STAT_Fort_BuildingSMActorReplaceBuildingActor"))
+        .Start()
+        .FindSlotCall(SetCurrentBuildingLevel)
+        .Find("call [*+0x*]")
         .Get();
 
     SetMirrored(this, bIsMirrored);
