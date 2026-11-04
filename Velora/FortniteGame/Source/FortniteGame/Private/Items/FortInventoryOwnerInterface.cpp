@@ -26,6 +26,13 @@ AFortInventory* IFortInventoryOwnerInterface::GetWorldInventory()
         .Find("call 0x*")
         .Target()
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:GetOverflowCountIfItemWasAddedToInventory"))
+        .Find("add r*, 0x*; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Is("push *; sub rsp, 0x*; mov *, rdx; test rcx, rcx; jz *; mov rax, [rcx]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     return GetWorldInventory(this);
