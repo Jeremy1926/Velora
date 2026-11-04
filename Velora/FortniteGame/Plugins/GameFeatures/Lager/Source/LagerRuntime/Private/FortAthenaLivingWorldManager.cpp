@@ -1973,6 +1973,9 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetTagDensityG
         .Find("mov rdx, r14; mov rcx, rbx; call 0x*; test rax, rax; jz 0x*; movss xmm2, dword ptr [r14+0x*]")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .Pattern("48 83 EC 28 8B 02 4C 8D 99 ? ? ? ? 4C 8B CA C1 E8 10 0F B7 12 8B CA 44 69 C0 01 00 08 00 C1 E1 10 44 03 C2 C1 EA 04 44 03 C1 49 8B CB 41 03 D0 4D 8B C1 E8 ? ? ? ? 83 F8 FF 74 0E 48 98 48 69 D0 ? ? ? ? 49 03 13")
         .Get();
 
     if (NativeGetTagDensityGrid)
