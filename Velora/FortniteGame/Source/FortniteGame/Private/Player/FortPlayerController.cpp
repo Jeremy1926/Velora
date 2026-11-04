@@ -564,6 +564,9 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+        .Find("lea rcx, [*+0x*]; mov rax, [*+0x20]; lea rdx, [*]; movups xmm0, [*]; setnz r8b; test rax, rax; setnz *; add r*, r*; mov [*+0x20], r*")
         .Get();
 
     if (bInlined)
@@ -588,6 +591,9 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
             .Find("setnz *")
             .Find("add rcx, 0x*; add [*+0x20], *")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("lea rcx, [*+0x*]; mov rax, [*+0x20]; lea rdx, [*]; movups xmm0, [*]; setnz r8b")
             .Get();
 
         static auto FindExistingItemForDefinition = Anchor::VirtualFunction<UFortItem* (*)(const void*, const UFortItemDefinition*, bool)>(TEXT("IFortInventoryOwnerInterface::FindExistingItemForDefinition"))
@@ -612,6 +618,10 @@ UFortItem* AFortPlayerController::K2_FindExistingItemForDefinition(const UFortIt
             .Find("call 0x*")
             .Target()
             .Find("mov rbx, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition"))
+            .Find("setnz *; add r*, r*; mov [*+0x20], r*")
+            .Find("mov r9, [rax+0x*]")
             .Get();
 
         static auto bItemVariantGuid = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:BP_FindExistingItemForDefinition")))->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr;
