@@ -207,14 +207,21 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameV
     if (!bAutoCreateAttachmentBuilding || !AutoCreateAttachmentBuildingShapes || !AutoCreateAttachmentBuildingResourceType || !bAutoCreateAttachmentBuilding->GetPropertyValue_InContainer(DecoItemDefinition))
         return;
 
+    static auto bKeepLoaded = Anchor::Exists()
+        .At((const void*)GetSoftObject)
+        .Find("lea r*, [rcx+0x*]; mov *, r8b")
+        .Get();
+
     TArray<UObject*> AllowedShapes;
     auto& Shapes = *AutoCreateAttachmentBuildingShapes->ContainerPtrToValuePtr<FScriptArray>(DecoItemDefinition);
     const int32 ShapeSize = AutoCreateAttachmentBuildingShapes->GetInner()->GetSize();
 
     for (int32 Index = 0; Index < Shapes.Num(); Index++)
     {
-        if (auto Shape = GetSoftObject((const uint8*)Shapes.GetData() + Index * ShapeSize))
-            AllowedShapes.Add(Shape);
+        auto Shape = (const uint8*)Shapes.GetData() + Index * ShapeSize;
+
+        if (auto Object = bKeepLoaded ? ((UObject* (*)(const void*, const void*, bool))GetSoftObject)(Shape, nullptr, true) : GetSoftObject(Shape))
+            AllowedShapes.Add(Object);
     }
 
     if (!AllowedShapes.Num())
