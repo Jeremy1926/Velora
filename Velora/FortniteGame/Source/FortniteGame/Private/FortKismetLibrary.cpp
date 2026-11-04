@@ -41,6 +41,12 @@ FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<I
         .Find("mov r8, [rsp+0x*]")
         .Call()
         .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; mov r9, *; lea rdx, [*]; mov r8, *; lea rcx, [*]; call 0x*")
+        .Call(2)
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
         .Get();
 
