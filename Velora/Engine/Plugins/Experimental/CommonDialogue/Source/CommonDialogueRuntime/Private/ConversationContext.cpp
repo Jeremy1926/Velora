@@ -208,6 +208,18 @@ void UConversationContextHelpers::execMakeConversationParticipant(FFrame& Stack,
         .If(UConversationInstance::HasServerLayout())
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
         .Has("setnz al; add [*+0x20], rax; test rdx, rdx; jz 0x*; mov rcx, [0x*]; test rcx, rcx; jnz 0x*; mov rcx, rdx; call 0x*")
+        .Or()
+        .If(UConversationInstance::HasServerLayout())
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
+        .Has("setnz al; add [*+0x20], rax; mov rbx, [rbp+0x*]; test rbx, rbx; jz 0x*; mov rsi, [0x*]; test rsi, rsi; jnz 0x*; call 0x*; mov rcx, [0x*]")
+        .Or()
+        .If(UConversationInstance::HasServerLayout())
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
+        .Has("setnz al; add [*+0x20], rax; mov rbx, [rbp-0x*]; test rbx, rbx; jz 0x*; mov rdi, [0x*]; test rdi, rdi; jnz 0x*; call 0x*; mov rcx, [0x*]")
+        .Or()
+        .If(UConversationInstance::HasServerLayout())
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
+        .Has("setnz al; add [*+0x20], rax; test rcx, rcx; jz 0x*; call 0x*; mov rbx, [rsp+0x*]; add rsp, 0x*; pop r14; pop rdi; pop rbp; ret")
         .Optional()
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant")));
 
