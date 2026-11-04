@@ -401,6 +401,23 @@ TMap<FName, FActorRepListRefView>& UFortReplicationGraph::GetAlwaysRelevantStrea
     return *(TMap<FName, FActorRepListRefView>*)(ReplayPlayerStateLimiterNode->ContainerPtrToValuePtr<uint8>(this) + sizeof(UReplicationGraphNode*));
 }
 
+void UFortReplicationGraph::InitForNetDriver(UNetDriver* InNetDriver)
+{
+    DETOUR(UFortReplicationGraph, InitForNetDriver, Anchor::Hook()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x48)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "push rbx; sub rsp, 0x20; mov rbx, rcx; mov [rsp+0x30], rcx; call 0x*; lea r9, [rsp+0x30]; mov r8, rbx; lea rdx, [rsp+0x40]; mov rcx, rax; call 0x*; add rsp, 0x20; pop rbx; ret")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    UReplicationGraph::InitForNetDriver(InNetDriver);
+
+    Original(InNetDriver);
+}
+
 void UFortReplicationGraph::InitializeForWorld(UWorld* World)
 {
     DETOUR(UFortReplicationGraph, InitializeForWorld, Anchor::Hook()

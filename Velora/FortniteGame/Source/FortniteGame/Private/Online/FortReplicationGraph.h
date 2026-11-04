@@ -113,6 +113,8 @@ public:
 
     TMap<FName, FActorRepListRefView>& GetAlwaysRelevantStreamingLevelActors();
 
+    void InitForNetDriver(UNetDriver* InNetDriver);
+
     void InitializeForWorld(UWorld* World);
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);
