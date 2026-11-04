@@ -2,8 +2,11 @@
 
 #include "UObject/Object.h"
 #include "UObject/NameTypes.h"
+#include "Engine/NetSerialization.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayEffectAggregator.h"
+
+class UScriptStruct;
 
 class UGameplayEffect : public UObject
 {
@@ -28,4 +31,13 @@ struct FGameplayEffectSpec
     void SetSetByCallerMagnitude(FName DataName, float Magnitude);
 
     void SetSetByCallerMagnitude(FGameplayTag DataTag, float Magnitude);
+};
+
+struct FActiveGameplayEffect : public FFastArraySerializerItem
+{
+    static UScriptStruct* StaticStruct();
+
+    FGameplayEffectSpec& GetSpec();
+
+    FActiveGameplayEffectHandle Handle;
 };

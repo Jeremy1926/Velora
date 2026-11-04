@@ -7,6 +7,7 @@
 #include "HAL/IConsoleManager.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "GameFramework/Controller.h"
 #include "GameplayTagAssetInterface.h"
 #include "FortRegisteredPlayerInfo.h"
@@ -63,6 +64,20 @@ void AFortPlayerPawnAthena::HandleDeath(float Damage, const FGameplayTagContaine
 
     if (InventoryParameters && InventoryParameters->GetbShouldDropCurrencyOnDeath())
         UFortControllerComponent_InventoryService::GenerateCurrencyOnPawnDeath(this, InstigatedBy, InventoryParameters->GetCurrencyPayoutRowName());
+}
+
+void AFortPlayerPawnAthena::PossessedBy(AController* NewController)
+{
+    DETOUR(AFortPlayerPawnAthena, PossessedBy, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    Original(NewController);
+
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+        GamePhaseLogic->HandlePawnPossessed(this);
 }
 
 void AFortPlayerPawnAthena::OnPlayerPawnReady()

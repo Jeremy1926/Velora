@@ -95,6 +95,8 @@ public:
 
     AGameStateBase* GetGameState() const;
 
+    UObject* GetSubsystemBase(UClass* SubsystemClass) const;
+
     UAISystemBase* GetAISystem() const;
 
     UGameInstance* GetGameInstance() const;

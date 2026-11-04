@@ -137,50 +137,9 @@ UClass* UFortGlobalActorRegistrySubsystem::StaticClass()
 
 UFortGlobalActorRegistrySubsystem* UFortGlobalActorRegistrySubsystem::GetGlobalActorRegistrySubsystem(const UObject* WorldContextObject)
 {
-    static auto SubsystemCollection = Anchor::Offset(TEXT("UWorld::SubsystemCollection"))
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]")
-        .Find("lea *, [rax+0x*]")
-        .Or()
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rdx, r*; mov rcx, rax; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Find("lea r*, [rcx+0x*]")
-        .Or()
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; mov *, rax; test rax, rax; jz 0x*")
-        .Find("lea rdx, [rbp-0x*]; mov rcx, *; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Find("lea r*, [rcx+0x*]")
-        .Disp();
-    static auto GetSubsystemInternal = Anchor::Function<UObject* (*)(void*, UClass*)>(TEXT("FSubsystemCollectionBase::GetSubsystemInternal"))
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]")
-        .Find("lea *, [rax+0x*]")
-        .Find("call 0x*")
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rdx, r*; mov rcx, rax; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Find("jmp 0x*")
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
-        .Find("call [rax+0x*]; mov *, rax; test rax, rax; jz 0x*")
-        .Find("lea rdx, [rbp-0x*]; mov rcx, *; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Find("jmp 0x*")
-        .Target()
-        .Get();
-
     auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
 
-    return World && StaticClass() ? (UFortGlobalActorRegistrySubsystem*)GetSubsystemInternal((uint8*)World + SubsystemCollection, StaticClass()) : nullptr;
+    return World && StaticClass() ? (UFortGlobalActorRegistrySubsystem*)World->GetSubsystemBase(StaticClass()) : nullptr;
 }
 
 UActorRegisterData_GameplayTagBased* UFortGlobalActorRegistrySubsystem::GetActorRegistryDataForGameplayTag(const FGameplayTag& GameplayTag)

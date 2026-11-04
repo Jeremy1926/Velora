@@ -294,6 +294,43 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToSel
     return ActiveGameplayEffectHandle;
 }
 
+void UAbilitySystemComponent::SetActiveGameplayEffectLevel(FActiveGameplayEffectHandle ActiveHandle, int32 NewLevel)
+{
+    static auto SetActiveGameplayEffectLevel = Anchor::VirtualFunction<void (*)(UAbilitySystemComponent*, FActiveGameplayEffectHandle, int32)>(TEXT("UAbilitySystemComponent::SetActiveGameplayEffectLevel"))
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:SetActiveGameplayEffectLevel"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:SetActiveGameplayEffectLevel"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:SetActiveGameplayEffectLevel"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    SetActiveGameplayEffectLevel(this, ActiveHandle, NewLevel);
+}
+
+FActiveGameplayEffect* UAbilitySystemComponent::GetActiveGameplayEffect(const FActiveGameplayEffectHandle Handle)
+{
+    static auto ActiveGameplayEffects = StaticClass()->FindPropertyByName(FName(TEXT("ActiveGameplayEffects")));
+    static auto GameplayEffects_Internal = (UArrayProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.ActiveGameplayEffectsContainer")))->FindPropertyByName(FName(TEXT("GameplayEffects_Internal")));
+
+    auto& GameplayEffects = *GameplayEffects_Internal->ContainerPtrToValuePtr<TArray<uint8>>(ActiveGameplayEffects->ContainerPtrToValuePtr<void>(this));
+
+    for (int32 Index = 0; Index < GameplayEffects.Num(); Index++)
+    {
+        auto Effect = (FActiveGameplayEffect*)(GameplayEffects.GetData() + Index * GameplayEffects_Internal->GetInner()->GetSize());
+
+        if (Effect->Handle == Handle)
+            return Effect;
+    }
+
+    return nullptr;
+}
+
 void UAbilitySystemComponent::OnTagUpdated(const FGameplayTag& Tag, bool TagExists)
 {
     static auto OnTagUpdated = Anchor::VirtualFunction<void (*)(UAbilitySystemComponent*, const FGameplayTag&, bool)>(TEXT("UAbilitySystemComponent::OnTagUpdated"))

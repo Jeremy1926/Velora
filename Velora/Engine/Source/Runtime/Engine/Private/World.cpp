@@ -26,6 +26,52 @@ AGameStateBase* UWorld::GetGameState() const
     return *GameState->ContainerPtrToValuePtr<AGameStateBase*>(this);
 }
 
+UObject* UWorld::GetSubsystemBase(UClass* SubsystemClass) const
+{
+    static auto SubsystemCollection = Anchor::Offset(TEXT("UWorld::SubsystemCollection"))
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]")
+        .Find("lea *, [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rdx, r*; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r*, [rcx+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; mov *, rax; test rax, rax; jz 0x*")
+        .Find("lea rdx, [rbp-0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r*, [rcx+0x*]")
+        .Disp();
+    static auto GetSubsystemInternal = Anchor::Function<UObject* (*)(void*, UClass*)>(TEXT("FSubsystemCollectionBase::GetSubsystemInternal"))
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]")
+        .Find("lea *, [rax+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rdx, r*; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; mov *, rax; test rax, rax; jz 0x*")
+        .Find("lea rdx, [rbp-0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
+
+    return GetSubsystemInternal((uint8*)this + SubsystemCollection, SubsystemClass);
+}
+
 UAISystemBase* UWorld::GetAISystem() const
 {
     static auto AISystem = GetClass()->FindPropertyByName(FName(TEXT("AISystem")));

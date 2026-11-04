@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "GameplayEffect.h"
+#include "UObject/Class.h"
+#include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 bool FGameplayEffectAttributeCaptureSpec::AttemptCalculateAttributeMagnitudeWithBase(const FAggregatorEvaluateParameters& InEvalParams, float InBaseValue, float& OutMagnitude) const
@@ -33,4 +36,18 @@ void FGameplayEffectSpec::SetSetByCallerMagnitude(FGameplayTag DataTag, float Ma
         .Get();
 
     SetSetByCallerMagnitude(this, DataTag, Magnitude);
+}
+
+UScriptStruct* FActiveGameplayEffect::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.ActiveGameplayEffect"));
+
+    return Struct;
+}
+
+FGameplayEffectSpec& FActiveGameplayEffect::GetSpec()
+{
+    static auto Spec = StaticStruct()->FindPropertyByName(FName(TEXT("Spec")));
+
+    return *Spec->ContainerPtrToValuePtr<FGameplayEffectSpec>(this);
 }
