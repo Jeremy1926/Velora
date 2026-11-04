@@ -1004,7 +1004,7 @@ EClassRepNodeMapping UFortReplicationGraph::GetClassNodeMapping(UClass* Class)
         return EClassRepNodeMapping::NotRouted;
 
     if (auto Ptr = GetClassRepNodePolicies().FindWithoutClassRecursion(Class))
-        return *Ptr;
+        return (EClassRepNodeMapping)(uint8)*Ptr;
 
     auto ActorCDO = Cast<AActor>(Class->GetDefaultObject(true));
 
@@ -1041,7 +1041,7 @@ bool UFortReplicationGraph::ConditionalInitClassReplicationInfo(UClass* Replicat
             return false;
     }
 
-    InitClassReplicationInfo(ClassInfo, ReplicatedClass, GetClassRepNodePolicies().GetChecked(ReplicatedClass) >= EClassRepNodeMapping::Spatialize_Static);
+    InitClassReplicationInfo(ClassInfo, ReplicatedClass, (EClassRepNodeMapping)(uint8)GetClassRepNodePolicies().GetChecked(ReplicatedClass) >= EClassRepNodeMapping::Spatialize_Static);
 
     return true;
 }
@@ -1058,7 +1058,7 @@ void UFortReplicationGraph::InitClassReplicationInfo(FClassReplicationInfo& Info
 
 EClassRepNodeMapping UFortReplicationGraph::GetMappingPolicy(UClass* Class, AActor* Actor)
 {
-    auto Policy = GetClassRepNodePolicies().GetChecked(Class);
+    auto Policy = (EClassRepNodeMapping)(uint8)GetClassRepNodePolicies().GetChecked(Class);
 
     if (Policy == EClassRepNodeMapping::Instance_Dynamic)
         Policy = GetInstanceDynamicRepNodeMapping(Actor);
@@ -1108,7 +1108,7 @@ EClassRepNodeMapping UFortReplicationGraph::GetInstanceDynamicRepNodeMapping(AAc
         .Target()
         .Get();
 
-    return GetInstanceDynamicRepNodeMapping(this, Actor);
+    return (EClassRepNodeMapping)(uint8)GetInstanceDynamicRepNodeMapping(this, Actor);
 }
 
 void UFortReplicationGraph::AddRelevantToAllConnections(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& GlobalInfo)
