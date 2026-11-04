@@ -187,6 +187,11 @@ AServerStreamingLevelsVisibility* AServerStreamingLevelsVisibility::SpawnServerA
         .Target()
         .Reference("call 0x*; add *, 0x8")
         .Start()
+        .Or()
+        .String(TEXT("ServerStreamingLevelsVisibility"))
+        .Start()
+        .Reference("call 0x*; mov ecx, [rax+0x*]")
+        .Start()
         .Optional()
         .Get();
 
