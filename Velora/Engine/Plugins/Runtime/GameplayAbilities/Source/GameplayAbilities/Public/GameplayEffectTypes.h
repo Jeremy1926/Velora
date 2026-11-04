@@ -19,6 +19,16 @@ struct FActiveGameplayEffectHandle
     {
     }
 
+    bool IsValid() const
+    {
+        return Handle != INDEX_NONE;
+    }
+
+    bool operator==(const FActiveGameplayEffectHandle& Other) const
+    {
+        return Handle == Other.Handle;
+    }
+
 private:
     int32 Handle;
     bool bPassedFiltersAndWasExecuted;

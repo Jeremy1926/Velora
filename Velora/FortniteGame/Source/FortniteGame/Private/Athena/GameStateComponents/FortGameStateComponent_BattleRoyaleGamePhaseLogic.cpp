@@ -15,7 +15,11 @@
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayEffect.h"
 #include "GameplayEffectTypes.h"
+#include "GameplayTagContainer.h"
+#include "Kismet/GameplayStatics.h"
 #include "Templates/Casts.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CommandLine.h"
@@ -49,6 +53,8 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TickComponent(float Del
 
     if (!GameState)
         return;
+
+    SafeZoneInsideChecks();
 
     const EAthenaGamePhase GamePhase = GetGamePhase();
     auto Playlist = GameState->GetCurrentPlaylist();
@@ -569,6 +575,165 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsSafeZoneTimerPaused()
     static auto SafeZonePauseTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));
 
     return *SafeZonePauseTime->ContainerPtrToValuePtr<float>(this) >= 0.0f;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandlePawnPossessed(AFortPlayerPawnAthena* Pawn)
+{
+    static auto GE_OutsideSafeZone = StaticClass()->FindPropertyByName(FName(TEXT("GE_OutsideSafeZone")));
+    static auto StormCampingDamageTag = FGameplayTag::RequestGameplayTag(FName(TEXT("SetByCaller.StormCampingDamage")));
+
+    auto AbilitySystemComponent = Pawn->GetAbilitySystemComponent();
+
+    if (Pawn->GetBeingRepossessed() || !AbilitySystemComponent || !GetWorld()->GetAuthGameMode())
+        return;
+
+    auto& StormEffectHandle = Pawn->GetStormEffectHandle();
+
+    if (StormEffectHandle.IsValid())
+        return;
+
+    StormEffectHandle = AbilitySystemComponent->BP_ApplyGameplayEffectToTarget(*GE_OutsideSafeZone->ContainerPtrToValuePtr<TSubclassOf<UGameplayEffect>>(this), AbilitySystemComponent, 1.0f, FGameplayEffectContextHandle());
+
+    if (auto ActiveGameplayEffect = AbilitySystemComponent->GetActiveGameplayEffect(StormEffectHandle))
+        ActiveGameplayEffect->GetSpec().SetSetByCallerMagnitude(StormCampingDamageTag, 1.0f);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SafeZoneInsideChecks()
+{
+    static auto bWarmUpInStorm = (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("bWarmUpInStorm")));
+    static auto PawnTickSubsystemClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawnTickSubsystem"));
+    static auto Pawns = PawnTickSubsystemClass->FindPropertyByName(FName(TEXT("Pawns")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode());
+    auto PawnTickSubsystem = GameState && GameMode ? GetWorld()->GetSubsystemBase(PawnTickSubsystemClass) : nullptr;
+
+    if (GetStormDamagePaused() || !PawnTickSubsystem)
+        return;
+
+    auto& PlayerPawns = *Pawns->ContainerPtrToValuePtr<TArray<AFortPlayerPawn*>>(PawnTickSubsystem);
+
+    if (GetGamePhase() == EAthenaGamePhase::Warmup)
+    {
+        auto Playlist = GameState->GetCurrentPlaylist();
+        const bool bIsInsideSafeZone = !Playlist || !bWarmUpInStorm->GetPropertyValue_InContainer(Playlist);
+
+        for (auto Pawn : PlayerPawns)
+        {
+            if (!Pawn || Pawn->IsPendingKill())
+                continue;
+
+            Pawn->SetIsInAnyStorm(Pawn->InPortaStorm() == bIsInsideSafeZone);
+            Pawn->SetIsInsideSafeZone(bIsInsideSafeZone);
+        }
+
+        return;
+    }
+
+    for (auto Pawn : PlayerPawns)
+    {
+        if (!Pawn || Pawn->IsPendingKill())
+            continue;
+
+        const bool bIsInsideSafeZone = IsInCurrentSafeZone(Pawn->GetActorLocation(), false);
+
+        SafeZoneSetPlayerInside(Pawn, bIsInsideSafeZone ? 0 : GameMode->GetSafeZonePhase(), bIsInsideSafeZone, bIsInsideSafeZone);
+    }
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SafeZoneSetPlayerInside(AFortPlayerPawn* Pawn, int32 StormDamageLevel, bool bIsInsideSafeZone, bool bUseStormDamageLevelForShieldDamage)
+{
+    static auto StormCampingDamageTag = FGameplayTag::RequestGameplayTag(FName(TEXT("SetByCaller.StormCampingDamage")));
+    static auto StormShieldDamageTag = FGameplayTag::RequestGameplayTag(FName(TEXT("SetByCaller.StormShieldDamage")));
+
+    if (!GetWorld() || !Pawn)
+        return;
+
+    Pawn->SetIsInAnyStorm(Pawn->InPortaStorm() == bIsInsideSafeZone);
+    Pawn->SetIsInsideSafeZone(bIsInsideSafeZone);
+
+    auto AbilitySystemComponent = Pawn->GetAbilitySystemComponent();
+    auto& StormEffectHandle = Pawn->GetStormEffectHandle();
+
+    if (!AbilitySystemComponent || !StormEffectHandle.IsValid())
+        return;
+
+    AbilitySystemComponent->SetActiveGameplayEffectLevel(StormEffectHandle, StormDamageLevel);
+
+    auto ActiveGameplayEffect = AbilitySystemComponent->GetActiveGameplayEffect(StormEffectHandle);
+
+    if (!ActiveGameplayEffect)
+        return;
+
+    ActiveGameplayEffect->GetSpec().SetSetByCallerMagnitude(StormCampingDamageTag, 1.0f);
+    ActiveGameplayEffect->GetSpec().SetSetByCallerMagnitude(StormShieldDamageTag, bUseStormDamageLevelForShieldDamage ? (float)StormDamageLevel : -1.0f);
+}
+
+bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsInCurrentSafeZone(const FVector& TestLocation, bool bClassicSafeZoneOnly)
+{
+    static auto IsInCurrentSafeZone = Anchor::Function<bool (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, const TGameValue<FVector>&, bool)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsInCurrentSafeZone"))
+        .Native(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:IsInCurrentSafeZone"))
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:IsInCurrentSafeZone"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:IsInCurrentSafeZone"))
+        .Find("call 0x*; mov [*], al")
+        .Target()
+        .Get();
+
+    return IsInCurrentSafeZone(this, TGameValue<FVector>(TestLocation), bClassicSafeZoneOnly);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execSetStormDamagePaused(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, execSetStormDamagePaused, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:SetStormDamagePaused"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:SetStormDamagePaused")));
+
+    uint32 bPause = 0;
+
+    Stack.StepCompiledIn(&bPause);
+    Stack.Code += !!Stack.Code;
+
+    SetStormDamagePaused(!!bPause);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetStormDamagePaused(bool bPause)
+{
+    auto& bStormDamagePaused = GetStormDamagePaused();
+
+    if (bStormDamagePaused == bPause)
+        return;
+
+    bStormDamagePaused = bPause;
+
+    if (!bPause)
+        return;
+
+    TArray<AActor*> PlayerPawns;
+    UGameplayStatics::GetAllActorsOfClass(this, AFortPlayerPawnAthena::StaticClass(), PlayerPawns);
+
+    for (auto Actor : PlayerPawns)
+    {
+        auto Pawn = (AFortPlayerPawnAthena*)Actor;
+
+        if (!Pawn->GetIsInAnyStorm() || !Pawn->GetAbilitySystemComponent())
+            continue;
+
+        Pawn->SetIsInAnyStorm(false);
+        Pawn->SetIsInsideSafeZone(true);
+    }
+}
+
+bool& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetStormDamagePaused()
+{
+    static bool bStormDamagePaused = false;
+
+    return bStormDamagePaused;
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGamePhase InGamePhase)

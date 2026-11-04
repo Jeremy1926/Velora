@@ -20,6 +20,7 @@ class UFortWorldItem;
 class UGameplayEffect;
 class UScriptStruct;
 class UStatManager;
+struct FActiveGameplayEffectHandle;
 struct FFrame;
 struct FGameplayTag;
 struct FScalableFloat;
@@ -114,9 +115,17 @@ public:
 
     void OnRep_IsInsideSafeZone();
 
+    bool GetIsInAnyStorm() const;
+
     void SetIsInAnyStorm(bool bNewValue);
 
     void OnRep_IsInAnyStorm();
+
+    bool InPortaStorm() const;
+
+    FActiveGameplayEffectHandle& GetStormEffectHandle();
+
+    bool GetBeingRepossessed() const;
 
     FGuid* GetLastEquippedWeaponOrGadgetGUID();
 

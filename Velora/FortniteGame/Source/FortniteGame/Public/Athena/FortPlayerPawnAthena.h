@@ -14,6 +14,8 @@ class AFortPlayerPawnAthena : public AFortPlayerPawn
 public:
     static UClass* StaticClass();
 
+    void PossessedBy(AController* NewController);
+
     void OnPlayerPawnReady();
 
     void ServerHandlePickup_Implementation(AFortPickup* Pickup, float InFlyTime, const TGameValue<FVector>& GameStartDirection, bool bPlayPickupSound);

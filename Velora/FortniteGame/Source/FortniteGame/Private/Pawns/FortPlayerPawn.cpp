@@ -19,6 +19,8 @@
 #include "FortGameMode.h"
 #include "FortGameState.h"
 #include "GameplayEffect.h"
+#include "GameplayTagAssetInterface.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
@@ -420,6 +422,13 @@ void AFortPlayerPawn::OnRep_IsInsideSafeZone()
     OnRep_IsInsideSafeZone(this);
 }
 
+bool AFortPlayerPawn::GetIsInAnyStorm() const
+{
+    static auto bIsInAnyStorm = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIsInAnyStorm")));
+
+    return bIsInAnyStorm->GetPropertyValue_InContainer(this);
+}
+
 void AFortPlayerPawn::SetIsInAnyStorm(bool bNewValue)
 {
     static auto bIsInAnyStorm = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIsInAnyStorm")));
@@ -438,6 +447,30 @@ void AFortPlayerPawn::OnRep_IsInAnyStorm()
         .Get();
 
     OnRep_IsInAnyStorm(this);
+}
+
+bool AFortPlayerPawn::InPortaStorm() const
+{
+    static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
+    static auto InDamageZoneTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Granted.Athena.Item.DogSweater.InDamageZone")));
+
+    auto AbilitySystemComponent = GetAbilitySystemComponent();
+
+    return AbilitySystemComponent && ((IGameplayTagAssetInterface*)AbilitySystemComponent->GetInterfaceAddress(GameplayTagAssetInterface))->HasMatchingGameplayTag(InDamageZoneTag);
+}
+
+FActiveGameplayEffectHandle& AFortPlayerPawn::GetStormEffectHandle()
+{
+    static auto bIsInsideSafeZone = StaticClass()->FindPropertyByName(FName(TEXT("bIsInsideSafeZone")));
+
+    return *(FActiveGameplayEffectHandle*)(bIsInsideSafeZone->ContainerPtrToValuePtr<uint8>(this) + sizeof(int32));
+}
+
+bool AFortPlayerPawn::GetBeingRepossessed() const
+{
+    static auto bBeingRepossessed = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bBeingRepossessed")));
+
+    return bBeingRepossessed->GetPropertyValue_InContainer(this);
 }
 
 FGuid* AFortPlayerPawn::GetLastEquippedWeaponOrGadgetGUID()

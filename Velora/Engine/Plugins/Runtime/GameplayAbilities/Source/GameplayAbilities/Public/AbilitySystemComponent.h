@@ -14,6 +14,7 @@
 class UGameplayEffect;
 struct FGameplayEffectAttributeCaptureSpec;
 struct FActiveGameplayCueContainer;
+struct FActiveGameplayEffect;
 struct FGameplayEffectSpec;
 
 template<>
@@ -49,6 +50,10 @@ public:
     FActiveGameplayEffectHandle BP_ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GameplayEffectClass, UAbilitySystemComponent* Target, float Level, FGameplayEffectContextHandle Context);
 
     FActiveGameplayEffectHandle BP_ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle EffectContext);
+
+    void SetActiveGameplayEffectLevel(FActiveGameplayEffectHandle ActiveHandle, int32 NewLevel);
+
+    FActiveGameplayEffect* GetActiveGameplayEffect(const FActiveGameplayEffectHandle Handle);
 
     FORCEINLINE void RemoveLooseGameplayTag(const FGameplayTag& GameplayTag, int32 Count = 1)
     {
