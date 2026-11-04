@@ -19,6 +19,16 @@ UAbilitySystemComponent* UAbilitySystemBlueprintLibrary::GetAbilitySystemCompone
         .Find("setnz *")
         .Find("add [*+0x20], *")
         .Find("call 0x*; mov rdx, rax; mov rcx, *; call 0x*; mov rcx, rax; test rax, rax")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov rdx, [0x*]; mov rcx, *; call 0x*; mov rcx, rax; test rax, rax")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov rdx, [0x*]; mov rcx, *; call 0x*; test rax, rax")
         .Get();
 
     if (bInlined)
