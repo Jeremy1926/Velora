@@ -36,6 +36,16 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
             .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
             .Find("mov rcx, r*; call 0x*; mov r*b, 0x1; cmp al, r*b")
             .Call()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+            .Find("mov rcx, r*; call 0x*; movss xmm3, dword ptr [*]")
+            .Call()
+            .Get();
+
+        static auto bEventBeforeSubGame = Anchor::Exists()
+            .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+            .Find("mov rcx, r*; call 0x*; movss xmm3, dword ptr [*]")
+            .Find("movss [rsp+0x20], xmm*; lea rcx, [rbp-0x*]; cmp al, 0x1; jnz *; call 0x*")
             .Get();
 
         static auto OnAthenaNoiseEvent = Anchor::Function<void (*)(UWorld*, const FAINoiseEvent&)>(TEXT("UAIPerceptionSystem::OnEvent<FAINoiseEvent> (Athena.AI.NoiseMaker)"))
@@ -52,6 +62,13 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
 
         if (GetSubGame(NoiseMaker) == ESubGame::Athena)
         {
+            if (bEventBeforeSubGame)
+            {
+                OnAthenaNoiseEvent(NoiseMaker->GetWorld(), FAINoiseEvent(NoiseMaker, NoiseLocation, 1.0f, MaxRange, FName(NAME_None)));
+
+                return;
+            }
+
             static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
             static auto NoiseMakerTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Athena.AI.NoiseMaker")), false);
 

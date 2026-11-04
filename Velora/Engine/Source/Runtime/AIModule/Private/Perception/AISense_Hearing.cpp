@@ -8,6 +8,10 @@ FAINoiseEvent::FAINoiseEvent(AActor* InInstigator, const FVector& InNoiseLocatio
         .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
         .Find("movss [rsp+0x20], xmm*; call 0x*")
         .Call()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+        .Find("movss [rsp+0x20], xmm*; lea rcx, [rbp-0x*]; cmp al, 0x1; jnz *; call 0x*")
+        .Call()
         .Get();
 
     AINoiseEvent(this, InInstigator, InNoiseLocation, InLoudness, InMaxRange, InTag);
