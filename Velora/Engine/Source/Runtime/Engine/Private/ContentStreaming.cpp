@@ -36,6 +36,8 @@ void IStreamingManager::RemoveStreamingViews(ERemoveStreamingViews RemovalType)
         .Pattern("40 53 48 83 EC 20 8B DA 48 8D 0D ? ? ? ? 33 D2 E8 ? ? ? ? 83 25 ? ? ? ? 00 83 3D ? ? ? ? 00")
         .Or()
         .Pattern("40 53 48 83 EC 30 83 25 ? ? ? ? 00 8B DA 83 3D ? ? ? ? 00")
+        .Or()
+        .Pattern("56 48 83 EC 30 89 D6 C7 05 ? ? ? ? 00 00 00 00 83 3D ? ? ? ? 00 74 ? 48 8D 05 ? ? ? ? 48 89 44 24 28")
         .Get();
 
     RemoveStreamingViews(this, RemovalType);
