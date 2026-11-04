@@ -99,6 +99,14 @@ int64 FOutBunch::GetNumBits() const
         .Call()
         .Call()
         .Find("mov [rdi+0x*], rax")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Call()
+        .Call()
+        .Find("mov [r*+0x*], rcx; mov [r*+0x*], cl")
         .Disp();
 
     return *(const int64*)((const uint8_t*)this + Num);
