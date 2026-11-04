@@ -60,6 +60,23 @@ bool FGlobalActorReplicationInfo::GetWantsToBeDormant() const
 
 bool FGlobalActorReplicationInfo::GetSwapRolesOnReplicate() const
 {
+    static auto bSwapRolesBit = Anchor::Exists()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x28)
+        .Has("and e*, 0xfffffffd")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
+        .Has("and e*, 0xfffffffd")
+        .Get();
+
+    if (bSwapRolesBit)
+        return (*((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bWantsToBeDormant) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bWantsToBeDormant))) & 2) != 0;
+
     return *((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bSwapRolesOnReplicate) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bSwapRolesOnReplicate))) != 0;
 }
 
