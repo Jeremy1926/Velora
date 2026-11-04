@@ -22,9 +22,54 @@ const FFieldNetCache* FClassNetCache::GetFromField(FFieldVariant Field) const
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Find("lea rdx, [*]; lea rcx, [*]; call 0x*; mov rdx, rax; mov rcx, r*; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
+        .Find("lea rcx, [*]; lea rdx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Find("lea rcx, [*]; lea rdx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
         .Find("call 0x*", 2)
         .Target()
         .Get();
+
+    static auto bVariantByReference = Anchor::Exists()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Find("lea rdx, [*]; lea rcx, [*]; call 0x*; mov rdx, rax; mov rcx, r*; call 0x*")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
+        .Find("lea rcx, [*]; lea rdx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Find("lea rcx, [*]; lea rdx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
+        .Get();
+
+    if (bVariantByReference)
+    {
+        auto TaggedField = Field.ToTaggedPointer();
+
+        return ((const FFieldNetCache* (*)(const FClassNetCache*, const UPTRINT*))GetFromField)(this, &TaggedField);
+    }
 
     if (FFieldVariant::IsTaggedPointer())
         return ((const FFieldNetCache* (*)(const FClassNetCache*, UPTRINT))GetFromField)(this, Field.ToTaggedPointer());
