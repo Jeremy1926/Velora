@@ -36,6 +36,11 @@ template<typename KeyType, typename ValueType, typename KeyFuncs = TDefaultMapKe
 class TMap
 {
 public:
+    static FORCEINLINE int32 GetTypeSize()
+    {
+        return TSet<TPair<KeyType, ValueType>, KeyFuncs>::GetTypeSize();
+    }
+
     FORCEINLINE int32 Num() const
     {
         return Pairs.Num();

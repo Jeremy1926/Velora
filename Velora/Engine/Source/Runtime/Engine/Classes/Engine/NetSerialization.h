@@ -34,13 +34,11 @@ struct FFastArraySerializerGuidReferences
 struct FFastArraySerializer
 {
     TMap<int32, int32> ItemMap;
-    int32 IDCounter;
-    int32 ArrayReplicationKey;
-
-    TMap<int32, FFastArraySerializerGuidReferences> GuidReferencesMap;
 
     void MarkItemDirty(FFastArraySerializerItem& Item)
     {
+        auto& IDCounter = GetIDCounter();
+
         if (Item.ReplicationID == -1)
         {
             Item.ReplicationID = ++IDCounter;
@@ -58,15 +56,14 @@ struct FFastArraySerializer
         ItemMap.Reset();
         IncrementArrayReplicationKey();
 
-        auto& Version = FEngineVersion::Current();
-        auto& ArraySerializer = Version.GetMajor() > 4 || Version.GetMinor() >= 23 ? *(FFastArraySerializer*)((uint8*)this + sizeof(TMap<int32, FGuidReferencesMap>)) : *this;
-
-        ArraySerializer.CachedNumItems = -1;
-        ArraySerializer.CachedNumItemsToConsiderForWriting = -1;
+        GetCachedNumItems() = -1;
+        GetCachedNumItemsToConsiderForWriting() = -1;
     }
 
     void IncrementArrayReplicationKey()
     {
+        auto& ArrayReplicationKey = GetArrayReplicationKey();
+
         ArrayReplicationKey++;
 
         if (ArrayReplicationKey == -1)
@@ -74,8 +71,27 @@ struct FFastArraySerializer
     }
 
 private:
-    int32 CachedNumItems;
-    int32 CachedNumItemsToConsiderForWriting;
+    int32& GetIDCounter()
+    {
+        return *(int32*)((uint8*)this + TMap<int32, int32>::GetTypeSize());
+    }
+
+    int32& GetArrayReplicationKey()
+    {
+        return *(&GetIDCounter() + 1);
+    }
+
+    int32& GetCachedNumItems()
+    {
+        auto& Version = FEngineVersion::Current();
+
+        return *(int32*)((uint8*)(&GetArrayReplicationKey() + 1) + (Version.GetMajor() > 4 || Version.GetMinor() >= 23 ? 2 : 1) * TMap<int32, FFastArraySerializerGuidReferences>::GetTypeSize());
+    }
+
+    int32& GetCachedNumItemsToConsiderForWriting()
+    {
+        return *(&GetCachedNumItems() + 1);
+    }
 };
 
 struct FVector_NetQuantize : public FVector

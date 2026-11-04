@@ -309,6 +309,11 @@ public:
         }
     }
 
+    static FORCEINLINE int32 GetTypeSize()
+    {
+        return FCompactSetBase::IsEnabled() ? (int32)sizeof(FCompactSetBase) : (int32)sizeof(TSet);
+    }
+
     FORCEINLINE int32 Num() const
     {
         if (FCompactSetBase::IsEnabled())
