@@ -269,9 +269,10 @@ TMulticastDelegate<void, int32, ABuildingContainer*>& AFortPlayerStateAthena::Ge
     return *NotifySquadSpecificContainerDestroyed;
 }
 
-TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& AFortPlayerStateAthena::GetNotifyRebootCardSpawned()
+TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>* AFortPlayerStateAthena::GetNotifyRebootCardSpawned()
 {
     static auto NotifyRebootCardSpawned = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifyRebootCardSpawned"))
+        .If(!::Anchor::Exists().String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target().Reference("mov ?dx, *").Start().Caller().SlotIn(TEXT("/Script/Engine.Default__Actor")).Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip")).Find("mov rcx, [*+0x*]; test rcx, rcx; jnz 0x*").Find("jnz 0x*").Target().Find("lea rcx, [0x*]").Is("lea rcx, [0x*]; movq r9, xmm3").Get())
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
         .Target()
@@ -286,6 +287,7 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
         .Find("lea rcx, [0x*]")
         .Target()
         .Or()
+        .If(!::Anchor::Exists().String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target().Reference("mov ?dx, *").Start().Caller().SlotIn(TEXT("/Script/Engine.Default__Actor")).Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip")).Find("mov rcx, [*+0x*]; test rcx, rcx; jz 0x*").Find("lea rcx, [0x*]").Is("lea rcx, [0x*]; movq r9, xmm3").Get())
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
         .Target()
@@ -299,12 +301,13 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
         .Target()
         .Get();
 
-    return *NotifyRebootCardSpawned;
+    return NotifyRebootCardSpawned;
 }
 
-TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& AFortPlayerStateAthena::GetNotifyRebootCardDestroyed()
+TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>* AFortPlayerStateAthena::GetNotifyRebootCardDestroyed()
 {
     static auto NotifyRebootCardDestroyed = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>*>(TEXT("AFortPlayerStateAthena::NotifyRebootCardDestroyed"))
+        .If(!::Anchor::Exists().String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target().Reference("mov ?dx, *").Start().Caller().SlotIn(TEXT("/Script/Engine.Default__Actor")).SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8).Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip")).Find("mov rdx, [*+0x*]; test rdx, rdx; jnz 0x*").Find("jnz 0x*").Target().Find("lea rcx, [0x*]").Is("lea rcx, [0x*]; movq r9, xmm3").Get())
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
         .Target()
@@ -320,6 +323,7 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
         .Find("lea rcx, [0x*]")
         .Target()
         .Or()
+        .If(!::Anchor::Exists().String(TEXT("ReceiveBeginPlay")).Find("lea *, [0x*]").Target().Reference("mov ?dx, *").Start().Caller().SlotIn(TEXT("/Script/Engine.Default__Actor")).SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8).Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip")).Find("mov rdx, [*+0x*]; test rdx, rdx; jz 0x*").Find("lea rcx, [0x*]").Is("lea rcx, [0x*]; movq r9, xmm3").Get())
         .String(TEXT("ReceiveBeginPlay"))
         .Find("lea *, [0x*]")
         .Target()
@@ -334,7 +338,7 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChi
         .Target()
         .Get();
 
-    return *NotifyRebootCardDestroyed;
+    return NotifyRebootCardDestroyed;
 }
 
 TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* AFortPlayerStateAthena::GetNotifySquadRebootCardSpawned()

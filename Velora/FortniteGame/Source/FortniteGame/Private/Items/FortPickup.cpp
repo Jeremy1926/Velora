@@ -34,7 +34,7 @@ UClass* AFortPickup::StaticClass()
     return Class;
 }
 
-TMulticastDelegate<void, AFortPickup*, float>& AFortPickup::GetNotifyPickupCullDistanceChange()
+TMulticastDelegate<void, AFortPickup*, float>* AFortPickup::GetNotifyPickupCullDistanceChange()
 {
     static auto NotifyPickupCullDistanceChange = Anchor::Data<TMulticastDelegate<void, AFortPickup*, float>*>(TEXT("AFortPickup::NotifyPickupCullDistanceChange"))
         .Pattern("48 8D 8B ? ? ? ? 45 33 C0 0F 57 C9 E8 ? ? ? ? 0F 2F 05 ? ? ? ? 0F 87")
@@ -72,9 +72,13 @@ TMulticastDelegate<void, AFortPickup*, float>& AFortPickup::GetNotifyPickupCullD
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Pattern("48 8D 8B ? ? ? ? 45 33 C0 0F 57 C9 E8 ? ? ? ? 0F 2F 05 ? ? ? ? 0F 86 ? ? ? ? F3 0F 59 C0 48 8D 0D")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
-    return *NotifyPickupCullDistanceChange;
+    return NotifyPickupCullDistanceChange;
 }
 
 AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& ItemEntry, const FVector& SpawnLocation, const FRotator& SpawnRotation, AFortPlayerController* OptionalOwnerPC, UClass* OverrideClass, AActor* Owner, EFortPickupSourceTypeFlag SourceTypeFlags, bool bRandomRotation, bool bPickupOnlyRelevantToOwner, EFortPickupSpawnSource PickupSpawnSource)

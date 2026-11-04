@@ -692,10 +692,16 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     AFortPlayerPawn::GetVehicleStateChange().AddUObject(this, &UFortReplicationGraph::OnVehicleChanged);
     AFortPlayerPawn::GetNotifyPetStateChange().AddUObject(this, &UFortReplicationGraph::OnPetStateChange);
     AFortPlayerPawn::GetNotifyBalloonStateChange().AddUObject(this, &UFortReplicationGraph::OnBalloonStateChange);
-    AFortPlayerPawn::GetNotifyPossessedPropStateChange().AddUObject(this, &UFortReplicationGraph::OnPossessedPropStateChange);
+
+    if (auto NotifyPossessedPropStateChange = AFortPlayerPawn::GetNotifyPossessedPropStateChange())
+        NotifyPossessedPropStateChange->AddUObject(this, &UFortReplicationGraph::OnPossessedPropStateChange);
+
     AFortPawn::GetNotifyPawnNetCullDistanceChanged().AddUObject(this, &UFortReplicationGraph::OnPawnCullDistSqChange);
     AFortAthenaExitCraft::GetOnExitVehicleCullDistChange().AddUObject(this, &UFortReplicationGraph::OnExitVehicleCullDistChange);
-    AFortPickup::GetNotifyPickupCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnPickupCullDistanceChanged);
+
+    if (auto NotifyPickupCullDistanceChange = AFortPickup::GetNotifyPickupCullDistanceChange())
+        NotifyPickupCullDistanceChange->AddUObject(this, &UFortReplicationGraph::OnPickupCullDistanceChanged);
+
     ABuildingActor::GetNotifyBuildingNetCullDistChange().AddUObject(this, &UFortReplicationGraph::OnBuildingDistSqChange);
     AFortAthenaVehicle::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
     ASimObject::GetNotifyNetCullDistanceChange().AddUObject(this, &UFortReplicationGraph::OnActorNetCullDistanceChange);
@@ -703,13 +709,13 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
 
     if (auto NotifySquadRebootCardSpawned = AFortPlayerStateAthena::GetNotifySquadRebootCardSpawned())
         NotifySquadRebootCardSpawned->AddUObject(this, &UFortReplicationGraph::OnSquadRebootCardSpawned);
-    else
-        AFortPlayerStateAthena::GetNotifyRebootCardSpawned().AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
+    else if (auto NotifyRebootCardSpawned = AFortPlayerStateAthena::GetNotifyRebootCardSpawned())
+        NotifyRebootCardSpawned->AddUObject(this, &UFortReplicationGraph::OnRebootCardSpawned);
 
     if (auto NotifySquadRebootCardDestroyed = AFortPlayerStateAthena::GetNotifySquadRebootCardDestroyed())
         NotifySquadRebootCardDestroyed->AddUObject(this, &UFortReplicationGraph::OnSquadRebootCardDestroyed);
-    else
-        AFortPlayerStateAthena::GetNotifyRebootCardDestroyed().AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
+    else if (auto NotifyRebootCardDestroyed = AFortPlayerStateAthena::GetNotifyRebootCardDestroyed())
+        NotifyRebootCardDestroyed->AddUObject(this, &UFortReplicationGraph::OnRebootCardDestroyed);
 
     if (AFortPlayerStateAthena::HasSquadSpecificContainers())
     {

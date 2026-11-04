@@ -87,7 +87,7 @@ public:
 
     static TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGameplayActor*>& GetNotifyBalloonStateChange();
 
-    static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& GetNotifyPossessedPropStateChange();
+    static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>* GetNotifyPossessedPropStateChange();
 
     static TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& GetVehicleStateChange();
 

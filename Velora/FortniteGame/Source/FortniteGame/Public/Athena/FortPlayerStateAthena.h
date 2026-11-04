@@ -63,9 +63,9 @@ public:
 
     static TMulticastDelegate<void, int32, ABuildingContainer*>& GetNotifySquadSpecificContainerDestroyed();
 
-    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& GetNotifyRebootCardSpawned();
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>* GetNotifyRebootCardSpawned();
 
-    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>& GetNotifyRebootCardDestroyed();
+    static TMulticastDelegate<void, AFortPlayerStateAthena*, ABuildingGameplayActorSpawnChip*>* GetNotifyRebootCardDestroyed();
 
     static TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* GetNotifySquadRebootCardSpawned();
 

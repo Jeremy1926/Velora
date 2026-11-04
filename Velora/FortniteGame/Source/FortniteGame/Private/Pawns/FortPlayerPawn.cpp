@@ -103,15 +103,20 @@ TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGam
     return *NotifyBalloonStateChange;
 }
 
-TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::GetNotifyPossessedPropStateChange()
+TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>* AFortPlayerPawn::GetNotifyPossessedPropStateChange()
 {
     static auto NotifyPossessedPropStateChange = Anchor::Data<TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>*>(TEXT("AFortPlayerPawn::NotifyPossessedPropStateChange"))
+        .If(!::Anchor::Exists().Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp")).Find("lea rcx, [0x*]").Is("lea rcx, [0x*]; call 0x*").Get())
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp"))
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp"))
+        .Find("lea rcx, [0x*]; mov rdx, *; call 0x*")
+        .Target()
         .Get();
 
-    return *NotifyPossessedPropStateChange;
+    return NotifyPossessedPropStateChange;
 }
 
 TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>& AFortPlayerPawn::GetVehicleStateChange()
