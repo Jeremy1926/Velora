@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "HAL/UnrealMemory.h"
+#include "Containers/Set.h"
 #include "Scanner.h"
 
 void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
@@ -163,4 +164,45 @@ SIZE_T FMemory::QuantizeSize(SIZE_T Count, uint32 Alignment)
         .Get();
 
     return QuantizeSize ? QuantizeSize(Count, Alignment) : Count;
+}
+
+bool FCompactSetBase::IsEnabled()
+{
+    static auto bCompact = Anchor::Exists()
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *; add [*+0x20], *")
+        .Call()
+        .Call()
+        .Find("movsxd *, dword ptr [rcx+0xc]; xor *, *; cmp *, 0x10000")
+        .Get();
+
+    return bCompact;
+}
+
+int32 FCompactSetBase::AllocatorCalculateSlackGrow(int32 NewMaxElements, const FCompactSetLayout& Layout) const
+{
+    static auto AllocatorCalculateSlackGrow = Anchor::Function<int32 (*)(const FCompactSetBase*, int32, const FCompactSetLayout&)>(TEXT("TCompactSetBase::AllocatorCalculateSlackGrow"))
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *; add [*+0x20], *")
+        .Call()
+        .Find("lea edx, [*+0x1]; mov rcx, *; call 0x*; mov rcx, *; mov edx, eax; call 0x*")
+        .Call()
+        .Get();
+
+    return AllocatorCalculateSlackGrow(this, NewMaxElements, Layout);
+}
+
+bool FCompactSetBase::ResizeAllocationPreserveData(int32 NewMaxElements, const FCompactSetLayout& Layout, bool bPreserve)
+{
+    static auto ResizeAllocationPreserveData = Anchor::Function<bool (*)(FCompactSetBase*, int32, const FCompactSetLayout&, bool)>(TEXT("TCompactSetBase::ResizeAllocationPreserveData"))
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *; add [*+0x20], *")
+        .Call()
+        .Find("lea edx, [*+0x1]; mov rcx, *; call 0x*; mov rcx, *; mov edx, eax; call 0x*")
+        .Call(2)
+        .Find("mov r9b, 0x1; call 0x*")
+        .Call()
+        .Get();
+
+    return ResizeAllocationPreserveData(this, NewMaxElements, Layout, bPreserve);
 }

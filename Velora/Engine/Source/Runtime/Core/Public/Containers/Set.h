@@ -55,6 +55,168 @@ struct DefaultKeyFuncs
     }
 };
 
+struct FCompactSetLayout
+{
+    int32 Size;
+    int32 Alignment;
+};
+
+class FCompactHashTableView
+{
+public:
+    FORCEINLINE FCompactHashTableView(uint8* Memory, uint32 InNextIndexCount, uint32 InHashCount)
+        : NextIndexData(Memory)
+        , KeyStorage(Memory + ((SIZE_T)InNextIndexCount << GetTypeShift(InNextIndexCount)))
+        , HashData(Memory + ((SIZE_T)InNextIndexCount << GetTypeShift(InNextIndexCount)) * 2)
+        , NextIndexCount(InNextIndexCount)
+        , HashCount(InHashCount)
+    {
+    }
+
+    static FORCEINLINE uint32 GetTypeSize(uint32 IndexCount)
+    {
+        return 1 + int32(IndexCount > 0xff) + int32(IndexCount > 0xffff) * 2;
+    }
+
+    static FORCEINLINE uint32 GetTypeShift(uint32 IndexCount)
+    {
+        return 0 + int32(IndexCount > 0xff) + int32(IndexCount > 0xffff);
+    }
+
+    FORCEINLINE uint32 GetHashCount() const
+    {
+        return HashCount;
+    }
+
+    FORCEINLINE void Reset() const
+    {
+        FMemory::Memset(HashData, 0xff, (SIZE_T)HashCount << GetTypeShift(NextIndexCount));
+    }
+
+    FORCEINLINE uint32 GetFirst(uint32 Key) const
+    {
+        return Read(HashData, Key & (HashCount - 1));
+    }
+
+    FORCEINLINE uint32 GetNext(uint32 Index) const
+    {
+        return Read(NextIndexData, Index);
+    }
+
+    FORCEINLINE uint32 GetStoredKey(uint32 Index) const
+    {
+        return Read(KeyStorage, Index);
+    }
+
+    void Add(uint32 Index, uint32 Key) const
+    {
+        const uint32 HashIndex = Key & (HashCount - 1);
+
+        Write(NextIndexData, Index, Read(HashData, HashIndex));
+        Write(HashData, HashIndex, Index);
+        Write(KeyStorage, Index, HashIndex);
+    }
+
+    uint32 Remove(uint32 Index, uint32 Key, uint32 LastIndex, uint32 OptLastKey) const
+    {
+        Write(KeyStorage, Index, Read(KeyStorage, LastIndex));
+
+        uint8* LookupEntry = FindLookupEntry(Index, Key);
+        WriteAt(LookupEntry, Read(NextIndexData, Index));
+
+        if (Index != LastIndex)
+        {
+            WriteAt(FindLookupEntry(LastIndex, OptLastKey), Index);
+            Write(NextIndexData, Index, Read(NextIndexData, LastIndex));
+        }
+
+        return ReadAt(LookupEntry);
+    }
+
+    FORCEINLINE void RemoveHashElement(uint32 Key) const
+    {
+        Write(HashData, Key & (HashCount - 1), INDEX_NONE);
+    }
+
+private:
+    FORCEINLINE uint32 ReadAt(const uint8* Entry) const
+    {
+        switch (GetTypeSize(NextIndexCount))
+        {
+        case 1:
+            return *Entry == 0xff ? (uint32)INDEX_NONE : *Entry;
+        case 2:
+            return *(const uint16*)Entry == 0xffff ? (uint32)INDEX_NONE : *(const uint16*)Entry;
+        default:
+            return *(const uint32*)Entry;
+        }
+    }
+
+    FORCEINLINE void WriteAt(uint8* Entry, uint32 Value) const
+    {
+        switch (GetTypeSize(NextIndexCount))
+        {
+        case 1:
+            *Entry = (uint8)Value;
+            break;
+        case 2:
+            *(uint16*)Entry = (uint16)Value;
+            break;
+        default:
+            *(uint32*)Entry = Value;
+            break;
+        }
+    }
+
+    FORCEINLINE uint32 Read(const uint8* Data, uint32 Index) const
+    {
+        return ReadAt(Data + ((SIZE_T)Index << GetTypeShift(NextIndexCount)));
+    }
+
+    FORCEINLINE void Write(uint8* Data, uint32 Index, uint32 Value) const
+    {
+        WriteAt(Data + ((SIZE_T)Index << GetTypeShift(NextIndexCount)), Value);
+    }
+
+    uint8* FindLookupEntry(uint32 Index, uint32 Key) const
+    {
+        for (uint8* Lookup = HashData + ((SIZE_T)(Key & (HashCount - 1)) << GetTypeShift(NextIndexCount)); ReadAt(Lookup) < NextIndexCount; Lookup = NextIndexData + ((SIZE_T)ReadAt(Lookup) << GetTypeShift(NextIndexCount)))
+        {
+            if (ReadAt(Lookup) == Index)
+                return Lookup;
+        }
+
+        return nullptr;
+    }
+
+    uint8* NextIndexData;
+    uint8* KeyStorage;
+    uint8* HashData;
+    uint32 NextIndexCount;
+    uint32 HashCount;
+};
+
+class FCompactSetBase
+{
+public:
+    static bool IsEnabled();
+
+    int32 AllocatorCalculateSlackGrow(int32 NewMaxElements, const FCompactSetLayout& Layout) const;
+
+    bool ResizeAllocationPreserveData(int32 NewMaxElements, const FCompactSetLayout& Layout, bool bPreserve = true);
+
+    FORCEINLINE FCompactHashTableView GetHashTableView(const FCompactSetLayout& Layout) const
+    {
+        uint32* HashTable = (uint32*)(Elements + ((SIZE_T)(Layout.Size * MaxElements + 3) & ~(SIZE_T)3));
+
+        return FCompactHashTableView((uint8*)(HashTable + 1), MaxElements, *HashTable);
+    }
+
+    uint8* Elements;
+    int32 NumElements;
+    int32 MaxElements;
+};
+
 template<typename InElementType>
 class TSetElement
 {
@@ -91,11 +253,17 @@ public:
 
         FORCEINLINE const ElementType& operator*() const
         {
+            if (FCompactSetBase::IsEnabled())
+                return Set.GetCompactData()[Index];
+
             return Set.Elements[Index].Value;
         }
 
         FORCEINLINE const ElementType* operator->() const
         {
+            if (FCompactSetBase::IsEnabled())
+                return &Set.GetCompactData()[Index];
+
             return &Set.Elements[Index].Value;
         }
 
@@ -107,6 +275,9 @@ public:
     private:
         FORCEINLINE void Skip()
         {
+            if (FCompactSetBase::IsEnabled())
+                return;
+
             while (Index < Set.Elements.GetMaxIndex() && !Set.Elements.IsAllocated(Index))
                 ++Index;
         }
@@ -120,13 +291,37 @@ public:
     {
     }
 
+    FORCEINLINE ~TSet()
+    {
+        if (FCompactSetBase::IsEnabled())
+        {
+            auto& Compact = GetCompact();
+
+            for (int32 Index = 0; Index < Compact.NumElements; Index++)
+                GetCompactData()[Index].~InElementType();
+
+            if (Compact.Elements)
+                FMemory::Free(Compact.Elements);
+
+            Compact.Elements = nullptr;
+            Compact.NumElements = 0;
+            Compact.MaxElements = 0;
+        }
+    }
+
     FORCEINLINE int32 Num() const
     {
+        if (FCompactSetBase::IsEnabled())
+            return GetCompact().NumElements;
+
         return Elements.Num();
     }
 
     FORCEINLINE ElementType& operator[](FSetElementId Id)
     {
+        if (FCompactSetBase::IsEnabled())
+            return GetCompactData()[Id];
+
         return Elements[Id].Value;
     }
 
@@ -137,6 +332,9 @@ public:
 
     FSetElementId Add(InElementType&& InElement)
     {
+        if (FCompactSetBase::IsEnabled())
+            return CompactAdd(MoveTemp(InElement));
+
         FSparseArrayAllocationInfo ElementAllocation = Elements.AddUninitialized();
         TSetElement<InElementType>& Element = *new(ElementAllocation) TSetElement<InElementType>{ MoveTemp(InElement) };
         FSetElementId ElementId(ElementAllocation.Index);
@@ -170,11 +368,17 @@ public:
 
     FORCEINLINE TConstIterator end() const
     {
+        if (FCompactSetBase::IsEnabled())
+            return TConstIterator(*this, GetCompact().NumElements);
+
         return TConstIterator(*this, Elements.GetMaxIndex());
     }
 
     FSetElementId FindId(KeyInitType Key) const
     {
+        if (FCompactSetBase::IsEnabled())
+            return CompactFindIndexByHash(KeyFuncs::GetKeyHash(Key), Key);
+
         if (Elements.Num())
         {
             for (FSetElementId ElementId = GetTypedHash(KeyFuncs::GetKeyHash(Key)); ElementId.IsValidId(); ElementId = Elements[ElementId].HashNextId)
@@ -193,12 +397,18 @@ public:
     {
         FSetElementId ElementId = FindId(Key);
 
+        if (FCompactSetBase::IsEnabled())
+            return ElementId.IsValidId() ? &GetCompactData()[ElementId] : nullptr;
+
         return ElementId.IsValidId() ? &Elements[ElementId].Value : nullptr;
     }
 
     FORCEINLINE const ElementType* Find(KeyInitType Key) const
     {
         FSetElementId ElementId = FindId(Key);
+
+        if (FCompactSetBase::IsEnabled())
+            return ElementId.IsValidId() ? &GetCompactData()[ElementId] : nullptr;
 
         return ElementId.IsValidId() ? &Elements[ElementId].Value : nullptr;
     }
@@ -210,6 +420,14 @@ public:
 
     void Remove(FSetElementId ElementId)
     {
+        if (FCompactSetBase::IsEnabled())
+        {
+            auto HashTable = GetCompact().GetHashTableView(GetSetLayout());
+            CompactRemoveByIndexAndHash(ElementId, HashTable.GetStoredKey(ElementId), HashTable);
+
+            return;
+        }
+
         if (Elements.Num())
         {
             const auto& ElementBeingRemoved = Elements[ElementId];
@@ -229,6 +447,27 @@ public:
 
     int32 Remove(KeyInitType Key)
     {
+        if (FCompactSetBase::IsEnabled())
+        {
+            if (!GetCompact().NumElements)
+                return 0;
+
+            const uint32 KeyHash = KeyFuncs::GetKeyHash(Key);
+            auto HashTable = GetCompact().GetHashTableView(GetSetLayout());
+
+            for (uint32 ElementIndex = HashTable.GetFirst(KeyHash); ElementIndex != (uint32)INDEX_NONE; ElementIndex = HashTable.GetNext(ElementIndex))
+            {
+                if (KeyFuncs::Matches(KeyFuncs::GetSetKey(GetCompactData()[ElementIndex]), Key))
+                {
+                    CompactRemoveByIndexAndHash(ElementIndex, KeyHash, HashTable);
+
+                    return 1;
+                }
+            }
+
+            return 0;
+        }
+
         int32 NumRemovedElements = 0;
 
         if (Elements.Num())
@@ -257,6 +496,33 @@ public:
 
     void Reset()
     {
+        if (FCompactSetBase::IsEnabled())
+        {
+            auto& Compact = GetCompact();
+
+            if (Compact.NumElements > 0)
+            {
+                auto HashTable = Compact.GetHashTableView(GetSetLayout());
+
+                if (Compact.NumElements < (int32)(HashTable.GetHashCount() / 4))
+                {
+                    for (int32 Index = 0; Index < Compact.NumElements; ++Index)
+                        HashTable.RemoveHashElement(HashTable.GetStoredKey(Index));
+                }
+                else
+                {
+                    HashTable.Reset();
+                }
+
+                for (int32 Index = 0; Index < Compact.NumElements; Index++)
+                    GetCompactData()[Index].~InElementType();
+
+                Compact.NumElements = 0;
+            }
+
+            return;
+        }
+
         Elements.Reset();
 
         for (int32 HashIndex = 0, LocalHashSize = HashSize; HashIndex < LocalHashSize; ++HashIndex)
@@ -266,6 +532,100 @@ public:
     }
 
 private:
+    static FORCEINLINE FCompactSetLayout GetSetLayout()
+    {
+        return { (int32)sizeof(InElementType), alignof(InElementType) > 4 ? (int32)alignof(InElementType) : 4 };
+    }
+
+    FORCEINLINE FCompactSetBase& GetCompact() const
+    {
+        return *(FCompactSetBase*)this;
+    }
+
+    FORCEINLINE InElementType* GetCompactData() const
+    {
+        return (InElementType*)GetCompact().Elements;
+    }
+
+    int32 CompactFindIndexByHash(uint32 KeyHash, KeyInitType Key) const
+    {
+        if (GetCompact().NumElements == 0)
+            return INDEX_NONE;
+
+        auto HashTable = GetCompact().GetHashTableView(GetSetLayout());
+
+        for (uint32 Index = HashTable.GetFirst(KeyHash); Index != (uint32)INDEX_NONE; Index = HashTable.GetNext(Index))
+        {
+            if (KeyFuncs::Matches(KeyFuncs::GetSetKey(GetCompactData()[Index]), Key))
+                return Index;
+        }
+
+        return INDEX_NONE;
+    }
+
+    void CompactRehash()
+    {
+        auto& Compact = GetCompact();
+
+        if (Compact.MaxElements > 0)
+        {
+            auto HashTable = Compact.GetHashTableView(GetSetLayout());
+            HashTable.Reset();
+
+            for (int32 Index = 0; Index < Compact.NumElements; ++Index)
+                HashTable.Add(Index, KeyFuncs::GetKeyHash(KeyFuncs::GetSetKey(GetCompactData()[Index])));
+        }
+    }
+
+    FSetElementId CompactAdd(InElementType&& InElement)
+    {
+        const uint32 KeyHash = KeyFuncs::GetKeyHash(KeyFuncs::GetSetKey(InElement));
+        const int32 ExistingIndex = CompactFindIndexByHash(KeyHash, KeyFuncs::GetSetKey(InElement));
+
+        if (ExistingIndex != INDEX_NONE)
+        {
+            GetCompactData()[ExistingIndex].~InElementType();
+            new(&GetCompactData()[ExistingIndex]) InElementType(MoveTemp(InElement));
+
+            return ExistingIndex;
+        }
+
+        auto& Compact = GetCompact();
+
+        if (Compact.NumElements == Compact.MaxElements)
+        {
+            const int32 NewMaxElements = Compact.AllocatorCalculateSlackGrow(Compact.NumElements + 1, GetSetLayout());
+
+            if ((uint32)NewMaxElements > (uint32)Compact.MaxElements && Compact.ResizeAllocationPreserveData(NewMaxElements, GetSetLayout()))
+                CompactRehash();
+        }
+
+        Compact.GetHashTableView(GetSetLayout()).Add(Compact.NumElements, KeyHash);
+        new(&GetCompactData()[Compact.NumElements]) InElementType(MoveTemp(InElement));
+
+        return Compact.NumElements++;
+    }
+
+    void CompactRemoveByIndexAndHash(int32 ElementIndex, uint32 KeyHash, const FCompactHashTableView& HashTable)
+    {
+        auto& Compact = GetCompact();
+        const int32 LastElementIndex = Compact.NumElements - 1;
+
+        if (ElementIndex == LastElementIndex)
+        {
+            HashTable.Remove(ElementIndex, KeyHash, ElementIndex, KeyHash);
+            GetCompactData()[LastElementIndex].~InElementType();
+        }
+        else
+        {
+            HashTable.Remove(ElementIndex, KeyHash, LastElementIndex, HashTable.GetStoredKey(LastElementIndex));
+            GetCompactData()[ElementIndex].~InElementType();
+            memmove((void*)&GetCompactData()[ElementIndex], (void*)&GetCompactData()[LastElementIndex], sizeof(InElementType));
+        }
+
+        --Compact.NumElements;
+    }
+
     FORCEINLINE FSetElementId& GetTypedHash(int32 HashIndex) const
     {
         return Hash.GetAllocation()[HashIndex & (HashSize - 1)];
