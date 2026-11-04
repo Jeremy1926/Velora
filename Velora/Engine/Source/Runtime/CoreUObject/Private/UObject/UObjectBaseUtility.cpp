@@ -16,6 +16,8 @@ UObject* UObjectBaseUtility::GetOutermost() const
         .Pattern("40 53 48 83 EC 20 48 8D 59 20 48 83 3B 00 74 ? 33 C0 F7 41 08 00 00 00 10 74 ? E8 ? ? ? ? 48 8B C8 48 85 C9 75 ? 48 8B 0B EB ? 48 8B C1 48 83 C4 20 5B C3")
         .Or()
         .Pattern("40 53 48 83 EC 20 48 8D 59 20 48 83 3B 00 74 ? 8B 41 08 33 D2 0F BA E0 1C 0F 82 ? ? ? ? 48 8B CA 48 85 C9 75 ? 48 8B 0B EB ? 48 8B C1 48 83 C4 20 5B C3")
+        .Or()
+        .Pattern("40 53 48 83 EC 20 48 8D 59 20 48 83 3B 00 74 ? 8B 41 08 33 D2 0F BA E0 1C 73 ? E8 ? ? ? ? 48 8B D0 48 8B CA 48 85 C9 75 ? 48 8B 0B EB ? 48 8B C1 48 83 C4 20 5B C3")
         .Get();
 
     if (GetOutermost)
