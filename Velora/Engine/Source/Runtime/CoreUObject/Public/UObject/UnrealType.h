@@ -11,6 +11,7 @@ class UProperty : public UField
 public:
     struct FEncryptedLayout
     {
+        Anchor::FCipher ArrayDim;
         Anchor::FCipher ElementSize;
         Anchor::FCipher Offset_Internal;
         Anchor::FCipher ByteOffset;
@@ -24,7 +25,7 @@ public:
     FORCEINLINE int32 GetSize() const
     {
         if (auto Layout = GetEncryptedLayout())
-            return Layout->ElementSize.Load<int32>(this);
+            return (Layout->ArrayDim.Size ? Layout->ArrayDim.Load<int32>(this) : 1) * Layout->ElementSize.Load<int32>(this);
 
         return GetProperty()->ArrayDim * GetProperty()->ElementSize;
     }

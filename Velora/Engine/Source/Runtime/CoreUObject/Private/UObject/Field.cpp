@@ -48,6 +48,15 @@ const UProperty::FEncryptedLayout* UProperty::GetEncryptedLayout()
 
     static FEncryptedLayout Layout
     {
+        Anchor::Cipher(TEXT("FProperty::ArrayDim"))
+            .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableRowFromName"))
+            .Find("add [*+0x20], *")
+            .Find("mov r9d, 0x1")
+            .Find("call 0x*")
+            .Target()
+            .Find("bt r*, 0x1e")
+            .Find("movsxd rax, dword ptr [r*+0x*]; imul r8, rax")
+            .Get(),
         Anchor::Cipher(TEXT("FProperty::ElementSize"))
             .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Add"))
             .Find("add [*+0x20], *")
