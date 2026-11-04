@@ -59,6 +59,12 @@ void ABuildingWall::Close_Implementation(AController* ControllerInstigator)
         .Find("add [*+0x20], *")
         .Call(3)
         .Find("call [r8+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CloseActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov r8, [rax]; mov rdx, *; mov rcx, rax; call [r8+0x*]")
+        .Find("call [r8+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
