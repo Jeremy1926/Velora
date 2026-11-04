@@ -29,6 +29,9 @@ enum class EFortBuildingType : uint8
     EFortBuildingType_MAX
 };
 
+template<>
+UEnum* StaticEnum<EFortBuildingType>();
+
 enum class EFortBuildingInitializationReason : uint8
 {
     StaticallyPlaced,

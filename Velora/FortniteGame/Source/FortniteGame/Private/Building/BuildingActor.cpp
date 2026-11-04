@@ -6,6 +6,14 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
+template<>
+UEnum* StaticEnum<EFortBuildingType>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildingType"));
+
+    return Enum;
+}
+
 UClass* ABuildingActor::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingActor"));

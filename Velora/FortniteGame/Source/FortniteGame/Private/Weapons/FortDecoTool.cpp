@@ -222,7 +222,9 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameV
 
     const int32 BuildingType = GetBuildingTypeFromBuildingAttachmentType(InBuildingAttachmentType);
 
-    if (BuildingType == (int32)EFortBuildingType::None)
+    static auto None = (int32)StaticEnum<EFortBuildingType>()->GetValueByName(FName(TEXT("EFortBuildingType::None")));
+
+    if (BuildingType == None)
         return;
 
     const bool bIgnoreCostCheck = DoesItemDefinitionHaveGameplayTag(DecoItemDefinition, GameplayTags() + TrapExtraPieceCostIgnore);
