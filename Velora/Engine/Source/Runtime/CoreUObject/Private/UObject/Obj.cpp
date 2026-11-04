@@ -29,6 +29,11 @@ UWorld* UObject::GetWorld() const
         .Find("call 0x*; mov rcx, [0x*]; mov rdx, rax")
         .Target()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameSession"))
+        .Or()
+        .String(TEXT("No world was found for object (%s) passed in to UEngine::GetWorldFromContextObject()."))
+        .Start()
+        .Find("mov rax, [r*]; mov rax, [rax+0x*]; lea rcx, [0x*]; cmp rax, rcx")
+        .Find("mov rax, [rax+0x*]")
         .Get();
 
     return GetWorld(this);
