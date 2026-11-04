@@ -67,6 +67,7 @@ UObject* UKismetSystemLibrary::GetObjectFromPrimaryAssetId(FPrimaryAssetId Prima
 FString UKismetSystemLibrary::GetPathName(const UObject* Object)
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
