@@ -56,6 +56,22 @@ EFortItemType UFortItemDefinition::GetItemType() const
 
 EFortRarity UFortItemDefinition::GetRarity() const
 {
+    static auto RarityInterfaceCall = Anchor::Address()
+        .Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetRarity"))
+        .Find("add rcx, 0x*; add [*+0x20], *")
+        .Optional()
+        .Get();
+
+    if (RarityInterfaceCall)
+    {
+        static auto RarityInterfaceOffset = ::Anchor::At(RarityInterfaceCall).Imm();
+        static auto RaritySlot = ::Anchor::At(RarityInterfaceCall).Find("call [*+0x*]").Disp();
+
+        auto RarityInterface = (const uint8*)this + RarityInterfaceOffset;
+
+        return (*(EFortRarity (**)(const void*))(*(const uint8* const*)RarityInterface + RaritySlot))(RarityInterface);
+    }
+
     static auto GetRarity = Anchor::VirtualFunction<EFortRarity (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::GetRarity"))
         .Native(TEXT("/Script/FortniteGame.FortItem:GetRarity"))
         .Find("jmp [*]")
