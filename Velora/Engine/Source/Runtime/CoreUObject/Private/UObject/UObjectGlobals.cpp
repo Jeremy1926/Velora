@@ -128,6 +128,15 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Or()
         .String(TEXT("STAT_ConstructObject"), "lea *, [0x*]; mov eax, [rcx+0x80]; mov *, [rcx]")
         .Start()
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:SpawnObject"))
+        .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("mov r9d, 0x1000000; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, r*; call 0x*; mov *, rax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
