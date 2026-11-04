@@ -11,6 +11,12 @@ UEngine*& GEngine = *Anchor::Data<UEngine**>(TEXT("GEngine"))
     .String(TEXT("RecordReplay: failed to create demo net driver!"))
     .Last("mov rcx, [0x*]")
     .Target()
+    .Or()
+    .String(TEXT("RecordReplay: failed to create demo net driver!"))
+    .Start()
+    .Find("call 0x*; test al, al; jz *; mov *, [0x*]")
+    .Find("mov *, [0x*]")
+    .Target()
     .Get();
 
 void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
