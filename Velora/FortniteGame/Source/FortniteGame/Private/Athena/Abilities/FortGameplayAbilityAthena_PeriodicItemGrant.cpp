@@ -77,14 +77,14 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::StartItemAwardTimers()
     static auto PairAlignment = FMath::Max(FMath::Max(FActiveItemGrantInfo::StaticStruct()->GetMinAlignment(), ValueAlignment), (int32)sizeof(int32));
     static auto ValueOffset = (FActiveItemGrantInfo::StaticStruct()->GetPropertiesSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
     static auto PairSize = (ValueOffset + FScalableFloat::StaticStruct()->GetPropertiesSize() + PairAlignment - 1) & ~(PairAlignment - 1);
-    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = FCompactSetBase::IsEnabled() ? PairSize : (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
 
     auto& Elements = *ItemsToGrant->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
     auto ElementData = *ItemsToGrant->ContainerPtrToValuePtr<const uint8*>(this);
 
     for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
     {
-        if (!Elements.IsAllocated(Index))
+        if (!FCompactSetBase::IsEnabled() && !Elements.IsAllocated(Index))
             continue;
 
         auto GrantInfo = (const FActiveItemGrantInfo*)(ElementData + Index * ElementSize);

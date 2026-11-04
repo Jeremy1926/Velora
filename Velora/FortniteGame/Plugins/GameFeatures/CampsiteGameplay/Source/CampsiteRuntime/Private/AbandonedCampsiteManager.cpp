@@ -329,7 +329,7 @@ const FScalableFloat* AAbandonedCampsiteManager::FindSpawnTypeWeight(EAbandonedC
     static auto ElementAlignment = FMath::Max(ValueAlignment, (int32)alignof(int32));
     static auto ValueOffset = ((int32)sizeof(EAbandonedCampsiteSpawnType) + ValueAlignment - 1) & ~(ValueAlignment - 1);
     static auto PairSize = (ValueOffset + FScalableFloat::StaticStruct()->GetPropertiesSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
-    static auto ElementSize = (PairSize + (int32)sizeof(int32) * 2 + ElementAlignment - 1) & ~(ElementAlignment - 1);
+    static auto ElementSize = FCompactSetBase::IsEnabled() ? PairSize : (PairSize + (int32)sizeof(int32) * 2 + ElementAlignment - 1) & ~(ElementAlignment - 1);
 
     auto& Elements = *SpawnTypeWeights->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
 
@@ -337,7 +337,7 @@ const FScalableFloat* AAbandonedCampsiteManager::FindSpawnTypeWeight(EAbandonedC
     {
         auto Element = (const uint8*)&Elements[0] + Index * ElementSize;
 
-        if (Elements.IsAllocated(Index) && *(const EAbandonedCampsiteSpawnType*)Element == SpawnType)
+        if ((FCompactSetBase::IsEnabled() || Elements.IsAllocated(Index)) && *(const EAbandonedCampsiteSpawnType*)Element == SpawnType)
             return (const FScalableFloat*)(Element + ValueOffset);
     }
 

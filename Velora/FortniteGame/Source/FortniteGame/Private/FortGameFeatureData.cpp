@@ -58,7 +58,7 @@ TArray<TPair<FGameplayTag, const TSoftObjectPtr<UDataTable>*>> FFortGameFeatureD
     static auto PairAlignment = FMath::Max(ValueAlignment, (int32)sizeof(int32));
     static auto ValueOffset = (FGameplayTag::GetTypeSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
     static auto PairSize = (ValueOffset + TSoftObjectPtr<UDataTable>::GetTypeSize() + PairAlignment - 1) & ~(PairAlignment - 1);
-    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = FCompactSetBase::IsEnabled() ? PairSize : (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
 
     auto& Elements = *PlaylistToOverrideTableMap->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
     auto ElementData = *PlaylistToOverrideTableMap->ContainerPtrToValuePtr<const uint8*>(this);
@@ -66,7 +66,7 @@ TArray<TPair<FGameplayTag, const TSoftObjectPtr<UDataTable>*>> FFortGameFeatureD
 
     for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
     {
-        if (Elements.IsAllocated(Index))
+        if (FCompactSetBase::IsEnabled() || Elements.IsAllocated(Index))
             Pairs.Add({ TGameLayout<FGameplayTag>::Load(ElementData + Index * ElementSize), (const TSoftObjectPtr<UDataTable>*)(ElementData + Index * ElementSize + ValueOffset) });
     }
 
@@ -94,7 +94,7 @@ TArray<TPair<FGameplayTag, const FFortGameFeatureLootTableData*>> UFortGameFeatu
     static auto PairAlignment = FMath::Max(ValueAlignment, (int32)sizeof(int32));
     static auto ValueOffset = (FGameplayTag::GetTypeSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
     static auto PairSize = (ValueOffset + FFortGameFeatureLootTableData::StaticStruct()->GetPropertiesSize() + PairAlignment - 1) & ~(PairAlignment - 1);
-    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = FCompactSetBase::IsEnabled() ? PairSize : (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
 
     auto& Elements = *PlaylistOverrideLootTableData->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
     auto ElementData = *PlaylistOverrideLootTableData->ContainerPtrToValuePtr<const uint8*>(this);
@@ -102,7 +102,7 @@ TArray<TPair<FGameplayTag, const FFortGameFeatureLootTableData*>> UFortGameFeatu
 
     for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
     {
-        if (Elements.IsAllocated(Index))
+        if (FCompactSetBase::IsEnabled() || Elements.IsAllocated(Index))
             Pairs.Add({ TGameLayout<FGameplayTag>::Load(ElementData + Index * ElementSize), (const FFortGameFeatureLootTableData*)(ElementData + Index * ElementSize + ValueOffset) });
     }
 

@@ -24,7 +24,7 @@ TArray<TPair<const TSoftClassPtr<ABuildingProp>*, FVehiclePropReplacementData>> 
     static auto PairAlignment = FMath::Max(FMath::Max(ValueAlignment, (int32)alignof(FSoftObjectPtr)), (int32)sizeof(int32));
     static auto ValueOffset = (TSoftClassPtr<ABuildingProp>::GetTypeSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
     static auto PairSize = (ValueOffset + PropReplacementDataStruct->GetPropertiesSize() + PairAlignment - 1) & ~(PairAlignment - 1);
-    static auto ElementSize = (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
+    static auto ElementSize = FCompactSetBase::IsEnabled() ? PairSize : (PairSize + 2 * (int32)sizeof(int32) + PairAlignment - 1) & ~(PairAlignment - 1);
 
     auto& Elements = *PropReplacements->ContainerPtrToValuePtr<TSparseArray<uint8>>(this);
     auto ElementData = *PropReplacements->ContainerPtrToValuePtr<const uint8*>(this);
@@ -32,7 +32,7 @@ TArray<TPair<const TSoftClassPtr<ABuildingProp>*, FVehiclePropReplacementData>> 
 
     for (int32 Index = 0; Index < Elements.GetMaxIndex(); Index++)
     {
-        if (!Elements.IsAllocated(Index))
+        if (!FCompactSetBase::IsEnabled() && !Elements.IsAllocated(Index))
             continue;
 
         auto Element = ElementData + Index * ElementSize;

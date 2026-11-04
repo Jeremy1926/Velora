@@ -34,11 +34,11 @@ const TArray<UFortControllerEffect*>& FConversationGiftTypeDefinition::GetEffect
 
 const FConversationGiftTypeDefinition* TMap<FGameplayTag, FConversationGiftTypeDefinition>::Find(const FGameplayTag& Key) const
 {
-    static auto ElementSize = FConversationGiftTypeDefinition::StaticStruct()->GetPropertiesSize() + 0x10;
+    static auto ElementSize = FConversationGiftTypeDefinition::StaticStruct()->GetPropertiesSize() + (FCompactSetBase::IsEnabled() ? 0x8 : 0x10);
 
     for (int32 Index = 0; Index < Elements.Num(); Index++)
     {
-        if (AllocationFlags[Index] && TGameLayout<FGameplayTag>::Load(Elements.GetData() + Index * ElementSize) == Key)
+        if ((FCompactSetBase::IsEnabled() || AllocationFlags[Index]) && TGameLayout<FGameplayTag>::Load(Elements.GetData() + Index * ElementSize) == Key)
             return (const FConversationGiftTypeDefinition*)(Elements.GetData() + Index * ElementSize + 8);
     }
 
