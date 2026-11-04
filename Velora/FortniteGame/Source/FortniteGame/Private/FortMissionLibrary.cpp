@@ -30,6 +30,9 @@ void UFortMissionLibrary::execTeleportPlayerPawn(FFrame& Stack, void* const Z_Pa
         .Exec(TEXT("/Script/FortniteGame.FortMissionLibrary:TeleportPlayerPawn"))
         .Find("xor r13d, r13d")
         .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r12], r13b; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortMissionLibrary:TeleportPlayerPawn"))
+        .Find("setnz *; add [*+0x20], *; mov [r14], r15b; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortMissionLibrary:TeleportPlayerPawn")));
 
