@@ -1885,6 +1885,10 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("mov *, [rax+0x*]; call 0x*; mov rcx, *; lea rdx, [rax+0x*]; call r*")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("mov *, [rax+0x*]; call 0x*; lea rdx, [rax+0x*]; mov rcx, *; call r*")
         .Get();
 
     return CanPerformNativeAction(this, ActionTag);
