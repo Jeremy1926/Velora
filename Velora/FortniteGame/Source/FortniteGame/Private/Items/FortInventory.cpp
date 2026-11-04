@@ -55,6 +55,20 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
         return GetOverflowFromAddingItemForOwner(ItemEntry, Owner ? Owner->GetInterfaceAddress(FortInventoryOwnerInterface) : nullptr, *InventoryType->ContainerPtrToValuePtr<uint8>(this), false);
     }
 
+    static auto InterfaceGetOverflowFromAddingItem = Anchor::VirtualFunction<int32 (*)(const void*, const FFortItemEntry&)>(TEXT("IFortInventoryInterface::GetOverflowFromAddingItem"))
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov r8, [rcx+0x*]; mov rcx, r*; call r8; test eax, eax")
+        .Optional()
+        .Get();
+
+    if (InterfaceGetOverflowFromAddingItem)
+    {
+        static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+        auto Interface = const_cast<AFortInventory*>(this)->GetInterfaceAddress(FortInventoryInterface);
+
+        return Interface ? InterfaceGetOverflowFromAddingItem(Interface, ItemEntry) : 0;
+    }
+
     static auto GetOverflowFromAddingItem = Anchor::Function<int32 (*)(const AFortInventory*, const FFortItemEntry&)>(TEXT("AFortInventory::GetOverflowFromAddingItem"))
         .String(TEXT("SwapEquippedText"))
         .Find("mov rcx, *; movzx *, al; call 0x*; test eax, eax")
@@ -98,6 +112,27 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
 
 void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
 {
+    static auto InterfaceSetItemRequiresUpdate = Anchor::VirtualFunction<void (*)(void*, FFortItemEntry&)>(TEXT("IFortInventoryInterface::SetItemRequiresUpdate"))
+        .String(TEXT("UFortWorldItem::UpdateQuantity: Got mcp request to change quantity on item %s*"))
+        .Find("mov edx, *; call 0x*")
+        .Call()
+        .Find("mov [*+0xc], e*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [r8+0x*]")
+        .Optional()
+        .Get();
+
+    if (InterfaceSetItemRequiresUpdate)
+    {
+        static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+
+        if (auto Interface = GetInterfaceAddress(FortInventoryInterface))
+            InterfaceSetItemRequiresUpdate(Interface, ItemEntry);
+
+        return;
+    }
+
     static auto SetItemRequiresUpdate = Anchor::Function<void (*)(AFortInventory*, FFortItemEntry&)>(TEXT("AFortInventory::SetItemRequiresUpdate"))
         .String(TEXT("UFortWorldItem::UpdateQuantity: Got mcp request to change quantity on item %s*"))
         .Find("mov rcx, rax; mov rdx, *; call 0x*")
