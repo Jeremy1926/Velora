@@ -148,6 +148,11 @@ TSharedPtr<FClassNetCacheMgr>& UNetDriver::GetNetCache()
         .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
         .Start()
         .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
+        .Find("mov rcx, [*+0x*]")
         .Disp();
 
     return *(TSharedPtr<FClassNetCacheMgr>*)((uint8_t*)this + NetCache);
