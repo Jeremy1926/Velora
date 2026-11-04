@@ -87,7 +87,7 @@ namespace Scanner
         {
             auto Chunk = Anchor::At(Chunks[Index]);
 
-            for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *" })
+            for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *" })
             {
                 if (auto Finish = Chunk.Find(Pattern); Finish.Get())
                 {
@@ -150,7 +150,7 @@ namespace Scanner
     {
         auto Exec = Scanner::Exec(FunctionPath);
 
-        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *", "setnz *; add r*, r*; mov [*+0x20], r*", "setnz *; add r*, r*; *; mov [*+0x20], r*" })
+        for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "setnz *; add r*, r*; mov [*+0x20], r*", "setnz *; add r*, r*; *; mov [*+0x20], r*" })
         {
             auto Finish = Exec.Find(Pattern);
 
@@ -160,7 +160,7 @@ namespace Scanner
             if (Finish.Is("setnz *; add r*, r*"))
                 Finish = Finish.Find("mov [*+0x20], r*");
 
-            for (auto Next = Finish.Is("cmp*") ? Finish.Find("mov [*+0x20], *").Find("*") : Finish.Find("*"); Next.Get(); Next = Next.Find("*"))
+            for (auto Next = Finish.Is("sbb*") ? Finish.Find("mov [*+0x20], *").Find("*") : Finish.Find("*"); Next.Get(); Next = Next.Find("*"))
             {
                 if (Next.Is("ret*"))
                     return Finish;
