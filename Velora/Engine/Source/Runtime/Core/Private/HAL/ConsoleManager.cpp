@@ -167,6 +167,12 @@ int32 IConsoleVariable::GetInt() const
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]; test eax, eax")
+        .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]; test eax, eax")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return GetInt(this);
