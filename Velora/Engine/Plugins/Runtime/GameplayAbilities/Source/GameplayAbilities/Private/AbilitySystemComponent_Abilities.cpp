@@ -39,6 +39,10 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
         .Start()
         .Find("lea rdx, [rsp+0x*]; mov r8, *; mov rcx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("GiveAbility called with an invalid Ability Class."))
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rbp; push rsi; push rdi; push r12; push r13; push r14; push r15; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [r8+0x10]")
         .Get();
 
     static auto InternalServerTryActiveAbility = Anchor::Hook(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), &UAbilitySystemComponent::InternalServerTryActiveAbility)
@@ -197,6 +201,13 @@ void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, b
         .Find("lea rdx, [rsp+0x*]; mov r8, *; mov rcx, *; call 0x*")
         .Call()
         .Find("mov r8b, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("GiveAbility called with an invalid Ability Class."))
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rbp; push rsi; push rdi; push r12; push r13; push r14; push r15; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [r8+0x10]")
+        .Find("mov r8b, 0x1; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
