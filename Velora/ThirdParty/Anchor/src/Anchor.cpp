@@ -212,6 +212,40 @@ namespace Anchor
         return Table;
     }
 
+    static const std::vector<std::pair<uint64_t, uint32_t>>& Texts()
+    {
+        static auto Table = []
+        {
+            std::vector<std::pair<uint64_t, uint32_t>> Table;
+            auto Image = Base();
+
+            for (auto Entry : References()[1])
+            {
+                auto Target = (uint32_t)(Entry >> 32);
+
+                for (auto& Section : Sections())
+                {
+                    if ((Section.Characteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_WRITE)) || Target < Section.VirtualAddress || Target >= Section.VirtualAddress + Section.Misc.VirtualSize)
+                        continue;
+
+                    uint64_t Key = 0;
+
+                    for (uint32_t Index = 0; Index < 8; Index++)
+                        Key = Key << 8 | (Target + Index < Section.VirtualAddress + Section.Misc.VirtualSize ? Image[Target + Index] : 0);
+
+                    Table.emplace_back(Key, Target);
+                }
+            }
+
+            std::sort(Table.begin(), Table.end());
+            Table.erase(std::unique(Table.begin(), Table.end()), Table.end());
+
+            return Table;
+        }();
+
+        return Table;
+    }
+
     template<typename PredicateType>
     static const uint8_t* FindIndexed(int32_t Kind, const void* Target, PredicateType Predicate)
     {
@@ -883,9 +917,66 @@ namespace Anchor
         return Reference;
     }
 
+    static std::string NarrowText(const wchar_t* Text)
+    {
+        std::string Narrow;
+
+        for (auto Char = Text; *Char; Char++)
+        {
+            if (*Char >= 0x80)
+                return std::string();
+
+            Narrow.push_back((char)*Char);
+        }
+
+        return Narrow;
+    }
+
+    static const uint8_t* FindText(const std::string& Narrow, const uint8_t* After)
+    {
+        auto Image = Base();
+        auto& Table = Texts();
+        auto Size = Narrow.back() == '*' ? Narrow.size() - 1 : Narrow.size() + 1;
+        auto Known = std::min<size_t>(Size, 8);
+        uint64_t Low = 0;
+        const uint8_t* Found = nullptr;
+
+        for (size_t Index = 0; Index < 8; Index++)
+            Low = Low << 8 | (Index < Known ? (uint8_t)Narrow.c_str()[Index] : 0);
+
+        auto High = Known < 8 ? Low | (~0ull >> (Known * 8)) : Low;
+
+        for (auto Entry = std::lower_bound(Table.begin(), Table.end(), std::make_pair(Low, 0u)); Entry != Table.end() && Entry->first <= High; Entry++)
+        {
+            auto Address = Image + Entry->second;
+
+            if (Address <= After || (Found && Address >= Found))
+                continue;
+
+            for (auto& Section : Sections())
+            {
+                auto Begin = Image + Section.VirtualAddress;
+
+                if (Address >= Begin && Address + Size <= Begin + Section.Misc.VirtualSize && !memcmp(Address, Narrow.c_str(), Size))
+                    Found = Address;
+            }
+        }
+
+        return Found;
+    }
+
     FCode String(const wchar_t* Text)
     {
         auto Reference = FindStringReference(Text);
+
+        if (!Reference)
+        {
+            if (auto Narrow = NarrowText(Text); !Narrow.empty())
+            {
+                if (auto Found = FindText(Narrow, nullptr))
+                    Reference = FindReference(Found);
+            }
+        }
 
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
@@ -1011,6 +1102,7 @@ namespace Anchor
     FCode String(const wchar_t* Text, std::string_view Instructions)
     {
         auto Size = (wcslen(Text) + 1) * sizeof(wchar_t);
+        auto bFound = false;
 
         for (auto& Section : Sections())
         {
@@ -1021,10 +1113,23 @@ namespace Anchor
             {
                 if (*(wchar_t*)Address == *Text && !memcmp(Address, Text, Size))
                 {
+                    bFound = true;
+
                     if (auto Code = Reference(Address, Instructions); Code.Get())
                         return Code;
                 }
             }
+        }
+
+        auto Narrow = NarrowText(Text);
+
+        if (Narrow.empty() || (bFound && FindStringReference(Text)))
+            return FCode();
+
+        for (auto Found = FindText(Narrow, nullptr); Found; Found = FindText(Narrow, Found))
+        {
+            if (auto Code = Reference(Found, Instructions); Code.Get())
+                return Code;
         }
 
         return FCode();
