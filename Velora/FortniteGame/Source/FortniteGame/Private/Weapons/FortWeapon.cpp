@@ -62,6 +62,11 @@ void AFortWeapon::PlayWeaponFireFX(bool bPersistentFire)
         .Caller()
         .Log(TEXT("AFortWeapon::PlayWeaponFireFX"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortWeapon"))
+        .Or()
+        .String(TEXT("STAT_FortWeapon_PlayWeaponFireAudio"))
+        .Start()
+        .Log(TEXT("AFortWeapon::PlayWeaponFireFX"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortWeapon"))
         .Get();
 
     PlayWeaponFireFX(this, bPersistentFire);
