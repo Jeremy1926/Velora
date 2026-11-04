@@ -1144,10 +1144,14 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
         .Find("setnz *; mov [rbp-0x*], *; add [*+0x20], *; mov rcx, rdi; call 0x*; mov rdx, [rbp-0x*]; test rdx, rdx; jz 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; mov rdx, rax; mov rcx, *; call 0x*; lea rcx, [rbp-0x*]; call 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
 
     static auto Function = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"));
+    static auto OptionalASCInterfaceParam = Function->FindPropertyByName(FName(TEXT("OptionalASCInterface")));
     static auto bTossWithVelocityParam = Function->FindPropertyByName(FName(TEXT("bTossWithVelocity")));
     static auto TossVelocityParam = Function->FindPropertyByName(FName(TEXT("TossVelocity")));
     static auto LootWorldLevelParam = Function->FindPropertyByName(FName(TEXT("LootWorldLevel")));
@@ -1156,6 +1160,7 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
     FName LootTierName(NAME_None);
     TGameValue<FVector> Position;
     int32 OverrideMaxStackCount = 0;
+    AActor* OptionalASCInterface = nullptr;
     uint32 bToss = 0;
     uint32 bTossWithVelocity = 0;
     TGameValue<FVector> TossVelocity;
@@ -1167,6 +1172,10 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
     Stack.StepCompiledIn(&LootTierName);
     Stack.StepCompiledIn(&Position);
     Stack.StepCompiledIn(&OverrideMaxStackCount);
+
+    if (OptionalASCInterfaceParam)
+        Stack.StepCompiledIn(&OptionalASCInterface);
+
     Stack.StepCompiledIn(&bToss);
 
     if (bTossWithVelocityParam)
