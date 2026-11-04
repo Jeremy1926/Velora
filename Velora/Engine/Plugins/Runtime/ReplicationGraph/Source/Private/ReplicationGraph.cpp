@@ -2405,6 +2405,18 @@ TArray<UReplicationGraphNode_DynamicSpatialFrequency::FDynamicSpatialFrequency_S
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x20)
         .Find("lea rdi, [r*+0x*]; movsxd *, dword ptr [rdi+0x8]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x28)
+        .Find("lea rcx, [rdi+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DynamicSpatialFrequency"), 0x28)
+        .Find("lea rdi, [r*+0x*]; movsxd *, dword ptr [rdi+0x8]")
         .Disp();
 
     return *(TArray<FDynamicSpatialFrequency_SortedItem>*)((uint8*)this + SortedReplicationList);
