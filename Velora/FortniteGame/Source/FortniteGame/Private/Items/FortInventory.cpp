@@ -271,6 +271,13 @@ FFortItemEntry::~FFortItemEntry()
         .Find("lea rcx, [*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("add rcx, [*]")
+        .Find("lea rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Destructor(this);
