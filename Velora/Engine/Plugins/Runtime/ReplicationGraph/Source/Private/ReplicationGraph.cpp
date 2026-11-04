@@ -1569,6 +1569,18 @@ TArray<TArray<UReplicationGraphNode_GridCell*>>& UReplicationGraphNode_GridSpati
         .Find("call 0x*", 2)
         .Target()
         .Find("lea rbx, [r*+0x*]; mov [rsp+0x*], edx")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "mov rax, rsp; sub rsp, 0x38; mov [rax-0x18], rdx; lea r8, [rax-0x18]; mov [rax-0x10], rdx; add rcx, 0x*; lea rdx, [rax+0x8]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r*+0x*]; mov [rsp+0x*], edx")
         .Disp();
 
     return *(TArray<TArray<UReplicationGraphNode_GridCell*>>*)((uint8*)this + Grid);
