@@ -43,6 +43,11 @@ bool UObject::NeedsLoadForServer() const
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Start()
         .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
+        .Or()
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Last("call 0x*; xor ecx, ecx; test al, al")
+        .Call()
+        .Find("jmp [rax+0x*]")
         .Get(sizeof(void*));
 
     return NeedsLoadForClient(this);
