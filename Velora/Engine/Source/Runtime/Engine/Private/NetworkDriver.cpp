@@ -613,6 +613,13 @@ void UReplicationSystem::PreSendUpdate(float DeltaSeconds)
         .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; lea rdx, [*]; *; mov dword ptr [*], 0x2; call 0x*")
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .String(TEXT("STAT_NetTickFlush"))
+        .Find("cmp [*+0x*], *; jz 0x*; cmp [*+0x*], *; jz 0x*; mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, *; call 0x*; mov rcx, [*+0x*]")
+        .Is("mov rcx, *; call 0x*; mov rcx, [*+0x*]; *; lea rdx, [*]; mov dword ptr [*], 0x2; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     if (PreSendUpdateParams)
