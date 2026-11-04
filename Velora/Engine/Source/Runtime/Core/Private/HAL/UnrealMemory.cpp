@@ -138,6 +138,11 @@ void FMemory::Free(void* Original)
         .Find("mov rcx, [r*]; test rcx, rcx; jz *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Failed to find object '{ClassName} {OuterName}.{ObjectName}'"))
+        .Start()
+        .Find("test rcx, rcx; jz *; call 0x*")
+        .Call()
         .Get();
 
     Free(Original);
