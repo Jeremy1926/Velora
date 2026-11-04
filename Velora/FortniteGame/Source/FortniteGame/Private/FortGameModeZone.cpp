@@ -237,6 +237,8 @@ bool AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, 
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; jmp 0x*")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "sub rsp, 0x28; mov al, 0x1; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; call 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov r10b, 0x1; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *")
         .Get();
 
     return ShouldWeaponRemoveGrantedAbilities(this, Weapon, Reason);
