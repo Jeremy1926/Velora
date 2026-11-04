@@ -143,6 +143,12 @@ void FMemory::Free(void* Original)
         .Start()
         .Find("test rcx, rcx; jz *; call 0x*")
         .Call()
+        .Or()
+        .Pattern("85 C9 0F 84 ? ? ? ? 55 56 ? 8D 6C 24 A8 ? 81 ? ? ? ? ? ? 8B 05 ? ? ? ? ? 33 C4 ? 89 45 30 ? 89 B4 24 48 01 00 00")
+        .Start()
+        .Or()
+        .Pattern("85 C9 0F 84 ? ? ? ? 56 ? 81 ? ? ? ? ? ? 8B 05 ? ? ? ? ? 33 C4 ? 89 84 24 30 01 00 00 ? 89 B4 24 48 01 00 00")
+        .Start()
         .Get();
 
     Free(Original);
