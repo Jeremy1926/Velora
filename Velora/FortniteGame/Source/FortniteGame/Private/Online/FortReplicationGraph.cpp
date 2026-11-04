@@ -2562,6 +2562,13 @@ FActorRepListRefView& UFortReplicationGraphNode_LiveSpectator::GetBroadcasterRel
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_LiveSpectator"))
         .Find("lea rcx, [rbx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_LiveSpectator"))
+        .Find("lea rcx, [rsi+0x*]; mov rdx, rdi; call 0x*")
         .Disp();
 
     return *(FActorRepListRefView*)((uint8*)this + BroadcasterRelevancyActorList);
