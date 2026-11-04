@@ -56,6 +56,13 @@ void APlayerController::Reset()
     static auto Reset = Anchor::VirtualFunction<void (*)(APlayerController*)>(TEXT("APlayerController::Reset"))
         .Event(TEXT("K2_OnReset"))
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Or()
+        .String(TEXT("K2_OnReset"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *; mov rbx, [rax+0x*]; call 0x*; xor r8d, r8d; mov rdx, rax; mov rcx, rdi; mov rax, rbx")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .Get();
 
     if (Reset)
