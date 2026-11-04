@@ -429,6 +429,11 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
         .Start()
         .Log(TEXT("AFortPlayerController::TryAddToQuickBar"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+        .Or()
+        .String(TEXT("Failed T7ryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Log(TEXT("AFortPlayerController::TryAddToQuickBar"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
         .Optional()
         .Get();
 
@@ -437,6 +442,9 @@ void AFortPlayerController::TryAddToQuickBar(UFortItem* Item)
 
     static auto NativeTryAddToQuickBar = Anchor::Function<void (*)(AFortPlayerController*, UFortItem*)>(TEXT("AFortPlayerController::TryAddToQuickBar"))
         .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Or()
+        .String(TEXT("Failed T7ryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
         .Start()
         .Get();
 
@@ -447,6 +455,10 @@ bool AFortPlayerController::CanServerTryAddToQuickBar() const
 {
     static auto bAuthorityCheck = Anchor::Exists()
         .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Has("cmp byte ptr [rcx+0x*], 0x3; mov rdi, rdx")
+        .Or()
+        .String(TEXT("Failed T7ryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
         .Start()
         .Has("cmp byte ptr [rcx+0x*], 0x3; mov rdi, rdx")
         .Get();
@@ -467,6 +479,10 @@ bool AFortPlayerController::CanServerTryAddToQuickBar() const
         .String(TEXT("Failed TryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
         .Start()
         .Has("call 0x*; cmp eax, r13d; jz 0x*")
+        .Or()
+        .String(TEXT("Failed T7ryAddToQuickBar due to invalid ItemDefinition for Item '%s'"))
+        .Start()
+        .Has("call 0x*; cmp eax, 0x1; jz 0x*")
         .Get();
 
     return !bAuthorityCheck && !bResultCheck;
