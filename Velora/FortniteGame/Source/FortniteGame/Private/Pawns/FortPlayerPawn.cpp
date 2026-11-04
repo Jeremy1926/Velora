@@ -2,6 +2,7 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
@@ -405,6 +406,14 @@ void AFortPlayerPawn::SetIsInsideSafeZone(bool bNewValue)
     DETOUR(AFortPlayerPawn, SetIsInsideSafeZone, Anchor::Hook()
         .Body(TEXT("/Script/FortniteGame.FortGameModeAthena:SafeZoneInsideChecks"))
         .Find("call 0x*; mov rax, [rdi]; mov dl, *; mov rcx, rdi; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; mov rax, [*]; mov dl, *; mov rcx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "ret*")
         .Optional()
