@@ -780,6 +780,11 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Find("ret")
         .Last("call *")
         .LogSlot(TEXT("AFortGameSession::Restart"))
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .String(TEXT("STAT_AFortGameModeAthena_RestartGameSession_Deferred"))
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortGameSession::Restart"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortGameSession"));
 
     static auto SpawnLoot = THook(TEXT("ABuildingContainer::SpawnLoot"), &ABuildingContainer::SpawnLoot)
