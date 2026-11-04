@@ -55,7 +55,7 @@ uint32 FGlobalActorReplicationInfo::GetForceNetUpdateFrame() const
 
 bool FGlobalActorReplicationInfo::GetWantsToBeDormant() const
 {
-    return *((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bWantsToBeDormant) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bWantsToBeDormant))) != 0;
+    return (*((const uint8*)this + (UE::LWC::IsEnabled() ? offsetof(TGlobalActorReplicationInfoLayout<FVector3d>, bWantsToBeDormant) : offsetof(TGlobalActorReplicationInfoLayout<FVector>, bWantsToBeDormant))) & 1) != 0;
 }
 
 bool FGlobalActorReplicationInfo::GetSwapRolesOnReplicate() const
