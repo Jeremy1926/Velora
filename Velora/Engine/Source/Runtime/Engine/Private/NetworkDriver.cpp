@@ -213,6 +213,10 @@ int32 UNetDriver::GetNetTag() const
         .Pattern("C7 ? ? ? 00 00 98 3A 00 00")
         .Find("mov qword ptr [*], 0x3f800000; mov [*], e*; mov [*], r*; mov [*], e*")
         .Find("mov [*], e*", 2)
+        .Or()
+        .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
+        .Find("mov qword ptr [*], 0x3f800000; mov [*], e*; mov [*], r*; mov [*], e*")
+        .Find("mov [*], e*", 2)
         .Disp();
 
     return *(int32*)((uint8_t*)this + NetTag);
@@ -225,6 +229,10 @@ void UNetDriver::SetNetTag(int32 InNetTag)
         .Find("mov [*], e*; mov [*], *l; mov [*], r*; mov [*], r*; mov [*], r*; mov [*], r*")
         .Or()
         .Pattern("C7 ? ? ? 00 00 98 3A 00 00")
+        .Find("mov qword ptr [*], 0x3f800000; mov [*], e*; mov [*], r*; mov [*], e*")
+        .Find("mov [*], e*", 2)
+        .Or()
+        .Pattern("C7 ? ? 10 27 00 00 C7 ? ? 98 3A 00 00")
         .Find("mov qword ptr [*], 0x3f800000; mov [*], e*; mov [*], r*; mov [*], e*")
         .Find("mov [*], e*", 2)
         .Disp();
