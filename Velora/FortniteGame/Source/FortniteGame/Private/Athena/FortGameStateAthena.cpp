@@ -679,6 +679,7 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
     static auto bPlaylistDataIsLoaded = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
     static auto bPlaylistDataIsActivelyLoading = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsActivelyLoading")));
     static auto AirCraftBehavior = GetClass()->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
+    static auto GamePhaseLogicAirCraftBehavior = !AirCraftBehavior && UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()->FindPropertyByName(FName(TEXT("AirCraftBehavior"))) : nullptr;
     static auto PlaylistNameProperty = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylist")))->FindPropertyByName(FName(TEXT("PlaylistName")));
     static auto PlaylistAirCraftBehavior = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
     static auto PlaylistAISettings = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("AISettings")));
@@ -715,7 +716,10 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
         Playlist = NewPlaylist;
     }
 
-    *AirCraftBehavior->ContainerPtrToValuePtr<uint8>(this) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
+    if (AirCraftBehavior)
+        *AirCraftBehavior->ContainerPtrToValuePtr<uint8>(this) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
+    else if (auto GamePhaseLogic = GamePhaseLogicAirCraftBehavior ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this) : nullptr)
+        *GamePhaseLogicAirCraftBehavior->ContainerPtrToValuePtr<uint8>(GamePhaseLogic) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
 
     if (auto AISettings = PlaylistAISettings ? *PlaylistAISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(NewPlaylist) : nullptr)
         GameMode->OverrideAISettings(AISettings);
