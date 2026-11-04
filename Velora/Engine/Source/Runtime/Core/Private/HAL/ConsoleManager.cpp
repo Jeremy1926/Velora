@@ -187,6 +187,9 @@ float IConsoleVariable::GetFloat() const
     static auto GetFloat = Anchor::VirtualFunction<float (*)(const IConsoleVariable*)>(TEXT("IConsoleVariable::GetFloat"))
         .String(TEXT("r.ViewDistanceScale"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rbx, rax; mov rdx, [rax]; call [*+0x*]; movss *, *")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("r.ViewDistanceScale"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]; maxss *, *")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return GetFloat(this);
