@@ -69,6 +69,29 @@ EFortRarity UFortItemDefinition::GetRarity() const
 
 int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 {
+    static auto NonVirtualClampItemLevel = Anchor::Optional<int32 (*)(const UFortItemDefinition*, int32)>(TEXT("UFortItemDefinition::ClampItemLevel"))
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Call()
+        .Find("mov edx, [rbx+0x*]; mov rcx, [rbx+0x*]; mov [rbx+0x*], ebp; mov [rbx+0x*], ebp; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Call()
+        .Find("mov edx, [rbx+0x*]; mov rcx, [rbx+0x*]; call 0x*; mov rbp, [rsp+0x*]; mov rsi, [rsp+0x*]; mov [rbx+0x*], eax")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (NonVirtualClampItemLevel)
+        return NonVirtualClampItemLevel(this, ItemLevel);
+
     static auto ClampItemLevel = Anchor::VirtualFunction<int32 (*)(const UFortItemDefinition*, int32)>(TEXT("UFortItemDefinition::ClampItemLevel"))
         .String(TEXT("%s HostUpgradeLevel: %i"))
         .Start()
