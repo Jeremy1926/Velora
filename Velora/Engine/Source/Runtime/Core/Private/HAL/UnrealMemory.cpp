@@ -17,6 +17,14 @@ void* FMemory::Realloc(void* Original, SIZE_T Count, uint32 Alignment)
         .Start()
         .Or()
         .Pattern("56 57 53 48 83 EC 20 44 89 C6 48 89 D7 48 89 CB 48 8B 0D ? ? ? ? 48 85 C9 74 ? 48 8B 01 48 8B 40 38 48 89 DA 49 89 F8 41 89 F1 48 83 C4 20 5B 5F 5E 48 FF E0")
+        .Or()
+        .Pattern("53 ? 83 ? ? ? 8B D9 ? 8B 09 ? 85 C9 75 ? ? 85 C0 74 ? ? 85 C0 0F 88 ? ? ? ? ? 8D 41 FF ? 3D FE FF FF 7F 0F 87 ? ? ? ? ? 63 D0 ? 33 C0 ? 0F AF D1 E8")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Pattern("53 ? 83 ? ? ? 8B D9 ? 8B 09 ? 85 C9 75 ? ? 85 C0 74 ? ? 85 C0 78 ? ? 8D 41 FF ? 3D FE FF FF 7F 77 ? ? 63 D0 ? 33 C0 ? 0F AF D1 E8")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return Realloc(Original, Count, Alignment);
