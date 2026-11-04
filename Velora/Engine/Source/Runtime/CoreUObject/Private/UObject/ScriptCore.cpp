@@ -32,6 +32,11 @@ void FFrame::Step(UObject* Context, void* const Result)
         .Find("movzx e*, byte ptr [rax]; lea r*, [0x*]")
         .Find("lea r*, [0x*]")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:IsValid"))
+        .Find("call [r*+rax*8]")
+        .Last("lea r*, [0x*]")
+        .Target()
         .Get();
 
     auto B = *Code++;
