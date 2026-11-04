@@ -69,6 +69,9 @@ void AFortAthenaSupplyDrop::execSpawnPickup(FFrame& Stack, void* const Z_Param__
         .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
         .Find("xor ebp, ebp")
         .Find("setnz *; add r*, r*; mov [*+0x20], r*; call 0x*; mov [rsi], rbp; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; mov [r*], rax")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:SpawnPickup")));
 
