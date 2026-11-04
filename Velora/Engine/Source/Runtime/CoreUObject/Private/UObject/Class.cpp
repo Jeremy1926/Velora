@@ -9,6 +9,16 @@ const UStruct::FEncryptedLayout* UStruct::GetEncryptedLayout()
     if (!FUObjectArray::GetEncryptedLayout())
         return nullptr;
 
+    static auto AlignedPropertiesSize = Anchor::Address()
+        .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableRowFromName"))
+        .Find("add [*+0x20], *")
+        .Find("mov r9d, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov ecx, [rcx+0x*]")
+        .Find("lea *, [rcx?0x*]")
+        .Get();
+
     static FEncryptedLayout Layout
     {
         Anchor::Cipher(TEXT("UStruct::SuperStruct"))
@@ -26,7 +36,8 @@ const UStruct::FEncryptedLayout* UStruct::GetEncryptedLayout()
             .Target()
             .Find("mov ecx, [rcx+0x*]")
             .Find("mov e*, [rdi+0x*]")
-            .Get(),
+            .Get()
+            .Added(AlignedPropertiesSize ? Anchor::At(AlignedPropertiesSize).Disp() + 1 : 0),
         Anchor::Cipher(TEXT("UStruct::MinAlignment"))
             .Exec(TEXT("/Script/Engine.DataTableFunctionLibrary:GetDataTableRowFromName"))
             .Find("add [*+0x20], *")

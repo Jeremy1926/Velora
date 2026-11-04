@@ -52,6 +52,8 @@ namespace Anchor
             return Result;
         }
 
+        FCipher Added(int64_t Value) const;
+
         template<typename ValueType>
         ValueType Load(const void* Object) const
         {

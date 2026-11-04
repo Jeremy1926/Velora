@@ -821,6 +821,16 @@ namespace Anchor
         return Value;
     }
 
+    FCipher FCipher::Added(int64_t Value) const
+    {
+        auto Result = *this;
+
+        if (Value && Result.Size && Result.Count < sizeof(Result.Steps) / sizeof(Result.Steps[0]))
+            Result.Steps[Result.Count++] = { (uint16_t)ZYDIS_MNEMONIC_ADD, (uint8_t)(Result.Size * 8), Result.Size >= 8 ? (uint64_t)Value : (uint64_t)Value & ((1ull << Result.Size * 8) - 1) };
+
+        return Result;
+    }
+
     FCipher FCode::Cipher() const
     {
         FCipher Result;
