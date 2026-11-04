@@ -56,6 +56,8 @@ public:
 
     void HandleMatchHasStarted();
 
+    void ScoreboardMatchStartedOrEndedHelper();
+
     int32 CountReadyPlayers();
 
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);

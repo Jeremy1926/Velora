@@ -353,6 +353,20 @@ void AFortGameModeAthena::HandleMatchHasStarted()
         GamePhaseLogic->HandleMatchHasStarted();
 }
 
+void AFortGameModeAthena::ScoreboardMatchStartedOrEndedHelper()
+{
+    DETOUR(AFortGameModeAthena, ScoreboardMatchStartedOrEndedHelper, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() != nullptr)
+        .String(TEXT("MatchEnded,%s,%s"))
+        .Start()
+        .Inline());
+
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+        GamePhaseLogic->SetGamePhase(EAthenaGamePhase::EndGame);
+
+    Original();
+}
+
 int32 AFortGameModeAthena::CountReadyPlayers()
 {
     static auto CountReadyPlayers = Anchor::Function<int32 (*)(AFortGameModeAthena*, bool)>(TEXT("AFortGameModeAthena::CountReadyPlayers"))
