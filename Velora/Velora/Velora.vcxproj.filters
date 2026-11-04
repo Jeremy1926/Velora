@@ -1,6 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Engine\Source\Runtime\UMG">
+      <UniqueIdentifier>{ED92705E-186D-46F0-95AC-653FAF8AF91A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\UMG\Private">
+      <UniqueIdentifier>{FE85183D-574C-4B1E-85D3-D737F798F769}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\UMG\Private\Components">
+      <UniqueIdentifier>{3A0E5E0F-EAFF-4E96-BB17-A981834AEDB5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\UMG\Public">
+      <UniqueIdentifier>{CF666CF8-D215-49F8-8307-80131B9F0B07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\UMG\Public\Components">
+      <UniqueIdentifier>{E27B6A86-B1BB-4557-8312-6BEB6EC1F3AD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteUI">
+      <UniqueIdentifier>{F69D194E-12F0-4566-8494-B99372F8BC76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteUI\Private">
+      <UniqueIdentifier>{BEDE0DA2-FD6D-4A9B-87BF-F5DF330DB434}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteUI\Public">
+      <UniqueIdentifier>{A1ED703C-8CF4-4D2F-BDD3-8BB0425D186D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Engine\Source\Runtime\AIModule">
       <UniqueIdentifier>{58B1991F-BF78-4012-A913-62C20BC9385A}</UniqueIdentifier>
     </Filter>
@@ -1662,6 +1686,12 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameModeZone.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\Source\Runtime\UMG\Public\Components\Widget.h">
+      <Filter>Engine\Source\Runtime\UMG\Public\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteUI\Public\FortAthenaMatchmakingWidget.h">
+      <Filter>FortniteGame\Source\FortniteUI\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameInstance.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
@@ -2776,6 +2806,12 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortTeamPrivateInfo.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\UMG\Private\Components\Widget.cpp">
+      <Filter>Engine\Source\Runtime\UMG\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteUI\Private\FortAthenaMatchmakingWidget.cpp">
+      <Filter>FortniteGame\Source\FortniteUI\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameInstance.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
