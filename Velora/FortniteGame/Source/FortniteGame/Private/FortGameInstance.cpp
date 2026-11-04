@@ -83,6 +83,10 @@ TSharedPtr<IAnalyticsProvider>* UFortGameInstance::GetServerEsportsAnalyticsProv
         .Find("cmp *, 0x1; jnz *")
         .Find("lea *, [*+0x*]", 2)
         .Is("lea *, [*+0x*]; xor r8d, r8d")
+        .Or()
+        .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
+        .Find("cmp *, 0x1; jnz *")
+        .Find("lea *, [*+0x*]; xor r8d, r8d")
         .Optional()
         .Disp();
 
