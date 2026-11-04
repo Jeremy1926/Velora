@@ -177,6 +177,14 @@ AServerStreamingLevelsVisibility* AServerStreamingLevelsVisibility::SpawnServerA
         .Pattern("48 83 EC 28 80 B9 ? ? 00 00 03 75 ? 48 81 C1 ? ? 00 00 45 84 C0 74 ? 4C 8B C2 45 33 C9")
         .Reference("call 0x*; add *, 0x8")
         .Start()
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("mov r8b, 0x1; mov rcx, [*+0xc0]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Reference("call 0x*; add *, 0x8")
+        .Start()
         .Optional()
         .Get();
 
