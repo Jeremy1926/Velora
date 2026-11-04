@@ -32,8 +32,13 @@ UClass* UCurveTable::StaticClass()
 FRealCurve* UCurveTable::FindCurve(FName RowName, const FString& ContextString, bool bWarnIfNotFound) const
 {
     static auto FindCurve = Anchor::Function<FRealCurve* (*)(const UCurveTable*, FName, const FString&, bool)>(TEXT("UCurveTable::FindCurve"))
+        .If(!::Anchor::Exists().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("mov r10, [rcx]; lea rax, [0x*]").Get())
         .String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s)."))
         .Start()
+        .Or()
+        .String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s)."), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*; lea rcx, [rsp+0x*]")
+        .Start()
+        .Is("mov [rsp+0x8], rbx; mov [rsp+0x18], rsi; mov [rsp+0x10], edx")
         .Get();
 
     return FindCurve(this, RowName, ContextString, bWarnIfNotFound);
