@@ -105,6 +105,12 @@ TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
         .Or()
         .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; test rax, rax; jz *; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; call [*+0x*]; test rax, rax; jz *; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
+        .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; call [*+0x*]; test rax, rax; jz *; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return AsVariableInt(this);
