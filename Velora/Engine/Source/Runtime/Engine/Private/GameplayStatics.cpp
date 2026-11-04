@@ -44,6 +44,18 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
         .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
         .Find("add [*+0x20], *")
         .Find("lea rdx, [*]; mov [rsp+0x28], *")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, [rbp-0x*]; mov [rsp+0x28], *; lea rdx, [rbp-0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [rbp-0x*]; mov rcx, [rbp-0x*]; mov [rsp+0x28], *")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, [rbp-0x*]; lea rdx, [rbp-0x*]; mov r9b, *")
         .Get();
 
     if (bClassByAddress)
