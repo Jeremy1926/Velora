@@ -6,9 +6,20 @@
 
 UFortItemDefinition* UFortItem::GetItemDefinitionBP() const
 {
-    static auto GetItemDefinitionBP = Anchor::VirtualFunction<UFortItemDefinition* (*)(const UFortItem*)>(TEXT("UFortItem::GetItemDefinitionBP"))
+    static auto VirtualGetItemDefinitionBP = Anchor::VirtualFunction<UFortItemDefinition* (*)(const UFortItem*)>(TEXT("UFortItem::GetItemDefinitionBP"))
         .Exec(TEXT("/Script/FortniteGame.FortItem:GetItemDefinitionBP"))
         .Find("call [*]")
+        .Optional()
+        .Get();
+
+    if (VirtualGetItemDefinitionBP)
+        return VirtualGetItemDefinitionBP(this);
+
+    static auto GetItemDefinitionBP = Anchor::Function<UFortItemDefinition* (*)(const UFortItem*)>(TEXT("UFortItem::GetItemDefinitionBP"))
+        .Exec(TEXT("/Script/FortniteGame.FortItem:GetItemDefinitionBP"))
+        .Find("add [*+0x20], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetItemDefinitionBP(this);
