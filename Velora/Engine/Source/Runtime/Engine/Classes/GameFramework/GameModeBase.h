@@ -14,6 +14,8 @@ public:
 
     APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot);
 
+    void RestartPlayer(AController* NewPlayer);
+
     FString& GetOptionsString();
 
     AGameStateBase* GetGameState() const;

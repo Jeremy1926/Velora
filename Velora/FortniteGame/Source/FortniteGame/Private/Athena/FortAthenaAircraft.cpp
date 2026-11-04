@@ -99,6 +99,13 @@ const FAircraftFlightInfo& AFortAthenaAircraft::GetFlightInfo() const
     return *FlightInfo->ContainerPtrToValuePtr<FAircraftFlightInfo>(this);
 }
 
+bool AFortAthenaAircraft::IsInDropZone() const
+{
+    static auto ClientFlightTimerDrift = StaticClass()->FindPropertyByName(FName(TEXT("ClientFlightTimerDrift")));
+
+    return *(bool*)(ClientFlightTimerDrift->ContainerPtrToValuePtr<uint8>(this) + sizeof(float));
+}
+
 int32& AFortAthenaAircraft::GetAircraftIndex()
 {
     static auto AircraftIndex = StaticClass()->FindPropertyByName(FName(TEXT("AircraftIndex")));

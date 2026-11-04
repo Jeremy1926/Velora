@@ -41,6 +41,21 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
     return SpawnDefaultPawnFor(this, NewPlayer, StartSpot);
 }
 
+void AGameModeBase::RestartPlayer(AController* NewPlayer)
+{
+    static auto RestartPlayer = Anchor::VirtualFunction<void (*)(AGameModeBase*, AController*)>(TEXT("AGameModeBase::RestartPlayer"))
+        .Exec(TEXT("/Script/Engine.GameModeBase:RestartPlayer"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameModeBase:RestartPlayer"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    RestartPlayer(this, NewPlayer);
+}
+
 AGameStateBase* AGameModeBase::GetGameState() const
 {
     static auto GameState = GetClass()->FindPropertyByName(FName(TEXT("GameState")));

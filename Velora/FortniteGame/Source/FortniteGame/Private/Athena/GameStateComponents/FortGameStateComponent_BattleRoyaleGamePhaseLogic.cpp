@@ -7,9 +7,12 @@
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/FortPlayerStateAthena.h"
+#include "Components/FortControllerComponent_Aircraft.h"
 #include "Items/FortQuickBars.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/GameModeBase.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "GameplayEffectTypes.h"
@@ -19,9 +22,11 @@
 #include "Misc/Parse.h"
 #include "UObject/Class.h"
 #include "UObject/ScriptDelegates.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()
 {
@@ -68,6 +73,8 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandleMatchHasStarted()
         GetWarmupCountdownDuration() = 15.0f;
         GetWarmupEarlyCountdownDuration() = 15.0f;
     }
+
+    GetNumAircraftsExitedDropZone() = 0;
 
     StartWarmupPhase();
 }
@@ -274,6 +281,173 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetupAircraft(AFortAthe
         SetAircraftIsLocked(true);
 
     GetAircrafts_GameState().Add(Aircraft);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execOnAircraftEnteredDropZone(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, execOnAircraftEnteredDropZone, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftEnteredDropZone"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftEnteredDropZone")));
+
+    AFortAthenaAircraft* FortAthenaAircraft = nullptr;
+
+    Stack.StepCompiledIn(&FortAthenaAircraft);
+    Stack.Code += !!Stack.Code;
+
+    OnAircraftEnteredDropZone(FortAthenaAircraft);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::OnAircraftEnteredDropZone(AFortAthenaAircraft* FortAthenaAircraft)
+{
+    bool bAllAircraftsInDropZone = true;
+
+    for (int32 AircraftIndex = 0; AircraftIndex < GetAircrafts_GameState().Num(); AircraftIndex++)
+    {
+        if (auto Aircraft = GetAircraft(AircraftIndex))
+            bAllAircraftsInDropZone &= Aircraft->IsInDropZone();
+    }
+
+    if (bAllAircraftsInDropZone)
+        SetAircraftLock(false);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execOnAircraftExitedDropZone(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, execOnAircraftExitedDropZone, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftExitedDropZone"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftExitedDropZone")));
+
+    AFortAthenaAircraft* FortAthenaAircraft = nullptr;
+
+    Stack.StepCompiledIn(&FortAthenaAircraft);
+    Stack.Code += !!Stack.Code;
+
+    OnAircraftExitedDropZone(FortAthenaAircraft);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::OnAircraftExitedDropZone(AFortAthenaAircraft* FortAthenaAircraft)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto GameMode = GameState ? GameState->GetWorld()->GetAuthGameMode() : nullptr;
+
+    if (!GameMode)
+        return;
+
+    for (auto PlayerState : GameState->GetPlayerArray())
+    {
+        auto PlayerController = PlayerState ? Cast<AFortPlayerControllerAthena>(PlayerState->GetOwner()) : nullptr;
+
+        if (!PlayerController || GetAircraft(GetAircraftIndex(PlayerState)) != FortAthenaAircraft)
+            continue;
+
+        auto AircraftComponent = PlayerController->FindComponentByClass<UFortControllerComponent_Aircraft>();
+
+        if (!AircraftComponent || !AircraftComponent->IsInAircraft())
+            continue;
+
+        AircraftComponent->GetIsAttemptingAircraftJump() = true;
+        GameMode->RestartPlayer(PlayerController);
+        AircraftComponent->GetIsAttemptingAircraftJump() = false;
+    }
+
+    if (++GetNumAircraftsExitedDropZone() < GetAircrafts_GameState().Num())
+        return;
+
+    const ESafeZoneStartUp SafeZoneStartUp = GameState->GetSafeZoneStartUp();
+
+    if (SafeZoneStartUp == ESafeZoneStartUp::StartsWithWarmUp || SafeZoneStartUp == ESafeZoneStartUp::StartsWithAirCraft)
+        StartSafeZonesPhase(false);
+    else
+        StartSafeZones(false, true);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execOnAircraftFlightEnded(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, execOnAircraftFlightEnded, Anchor::Hook()
+        .If(StaticClass())
+        .StubExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftFlightEnded"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnAircraftFlightEnded")));
+
+    AFortAthenaAircraft* FortAthenaAircraft = nullptr;
+
+    Stack.StepCompiledIn(&FortAthenaAircraft);
+    Stack.Code += !!Stack.Code;
+
+    OnAircraftFlightEnded(FortAthenaAircraft);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::OnAircraftFlightEnded(AFortAthenaAircraft* FortAthenaAircraft)
+{
+    if (!FortAthenaAircraft)
+        return;
+
+    FScriptDelegate OnAircraftEnteredDropZone;
+    OnAircraftEnteredDropZone.BindUFunction(this, FName(TEXT("OnAircraftEnteredDropZone")));
+    FortAthenaAircraft->GetOnDropZoneEntered().Remove(OnAircraftEnteredDropZone);
+
+    FScriptDelegate OnAircraftExitedDropZone;
+    OnAircraftExitedDropZone.BindUFunction(this, FName(TEXT("OnAircraftExitedDropZone")));
+    FortAthenaAircraft->GetOnDropZoneExited().Remove(OnAircraftExitedDropZone);
+
+    FScriptDelegate OnAircraftFlightEnded;
+    OnAircraftFlightEnded.BindUFunction(this, FName(TEXT("OnAircraftFlightEnded")));
+    FortAthenaAircraft->GetOnFlightEnded().Remove(OnAircraftFlightEnded);
+
+    FortAthenaAircraft->Destroy(false, true);
+}
+
+AFortAthenaAircraft* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraft(int32 AircraftIndex) const
+{
+    static auto GetAircraft = Anchor::Function<AFortAthenaAircraft* (*)(const UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, int32)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraft"))
+        .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraft")
+        .Start()
+        .Get();
+
+    return GetAircraft(this, AircraftIndex);
+}
+
+int32 UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraftIndex(APlayerState* PlayerState)
+{
+    auto PlayerStateAthena = Cast<AFortPlayerStateAthena>(PlayerState);
+
+    return PlayerStateAthena ? GetAircraftIndexFromTeam(PlayerStateAthena->GetTeamIndex()) : 0;
+}
+
+int32 UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraftIndexFromTeam(uint8 TeamIndex)
+{
+    static auto DefaultFirstTeam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("DefaultFirstTeam")));
+    static auto AirCraftBehavior = StaticClass()->FindPropertyByName(FName(TEXT("AirCraftBehavior")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
+
+    if (!Playlist || *AirCraftBehavior->ContainerPtrToValuePtr<EAirCraftBehavior>(this) != EAirCraftBehavior::OpposingAirCraftForEachTeam)
+        return 0;
+
+    const int32 AircraftIndex = TeamIndex - *DefaultFirstTeam->ContainerPtrToValuePtr<uint8>(Playlist);
+
+    if (AircraftIndex < 0)
+        return 0;
+
+    if (GetGamePhase() == EAthenaGamePhase::Setup || GetGamePhase() == EAthenaGamePhase::Warmup || AircraftIndex < GetAircrafts_GameState().Num())
+        return AircraftIndex;
+
+    return 0;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftLock(bool bLock)
+{
+    static auto SetAircraftLock = Anchor::Function<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, bool)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftLock"))
+        .FieldPattern("80 B9 %o 00 ? ? ? 48 8B D9 74 ? 84 D2 75 ? 80 B9 ? ? 00 00 03 77", StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked"))))
+        .Start()
+        .Get();
+
+    SetAircraftLock(this, bLock);
 }
 
 bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HasSafeZoneAlreadyStarted(EAthenaGamePhase InGamePhase, ESafeZoneStartUp SafeZoneStartUp)
@@ -489,6 +663,13 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftIsLocked(boo
     static auto bAircraftIsLocked = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked")));
 
     bAircraftIsLocked->SetPropertyValue_InContainer(this, bInAircraftIsLocked);
+}
+
+int32& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetNumAircraftsExitedDropZone()
+{
+    static int32 NumAircraftsExitedDropZone = 0;
+
+    return NumAircraftsExitedDropZone;
 }
 
 float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraftStartTime()

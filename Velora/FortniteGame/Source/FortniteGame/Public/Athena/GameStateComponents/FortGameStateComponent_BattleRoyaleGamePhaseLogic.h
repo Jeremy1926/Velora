@@ -6,7 +6,9 @@
 
 class AFortAthenaAircraft;
 class AFortSafeZoneIndicator;
+class APlayerState;
 class UObject;
+struct FFrame;
 struct FScalableFloat;
 struct FVector;
 
@@ -36,6 +38,26 @@ public:
     bool StartAircraftPhase(bool bSkippedWarmup);
 
     void SetupAircraft(AFortAthenaAircraft* Aircraft);
+
+    void execOnAircraftEnteredDropZone(FFrame& Stack, void* const Z_Param__Result);
+
+    void OnAircraftEnteredDropZone(AFortAthenaAircraft* FortAthenaAircraft);
+
+    void execOnAircraftExitedDropZone(FFrame& Stack, void* const Z_Param__Result);
+
+    void OnAircraftExitedDropZone(AFortAthenaAircraft* FortAthenaAircraft);
+
+    void execOnAircraftFlightEnded(FFrame& Stack, void* const Z_Param__Result);
+
+    void OnAircraftFlightEnded(AFortAthenaAircraft* FortAthenaAircraft);
+
+    AFortAthenaAircraft* GetAircraft(int32 AircraftIndex) const;
+
+    int32 GetAircraftIndex(APlayerState* PlayerState);
+
+    int32 GetAircraftIndexFromTeam(uint8 TeamIndex);
+
+    void SetAircraftLock(bool bLock);
 
     static bool HasSafeZoneAlreadyStarted(EAthenaGamePhase InGamePhase, ESafeZoneStartUp SafeZoneStartUp);
 
@@ -84,6 +106,8 @@ public:
     TArray<TWeakObjectPtr<AFortAthenaAircraft>>& GetAircrafts_GameState();
 
     void SetAircraftIsLocked(bool bInAircraftIsLocked);
+
+    int32& GetNumAircraftsExitedDropZone();
 
     float& GetAircraftStartTime();
 

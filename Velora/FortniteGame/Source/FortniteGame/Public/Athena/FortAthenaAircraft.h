@@ -45,5 +45,7 @@ public:
 
     const FAircraftFlightInfo& GetFlightInfo() const;
 
+    bool IsInDropZone() const;
+
     int32& GetAircraftIndex();
 };
