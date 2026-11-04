@@ -125,6 +125,13 @@ void AFortGameMode::FinishWorldInitialization()
         .Caller()
         .Log(TEXT("AFortGameModeAthena::FinishWorldInitialization"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .String(TEXT("bEnableMeshNetwork"))
+        .Start()
+        .Caller()
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Log(TEXT("AFortGameModeAthena::FinishWorldInitialization"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Get(TEXT("/Script/FortniteGame.Default__FortGameMode"));
 
     FinishWorldInitialization(this);
