@@ -103,6 +103,10 @@ AFortGameplayMutator* AFortGameStateAthena::GetMutatorByClass_Implementation(con
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov rcx, *; call *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov [r8], *")
         .Get();
 
     if (bClassByAddress)
