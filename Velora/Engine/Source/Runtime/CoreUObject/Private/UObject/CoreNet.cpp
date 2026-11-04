@@ -40,6 +40,12 @@ const FClassNetCache* FClassNetCacheMgr::GetClassNetCache(UClass* Class)
         .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetClassNetCache(this, Class);
