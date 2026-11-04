@@ -171,6 +171,36 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         return ConstructWithParams(OutlineName);
     }
 
+    static auto NewObject = Anchor::Optional<UObject* (*)(UObject*, UClass*, NAME_INDEX, EObjectFlags, UObject*)>(TEXT("NewObject"))
+        .Exec(TEXT("/Script/Engine.GameplayStatics:SpawnObject"))
+        .Find("lea rcx, [rsp+0x*]; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r9d, 0x1000000")
+        .Find("call 0x*")
+        .Target()
+        .FindCallToString(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."))
+        .Start()
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:SpawnObject"))
+        .Find("mov rdx, *; lea rcx, [rsp+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r9d, 0x1000000")
+        .Find("call 0x*")
+        .Target()
+        .FindCallToString(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."))
+        .Start()
+        .Get();
+
+    if (NewObject && FName::IsOutlineNumber() && InternalSetFlags == EInternalObjectFlags::None && !bCopyTransientsFromClassDefaults && !InstanceGraph && !bAssumeTemplateIsArchetype)
+    {
+        NAME_INDEX OutlineName = 0;
+        TGameLayout<FName>::Store(&OutlineName, Name);
+
+        return NewObject(InOuter, Class, OutlineName, SetFlags, Template);
+    }
+
     static auto StaticConstructObject_Internal = Anchor::Function<UObject* (*)(UClass*, UObject*, FName, EObjectFlags, EInternalObjectFlags, UObject*, bool, FObjectInstancingGraph*, bool)>(TEXT("StaticConstructObject_Internal"))
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."))
         .FirstOf("call 0x*", "jmp 0x*")
