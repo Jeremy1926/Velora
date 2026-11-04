@@ -175,6 +175,9 @@ void IConsoleVariable::SetOnChangedCallback(const FConsoleVariableDelegate& Call
         .Or()
         .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; mov r8b, *; call [rax+0x*]; test rax, rax; jz 0x*; xorps *, *; lea *, [rsp+0x*]; movaps [*], *; mov r8, [rax]")
         .Find("call [r8+0x*]")
+        .Or()
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; call [rax+0x*]; test rax, rax; jz 0x*; mov r8, [rax]")
+        .Find("call [r8+0x*]")
         .Get();
 
     SetOnChangedCallback(this, Callback);
