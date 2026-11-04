@@ -1778,9 +1778,41 @@ void UReplicationGraphNode_GridSpatialization2D::AddActor_Dormancy(const FNewRep
         .Find("mov rcx, [rcx+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Optional()
         .Get();
 
-    AddActor_Dormancy(this, ActorInfo, ActorRepInfo);
+    if (AddActor_Dormancy)
+    {
+        AddActor_Dormancy(this, ActorInfo, ActorRepInfo);
+        return;
+    }
+
+    static auto AddDormancyChange = Anchor::Function<FDelegateHandle* (*)(FNotifyActorChangeDormancy*, FDelegateHandle*, UReplicationGraphNode_GridSpatialization2D*)>(TEXT("FNotifyActorChangeDormancy::AddUObject"))
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x28)
+        .Find("lea rcx, [*+0x*]; mov r8, *; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x48)
+        .Find("lea rcx, [*+0x*]; mov r8, *; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (ActorRepInfo.GetWantsToBeDormant())
+        AddActorInternal_Static(ActorInfo, ActorRepInfo, true);
+    else
+        AddActorInternal_Dynamic(ActorInfo);
+
+    FDelegateHandle Handle;
+
+    AddDormancyChange(&ActorRepInfo.GetEvents().DormancyChange, &Handle, this);
 }
 
 void UReplicationGraphNode_GridSpatialization2D::RemoveActor_Static(const FNewReplicatedActorInfo& ActorInfo)
@@ -1808,9 +1840,52 @@ void UReplicationGraphNode_GridSpatialization2D::RemoveActor_Dormancy(const FNew
         .Find("mov rcx, [*+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x30)
+        .Find("mov rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
         .Get();
 
-    RemoveActor_Dormancy(this, ActorInfo);
+    if (RemoveActor_Dormancy)
+    {
+        RemoveActor_Dormancy(this, ActorInfo);
+        return;
+    }
+
+    static auto RemoveAllDormancyChange = Anchor::Function<void (*)(FNotifyActorChangeDormancy*, const void*)>(TEXT("FNotifyActorChangeDormancy::RemoveAll"))
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x30)
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__BasicReplicationGraph"), 0x50)
+        .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (!GetGraphGlobals().IsValid())
+        return;
+
+    auto& ActorRepInfo = GetGraphGlobals()->GlobalActorReplicationInfoMap->Get(ActorInfo.Actor);
+
+    if (ActorRepInfo.GetWantsToBeDormant())
+        RemoveActorInternal_Static(ActorInfo, ActorRepInfo, true);
+    else
+        RemoveActorInternal_Dynamic(ActorInfo);
+
+    RemoveAllDormancyChange(&ActorRepInfo.GetEvents().DormancyChange, this);
 }
 
 void UReplicationGraphNode_GridSpatialization2D::NotifyActorCullDistChange(AActor* Actor, FGlobalActorReplicationInfo& GlobalInfo, float OldDist)
