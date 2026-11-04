@@ -106,6 +106,14 @@ UGameDataBR* UFortAssetManager::GetGameDataBR()
         .Target()
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .String(TEXT("[%s]  - with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Find("test al, al; jz 0x*; call 0x*; mov r8b, *; mov dl, 0x1; lea rcx, [rax+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
         .Get();
 
     return GetGameDataBR(this);

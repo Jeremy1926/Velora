@@ -24,6 +24,9 @@ bool UFortGlobals::HasInitializePlayerGameplayAbilities()
     static auto bHasInitializePlayerGameplayAbilities = Anchor::Exists()
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
         .Start()
+        .Or()
+        .String(TEXT("[%s]  - with invalid PlayerStateOrProxy!"))
+        .Start()
         .Get();
 
     return bHasInitializePlayerGameplayAbilities;
@@ -33,6 +36,9 @@ void UFortGlobals::InitializePlayerGameplayAbilities(IAbilitySystemInterface* Pl
 {
     static auto InitializePlayerGameplayAbilities = Anchor::Function<void (*)(IAbilitySystemInterface*)>(TEXT("UFortGlobals::InitializePlayerGameplayAbilities"))
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Or()
+        .String(TEXT("[%s]  - with invalid PlayerStateOrProxy!"))
         .Start()
         .Get();
 
