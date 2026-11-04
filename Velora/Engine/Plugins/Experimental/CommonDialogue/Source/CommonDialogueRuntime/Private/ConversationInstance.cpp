@@ -53,9 +53,9 @@ TArray<FConversationChoiceReference>& UConversationInstance::FCheckpoint::GetSco
 bool UConversationInstance::HasServerLayout()
 {
     auto Class = StaticClass();
-    auto ParticipantsProperty = Class ? Class->FindPropertyByName(FName(TEXT("Participants"))) : nullptr;
+    auto DefaultObject = Class && Class->FindPropertyByName(FName(TEXT("Participants"))) && FConversationBranchPoint::StaticStruct() ? (const UConversationInstance*)Class->GetDefaultObject() : nullptr;
 
-    return ParticipantsProperty && Class->GetPropertiesSize() == (ParticipantsProperty->GetOffset_ForInternal() == sizeof(UObject) ? 0x190 : 0x1A8);
+    return DefaultObject && Class->GetPropertiesSize() == (int32)(((uintptr_t)&DefaultObject->GetbConversationStarted() - (uintptr_t)DefaultObject + sizeof(bool) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
 }
 
 void UConversationInstance::ServerRemoveParticipant(FGameplayTag ParticipantID)
@@ -423,13 +423,6 @@ void UConversationInstance::OnCurrentConversationNodeModified()
     }
 }
 
-uint8* UConversationInstance::GetLayoutMember(int32 OldLayoutOffset, int32 NewLayoutOffset) const
-{
-    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
-
-    return (uint8*)this + (Participants->GetOffset_ForInternal() == sizeof(UObject) ? OldLayoutOffset : NewLayoutOffset);
-}
-
 FConversationParticipants& UConversationInstance::GetParticipants() const
 {
     static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
@@ -439,45 +432,59 @@ FConversationParticipants& UConversationInstance::GetParticipants() const
 
 FGameplayTag& UConversationInstance::GetStartingEntryGameplayTag() const
 {
-    return *(FGameplayTag*)GetLayoutMember(0x38, 0x60);
+    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
+    static auto ActiveConversationGraph = StaticClass()->FindPropertyByName(FName(TEXT("ActiveConversationGraph")));
+    static auto LastProperty = ActiveConversationGraph ? ActiveConversationGraph : Participants;
+
+    return *(FGameplayTag*)(LastProperty->ContainerPtrToValuePtr<uint8>((void*)this) + LastProperty->GetSize());
 }
 
 FConversationBranchPoint& UConversationInstance::GetStartingBranchPoint() const
 {
-    return *(FConversationBranchPoint*)GetLayoutMember(0x40, 0x68);
+    return *(FConversationBranchPoint*)(((uintptr_t)&GetStartingEntryGameplayTag() + FGameplayTag::GetTypeSize() + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
 }
 
 FConversationBranchPoint& UConversationInstance::GetCurrentBranchPoint() const
 {
-    return *(FConversationBranchPoint*)GetLayoutMember(0xC0, 0xE8);
+    return *(FConversationBranchPoint*)((uint8*)&GetStartingBranchPoint() + FConversationBranchPoint::GetTypeSize());
 }
 
 TRuntimeSizedArray<UConversationInstance::FCheckpoint>& UConversationInstance::GetClientBranchPoints() const
 {
-    return *(TRuntimeSizedArray<FCheckpoint>*)GetLayoutMember(0x140, 0x168);
+    return *(TRuntimeSizedArray<FCheckpoint>*)((uint8*)&GetCurrentBranchPoint() + FConversationBranchPoint::GetTypeSize());
 }
 
 TArray<FConversationBranchPoint>& UConversationInstance::GetCurrentBranchPoints() const
 {
-    return *(TArray<FConversationBranchPoint>*)GetLayoutMember(0x150, 0x178);
+    return *(TArray<FConversationBranchPoint>*)(&GetClientBranchPoints() + 1);
 }
 
 TArray<FClientConversationOptionEntry>& UConversationInstance::GetCurrentUserChoices() const
 {
-    return *(TArray<FClientConversationOptionEntry>*)GetLayoutMember(0x160, 0x40);
+    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
+
+    if (Participants->GetOffset_ForInternal() == sizeof(UObject))
+        return *(TArray<FClientConversationOptionEntry>*)(&GetCurrentBranchPoints() + 1);
+
+    return *((TArray<FClientConversationOptionEntry>*)Participants->ContainerPtrToValuePtr<void>((void*)this) - 1);
 }
 
 TArray<FConversationChoiceReference>& UConversationInstance::GetScopeStack() const
 {
-    return *(TArray<FConversationChoiceReference>*)GetLayoutMember(0x170, 0x188);
+    static auto Participants = StaticClass()->FindPropertyByName(FName(TEXT("Participants")));
+
+    if (Participants->GetOffset_ForInternal() == sizeof(UObject))
+        return *(TArray<FConversationChoiceReference>*)(&GetCurrentUserChoices() + 1);
+
+    return *(TArray<FConversationChoiceReference>*)(&GetCurrentBranchPoints() + 1);
 }
 
 FRandomStream& UConversationInstance::GetConversationRNG() const
 {
-    return *(FRandomStream*)GetLayoutMember(0x180, 0x198);
+    return *(FRandomStream*)(&GetScopeStack() + 1);
 }
 
 bool& UConversationInstance::GetbConversationStarted() const
 {
-    return *(bool*)GetLayoutMember(0x188, 0x1A0);
+    return *(bool*)(&GetConversationRNG() + 1);
 }

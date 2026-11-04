@@ -95,8 +95,6 @@ private:
 
     void OnCurrentConversationNodeModified();
 
-    uint8* GetLayoutMember(int32 OldLayoutOffset, int32 NewLayoutOffset) const;
-
     FConversationParticipants& GetParticipants() const;
 
     FGameplayTag& GetStartingEntryGameplayTag() const;
