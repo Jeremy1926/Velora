@@ -406,6 +406,10 @@ AFortAthenaAircraft* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAirc
     static auto GetAircraft = Anchor::Function<AFortAthenaAircraft* (*)(const UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, int32)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraft"))
         .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAircraft")
         .Start()
+        .Or()
+        .If(StaticClass())
+        .Pattern("48 63 ? 0F B6 89 ? ? 00 00 83 E9 01 0F 84 ? ? ? ? 83 F9 01 0F 84")
+        .Start()
         .Get();
 
     return GetAircraft(this, AircraftIndex);
