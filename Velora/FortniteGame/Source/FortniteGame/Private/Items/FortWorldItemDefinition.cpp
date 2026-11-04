@@ -16,6 +16,10 @@ UClass* UFortWorldItemDefinition::StaticClass()
 bool UFortWorldItemDefinition::ServerExecute(UFortWorldItem* Item, AFortPlayerController* PlayerController) const
 {
     static auto ServerExecute = Anchor::VirtualFunction<bool (*)(const UFortWorldItemDefinition*, UFortWorldItem*, AFortPlayerController*)>(TEXT("UFortWorldItemDefinition::ServerExecute"))
+        .String(TEXT("STAT_UFortWeaponItemDefinition_ServerExecute"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"))
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
         .Log(TEXT("AFortPawn::EquipWeaponDefinition"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortWeaponItemDefinition"))
