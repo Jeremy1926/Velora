@@ -93,6 +93,11 @@ bool UChannel::GetPendingDormancy() const
     static auto Offset = Anchor::Offset(TEXT("UChannel::bPendingDormancy"))
         .String(TEXT("StartBecomingDormant: %s"))
         .Start()
+        .Find("bts e*, 0x*; mov [*], e*")
+        .Find("mov [*], e*")
+        .Or()
+        .String(TEXT("StartBecomingDormant: %s"))
+        .Start()
         .Find("or dword ptr [*], 0x*")
         .Or()
         .String(TEXT("StartBecomingDormant: %s"))
@@ -102,6 +107,10 @@ bool UChannel::GetPendingDormancy() const
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("UChannel::bPendingDormancy"))
+        .String(TEXT("StartBecomingDormant: %s"))
+        .Start()
+        .Find("bts e*, 0x*; mov [*], e*")
+        .Or()
         .String(TEXT("StartBecomingDormant: %s"))
         .Start()
         .Find("or dword ptr [*], 0x*")
