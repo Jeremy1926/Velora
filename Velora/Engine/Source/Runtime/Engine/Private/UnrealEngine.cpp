@@ -100,6 +100,11 @@ bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName N
 {
     static auto CreateNamedNetDriver = Anchor::Function<bool (*)(UEngine*, UWorld*, FName, FName)>(TEXT("UEngine::CreateNamedNetDriver"))
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("call 0x*; test al, al; jz *; mov r14, [0x*]")
+        .Target()
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Last("call 0x*")
         .Target()
         .Get();
