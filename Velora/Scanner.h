@@ -92,6 +92,13 @@ namespace Scanner
                 if (auto Finish = Chunk.Find(Pattern); Finish.Get())
                 {
                     auto Body = Finish.Find("call 0x*");
+
+                    for (auto Barrier = Finish.Find("lock or *"); Body.Get() && Barrier.Get() && Barrier.Get() < Body.Get(); )
+                    {
+                        Barrier = Body.Find("lock or *");
+                        Body = Body.Find("call 0x*");
+                    }
+
                     auto Return = Finish.Find("ret*");
 
                     return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
@@ -116,6 +123,13 @@ namespace Scanner
                 if (auto Finish = Anchor::At(Chunks[Index]).Find(Pattern); Finish.Get())
                 {
                     auto Body = Finish.Find("call 0x*");
+
+                    for (auto Barrier = Finish.Find("lock or *"); Body.Get() && Barrier.Get() && Barrier.Get() < Body.Get(); )
+                    {
+                        Barrier = Body.Find("lock or *");
+                        Body = Body.Find("call 0x*");
+                    }
+
                     auto Return = Finish.Find("ret*");
 
                     return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
