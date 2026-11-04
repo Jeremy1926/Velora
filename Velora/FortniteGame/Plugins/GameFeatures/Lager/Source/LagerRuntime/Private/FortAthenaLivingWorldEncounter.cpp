@@ -198,6 +198,15 @@ FFortAthenaLivingWorldCategory*& UFortAthenaLivingWorldEncounterInstance::GetCat
         .Find("call 0x*")
         .Target()
         .Find("mov [rcx+0x*], rdx")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov r9, *; lea rdx, [*]; mov r8, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rax; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rcx+0x*], rdx")
         .Disp();
 
     return *(FFortAthenaLivingWorldCategory**)((uint8*)this + Category);
