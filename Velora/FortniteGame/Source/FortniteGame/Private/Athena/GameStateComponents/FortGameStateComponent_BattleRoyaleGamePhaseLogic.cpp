@@ -576,6 +576,8 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase(EAthenaGam
     static auto SetGamePhase = Anchor::Function<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, EAthenaGamePhase)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase"))
         .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetGamePhase")
         .Start()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:SetGamePhase"))
         .Get();
 
     SetGamePhase(this, InGamePhase);
