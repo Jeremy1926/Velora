@@ -85,6 +85,11 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
         .Start()
         .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
         .Start()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; test *, *; jz *; mov rcx, *; call 0x*; test rax, rax; jz *; cmp *[rax+0x*], *")
+        .Start()
         .Inline());
 
     static auto bIsPlayerPawnReady = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsPlayerPawnReady")));
@@ -105,6 +110,11 @@ void AFortPlayerPawnAthena::OnPlayerPawnReady()
         .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
         .Start()
         .Reference("call 0x*; mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]; test al, al")
+        .Start()
+        .Or()
+        .String(TEXT("UpdateAbilitySystemActor with no profile/world, clearing [%s]"))
+        .Start()
+        .Reference("call 0x*; mov rcx, *; call 0x*; test *, *; jz *; mov rcx, *; call 0x*; test rax, rax; jz *; cmp *[rax+0x*], *")
         .Start()
         .Get();
 
