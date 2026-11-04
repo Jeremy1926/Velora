@@ -738,6 +738,9 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
         .Has("setnz *; add [*+0x20], *; call 0x*; lea rcx, [rax+0x8]; call 0x*; and qword ptr [*], 0x0; lea rcx, [rsp+0x*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Has("call 0x*; lea rcx, [rax+0x8]; call 0x*; and qword ptr [*], 0x0; lea rcx, [rsp+0x*]; call 0x*; lea r11, [rsp+0x*]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld")));
 
