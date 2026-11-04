@@ -34,6 +34,13 @@ UWorld* UObject::GetWorld() const
         .Start()
         .Find("mov rax, [r*]; mov rax, [rax+0x*]; lea rcx, [0x*]; cmp rax, rcx")
         .Find("mov rax, [rax+0x*]")
+        .Or()
+        .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
+        .Start()
+        .Find("call 0x*; mov rcx, r*; call 0x*; mov r*, rax")
+        .Find("call 0x*")
+        .Target()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameSession"))
         .Get();
 
     return GetWorld(this);
