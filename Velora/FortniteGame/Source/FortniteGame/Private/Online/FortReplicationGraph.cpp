@@ -2458,6 +2458,15 @@ EFortDynamicNodeType& UFortReplicationGraphNode_DynamicSpatialFrequency::GetCurr
         .Find("call 0x*")
         .Target()
         .Find("mov [rax+0x*], r14b")
+        .Or()
+        .String(TEXT("UReplicationGraphNode::NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rax+0x*], r12b")
         .Disp();
 
     return *(EFortDynamicNodeType*)((uint8*)this + CurrentDynamicNodeType);
