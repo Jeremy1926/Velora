@@ -47,6 +47,13 @@ void IConsoleManager::SetupSingleton()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Last("call 0x*; mov rcx, [0x*]; jmp 0x*")
         .Call()
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
+        .Last("mov rcx, [0x*]; test rcx, rcx; jz 0x*")
+        .Find("jz 0x*")
+        .Target()
+        .Is("call 0x*")
+        .Target()
         .Get();
 
     SetupSingleton();
