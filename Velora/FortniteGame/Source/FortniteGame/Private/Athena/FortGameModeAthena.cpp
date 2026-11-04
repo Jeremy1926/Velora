@@ -182,6 +182,8 @@ TMulticastDelegate<void, AFortLiveSpectatorController*>& AFortGameModeAthena::Ge
     return *NotifyLiveSpectatorJoined;
 }
 
+static TMulticastDelegate<void, AFortPlayerStateAthena*, uint8> StrippedNotifyPlayerStateSquadAssignment;
+
 TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>* AFortGameModeAthena::GetNotifyPlayerStateSquadAssignment()
 {
     static auto NotifyPlayerStateSquadAssignment = Anchor::Data<TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>*>(TEXT("AFortGameModeAthena::NotifyPlayerStateSquadAssignment"))
@@ -193,7 +195,7 @@ TMulticastDelegate<void, AFortPlayerStateAthena*, uint8>* AFortGameModeAthena::G
         .Optional()
         .Get();
 
-    return NotifyPlayerStateSquadAssignment;
+    return NotifyPlayerStateSquadAssignment ? NotifyPlayerStateSquadAssignment : &StrippedNotifyPlayerStateSquadAssignment;
 }
 
 TMulticastDelegate<void, TSubclassOf<AFortPawn>>& AFortGameModeAthena::GetNotifyNewAIClass()
@@ -556,9 +558,14 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
         .Caller()
         .Inline());
 
+    auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;
+    auto PreviousSquadId = PlayerState ? PlayerState->GetSquadId() : (uint8)0xFF;
+
     Original(Player);
 
-    auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;
+    if (PlayerState)
+        StrippedNotifyPlayerStateSquadAssignment.Broadcast(PlayerState, PreviousSquadId);
+
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
 
     if (!PlayerState || !GameState)
