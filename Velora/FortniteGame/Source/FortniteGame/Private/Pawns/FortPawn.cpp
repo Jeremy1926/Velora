@@ -420,6 +420,9 @@ bool AFortPawn::UpdateSharedReplication()
         .Or()
         .Event(TEXT("FastSharedReplication"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"))
+        .Or()
+        .Event(TEXT("FastSharedReplication"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortAIPawn"))
         .Get();
 
     return UpdateSharedReplication(this);
