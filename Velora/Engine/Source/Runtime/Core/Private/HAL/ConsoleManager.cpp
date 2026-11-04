@@ -30,6 +30,10 @@ IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(
     .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
     .Last("mov rcx, [0x*]; test rcx, rcx")
     .Target()
+    .Or()
+    .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
+    .Last("mov rcx, [0x*]; test rcx, rcx")
+    .Target()
     .Get();
 
 void IConsoleManager::SetupSingleton()
@@ -58,6 +62,10 @@ void IConsoleManager::SetupSingleton()
         .Target()
         .Is("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
+        .Last("mov rcx, [0x*]; test rcx, rcx")
+        .Call()
         .Get();
 
     SetupSingleton();
@@ -78,6 +86,9 @@ IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
         .Find("call [*+0x*]")
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
+        .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
         .Find("call [*+0x*]")
         .Get();
 
@@ -193,6 +204,9 @@ int32 IConsoleVariable::GetInt() const
         .Find("call [*+0x*]", 2)
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; call [*+0x*]; test eax, eax")
+        .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
         .Find("call [*+0x*]", 2)
         .Get();
 
