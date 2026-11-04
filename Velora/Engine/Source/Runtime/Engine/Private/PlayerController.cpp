@@ -74,6 +74,9 @@ void APlayerController::ClientGotoState(FName NewState)
     static auto ClientGotoState = Anchor::Function<void (*)(APlayerController*, FName)>(TEXT("APlayerController::ClientGotoState"))
         .Event(TEXT("ClientGotoState"))
         .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx]; mov rdi, rcx; mov [rsp+0x38], edx; mov edx, [0x*]")
+        .Or()
+        .Event(TEXT("ClientGotoState"))
+        .Is("push rbx; sub rsp, 0x20; mov [rsp+0x38], edx; mov rbx, rcx; mov edx, [0x*]")
         .Get();
 
     if (ClientGotoState)
