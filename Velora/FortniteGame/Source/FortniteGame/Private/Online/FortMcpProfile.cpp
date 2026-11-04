@@ -12,6 +12,12 @@ void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArra
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]")
+        .Find("lea r8, [rbp-0x*]; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     GetItemInstancesForTemplate(this, Template, OutInstances);
