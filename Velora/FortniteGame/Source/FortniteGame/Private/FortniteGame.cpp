@@ -12,6 +12,11 @@ FLogCategoryBase& LogFort = *Anchor::Data<FLogCategoryBase*>(TEXT("LogFort"))
     .Start()
     .Find("cmp byte ptr [0x*], *")
     .Target()
+    .Or()
+    .String(TEXT("[%s] FortGameModeAthena:: Failed due to no start spot."))
+    .Start()
+    .Find("cmp byte ptr [0x*], *")
+    .Target()
     .Get();
 
 FLogCategoryBase& LogFortBuilding = *Anchor::Data<FLogCategoryBase*>(TEXT("LogFortBuilding"))

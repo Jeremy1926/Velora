@@ -19,6 +19,9 @@ UClass* AGameModeBase::GetDefaultPawnClassForController(AController* InControlle
         .Or()
         .String(TEXT("FortGameModeAthena:%hs: Failed due to no start spot."))
         .Call()
+        .Or()
+        .String(TEXT("[%s] FortGameModeAthena:: Failed due to no start spot."))
+        .Call()
         .Get();
 
     return GetDefaultPawnClassForController(this, InController);
@@ -33,6 +36,11 @@ APawn* AGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer,
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Or()
         .String(TEXT("FortGameModeAthena:%hs: Failed due to no start spot."))
+        .Start()
+        .Log(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .String(TEXT("[%s] FortGameModeAthena:: Failed due to no start spot."))
         .Start()
         .Log(TEXT("AFortGameModeAthena::SpawnDefaultPawnFor_Implementation"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))

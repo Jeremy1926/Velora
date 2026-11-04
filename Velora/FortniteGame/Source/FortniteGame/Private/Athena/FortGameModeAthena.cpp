@@ -386,6 +386,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         .Or()
         .String(TEXT("FortGameModeAthena:%hs: Failed due to no start spot."))
         .Start()
+        .Or()
+        .String(TEXT("[%s] FortGameModeAthena:: Failed due to no start spot."))
+        .Start()
         .Inline());
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(NewPlayer);
