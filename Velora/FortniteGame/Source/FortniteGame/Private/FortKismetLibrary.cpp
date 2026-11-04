@@ -1010,6 +1010,18 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayerByGuid(FFrame& Stack, void* 
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
         .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rsi], r14d; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("xor r12d, r12d")
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r15], r12d; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("xor r13d, r13d")
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [r12], r13d; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("xor ebp, ebp")
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov [rsi], ebp; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")));
 
