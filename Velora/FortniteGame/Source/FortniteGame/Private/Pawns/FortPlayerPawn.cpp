@@ -70,6 +70,12 @@ TMulticastDelegate<void, AFortPlayerPawn*, AFortPlayerPetRepState*, AFortPlayerP
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .FieldPattern("48 8B B9 %o 48 8B F2 48 8B D9 48 85 FF 74", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("PetState"))) : nullptr)
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPetStateChange;
