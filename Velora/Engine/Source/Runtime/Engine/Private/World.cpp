@@ -232,6 +232,11 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
         .Find("call [rax+0x*]")
         .Find("movsxd rax, dword ptr [r*+0x*]")
         .Find("mov rcx, [r*+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("movsxd *, dword ptr [*+0x*]; test *, *; jz *; mov *, [*+0x*]; imul *, *, 0x*; cmp byte ptr [*], 0x0")
+        .Find("mov *, [*+0x*]")
         .Disp();
 
     static auto LevelCollectionSize = Anchor::Offset(TEXT("FLevelCollection size"))
@@ -239,6 +244,11 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
         .Find("call r8")
         .Find("call [rax+0x*]")
         .Find("imul r*, r*, 0x*")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("movsxd *, dword ptr [*+0x*]; test *, *; jz *; mov *, [*+0x*]; imul *, *, 0x*; cmp byte ptr [*], 0x0")
+        .Find("imul *, *, 0x*")
         .Imm();
 
     if (LevelCollections <= 0 || LevelCollectionSize <= 0)
