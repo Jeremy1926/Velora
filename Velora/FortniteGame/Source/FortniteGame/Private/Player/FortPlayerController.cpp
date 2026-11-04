@@ -2066,6 +2066,11 @@ FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralG
         .Caller()
         .Find("mov r8d, *; *; call [*+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("mov r8d, *; call [*+0x*]; mov rdx, rax")
+        .Find("call [*+0x*]")
         .Get();
 
     if (!GetErrorMessageFromStructuralQuery)
