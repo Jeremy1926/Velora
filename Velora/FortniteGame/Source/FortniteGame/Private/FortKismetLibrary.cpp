@@ -1088,6 +1088,12 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
         .Find("xor r14d, r14d")
         .Find("setnz *; add [*+0x20], *; mov [rsi], r14b; call 0x*; mov rbx, [rsp+0x*]; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; mov [rsp+0x28], rax; call 0x*; mov rcx, [rbp-0x*]; mov [r14], al")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; mov [rsp+0x28], rax; call 0x*; mov rcx, [rbp-0x*]; mov [rdi], al")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")));
 
