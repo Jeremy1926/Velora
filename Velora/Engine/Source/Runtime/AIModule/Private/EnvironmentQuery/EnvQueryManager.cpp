@@ -61,6 +61,7 @@ UEnvQueryManager* UEnvQueryManager::GetCurrent(UObject* WorldContextObject)
 UEnvQueryInstanceBlueprintWrapper* UEnvQueryManager::RunEQSQuery(UObject* WorldContextObject, UEnvQuery* QueryTemplate, UObject* Querier, TEnumAsByte<EEnvQueryRunMode::Type> RunMode, TSubclassOf<UEnvQueryInstanceBlueprintWrapper> WrapperClass)
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

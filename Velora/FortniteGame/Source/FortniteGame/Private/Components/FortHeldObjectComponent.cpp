@@ -222,6 +222,7 @@ void UFortHeldObjectComponent::OnRep_OwningPawn(AFortPlayerPawn* LastOwningPawn)
 float UFortHeldObjectComponent::GetGravityScale() const
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
@@ -316,6 +317,7 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
 float UFortHeldObjectComponent::GetMaxSpeed() const
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

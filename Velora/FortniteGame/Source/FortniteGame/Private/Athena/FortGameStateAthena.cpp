@@ -372,6 +372,7 @@ UObject* AFortGameStateAthena::GetCurrentPlaylist() const
 int32 AFortGameStateAthena::GetAvgPlayerMMR() const
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

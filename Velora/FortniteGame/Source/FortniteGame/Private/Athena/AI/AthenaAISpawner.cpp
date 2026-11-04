@@ -37,6 +37,7 @@ void FOnPawnSpawnedDynamicEvent::ProcessMulticastDelegate(void* Parameters) cons
 int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISpawnerComponentList, const FTransform& SpawnTransform, const TDelegate<void(AActor*, int32)>& SpawnedCallback)
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

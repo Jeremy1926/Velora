@@ -28,6 +28,7 @@ UClass* AFortVehicleManager::StaticClass()
 bool AFortVehicleManager::GetVehicleManager(const UObject* WorldContextObject, AFortVehicleManager*& VehicleManager)
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortVehicleManager:GetVehicleManager")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortVehicleManager:GetVehicleManager"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

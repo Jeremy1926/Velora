@@ -27,6 +27,7 @@ UClass* UFortControllerComponent_InventoryService::StaticClass()
 UCurveTable* UFortControllerComponent_InventoryService::GetDefaultCurrencyPayoutTable()
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
@@ -59,6 +60,7 @@ UFortResourceItemDefinition* UFortControllerComponent_InventoryService::GetDefau
 UFortControllerComponent_InventoryService* UFortControllerComponent_InventoryService::GetInventoryServiceComponent(AFortPlayerController* FortPC)
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent"))
         .Find("setnz *")
         .Find("add [*+0x20], *")

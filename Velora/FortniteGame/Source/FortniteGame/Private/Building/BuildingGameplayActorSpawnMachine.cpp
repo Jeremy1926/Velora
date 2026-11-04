@@ -352,6 +352,7 @@ void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn
 bool ABuildingGameplayActorSpawnMachine::RebootPlayersInAir() const
 {
     static auto bInlined = Anchor::Exists()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
