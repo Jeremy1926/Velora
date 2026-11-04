@@ -81,6 +81,10 @@ bool TPersistentObjectPtr<FSoftObjectPath>::HasTagAtLastTest()
         .Or()
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
         .Find("lea rcx, [rsi+0x10]; *; *; mov [rsi+0x8], r*; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("lea rcx, [rsi+0x10]")
+        .Find("mov [rsi+0x8], r*")
         .Get();
 
     return bTagAtLastTest;
