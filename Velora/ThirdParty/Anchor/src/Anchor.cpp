@@ -623,6 +623,42 @@ namespace Anchor
         return Match(Text, Pattern);
     }
 
+    static bool IsFrameFinishClang()
+    {
+        static auto bClang = FindPattern("48 83 F8 01 48 83 D8 FF") != nullptr;
+
+        return bClang;
+    }
+
+    static bool IsFrameFinishStep(const uint8_t* Address, ZydisMnemonic Mnemonic, ZydisRegister Register, int64_t Value)
+    {
+        FInstruction Instruction;
+
+        return Decode(Address, Instruction) && Instruction.Info.length == 4 && Instruction.Info.mnemonic == Mnemonic && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_REGISTER && Instruction.Operands[0].reg.value == Register && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Instruction.Operands[1].imm.value.s == Value;
+    }
+
+    static bool MatchFrameFinish(const uint8_t* Address, const FInstruction& Instruction, std::string_view Pattern)
+    {
+        static const char* const LowBytes[] = { "al", "cl", "dl", "bl", "spl", "bpl", "sil", "dil", "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b" };
+        char Text[sizeof(Instruction.Text) + 8];
+
+        if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_SBB && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetClass(Instruction.Operands[0].reg.value) == ZYDIS_REGCLASS_GPR64 && IsFrameFinishStep(Address, ZYDIS_MNEMONIC_SBB, Instruction.Operands[0].reg.value, -1) && IsFrameFinishStep(Address - 4, ZYDIS_MNEMONIC_CMP, Instruction.Operands[0].reg.value, 1) && IsFrameFinishClang())
+        {
+            snprintf(Text, sizeof(Text), "setnz %s", LowBytes[ZydisRegisterGetId(Instruction.Operands[0].reg.value)]);
+
+            return Match(Text, Pattern);
+        }
+
+        if (Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Instruction.Operands[0].type == ZYDIS_OPERAND_TYPE_MEMORY && Instruction.Operands[0].mem.index == ZYDIS_REGISTER_NONE && Instruction.Operands[0].mem.disp.value == 0x20 && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetClass(Instruction.Operands[1].reg.value) == ZYDIS_REGCLASS_GPR64 && IsFrameFinishStep(Address - 4, ZYDIS_MNEMONIC_SBB, Instruction.Operands[1].reg.value, -1) && IsFrameFinishStep(Address - 8, ZYDIS_MNEMONIC_CMP, Instruction.Operands[1].reg.value, 1) && IsFrameFinishClang())
+        {
+            snprintf(Text, sizeof(Text), "add%s", Instruction.Text + 3);
+
+            return Match(Text, Pattern);
+        }
+
+        return false;
+    }
+
     static bool Matches(const uint8_t* Address, std::string_view Instructions)
     {
         FInstruction Instruction;
@@ -632,7 +668,7 @@ namespace Anchor
             auto Separator = Instructions.find("; ");
             auto Pattern = Instructions.substr(0, Separator);
 
-            if (!Decode(Address, Instruction) || (!Match(Instruction.Text, Pattern) && !MatchSwapped(Instruction, Pattern)))
+            if (!Decode(Address, Instruction) || (!Match(Instruction.Text, Pattern) && !MatchSwapped(Instruction, Pattern) && !MatchFrameFinish(Address, Instruction, Pattern)))
                 return false;
 
             if (Separator == std::string_view::npos)
