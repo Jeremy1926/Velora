@@ -1947,6 +1947,10 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea rbx, [rsi+0x*]; mov rdx, rdi; mov rcx, rbx; call 0x*")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("lea r12, [r*+0x*]; mov rdx, r*; mov rcx, r12; call 0x*")
         .Optional()
         .Disp();
 
