@@ -426,7 +426,7 @@ public:
 
     int32& GetConnectionOrderNum();
 
-    int32& GetConnectionId();
+    int32* GetConnectionId();
 
     FGlobalActorReplicationInfoMap*& GetGlobalMap();
 

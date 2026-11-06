@@ -86,7 +86,7 @@ int32& UNetReplicationGraphConnection::GetConnectionOrderNum()
     return *(int32*)((uint8*)this + ConnectionOrderNum);
 }
 
-int32& UNetReplicationGraphConnection::GetConnectionId()
+int32* UNetReplicationGraphConnection::GetConnectionId()
 {
     static auto bConnectionIdStoreGone = Anchor::Exists()
         .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
@@ -128,7 +128,7 @@ int32& UNetReplicationGraphConnection::GetConnectionId()
         .Get();
 
     if (bConnectionIdStoreGone)
-        return *(&GetConnectionOrderNum() + 1);
+        return nullptr;
 
     static auto ConnectionId = Anchor::Offset(TEXT("UNetReplicationGraphConnection::ConnectionId"))
         .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
@@ -141,7 +141,7 @@ int32& UNetReplicationGraphConnection::GetConnectionId()
         .Find("mov [*+0x*], ecx", 2)
         .Disp();
 
-    return *(int32*)((uint8*)this + ConnectionId);
+    return (int32*)((uint8*)this + ConnectionId);
 }
 
 FGlobalActorReplicationInfoMap*& UNetReplicationGraphConnection::GetGlobalMap()
@@ -228,7 +228,10 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
 
 TArray<FLastLocationGatherInfo>& UNetReplicationGraphConnection::GetLastGatherLocations()
 {
-    return *(TArray<FLastLocationGatherInfo>*)(((uintptr_t)&GetConnectionId() + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+    auto ConnectionId = GetConnectionId();
+    auto PreviousField = ConnectionId ? (uintptr_t)ConnectionId : (uintptr_t)&GetConnectionOrderNum();
+
+    return *(TArray<FLastLocationGatherInfo>*)((PreviousField + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
 }
 
 TMulticastDelegate<void, UNetReplicationGraphConnection*, FPrioritizedRepList*>& UNetReplicationGraphConnection::GetOnPostReplicatePrioritizeLists()
@@ -4756,7 +4759,10 @@ UNetReplicationGraphConnection* UReplicationGraph::CreateClientConnectionManager
     auto NewConnectionManager = NewObject<UNetReplicationGraphConnection>(this, ConnectionManagerClass && ConnectionManagerClass->IsChildOf(UNetReplicationGraphConnection::StaticClass()) ? ConnectionManagerClass : nullptr);
 
     NewConnectionManager->GetConnectionOrderNum() = GetConnections().Num() + GetPendingConnectionManagers().Num();
-    NewConnectionManager->GetConnectionId() = NewConnectionManager->GetConnectionOrderNum();
+
+    if (auto ConnectionId = NewConnectionManager->GetConnectionId())
+        *ConnectionId = NewConnectionManager->GetConnectionOrderNum();
+
     NewConnectionManager->InitForGraph(this);
     NewConnectionManager->InitForConnection(Connection);
 
