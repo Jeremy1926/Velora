@@ -450,7 +450,17 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
     }
 
     if (!PlayerController->GetWorldInventory())
-        PlayerController->RebuildInventoriesIfNeeded();
+    {
+        auto WorldInventoryClass = PlayerController->GetWorldInventoryClass();
+
+        FActorSpawnParameters SpawnParameters;
+        SpawnParameters.Owner = PlayerController;
+
+        PlayerController->GetWorldInventory() = (AFortInventory*)GetWorld()->SpawnActor(WorldInventoryClass && WorldInventoryClass->IsChildOf(AFortInventory::StaticClass()) ? WorldInventoryClass : AFortInventory::StaticClass(), nullptr, nullptr, SpawnParameters);
+
+        if (PlayerController->GetWorldInventory())
+            PlayerController->GetWorldInventory()->GetInventoryType() = EFortInventoryType::World;
+    }
 
     auto Pawn = AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
     auto PlayerState = Cast<AFortPlayerState>(NewPlayer->GetPlayerState());

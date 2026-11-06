@@ -1401,15 +1401,11 @@ AFortInventory*& AFortPlayerController::GetWorldInventory()
     return *WorldInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
 }
 
-void AFortPlayerController::RebuildInventoriesIfNeeded()
+UClass* AFortPlayerController::GetWorldInventoryClass()
 {
-    static auto RebuildInventoriesIfNeeded = Anchor::Optional<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::RebuildInventoriesIfNeeded"))
-        .String(TEXT("RebuildInventoriesIfNeeded releasing world inventory for %s"))
-        .Start()
-        .Get();
+    static auto WorldInventoryClass = GetClass()->FindPropertyByName(FName(TEXT("WorldInventoryClass")));
 
-    if (RebuildInventoriesIfNeeded)
-        RebuildInventoriesIfNeeded(this);
+    return *WorldInventoryClass->ContainerPtrToValuePtr<UClass*>(this);
 }
 
 AFortPlayerController*& AFortPlayerController::GetLastDamager()

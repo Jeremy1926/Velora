@@ -188,7 +188,7 @@ public:
 
     AFortInventory*& GetWorldInventory();
 
-    void RebuildInventoriesIfNeeded();
+    UClass* GetWorldInventoryClass();
 
     AFortPlayerController*& GetLastDamager();
 
