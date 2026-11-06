@@ -1401,6 +1401,17 @@ AFortInventory*& AFortPlayerController::GetWorldInventory()
     return *WorldInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
 }
 
+void AFortPlayerController::RebuildInventoriesIfNeeded()
+{
+    static auto RebuildInventoriesIfNeeded = Anchor::Optional<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::RebuildInventoriesIfNeeded"))
+        .String(TEXT("RebuildInventoriesIfNeeded releasing world inventory for %s"))
+        .Start()
+        .Get();
+
+    if (RebuildInventoriesIfNeeded)
+        RebuildInventoriesIfNeeded(this);
+}
+
 AFortPlayerController*& AFortPlayerController::GetLastDamager()
 {
     static auto LastDamager = GetClass()->FindPropertyByName(FName(TEXT("LastDamager")));

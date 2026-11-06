@@ -188,6 +188,8 @@ public:
 
     AFortInventory*& GetWorldInventory();
 
+    void RebuildInventoriesIfNeeded();
+
     AFortPlayerController*& GetLastDamager();
 
     AFortPlayerController*& GetLastFallInstigator();

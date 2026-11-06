@@ -449,6 +449,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         return nullptr;
     }
 
+    if (!PlayerController->GetWorldInventory())
+        PlayerController->RebuildInventoriesIfNeeded();
+
     auto Pawn = AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
     auto PlayerState = Cast<AFortPlayerState>(NewPlayer->GetPlayerState());
 
