@@ -441,10 +441,13 @@ int64 UNetReplicationGraphConnection::ReplicateDormantDestructionInfos()
 
 FActorRepListRefView& UNetReplicationGraphConnection::GetPrevDormantActorListForNode(const UReplicationGraphNode* GridNode)
 {
-    auto QueuedBitsForActorDiscovery = (uintptr_t)&GetLastGatherLocations() + sizeof(TArray<FLastLocationGatherInfo>);
-    auto& PrevDormantActorListPerNode = *(TMap<FObjectKey, FActorRepListRefView>*)((QueuedBitsForActorDiscovery + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1));
+    auto QueuedBitsForActorDiscovery = (uintptr_t)&GetQueuedBitsForActorDiscovery();
+    auto PrevDormantActorListPerNode = (QueuedBitsForActorDiscovery + sizeof(int32) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1);
 
-    return PrevDormantActorListPerNode.FindOrAdd(FObjectKey(GridNode));
+    if (((uintptr_t)&GetConnectionGraphNodes() - PrevDormantActorListPerNode) % sizeof(TMap<FObjectKey, FActorRepListRefView>))
+        PrevDormantActorListPerNode = (QueuedBitsForActorDiscovery + sizeof(int32) + sizeof(FRepGraphConnectionSaturationAnalytics) + alignof(void*) - 1) & ~(uintptr_t)(alignof(void*) - 1);
+
+    return (*(TMap<FObjectKey, FActorRepListRefView>*)PrevDormantActorListPerNode).FindOrAdd(FObjectKey(GridNode));
 }
 
 TArray<FCachedDormantDestructInfo>& UNetReplicationGraphConnection::GetPendingDormantDestructList()

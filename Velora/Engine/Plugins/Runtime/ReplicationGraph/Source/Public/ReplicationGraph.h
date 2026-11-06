@@ -417,6 +417,12 @@ private:
     FActorRepListRefView& GetReplicationActorList();
 };
 
+struct FRepGraphConnectionSaturationAnalytics
+{
+    uint32 LongestRunOfSaturatedReplications;
+    uint32 CurrentRunOfSaturatedReplications;
+};
+
 class UNetReplicationGraphConnection : public UReplicationConnectionDriver
 {
 public:
