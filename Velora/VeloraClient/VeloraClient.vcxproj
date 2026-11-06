@@ -247,6 +247,8 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Player.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectBaseUtility.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CharacterMovementComponent.cpp" />
     <ClCompile Include="Engine\Source\Runtime\Engine\Private\Actor.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />

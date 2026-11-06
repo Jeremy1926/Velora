@@ -25,10 +25,11 @@ void APlayerController::SendClientAdjustment()
         return SendClientAdjustment(this);
 
     static auto NetworkPredictionInterfaceClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.NetworkPredictionInterface"));
+    static auto RemoteRole = APawn::StaticClass()->FindPropertyByName(FName(TEXT("RemoteRole")));
 
     APawn* RemotePawn = GetPawnOrSpectator();
 
-    if (RemotePawn && RemotePawn->GetRemoteRole() == ROLE_AutonomousProxy && !IsNetMode(NM_Client))
+    if (RemotePawn && (ENetRole)*RemoteRole->ContainerPtrToValuePtr<uint8>(RemotePawn) == ROLE_AutonomousProxy)
     {
         auto MovementComponent = RemotePawn->GetMovementComponent();
         auto NetworkPredictionInterface = MovementComponent ? MovementComponent->GetInterfaceAddress(NetworkPredictionInterfaceClass) : nullptr;
