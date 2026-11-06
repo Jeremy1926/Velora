@@ -1355,7 +1355,34 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("call [rax+0x*]")
             .Get();
 
-        if (!ItemDefinition || !InventoryOwner || !IsQuickbarItemType(GetItemType(ItemDefinition)))
+        static auto ItemTypeInterfaceCall = Anchor::Address()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rcx, [*+0x*]; mov rax, [rcx]; call [rax+0x*]; mov cl, al; call 0x*")
+            .Optional()
+            .Get();
+
+        if (!ItemDefinition || !InventoryOwner)
+            return;
+
+        uint8 ItemType;
+
+        if (ItemTypeInterfaceCall)
+        {
+            static auto ItemTypeInterfaceOffset = ::Anchor::At(ItemTypeInterfaceCall).Disp();
+            static auto ItemTypeSlot = ::Anchor::At(ItemTypeInterfaceCall).Find("call [rax+0x*]").Disp();
+
+            auto ItemTypeInterface = (const uint8*)ItemDefinition + ItemTypeInterfaceOffset;
+
+            ItemType = (*(uint8 (**)(const void*))(*(const uint8* const*)ItemTypeInterface + ItemTypeSlot))(ItemTypeInterface);
+        }
+        else
+        {
+            ItemType = GetItemType(ItemDefinition);
+        }
+
+        if (!IsQuickbarItemType(ItemType))
             return;
 
         static auto ItemVariantHandleStruct = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ItemVariantHandle"));
