@@ -2,6 +2,7 @@
 #include "UObject/Field.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 FFieldClass* FField::StaticClass()
@@ -50,4 +51,16 @@ bool FFieldVariant::IsTaggedPointer()
     }();
 
     return bTaggedPointer;
+}
+
+UProperty* UArrayProperty::GetInner() const
+{
+    static auto Inner = Anchor::Offset(TEXT("FArrayProperty::Inner"))
+        .String(TEXT("TARRAY"))
+        .Start()
+        .Find("mov rcx, [rcx+0x*]")
+        .Optional()
+        .Disp();
+
+    return Inner > 0 ? *(UProperty* const*)((const uint8*)this + Inner) : GetProperty()->Inner;
 }

@@ -132,10 +132,7 @@ private:
 class UArrayProperty : public UProperty
 {
 public:
-    FORCEINLINE UProperty* GetInner() const
-    {
-        return GetProperty()->Inner;
-    }
+    UProperty* GetInner() const;
 
 private:
     FORCEINLINE const UArrayProperty* GetProperty() const
