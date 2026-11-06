@@ -178,6 +178,8 @@ public:
 
     void SetNetServerMaxTickRate(int32 InNetServerMaxTickRate);
 
+    void SetClampListenServerTickRate(bool bInClampListenServerTickRate);
+
     void SetMaxClientRate(int32 InMaxClientRate);
 
     float GetServerTravelPause() const;

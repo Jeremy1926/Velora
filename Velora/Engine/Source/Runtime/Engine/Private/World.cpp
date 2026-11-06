@@ -408,6 +408,8 @@ bool UWorld::Listen(FURL& InURL)
     if (!LanPlay && (GetNetDriver()->GetMaxInternetClientRate() < GetNetDriver()->GetMaxClientRate()) && (GetNetDriver()->GetMaxInternetClientRate() > 2500))
         GetNetDriver()->SetMaxClientRate(GetNetDriver()->GetMaxInternetClientRate());
 
+    GetNetDriver()->SetClampListenServerTickRate(true);
+
     SetNextSwitchCountdown(GetNetDriver()->GetServerTravelPause());
 
     return true;
