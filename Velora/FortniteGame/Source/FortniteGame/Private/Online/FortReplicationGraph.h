@@ -115,6 +115,8 @@ public:
 
     void InitForNetDriver(UNetDriver* InNetDriver);
 
+    bool ProcessRemoteFunction(AActor* Actor, UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack, UObject* SubObject);
+
     void InitializeForWorld(UWorld* World);
 
     void InitConnectionGraphNodes(UNetReplicationGraphConnection* ConnectionManager);

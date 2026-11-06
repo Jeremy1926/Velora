@@ -418,6 +418,21 @@ void UFortReplicationGraph::InitForNetDriver(UNetDriver* InNetDriver)
     Original(InNetDriver);
 }
 
+bool UFortReplicationGraph::ProcessRemoteFunction(AActor* Actor, UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack, UObject* SubObject)
+{
+    DETOUR(UFortReplicationGraph, ProcessRemoteFunction, Anchor::Hook()
+        .String(TEXT("UFortReplicationGraph::ProcessRemoteFunction has potentially run out of replication channels!"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"))
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov al, 0x1; ret*")
+        .Optional()
+        .InChildVTables(UFortReplicationGraph::StaticClass()));
+
+    Original(Actor, Function, Parameters, OutParms, Stack, SubObject);
+
+    return UReplicationGraph::ProcessRemoteFunction(Actor, Function, Parameters, OutParms, Stack, SubObject);
+}
+
 void UFortReplicationGraph::InitializeForWorld(UWorld* World)
 {
     DETOUR(UFortReplicationGraph, InitializeForWorld, Anchor::Hook()
