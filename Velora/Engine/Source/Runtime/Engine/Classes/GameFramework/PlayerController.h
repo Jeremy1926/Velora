@@ -19,6 +19,10 @@ public:
 
     APawn* GetAcknowledgedPawn() const;
 
+    APawn* GetSpectatorPawn() const;
+
+    APawn* GetPawnOrSpectator() const;
+
     UCheatManager* GetCheatManager() const;
 
     void SetCheatManager(UCheatManager* InCheatManager);

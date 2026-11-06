@@ -4,6 +4,7 @@
 
 class AController;
 class APlayerState;
+class UActorComponent;
 
 class APawn : public AActor
 {
@@ -13,4 +14,6 @@ public:
     AController* GetController() const;
 
     APlayerState* GetPlayerState() const;
+
+    UActorComponent* GetMovementComponent() const;
 };

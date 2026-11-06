@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/CheatManager.h"
+#include "GameFramework/Pawn.h"
+#include "Components/ActorComponent.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -16,9 +18,24 @@ void APlayerController::SendClientAdjustment()
         .Or()
         .Event(TEXT("ClientRecvServerAckFrame"))
         .InVirtual(TEXT("/Script/Engine.Default__PlayerController"), TEXT("APlayerController::SendClientAdjustment"))
+        .Optional()
         .Get();
 
-    SendClientAdjustment(this);
+    if (SendClientAdjustment)
+        return SendClientAdjustment(this);
+
+    static auto NetworkPredictionInterfaceClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.NetworkPredictionInterface"));
+
+    APawn* RemotePawn = GetPawnOrSpectator();
+
+    if (RemotePawn && RemotePawn->GetRemoteRole() == ROLE_AutonomousProxy && !IsNetMode(NM_Client))
+    {
+        auto MovementComponent = RemotePawn->GetMovementComponent();
+        auto NetworkPredictionInterface = MovementComponent ? MovementComponent->GetInterfaceAddress(NetworkPredictionInterfaceClass) : nullptr;
+
+        if (NetworkPredictionInterface)
+            (*(void (***)(void*))NetworkPredictionInterface)[2](NetworkPredictionInterface);
+    }
 }
 
 void APlayerController::ServerAcknowledgePossession_Implementation(APawn* P)
@@ -88,6 +105,18 @@ APawn* APlayerController::GetAcknowledgedPawn() const
     static auto AcknowledgedPawn = GetClass()->FindPropertyByName(FName(TEXT("AcknowledgedPawn")));
 
     return *AcknowledgedPawn->ContainerPtrToValuePtr<APawn*>(this);
+}
+
+APawn* APlayerController::GetSpectatorPawn() const
+{
+    static auto SpectatorPawn = GetClass()->FindPropertyByName(FName(TEXT("SpectatorPawn")));
+
+    return *SpectatorPawn->ContainerPtrToValuePtr<APawn*>(this);
+}
+
+APawn* APlayerController::GetPawnOrSpectator() const
+{
+    return GetPawn() ? GetPawn() : GetSpectatorPawn();
 }
 
 UCheatManager* APlayerController::GetCheatManager() const
