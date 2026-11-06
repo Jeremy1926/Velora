@@ -16,6 +16,7 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
 UClass* ABuildingSMActor::StaticClass()
@@ -300,7 +301,10 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
 
 void ABuildingSMActor::AttemptSpawnResources(const FBuildingSMActorAttemptSpawnResourcesParams& Params)
 {
-    AttemptSpawnResources(Params.InstigatorPawn, Params.ActualDamageDealt, Params.bJustHitWeakspot);
+    static auto InstigatorPawn = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingSMActorAttemptSpawnResourcesParams")))->FindPropertyByName(FName(TEXT("InstigatorPawn")));
+    static auto bWeakInstigatorPawn = InstigatorPawn->IsWeakObjectProperty();
+
+    AttemptSpawnResources(bWeakInstigatorPawn ? (AFortPawn*)InstigatorPawn->ContainerPtrToValuePtr<FWeakObjectPtr>(&Params)->Get() : Params.InstigatorPawn, Params.ActualDamageDealt, Params.bJustHitWeakspot);
 }
 
 float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
