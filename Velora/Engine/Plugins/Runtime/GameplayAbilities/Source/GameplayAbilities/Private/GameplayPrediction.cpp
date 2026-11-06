@@ -36,7 +36,7 @@ FScopedPredictionWindow::FScopedPredictionWindow(UAbilitySystemComponent* Abilit
         .Start()
         .Find("call 0x*")
         .IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov rdi, rcx; call 0x*; movzx eax, word ptr [rbx+0x8]")
-        .Find("call 0x*", 2)
+        .Find("call 0x*")
         .Target()
         .Get();
 
