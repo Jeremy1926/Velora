@@ -253,8 +253,8 @@ struct FFortAlwaysRelevantActorInfo
     }
 
     const UNetConnection* Connection;
-    AActor* LastPawn;
-    AActor* LastTetherPawn;
+    TWeakObjectPtr<AActor> LastPawn;
+    TWeakObjectPtr<AActor> LastTetherPawn;
 };
 
 class UFortReplicationGraphNode_AlwaysRelevant_ForConnection : public UReplicationGraphNode

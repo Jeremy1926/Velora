@@ -2136,7 +2136,7 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
 
         if (auto Pawn = Cast<AFortPawn>(PlayerController->GetPawn()))
         {
-            if (Pawn != LastData->LastPawn)
+            if (Pawn != LastData->LastPawn.Get())
             {
                 LastData->LastPawn = Pawn;
 
@@ -2151,9 +2151,9 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
             for (auto Weapon : Pawn->GetCurrentWeaponList())
                 ReplicationActorList.ConditionalAdd((AActor*)Weapon);
         }
-        else if (CurViewer.InViewer == CurViewer.ViewTarget && LastData->LastPawn)
+        else if (CurViewer.InViewer == CurViewer.ViewTarget && LastData->LastPawn.Get())
         {
-            ReplicationActorList.ConditionalAdd(LastData->LastPawn);
+            ReplicationActorList.ConditionalAdd(LastData->LastPawn.Get());
         }
 
         AActor* TetherPawn = nullptr;
@@ -2169,9 +2169,9 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
             ReplicationActorList.ConditionalAdd(TetherPawn);
         }
 
-        if (CurViewer.ViewTarget != LastData->LastPawn && Cast<AFortPawn>(CurViewer.ViewTarget))
+        if (CurViewer.ViewTarget != LastData->LastPawn.Get() && Cast<AFortPawn>(CurViewer.ViewTarget))
         {
-            auto LastPawn = Cast<AFortPawn>(LastData->LastPawn);
+            auto LastPawn = Cast<AFortPawn>(LastData->LastPawn.Get());
 
             if (LastPawn && LastPawn != TetherPawn)
                 LastPawn->UpdateCullDistance();
@@ -2185,7 +2185,7 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
 
         if (TetherPawn)
         {
-            if (TetherPawn != LastData->LastTetherPawn)
+            if (TetherPawn != LastData->LastTetherPawn.Get())
             {
                 LastData->LastTetherPawn = TetherPawn;
 
@@ -2194,11 +2194,11 @@ void UFortReplicationGraphNode_AlwaysRelevant_ForConnection::GatherActorListsFor
                 ActorInfo.ReplicationPeriodFrame = 1;
             }
         }
-        else if (LastData->LastTetherPawn)
+        else if (LastData->LastTetherPawn.Get())
         {
-            auto LastTetherPawn = Cast<AFortPawn>(LastData->LastTetherPawn);
+            auto LastTetherPawn = Cast<AFortPawn>(LastData->LastTetherPawn.Get());
 
-            if (LastTetherPawn && LastTetherPawn != LastData->LastPawn)
+            if (LastTetherPawn && LastTetherPawn != LastData->LastPawn.Get())
                 LastTetherPawn->UpdateCullDistance();
 
             LastData->LastTetherPawn = nullptr;
@@ -2733,7 +2733,7 @@ void UFortReplicationGraphNode_LiveSpectator::GatherActorListsForConnection(cons
             if (Cast<AFortPlayerPawn>(ViewTarget))
                 LastData->LastPawn = ViewTarget;
             else
-                ViewTarget = LastData->LastPawn;
+                ViewTarget = LastData->LastPawn.Get();
         }
 
         if (!ViewTarget || !IsActorValidForReplication(ViewTarget) || ProcessedViewTargets.Contains(ViewTarget))
