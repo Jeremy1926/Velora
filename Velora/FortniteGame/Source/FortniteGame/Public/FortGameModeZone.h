@@ -25,5 +25,5 @@ public:
 
     bool ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, EFortWeaponAbilityRemovalReason Reason) const;
 
-    TArray<FItemAndCount>& GetStartingItems();
+    TArray<FItemAndCount> GetStartingItems();
 };

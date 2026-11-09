@@ -247,9 +247,19 @@ bool AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, 
     return ShouldWeaponRemoveGrantedAbilities(this, Weapon, Reason);
 }
 
-TArray<FItemAndCount>& AFortGameModeZone::GetStartingItems()
+TArray<FItemAndCount> AFortGameModeZone::GetStartingItems()
 {
-    static auto StartingItems = GetClass()->FindPropertyByName(FName(TEXT("StartingItems")));
+    static auto StartingItems = (UArrayProperty*)GetClass()->FindPropertyByName(FName(TEXT("StartingItems")));
+    static auto ElementSize = StartingItems->GetInner()->GetSize();
 
-    return *StartingItems->ContainerPtrToValuePtr<TArray<FItemAndCount>>(this);
+    if (ElementSize == sizeof(FItemAndCount))
+        return *StartingItems->ContainerPtrToValuePtr<TArray<FItemAndCount>>(this);
+
+    auto& RawItems = *StartingItems->ContainerPtrToValuePtr<TArray<uint8>>(this);
+    TArray<FItemAndCount> ItemsAndCounts;
+
+    for (int32 Index = 0; Index < RawItems.Num(); Index++)
+        ItemsAndCounts.Add(*(FItemAndCount*)(RawItems.GetData() + Index * ElementSize));
+
+    return ItemsAndCounts;
 }
