@@ -179,6 +179,11 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnAircrafts()
         return;
     }
 
+    auto MapInfo = GameState->GetMapInfo();
+
+    if (MapInfo && MapInfo->IsMapInfoValidForAircraft() && MapInfo->GetFlightInfos().Num() == 0)
+        MapInfo->InitializeFlightPath(GameState, this, false, 0.0f, 0.0f, 360.0f);
+
     for (int32 Index = 0; Index < AircraftCount; Index++)
         GetAircrafts_GameMode().Add(AFortAthenaAircraft::SpawnAircraft(GameState->GetWorld(), Index));
 }
