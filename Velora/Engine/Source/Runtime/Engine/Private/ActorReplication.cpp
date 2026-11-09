@@ -46,6 +46,12 @@ bool AActor::GetNetDormancy(const FVector& ViewPos, const FVector& ViewDir, AAct
 void AActor::CallPreReplication(UNetDriver* NetDriver)
 {
     static auto CallPreReplication = Anchor::Function<void (*)(AActor*, UNetDriver*)>(TEXT("AActor::CallPreReplication"))
+        .String(TEXT("Attempt to replicate function '%s' on Actor '%s' while it is in the middle of variable replication!"))
+        .Find("add [*], *; mov rdx, rax; mov rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Is("test rdx, rdx; jz 0x*")
+        .Or()
         .String(TEXT("Actor %s took more than 95%% of maximum desired recording time. Actor: %.3fms. Max: %.3fms."))
         .Is("lea *, [0x*]")
         .Last("xor r9d, r9d")
