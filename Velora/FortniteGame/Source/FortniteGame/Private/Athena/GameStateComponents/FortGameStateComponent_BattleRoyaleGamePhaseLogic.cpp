@@ -107,6 +107,8 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StartWarmupPhase()
     if (Playlist && bSkipWarmup->GetPropertyValue_InContainer(Playlist))
         return false;
 
+    InitializeSafeZoneLocations();
+
     if (Playlist && bSkipAircraft->GetPropertyValue_InContainer(Playlist))
         SetGameModeWillSkipAircraft(true);
     else
@@ -156,6 +158,36 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateWarmupPhase()
 
     if (OnWarmupCountdownEndTimeUpdated)
         OnWarmupCountdownEndTimeUpdated->ContainerPtrToValuePtr<FMulticastScriptDelegate>(GameState)->ProcessMulticastDelegate<UObject>(&NewWarmupCountdownEndTime);
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSafeZoneLocations()
+{
+    static auto SetSafeZoneLocations = Anchor::Function<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, const void*)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations"))
+        .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations")
+        .Start()
+        .Get();
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto MapInfo = GameState ? GameState->GetMapInfo() : nullptr;
+
+    if (!MapInfo)
+        return;
+
+    TArray<uint8> SafeZoneLocations;
+
+    MapInfo->GenerateSafeZoneLocations(SafeZoneLocations, MapInfo->GetActorLocation(), 0);
+
+    if (SafeZoneLocations.Num() == 0)
+        return;
+
+    struct
+    {
+        const uint8* Data;
+        int32 ArrayNum;
+        int32 ArrayMax;
+    } Locations{ SafeZoneLocations.GetData(), SafeZoneLocations.Num() / TGameLayout<FVector>::Size(), SafeZoneLocations.Num() / TGameLayout<FVector>::Size() };
+
+    SetSafeZoneLocations(this, &Locations);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnAircrafts()

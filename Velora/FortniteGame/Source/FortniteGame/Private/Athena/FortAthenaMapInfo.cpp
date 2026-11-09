@@ -268,6 +268,50 @@ const FScalableFloat& AFortAthenaMapInfo::GetSafeZoneStartDelay() const
     return *SafeZoneStartDelay->ContainerPtrToValuePtr<FScalableFloat>(this);
 }
 
+void AFortAthenaMapInfo::GenerateSafeZoneLocations(TArray<uint8>& OutLocations, const FVector& MapCenter, int32 BaseSafeZoneIndex)
+{
+    static auto ConstructSafeZoneLocationParams = Anchor::Function<void* (*)(AFortAthenaMapInfo*, void*, int32, const TGameValue<FVector>&, const TGameValue<FVector>&, bool, int32)>(TEXT("AFortAthenaMapInfo::ConstructSafeZoneLocationParams"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaMapInfo:ConstructSafeZoneLocationParams"))
+        .Get();
+
+    static auto PickSafeZoneLocation = Anchor::Function<TGameValue<FVector>* (*)(AFortAthenaMapInfo*, TGameValue<FVector>*, const void*, const void*)>(TEXT("AFortAthenaMapInfo::PickSafeZoneLocation"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaMapInfo:PickSafeZoneLocation"))
+        .Get();
+
+    const int32 SafeZoneCount = GetSafeZoneCount();
+
+    if (SafeZoneCount <= 0)
+        return;
+
+    OutLocations.Reset();
+    OutLocations.AddUninitialized(SafeZoneCount * TGameLayout<FVector>::Size());
+    memset(OutLocations.GetData(), 0, OutLocations.Num());
+    TGameLayout<FVector>::Store(OutLocations.GetData(), MapCenter);
+
+    TArray<uint8> BlacklistLocations;
+
+    for (int32 SafeZoneIndex = SafeZoneCount - 1; SafeZoneIndex > BaseSafeZoneIndex; SafeZoneIndex--)
+    {
+        const bool bFinalPhase = SafeZoneIndex == SafeZoneCount - 1;
+        const int32 NextIndex = bFinalPhase ? 0 : SafeZoneIndex + 1;
+        const TGameValue<FVector> NextLocation(TGameLayout<FVector>::Load(OutLocations.GetData() + NextIndex * TGameLayout<FVector>::Size()));
+        alignas(16) uint8 Params[0x100]{};
+        TGameValue<FVector> Location;
+
+        ConstructSafeZoneLocationParams(this, Params, SafeZoneIndex, TGameValue<FVector>(MapCenter), NextLocation, bFinalPhase, BaseSafeZoneIndex);
+
+        auto PickedLocation = PickSafeZoneLocation(this, &Location, Params, &BlacklistLocations);
+
+        if (!PickedLocation)
+        {
+            OutLocations.Reset();
+            return;
+        }
+
+        TGameLayout<FVector>::Store(OutLocations.GetData() + SafeZoneIndex * TGameLayout<FVector>::Size(), PickedLocation->Get());
+    }
+}
+
 int32 AFortAthenaMapInfo::GetSafeZoneCount() const
 {
     static auto Count = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSafeZoneDefinition")))->FindPropertyByName(FName(TEXT("Count")))->GetOffset_ForInternal();

@@ -35,6 +35,8 @@ public:
 
     void SpawnAircrafts();
 
+    void InitializeSafeZoneLocations();
+
     void TryToProceedToAircraftPhase();
 
     bool StartAircraftPhase(bool bSkippedWarmup);

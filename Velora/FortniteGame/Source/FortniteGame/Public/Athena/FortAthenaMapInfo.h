@@ -72,5 +72,7 @@ public:
 
     int32 GetSafeZoneCount() const;
 
+    void GenerateSafeZoneLocations(TArray<uint8>& OutLocations, const FVector& MapCenter, int32 BaseSafeZoneIndex);
+
     const uint8* GetSafeZoneDefinition() const;
 };
