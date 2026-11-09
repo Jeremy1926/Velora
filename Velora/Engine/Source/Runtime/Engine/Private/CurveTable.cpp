@@ -39,6 +39,8 @@ FRealCurve* UCurveTable::FindCurve(FName RowName, const FString& ContextString, 
         .String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s)."), "lea rdx, [0x*]; lea rcx, [0x*]; call 0x*; lea rcx, [rsp+0x*]")
         .Start()
         .Is("mov [rsp+0x8], rbx; mov [rsp+0x18], rsi; mov [rsp+0x10], edx")
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 74 24 18 89 54 24 10 57 48 83 EC 50 4D 8B D8 4C 8B D1 85 D2 0F 84 ? ? ? ? 44 0F B7 C2 8B CA C1 E9 10")
         .Get();
 
     return FindCurve(this, RowName, ContextString, bWarnIfNotFound);
