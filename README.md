@@ -2,7 +2,7 @@
 
 Universal gameserver for Fortnite.
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20the%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/nrTrnQFa3W)
+[![Discord](https://img.shields.io/badge/Discord-Join%20the%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/7my9RAyuw4)
 
 > Not affiliated with Epic Games.
 
