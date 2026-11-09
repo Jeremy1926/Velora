@@ -66,6 +66,8 @@ struct FZiplinePawnState
 
     void SetPreviousZipline(UObject* InPreviousZipline);
 
+    bool IsZiplining() const;
+
     int32 GetAuthoritativeValue() const;
 };
 

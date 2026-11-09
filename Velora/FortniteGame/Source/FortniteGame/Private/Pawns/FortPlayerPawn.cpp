@@ -788,6 +788,13 @@ void FZiplinePawnState::SetPreviousZipline(UObject* InPreviousZipline)
         *PreviousZipline->ContainerPtrToValuePtr<UObject*>(this) = InPreviousZipline;
 }
 
+bool FZiplinePawnState::IsZiplining() const
+{
+    static auto bIsZiplining = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsZiplining")));
+
+    return bIsZiplining && bIsZiplining->GetPropertyValue_InContainer(this);
+}
+
 int32 FZiplinePawnState::GetAuthoritativeValue() const
 {
     static auto AuthoritativeValue = StaticStruct()->FindPropertyByName(FName(TEXT("AuthoritativeValue")));
@@ -826,7 +833,11 @@ UStatManager* FFortClientObservedStatArray::GetMyStatManager() const
 
 void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnState& InZiplineState)
 {
+    static auto ZiplinePostBegin = StaticClass()->FindPropertyByName(FName(TEXT("ZiplinePostBegin")));
+
     auto& ZiplineState = GetZiplineState();
+    auto bWasZiplining = ZiplineState.IsZiplining();
+    auto PreviousZipline = ZiplineState.GetZipline();
 
     if (InZiplineState.GetAuthoritativeValue() > ZiplineState.GetAuthoritativeValue())
     {
@@ -839,6 +850,9 @@ void AFortPlayerPawn::ServerSendZiplineState_Implementation(const FZiplinePawnSt
     }
 
     HandleZiplineStateChanged();
+
+    if (ZiplinePostBegin && ZiplineState.IsZiplining() && (!bWasZiplining || ZiplineState.GetZipline() != PreviousZipline))
+        ZiplinePostBegin->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(nullptr);
 }
 
 void AFortPlayerPawn::HandleZiplineStateChanged()
