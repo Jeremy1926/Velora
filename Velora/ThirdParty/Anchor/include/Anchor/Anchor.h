@@ -359,6 +359,9 @@ namespace Anchor
 
         FunctionType Get() const
         {
+            if (this->bMissing)
+                return nullptr;
+
             auto Address = this->Code.Get(this->Name);
 
             return (FunctionType)(Address ? (const void*)Address : (const void*)&Private::NullFunction);
