@@ -4149,7 +4149,23 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
         GetFrameReplicationStats().NumReplicatedCleanActors++;
 
     if (Config::bLogReplication && (bOpenedChannel || bWantsToGoDormant))
-        UE_LOG(LogVelora, Log, TEXT("Rep send %s frame %u bits %lld opened %d dormant %d"), *Actor->GetName(), FrameNum, BitsWritten, (int32)bOpenedChannel, (int32)bWantsToGoDormant);
+    {
+        auto BuildingAnimation = Actor->GetClass()->FindPropertyByName(FName(TEXT("BuildingAnimation")));
+        auto bUnderConstruction = (UBoolProperty*)Actor->GetClass()->FindPropertyByName(FName(TEXT("bUnderConstruction")));
+        auto bDestroyed = (UBoolProperty*)Actor->GetClass()->FindPropertyByName(FName(TEXT("bDestroyed")));
+        auto ProxyGameplayCueDamage = Actor->GetClass()->FindPropertyByName(FName(TEXT("ProxyGameplayCueDamage")));
+
+        if (BuildingAnimation && bUnderConstruction && bDestroyed && ProxyGameplayCueDamage)
+        {
+            auto Cue = ProxyGameplayCueDamage->ContainerPtrToValuePtr<uint32>(Actor);
+
+            UE_LOG(LogVelora, Log, TEXT("Rep send %s frame %u bits %lld opened %d dormant %d anim %d construction %d destroyed %d cue %08X %08X %08X %08X"), *Actor->GetName(), FrameNum, BitsWritten, (int32)bOpenedChannel, (int32)bWantsToGoDormant, (int32)*BuildingAnimation->ContainerPtrToValuePtr<uint8>(Actor), (int32)bUnderConstruction->GetPropertyValue_InContainer(Actor), (int32)bDestroyed->GetPropertyValue_InContainer(Actor), Cue[0], Cue[1], Cue[2], Cue[3]);
+        }
+        else
+        {
+            UE_LOG(LogVelora, Log, TEXT("Rep send %s frame %u bits %lld opened %d dormant %d"), *Actor->GetName(), FrameNum, BitsWritten, (int32)bOpenedChannel, (int32)bWantsToGoDormant);
+        }
+    }
 
     const bool bIsTrafficActorDiscovery = GetActorDiscoveryMaxBitsPerFrame() > 0 && (ActorInfo.Channel && ActorInfo.Channel->GetSpawnAcked() == false);
     const bool bIsActorDiscoveryBudgetFull = bIsTrafficActorDiscovery && (ConnectionManager.GetQueuedBitsForActorDiscovery() >= GetActorDiscoveryMaxBitsPerFrame());

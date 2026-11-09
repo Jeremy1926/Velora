@@ -502,7 +502,7 @@ void UFortReplicationGraph::RouteAddNetworkActorToNodes(const FNewReplicatedActo
     const auto Policy = GetMappingPolicy(ActorInfo.Class, ActorInfo.Actor);
 
     if (Config::bLogReplication)
-        UE_LOG(LogVelora, Log, TEXT("Rep add %s policy %d dormant %d"), *ActorInfo.Actor->GetName(), (int32)Policy, (int32)GlobalInfo.GetWantsToBeDormant());
+        UE_LOG(LogVelora, Log, TEXT("Rep add %s policy %d dormant %d initialized %d"), *ActorInfo.Actor->GetName(), (int32)Policy, (int32)GlobalInfo.GetWantsToBeDormant(), (int32)ActorInfo.Actor->IsActorInitialized());
 
     if (Policy >= EClassRepNodeMapping::Spatialize_Static)
     {
