@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ReplicationGraph.h"
+#include "Config.h"
 #include "Containers/ArrayView.h"
 #include "Engine/ActorChannel.h"
 #include "Engine/NetConnection.h"
@@ -4117,6 +4118,7 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
     FScopedActorRoleSwap SwapGuard(GlobalActorInfo.GetSwapRolesOnReplicate() ? Actor : nullptr);
 
     const bool bWantsToGoDormant = GlobalActorInfo.GetWantsToBeDormant();
+    const bool bOpenedChannel = ActorInfo.Channel == nullptr;
 
     if (ActorInfo.Channel == nullptr)
     {
@@ -4145,6 +4147,9 @@ int64 UReplicationGraph::ReplicateSingleActor(AActor* Actor, FConnectionReplicat
 
     if (!(BitsWritten > 0))
         GetFrameReplicationStats().NumReplicatedCleanActors++;
+
+    if (Config::bLogReplication && (bOpenedChannel || bWantsToGoDormant))
+        UE_LOG(LogVelora, Log, TEXT("Rep send %s frame %u bits %lld opened %d dormant %d"), *Actor->GetName(), FrameNum, BitsWritten, (int32)bOpenedChannel, (int32)bWantsToGoDormant);
 
     const bool bIsTrafficActorDiscovery = GetActorDiscoveryMaxBitsPerFrame() > 0 && (ActorInfo.Channel && ActorInfo.Channel->GetSpawnAcked() == false);
     const bool bIsActorDiscoveryBudgetFull = bIsTrafficActorDiscovery && (ConnectionManager.GetQueuedBitsForActorDiscovery() >= GetActorDiscoveryMaxBitsPerFrame());
@@ -4378,6 +4383,9 @@ bool UReplicationGraph::ProcessRemoteFunction(AActor* Actor, UFunction* Function
         }
 
         RepLayout->ClearSharedSerializationForRPC();
+
+        if (Config::bLogReplication)
+            UE_LOG(LogVelora, Log, TEXT("Rep multicast %s on %s flush %d"), *Function->GetName(), *Actor->GetName(), (int32)ForceFlushNetDormancy);
 
         if (ForceFlushNetDormancy)
             Actor->FlushNetDormancy();

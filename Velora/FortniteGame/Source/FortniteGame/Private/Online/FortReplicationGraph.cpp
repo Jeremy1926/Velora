@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortReplicationGraph.h"
 #include "FortTeamActorInterface.h"
+#include "Config.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
@@ -500,6 +501,9 @@ void UFortReplicationGraph::RouteAddNetworkActorToNodes(const FNewReplicatedActo
 
     const auto Policy = GetMappingPolicy(ActorInfo.Class, ActorInfo.Actor);
 
+    if (Config::bLogReplication)
+        UE_LOG(LogVelora, Log, TEXT("Rep add %s policy %d dormant %d"), *ActorInfo.Actor->GetName(), (int32)Policy, (int32)GlobalInfo.GetWantsToBeDormant());
+
     if (Policy >= EClassRepNodeMapping::Spatialize_Static)
     {
         auto RootGridNode = GetRootGridNode();
@@ -561,6 +565,9 @@ void UFortReplicationGraph::RouteRemoveNetworkActorToNodes(const FNewReplicatedA
         .InChildVTables(UFortReplicationGraph::StaticClass()));
 
     const auto Policy = GetMappingPolicy(ActorInfo.Class, ActorInfo.Actor);
+
+    if (Config::bLogReplication)
+        UE_LOG(LogVelora, Log, TEXT("Rep remove %s policy %d"), *ActorInfo.Actor->GetName(), (int32)Policy);
 
     if (Policy == EClassRepNodeMapping::Spatialize_Static)
         GetRootGridNode()->RemoveActor_Static(ActorInfo);
