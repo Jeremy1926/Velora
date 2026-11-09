@@ -68,12 +68,19 @@ void UConversationLibrary::execStartConversation(FFrame& Stack, void* const Z_Pa
     FGameplayTag InstigatorTag;
     AActor* Target = nullptr;
     FGameplayTag TargetTag;
+    UClass* ConversationInstanceClass = nullptr;
+
+    static auto ConversationInstanceClassParam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CommonDialogueRuntime.ConversationLibrary:StartConversation")))->FindPropertyByName(FName(TEXT("ConversationInstanceClass")));
 
     Stack.StepCompiledIn(&ConversationEntryTag);
     Stack.StepCompiledIn(&Instigator);
     Stack.StepCompiledIn(&InstigatorTag);
     Stack.StepCompiledIn(&Target);
     Stack.StepCompiledIn(&TargetTag);
+
+    if (ConversationInstanceClassParam)
+        Stack.StepCompiledIn(&ConversationInstanceClass);
+
     Stack.Code += !!Stack.Code;
 
     *(UConversationInstance**)Z_Param__Result = StartConversation(ConversationEntryTag, Instigator, InstigatorTag, Target, TargetTag);

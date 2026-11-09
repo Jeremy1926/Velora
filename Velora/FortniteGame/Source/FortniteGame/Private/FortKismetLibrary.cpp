@@ -102,6 +102,7 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
     static auto bHasItemLevel = Function->FindPropertyByName(FName(TEXT("ItemLevel"))) != nullptr;
     static auto bHasPickupInstigatorHandle = Function->FindPropertyByName(FName(TEXT("PickupInstigatorHandle"))) != nullptr;
     static auto bHasUseItemPickupAnalyticEvent = Function->FindPropertyByName(FName(TEXT("bUseItemPickupAnalyticEvent"))) != nullptr;
+    static auto bHasWeaponAmmoOverride = Function->FindPropertyByName(FName(TEXT("WeaponAmmoOverride"))) != nullptr;
 
     TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner;
     UFortWorldItemDefinition* ItemDefinition = nullptr;
@@ -111,6 +112,7 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
     int32 ItemLevel = 0;
     int32 PickupInstigatorHandle = 0;
     uint32 bUseItemPickupAnalyticEvent = 0;
+    int32 WeaponAmmoOverride = 0;
 
     Stack.StepCompiledIn(&InventoryOwner);
     Stack.StepCompiledIn(&ItemDefinition);
@@ -129,6 +131,9 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
 
     if (bHasUseItemPickupAnalyticEvent)
         Stack.StepCompiledIn(&bUseItemPickupAnalyticEvent);
+
+    if (bHasWeaponAmmoOverride)
+        Stack.StepCompiledIn(&WeaponAmmoOverride);
 
     Stack.Code += !!Stack.Code;
 
