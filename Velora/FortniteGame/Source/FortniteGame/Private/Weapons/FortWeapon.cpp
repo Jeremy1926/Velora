@@ -277,3 +277,17 @@ float& AFortWeapon::GetLastFireTimeVerified()
 
     return *LastFireTimeVerified->ContainerPtrToValuePtr<float>(this);
 }
+
+UFortGameplayAbility* AFortWeapon::GetActiveAbility() const
+{
+    static auto ActiveAbility = StaticClass()->FindPropertyByName(FName(TEXT("ActiveAbility")));
+
+    return ActiveAbility ? *ActiveAbility->ContainerPtrToValuePtr<UFortGameplayAbility*>(this) : nullptr;
+}
+
+FGameplayAbilitySpecHandle AFortWeapon::GetPrimaryAbilitySpecHandle() const
+{
+    static auto PrimaryAbilitySpecHandle = StaticClass()->FindPropertyByName(FName(TEXT("PrimaryAbilitySpecHandle")));
+
+    return PrimaryAbilitySpecHandle ? *PrimaryAbilitySpecHandle->ContainerPtrToValuePtr<FGameplayAbilitySpecHandle>(this) : FGameplayAbilitySpecHandle();
+}

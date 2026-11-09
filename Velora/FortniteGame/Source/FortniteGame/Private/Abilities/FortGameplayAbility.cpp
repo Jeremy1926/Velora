@@ -110,3 +110,34 @@ TWeakObjectPtr<AFortWeapon>& UFortGameplayAbility::GetAbilityWeapon()
 
     return *(TWeakObjectPtr<AFortWeapon>*)((uint8_t*)this + AbilityWeapon);
 }
+
+TArray<FActiveGameplayEffectHandle> UFortGameplayAbility::ApplyGameplayEffectContainer(const FGameplayAbilityTargetDataHandle& TargetData, FGameplayTag ApplicationTag, int32 GameplayEffectLevel)
+{
+    static auto ApplyGameplayEffectContainer = Anchor::VirtualFunction<TArray<FActiveGameplayEffectHandle>* (*)(UFortGameplayAbility*, TArray<FActiveGameplayEffectHandle>*, const FGameplayAbilityTargetDataHandle*, FGameplayTag, int32)>(TEXT("UFortGameplayAbility::ApplyGameplayEffectContainer"))
+        .Exec(TEXT("/Script/FortniteGame.FortGameplayAbility:ApplyGameplayEffectContainer"))
+        .Find("add [*+0x20], *")
+        .Find("mov rsi, [rax+0x*]")
+        .Get();
+
+    TArray<FActiveGameplayEffectHandle> Handles;
+
+    ApplyGameplayEffectContainer(this, &Handles, &TargetData, ApplicationTag, GameplayEffectLevel);
+
+    return Handles;
+}
+
+float UFortGameplayAbility::GetCurrentAbilitySourceLevel()
+{
+    static auto GetCurrentAbilitySourceLevel = Anchor::Function<void (*)(UFortGameplayAbility*, float*)>(TEXT("UFortGameplayAbility::GetCurrentAbilitySourceLevel"))
+        .String(TEXT("STAT_FortGA_Ranged_OnTargetDataReadyCB"))
+        .Find("lea rdx, [rsp+0x*]; mov rcx, rsi; call 0x*; mov rax, [rsi]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    float Level = 0.0f;
+
+    GetCurrentAbilitySourceLevel(this, &Level);
+
+    return Level;
+}

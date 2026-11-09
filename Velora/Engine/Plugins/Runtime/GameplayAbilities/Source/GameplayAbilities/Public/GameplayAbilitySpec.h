@@ -74,6 +74,8 @@ struct alignas(8) FGameplayAbilitySpec : public FFastArraySerializerItem
 
     uint8 PendingRemove : 1;
 
+    UGameplayAbility* GetPrimaryInstance() const;
+
     static UScriptStruct* StaticStruct();
 
     static int32 GetTypeSize();

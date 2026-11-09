@@ -3,8 +3,10 @@
 #include "GameFramework/Actor.h"
 #include "Misc/Guid.h"
 #include "UObject/WeakObjectPtr.h"
+#include "GameplayAbilitySpec.h"
 
 struct FFrame;
+class UFortGameplayAbility;
 class UFortItemDefinition;
 class UFortWeaponItemDefinition;
 enum class EFortWeaponType : uint8;
@@ -59,4 +61,8 @@ public:
     FGuid& GetItemEntryGuid();
 
     float& GetLastFireTimeVerified();
+
+    UFortGameplayAbility* GetActiveAbility() const;
+
+    FGameplayAbilitySpecHandle GetPrimaryAbilitySpecHandle() const;
 };
