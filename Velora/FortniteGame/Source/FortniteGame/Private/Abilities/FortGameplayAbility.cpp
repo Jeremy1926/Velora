@@ -8,6 +8,7 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
