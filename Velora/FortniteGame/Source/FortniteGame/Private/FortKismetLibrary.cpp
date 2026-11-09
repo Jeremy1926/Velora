@@ -1102,12 +1102,14 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")));
 
     static auto WorldContextObjectParam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("WorldContextObject")));
+    static auto OptionalLootTagsParam = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")))->FindPropertyByName(FName(TEXT("OptionalLootTags")));
 
     UObject* WorldContextObject = nullptr;
     TArray<FFortItemEntry> LootToDropTemp;
     FName TierGroupName = NAME_None;
     int32 WorldLevel = 0;
     int32 ForcedLootTier = 0;
+    FGameplayTagContainer OptionalLootTagsTemp;
 
     if (WorldContextObjectParam)
         Stack.StepCompiledIn(&WorldContextObject);
@@ -1116,6 +1118,10 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
     Stack.StepCompiledIn(&TierGroupName);
     Stack.StepCompiledIn(&WorldLevel);
     Stack.StepCompiledIn(&ForcedLootTier);
+
+    if (OptionalLootTagsParam)
+        Stack.StepCompiledInRef<FGameplayTagContainer>(&OptionalLootTagsTemp);
+
     Stack.Code += !!Stack.Code;
 
     *(bool*)Z_Param__Result = PickLootDrops(&OutLootToDrop, TierGroupName, WorldLevel, ForcedLootTier);
