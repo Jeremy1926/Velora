@@ -51,5 +51,5 @@ void AFortWeaponRanged::ServerNotifyPawnHit_Implementation(const FHitResult& Hit
     FMemory::Memzero(TargetData.GetData(), TargetData.Num());
 
     Ability->MakeTargetDataHandleFromHitResults(*(FGameplayAbilityTargetDataHandle*)TargetData.GetData(), Hit);
-    Ability->ApplyGameplayEffectContainer(*(FGameplayAbilityTargetDataHandle*)TargetData.GetData(), FGameplayTag(), (int32)Ability->GetCurrentAbilitySourceLevel());
+    Ability->ApplyGameplayEffectContainer(*(FGameplayAbilityTargetDataHandle*)TargetData.GetData(), Ability->GetEffectContainerApplicationTag(), (int32)Ability->GetCurrentAbilitySourceLevel());
 }

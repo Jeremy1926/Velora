@@ -27,4 +27,6 @@ public:
     TArray<FActiveGameplayEffectHandle> ApplyGameplayEffectContainer(const FGameplayAbilityTargetDataHandle& TargetData, FGameplayTag ApplicationTag, int32 GameplayEffectLevel);
 
     float GetCurrentAbilitySourceLevel();
+
+    FGameplayTag GetEffectContainerApplicationTag() const;
 };

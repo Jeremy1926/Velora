@@ -141,3 +141,10 @@ float UFortGameplayAbility::GetCurrentAbilitySourceLevel()
 
     return Level;
 }
+
+FGameplayTag UFortGameplayAbility::GetEffectContainerApplicationTag() const
+{
+    static auto EffectContainers = StaticClass()->FindPropertyByName(FName(TEXT("EffectContainers")));
+
+    return EffectContainers ? *EffectContainers->ContainerPtrToValuePtr<FGameplayTag>(this) : FGameplayTag();
+}
