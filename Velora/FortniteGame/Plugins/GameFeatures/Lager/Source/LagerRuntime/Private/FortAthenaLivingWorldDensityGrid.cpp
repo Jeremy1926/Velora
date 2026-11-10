@@ -872,3 +872,17 @@ int32 FFortAthenaLivingWorldDensityGrid::MovePreRegistration(int32 Handle, const
 
     return PreRegisterActor(Location, DensityRange, DensityValue);
 }
+
+void FFortAthenaLivingWorldDensityGrid::RemoveRegistration(int32& Handle)
+{
+    static auto RemoveRegistration = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, int32*)>(TEXT("FFortAthenaLivingWorldDensityGrid::RemoveRegistration"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 3)
+        .Target()
+        .Get();
+
+    RemoveRegistration(this, &Handle);
+}

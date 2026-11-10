@@ -2362,6 +2362,47 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     ProcessPendingEventRequests();
     ProcessEventRuntimeEQSSpawns();
     UpdateSpawnedActors();
+    TickDestroyedActorDensities();
+}
+
+void UFortAthenaLivingWorldManager::TickDestroyedActorDensities()
+{
+    static auto DestroyedActorTagDensities = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::DestroyedActorTagDensities"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("xor r8d, r8d; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [r15+0x*]; movss [rbp+0x*], xmm6; mov [rbp+0x*], eax; call 0x*")
+        .Disp();
+
+    auto World = GetWorld();
+
+    if (!World || DestroyedActorTagDensities <= 0)
+        return;
+
+    auto TagDensities = (uint8*)this + DestroyedActorTagDensities;
+    const float Now = World->GetTimeSeconds();
+
+    for (int32 Index = 0; Index < *(int32*)(TagDensities + 0x8); Index++)
+    {
+        auto AllocationFlags = *(uint32**)(TagDensities + 0x20) ? *(uint32**)(TagDensities + 0x20) : (uint32*)(TagDensities + 0x10);
+        auto TagDensity = *(uint8**)TagDensities + Index * 0xC;
+
+        if (Index >= *(int32*)(TagDensities + 0x28) || !(AllocationFlags[Index / 32] & (1u << (Index % 32))) || !(Now > *(float*)(TagDensity + 0x4)))
+            continue;
+
+        if (auto TagDensityGrid = GetTagDensityGrid(((const TGameValue<FGameplayTag>*)TagDensity)->Get()))
+            TagDensityGrid->RemoveRegistration(*(int32*)(TagDensity + 0x8));
+
+        if (*(int32*)(TagDensities + 0x34) > 0)
+            *(int32*)(*(uint8**)TagDensities + *(int32*)(TagDensities + 0x30) * 0xC) = Index;
+
+        *(int32*)TagDensity = INDEX_NONE;
+        *(int32*)(TagDensity + 0x4) = *(int32*)(TagDensities + 0x34) > 0 ? *(int32*)(TagDensities + 0x30) : INDEX_NONE;
+        *(int32*)(TagDensities + 0x30) = Index;
+        (*(int32*)(TagDensities + 0x34))++;
+        AllocationFlags[Index / 32] &= ~(1u << (Index % 32));
+    }
 }
 
 void UFortAthenaLivingWorldManager::ProcessEventRuntimeEQSSpawns()

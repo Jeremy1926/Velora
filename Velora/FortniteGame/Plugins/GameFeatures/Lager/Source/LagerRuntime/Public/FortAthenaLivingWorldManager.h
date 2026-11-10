@@ -319,6 +319,8 @@ public:
 
     void UpdateSpawnedActors();
 
+    void TickDestroyedActorDensities();
+
     void ProcessEventRuntimeEQSSpawns();
 
     void OnEventRuntimeEQSFinished(TSharedPtr<FEnvQueryResult> Result);
