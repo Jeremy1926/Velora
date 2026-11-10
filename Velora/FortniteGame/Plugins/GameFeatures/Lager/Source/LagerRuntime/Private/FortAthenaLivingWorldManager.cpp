@@ -46,6 +46,8 @@ TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRequest> UFortAthenaLivin
 
 TArray<UFortAthenaLivingWorldManager::FLivingWorldPendingEQSSpawn> UFortAthenaLivingWorldManager::PendingEQSSpawns;
 
+TArray<UFortAthenaLivingWorldManager::FEventRuntimeEQSSpawn> UFortAthenaLivingWorldManager::PendingEventRuntimeEQSSpawns;
+
 int32 UFortAthenaLivingWorldManager::NextEQSSpawnRequestID = INDEX_NONE;
 
 TArray<UFortAthenaLivingWorldManager::FLivingWorldActorUpdateInfo> UFortAthenaLivingWorldManager::ActorToDespawnQueue;
@@ -2358,7 +2360,169 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
 
     UpdateEncounterInstancesFromRuntimes();
     ProcessPendingEventRequests();
+    ProcessEventRuntimeEQSSpawns();
     UpdateSpawnedActors();
+}
+
+void UFortAthenaLivingWorldManager::ProcessEventRuntimeEQSSpawns()
+{
+    for (int32 Index = PendingEventRuntimeEQSSpawns.Num() - 1; Index >= 0; Index--)
+    {
+        if (!PendingEventRuntimeEQSSpawns[Index].LivingWorldManager.Get())
+            PendingEventRuntimeEQSSpawns.RemoveAt(Index);
+    }
+
+    for (int32 Index = 0; Index < PendingEventRuntimeEQSSpawns.Num(); Index++)
+    {
+        auto& EQSSpawn = PendingEventRuntimeEQSSpawns[Index];
+
+        if (EQSSpawn.LivingWorldManager.Get() != this)
+            continue;
+
+        if (EQSSpawn.QueryID != INDEX_NONE && GetWorld()->GetTimeSeconds() < EQSSpawn.QueryStartTime + 5.0f)
+            return;
+
+        auto EQSHelper = GetEQSHelper();
+        auto RootComponent = EQSHelper ? EQSHelper->GetRootComponent() : nullptr;
+        auto EnvironmentQuery = (UEnvQuery*)EQSSpawn.EnvironmentQuery.Get();
+
+        if (EQSSpawn.QueryID == INDEX_NONE && RootComponent && EnvironmentQuery)
+        {
+            RootComponent->K2_SetWorldLocationAndRotation(EQSSpawn.DefaultPosition, EQSSpawn.DefaultRotation, false, true);
+
+            FEnvQueryRequest QueryRequest(EnvironmentQuery, EQSHelper);
+            EQSSpawn.QueryStartTime = GetWorld()->GetTimeSeconds();
+            EQSSpawn.QueryID = QueryRequest.Execute((EEnvQueryRunMode::Type)EQSSpawn.RunMode, FQueryFinishedSignature::CreateUObject(this, &UFortAthenaLivingWorldManager::OnEventRuntimeEQSFinished));
+
+            if (EQSSpawn.QueryID != INDEX_NONE)
+                return;
+        }
+
+        const FEventRuntimeEQSSpawn FailedEQSSpawn = EQSSpawn;
+        PendingEventRuntimeEQSSpawns.RemoveAt(Index);
+
+        FinishEventRuntimeEQSSpawn(FailedEQSSpawn, nullptr);
+        return;
+    }
+}
+
+void UFortAthenaLivingWorldManager::OnEventRuntimeEQSFinished(TSharedPtr<FEnvQueryResult> Result)
+{
+    if (!Result.IsValid())
+        return;
+
+    int32 Index = INDEX_NONE;
+
+    for (int32 SpawnIndex = 0; SpawnIndex < PendingEventRuntimeEQSSpawns.Num(); SpawnIndex++)
+    {
+        if (PendingEventRuntimeEQSSpawns[SpawnIndex].LivingWorldManager.Get() == this && PendingEventRuntimeEQSSpawns[SpawnIndex].QueryID == Result->QueryID)
+        {
+            Index = SpawnIndex;
+            break;
+        }
+    }
+
+    if (Index == INDEX_NONE)
+        return;
+
+    const int32 ItemCount = Result->Items.Num();
+    const int32 EventRequestID = PendingEventRuntimeEQSSpawns[Index].EventRequestID;
+    TArray<int32> UsedItems;
+
+    for (bool bFirst = true; Index < PendingEventRuntimeEQSSpawns.Num(); bFirst = false)
+    {
+        if (!bFirst && (PendingEventRuntimeEQSSpawns[Index].LivingWorldManager.Get() != this || PendingEventRuntimeEQSSpawns[Index].EventRequestID != EventRequestID || !PendingEventRuntimeEQSSpawns[Index].bSharePreviousActorEQSResult || PendingEventRuntimeEQSSpawns[Index].QueryID != INDEX_NONE))
+            break;
+
+        const FEventRuntimeEQSSpawn EQSSpawn = PendingEventRuntimeEQSSpawns[Index];
+        PendingEventRuntimeEQSSpawns.RemoveAt(Index);
+
+        if (ItemCount <= 0 || ItemCount <= UsedItems.Num())
+        {
+            FinishEventRuntimeEQSSpawn(EQSSpawn, nullptr);
+            continue;
+        }
+
+        int32 Item = 0;
+
+        if (EQSSpawn.RunMode != EEnvQueryRunMode::AllMatching)
+        {
+            while (UsedItems.Contains(Item))
+                Item++;
+        }
+        else
+        {
+            const int32 FreeItemCount = ItemCount - UsedItems.Num();
+
+            Item = FMath::Min(FMath::TruncToInt(FMath::FRand() * FreeItemCount), FreeItemCount - 1);
+
+            for (int32 Candidate = 0; Candidate <= Item; Candidate++)
+            {
+                if (UsedItems.Contains(Candidate))
+                    Item++;
+            }
+        }
+
+        const FVector Location = Result->GetItemAsLocation(Item);
+
+        UsedItems.Add(Item);
+        FinishEventRuntimeEQSSpawn(EQSSpawn, &Location);
+    }
+}
+
+void UFortAthenaLivingWorldManager::FinishEventRuntimeEQSSpawn(const FEventRuntimeEQSSpawn& EQSSpawn, const FVector* Location)
+{
+    FPendingActorSpawnEventRequest* PendingRequest = nullptr;
+    FPendingActorSpawnEventRequest::FActorInfo* ActorInfo = nullptr;
+
+    for (auto& PendingActorSpawnRequest : GetPendingActorSpawnRequests())
+    {
+        for (auto& PendingActorInfo : PendingActorSpawnRequest.ActorInfos)
+        {
+            if (PendingActorInfo.RequestID == EQSSpawn.RequestID)
+            {
+                PendingRequest = &PendingActorSpawnRequest;
+                ActorInfo = &PendingActorInfo;
+            }
+        }
+    }
+
+    if (!Location || !ActorInfo)
+    {
+        OnActorSpawned(nullptr, EQSSpawn.RequestID);
+        return;
+    }
+
+    ActorInfo->Location[0] = Location->X;
+    ActorInfo->Location[1] = Location->Y;
+    ActorInfo->Location[2] = Location->Z;
+
+    if (auto ActorDensityGrid = GetActorDensityGrid())
+        ActorInfo->PreRegistrationHandle = ActorDensityGrid->MovePreRegistration(ActorInfo->PreRegistrationHandle, *Location);
+
+    if (EQSSpawn.bUpdateDefaultPosition)
+    {
+        PendingRequest->Location[0] = Location->X;
+        PendingRequest->Location[1] = Location->Y;
+        PendingRequest->Location[2] = Location->Z;
+
+        for (auto& PendingEQSSpawn : PendingEventRuntimeEQSSpawns)
+        {
+            if (PendingEQSSpawn.LivingWorldManager.Get() == this && PendingEQSSpawn.EventRequestID == EQSSpawn.EventRequestID)
+                PendingEQSSpawn.DefaultPosition = *Location;
+        }
+    }
+
+    auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem());
+    auto AISpawner = AISystem ? AISystem->GetAISpawner() : nullptr;
+    AActor* SpawnedActor = nullptr;
+    bool bCompleted = false;
+    const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, *Location, EQSSpawn.DefaultRotation, EQSSpawn.SpawnerDataClass.Get(), EQSSpawn.ActorClass.Get(), EQSSpawn.EventData.Get(), SpawnedActor, bCompleted);
+
+    ActorInfo->RequestID = RequestID;
+
+    if (bCompleted)
+        OnActorSpawned(SpawnedActor, RequestID);
 }
 
 void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
@@ -3478,6 +3642,7 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
     auto& PendingRequest = *(FPendingActorSpawnEventRequest*)PendingRequestStorage;
     TArray<FVector> Locations;
     TArray<FRotator> Rotations;
+    TArray<UObject*> EnvironmentQueries;
     bool bHasDefaultLocation = false;
     FVector DefaultLocation(ForceInit);
     FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
@@ -3574,6 +3739,7 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
 
         Locations.Add(Location);
         Rotations.Add(Rotation);
+        EnvironmentQueries.Add(ActorDescription.bSpawnAroundDefaultPoint && GetEQSHelper() ? ActorDescription.SpawnAroundEnvironmentQuery.Get() : nullptr);
     }
 
     bool bValidRequest = PendingRequest.ActorInfos.Num() == EventRequest.ActorCount && PendingRequest.ActorInfos.Num() > 0;
@@ -3623,13 +3789,40 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         auto ActorClass = PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].ActorClass;
         AActor* SpawnedActor = nullptr;
         bool bCompleted = false;
-        const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, Locations[Index], Rotations[Index], SpawnerDataClass, ActorClass, EventDataRuntime->EventData.Get(), SpawnedActor, bCompleted);
 
-        PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].RequestID = RequestID;
+        if (EnvironmentQueries[Index])
+        {
+            static auto NextEQSRequestID = -0x40000000;
 
-        SpawnedActors.Add(SpawnedActor);
-        RequestIDs.Add(RequestID);
-        CompletedRequests.Add(bCompleted);
+            auto& ActorDescription = SpawnData->ActorDescriptions[PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].Index];
+            FEventRuntimeEQSSpawn EQSSpawn;
+
+            EQSSpawn.LivingWorldManager = this;
+            EQSSpawn.SpawnerDataClass = SpawnerDataClass;
+            EQSSpawn.ActorClass = ActorClass;
+            EQSSpawn.EnvironmentQuery = EnvironmentQueries[Index];
+            EQSSpawn.EventData = EventDataRuntime->EventData.Get();
+            EQSSpawn.DefaultPosition = DefaultLocation;
+            EQSSpawn.DefaultRotation = DefaultRotation;
+            EQSSpawn.EventRequestID = EventRequest.RequestID;
+            EQSSpawn.RequestID = NextEQSRequestID--;
+            EQSSpawn.RunMode = ActorDescription.Pad58[0];
+            EQSSpawn.bUpdateDefaultPosition = (&ActorDescription.bSpawnAroundDefaultPoint)[1];
+            EQSSpawn.bSharePreviousActorEQSResult = (&ActorDescription.bSpawnAroundDefaultPoint)[2];
+
+            PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].RequestID = EQSSpawn.RequestID;
+            PendingEventRuntimeEQSSpawns.Add(EQSSpawn);
+        }
+        else
+        {
+            const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, Locations[Index], Rotations[Index], SpawnerDataClass, ActorClass, EventDataRuntime->EventData.Get(), SpawnedActor, bCompleted);
+
+            PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].RequestID = RequestID;
+
+            SpawnedActors.Add(SpawnedActor);
+            RequestIDs.Add(RequestID);
+            CompletedRequests.Add(bCompleted);
+        }
 
         if (SpawnerDataClass)
         {

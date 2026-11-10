@@ -263,6 +263,24 @@ public:
         bool bHasPointProvider;
     };
 
+    struct FEventRuntimeEQSSpawn
+    {
+        TWeakObjectPtr<UFortAthenaLivingWorldManager> LivingWorldManager;
+        TWeakObjectPtr<UClass> SpawnerDataClass;
+        TWeakObjectPtr<UClass> ActorClass;
+        TWeakObjectPtr<UObject> EnvironmentQuery;
+        TWeakObjectPtr<UObject> EventData;
+        FVector DefaultPosition = FVector(ForceInit);
+        FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
+        int32 EventRequestID = INDEX_NONE;
+        int32 RequestID = INDEX_NONE;
+        int32 QueryID = INDEX_NONE;
+        float QueryStartTime = 0.0f;
+        uint8 RunMode = 0;
+        bool bUpdateDefaultPosition = false;
+        bool bSharePreviousActorEQSResult = false;
+    };
+
     struct FPendingActorSpawnEventRequest
     {
         struct FActorInfo
@@ -300,6 +318,12 @@ public:
     void ReleasePendingEventInstances();
 
     void UpdateSpawnedActors();
+
+    void ProcessEventRuntimeEQSSpawns();
+
+    void OnEventRuntimeEQSFinished(TSharedPtr<FEnvQueryResult> Result);
+
+    void FinishEventRuntimeEQSSpawn(const FEventRuntimeEQSSpawn& EQSSpawn, const FVector* Location);
 
     void UpdateEncounterInstancesFromRuntimes();
 
@@ -481,6 +505,8 @@ private:
     static TArray<FLivingWorldEventRequest> PendingEventRequests;
 
     static TArray<FLivingWorldPendingEQSSpawn> PendingEQSSpawns;
+
+    static TArray<FEventRuntimeEQSSpawn> PendingEventRuntimeEQSSpawns;
 
     static TArray<FLivingWorldActorUpdateInfo> ActorToDespawnQueue;
 
