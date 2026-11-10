@@ -260,14 +260,13 @@ PATCH(UWorld, PatchInlinedNetMode, UWorld::PatchInlinedNetMode())
 
 int32 UWorld::PatchInlinedNetMode()
 {
-    static auto AttemptDeriveFromURL = Anchor::Data<const uint8*>(TEXT("UWorld::AttemptDeriveFromURL"))
+    static auto TailCall = Anchor::Data<const uint8*>(TEXT("UWorld::InternalGetNetMode tail call"))
         .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
         .Start()
         .Find("mov rcx, rax; call 0x*")
         .Call()
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Or()
         .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
         .Start()
@@ -275,39 +274,38 @@ int32 UWorld::PatchInlinedNetMode()
         .Call()
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Or()
         .Pattern("48 83 EC 28 48 83 79 38 00 4C 8B C1 75 ? 48 8B 91 F0 00 00 00")
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Or()
         .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 75 ? 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75 ? 48 8B 81 ? ? 00 00 48 85 C0 74 ? 83 B8 34 01 00 00 01 74 ? 48 8B 01 FF 90 ? ? 00 00 84 C0 0F 85 ? ? ? ? B8 03 00 00 00 48 83 C4 28 C3")
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Or()
         .Pattern("56 48 83 EC 20 BE 03 00 00 00 48 83 79 ? 00 75 ? 48 89 C8 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75")
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Or()
         .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 74 ? B8 03 00 00 00 48 83 C4 28 C3 48 8B 89 ? ? 00 00")
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
-        .Target()
         .Optional()
         .Get();
 
     static auto NetDriver = StaticClass()->FindPropertyByName(FName(TEXT("NetDriver")));
 
-    if (!AttemptDeriveFromURL || !NetDriver || NetDriver->GetOffset_ForInternal() >= 0x80)
+    if (!TailCall || !NetDriver || NetDriver->GetOffset_ForInternal() >= 0x80)
         return 0;
 
+    auto AttemptDeriveFromURL = Anchor::FCode(TailCall).Target();
+
     char CompareText[48];
+    char RegisterCompareText[48];
     char CallText[40];
     char JumpText[40];
     snprintf(CompareText, sizeof(CompareText), "cmp qword ptr [*+0x%x], *", (uint32)NetDriver->GetOffset_ForInternal());
+    snprintf(RegisterCompareText, sizeof(RegisterCompareText), "cmp [*+0x%x], *", (uint32)NetDriver->GetOffset_ForInternal());
     snprintf(CallText, sizeof(CallText), "call 0x%llx", (unsigned long long)AttemptDeriveFromURL);
     snprintf(JumpText, sizeof(JumpText), "jmp 0x%llx", (unsigned long long)AttemptDeriveFromURL);
 
@@ -328,7 +326,10 @@ int32 UWorld::PatchInlinedNetMode()
 
             Anchor::FCode Compare(Address);
 
-            if (!Compare.Is(CompareText))
+            if (!Compare.Is(CompareText) && !Compare.Is(RegisterCompareText))
+                continue;
+
+            if (Address < TailCall && TailCall - Address < 0x100)
                 continue;
 
             auto Branch = Compare.Find("*");
