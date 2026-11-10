@@ -1,0 +1,64 @@
+#include "pch.h"
+#include "Online/Iris/FortIrisHelper.h"
+#include "Player/FortPlayerController.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectArray.h"
+#include "UObject/UObjectGlobals.h"
+#include "UObject/WeakObjectPtr.h"
+#include "Scanner.h"
+
+UClass* UFortIrisHelper::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortIrisHelper"));
+
+    return Class;
+}
+
+UFortIrisHelper* UFortIrisHelper::Get()
+{
+    static TWeakObjectPtr<UFortIrisHelper> IrisHelper;
+
+    if (IrisHelper.IsValid() || !StaticClass())
+        return IrisHelper.Get();
+
+    for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
+    {
+        auto ObjectItem = GUObjectArray.IndexToObject(Index);
+        auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+
+        if (Object && Object->GetClass() == StaticClass() && !(Object->GetFlags() & RF_ClassDefaultObject))
+        {
+            IrisHelper = (UFortIrisHelper*)Object;
+            break;
+        }
+    }
+
+    return IrisHelper.Get();
+}
+
+void UFortIrisHelper::OnPlayerControllerInventorySwitched(AFortPlayerController* PC)
+{
+    static auto GetConnectionContext = Anchor::Optional<void (*)(UFortIrisHelper*, void**, AFortPlayerController*)>(TEXT("UFortIrisHelper::OnPlayerControllerInventorySwitched connection context"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerInventorySwitched"))
+        .Find("movdqu [rbp-0x*], xmm1; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto UpdateConnectionFilters = Anchor::Optional<void (*)(UFortIrisHelper*, void**)>(TEXT("UFortIrisHelper::OnPlayerControllerInventorySwitched filter update"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerInventorySwitched"))
+        .Find("lea rdx, [rbp-0x*]; call 0x*; test rbx, rbx")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (!GetConnectionContext || !UpdateConnectionFilters)
+        return;
+
+    void* Context[4] = {};
+
+    GetConnectionContext(this, Context, PC);
+
+    if (Context[0] && Context[1] && Context[2] && Context[3])
+        UpdateConnectionFilters(this, Context);
+}

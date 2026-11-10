@@ -45,6 +45,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/NetDriver.h"
 #include "UObject/ScriptDelegates.h"
+#include "Online/Iris/FortIrisHelper.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "Math/UnrealMathUtility.h"
@@ -475,6 +476,11 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             } Parameters{ PlayerController, PlayerController->GetViewTarget(), PlayerController->GetViewTarget() };
 
             OnViewTargetChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(PlayerController)->ProcessMulticastDelegate<UObject>(&Parameters);
+
+            if (auto IrisHelper = UFortIrisHelper::Get())
+                IrisHelper->OnPlayerControllerInventorySwitched(PlayerController);
+
+            UE_LOG(LogVelora, Log, TEXT("Iris helper %s for %s"), UFortIrisHelper::Get() ? *UFortIrisHelper::Get()->GetName() : TEXT("none"), *PlayerController->GetName());
         }
     }
 

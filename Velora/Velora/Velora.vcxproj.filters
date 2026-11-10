@@ -445,8 +445,14 @@
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Online">
       <UniqueIdentifier>{F12F1556-29B4-4C7C-8570-2688D70F170D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Online\Iris">
+      <UniqueIdentifier>{ed2db1c0-9ecd-4873-a782-a1944a942732}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Public\Online">
       <UniqueIdentifier>{9F99FF29-B847-414E-9F8B-2CDA9F74117E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Public\Online\Iris">
+      <UniqueIdentifier>{af88a4d0-b2cc-4415-8d96-c3f6d0256d9f}</UniqueIdentifier>
     </Filter>
     <Filter Include="FortniteGame\Source\FortniteGame\Private\Player">
       <UniqueIdentifier>{5BF30DF8-BA3F-4264-B35E-C06601EBBCD4}</UniqueIdentifier>
@@ -1764,6 +1770,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponModItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\Iris\FortIrisHelper.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Online\Iris</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public\FortWeaponModStationComponent.h">
       <Filter>FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public</Filter>
     </ClInclude>
@@ -2899,6 +2908,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponModItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\Iris\FortIrisHelper.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Online\Iris</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private\FortWeaponModStationComponent.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private</Filter>

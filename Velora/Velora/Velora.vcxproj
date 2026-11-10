@@ -490,6 +490,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRangedMountedCannon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponRanged.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponModItemDefinition.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Online\Iris\FortIrisHelper.h" />
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public\FortWeaponModStationComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool_ContextTrap.h" />
@@ -901,6 +902,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRangedMountedCannon.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponRanged.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponModItemDefinition.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Online\Iris\FortIrisHelper.cpp" />
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private\FortWeaponModStationComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool_ContextTrap.cpp" />
