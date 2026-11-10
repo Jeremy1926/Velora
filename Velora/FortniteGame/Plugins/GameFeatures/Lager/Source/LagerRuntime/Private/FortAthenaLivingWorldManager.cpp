@@ -2337,6 +2337,8 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     if (NextEventGenerationTime < 0.0f)
         return;
 
+    ReleasePendingEventInstances();
+
     if (World->GetTimeSeconds() >= NextEventGenerationTime)
     {
         NextEventGenerationTime = World->GetTimeSeconds() + Config->GetMinimumEventGenerationInterval().GetValueAtLevel(0.0f);
@@ -2346,6 +2348,114 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     }
 
     ProcessPendingEventRequests();
+}
+
+void UFortAthenaLivingWorldManager::ReleasePendingEventInstances()
+{
+    static auto IsAllocated = Anchor::Function<bool (*)(void*, int32)>(TEXT("TSparseArray<UFortAthenaLivingWorldManager::FEventInstance>::IsValidIndex"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("mov edx, r15d; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto ReleaseEventInstance = Anchor::Function<void (*)(UFortAthenaLivingWorldManager*, void*)>(TEXT("UFortAthenaLivingWorldManager::ReleaseEventInstance"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("mov rcx, rbp; mov byte ptr [rdx+0x*], 0x0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto RemoveEventInstance = Anchor::Function<void (*)(void*, int32)>(TEXT("UFortAthenaLivingWorldManager::FEventInstanceContainer::RemoveEventInstance"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("mov edx, r15d; mov rcx, r12; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto PendingReleasesOffset = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FEventInstanceContainer::PendingReleases"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("lea rdi, [rcx+0x*]")
+        .Disp();
+
+    static auto EventInstanceContainer = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::EventInstanceContainer"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("lea r12, [rcx+0x*]")
+        .Disp();
+
+    static auto EventInstanceSize = Anchor::Offset(TEXT("sizeof(UFortAthenaLivingWorldManager::FEventInstance)"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("imul rdx, r15, 0x*")
+        .Imm();
+
+    static auto bPendingRelease = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FEventInstance::bPendingRelease"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("mov byte ptr [rdx+0x*], 0x0")
+        .Disp();
+
+    struct FPendingRelease
+    {
+        int32 InstanceIndex;
+        float ReleaseTime;
+    };
+
+    auto World = GetWorld();
+
+    if (!World)
+        return;
+
+    auto& PendingReleases = *(TArray<FPendingRelease>*)((uint8*)this + PendingReleasesOffset);
+    auto EventInstances = (uint8*)this + EventInstanceContainer;
+    const float Now = World->GetTimeSeconds();
+
+    for (int32 Index = PendingReleases.Num() - 1; Index >= 0; Index--)
+    {
+        if (!(Now > PendingReleases[Index].ReleaseTime))
+            continue;
+
+        const int32 InstanceIndex = PendingReleases[Index].InstanceIndex;
+
+        if (IsAllocated(EventInstances, InstanceIndex))
+        {
+            auto EventInstance = *(uint8**)EventInstances + InstanceIndex * EventInstanceSize;
+
+            EventInstance[bPendingRelease] = 0;
+
+            ReleaseEventInstance(this, EventInstance);
+            RemoveEventInstance(EventInstances, InstanceIndex);
+        }
+
+        PendingReleases[Index] = PendingReleases[PendingReleases.Num() - 1];
+        PendingReleases.RemoveAt(PendingReleases.Num() - 1);
+    }
 }
 
 void UFortAthenaLivingWorldManager::GenerateEventsFromRuntimes()

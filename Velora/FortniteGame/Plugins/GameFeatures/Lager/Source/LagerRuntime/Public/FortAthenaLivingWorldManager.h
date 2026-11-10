@@ -297,6 +297,8 @@ public:
 
     void TickEventRuntimes(float DeltaTime);
 
+    void ReleasePendingEventInstances();
+
     void GenerateEventsFromRuntimes();
 
     void ProcessCategory(FFortAthenaLivingWorldCategory* Category, void* ConditionContext);
