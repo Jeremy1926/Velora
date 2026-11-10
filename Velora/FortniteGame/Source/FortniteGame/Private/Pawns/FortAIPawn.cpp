@@ -133,6 +133,7 @@ void AFortAIPawn::DropAllItems(bool bSpawnPickups)
         FFortItemEntry DropItemEntry(ItemDefinition, ItemEntry.GetCount(), ItemEntry.GetLevel());
         DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
         DropItemEntry.GetDurability() = ItemEntry.GetDurability();
+        DropItemEntry.CopyWeaponModStateFrom(ItemEntry);
 
         if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
             Pickup->TossPickup(Location, this, 0, true);

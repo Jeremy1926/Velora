@@ -680,6 +680,21 @@ void FFortItemEntry::SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeapo
     GetIsDirty() = true;
 }
 
+void FFortItemEntry::CopyWeaponModStateFrom(FFortItemEntry& Other)
+{
+    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+
+    if (WeaponModSlots && Other.GetWeaponModSlots().Num() > 0)
+        SetWeaponModSlots(Other.GetWeaponModSlots());
+
+    if (StateValuesConstObject)
+    {
+        for (auto& StateValue : Other.GetStateValuesConstObject())
+            SetStateConstObject(StateValue.GetStateType(), StateValue.GetObjectData().Get());
+    }
+}
+
 UScriptStruct* FFortItemList::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemList"));

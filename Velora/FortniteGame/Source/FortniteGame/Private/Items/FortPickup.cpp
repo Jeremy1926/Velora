@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Items/FortPickup.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
+#include "GameplayTagContainer.h"
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortQuickBars.h"
@@ -465,6 +467,8 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             for (auto& StateValue : PickupItemEntry.GetStateValues())
                 ItemEntry->SetStateValue(StateValue.GetStateType(), StateValue.GetIntValue());
+
+            ItemEntry->CopyWeaponModStateFrom(PickupItemEntry);
 
             ItemEntry->SetStateValue(EFortItemEntryState::NewItemCount, ItemEntry->GetCount());
 

@@ -141,6 +141,8 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     void SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeaponModSlots);
 
+    void CopyWeaponModStateFrom(FFortItemEntry& Other);
+
 private:
     uint8 Data[0x1F4];
 };

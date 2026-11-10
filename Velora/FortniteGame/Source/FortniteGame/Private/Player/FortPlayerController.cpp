@@ -732,6 +732,7 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
         FFortItemEntry DropItemEntry(ItemEntry.GetItemDefinition(), FMath::Min(Count, ItemEntry.GetCount()), ItemEntry.GetLevel());
         DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
         DropItemEntry.GetDurability() = ItemEntry.GetDurability();
+        DropItemEntry.CopyWeaponModStateFrom(ItemEntry);
 
         const FVector Location = Pawn->GetActorLocation();
 
@@ -1023,6 +1024,7 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
         FFortItemEntry DropItemEntry(ItemDefinition, ReplicatedEntries[Index].GetCount(), ReplicatedEntries[Index].GetLevel());
         DropItemEntry.GetLoadedAmmo() = ReplicatedEntries[Index].GetLoadedAmmo();
         DropItemEntry.GetDurability() = ReplicatedEntries[Index].GetDurability();
+        DropItemEntry.CopyWeaponModStateFrom(ReplicatedEntries[Index]);
 
         const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
 
@@ -1065,6 +1067,7 @@ void AFortPlayerController::DropItemsAsPickups(const TArray<UFortWorldItem*>& It
         FFortItemEntry DropItemEntry(ItemEntry.GetItemDefinition(), ItemEntry.GetCount(), ItemEntry.GetLevel());
         DropItemEntry.GetLoadedAmmo() = ItemEntry.GetLoadedAmmo();
         DropItemEntry.GetDurability() = ItemEntry.GetDurability();
+        DropItemEntry.CopyWeaponModStateFrom(ItemEntry);
 
         if (auto Pickup = AFortPickup::CreateFromData(Pawn->GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, PlayerController, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
             Pickup->TossPickup(Location, Pawn, 0, true);

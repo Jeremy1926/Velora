@@ -120,8 +120,6 @@ bool UFortWeaponModSetData::ApplyModSetToItemEntry(FFortItemEntry& ItemEntry) co
     if (!Mods)
         return false;
 
-    UE_LOG(LogFortLoot, Verbose, TEXT("UFortWeaponModSetData::ApplyModSetToItemEntry applying mod set %s to %s"), *GetName(), *WeaponItemDefinition->GetName());
-
     WeaponItemDefinition->SetDefaultWeaponModSlotsIfNeeded(ItemEntry);
 
     TArray<FFortWeaponModSlot> WeaponModSlots = ItemEntry.GetWeaponModSlots();
@@ -149,6 +147,8 @@ bool UFortWeaponModSetData::ApplyModSetToItemEntry(FFortItemEntry& ItemEntry) co
     }
 
     ItemEntry.SetWeaponModSlots(WeaponModSlots);
+
+    UE_LOG(LogFortLoot, Log, TEXT("UFortWeaponModSetData::ApplyModSetToItemEntry applying mod set %s to %s, %d mods for rarity, %d slots"), *GetName(), *WeaponItemDefinition->GetName(), Mods->Num(), WeaponModSlots.Num());
 
     const FGameplayTag NameModifierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("ItemStateValue.ConstObject.NameModifer")), false);
 
