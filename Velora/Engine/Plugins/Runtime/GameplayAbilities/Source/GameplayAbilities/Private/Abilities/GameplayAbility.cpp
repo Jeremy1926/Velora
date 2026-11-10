@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Abilities/GameplayAbility.h"
+#include "UObject/Stack.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 
@@ -39,4 +40,15 @@ AActor* UGameplayAbility::GetAvatarActorFromActorInfo() const
         .Get();
 
     return GetAvatarActorFromActorInfo(this);
+}
+
+void UGameplayAbility::K2_CancelAbility()
+{
+    static auto execK2_CancelAbility = Anchor::Function<void (*)(UGameplayAbility*, FFrame&, void*)>(TEXT("UGameplayAbility::execK2_CancelAbility"))
+        .Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_CancelAbility"))
+        .Get();
+
+    alignas(16) uint8 Stack[0x100] = {};
+
+    execK2_CancelAbility(this, *(FFrame*)Stack, nullptr);
 }

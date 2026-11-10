@@ -46,6 +46,25 @@ UGameplayAbility* FGameplayAbilitySpec::GetPrimaryInstance() const
     return nullptr;
 }
 
+TArray<UGameplayAbility*> FGameplayAbilitySpec::GetAbilityInstances() const
+{
+    static auto NonReplicatedInstances = StaticStruct()->FindPropertyByName(FName(TEXT("NonReplicatedInstances")));
+    static auto ReplicatedInstances = StaticStruct()->FindPropertyByName(FName(TEXT("ReplicatedInstances")));
+
+    TArray<UGameplayAbility*> Abilities;
+
+    for (auto Instances : { ReplicatedInstances, NonReplicatedInstances })
+    {
+        if (!Instances)
+            continue;
+
+        for (auto Instance : *Instances->ContainerPtrToValuePtr<TArray<UGameplayAbility*>>(this))
+            Abilities.Add(Instance);
+    }
+
+    return Abilities;
+}
+
 UScriptStruct* FGameplayAbilitySpec::StaticStruct()
 {
     static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayAbilities.GameplayAbilitySpec"));

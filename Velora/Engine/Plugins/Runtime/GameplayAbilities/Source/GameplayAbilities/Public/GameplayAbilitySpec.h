@@ -76,6 +76,8 @@ struct alignas(8) FGameplayAbilitySpec : public FFastArraySerializerItem
 
     UGameplayAbility* GetPrimaryInstance() const;
 
+    TArray<UGameplayAbility*> GetAbilityInstances() const;
+
     static UScriptStruct* StaticStruct();
 
     static int32 GetTypeSize();

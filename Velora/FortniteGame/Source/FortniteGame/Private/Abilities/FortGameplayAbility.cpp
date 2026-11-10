@@ -154,3 +154,35 @@ FGameplayTag UFortGameplayAbility::GetEffectContainerApplicationTag() const
 
     return EffectContainers ? *EffectContainers->ContainerPtrToValuePtr<FGameplayTag>(this) : FGameplayTag();
 }
+
+void UFortGameplayAbility::TagChangedActionCallback(const FGameplayTag Tag, bool bTagExists)
+{
+    static auto TagChangedActions = StaticClass()->FindPropertyByName(FName(TEXT("TagChangedActions")));
+    static auto TagChangedActionStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameplayAbilityTagChangedAction"));
+
+    if (!TagChangedActions || !TagChangedActionStruct)
+        return;
+
+    static auto Trigger = TagChangedActionStruct->FindPropertyByName(FName(TEXT("Trigger")));
+    static auto Action = TagChangedActionStruct->FindPropertyByName(FName(TEXT("Action")));
+    static auto ActionTag = TagChangedActionStruct->FindPropertyByName(FName(TEXT("Tag")));
+
+    auto& Actions = *TagChangedActions->ContainerPtrToValuePtr<TArray<uint8>>(this);
+
+    for (int32 Index = 0; Index < Actions.Num(); Index++)
+    {
+        auto ActionData = Actions.GetData() + Index * TagChangedActionStruct->GetPropertiesSize();
+
+        if (!(ActionTag->GetPropertyValue_InContainer<FGameplayTag>(ActionData) == Tag))
+            continue;
+
+        const auto TriggerValue = *Trigger->ContainerPtrToValuePtr<EFortGameplayAbilityTagChangedEvent>(ActionData);
+        const bool bTriggered = bTagExists ? (TriggerValue == EFortGameplayAbilityTagChangedEvent::NewlyAdded || TriggerValue == EFortGameplayAbilityTagChangedEvent::Increased) : (TriggerValue == EFortGameplayAbilityTagChangedEvent::FullyRemoved || TriggerValue == EFortGameplayAbilityTagChangedEvent::Decreased);
+
+        if (bTriggered && *Action->ContainerPtrToValuePtr<EFortGameplayAbilityTagChangedActionType>(ActionData) == EFortGameplayAbilityTagChangedActionType::Cancel)
+        {
+            K2_CancelAbility();
+            return;
+        }
+    }
+}

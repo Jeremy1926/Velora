@@ -11,10 +11,25 @@ class UFortWeaponItemDefinition;
 class UFortWorldItem;
 struct FFrame;
 
+enum class EFortGameplayAbilityTagChangedActionType : uint8
+{
+    Cancel,
+};
+
+enum class EFortGameplayAbilityTagChangedEvent : uint8
+{
+    NewlyAdded,
+    Increased,
+    FullyRemoved,
+    Decreased,
+};
+
 class UFortGameplayAbility : public UGameplayAbility
 {
 public:
     static UClass* StaticClass();
+
+    void TagChangedActionCallback(const FGameplayTag Tag, bool bTagExists);
 
     void EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponDefinition, int32 ItemLevel);
 

@@ -12,4 +12,6 @@ class UGameplayAbility : public UObject
 {
 public:
     AActor* GetAvatarActorFromActorInfo() const;
+
+    void K2_CancelAbility();
 };
