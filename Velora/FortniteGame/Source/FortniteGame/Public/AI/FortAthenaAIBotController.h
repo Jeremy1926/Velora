@@ -11,6 +11,7 @@ class UFortAthenaAIBotInventoryItems;
 class UFortAthenaAIRuntimeParametersComponent;
 class UFortBotNameSettings;
 class UFortItemDefinition;
+class AFortWeapon;
 class UFortWorldItem;
 class UScriptStruct;
 struct FFortAthenaLoadout;
@@ -43,6 +44,8 @@ public:
     void InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory);
 
     void AddStartingItemsToInventory();
+
+    AFortWeapon* EquipBestWeapon(bool bUpdateBB);
 
     void InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets);
 

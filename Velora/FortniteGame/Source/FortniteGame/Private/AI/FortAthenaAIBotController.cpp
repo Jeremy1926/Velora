@@ -160,7 +160,14 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         .Target()
         .Get();
 
-    if (!bFindWeaponTypeForStats)
+    static auto SetItem = Anchor::Optional<void (*)(FFortBotInventoryInfo*, UFortWorldItem*)>(TEXT("FFortBotInventoryInfo::SetItem"))
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Find("add rcx, 0x*; add rcx, rsi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (!bFindWeaponTypeForStats && !SetItem)
         return;
 
     for (auto& ItemAndCount : Items)
@@ -182,6 +189,18 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         while (WorldItem && WouldItemFitInBotInventory(WorldItem, SlotIndex, bIsItemSupported) && SlotIndex >= 0)
         {
             auto& SlotItem = GetSlotItems(SlotIndex);
+
+            if (SetItem)
+            {
+                auto PreviousItem = SlotItem.GetFortItem();
+
+                SetItem(&SlotItem, WorldItem);
+
+                WorldItem = PreviousItem != WorldItem ? PreviousItem : nullptr;
+
+                continue;
+            }
+
             auto ItemType = SlotItem.GetItemType();
             auto WeaponType = SlotItem.GetWeaponType();
 
@@ -199,6 +218,18 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
             WorldItem = ReplacedItem != WorldItem ? ReplacedItem : nullptr;
         }
     }
+
+    if (SetItem)
+        EquipBestWeapon(true);
+}
+
+AFortWeapon* AFortAthenaAIBotController::EquipBestWeapon(bool bUpdateBB)
+{
+    static auto EquipBestWeapon = Anchor::Optional<AFortWeapon* (*)(AFortAthenaAIBotController*, bool)>(TEXT("AFortAthenaAIBotController::EquipBestWeapon"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaAIBotController:EquipBestWeapon"))
+        .Get();
+
+    return EquipBestWeapon ? EquipBestWeapon(this, bUpdateBB) : nullptr;
 }
 
 void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory)
@@ -236,6 +267,9 @@ void AFortAthenaAIBotController::AddStartingItemsToInventory()
         .Or()
         .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
         .Find("cmp byte ptr [*+0x*], 0x0")
+        .Or()
+        .FieldPattern("48 83 BF %o 00 88 03", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
+        .Find("cmp byte ptr [rdi+0x*], r15b")
         .Disp();
 
     if (bAllowUnsupportedItems)
@@ -285,6 +319,9 @@ bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item
         .Start()
         .Or()
         .FieldPattern("41 C7 00 FF FF FF FF 48 8B 89 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedBotManager"))) : nullptr)
+        .Start()
+        .Or()
+        .FieldPattern("48 83 BF %o 00 88 03", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
         .Start()
         .Get();
 
