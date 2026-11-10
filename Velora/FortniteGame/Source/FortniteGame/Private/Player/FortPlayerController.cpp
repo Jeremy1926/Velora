@@ -40,6 +40,7 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
+#include "UObject/ScriptInterface.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -1431,6 +1432,24 @@ AFortInventory*& AFortPlayerController::GetWorldInventory()
     static auto WorldInventory = GetClass()->FindPropertyByName(FName(TEXT("WorldInventory")));
 
     return *WorldInventory->ContainerPtrToValuePtr<AFortInventory*>(this);
+}
+
+void AFortPlayerController::SetWorldInventory(AFortInventory* InWorldInventory)
+{
+    static auto WorldInventory = GetClass()->FindPropertyByName(FName(TEXT("WorldInventory")));
+    static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+
+    if (WorldInventory->GetSize() == sizeof(FScriptInterface))
+    {
+        auto ScriptInterface = WorldInventory->ContainerPtrToValuePtr<FScriptInterface>(this);
+
+        ScriptInterface->SetObject(InWorldInventory);
+        ScriptInterface->SetInterface(InWorldInventory ? InWorldInventory->GetInterfaceAddress(FortInventoryInterface) : nullptr);
+
+        return;
+    }
+
+    *WorldInventory->ContainerPtrToValuePtr<AFortInventory*>(this) = InWorldInventory;
 }
 
 UClass* AFortPlayerController::GetWorldInventoryClass()

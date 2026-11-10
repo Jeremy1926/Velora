@@ -456,7 +456,7 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         FActorSpawnParameters SpawnParameters;
         SpawnParameters.Owner = PlayerController;
 
-        PlayerController->GetWorldInventory() = (AFortInventory*)GetWorld()->SpawnActor(WorldInventoryClass && WorldInventoryClass->IsChildOf(AFortInventory::StaticClass()) ? WorldInventoryClass : AFortInventory::StaticClass(), nullptr, nullptr, SpawnParameters);
+        PlayerController->SetWorldInventory((AFortInventory*)GetWorld()->SpawnActor(WorldInventoryClass && WorldInventoryClass->IsChildOf(AFortInventory::StaticClass()) ? WorldInventoryClass : AFortInventory::StaticClass(), nullptr, nullptr, SpawnParameters));
 
         if (PlayerController->GetWorldInventory())
             PlayerController->GetWorldInventory()->GetInventoryType() = EFortInventoryType::World;

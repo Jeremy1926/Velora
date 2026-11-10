@@ -16,6 +16,7 @@
 #include "Weapons/FortWeapon.h"
 #include "Templates/Casts.h"
 #include "Engine/World.h"
+#include "UObject/ScriptInterface.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -107,6 +108,12 @@ bool AFortAthenaAIBotController::CreateInventory()
 
     if (!GetInventory())
         return false;
+
+    static auto Inventory = GetClass()->FindPropertyByName(FName(TEXT("Inventory")));
+    static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+
+    if (Inventory->GetSize() == sizeof(FScriptInterface))
+        Inventory->ContainerPtrToValuePtr<FScriptInterface>(this)->SetInterface(GetInventory()->GetInterfaceAddress(FortInventoryInterface));
 
     GetInventory()->GetInventoryType() = EFortInventoryType::World;
 
