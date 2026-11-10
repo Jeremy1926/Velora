@@ -2,7 +2,15 @@
 #include "Pawns/FortPawn.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UClass* AFortPawn::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn"));
+
+    return Class;
+}
 
 UFortMovementSet* AFortPawn::GetMovementSet() const
 {

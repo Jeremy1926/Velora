@@ -9,6 +9,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Config.h"
+#include "HAL/IConsoleManager.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -538,6 +539,9 @@ bool UWorld::Listen(FURL& InURL)
         GEngine->BroadcastNetworkFailure(this, GetNetDriver(), ENetworkFailure::NetDriverAlreadyExists);
         return false;
     }
+
+    if (auto UseIrisReplication = IConsoleManager::Get().FindConsoleVariable(TEXT("net.Iris.UseIrisReplication")))
+        UseIrisReplication->Set(TEXT("0"), ECVF_SetByCode);
 
     if (GEngine->CreateNamedNetDriver(this, NAME_GameNetDriver, NAME_GameNetDriver))
     {
