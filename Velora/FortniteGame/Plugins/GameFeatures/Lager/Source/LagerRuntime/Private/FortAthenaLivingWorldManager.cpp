@@ -2562,7 +2562,7 @@ bool UFortAthenaLivingWorldManager::IsActivePointProvider(const FScriptInterface
             return false;
     }
 
-    return (*(bool (***)(IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules*))PointProviderInterface)[0x50 / sizeof(void*)](PointProviderInterface, &PointFilter);
+    return (*(bool (***)(IFortAthenaLivingWorldPointProviderInterface*, const FFortAthenaLivingWorldPointProviderFilterRules*, void*))PointProviderInterface)[0x50 / sizeof(void*)](PointProviderInterface, &PointFilter, nullptr);
 }
 
 FScriptInterface UFortAthenaLivingWorldManager::GetRandomPointProviderFromTagQuery(const TArray<FScriptInterface>& PointProviders, const FGameplayTagQuery& TagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, int32 StartIndex)
