@@ -129,13 +129,13 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
 
                     for (auto Entry = (const uint8**)(Image + Sections[Index].VirtualAddress); !CopyFromMoveDataSlot && (const uint8*)(Entry + 0x10) < Image + Sections[Index].VirtualAddress + Sections[Index].Misc.VirtualSize; Entry++)
                     {
-                        if (Entry[0] != BaseCopyFromMoveData || Entry[1] != BaseCopyFromMoveData)
+                        if (Entry[0] != BaseCopyFromMoveData || Entry[1] == BaseCopyFromMoveData)
                             continue;
 
-                        for (int32 Slot = 2; !CopyFromMoveDataSlot && Slot < 0x10; Slot++)
+                        for (int32 Slot = 1; !CopyFromMoveDataSlot && Slot < 0x10; Slot++)
                         {
                             if (Entry[Slot] > Image && Entry[Slot] < Image + Headers->OptionalHeader.SizeOfImage && Anchor::At(Entry[Slot]).Is("mov byte ptr [rcx+0xe], 0x1; ret"))
-                                CopyFromMoveDataSlot = ForceManualEndSlot - Slot * (int32)sizeof(void*);
+                                CopyFromMoveDataSlot = ForceManualEndSlot - (Slot + 1) * (int32)sizeof(void*);
                         }
                     }
                 }
