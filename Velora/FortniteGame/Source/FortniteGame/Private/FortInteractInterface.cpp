@@ -47,6 +47,12 @@ FInteractionType::FInteractionType(AFortPlayerPawn* InRequestingPawn, ETInteract
         .Find("mov r8d, 0x1; lea rcx, [rbp+0x*]; mov rdx, r15; mov [rsp+0x*], al; mov sil, al; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String("AFortPlayerPawn::TryToAutoPickupWeapon")
+        .Start()
+        .Find("mov r8d, 0x1; lea rcx, [rbp+0x*]; mov rdx, r14; mov [rsp+0x*], al; mov sil, al; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Constructor(this, InRequestingPawn, InInteractionType);

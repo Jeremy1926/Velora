@@ -49,6 +49,15 @@ void FRepLayout::SendPropertiesForRPC(UFunction* Function, UActorChannel* Channe
         .Find("xor r8d, r8d; call 0x*; mov rcx, [rbp-0x*]; lea rdx, [rbp+0x*]; mov r8, r*; call 0x*")
         .Find("call 0x*", 3)
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov [rsp+0x58], r8d; mov r8, r*; mov [rsp+0x50], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("xor r8d, r8d; call 0x*; mov rcx, [rsp+0x*]; lea rdx, [rsp+0x*]; mov r8, r*; call 0x*")
+        .Find("call 0x*", 3)
+        .Target()
         .Get();
 
     SendPropertiesForRPC(this, Function, Channel, Writer, Data);

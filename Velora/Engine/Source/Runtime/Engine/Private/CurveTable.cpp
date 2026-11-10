@@ -32,7 +32,7 @@ UClass* UCurveTable::StaticClass()
 FRealCurve* UCurveTable::FindCurve(FName RowName, const FString& ContextString, bool bWarnIfNotFound) const
 {
     static auto FindCurve = Anchor::Function<FRealCurve* (*)(const UCurveTable*, FName, const FString&, bool)>(TEXT("UCurveTable::FindCurve"))
-        .If(!::Anchor::Exists().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("mov r10, [rcx]; lea rax, [0x*]").Or().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("mov r10, [rcx]; xor ebx, ebx; add rcx, 0x8").Get())
+        .If(!::Anchor::Exists().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("mov r10, [rcx]; lea rax, [0x*]").Or().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("mov r10, [rcx]; xor ebx, ebx; add rcx, 0x8").Or().String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s).")).Start().Has("cmp dword ptr [r8+0x8], 0x1; mov r15, r9").Get())
         .String(TEXT("UCurveTable::FindCurve : Row '%s' not found in CurveTable '%s' (%s)."))
         .Start()
         .Or()

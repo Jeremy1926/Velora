@@ -565,12 +565,23 @@ UActorComponent* AActor::AddComponentByClass(TSubclassOf<UActorComponent> Class,
         .Optional()
         .Get();
 
-    if (!AddComponentByClass)
-        return nullptr;
-
     const TGameValue<FTransform> GameRelativeTransform(RelativeTransform);
 
-    return AddComponentByClass(this, &Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
+    if (AddComponentByClass)
+        return AddComponentByClass(this, &Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
+
+    static auto AddComponentByClassByValue = Anchor::Function<UActorComponent* (*)(AActor*, UClass*, bool, const TGameValue<FTransform>&, bool)>(TEXT("AActor::AddComponentByClass"))
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov r9, rsi; mov rdx, [rbp-0x*]; mov r8b, r12b; setnz al; mov rcx, r14")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (!AddComponentByClassByValue)
+        return nullptr;
+
+    return AddComponentByClassByValue(this, Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
 }
 
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const

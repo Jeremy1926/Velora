@@ -98,6 +98,11 @@ TMulticastDelegate<void, AFortPlayerPawn*, ABuildingGameplayActor*, ABuildingGam
         .Find("add [*+0x20], *")
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:SetBalloonRope"))
+        .Find("cmp [*+0x20], *; lea rcx, [0x*]; mov rdx, rsi; setnz *; add [*+0x20], *")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyBalloonStateChange;

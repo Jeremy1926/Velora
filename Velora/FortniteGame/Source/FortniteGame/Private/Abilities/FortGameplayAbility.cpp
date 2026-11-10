@@ -134,6 +134,11 @@ float UFortGameplayAbility::GetCurrentAbilitySourceLevel()
         .Find("lea rdx, [rsp+0x*]; mov rcx, rsi; call 0x*; mov rax, [rsi]")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("STAT_FortGA_Ranged_OnTargetDataReadyCB"))
+        .Find("lea rdx, [rsp+0x*]; mov rcx, rdi; call 0x*; mov rax, [rdi]")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     float Level = 0.0f;
