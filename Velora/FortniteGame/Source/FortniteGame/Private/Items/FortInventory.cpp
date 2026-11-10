@@ -29,6 +29,23 @@ FFortItemList& AFortInventory::GetInventory()
 
 void AFortInventory::HandleInventoryLocalUpdate()
 {
+    static auto InterfaceHandleInventoryLocalUpdate = Anchor::VirtualFunction<void (*)(void*)>(TEXT("IFortInventoryInterface::HandleInventoryLocalUpdate"))
+        .Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate"))
+        .Find("add rcx, 0x*; add [rdx+0x20], rax; mov rax, [rcx]; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
+        .Optional()
+        .Get();
+
+    if (InterfaceHandleInventoryLocalUpdate)
+    {
+        static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+
+        if (auto Interface = GetInterfaceAddress(FortInventoryInterface))
+            InterfaceHandleInventoryLocalUpdate(Interface);
+
+        return;
+    }
+
     static auto HandleInventoryLocalUpdate = Anchor::Function<void (*)(AFortInventory*)>(TEXT("AFortInventory::HandleInventoryLocalUpdate"))
         .Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate"))
         .Find("jmp 0x*")
