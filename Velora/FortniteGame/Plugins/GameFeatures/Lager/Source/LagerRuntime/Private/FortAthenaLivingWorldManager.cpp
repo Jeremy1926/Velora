@@ -2295,6 +2295,9 @@ void UFortAthenaLivingWorldManager::AddPendingEventRequest(const FEventRequest& 
     auto& Num = *(int32*)(PendingEventRequests + 0x8);
     auto& Max = *(int32*)(PendingEventRequests + 0xC);
 
+    if (FEventRequest::GetTypeSize() <= 0)
+        return;
+
     if (Num >= Max)
     {
         Max = Max > 0 ? Max * 2 : 4;
