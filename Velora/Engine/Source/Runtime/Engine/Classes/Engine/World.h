@@ -129,7 +129,7 @@ public:
 
     ENetMode AttemptDeriveFromURL() const;
 
-    static void PatchInlinedNetMode();
+    static int32 PatchInlinedNetMode();
 
     void SetNextSwitchCountdown(float InNextSwitchCountdown);
 

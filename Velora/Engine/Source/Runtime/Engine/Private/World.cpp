@@ -249,7 +249,9 @@ ENetMode UWorld::AttemptDeriveFromURL() const
     return Original();
 }
 
-void UWorld::PatchInlinedNetMode()
+PATCH(UWorld, PatchInlinedNetMode, UWorld::PatchInlinedNetMode())
+
+int32 UWorld::PatchInlinedNetMode()
 {
     static auto AttemptDeriveFromURL = Anchor::Data<const uint8*>(TEXT("UWorld::AttemptDeriveFromURL"))
         .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
@@ -293,7 +295,7 @@ void UWorld::PatchInlinedNetMode()
     static auto NetDriver = StaticClass()->FindPropertyByName(FName(TEXT("NetDriver")));
 
     if (!AttemptDeriveFromURL || !NetDriver || NetDriver->GetOffset_ForInternal() >= 0x80)
-        return;
+        return 0;
 
     char CompareText[48];
     char CallText[40];
@@ -374,6 +376,8 @@ void UWorld::PatchInlinedNetMode()
     }
 
     UE_LOG(LogVelora, Log, TEXT("Patched %d inlined UWorld::InternalGetNetMode"), NumPatched);
+
+    return NumPatched;
 }
 
 AServerStreamingLevelsVisibility* UWorld::GetServerStreamingLevelsVisibility() const
