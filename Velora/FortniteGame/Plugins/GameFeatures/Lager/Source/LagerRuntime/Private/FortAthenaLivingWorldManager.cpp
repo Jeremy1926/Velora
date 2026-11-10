@@ -3698,7 +3698,12 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
 
     const FTransform SpawnTransform(Rotation, Location, FVector(1.0f, 1.0f, 1.0f));
 
-    OutSpawnedActor = GetWorld()->SpawnActor(ActorClass, &SpawnTransform);
+    FActorSpawnParameters SpawnParameters;
+
+    SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    SpawnParameters.bNoFail = true;
+
+    OutSpawnedActor = GetWorld()->SpawnActor(ActorClass, &SpawnTransform, SpawnParameters);
 
     if (Config::bLogLivingWorld)
         UE_LOG(LogVelora, Log, TEXT("LivingWorld actor spawn %s at %.0f %.0f %.0f: %s"), *ActorClass->GetName(), Location.X, Location.Y, Location.Z, OutSpawnedActor ? *OutSpawnedActor->GetName() : TEXT("failed"));
