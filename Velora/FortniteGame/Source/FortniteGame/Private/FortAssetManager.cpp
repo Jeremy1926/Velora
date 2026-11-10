@@ -22,6 +22,12 @@ UFortAssetManager& UFortAssetManager::Get()
         .Or()
         .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
         .Call()
+        .Is("mov [rsp+0x10], rbx; push rdi; sub rsp, 0x70; mov rdi, [0x*]; test rdi, rdi; jz 0x*")
+        .Pattern("4C 39 0C C8 75 ? 48 85 D2 0F 84 ? ? ? ? 48 8B C2 48 83 C4 70 5B C3 33 D2 EB")
+        .Start()
+        .Or()
+        .Native(TEXT("/Script/FortniteUI.FortInventoryContext:GetResourceItemDefinition"))
+        .Call()
         .Call()
         .Get();
 
