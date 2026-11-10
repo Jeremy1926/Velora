@@ -52,15 +52,5 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         return AllowEncryption != nullptr;
     }();
 
-    static auto bUseIrisReplication = []
-    {
-        auto UseIrisReplication = IConsoleManager::Get().FindConsoleVariable(TEXT("net.Iris.UseIrisReplication"));
-
-        if (UseIrisReplication)
-            UseIrisReplication->Set(TEXT("0"), ECVF_SetByCode);
-
-        return UseIrisReplication != nullptr;
-    }();
-
     Original(DeltaSeconds, bIdleMode);
 }
