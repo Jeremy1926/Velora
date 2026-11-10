@@ -148,6 +148,10 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
         .Or()
         .If(MaxStackSize->GetSize() == sizeof(int32))
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "cmp dword ptr [*+%x], 0x7ffffffe", MaxStackSize)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetMaxStackSize"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
         .Get();
 
     return GetMaxStackSize(this, AbilitySystemComponent);
