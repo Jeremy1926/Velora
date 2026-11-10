@@ -1368,3 +1368,51 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void*
 
     *(AFortPickup**)Z_Param__Result = K2_SpawnPickupInWorldWithClass(WorldContextObject, ItemDefinition, PickupClass, NumberToSpawn, Position, Direction, OverrideMaxStackCount, !!bToss);
 }
+
+void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClassAndItemEntry(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UFortKismetLibrary, execK2_SpawnPickupInWorldWithClassAndItemEntry, Anchor::Hook()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClassAndItemEntry")))
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClassAndItemEntry"))
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClassAndItemEntry")));
+
+    alignas(16) uint8 ItemEntryTemp[0x400] = {};
+    UObject* WorldContextObject = nullptr;
+    TSubclassOf<AFortPickup> PickupClass;
+    TGameValue<FVector> Position;
+    TGameValue<FVector> Direction;
+    int32 OverrideMaxStackCount = 0;
+    uint32 bToss = 0;
+    uint32 bRandomRotation = 0;
+    uint32 bBlockedFromAutoPickup = 0;
+    EFortPickupSourceTypeFlag SourceType = EFortPickupSourceTypeFlag::Other;
+    EFortPickupSpawnSource Source = EFortPickupSpawnSource::Unset;
+    AFortPlayerController* OptionalOwnerPC = nullptr;
+    uint32 bPickupOnlyRelevantToOwner = 0;
+
+    Stack.StepCompiledIn(&WorldContextObject);
+
+    auto& ItemEntry = Stack.StepCompiledInRef<FFortItemEntry>(ItemEntryTemp);
+
+    Stack.StepCompiledIn(&PickupClass);
+    Stack.StepCompiledIn(&Position);
+    Stack.StepCompiledIn(&Direction);
+    Stack.StepCompiledIn(&OverrideMaxStackCount);
+    Stack.StepCompiledIn(&bToss);
+    Stack.StepCompiledIn(&bRandomRotation);
+    Stack.StepCompiledIn(&bBlockedFromAutoPickup);
+    Stack.StepCompiledIn(&SourceType);
+    Stack.StepCompiledIn(&Source);
+    Stack.StepCompiledIn(&OptionalOwnerPC);
+    Stack.StepCompiledIn(&bPickupOnlyRelevantToOwner);
+    Stack.Code += !!Stack.Code;
+
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+    auto Pickup = World && Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()) ? AFortPickup::CreateFromData(World, ItemEntry, Position.Get(), FRotator{ 0.0f, 0.0f, 0.0f }, OptionalOwnerPC, PickupClass ? (UClass*)PickupClass : AFortPickupAthena::StaticClass(), nullptr, SourceType) : nullptr;
+
+    if (Pickup && bToss)
+        Pickup->TossPickup(Position.Get(), nullptr, OverrideMaxStackCount, true, true, SourceType, Source);
+
+    *(AFortPickup**)Z_Param__Result = Pickup;
+}

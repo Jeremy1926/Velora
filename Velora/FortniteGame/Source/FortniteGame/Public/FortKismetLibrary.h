@@ -130,6 +130,8 @@ public:
 
     void execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void* const Z_Param__Result);
 
+    void execK2_SpawnPickupInWorldWithClassAndItemEntry(FFrame& Stack, void* const Z_Param__Result);
+
     static TArray<AFortPickup*> K2_SpawnPickupInWorldWithLootTier(UObject* WorldContextObject, FName LootTierName, const TGameValue<FVector>& GamePosition, int32 OverrideMaxStackCount, bool bToss, EFortPickupSourceTypeFlag SourceType, EFortPickupSpawnSource Source);
 
     void execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, void* const Z_Param__Result);
