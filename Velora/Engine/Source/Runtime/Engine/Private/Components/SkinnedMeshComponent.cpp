@@ -18,6 +18,12 @@ int32 USkinnedMeshComponent::GetBoneIndex(FName BoneName) const
         .Find("add [*+0x20], *")
         .Find("mov rcx, rax; mov rdx, [rax]; call [rdx+0x*]; test ebx, ebx; jz 0x*; lea r11, [rax+0x*]")
         .Find("call [rdx+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.SkinnedMeshComponent:GetBoneIndex"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, rax; mov rdx, [rax]; call [rdx+0x*]; movzx edx, bx; mov ecx, edx")
+        .Find("call [rdx+0x*]")
         .Optional()
         .Get();
 
@@ -33,6 +39,12 @@ int32 USkinnedMeshComponent::GetBoneIndex(FName BoneName) const
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("mov rcx, rax; mov rdx, [rax]; call [rdx+0x*]; test ebx, ebx; jz 0x*; lea r11, [rax+0x*]")
+            .Find("lea r11, [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.SkinnedMeshComponent:GetBoneIndex"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rcx, rax; mov rdx, [rax]; call [rdx+0x*]; movzx edx, bx; mov ecx, edx")
             .Find("lea r11, [rax+0x*]")
             .Disp();
 
