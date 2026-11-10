@@ -240,7 +240,29 @@ void FFortAthenaLivingWorldPlayerTracker::GetNumberOfPlayerPawnInRange(const FVe
         .Find("movdqa [*], xmm*; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Optional()
         .Get();
 
-    GetNumberOfPlayerPawnInRange(this, Origin, MaxRadius, SquaredRadii, OutNumberOfPlayerInRadius, ScratchPad);
+    if (GetNumberOfPlayerPawnInRange)
+    {
+        GetNumberOfPlayerPawnInRange(this, Origin, MaxRadius, SquaredRadii, OutNumberOfPlayerInRadius, ScratchPad);
+        return;
+    }
+
+    for (int32 Index = 0; Index < OutNumberOfPlayerInRadius.Num(); Index++)
+        OutNumberOfPlayerInRadius[Index] = 0;
+
+    for (auto PlayerPawn : GetTrackedPlayerPawns())
+    {
+        if (!PlayerPawn)
+            continue;
+
+        const float DistanceSquared = (PlayerPawn->GetActorLocation() - Origin).SizeSquared();
+
+        for (int32 Index = 0; Index < OutNumberOfPlayerInRadius.Num() && Index < SquaredRadii.Num(); Index++)
+        {
+            if (DistanceSquared <= SquaredRadii[Index])
+                OutNumberOfPlayerInRadius[Index]++;
+        }
+    }
 }

@@ -299,6 +299,8 @@ public:
 
     void ReleasePendingEventInstances();
 
+    void UpdateSpawnedActors();
+
     void GenerateEventsFromRuntimes();
 
     void ProcessCategory(FFortAthenaLivingWorldCategory* Category, void* ConditionContext);

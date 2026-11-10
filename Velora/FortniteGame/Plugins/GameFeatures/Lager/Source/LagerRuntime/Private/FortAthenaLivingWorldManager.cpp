@@ -2356,6 +2356,126 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     }
 
     ProcessPendingEventRequests();
+    UpdateSpawnedActors();
+}
+
+void UFortAthenaLivingWorldManager::UpdateSpawnedActors()
+{
+    static auto DestroyActor = Anchor::Function<void (*)(UFortAthenaLivingWorldManager*, AActor*)>(TEXT("UFortAthenaLivingWorldManager::DestroyActor"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("call 0x*", 3)
+        .Target()
+        .Get();
+
+    static auto OnSpawnedActorDestroy_Internal = Anchor::Function<void (*)(UFortAthenaLivingWorldManager*, AActor*, bool)>(TEXT("UFortAthenaLivingWorldManager::OnSpawnedActorDestroy_Internal"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("xor r8d, r8d; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto ActorUpdateHandler = StaticClass()->FindPropertyByName(FName(TEXT("ActorUpdateHandler")));
+    static auto bIsDying = (UBoolProperty*)AFortPawn::StaticClass()->FindPropertyByName(FName(TEXT("bIsDying")));
+
+    auto World = GetWorld();
+
+    if (!World || !ActorUpdateHandler)
+        return;
+
+    auto Handler = ActorUpdateHandler->ContainerPtrToValuePtr<uint8>(this);
+    auto& DespawnCandidates = *(TArray<int32>*)(Handler + 0x90);
+    auto& LastUpdateIndex = *(int32*)(Handler + 0xA0);
+    const float Now = World->GetTimeSeconds();
+    const int32 UpdateCount = FMath::Min(*(int32*)(Handler + 0x10) - *(int32*)(Handler + 0x3C), *(int32*)(Handler + 0xA4));
+
+    for (int32 UpdateIndex = 0; UpdateIndex < UpdateCount; UpdateIndex++)
+    {
+        const int32 ActorInfoNum = *(int32*)(Handler + 0x10);
+        const int32 NumBits = *(int32*)(Handler + 0x30);
+        auto AllocationFlags = *(uint32**)(Handler + 0x28) ? *(uint32**)(Handler + 0x28) : (uint32*)(Handler + 0x18);
+
+        if (ActorInfoNum <= 0 || ActorInfoNum - *(int32*)(Handler + 0x3C) <= 0)
+            break;
+
+        int32 Index = LastUpdateIndex;
+
+        for (int32 Step = 0; Step < ActorInfoNum; Step++)
+        {
+            Index = Index + 1 < ActorInfoNum ? Index + 1 : 0;
+
+            if (Index >= 0 && Index < NumBits && (AllocationFlags[Index / 32] & (1u << (Index % 32))))
+                break;
+        }
+
+        if (Index < 0 || Index >= NumBits || !(AllocationFlags[Index / 32] & (1u << (Index % 32))))
+            break;
+
+        LastUpdateIndex = Index;
+
+        auto ActorInfo = *(uint8**)(Handler + 0x08) + Index * 0x40;
+        auto Actor = (AActor*)((FWeakObjectPtr*)(ActorInfo + 0x28))->Get();
+        auto Event = *(FFortAthenaLivingWorldEvent**)(ActorInfo + 0x30);
+        auto& DespawnCandidateTimestamp = *(float*)(ActorInfo + 0x38);
+
+        if (!Actor || !Event)
+            continue;
+
+        if (ActorInfo[0x3C] && bIsDying && Cast<AFortPawn>(Actor) && bIsDying->GetPropertyValue_InContainer(Actor))
+            continue;
+
+        if (IsActorCandidateForDespawn(Actor, Event->GetDespawnCondition()))
+        {
+            if (DespawnCandidateTimestamp < 0.0f)
+                DespawnCandidateTimestamp = Now + Event->GetDespawnCondition()->GetTimeAsCandidateBeforeDespawn();
+
+            if (Now >= DespawnCandidateTimestamp)
+                DespawnCandidates.AddUnique(Index);
+
+            continue;
+        }
+
+        if (DespawnCandidateTimestamp > 0.0f)
+        {
+            while (DespawnCandidates.RemoveSingle(Index) > 0)
+            {
+            }
+        }
+
+        DespawnCandidateTimestamp = -1.0f;
+    }
+
+    const int32 DespawnCount = FMath::Min(DespawnCandidates.Num(), *(int32*)(Handler + 0xA8));
+
+    for (int32 DespawnIndex = 0; DespawnIndex < DespawnCount && DespawnCandidates.Num() > 0; DespawnIndex++)
+    {
+        const int32 Index = DespawnCandidates[0];
+        const int32 NumBits = *(int32*)(Handler + 0x30);
+        auto AllocationFlags = *(uint32**)(Handler + 0x28) ? *(uint32**)(Handler + 0x28) : (uint32*)(Handler + 0x18);
+
+        DespawnCandidates.RemoveAt(0);
+
+        if (Index < 0 || Index >= NumBits || !(AllocationFlags[Index / 32] & (1u << (Index % 32))))
+            continue;
+
+        auto ActorInfo = *(uint8**)(Handler + 0x08) + Index * 0x40;
+        auto Actor = (AActor*)((FWeakObjectPtr*)(ActorInfo + 0x28))->Get();
+        auto Event = *(FFortAthenaLivingWorldEvent**)(ActorInfo + 0x30);
+        auto& DespawnCandidateTimestamp = *(float*)(ActorInfo + 0x38);
+
+        if (!Actor || !Event || !(DespawnCandidateTimestamp > 0.0f) || Now < DespawnCandidateTimestamp)
+            continue;
+
+        if (!IsActorCandidateForDespawn(Actor, Event->GetDespawnCondition()))
+        {
+            DespawnCandidateTimestamp = -1.0f;
+            continue;
+        }
+
+        DestroyActor(this, Actor);
+        OnSpawnedActorDestroy_Internal(this, Actor, false);
+    }
 }
 
 void UFortAthenaLivingWorldManager::ReleasePendingEventInstances()

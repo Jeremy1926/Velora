@@ -106,6 +106,8 @@ public:
 
     void StartPlaylistTimer(float Seconds, bool bOption);
 
+    const void* GetGamePhaseLogicSafeZoneInterface() const;
+
     const void* GetSafeZoneInterface() const;
 
     EFortSafeZoneState GetSafeZoneState() const;

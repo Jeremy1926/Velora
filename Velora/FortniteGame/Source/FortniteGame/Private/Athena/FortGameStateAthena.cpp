@@ -290,6 +290,16 @@ void AFortGameStateAthena::StartPlaylistTimer(float Seconds, bool bOption)
         SafeZoneIndicator->OnSafeZoneTimerPauseChanged(GetSafeZonePauseTime() >= 0.0f);
 }
 
+const void* AFortGameStateAthena::GetGamePhaseLogicSafeZoneInterface() const
+{
+    if (!UFortAthenaLivingWorldManager::HasEventRuntimes())
+        return nullptr;
+
+    auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+    return GamePhaseLogic ? (const uint8*)GamePhaseLogic + 0xA0 : nullptr;
+}
+
 const void* AFortGameStateAthena::GetSafeZoneInterface() const
 {
     static auto SafeZoneInterface = Anchor::Offset(TEXT("AFortGameStateAthena::SafeZoneInterface"))
@@ -333,7 +343,9 @@ FVector AFortGameStateAthena::GetSafeZoneCenter() const
 
     TGameValue<FVector> SafeZoneCenter;
 
-    if (auto SafeZoneInterface = GetSafeZoneInterface())
+    if (auto GamePhaseLogicSafeZoneInterface = GetGamePhaseLogicSafeZoneInterface())
+        (*(void (***)(const void*, TGameValue<FVector>*))GamePhaseLogicSafeZoneInterface)[0x50 / sizeof(void*)](GamePhaseLogicSafeZoneInterface, &SafeZoneCenter);
+    else if (auto SafeZoneInterface = GetSafeZoneInterface())
         GetSafeZoneCenter(SafeZoneInterface, &SafeZoneCenter);
 
     return SafeZoneCenter.Get();
@@ -349,6 +361,9 @@ float AFortGameStateAthena::GetSafeZoneRadius() const
         .Target()
         .Find("call [rax+0x*]", 3)
         .Get();
+
+    if (auto GamePhaseLogicSafeZoneInterface = GetGamePhaseLogicSafeZoneInterface())
+        return (*(float (***)(const void*))GamePhaseLogicSafeZoneInterface)[0x48 / sizeof(void*)](GamePhaseLogicSafeZoneInterface);
 
     auto SafeZoneInterface = GetSafeZoneInterface();
 
