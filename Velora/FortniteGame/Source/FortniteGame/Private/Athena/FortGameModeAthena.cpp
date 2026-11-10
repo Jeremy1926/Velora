@@ -43,6 +43,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/GameEngine.h"
 #include "Engine/GameInstance.h"
+#include "Engine/NetDriver.h"
+#include "UObject/ScriptDelegates.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "Math/UnrealMathUtility.h"
@@ -460,6 +462,20 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
         if (PlayerController->GetWorldInventory())
             PlayerController->GetWorldInventory()->GetInventoryType() = EFortInventoryType::World;
+
+        static auto OnViewTargetChanged = AFortPlayerController::StaticClass()->FindPropertyByName(FName(TEXT("OnViewTargetChanged")));
+
+        if (OnViewTargetChanged && GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem())
+        {
+            struct
+            {
+                AFortPlayerController* PlayerController;
+                AActor* NewViewTarget;
+                AActor* OldViewTarget;
+            } Parameters{ PlayerController, PlayerController->GetViewTarget(), PlayerController->GetViewTarget() };
+
+            OnViewTargetChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(PlayerController)->ProcessMulticastDelegate<UObject>(&Parameters);
+        }
     }
 
     auto Pawn = AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
