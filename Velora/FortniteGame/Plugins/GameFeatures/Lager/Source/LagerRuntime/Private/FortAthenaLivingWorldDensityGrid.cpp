@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FortAthenaLivingWorldDensityGrid.h"
+#include "FortAthenaLivingWorldManager.h"
 #include "GameFramework/Actor.h"
 #include "Scanner.h"
 
@@ -418,6 +419,116 @@ float* FFortAthenaLivingWorldDensityGrid::GetActorDataDensityRange(AActor* InAct
 
 void FFortAthenaLivingWorldDensityGrid::UpdateActor(AActor* InActor)
 {
+    if (UFortAthenaLivingWorldManager::HasEventRuntimes())
+    {
+        static auto bInitialized = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("jmp 0x*")
+            .Target()
+            .Find("test [rcx+0x*], r12b")
+            .Disp();
+
+        static auto BuildAABB = Anchor::Function<void* (*)(void*, const FVector3d*, const FVector3d*)>(TEXT("FBox::BuildAABB"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("jmp 0x*")
+            .Target()
+            .Find("call 0x*; lea r9, [rbp-0x*]; mov rcx, rsi; lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+            .Target()
+            .Get();
+
+        static auto GetGridCellMinAndMaxForBounds = Anchor::Function<bool (*)(FFortAthenaLivingWorldDensityGrid*, const void*, int32*, int32*)>(TEXT("FFortSpatialGrid::GetGridCellMinAndMaxForBounds"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea r9, [rbp-0x*]; mov rcx, rsi; lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto AddActorDataToOccupiedCellIndex = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, void*)>(TEXT("FFortAthenaLivingWorldDensityGrid::AddActorDataToOccupiedCellIndex"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("jmp 0x*")
+            .Target()
+            .Find("imul rdx, rax, 0x2c; add rdx, [rbx]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto RemoveActorDataFromOccupiedCellIndex = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, void*)>(TEXT("FFortAthenaLivingWorldDensityGrid::RemoveActorDataFromOccupiedCellIndex"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("call 0x*", 3)
+            .Target()
+            .Find("mov rdx, r11; mov rcx, rsi; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto ActorDataArray = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::ActorDataArray"))
+            .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+            .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea rbx, [rsi+0x*]; call 0x*; mov rdx, rax; mov rcx, rbx")
+            .Disp();
+
+        if (!InActor || !(*((uint8*)this + bInitialized) & 1))
+            return;
+
+        auto ActorDatas = (uint8*)this + ActorDataArray;
+        auto AllocationFlags = *(uint32**)(ActorDatas + 0x20) ? *(uint32**)(ActorDatas + 0x20) : (uint32*)(ActorDatas + 0x10);
+        const int32 NumBits = *(int32*)(ActorDatas + 0x28);
+        const FWeakObjectPtr WeakActor(InActor);
+
+        for (int32 Index = 0; Index < *(int32*)(ActorDatas + 0x8) && Index < NumBits; Index++)
+        {
+            auto ActorData = *(uint8**)ActorDatas + Index * 0x2C;
+
+            if (!(AllocationFlags[Index / 32] & (1u << (Index % 32))) || !(*(FWeakObjectPtr*)(ActorData + 0x18) == WeakActor) || !WeakActor.IsValid())
+                continue;
+
+            const FVector3d Origin(InActor->GetActorLocation());
+            const FVector3d Extent(FVector(*(float*)(ActorData + 0x24), *(float*)(ActorData + 0x24), *(float*)(ActorData + 0x24)));
+            alignas(8) uint8 Bounds[0x38] = {};
+            int32 MinCell[3] = {};
+            int32 MaxCell[3] = {};
+
+            BuildAABB(Bounds, &Origin, &Extent);
+
+            if (!GetGridCellMinAndMaxForBounds(this, Bounds, MinCell, MaxCell))
+                return;
+
+            if (!memcmp(ActorData, MinCell, sizeof(MinCell)) && !memcmp(ActorData + 0xC, MaxCell, sizeof(MaxCell)))
+                return;
+
+            RemoveActorDataFromOccupiedCellIndex(this, ActorData);
+
+            memcpy(ActorData, MinCell, sizeof(MinCell));
+            memcpy(ActorData + 0xC, MaxCell, sizeof(MaxCell));
+
+            AddActorDataToOccupiedCellIndex(this, ActorData);
+            return;
+        }
+
+        return;
+    }
+
     if (!InActor || !HasActorDensityValues())
         return;
 

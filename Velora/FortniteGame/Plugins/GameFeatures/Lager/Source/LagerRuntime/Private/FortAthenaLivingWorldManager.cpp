@@ -2550,7 +2550,21 @@ void UFortAthenaLivingWorldManager::UpdateSpawnedActors()
         auto Event = *(FFortAthenaLivingWorldEvent**)(ActorInfo + 0x30);
         auto& DespawnCandidateTimestamp = *(float*)(ActorInfo + 0x38);
 
-        if (!Actor || !Event)
+        if (!Actor)
+            continue;
+
+        if (auto ActorDensityGrid = GetActorDensityGrid())
+            ActorDensityGrid->UpdateActor(Actor);
+
+        for (int32 TagIndex = 0; TagIndex < *(int32*)(ActorInfo + 0x10); TagIndex++)
+        {
+            auto DensityTags = *(uint8**)(ActorInfo + 0x8) ? *(uint8**)(ActorInfo + 0x8) : ActorInfo;
+
+            if (auto TagDensityGrid = GetTagDensityGrid(((const TGameValue<FGameplayTag>*)(DensityTags + TagIndex * 0x4))->Get()))
+                TagDensityGrid->UpdateActor(Actor);
+        }
+
+        if (!Event)
             continue;
 
         if (ActorInfo[0x3C] && bIsDying && Cast<AFortPawn>(Actor) && bIsDying->GetPropertyValue_InContainer(Actor))
