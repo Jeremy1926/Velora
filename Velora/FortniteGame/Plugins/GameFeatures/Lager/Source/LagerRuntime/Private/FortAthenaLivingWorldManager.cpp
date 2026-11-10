@@ -2413,6 +2413,18 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     ProcessEventRuntimeEQSSpawns();
     UpdateSpawnedActors();
     TickDestroyedActorDensities();
+
+    static auto ActorUpdateHandler = StaticClass()->FindPropertyByName(FName(TEXT("ActorUpdateHandler")));
+    static float NextStatusTime = 0.0f;
+
+    if (Config::bLogLivingWorld && (World->GetTimeSeconds() >= NextStatusTime || NextStatusTime - World->GetTimeSeconds() > 30.0f))
+    {
+        auto Handler = ActorUpdateHandler ? ActorUpdateHandler->ContainerPtrToValuePtr<uint8>(this) : nullptr;
+
+        NextStatusTime = World->GetTimeSeconds() + 30.0f;
+
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld status: %d categories, %d events, %d point providers, %d tracked players, %d spawned actors, %d pending requests, %d pending spawns"), GetCategoryRuntimes().Num(), GetEventRuntimes().Num(), GetPointProviders().Num(), PlayerTracker ? PlayerTracker->GetTrackedPlayerPawns().Num() : 0, Handler ? *(int32*)(Handler + 0x10) - *(int32*)(Handler + 0x3C) : 0, GetPendingEventRequests().Num(), GetPendingActorSpawnRequests().Num());
+    }
 }
 
 void UFortAthenaLivingWorldManager::TickDestroyedActorDensities()
