@@ -356,5 +356,28 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
     AFortWeapon::FlushPendingUnequipRemovals();
 
+    static int32 VehicleLogCountdown = 0;
+
+    auto VehicleLogWorld = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+
+    if (Config::bLogReplication && VehicleLogWorld && --VehicleLogCountdown < 0)
+    {
+        VehicleLogCountdown = 300;
+
+        static auto CurrentVehicle = AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle")));
+        static auto VehicleLastTick = AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("VehicleLastTick")));
+
+        TArray<AActor*> Pawns;
+        UGameplayStatics::GetAllActorsOfClass(VehicleLogWorld, AFortPlayerPawn::StaticClass(), Pawns);
+
+        for (auto Pawn : Pawns)
+        {
+            auto Vehicle = CurrentVehicle ? *CurrentVehicle->ContainerPtrToValuePtr<AActor*>(Pawn) : nullptr;
+            auto LastVehicle = VehicleLastTick ? *VehicleLastTick->ContainerPtrToValuePtr<AActor*>(Pawn) : nullptr;
+
+            UE_LOG(LogVelora, Log, TEXT("Pawn %s class %s vehicle %s last %s"), *Pawn->GetName(), *Pawn->GetClass()->GetName(), Vehicle ? *Vehicle->GetName() : TEXT("none"), LastVehicle ? *LastVehicle->GetName() : TEXT("none"));
+        }
+    }
+
     Original(DeltaSeconds, bIdleMode);
 }
