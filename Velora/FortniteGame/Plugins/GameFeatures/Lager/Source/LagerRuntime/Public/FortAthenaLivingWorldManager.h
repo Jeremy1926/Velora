@@ -321,7 +321,7 @@ public:
 
     void RemovePreRegistrationFromDensityGrids(FPendingActorSpawnEventRequest::FActorInfo& ActorInfo, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
 
-    int32 RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, AActor*& OutSpawnedActor, bool& bOutCompleted);
+    int32 RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, UObject* EventData, AActor*& OutSpawnedActor, bool& bOutCompleted);
 
     bool SelectDataToSpawn(FEventRuntimeSpawnData::FActorDescription& ActorDescription, FEventDataRuntime* EventDataRuntime, UClass*& OutSpawnerDataClass, UClass*& OutActorClass);
 

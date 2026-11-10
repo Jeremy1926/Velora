@@ -2897,8 +2897,27 @@ bool UFortAthenaLivingWorldManager::SelectDataToSpawn(FEventRuntimeSpawnData::FA
     return true;
 }
 
-int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, AActor*& OutSpawnedActor, bool& bOutCompleted)
+int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, UObject* EventData, AActor*& OutSpawnedActor, bool& bOutCompleted)
 {
+    static auto GetSpawnAction = Anchor::Function<UObject* (*)(UFortAthenaLivingWorldManager*, void*)>(TEXT("UFortAthenaLivingWorldManager::GetSpawnAction"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rdx, [rsi+0x*]; mov [rsp+0x20], r15; mov r9, rdi; mov rcx, r14; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, rbx; mov rcx, r14; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto OnActorSpawnedSlot = Anchor::Offset(TEXT("UFortAthenaLivingWorldSpawnAction::OnActorSpawned"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rdx, [rsi+0x*]; mov [rsp+0x20], r15; mov r9, rdi; mov rcx, r14; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [r9+0x*]")
+        .Disp();
+
+    static auto SpawnActions = UFortAthenaLivingWorldEventData::StaticClass()->FindPropertyByName(FName(TEXT("SpawnActions")));
     static auto NextActorRequestID = -2;
 
     auto SpawnerData = SpawnerDataClass ? SpawnerDataClass->GetDefaultObject() : nullptr;
@@ -2913,7 +2932,24 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
             return NextActorRequestID--;
         }
 
-        return AISpawner->RequestSpawn(ComponentList, FTransform(FRotator{ 0.0f, Rotation.Yaw, 0.0f }, Location, FVector(1.0f, 1.0f, 1.0f)), TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned));
+        if (EventData && SpawnActions)
+        {
+            auto& TaggedSpawnActions = *SpawnActions->ContainerPtrToValuePtr<TArray<uint8>>(EventData);
+
+            for (int32 Index = 0; Index < TaggedSpawnActions.Num(); Index++)
+            {
+                if (auto SpawnAction = GetSpawnAction(this, TaggedSpawnActions.GetData() + Index * 0x10))
+                    (*(void (***)(UObject*, UFortAthenaAISpawnerDataComponentList*, UFortAthenaLivingWorldManager*))SpawnAction)[(OnActorSpawnedSlot - sizeof(void*)) / sizeof(void*)](SpawnAction, ComponentList, this);
+            }
+        }
+
+        const int32 RequestID = AISpawner->RequestSpawn(ComponentList, FTransform(FRotator{ 0.0f, Rotation.Yaw, 0.0f }, Location, FVector(1.0f, 1.0f, 1.0f)), TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned));
+
+        if (RequestID != INDEX_NONE)
+            return RequestID;
+
+        bOutCompleted = true;
+        return NextActorRequestID--;
     }
 
     if (auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnerData))
@@ -3209,7 +3245,7 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         auto ActorClass = PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].ActorClass;
         AActor* SpawnedActor = nullptr;
         bool bCompleted = false;
-        const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, Locations[Index], Rotations[Index], SpawnerDataClass, ActorClass, SpawnedActor, bCompleted);
+        const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, Locations[Index], Rotations[Index], SpawnerDataClass, ActorClass, EventDataRuntime->EventData.Get(), SpawnedActor, bCompleted);
 
         PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].RequestID = RequestID;
 
