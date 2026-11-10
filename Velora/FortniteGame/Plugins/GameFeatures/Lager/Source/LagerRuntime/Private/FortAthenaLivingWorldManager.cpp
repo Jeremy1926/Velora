@@ -2337,11 +2337,19 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     if (NextEventGenerationTime < 0.0f)
         return;
 
+    auto PlayerTracker = GetPlayerTracker();
+
+    if (PlayerTracker)
+        PlayerTracker->UpdateTimeSinceLastRefresh(DeltaTime);
+
     ReleasePendingEventInstances();
 
     if (World->GetTimeSeconds() >= NextEventGenerationTime)
     {
         NextEventGenerationTime = World->GetTimeSeconds() + Config->GetMinimumEventGenerationInterval().GetValueAtLevel(0.0f);
+
+        if (PlayerTracker && GetCachedGameState())
+            PlayerTracker->RefreshTree(World, GetCachedGameState());
 
         RegisterStaticPointProviders();
         GenerateEventsFromRuntimes();

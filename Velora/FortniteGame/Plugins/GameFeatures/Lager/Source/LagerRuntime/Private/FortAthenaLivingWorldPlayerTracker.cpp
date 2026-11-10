@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "FortAthenaLivingWorldPlayerTracker.h"
+#include "FortAthenaLivingWorldConfigData.h"
 #include "AI/FortAthenaAIBotController.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
@@ -105,7 +106,7 @@ TSet<const AFortAthenaAIBotController*>& FFortAthenaLivingWorldPlayerTracker::Ge
 
 TArray<const AFortPlayerPawn*>& FFortAthenaLivingWorldPlayerTracker::GetTrackedPlayerPawns()
 {
-    static auto TrackedPlayerPawns = StaticStruct()->FindPropertyByName(FName(TEXT("TrackedPlayerPawns")));
+    static auto TrackedPlayerPawns = StaticStruct()->FindPropertyByName(FName(TEXT("TrackedPlayerPawns"))) ? StaticStruct()->FindPropertyByName(FName(TEXT("TrackedPlayerPawns"))) : StaticStruct()->FindPropertyByName(FName(TEXT("TrackedPawns")));
 
     return *TrackedPlayerPawns->ContainerPtrToValuePtr<TArray<const AFortPlayerPawn*>>(this);
 }
@@ -119,6 +120,11 @@ TArray<const AController*>& FFortAthenaLivingWorldPlayerTracker::GetTrackedPlaye
 
 TBVTree<FSimpleBVTreeElement>& FFortAthenaLivingWorldPlayerTracker::GetTrackedPlayerBVTree()
 {
+    static auto Listeners = StaticStruct()->FindPropertyByName(FName(TEXT("Listeners")));
+
+    if (Listeners)
+        return *(TBVTree<FSimpleBVTreeElement>*)(Listeners->ContainerPtrToValuePtr<TArray<FWeakObjectPtr>>(this) + 1);
+
     return *(TBVTree<FSimpleBVTreeElement>*)(&GetTrackedPlayerControllers() + 1);
 }
 
@@ -129,6 +135,11 @@ int32& FFortAthenaLivingWorldPlayerTracker::GetMinNumberOfPlayers()
 
 float& FFortAthenaLivingWorldPlayerTracker::GetTimeSinceLastRefresh()
 {
+    static auto TrackDeadPlayers = UFortAthenaLivingWorldConfigData::StaticClass()->FindPropertyByName(FName(TEXT("TrackDeadPlayers")));
+
+    if (TrackDeadPlayers)
+        return *(float*)(&GetMinNumberOfPlayers() + 2);
+
     return *(float*)(&GetMinNumberOfPlayers() + 1);
 }
 
