@@ -64,6 +64,10 @@ const TArray<UClass*>& AFortGameStateZone::GetAllPlayerBuildableClasses() const
 void AFortGameStateZone::OnAbilitySystemInterfaceReadyForPersistentGameplayEffects(IAbilitySystemInterface* AbilitySystemInterface)
 {
     static auto OnAbilitySystemInterfaceReadyForPersistentGameplayEffects = Anchor::Function<void (*)(AFortGameStateZone*, IAbilitySystemInterface*)>(TEXT("AFortGameStateZone::OnAbilitySystemInterfaceReadyForPersistentGameplayEffects"))
+        .String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects"), "lea rcx, [0x*]; lea rdx, [rax+0x*]; mov r8, rdi")
+        .Start()
+        .Is("test rdx, rdx; jz 0x*")
+        .Or()
         .String(TEXT("STAT_Fort_GameStateZoneApplyingPersistentEffects"))
         .Start()
         .Get();

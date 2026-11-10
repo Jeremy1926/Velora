@@ -155,6 +155,14 @@ UFunction* UObject::FindFunctionChecked(FName InName) const
         .Start()
         .Find("mov rcx, [rcx+0x10]; mov r8d, 0x1")
         .Call()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("mov r8d, 0x1; mov rcx, [rcx+0x10]")
+        .Call()
         .Get();
 
     if (FindFunctionByName)
