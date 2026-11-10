@@ -32,6 +32,9 @@ void FGameplayEffectSpec::SetSetByCallerMagnitude(FGameplayTag DataTag, float Ma
 {
     static auto SetSetByCallerMagnitude = Anchor::Function<void (*)(FGameplayEffectSpec*, FGameplayTag, float)>(TEXT("FGameplayEffectSpec::SetSetByCallerMagnitude(FGameplayTag)"))
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignTagSetByCallerMagnitude"))
+        .Is("test edx, edx; jz 0x*")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:AssignTagSetByCallerMagnitude"))
         .Call()
         .Get();
 
