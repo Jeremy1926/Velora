@@ -24,6 +24,11 @@ void UFortGameplayAbility_RangedWeapon::MakeTargetDataHandleFromHitResults(FGame
         .Find("lea r8, [rbp-0x*]; lea rdx, [rbp+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("STAT_FortGA_Ranged_OnTargetDataReadyCB"))
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     struct
