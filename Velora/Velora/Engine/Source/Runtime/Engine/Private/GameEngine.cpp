@@ -37,6 +37,8 @@
 #include "Conversation/FortConversationTaskNode_SupplyDrop.h"
 #include "Online/FortGameSession.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/NetDriver.h"
+#include "Misc/OutputDeviceRedirector.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "ContentStreaming.h"
@@ -357,6 +359,29 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
     }
 
     AFortWeapon::FlushPendingUnequipRemovals();
+
+    static int32 IrisLogCountdown = 600;
+
+    auto IrisLogWorld = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
+    auto IrisLogNetDriver = Config::bLogReplication && IrisLogCountdown >= 0 && IrisLogWorld ? IrisLogWorld->GetNetDriver() : nullptr;
+
+    if (IrisLogNetDriver && IrisLogNetDriver->GetReplicationSystem() && IrisLogNetDriver->GetClientConnections().Num() > 0 && --IrisLogCountdown < 0)
+    {
+        TArray<AActor*> PlayerControllers;
+        UGameplayStatics::GetAllActorsOfClass(IrisLogWorld, AFortPlayerController::StaticClass(), PlayerControllers);
+
+        for (auto Actor : PlayerControllers)
+        {
+            auto WorldInventory = ((AFortPlayerController*)Actor)->GetWorldInventory();
+
+            UE_LOG(LogVelora, Log, TEXT("Iris controller %s inventory %s owner %s"), *Actor->GetName(), WorldInventory ? *WorldInventory->GetName() : TEXT("none"), WorldInventory && WorldInventory->GetOwner() ? *WorldInventory->GetOwner()->GetName() : TEXT("none"));
+        }
+
+        IConsoleManager::Get().ProcessUserConsoleInput(TEXT("Net.Iris.PrintDynamicFilterClassConfig"), *GLog, IrisLogWorld);
+        IConsoleManager::Get().ProcessUserConsoleInput(TEXT("Net.Iris.PrintAlwaysRelevantObjects"), *GLog, IrisLogWorld);
+        IConsoleManager::Get().ProcessUserConsoleInput(TEXT("Net.Iris.PrintRelevantObjectsToConnection"), *GLog, IrisLogWorld);
+        IConsoleManager::Get().ProcessUserConsoleInput(TEXT("Net.Iris.PrintReplicatedObjects"), *GLog, IrisLogWorld);
+    }
 
     Original(DeltaSeconds, bIdleMode);
 }

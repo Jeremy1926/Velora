@@ -66,6 +66,8 @@ class IConsoleManager
 public:
     IConsoleVariable* FindConsoleVariable(const TCHAR* Name) const;
 
+    bool ProcessUserConsoleInput(const TCHAR* InInput, class FOutputDevice& Ar, class UWorld* InWorld);
+
     TConsoleVariableData<int32>* FindTConsoleVariableDataInt(const TCHAR* Name) const
     {
         IConsoleVariable* P = FindConsoleVariable(Name);
