@@ -77,6 +77,8 @@ public:
 class UWorld final : public UObject, public FNetworkNotify
 {
 public:
+    static UClass* StaticClass();
+
     struct FActorsInitializedParams
     {
         UWorld* World;

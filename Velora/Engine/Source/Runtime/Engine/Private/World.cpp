@@ -12,6 +12,13 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UClass* UWorld::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.World"));
+
+    return Class;
+}
+
 AGameModeBase* UWorld::GetAuthGameMode() const
 {
     static auto AuthorityGameMode = GetClass()->FindPropertyByName(FName(TEXT("AuthorityGameMode")));
