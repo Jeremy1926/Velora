@@ -770,7 +770,26 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
         *GamePhaseLogicAirCraftBehavior->ContainerPtrToValuePtr<uint8>(GamePhaseLogic) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
 
     if (auto AISettings = !PlaylistAISettings ? nullptr : PlaylistAISettings->GetSize() == sizeof(void*) ? *PlaylistAISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(NewPlaylist) : (UAthenaAISettings*)PlaylistAISettings->ContainerPtrToValuePtr<TSoftObjectPtr<UObject>>(NewPlaylist)->LoadSynchronous())
+    {
+        static auto AIServices = ((UObject*)AISettings)->GetClass()->FindPropertyByName(FName(TEXT("AIServices")));
+        static auto PlayerBotsServiceClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteAI.AthenaAIServicePlayerBots"));
+
+        bool bHasPlayerBotsService = !AIServices || !PlayerBotsServiceClass || !UFortAthenaLivingWorldManager::HasEventRuntimes();
+
+        for (int32 Index = 0; !bHasPlayerBotsService && Index < AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings)->Num(); Index++)
+            bHasPlayerBotsService = (*AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings))[Index] && (*AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings))[Index]->IsChildOf(PlayerBotsServiceClass);
+
+        for (int32 Index = 0; !bHasPlayerBotsService && Index < AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings)->Num(); Index++)
+        {
+            if ((*AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings))[Index])
+                continue;
+
+            (*AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings))[Index] = PlayerBotsServiceClass;
+            bHasPlayerBotsService = true;
+        }
+
         GameMode->OverrideAISettings(AISettings);
+    }
 
     if (PlaylistInfo)
         OnRep_CurrentPlaylistInfo();
