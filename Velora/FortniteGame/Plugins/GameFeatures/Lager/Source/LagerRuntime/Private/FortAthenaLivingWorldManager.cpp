@@ -1046,6 +1046,12 @@ void UFortAthenaLivingWorldManager::OnActorSpawned(AActor* SpawnedActor, int32 R
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Get();
 
+    static auto bHidden = (UBoolProperty*)AActor::StaticClass()->FindPropertyByName(FName(TEXT("bHidden")));
+    static auto bOnlyRelevantToOwner = (UBoolProperty*)AActor::StaticClass()->FindPropertyByName(FName(TEXT("bOnlyRelevantToOwner")));
+
+    if (Config::bLogLivingWorld && SpawnedActor && RequestID >= 0)
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld spawned %s for request %d at %.0f %.0f %.0f: replicated %d, hidden %d, owner only %d, dormancy %d, cull distance %.0f"), *SpawnedActor->GetName(), RequestID, SpawnedActor->GetActorLocation().X, SpawnedActor->GetActorLocation().Y, SpawnedActor->GetActorLocation().Z, (int32)SpawnedActor->GetIsReplicated(), bHidden ? (int32)bHidden->GetPropertyValue_InContainer(SpawnedActor) : -1, bOnlyRelevantToOwner ? (int32)bOnlyRelevantToOwner->GetPropertyValue_InContainer(SpawnedActor) : -1, (int32)SpawnedActor->GetNetDormancy(), FMath::Sqrt(SpawnedActor->GetNetCullDistanceSquared()));
+
     if (NativeOnActorSpawned)
         return NativeOnActorSpawned(this, SpawnedActor, RequestID);
 
