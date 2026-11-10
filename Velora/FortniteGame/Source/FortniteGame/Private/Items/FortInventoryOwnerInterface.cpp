@@ -2,7 +2,9 @@
 #include "Items/FortInventoryOwnerInterface.h"
 #include "AI/FortAthenaAIBotController.h"
 #include "Items/FortInventory.h"
+#include "Player/FortPlayerController.h"
 #include "UObject/Class.h"
+#include "UObject/ScriptInterface.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
@@ -35,7 +37,17 @@ AFortInventory* IFortInventoryOwnerInterface::GetWorldInventory()
         .Find("call [rax+0x*]")
         .Get();
 
-    return GetWorldInventory(this);
+    static auto WorldInventory = AFortPlayerController::StaticClass()->FindPropertyByName(FName(TEXT("WorldInventory")));
+    static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+
+    auto Inventory = GetWorldInventory(this);
+
+    if (!Inventory || !WorldInventory || WorldInventory->GetSize() != sizeof(FScriptInterface))
+        return Inventory;
+
+    auto DefaultInventory = AFortInventory::StaticClass()->GetDefaultObject(false);
+
+    return (AFortInventory*)((uint8*)Inventory - ((uint8*)DefaultInventory->GetInterfaceAddress(FortInventoryInterface) - (uint8*)DefaultInventory));
 }
 
 bool IFortInventoryOwnerInterface::CreateInventory()
