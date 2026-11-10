@@ -136,6 +136,36 @@
     <Filter Include="Velora">
       <UniqueIdentifier>{965FA01E-FD87-4CCC-AA65-6C966F4DDF30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Source\Runtime\Engine\Private\Components">
+      <UniqueIdentifier>{13FF999C-A94F-4C8E-AC0C-CA6F73FD84CA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Source\Runtime\Core\Private\Math">
+      <UniqueIdentifier>{358A5F53-6907-43BD-BBD6-0505670F0F63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame">
+      <UniqueIdentifier>{0D0FF038-236D-4875-B941-F04EDA670FF2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source">
+      <UniqueIdentifier>{5FB1CA56-7A54-4939-A17A-2BBAD70BC545}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame">
+      <UniqueIdentifier>{78FADE6C-EE24-49A5-8F9A-C0998FF38CDC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private">
+      <UniqueIdentifier>{370C722F-C58D-4F6D-B21C-7A2ACC795D21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Player">
+      <UniqueIdentifier>{FA54BB48-AAAD-4DA8-9F93-08486C4FC60F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Abilities">
+      <UniqueIdentifier>{7BDE43FC-1367-44D6-9C57-DB8F9F333ED1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Movement">
+      <UniqueIdentifier>{A7DBEDE1-A699-459E-A46E-D20CA79D3F27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Source\FortniteGame\Private\Pawns">
+      <UniqueIdentifier>{703E7ED8-B3F1-43AF-8C71-613C5601A5DB}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -377,18 +407,42 @@
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Player.cpp">
       <Filter>Engine\Source\Runtime\Engine\Private</Filter>
     </ClCompile>
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectBaseUtility.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CharacterMovementComponent.cpp" />
-    <ClCompile Include="Engine\Source\Runtime\Engine\Private\Actor.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp" />
-    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Math\UnrealMath.cpp" />
-    <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp" />
-    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Movement\FortMovementComp_Character.cpp" />
-    <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Pawns\FortPawn.cpp" />
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Character.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Controller.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Pawn.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\CoreUObject\Private\UObject\UObjectBaseUtility.cpp">
+      <Filter>Engine\Source\Runtime\CoreUObject\Private\UObject</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\CharacterMovementComponent.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Runtime\Engine\Private\Actor.cpp">
+      <Filter>Engine\Source\Runtime\Engine\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Misc\Parse.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Math\UnrealMath.cpp">
+      <Filter>Engine\Source\Runtime\Core\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Player\FortPlayerController.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Abilities\FortMovementSet.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Abilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Movement\FortMovementComp_Character.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="FortniteGame\Source\FortniteGame\Private\Pawns\FortPawn.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Pawns</Filter>
+    </ClCompile>
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Logging\LogMacros.cpp">
       <Filter>Engine\Source\Runtime\Core\Private\Logging</Filter>
     </ClCompile>
