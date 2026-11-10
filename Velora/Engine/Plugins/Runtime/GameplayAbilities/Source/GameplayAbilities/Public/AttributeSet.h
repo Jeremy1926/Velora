@@ -29,6 +29,11 @@ struct FGameplayAttribute
 {
     FGameplayAttribute(UProperty* NewProperty);
 
+    bool operator==(const FGameplayAttribute& Other) const
+    {
+        return AttributeOwner == Other.AttributeOwner && AttributeName == Other.AttributeName;
+    }
+
     FString AttributeName;
 
 private:

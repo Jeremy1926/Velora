@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "Templates/Casts.h"
 #include "Player/FortPlayerController.h"
+#include "Player/FortPlayerStateZone.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
@@ -211,6 +212,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
         AFriendChestNative::TickActivationTimers();
         UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
+        AFortPlayerStateZone::TickSimulatedAttributes(World);
 
         if ((UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes()) && World->GetGameState())
         {
