@@ -42,7 +42,7 @@ int32 UFortItemDefinition::GetMinLevel() const
 
 const FText& UFortItemDefinition::GetDisplayName() const
 {
-    static auto DisplayName = GetClass()->FindPropertyByName(FName(TEXT("DisplayName")));
+    static auto DisplayName = GetClass()->FindPropertyByName(FName(TEXT("DisplayName"))) ? GetClass()->FindPropertyByName(FName(TEXT("DisplayName"))) : GetClass()->FindPropertyByName(FName(TEXT("ItemName")));
 
     return *DisplayName->ContainerPtrToValuePtr<FText>(this);
 }

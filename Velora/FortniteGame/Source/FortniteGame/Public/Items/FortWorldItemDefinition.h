@@ -27,6 +27,8 @@ public:
 
     bool SupportsQuickbarFocus() const;
 
+    UObject* GetPickupItemComponent() const;
+
     bool CanBeDropped() const;
 
     bool ShouldDropOnDeath() const;
