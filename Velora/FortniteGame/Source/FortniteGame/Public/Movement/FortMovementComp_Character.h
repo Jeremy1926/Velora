@@ -2,8 +2,6 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 
-struct FCharacterNetworkMoveData;
-
 struct FFortMovementMode_BaseExtRuntimeData
 {
     void** VTable;
@@ -16,9 +14,11 @@ struct FFortMovementMode_BaseExtRuntimeData
 class UFortMovementComp_Character : public UCharacterMovementComponent
 {
 public:
+    static UClass* StaticClass();
+
     float GetMaxSpeed() const;
 
-    void ServerMove_PerformMovement(const FCharacterNetworkMoveData& MoveData);
+    void MoveAutonomous(float ClientTimeStamp, float DeltaTime, uint8 CompressedFlags, const FVector& NewAccel);
 
     void ServerUpdateReceivedPackMovementModeExtension();
 };

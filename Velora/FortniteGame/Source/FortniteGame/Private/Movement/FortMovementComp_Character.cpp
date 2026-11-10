@@ -7,8 +7,16 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UClass* UFortMovementComp_Character::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMovementComp_Character"));
+
+    return Class;
+}
 
 float UFortMovementComp_Character::GetMaxSpeed() const
 {
@@ -25,18 +33,23 @@ float UFortMovementComp_Character::GetMaxSpeed() const
     return Original();
 }
 
-void UFortMovementComp_Character::ServerMove_PerformMovement(const FCharacterNetworkMoveData& MoveData)
+void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float DeltaTime, uint8 CompressedFlags, const FVector& NewAccel)
 {
-    DETOUR(UFortMovementComp_Character, ServerMove_PerformMovement, Anchor::Hook()
+    DETOUR(UFortMovementComp_Character, MoveAutonomous, Anchor::Hook()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; movsxd rax, dword ptr [rdi+0x*]; mov rsi, [rdi+0x*]; lea r15, [rsi+rax*8]"); })
         .Find("add rsp, 0x*; pop r15; pop r14; pop *; jmp 0x*")
         .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
-        .AtCall());
+        .Inline());
 
-    ServerUpdateReceivedPackMovementModeExtension();
+    if (IsA(UFortMovementComp_Character::StaticClass()))
+        ServerUpdateReceivedPackMovementModeExtension();
 
-    Original(MoveData);
+    Original(ClientTimeStamp, DeltaTime, CompressedFlags, NewAccel);
 }
 
 void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension()
