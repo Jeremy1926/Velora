@@ -3871,6 +3871,55 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
                 EventDataRuntime.PointProviders.Add(PointProvider);
         }
     }
+
+    static auto EncounterEventRuntimes = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::EventRuntimes"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
+        .Disp();
+
+    for (auto EncounterInstance : GetRunningEncounterInstances())
+    {
+        if (!EncounterInstance)
+            continue;
+
+        bool bAllowed = false;
+
+        for (auto& AllowedPointProvider : EncounterInstance->GetOriginalPointProviders())
+        {
+            if (AllowedPointProvider.GetObject() == PointProvider.GetObject())
+                bAllowed = true;
+        }
+
+        if (!bAllowed)
+            continue;
+
+        bool bRegistered = false;
+
+        for (auto& RegisteredPointProvider : EncounterInstance->GetRegisteredPointProviders())
+        {
+            if (RegisteredPointProvider.GetObject() == PointProvider.GetObject())
+                bRegistered = true;
+        }
+
+        if (bRegistered)
+            continue;
+
+        EncounterInstance->GetRegisteredPointProviders().Add(PointProvider);
+
+        for (auto& EventRuntime : *(TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>*)((uint8*)EncounterInstance + EncounterEventRuntimes))
+        {
+            for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+            {
+                if (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags))
+                    EventDataRuntime.PointProviders.Add(PointProvider);
+            }
+        }
+    }
 }
 
 void UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntime(const FScriptInterface& PointProvider)
@@ -3883,6 +3932,36 @@ void UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntime(const FS
             {
                 if (EventDataRuntime.PointProviders[Index].GetObject() == PointProvider.GetObject())
                     EventDataRuntime.PointProviders.RemoveAt(Index);
+            }
+        }
+    }
+
+    static auto EncounterEventRuntimes = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::EventRuntimes"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
+        .Disp();
+
+    for (auto EncounterInstance : GetRunningEncounterInstances())
+    {
+        if (!EncounterInstance)
+            continue;
+
+        EncounterInstance->RemoveActivePointProvider(PointProvider);
+
+        for (auto& EventRuntime : *(TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>*)((uint8*)EncounterInstance + EncounterEventRuntimes))
+        {
+            for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+            {
+                for (int32 Index = EventDataRuntime.PointProviders.Num() - 1; Index >= 0; Index--)
+                {
+                    if (EventDataRuntime.PointProviders[Index].GetObject() == PointProvider.GetObject())
+                        EventDataRuntime.PointProviders.RemoveAt(Index);
+                }
             }
         }
     }
