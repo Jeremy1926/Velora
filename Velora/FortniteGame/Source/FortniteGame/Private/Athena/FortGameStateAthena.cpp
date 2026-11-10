@@ -769,7 +769,7 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
     else if (auto GamePhaseLogic = GamePhaseLogicAirCraftBehavior ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this) : nullptr)
         *GamePhaseLogicAirCraftBehavior->ContainerPtrToValuePtr<uint8>(GamePhaseLogic) = *PlaylistAirCraftBehavior->ContainerPtrToValuePtr<uint8>(NewPlaylist);
 
-    if (auto AISettings = PlaylistAISettings ? *PlaylistAISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(NewPlaylist) : nullptr)
+    if (auto AISettings = !PlaylistAISettings ? nullptr : PlaylistAISettings->GetSize() == sizeof(void*) ? *PlaylistAISettings->ContainerPtrToValuePtr<UAthenaAISettings*>(NewPlaylist) : (UAthenaAISettings*)PlaylistAISettings->ContainerPtrToValuePtr<TSoftObjectPtr<UObject>>(NewPlaylist)->LoadSynchronous())
         GameMode->OverrideAISettings(AISettings);
 
     if (PlaylistInfo)
