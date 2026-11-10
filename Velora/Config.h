@@ -15,4 +15,5 @@ namespace Config
     inline bool bInfiniteAmmo = false;
     inline bool bInfiniteMaterials = false;
     inline bool bLogReplication = false;
+    inline bool bLogLivingWorld = true;
 }

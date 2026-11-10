@@ -2,6 +2,7 @@
 #include "FortAthenaLivingWorldManager.h"
 #include "FortAthenaLivingWorldCategory.h"
 #include "FortAthenaLivingWorldConfigData.h"
+#include "Config.h"
 #include "Misc/EngineVersion.h"
 #include "FortAthenaLivingWorldDensityGrid.h"
 #include "FortAthenaLivingWorldEncounter.h"
@@ -2380,6 +2381,15 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
     if (NextEventGenerationTime < 0.0f)
         return;
 
+    static bool bLoggedStart = false;
+
+    if (Config::bLogLivingWorld && !bLoggedStart)
+    {
+        bLoggedStart = true;
+
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld started: %d categories, %d events, %d point providers, first generation at %.1f"), GetCategoryRuntimes().Num(), GetEventRuntimes().Num(), GetPointProviders().Num(), NextEventGenerationTime);
+    }
+
     auto PlayerTracker = GetPlayerTracker();
 
     if (PlayerTracker)
@@ -2508,6 +2518,9 @@ void UFortAthenaLivingWorldManager::OnEventRuntimeEQSFinished(TSharedPtr<FEnvQue
 
     const int32 ItemCount = Result->Items.Num();
     const int32 EventRequestID = PendingEventRuntimeEQSSpawns[Index].EventRequestID;
+
+    if (Config::bLogLivingWorld)
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d: spawn around query returned %d points"), EventRequestID, ItemCount);
     TArray<int32> UsedItems;
 
     for (bool bFirst = true; Index < PendingEventRuntimeEQSSpawns.Num(); bFirst = false)
@@ -2864,6 +2877,9 @@ void UFortAthenaLivingWorldManager::UpdateSpawnedActors()
             DespawnCandidateTimestamp = -1.0f;
             continue;
         }
+
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld despawn %s"), *Actor->GetName());
 
         DestroyActor(this, Actor);
         OnSpawnedActorDestroy_Internal(this, Actor, false);
@@ -3429,6 +3445,9 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         EventRequest.RequestID = NextEventRequestID++;
         EventRequest.bHasPointProvider = bHasPointProvider;
 
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d: %s, %d actors, provider %s"), EventRequest.RequestID, RequestedEvent.EventData ? *RequestedEvent.EventData->GetName() : TEXT("None"), ActorCount, bHasPointProvider ? *PointProvider.GetObject()->GetName() : TEXT("None"));
+
         SpawnedActorCount += ActorCount;
         EventInstanceBudget--;
 
@@ -3569,6 +3588,9 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
 
         const int32 RequestID = AISpawner->RequestSpawn(ComponentList, FTransform(FRotator{ 0.0f, Rotation.Yaw, 0.0f }, Location, FVector(1.0f, 1.0f, 1.0f)), TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned));
 
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld AI spawn %s at %.0f %.0f %.0f: spawner request %d"), *SpawnerDataClass->GetName(), Location.X, Location.Y, Location.Z, RequestID);
+
         if (RequestID != INDEX_NONE)
             return RequestID;
 
@@ -3587,6 +3609,9 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
     const FTransform SpawnTransform(Rotation, Location, FVector(1.0f, 1.0f, 1.0f));
 
     OutSpawnedActor = GetWorld()->SpawnActor(ActorClass, &SpawnTransform);
+
+    if (Config::bLogLivingWorld)
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld actor spawn %s at %.0f %.0f %.0f: %s"), *ActorClass->GetName(), Location.X, Location.Y, Location.Z, OutSpawnedActor ? *OutSpawnedActor->GetName() : TEXT("failed"));
 
     return NextActorRequestID--;
 }
@@ -3705,6 +3730,9 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
 
     if (!PointProviderInterface)
     {
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d cancelled: no point provider"), EventRequest.RequestID);
+
         CancelEventRequest(EventRequest);
         return;
     }
@@ -3834,6 +3862,9 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
 
     if (!bValidRequest)
     {
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d cancelled: %d of %d actors got a class, a location and a density slot"), EventRequest.RequestID, PendingRequest.ActorInfos.Num(), EventRequest.ActorCount);
+
         for (auto& ActorInfo : PendingRequest.ActorInfos)
             RemovePreRegistrationFromDensityGrids(ActorInfo, EventRequest.EncounterInstance);
 
