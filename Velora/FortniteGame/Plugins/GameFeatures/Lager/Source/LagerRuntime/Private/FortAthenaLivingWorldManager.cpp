@@ -3780,6 +3780,11 @@ void UFortAthenaLivingWorldManager::RemovePreRegistrationFromDensityGrids(FPendi
         .Find("mov r8, [rsi+0x18]; lea r9, [r15+0x*]; lea rdx, [r15+0x*]; mov rcx, r14; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov r8, [rbx+0x18]; lea r9, [r14+0x*]; lea rdx, [r14+0x*]; mov rcx, r13; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     RemovePreRegistrationFromDensityGridAndUpdateDensityReservoir(this, &ActorInfo.PreRegistrationHandle, EncounterInstance, &ActorInfo.TagPreRegistrationHandles);
