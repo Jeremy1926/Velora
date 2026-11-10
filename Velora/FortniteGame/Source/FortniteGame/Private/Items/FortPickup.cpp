@@ -76,6 +76,13 @@ TMulticastDelegate<void, AFortPickup*, float>* AFortPickup::GetNotifyPickupCullD
         .Pattern("48 8D 8B ? ? ? ? 45 33 C0 0F 57 C9 E8 ? ? ? ? 0F 2F 05 ? ? ? ? 0F 86 ? ? ? ? F3 0F 59 C0 48 8D 0D")
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Pattern("48 8D 8B ? ? ? ? 45 33 C0 0F 57 C9 E8 ? ? ? ? 0F 2F 05 ? ? ? ? 0F 87")
+        .Find("jnbe 0x*")
+        .Target()
+        .Is("mulss xmm0, xmm0; lea rcx, [0x*]; mov rdx, *; movaps xmm2, xmm0; call 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return NotifyPickupCullDistanceChange;

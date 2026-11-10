@@ -816,6 +816,11 @@ void UFortKismetLibrary::CreateTossAmmoPickupForWeaponItemDefinitionAtLocation(U
         .Find("mov rdx, r*; mov rcx, r*; mov [rsp+0x20], *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CreateTossAmmoPickupForWeaponItemDefinitionAtLocation"))
+        .Find("mov rdx, r*; mov [rsp+0x28], *; mov rcx, rax; mov [rsp+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (GenerateAmmoPickupForWeaponItemDefinitionToPosition)

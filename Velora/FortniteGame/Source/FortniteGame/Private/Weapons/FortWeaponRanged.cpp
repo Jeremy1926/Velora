@@ -26,6 +26,12 @@ void AFortWeaponRanged::ServerNotifyPawnHit_Implementation(const FHitResult& Hit
         .Find("mov r9, [rax+0x*]")
         .LogSlot(TEXT("AFortWeaponRanged::ServerNotifyPawnHit_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRanged"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRanged:ServerNotifyPawnHit"))
+        .Find("add [*+0x20], *")
+        .Find("mov r10, [rax+0x*]")
+        .LogSlot(TEXT("AFortWeaponRanged::ServerNotifyPawnHit_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortWeaponRanged"), "ret*")
         .Optional()
         .InChildVTables(StaticClass()));
 

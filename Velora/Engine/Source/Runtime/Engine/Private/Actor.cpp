@@ -557,6 +557,11 @@ UActorComponent* AActor::AddComponentByClass(TSubclassOf<UActorComponent> Class,
         .Find("mov r9, rdi; mov [rsp+0x20], sil; mov r8b, r12b; lea rdx, [rbp-0x*]; mov rcx, r14; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov r9, rsi; mov [rsp+0x20], dil; mov r8b, r14b; lea rdx, [rbp-0x*]; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Optional()
         .Get();
 
