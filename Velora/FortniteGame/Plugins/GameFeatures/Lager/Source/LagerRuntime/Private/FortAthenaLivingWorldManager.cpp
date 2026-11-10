@@ -2017,6 +2017,10 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
         .Optional()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r13+0x*]; mov rdx, rsi; lea r8, [r14+0x*]; call 0x*")
+        .Optional()
         .Disp();
 
     return ActorDensityGrid > 0 ? (FFortAthenaLivingWorldDensityGrid*)((uint8*)this + ActorDensityGrid) : nullptr;
