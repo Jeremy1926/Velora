@@ -2,6 +2,10 @@
 
 #include "Items/FortWorldItemDefinition.h"
 #include "Engine/DataTable.h"
+#include "GameplayTagContainer.h"
+
+struct FFortItemEntry;
+struct FFortWeaponModSlot;
 
 struct FFortBaseWeaponStats : public FTableRowBase
 {
@@ -28,4 +32,10 @@ public:
     int32 GetBaseClipSizeWithMods(const FFortBaseWeaponStats* WeaponStats, int32 Level) const;
 
     const FDataTableRowHandle& GetWeaponStatHandle() const;
+
+    const TArray<FFortWeaponModSlot>& GetWeaponModSlots() const;
+
+    bool SetDefaultWeaponModSlotsIfNeeded(FFortItemEntry& ItemEntry) const;
+
+    FGameplayTag GetWeaponModBucketTag() const;
 };

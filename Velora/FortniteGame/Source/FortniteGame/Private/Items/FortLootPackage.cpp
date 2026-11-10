@@ -5,6 +5,9 @@
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
+#include "Engine/GameEngine.h"
+#include "Engine/GameInstance.h"
 #include "FortGameData.h"
 #include "FortniteGame.h"
 #include "Logging/LogMacros.h"
@@ -236,6 +239,12 @@ void UFortLootPackage::PickLootDropsFromLootPackage(TArray<FFortItemEntry>& OutL
 
                             auto ItemEntry = new(OutLootToDrop) FFortItemEntry(ItemDefinition, NumberToStack, FMath::Max(ItemLevel, 0));
                             ItemEntry->GetLevel() = ItemDefinition->ClampItemLevel(ItemEntry->GetLevel());
+
+                            auto WeaponModManager = UFortWeaponModManager::Get(((UGameEngine*)GEngine)->GetGameInstance());
+                            auto AutoApplyModDataAsset = WeaponModManager ? WeaponModManager->GetAutoApplyModDataAsset() : nullptr;
+
+                            if (AutoApplyModDataAsset)
+                                AutoApplyModDataAsset->TryApplyRandomModSetToItemEntry(*ItemEntry);
 
                             NumberToDrop -= NumberToStack;
                         }

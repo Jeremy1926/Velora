@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Items/FortInventory.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
+#include "GameplayTagContainer.h"
 #include "Misc/EngineVersion.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
@@ -246,6 +248,44 @@ TEnumAsByte<EFortItemEntryState::Type>& FFortItemEntryStateValue::GetStateType()
     static auto StateType = StaticStruct()->FindPropertyByName(FName(TEXT("StateType")));
 
     return *StateType->ContainerPtrToValuePtr<TEnumAsByte<EFortItemEntryState::Type>>(this);
+}
+
+FFortItemEntryStateValueConstObject::FFortItemEntryStateValueConstObject(const FGameplayTag& InStateType, const UObject* InObjectData)
+{
+    static auto StateType = StaticStruct()->FindPropertyByName(FName(TEXT("StateType")));
+
+    memset(this, 0, GetTypeSize());
+
+    StateType->SetPropertyValue_InContainer<FGameplayTag>(this, InStateType);
+    GetObjectData() = (UObject*)InObjectData;
+}
+
+UScriptStruct* FFortItemEntryStateValueConstObject::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemEntryStateValueConstObject"));
+
+    return Struct;
+}
+
+int32 FFortItemEntryStateValueConstObject::GetTypeSize()
+{
+    static auto TypeSize = StaticStruct()->GetPropertiesSize();
+
+    return TypeSize;
+}
+
+FGameplayTag FFortItemEntryStateValueConstObject::GetStateType() const
+{
+    static auto StateType = StaticStruct()->FindPropertyByName(FName(TEXT("StateType")));
+
+    return StateType->GetPropertyValue_InContainer<FGameplayTag>(this);
+}
+
+TWeakObjectPtr<UObject>& FFortItemEntryStateValueConstObject::GetObjectData()
+{
+    static auto ObjectData = StaticStruct()->FindPropertyByName(FName(TEXT("ObjectData")));
+
+    return *ObjectData->ContainerPtrToValuePtr<TWeakObjectPtr<UObject>>(this);
 }
 
 FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel)
@@ -523,6 +563,121 @@ void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
             return;
         }
     }
+}
+
+TArray<FFortItemEntryStateValueConstObject>& FFortItemEntry::GetStateValuesConstObject()
+{
+    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+
+    return *StateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(this);
+}
+
+const UObject* FFortItemEntry::GetStateConstObject(const FGameplayTag& StateType)
+{
+    for (auto& StateValue : GetStateValuesConstObject())
+    {
+        if (StateValue.GetStateType() == StateType)
+            return StateValue.GetObjectData().Get();
+    }
+
+    return nullptr;
+}
+
+void FFortItemEntry::SetStateConstObject(const FGameplayTag& StateType, const UObject* ObjectData)
+{
+    auto& StateValues = GetStateValuesConstObject();
+    int32 StateValueIndex = 0;
+
+    while (StateValueIndex < StateValues.Num() && !(StateValues[StateValueIndex].GetStateType() == StateType))
+    {
+        StateValueIndex++;
+    }
+
+    if (StateValueIndex < StateValues.Num())
+    {
+        if (StateValues[StateValueIndex].GetObjectData().Get() == ObjectData)
+            return;
+
+        StateValues[StateValueIndex].GetObjectData() = (UObject*)ObjectData;
+    }
+    else
+    {
+        new(StateValues) FFortItemEntryStateValueConstObject(StateType, ObjectData);
+    }
+
+    if (GetParentInventory().IsValid())
+    {
+        GetParentInventory().Get()->SetItemRequiresUpdate(*this);
+    }
+
+    GetIsDirty() = true;
+}
+
+void FFortItemEntry::RemoveStateConstObject(const FGameplayTag& StateType)
+{
+    auto& StateValues = GetStateValuesConstObject();
+
+    for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
+    {
+        if (StateValues[StateValueIndex].GetStateType() == StateType)
+        {
+            StateValues.RemoveAt(StateValueIndex);
+
+            if (GetParentInventory().IsValid())
+            {
+                GetParentInventory().Get()->SetItemRequiresUpdate(*this);
+            }
+
+            GetIsDirty() = true;
+
+            return;
+        }
+    }
+}
+
+TArray<FFortWeaponModSlot>& FFortItemEntry::GetWeaponModSlots()
+{
+    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+
+    return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+}
+
+TArray<FFortSavedWeaponModSlot>& FFortItemEntry::GetSavedWeaponModSlots()
+{
+    static auto SavedWeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("SavedWeaponModSlots")));
+
+    return *SavedWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(this);
+}
+
+void FFortItemEntry::AppendWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot)
+{
+    GetWeaponModSlots().Add(WeaponModSlot);
+    GetSavedWeaponModSlots().Add(FFortSavedWeaponModSlot(WeaponModSlot));
+
+    if (GetParentInventory().IsValid())
+    {
+        GetParentInventory().Get()->SetItemRequiresUpdate(*this);
+    }
+
+    GetIsDirty() = true;
+}
+
+void FFortItemEntry::SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeaponModSlots)
+{
+    GetWeaponModSlots() = InWeaponModSlots;
+    GetSavedWeaponModSlots().Reset(InWeaponModSlots.Num());
+
+    for (auto& WeaponModSlot : InWeaponModSlots)
+    {
+        GetSavedWeaponModSlots().Add(FFortSavedWeaponModSlot(WeaponModSlot));
+    }
+
+    if (GetParentInventory().IsValid())
+    {
+        GetParentInventory().Get()->SetItemRequiresUpdate(*this);
+    }
+
+    GetIsDirty() = true;
 }
 
 UScriptStruct* FFortItemList::StaticStruct()

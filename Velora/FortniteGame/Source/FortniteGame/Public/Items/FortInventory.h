@@ -15,6 +15,9 @@
 class AFortInventory;
 class UFortItemDefinition;
 class UFortWorldItem;
+struct FGameplayTag;
+struct FFortWeaponModSlot;
+struct FFortSavedWeaponModSlot;
 
 namespace EFortItemEntryState
 {
@@ -55,6 +58,24 @@ struct FFortItemEntryStateValue
 
 template<>
 class TArray<FFortItemEntryStateValue, FDefaultAllocator> : public TRuntimeSizedArray<FFortItemEntryStateValue>
+{
+};
+
+struct FFortItemEntryStateValueConstObject
+{
+    FFortItemEntryStateValueConstObject(const FGameplayTag& InStateType, const UObject* InObjectData);
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    FGameplayTag GetStateType() const;
+
+    TWeakObjectPtr<UObject>& GetObjectData();
+};
+
+template<>
+class TArray<FFortItemEntryStateValueConstObject, FDefaultAllocator> : public TRuntimeSizedArray<FFortItemEntryStateValueConstObject>
 {
 };
 
@@ -103,6 +124,22 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
     void SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue);
 
     void RemoveStateValue(EFortItemEntryState::Type StateType);
+
+    TArray<FFortItemEntryStateValueConstObject>& GetStateValuesConstObject();
+
+    const UObject* GetStateConstObject(const FGameplayTag& StateType);
+
+    void SetStateConstObject(const FGameplayTag& StateType, const UObject* ObjectData);
+
+    void RemoveStateConstObject(const FGameplayTag& StateType);
+
+    TArray<FFortWeaponModSlot>& GetWeaponModSlots();
+
+    TArray<FFortSavedWeaponModSlot>& GetSavedWeaponModSlots();
+
+    void AppendWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot);
+
+    void SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeaponModSlots);
 
 private:
     uint8 Data[0x1F4];

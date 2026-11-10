@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Items/FortWeaponItemDefinition.h"
+#include "Items/FortInventory.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
@@ -53,4 +55,37 @@ const FDataTableRowHandle& UFortWeaponItemDefinition::GetWeaponStatHandle() cons
     static auto WeaponStatHandle = GetClass()->FindPropertyByName(FName(TEXT("WeaponStatHandle")));
 
     return *WeaponStatHandle->ContainerPtrToValuePtr<FDataTableRowHandle>(this);
+}
+
+const TArray<FFortWeaponModSlot>& UFortWeaponItemDefinition::GetWeaponModSlots() const
+{
+    static auto WeaponModSlots = StaticClass()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+
+    return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+}
+
+bool UFortWeaponItemDefinition::SetDefaultWeaponModSlotsIfNeeded(FFortItemEntry& ItemEntry) const
+{
+    if (GetWeaponModSlots().Num() > 0 && ItemEntry.GetWeaponModSlots().Num() == 0)
+    {
+        ItemEntry.SetWeaponModSlots(GetWeaponModSlots());
+        return true;
+    }
+
+    return false;
+}
+
+FGameplayTag UFortWeaponItemDefinition::GetWeaponModBucketTag() const
+{
+    static auto GameplayTags = StaticClass()->FindPropertyByName(FName(TEXT("GameplayTags")));
+
+    for (const FGameplayTag& GameplayTag : GameplayTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this)->GetGameplayTagArray())
+    {
+        const FString TagString = GameplayTag.ToString();
+
+        if (TagString == FString(TEXT("ModSetBucket")) || TagString.StartsWith(TEXT("ModSetBucket.")))
+            return GameplayTag;
+    }
+
+    return FGameplayTag();
 }
