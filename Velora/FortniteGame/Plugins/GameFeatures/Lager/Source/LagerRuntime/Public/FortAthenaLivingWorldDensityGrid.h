@@ -32,6 +32,8 @@ struct FFortAthenaLivingWorldDensityGrid
 
     bool AddActor(AActor* InActor, float DensityValue, float DensityRange);
 
+    int32 PreRegisterActor(const FVector& Location, float DensityRange, float DensityValue);
+
     void RemoveActor(AActor* InActor);
 
     float GetActorDensityValue(AActor* InActor);

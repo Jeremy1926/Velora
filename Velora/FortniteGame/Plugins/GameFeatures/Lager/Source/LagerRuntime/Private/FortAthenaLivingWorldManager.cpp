@@ -23,6 +23,7 @@
 #include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/Pawn.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -2002,6 +2003,10 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .If(StaticClass())
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
         .Find("lea r12, [r*+0x*]; mov rdx, r*; mov rcx, r12; call 0x*")
+        .Or()
+        .If(StaticClass())
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
         .Optional()
         .Disp();
 
@@ -2950,6 +2955,74 @@ void UFortAthenaLivingWorldManager::ProcessPendingEventRequests()
         ProcessEventRequest(EventRequest);
 }
 
+bool UFortAthenaLivingWorldManager::GetAISpawnerDataCullDistance(UClass* AISpawnerDataClass, float& OutCullDistance)
+{
+    static auto GameplayComponent = UFortAthenaAISpawnerData::StaticClass()->FindPropertyByName(FName(TEXT("GameplayComponent")));
+    static auto SpawnParamsComponent = UFortAthenaAISpawnerData::StaticClass()->FindPropertyByName(FName(TEXT("SpawnParamsComponent")));
+
+    auto AISpawnerData = AISpawnerDataClass ? Cast<UFortAthenaAISpawnerData>(AISpawnerDataClass->GetDefaultObject()) : nullptr;
+
+    if (!AISpawnerData)
+        return false;
+
+    auto GameplayComponentClass = GameplayComponent ? *GameplayComponent->ContainerPtrToValuePtr<UClass*>(AISpawnerData) : nullptr;
+    auto Gameplay = GameplayComponentClass ? GameplayComponentClass->GetDefaultObject() : nullptr;
+    auto PawnCullDistance = Gameplay ? Gameplay->GetClass()->FindPropertyByName(FName(TEXT("PawnCullDistance"))) : nullptr;
+
+    if (PawnCullDistance && PawnCullDistance->ContainerPtrToValuePtr<FScalableFloat>(Gameplay)->GetValueAtLevel(0.0f) > 0.0f)
+    {
+        OutCullDistance = PawnCullDistance->ContainerPtrToValuePtr<FScalableFloat>(Gameplay)->GetValueAtLevel(0.0f);
+        return true;
+    }
+
+    auto SpawnParamsComponentClass = SpawnParamsComponent ? *SpawnParamsComponent->ContainerPtrToValuePtr<UClass*>(AISpawnerData) : nullptr;
+    auto SpawnParams = SpawnParamsComponentClass ? SpawnParamsComponentClass->GetDefaultObject() : nullptr;
+    auto PawnClassProperty = SpawnParams ? SpawnParams->GetClass()->FindPropertyByName(FName(TEXT("PawnClass"))) : nullptr;
+    auto PawnClass = PawnClassProperty ? *PawnClassProperty->ContainerPtrToValuePtr<UClass*>(SpawnParams) : nullptr;
+    auto Pawn = PawnClass ? Cast<APawn>(PawnClass->GetDefaultObject()) : nullptr;
+
+    if (!Pawn)
+        return false;
+
+    OutCullDistance = FMath::Sqrt(Pawn->GetNetCullDistanceSquared());
+
+    return true;
+}
+
+int32 UFortAthenaLivingWorldManager::PreRegisterInDensityGrids(const FVector& Location, float DensityRange, float DensityValue, FEventRuntimeSpawnData::FActorDescription& ActorDescription, TArray<uint64, TInlineAllocator<1>>& OutTagPreRegistrationHandles)
+{
+    for (int32 Index = 0; Index < ActorDescription.TagDensityRegistrations.Num(); Index++)
+    {
+        auto TagDensityRegistration = ActorDescription.TagDensityRegistrations.GetData() + Index * 0x58;
+        auto TagDensityGrid = GetTagDensityGrid(((const TGameValue<FGameplayTag>*)TagDensityRegistration)->Get());
+
+        if (!TagDensityGrid)
+            continue;
+
+        const float TagDensityRange = ((FScalableFloat*)(TagDensityRegistration + 0x8))->GetValueAtLevel(0.0f);
+        const float TagDensityValue = ((FScalableFloat*)(TagDensityRegistration + 0x30))->GetValueAtLevel(0.0f);
+        const int32 Handle = TagDensityGrid->PreRegisterActor(Location, TagDensityRange >= 0.0f ? TagDensityRange : DensityRange, TagDensityValue);
+
+        OutTagPreRegistrationHandles.Add((uint64)*(uint32*)TagDensityRegistration | ((uint64)(uint32)Handle << 32));
+    }
+
+    auto ActorDensityGrid = GetActorDensityGrid();
+
+    return ActorDensityGrid ? ActorDensityGrid->PreRegisterActor(Location, DensityRange, DensityValue) : INDEX_NONE;
+}
+
+void UFortAthenaLivingWorldManager::RemovePreRegistrationFromDensityGrids(FPendingActorSpawnEventRequest::FActorInfo& ActorInfo, UFortAthenaLivingWorldEncounterInstance* EncounterInstance)
+{
+    static auto RemovePreRegistrationFromDensityGridAndUpdateDensityReservoir = Anchor::Function<void (*)(UFortAthenaLivingWorldManager*, int32*, UFortAthenaLivingWorldEncounterInstance*, void*)>(TEXT("UFortAthenaLivingWorldManager::RemovePreRegistrationFromDensityGridAndUpdateDensityReservoir"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov r8, [rsi+0x18]; lea r9, [r15+0x*]; lea rdx, [r15+0x*]; mov rcx, r14; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    RemovePreRegistrationFromDensityGridAndUpdateDensityReservoir(this, &ActorInfo.PreRegistrationHandle, EncounterInstance, &ActorInfo.TagPreRegistrationHandles);
+}
+
 void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequest)
 {
     static auto ConstructPointProviderFilterRules = Anchor::Function<void* (*)(FFortAthenaLivingWorldPointProviderFilterRules*, UFortAthenaLivingWorldManager*, FFortAthenaLivingWorldEvent*, UObject*, int32, float, float)>(TEXT("FFortAthenaLivingWorldPointProviderFilterRules::FFortAthenaLivingWorldPointProviderFilterRules"))
@@ -2987,15 +3060,10 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         return;
     }
 
-    struct FSpawnInfo
-    {
-        UClass* SpawnerDataClass = nullptr;
-        UClass* ActorClass = nullptr;
-        FVector Location = FVector(ForceInit);
-        FRotator Rotation{ 0.0f, 0.0f, 0.0f };
-    };
-
-    TArray<FSpawnInfo> SpawnInfos;
+    alignas(8) uint8 PendingRequestStorage[sizeof(FPendingActorSpawnEventRequest)] = {};
+    auto& PendingRequest = *(FPendingActorSpawnEventRequest*)PendingRequestStorage;
+    TArray<FVector> Locations;
+    TArray<FRotator> Rotations;
     bool bHasDefaultLocation = false;
     FVector DefaultLocation(ForceInit);
     FRotator DefaultRotation{ 0.0f, 0.0f, 0.0f };
@@ -3003,15 +3071,51 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
     for (int32 Index = 0; Index < EventRequest.ActorCount && Index < SpawnData->ActorDescriptions.Num(); Index++)
     {
         auto& ActorDescription = SpawnData->ActorDescriptions[Index];
-        FSpawnInfo SpawnInfo;
+        UClass* SpawnerDataClass = nullptr;
+        UClass* ActorClass = nullptr;
 
-        if (!SelectDataToSpawn(ActorDescription, EventDataRuntime, SpawnInfo.SpawnerDataClass, SpawnInfo.ActorClass))
+        if (!SelectDataToSpawn(ActorDescription, EventDataRuntime, SpawnerDataClass, ActorClass))
             continue;
+
+        auto SpawnerData = SpawnerDataClass ? SpawnerDataClass->GetDefaultObject() : nullptr;
+        float DensityRange = 0.0f;
+
+        if (ActorClass)
+        {
+            DensityRange = FMath::Sqrt(((AActor*)ActorClass->GetDefaultObject())->GetNetCullDistanceSquared());
+        }
+        else if (Cast<UFortAthenaAISpawnerData>(SpawnerData))
+        {
+            if (!GetAISpawnerDataCullDistance(SpawnerDataClass, DensityRange))
+                continue;
+        }
+        else if (auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnerData))
+        {
+            auto SpawnedActorClass = ActorSpawnerData->GetActorClass();
+
+            if (!SpawnedActorClass || !SpawnedActorClass->IsChildOf(AActor::StaticClass()))
+                continue;
+
+            DensityRange = FMath::Sqrt(((AActor*)SpawnedActorClass->GetDefaultObject())->GetNetCullDistanceSquared());
+        }
+        else
+        {
+            continue;
+        }
+
+        if (ActorDescription.DensityRangeOverride >= 0.0f)
+            DensityRange = ActorDescription.DensityRangeOverride;
+
+        if (ActorDescription.PrefabGuid[0] || ActorDescription.PrefabGuid[1] || ActorDescription.PrefabGuid[2] || ActorDescription.PrefabGuid[3])
+            continue;
+
+        FVector Location(ForceInit);
+        FRotator Rotation{ 0.0f, 0.0f, 0.0f };
 
         if (ActorDescription.bSpawnAroundDefaultPoint && bHasDefaultLocation)
         {
-            SpawnInfo.Location = DefaultLocation;
-            SpawnInfo.Rotation = DefaultRotation;
+            Location = DefaultLocation;
+            Rotation = DefaultRotation;
         }
         else
         {
@@ -3022,38 +3126,59 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
                 DensityForActors += SpawnData->ActorDescriptions[ActorIndex].DensityValue;
 
             alignas(8) uint8 PointFilter[0x40] = {};
-            TGameValue<FVector> GameLocation(SpawnInfo.Location);
-            TGameValue<FRotator> GameRotation(SpawnInfo.Rotation);
+            TGameValue<FVector> GameLocation(Location);
+            TGameValue<FRotator> GameRotation(Rotation);
 
-            ConstructPointProviderFilterRules((FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, this, Event, EventDataRuntime->EventData.Get(), RemainingActorCount, DensityForActors, SpawnData->DensityRange);
+            ConstructPointProviderFilterRules((FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, this, Event, EventDataRuntime->EventData.Get(), RemainingActorCount, DensityForActors, DensityRange);
 
             if (!(*(bool (***)(void*, void*, TGameValue<FVector>*, TGameValue<FRotator>*, void*))PointProviderInterface)[0x10 / sizeof(void*)](PointProviderInterface, PointFilter, &GameLocation, &GameRotation, nullptr))
                 continue;
 
-            SpawnInfo.Location = GameLocation.Get();
-            SpawnInfo.Rotation = GameRotation.Get();
+            Location = GameLocation.Get();
+            Rotation = GameRotation.Get();
 
             if (!bHasDefaultLocation)
             {
-                DefaultLocation = SpawnInfo.Location;
-                DefaultRotation = SpawnInfo.Rotation;
+                DefaultLocation = Location;
+                DefaultRotation = Rotation;
                 bHasDefaultLocation = true;
             }
         }
 
-        SpawnInfos.Add(SpawnInfo);
+        auto& ActorInfo = PendingRequest.ActorInfos[PendingRequest.ActorInfos.AddUninitialized()];
+
+        FMemory::Memzero(&ActorInfo, sizeof(FPendingActorSpawnEventRequest::FActorInfo));
+
+        ActorInfo.Location[0] = Location.X;
+        ActorInfo.Location[1] = Location.Y;
+        ActorInfo.Location[2] = Location.Z;
+        ActorInfo.SpawnerDataClass = SpawnerDataClass;
+        ActorInfo.ActorClass = ActorClass;
+        ActorInfo.RequestID = INDEX_NONE;
+        ActorInfo.Index = Index;
+        ActorInfo.PreRegistrationHandle = PreRegisterInDensityGrids(Location, DensityRange, ActorDescription.DensityValue, ActorDescription, ActorInfo.TagPreRegistrationHandles);
+
+        Locations.Add(Location);
+        Rotations.Add(Rotation);
     }
 
-    if (SpawnInfos.Num() != EventRequest.ActorCount || SpawnInfos.Num() == 0)
+    bool bValidRequest = PendingRequest.ActorInfos.Num() == EventRequest.ActorCount && PendingRequest.ActorInfos.Num() > 0;
+
+    for (auto& ActorInfo : PendingRequest.ActorInfos)
     {
+        if (ActorInfo.PreRegistrationHandle == INDEX_NONE)
+            bValidRequest = false;
+    }
+
+    if (!bValidRequest)
+    {
+        for (auto& ActorInfo : PendingRequest.ActorInfos)
+            RemovePreRegistrationFromDensityGrids(ActorInfo, EventRequest.EncounterInstance);
+
+        PendingRequest.ActorInfos.Empty();
         CancelEventRequest(EventRequest);
         return;
     }
-
-    auto& PendingActorSpawnRequests = GetPendingActorSpawnRequests();
-    auto& PendingRequest = PendingActorSpawnRequests[PendingActorSpawnRequests.AddUninitialized()];
-
-    FMemory::Memzero(&PendingRequest, sizeof(FPendingActorSpawnEventRequest));
 
     PendingRequest.Category = EventRequest.Category;
     PendingRequest.Event = Event;
@@ -3069,34 +3194,30 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
     PendingRequest.Rotation[1] = DefaultRotation.Yaw;
     PendingRequest.Rotation[2] = DefaultRotation.Roll;
 
+    auto& PendingActorSpawnRequests = GetPendingActorSpawnRequests();
+    const int32 PendingRequestIndex = PendingActorSpawnRequests.AddUninitialized();
+
+    memcpy(&PendingActorSpawnRequests[PendingRequestIndex], PendingRequestStorage, sizeof(FPendingActorSpawnEventRequest));
+
     TArray<AActor*> SpawnedActors;
     TArray<int32> RequestIDs;
     TArray<bool> CompletedRequests;
 
-    for (int32 Index = 0; Index < SpawnInfos.Num(); Index++)
+    for (int32 Index = 0; Index < Locations.Num(); Index++)
     {
-        auto& SpawnInfo = SpawnInfos[Index];
+        auto SpawnerDataClass = PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].SpawnerDataClass;
+        auto ActorClass = PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].ActorClass;
         AActor* SpawnedActor = nullptr;
         bool bCompleted = false;
-        const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, SpawnInfo.Location, SpawnInfo.Rotation, SpawnInfo.SpawnerDataClass, SpawnInfo.ActorClass, SpawnedActor, bCompleted);
-        auto& ActorInfo = PendingRequest.ActorInfos[PendingRequest.ActorInfos.AddUninitialized()];
+        const int32 RequestID = RequestSpawnToAISpawnerSystem(AISpawner, Locations[Index], Rotations[Index], SpawnerDataClass, ActorClass, SpawnedActor, bCompleted);
 
-        FMemory::Memzero(&ActorInfo, sizeof(FPendingActorSpawnEventRequest::FActorInfo));
-
-        ActorInfo.Location[0] = SpawnInfo.Location.X;
-        ActorInfo.Location[1] = SpawnInfo.Location.Y;
-        ActorInfo.Location[2] = SpawnInfo.Location.Z;
-        ActorInfo.SpawnerDataClass = SpawnInfo.SpawnerDataClass;
-        ActorInfo.ActorClass = SpawnInfo.ActorClass;
-        ActorInfo.RequestID = RequestID;
-        ActorInfo.PreRegistrationHandle = INDEX_NONE;
-        ActorInfo.Index = Index;
+        PendingActorSpawnRequests[PendingRequestIndex].ActorInfos[Index].RequestID = RequestID;
 
         SpawnedActors.Add(SpawnedActor);
         RequestIDs.Add(RequestID);
         CompletedRequests.Add(bCompleted);
 
-        if (SpawnInfo.SpawnerDataClass)
+        if (SpawnerDataClass)
         {
             static auto SpawnerDataLimiter = StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter")));
             static auto SingleUseSpawnerDataQuery = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SingleUseSpawnerDataQuery")));
@@ -3105,15 +3226,15 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
             static auto SpawnedConcurrentSingleUseSpawnerData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SpawnedConcurrentSingleUseSpawnerData")));
 
             auto Limiter = SpawnerDataLimiter->ContainerPtrToValuePtr<uint8>(this);
-            auto AISpawnerData = Cast<UFortAthenaAISpawnerData>(SpawnInfo.SpawnerDataClass->GetDefaultObject());
-            auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnInfo.SpawnerDataClass->GetDefaultObject());
+            auto AISpawnerData = Cast<UFortAthenaAISpawnerData>(SpawnerDataClass->GetDefaultObject());
+            auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnerDataClass->GetDefaultObject());
             auto DescriptorTag = AISpawnerData ? &AISpawnerData->GetDescriptorTag() : ActorSpawnerData ? &ActorSpawnerData->GetDescriptorTag() : nullptr;
 
             if (DescriptorTag && !SingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->IsEmpty() && SingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->Matches(*DescriptorTag))
-                SpawnedSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnInfo.SpawnerDataClass);
+                SpawnedSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnerDataClass);
 
             if (DescriptorTag && !ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->IsEmpty() && ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->Matches(*DescriptorTag))
-                SpawnedConcurrentSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnInfo.SpawnerDataClass);
+                SpawnedConcurrentSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnerDataClass);
         }
     }
 

@@ -315,6 +315,12 @@ public:
 
     void ProcessEventRequest(FEventRequest& EventRequest);
 
+    static bool GetAISpawnerDataCullDistance(UClass* AISpawnerDataClass, float& OutCullDistance);
+
+    int32 PreRegisterInDensityGrids(const FVector& Location, float DensityRange, float DensityValue, FEventRuntimeSpawnData::FActorDescription& ActorDescription, TArray<uint64, TInlineAllocator<1>>& OutTagPreRegistrationHandles);
+
+    void RemovePreRegistrationFromDensityGrids(FPendingActorSpawnEventRequest::FActorInfo& ActorInfo, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
+
     int32 RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, AActor*& OutSpawnedActor, bool& bOutCompleted);
 
     bool SelectDataToSpawn(FEventRuntimeSpawnData::FActorDescription& ActorDescription, FEventDataRuntime* EventDataRuntime, UClass*& OutSpawnerDataClass, UClass*& OutActorClass);
