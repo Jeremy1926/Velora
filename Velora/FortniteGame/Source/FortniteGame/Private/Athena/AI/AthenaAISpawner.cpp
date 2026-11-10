@@ -45,7 +45,7 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
 
     if (bInlined)
     {
-        static auto RequestSpawnWithCallback = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const TGameValue<FTransform>*, const TDelegate<void(AActor*, int32)>*)>(TEXT("UAthenaAISpawner::RequestSpawn spawned callback"))
+        static auto RequestSpawnWithCallback = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const TGameValue<FTransform>*, const TDelegate<void(AActor*, int32)>*, void*, bool)>(TEXT("UAthenaAISpawner::RequestSpawn spawned callback"))
             .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
@@ -58,7 +58,7 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
 
         const TGameValue<FTransform> GameSpawnTransform(SpawnTransform);
 
-        return RequestSpawnWithCallback(this, AISpawnerComponentList, &GameSpawnTransform, &SpawnedCallback);
+        return RequestSpawnWithCallback(this, AISpawnerComponentList, &GameSpawnTransform, &SpawnedCallback, nullptr, false);
     }
 
     static auto RequestSpawn = Anchor::Function<int32 (*)(UAthenaAISpawner*, UFortAthenaAISpawnerDataComponentList*, const TGameValue<FTransform>&)>(TEXT("UAthenaAISpawner::RequestSpawn"))
