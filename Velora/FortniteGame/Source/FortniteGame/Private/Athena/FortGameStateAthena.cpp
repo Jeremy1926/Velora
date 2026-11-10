@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Config.h"
+#include "Athena/AI/AthenaAISystem.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortSafeZoneIndicator.h"
@@ -786,6 +787,9 @@ void AFortGameStateAthena::SetCurrentPlaylistName(FName PlaylistName)
 
             (*AIServices->ContainerPtrToValuePtr<TArray<UClass*>>(AISettings))[Index] = PlayerBotsServiceClass;
             bHasPlayerBotsService = true;
+
+            if (auto AISystem = Cast<UAthenaAISystem>(GetWorld()->GetAISystem()))
+                AISystem->CreateAIPopulationTracker();
         }
 
         GameMode->OverrideAISettings(AISettings);

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/AI/AthenaAISystem.h"
+#include "Athena/AI/AthenaAIPopulationTracker.h"
 #include "Athena/FortServerBotManagerAthena.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -25,6 +26,16 @@ UAthenaAIPopulationTracker* UAthenaAISystem::GetAIPopulationTracker() const
     static auto AIPopulationTracker = GetClass()->FindPropertyByName(FName(TEXT("AIPopulationTracker")));
 
     return AIPopulationTracker ? *AIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) : nullptr;
+}
+
+void UAthenaAISystem::CreateAIPopulationTracker()
+{
+    static auto AIPopulationTracker = GetClass()->FindPropertyByName(FName(TEXT("AIPopulationTracker")));
+
+    if (!AIPopulationTracker || !UAthenaAIPopulationTracker::StaticClass() || *AIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this))
+        return;
+
+    *AIPopulationTracker->ContainerPtrToValuePtr<UAthenaAIPopulationTracker*>(this) = NewObject<UAthenaAIPopulationTracker>(this, UAthenaAIPopulationTracker::StaticClass());
 }
 
 UAthenaAISpawner* UAthenaAISystem::GetAISpawner() const

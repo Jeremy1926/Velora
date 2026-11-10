@@ -17,6 +17,8 @@ public:
 
     UAthenaAIPopulationTracker* GetAIPopulationTracker() const;
 
+    void CreateAIPopulationTracker();
+
     UAthenaAISpawner* GetAISpawner() const;
 
     UFortServerBotManagerAthena** GetPlayerBotManager();
