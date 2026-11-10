@@ -504,6 +504,18 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
     if (bBroadcastsCurrentPlaylistLoaded)
     {
         Original();
+
+        TArray<AActor*> BuildingContainers;
+        UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
+
+        for (auto Actor : BuildingContainers)
+        {
+            auto BuildingContainer = (ABuildingContainer*)Actor;
+
+            if (BuildingContainer->GetStartAlreadySearched_Athena())
+                BuildingContainer->SpawnLoot(nullptr);
+        }
+
         return;
     }
 
