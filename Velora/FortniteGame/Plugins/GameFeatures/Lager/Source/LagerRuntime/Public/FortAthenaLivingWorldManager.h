@@ -212,6 +212,12 @@ public:
 
     struct FEventDataRuntime
     {
+        static int32 GetTypeSize();
+
+        float& GetTotalFilterWeight();
+
+        void* GetSpawnerDataFilter();
+
         TArray<uint8> FilterEntries;
         TArray<FScriptInterface> PointProviders;
         FGameplayTagQuery ProviderFilters;
@@ -224,6 +230,8 @@ public:
 
     struct FEventRuntime
     {
+        FEventDataRuntime& GetEventDataRuntime(int32 Index);
+
         TArray<FEventDataRuntime> EventDataRuntimes;
         TArray<FEventRuntimeSpawnData> SpawnDatas;
         int32 Pad20;

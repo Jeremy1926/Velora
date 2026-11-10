@@ -2,6 +2,7 @@
 #include "FortAthenaLivingWorldManager.h"
 #include "FortAthenaLivingWorldCategory.h"
 #include "FortAthenaLivingWorldConfigData.h"
+#include "Misc/EngineVersion.h"
 #include "FortAthenaLivingWorldDensityGrid.h"
 #include "FortAthenaLivingWorldEncounter.h"
 #include "FortAthenaLivingWorldEvent.h"
@@ -396,6 +397,10 @@ int32 UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequestsOffset()
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea r13, [rcx+0x*]; movaps xmm0, *; mov rdi, rdx; mov r14, rcx")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rbx, [rcx+0x*]; movaps xmm0, *; mov rdi, rdx; mov r14, rcx")
         .Disp();
 
     return PendingActorSpawnEventRequests;
@@ -2223,10 +2228,45 @@ static_assert(sizeof(UFortAthenaLivingWorldManager::FEventRequest) == 0x48);
 static_assert(sizeof(UFortAthenaLivingWorldManager::FPendingActorSpawnEventRequest::FActorInfo) == 0x70);
 static_assert(sizeof(UFortAthenaLivingWorldManager::FPendingActorSpawnEventRequest) == 0x90);
 
+int32 UFortAthenaLivingWorldManager::FEventDataRuntime::GetTypeSize()
+{
+    static auto TypeSize = Anchor::Offset(TEXT("sizeof(UFortAthenaLivingWorldManager::FEventDataRuntime)"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:EndEncounter"))
+        .Find("test rbx, rbx; jz 0x*; mov rdx, rbx; mov rcx, rdi; call 0x*; mov rdx, [rbx+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 5)
+        .Target()
+        .Find("mov rcx, rbp; mov byte ptr [rdx+0x*], 0x0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 3)
+        .Target()
+        .Find("imul rax, rax, 0x*")
+        .Imm();
+
+    return (int32)TypeSize;
+}
+
+float& UFortAthenaLivingWorldManager::FEventDataRuntime::GetTotalFilterWeight()
+{
+    return *(float*)((uint8*)this + GetTypeSize() - 0x8);
+}
+
+void* UFortAthenaLivingWorldManager::FEventDataRuntime::GetSpawnerDataFilter()
+{
+    return GetTypeSize() == sizeof(FEventDataRuntime) && SpawnerDataFilterClass ? SpawnerDataFilter : nullptr;
+}
+
+UFortAthenaLivingWorldManager::FEventDataRuntime& UFortAthenaLivingWorldManager::FEventRuntime::GetEventDataRuntime(int32 Index)
+{
+    return *(FEventDataRuntime*)((uint8*)EventDataRuntimes.GetData() + Index * FEventDataRuntime::GetTypeSize());
+}
+
 bool UFortAthenaLivingWorldManager::HasEventRuntimes()
 {
     static auto bHasEventRuntimes = Anchor::Exists()
-        .If(StaticClass() && StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer"))) && (GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD8 || (StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter"))) && GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD0)))
+        .If(StaticClass() && StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer"))) && (GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD8 || ((StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter"))) || (StaticClass()->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData"))) && FEngineVersion::Current().GetChangelist() >= 29915848)) && GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD0)))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
@@ -3193,7 +3233,7 @@ FScriptInterface UFortAthenaLivingWorldManager::GetRandomPointProviderFromEventD
     static FGameplayTagQuery EmptyTagQuery;
 
     const FGameplayTagQuery* TagQuery = &EmptyTagQuery;
-    const float Roll = FMath::FRand() * EventDataRuntime->TotalFilterWeight;
+    const float Roll = FMath::FRand() * EventDataRuntime->GetTotalFilterWeight();
     float Weight = 0.0f;
 
     for (int32 Index = 0; Index < EventDataRuntime->FilterEntries.Num(); Index++)
@@ -3336,7 +3376,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
             ActorCount = SpawnData->MinActorCount + (ActorCountRange + 1 > 0 ? FMath::Min(FMath::TruncToInt(FMath::FRand() * (ActorCountRange + 1)), ActorCountRange) : 0);
             ActorCount = FMath::Min(FMath::Min(ActorCount, SpawnData->ActorDescriptions.Num()), RemainingActorBudget);
 
-            auto EventDataRuntime = &EventRuntime->EventDataRuntimes[SpawnData->EventDataRuntimeIndex];
+            auto EventDataRuntime = &EventRuntime->GetEventDataRuntime(SpawnData->EventDataRuntimeIndex);
             float DensityForActors = 0.0f;
 
             for (int32 Index = 0; Index < ActorCount; Index++)
@@ -3371,7 +3411,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         {
             UObject* EventData;
             int32 ActorCount;
-        } RequestedEvent{ EventRuntime->EventDataRuntimes[SpawnData->EventDataRuntimeIndex].EventData.Get(), ActorCount };
+        } RequestedEvent{ EventRuntime->GetEventDataRuntime(SpawnData->EventDataRuntimeIndex).EventData.Get(), ActorCount };
 
         if (bHasPointProvider)
             (*(void (***)(void*, void*))PointProvider.GetInterface())[0x38 / sizeof(void*)](PointProvider.GetInterface(), &RequestedEvent);
@@ -3426,7 +3466,7 @@ void UFortAthenaLivingWorldManager::CancelEventRequest(const FEventRequest& Even
     if (PointProviderInterface)
     {
         auto EventRuntime = FindEventRuntime(EventRequest.Event, EventRequest.EncounterInstance);
-        auto EventData = EventRuntime && EventRequest.SpawnData ? EventRuntime->EventDataRuntimes[EventRequest.SpawnData->EventDataRuntimeIndex].EventData.Get() : nullptr;
+        auto EventData = EventRuntime && EventRequest.SpawnData ? EventRuntime->GetEventDataRuntime(EventRequest.SpawnData->EventDataRuntimeIndex).EventData.Get() : nullptr;
 
         for (int32 Index = 0; Index < EventRequest.ActorCount; Index++)
             (*(void (***)(void*, UObject**))PointProviderInterface)[0x28 / sizeof(void*)](PointProviderInterface, &EventData);
@@ -3446,8 +3486,9 @@ void UFortAthenaLivingWorldManager::CancelEventRequest(const FEventRequest& Even
 bool UFortAthenaLivingWorldManager::SelectDataToSpawn(FEventRuntimeSpawnData::FActorDescription& ActorDescription, FEventDataRuntime* EventDataRuntime, UClass*& OutSpawnerDataClass, UClass*& OutActorClass)
 {
     static auto SpawnerDataLimiter = StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter")));
-    static auto SpawnedSingleUseSpawnerData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData")));
-    static auto SpawnedConcurrentSingleUseSpawnerData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SpawnedConcurrentSingleUseSpawnerData")));
+    static auto LimiterStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter"));
+    static auto SpawnedSingleUseSpawnerData = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData"))) : StaticClass()->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData")));
+    static auto SpawnedConcurrentSingleUseSpawnerData = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("SpawnedConcurrentSingleUseSpawnerData"))) : nullptr;
 
     if (ActorDescription.ActorClass && ActorDescription.ActorClass->IsChildOf(AActor::StaticClass()))
     {
@@ -3455,15 +3496,15 @@ bool UFortAthenaLivingWorldManager::SelectDataToSpawn(FEventRuntimeSpawnData::FA
         return true;
     }
 
-    auto Limiter = SpawnerDataLimiter->ContainerPtrToValuePtr<uint8>(this);
+    auto Limiter = SpawnerDataLimiter ? SpawnerDataLimiter->ContainerPtrToValuePtr<uint8>(this) : (uint8*)this;
     auto& SingleUse = *SpawnedSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter);
-    auto& ConcurrentSingleUse = *SpawnedConcurrentSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter);
-    auto SpawnerDataFilter = EventDataRuntime->SpawnerDataFilterClass ? EventDataRuntime->SpawnerDataFilter : nullptr;
+    auto ConcurrentSingleUse = SpawnedConcurrentSingleUseSpawnerData ? SpawnedConcurrentSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter) : nullptr;
+    auto SpawnerDataFilter = EventDataRuntime->GetSpawnerDataFilter();
     TArray<UClass*> Candidates;
 
     for (auto SpawnerDataClass : ActorDescription.SpawnerDataClasses)
     {
-        if (SingleUse.Contains(SpawnerDataClass) || ConcurrentSingleUse.Contains(SpawnerDataClass))
+        if (SingleUse.Contains(SpawnerDataClass) || (ConcurrentSingleUse && ConcurrentSingleUse->Contains(SpawnerDataClass)))
             continue;
 
         if (SpawnerDataFilter && !(*(bool (***)(void*, UClass**))SpawnerDataFilter)[0x10 / sizeof(void*)](SpawnerDataFilter, &SpawnerDataClass))
@@ -3669,7 +3710,7 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
     }
 
     auto EventRuntime = FindEventRuntime(Event, EventRequest.EncounterInstance);
-    auto EventDataRuntime = EventRuntime ? &EventRuntime->EventDataRuntimes[SpawnData->EventDataRuntimeIndex] : nullptr;
+    auto EventDataRuntime = EventRuntime ? &EventRuntime->GetEventDataRuntime(SpawnData->EventDataRuntimeIndex) : nullptr;
     auto AISystem = Cast<UAthenaAISystem>(World->GetAISystem());
     auto AISpawner = AISystem ? AISystem->GetAISpawner() : nullptr;
 
@@ -3868,20 +3909,22 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         if (SpawnerDataClass)
         {
             static auto SpawnerDataLimiter = StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter")));
-            static auto SingleUseSpawnerDataQuery = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SingleUseSpawnerDataQuery")));
-            static auto ConcurrentSingleUseSpawnerDataQuery = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("ConcurrentSingleUseSpawnerDataQuery")));
-            static auto SpawnedSingleUseSpawnerData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData")));
-            static auto SpawnedConcurrentSingleUseSpawnerData = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter")))->FindPropertyByName(FName(TEXT("SpawnedConcurrentSingleUseSpawnerData")));
+            static auto LimiterStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldSpawnerDataLimiter"));
+            static auto SingleUseSpawnerDataQuery = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("SingleUseSpawnerDataQuery"))) : UFortAthenaLivingWorldConfigData::StaticClass()->FindPropertyByName(FName(TEXT("SingleUseSpawnerDataQuery")));
+            static auto ConcurrentSingleUseSpawnerDataQuery = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("ConcurrentSingleUseSpawnerDataQuery"))) : nullptr;
+            static auto SpawnedSingleUseSpawnerData = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData"))) : StaticClass()->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData")));
+            static auto SpawnedConcurrentSingleUseSpawnerData = SpawnerDataLimiter ? LimiterStruct->FindPropertyByName(FName(TEXT("SpawnedConcurrentSingleUseSpawnerData"))) : nullptr;
 
-            auto Limiter = SpawnerDataLimiter->ContainerPtrToValuePtr<uint8>(this);
+            auto Limiter = SpawnerDataLimiter ? SpawnerDataLimiter->ContainerPtrToValuePtr<uint8>(this) : (uint8*)this;
+            auto SingleUseQuery = SingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(SpawnerDataLimiter ? (void*)Limiter : (void*)GetConfig());
             auto AISpawnerData = Cast<UFortAthenaAISpawnerData>(SpawnerDataClass->GetDefaultObject());
             auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnerDataClass->GetDefaultObject());
             auto DescriptorTag = AISpawnerData ? &AISpawnerData->GetDescriptorTag() : ActorSpawnerData ? &ActorSpawnerData->GetDescriptorTag() : nullptr;
 
-            if (DescriptorTag && !SingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->IsEmpty() && SingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->Matches(*DescriptorTag))
+            if (DescriptorTag && !SingleUseQuery->IsEmpty() && SingleUseQuery->Matches(*DescriptorTag))
                 SpawnedSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnerDataClass);
 
-            if (DescriptorTag && !ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->IsEmpty() && ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->Matches(*DescriptorTag))
+            if (ConcurrentSingleUseSpawnerDataQuery && DescriptorTag && !ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->IsEmpty() && ConcurrentSingleUseSpawnerDataQuery->ContainerPtrToValuePtr<FGameplayTagQuery>(Limiter)->Matches(*DescriptorTag))
                 SpawnedConcurrentSingleUseSpawnerData->ContainerPtrToValuePtr<TArray<UClass*>>(Limiter)->AddUnique(SpawnerDataClass);
         }
     }
@@ -3906,8 +3949,10 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
 
     for (auto& EventRuntime : GetEventRuntimes())
     {
-        for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+        for (int32 EventDataRuntimeIndex = 0; EventDataRuntimeIndex < EventRuntime.Value.EventDataRuntimes.Num(); EventDataRuntimeIndex++)
         {
+            auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
+
             if (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags))
                 EventDataRuntime.PointProviders.Add(PointProvider);
         }
@@ -3954,8 +3999,10 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
 
         for (auto& EventRuntime : *(TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>*)((uint8*)EncounterInstance + EncounterEventRuntimes))
         {
-            for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+            for (int32 EventDataRuntimeIndex = 0; EventDataRuntimeIndex < EventRuntime.Value.EventDataRuntimes.Num(); EventDataRuntimeIndex++)
             {
+                auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
+
                 if (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags))
                     EventDataRuntime.PointProviders.Add(PointProvider);
             }
@@ -3967,8 +4014,10 @@ void UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntime(const FS
 {
     for (auto& EventRuntime : GetEventRuntimes())
     {
-        for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+        for (int32 EventDataRuntimeIndex = 0; EventDataRuntimeIndex < EventRuntime.Value.EventDataRuntimes.Num(); EventDataRuntimeIndex++)
         {
+            auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
+
             for (int32 Index = EventDataRuntime.PointProviders.Num() - 1; Index >= 0; Index--)
             {
                 if (EventDataRuntime.PointProviders[Index].GetObject() == PointProvider.GetObject())
@@ -3996,8 +4045,10 @@ void UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntime(const FS
 
         for (auto& EventRuntime : *(TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>*)((uint8*)EncounterInstance + EncounterEventRuntimes))
         {
-            for (auto& EventDataRuntime : ((FEventRuntime&)EventRuntime.Value).EventDataRuntimes)
+            for (int32 EventDataRuntimeIndex = 0; EventDataRuntimeIndex < EventRuntime.Value.EventDataRuntimes.Num(); EventDataRuntimeIndex++)
             {
+                auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
+
                 for (int32 Index = EventDataRuntime.PointProviders.Num() - 1; Index >= 0; Index--)
                 {
                     if (EventDataRuntime.PointProviders[Index].GetObject() == PointProvider.GetObject())
