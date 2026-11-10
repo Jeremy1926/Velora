@@ -3476,6 +3476,18 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
             ConstructPointProviderFilterRules((FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, this, Event, EventDataRuntime->EventData.Get(), ActorCount, DensityForActors, SpawnData->DensityRange);
 
             PointProvider = GetRandomPointProviderFromEventDataRuntime(EventDataRuntime, *(FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, StartIndices.IsValidIndex(SpawnDataIndex) ? StartIndices[SpawnDataIndex] : INDEX_NONE);
+
+            if (Config::bLogLivingWorld && !PointProvider.GetObject())
+            {
+                static FGameplayTagQuery EmptyTagQuery;
+
+                int32 EnabledCount = 0;
+
+                for (auto& RuntimePointProvider : EventDataRuntime->PointProviders)
+                    EnabledCount += IsActivePointProvider(RuntimePointProvider, EmptyTagQuery, *(FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter) ? 1 : 0;
+
+                UE_LOG(LogVelora, Log, TEXT("LivingWorld no provider for %s: %d providers in the event, %d of them enabled, %d filter entries, %d actors, density range %.0f"), EventDataRuntime->EventData.Get() ? *EventDataRuntime->EventData.Get()->GetName() : TEXT("None"), EventDataRuntime->PointProviders.Num(), EnabledCount, EventDataRuntime->FilterEntries.Num(), ActorCount, SpawnData->DensityRange);
+            }
         }
 
         if (!SpawnData)
@@ -3846,7 +3858,12 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         UClass* ActorClass = nullptr;
 
         if (!SelectDataToSpawn(ActorDescription, EventDataRuntime, SpawnerDataClass, ActorClass))
+        {
+            if (Config::bLogLivingWorld)
+                UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: no data to spawn, %d spawner data classes, actor class %s"), EventRequest.RequestID, Index, ActorDescription.SpawnerDataClasses.Num(), ActorDescription.ActorClass ? *ActorDescription.ActorClass->GetName() : TEXT("None"));
+
             continue;
+        }
 
         auto SpawnerData = SpawnerDataClass ? SpawnerDataClass->GetDefaultObject() : nullptr;
         float DensityRange = 0.0f;
@@ -3858,19 +3875,32 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         else if (Cast<UFortAthenaAISpawnerData>(SpawnerData))
         {
             if (!GetAISpawnerDataCullDistance(SpawnerDataClass, DensityRange))
+            {
+                if (Config::bLogLivingWorld)
+                    UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: no cull distance for %s"), EventRequest.RequestID, Index, *SpawnerDataClass->GetName());
+
                 continue;
+            }
         }
         else if (auto ActorSpawnerData = Cast<UFortAthenaActorSpawnerData>(SpawnerData))
         {
             auto SpawnedActorClass = ActorSpawnerData->GetActorClass();
 
             if (!SpawnedActorClass || !SpawnedActorClass->IsChildOf(AActor::StaticClass()))
+            {
+                if (Config::bLogLivingWorld)
+                    UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: actor spawner data %s has no actor class"), EventRequest.RequestID, Index, *SpawnerDataClass->GetName());
+
                 continue;
+            }
 
             DensityRange = FMath::Sqrt(((AActor*)SpawnedActorClass->GetDefaultObject())->GetNetCullDistanceSquared());
         }
         else
         {
+            if (Config::bLogLivingWorld)
+                UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: %s is no AI or actor spawner data"), EventRequest.RequestID, Index, SpawnerDataClass ? *SpawnerDataClass->GetName() : TEXT("None"));
+
             continue;
         }
 
@@ -3878,7 +3908,12 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
             DensityRange = ActorDescription.DensityRangeOverride;
 
         if (ActorDescription.PrefabGuid[0] || ActorDescription.PrefabGuid[1] || ActorDescription.PrefabGuid[2] || ActorDescription.PrefabGuid[3])
+        {
+            if (Config::bLogLivingWorld)
+                UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: prefab spawn"), EventRequest.RequestID, Index);
+
             continue;
+        }
 
         FVector Location(ForceInit);
         FRotator Rotation{ 0.0f, 0.0f, 0.0f };
@@ -3903,7 +3938,12 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
             ConstructPointProviderFilterRules((FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, this, Event, EventDataRuntime->EventData.Get(), RemainingActorCount, DensityForActors, DensityRange);
 
             if (!(*(bool (***)(void*, void*, TGameValue<FVector>*, TGameValue<FRotator>*, void*))PointProviderInterface)[0x10 / sizeof(void*)](PointProviderInterface, PointFilter, &GameLocation, &GameRotation, nullptr))
+            {
+                if (Config::bLogLivingWorld)
+                    UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: provider %s gave no location for %s, density range %.0f"), EventRequest.RequestID, Index, *EventRequest.PointProvider.GetObject()->GetName(), SpawnerDataClass ? *SpawnerDataClass->GetName() : *ActorClass->GetName(), DensityRange);
+
                 continue;
+            }
 
             Location = GameLocation.Get();
             Rotation = GameRotation.Get();
@@ -3928,6 +3968,9 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         ActorInfo.RequestID = INDEX_NONE;
         ActorInfo.Index = Index;
         ActorInfo.PreRegistrationHandle = PreRegisterInDensityGrids(Location, DensityRange, ActorDescription.DensityValue, ActorDescription, ActorInfo.TagPreRegistrationHandles);
+
+        if (Config::bLogLivingWorld && ActorInfo.PreRegistrationHandle == INDEX_NONE)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d actor %d: no density slot at %.0f %.0f %.0f, range %.0f, value %.2f"), EventRequest.RequestID, Index, Location.X, Location.Y, Location.Z, DensityRange, ActorDescription.DensityValue);
 
         Locations.Add(Location);
         Rotations.Add(Rotation);
