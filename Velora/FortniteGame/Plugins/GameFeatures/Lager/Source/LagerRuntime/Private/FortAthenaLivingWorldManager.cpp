@@ -2264,6 +2264,60 @@ UFortAthenaLivingWorldManager::FEventDataRuntime& UFortAthenaLivingWorldManager:
     return *(FEventDataRuntime*)((uint8*)EventDataRuntimes.GetData() + Index * FEventDataRuntime::GetTypeSize());
 }
 
+int32 UFortAthenaLivingWorldManager::FEventRequest::GetTypeSize()
+{
+    static auto TypeSize = Anchor::Offset(TEXT("sizeof(UFortAthenaLivingWorldManager::FEventRequest)"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:HasPendingSpawnRequestForEncounter"))
+        .Find("cmp [r*+0x18], r*; jz 0x*; add r*, 0x*")
+        .Find("add r*, 0x*")
+        .Imm();
+
+    return (int32)TypeSize;
+}
+
+UFortAthenaLivingWorldManager::FEventRequest UFortAthenaLivingWorldManager::GetPendingEventRequest(int32 Index)
+{
+    FEventRequest EventRequest;
+
+    FMemory::Memzero(&EventRequest, sizeof(FEventRequest));
+    memcpy(&EventRequest, *(uint8**)&GetPendingEventRequests() + Index * FEventRequest::GetTypeSize(), FMath::Min(FEventRequest::GetTypeSize(), (int32)sizeof(FEventRequest)));
+
+    if (FEventRequest::GetTypeSize() < (int32)sizeof(FEventRequest))
+        EventRequest.bHasPointProvider = EventRequest.PointProvider.GetObject() && EventRequest.PointProvider.GetInterface();
+
+    return EventRequest;
+}
+
+void UFortAthenaLivingWorldManager::AddPendingEventRequest(const FEventRequest& EventRequest)
+{
+    auto PendingEventRequests = (uint8*)&GetPendingEventRequests();
+    auto& Data = *(uint8**)PendingEventRequests;
+    auto& Num = *(int32*)(PendingEventRequests + 0x8);
+    auto& Max = *(int32*)(PendingEventRequests + 0xC);
+
+    if (Num >= Max)
+    {
+        Max = Max > 0 ? Max * 2 : 4;
+        Data = (uint8*)FMemory::Realloc(Data, (SIZE_T)Max * FEventRequest::GetTypeSize());
+    }
+
+    FMemory::Memzero(Data + Num * FEventRequest::GetTypeSize(), FEventRequest::GetTypeSize());
+    memcpy(Data + Num * FEventRequest::GetTypeSize(), &EventRequest, FMath::Min(FEventRequest::GetTypeSize(), (int32)sizeof(FEventRequest)));
+
+    Num++;
+}
+
+void UFortAthenaLivingWorldManager::RemovePendingEventRequests(int32 Index, int32 Count)
+{
+    auto PendingEventRequests = (uint8*)&GetPendingEventRequests();
+    auto Data = *(uint8**)PendingEventRequests;
+    auto& Num = *(int32*)(PendingEventRequests + 0x8);
+
+    memmove(Data + Index * FEventRequest::GetTypeSize(), Data + (Index + Count) * FEventRequest::GetTypeSize(), (SIZE_T)(Num - Index - Count) * FEventRequest::GetTypeSize());
+
+    Num -= Count;
+}
+
 bool UFortAthenaLivingWorldManager::HasEventRuntimes()
 {
     static auto bHasEventRuntimes = Anchor::Exists()
@@ -3444,7 +3498,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         if (bHasPointProvider)
             (*(void (***)(void*, void*))PointProvider.GetInterface())[0x38 / sizeof(void*)](PointProvider.GetInterface(), &RequestedEvent);
 
-        auto& EventRequest = GetPendingEventRequests()[GetPendingEventRequests().AddUninitialized()];
+        FEventRequest EventRequest;
 
         FMemory::Memzero(&EventRequest, sizeof(FEventRequest));
 
@@ -3456,6 +3510,8 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         EventRequest.ActorCount = ActorCount;
         EventRequest.RequestID = NextEventRequestID++;
         EventRequest.bHasPointProvider = bHasPointProvider;
+
+        AddPendingEventRequest(EventRequest);
 
         if (Config::bLogLivingWorld)
             UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d: %s, %d actors, provider %s"), EventRequest.RequestID, RequestedEvent.EventData ? *RequestedEvent.EventData->GetName() : TEXT("None"), ActorCount, bHasPointProvider ? *PointProvider.GetObject()->GetName() : TEXT("None"));
@@ -3573,6 +3629,7 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
         .Disp();
 
     static auto SpawnActions = UFortAthenaLivingWorldEventData::StaticClass()->FindPropertyByName(FName(TEXT("SpawnActions")));
+    static auto ObjectVTable = *(void***)StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
     static auto NextActorRequestID = -2;
 
     auto SpawnerData = SpawnerDataClass ? SpawnerDataClass->GetDefaultObject() : nullptr;
@@ -3593,7 +3650,9 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
 
             for (int32 Index = 0; Index < TaggedSpawnActions.Num(); Index++)
             {
-                if (auto SpawnAction = GetSpawnAction(this, TaggedSpawnActions.GetData() + Index * 0x10))
+                auto SpawnAction = GetSpawnAction(this, TaggedSpawnActions.GetData() + Index * 0x10);
+
+                if (SpawnAction && (*(void***)SpawnAction)[(OnActorSpawnedSlot - sizeof(void*)) / sizeof(void*)] != ObjectVTable[(OnActorSpawnedSlot - sizeof(void*)) / sizeof(void*)])
                     (*(void (***)(UObject*, UFortAthenaAISpawnerDataComponentList*, UFortAthenaLivingWorldManager*))SpawnAction)[(OnActorSpawnedSlot - sizeof(void*)) / sizeof(void*)](SpawnAction, ComponentList, this);
             }
         }
@@ -3635,18 +3694,17 @@ void UFortAthenaLivingWorldManager::ProcessPendingEventRequests()
     if (!Config)
         return;
 
-    auto& PendingEventRequests = GetPendingEventRequests();
-    const int32 Count = FMath::Min(PendingEventRequests.Num(), (int32)Config->GetMaxEventSpawnPerTick().GetValueAtLevel(0.0f));
+    const int32 Count = FMath::Min(GetPendingEventRequests().Num(), (int32)Config->GetMaxEventSpawnPerTick().GetValueAtLevel(0.0f));
 
-    if (Count <= 0)
+    if (Count <= 0 || FEventRequest::GetTypeSize() <= 0)
         return;
 
     TArray<FEventRequest> EventRequests;
 
     for (int32 Index = 0; Index < Count; Index++)
-        EventRequests.Add(PendingEventRequests[Index]);
+        EventRequests.Add(GetPendingEventRequest(Index));
 
-    PendingEventRequests.RemoveAt(0, Count);
+    RemovePendingEventRequests(0, Count);
 
     for (auto& EventRequest : EventRequests)
         ProcessEventRequest(EventRequest);
@@ -4139,12 +4197,10 @@ void UFortAthenaLivingWorldManager::DisablePointProvider(const FScriptInterface&
 
     RemovePointProviderFromEventRuntime(PointProvider);
 
-    auto& PendingEventRequests = GetPendingEventRequests();
-
-    for (int32 Index = PendingEventRequests.Num() - 1; Index >= 0; Index--)
+    for (int32 Index = GetPendingEventRequests().Num() - 1; Index >= 0 && FEventRequest::GetTypeSize() > 0; Index--)
     {
-        if (PendingEventRequests[Index].PointProvider.GetObject() == PointProvider.GetObject())
-            PendingEventRequests.RemoveAt(Index);
+        if (GetPendingEventRequest(Index).PointProvider.GetObject() == PointProvider.GetObject())
+            RemovePendingEventRequests(Index, 1);
     }
 }
 

@@ -259,6 +259,8 @@ public:
 
     struct FEventRequest
     {
+        static int32 GetTypeSize();
+
         FFortAthenaLivingWorldCategory* Category;
         FFortAthenaLivingWorldEvent* Event;
         FEventRuntimeSpawnData* SpawnData;
@@ -382,6 +384,12 @@ public:
     TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>& GetEventRuntimes();
 
     TArray<FEventRequest>& GetPendingEventRequests();
+
+    FEventRequest GetPendingEventRequest(int32 Index);
+
+    void AddPendingEventRequest(const FEventRequest& EventRequest);
+
+    void RemovePendingEventRequests(int32 Index, int32 Count);
 
     TArray<FPendingActorSpawnEventRequest>& GetPendingActorSpawnRequests();
 
