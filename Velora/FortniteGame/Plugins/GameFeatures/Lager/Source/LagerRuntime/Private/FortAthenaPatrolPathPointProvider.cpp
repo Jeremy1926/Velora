@@ -100,6 +100,11 @@ bool AFortAthenaPatrolPathPointProvider::GetValidLocation(const FFortAthenaLivin
         .If(FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() && !IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius())
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetValidLocation"))
         .Find("call [rax+0x*]")
+        .Or()
+        .If(FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules() && !IFortAthenaLivingWorldPointProviderInterface::HasActorDensityComputationRadius() && UFortAthenaLivingWorldManager::HasEventRuntimes())
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetFiltersTags"))
+        .Find("call [rax+0x*]")
+        .SlotShift(StaticClass()->GetDefaultObject(false)->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()), -0x8)
         .Optional()
         .InInterfaceVTables(StaticClass(), IFortAthenaLivingWorldPointProviderInterface::StaticClass(), "sub rsp, 0x28; cmp qword ptr [rcx+0x*], 0x0; jz 0x*; add rcx, 0x*; call 0x*; xor al, al*"));
 

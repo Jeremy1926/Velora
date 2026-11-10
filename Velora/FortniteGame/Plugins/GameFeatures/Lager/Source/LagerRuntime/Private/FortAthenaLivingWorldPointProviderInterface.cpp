@@ -91,13 +91,15 @@ bool FFortAthenaLivingWorldPointProviderFilterRules::HasDensityRules()
 
 int32 FFortAthenaLivingWorldPointProviderFilterRules::GetPlayerDistanceOffset()
 {
-    return HasEventRules() ? 0x20 : 0xC;
+    static auto bHasEventDataName = StaticStruct() && StaticStruct()->GetPropertiesSize() >= 0x38;
+
+    return bHasEventDataName ? 0x28 : HasEventRules() ? 0x20 : 0xC;
 }
 
 int32 FFortAthenaLivingWorldPointProviderFilterRules::GetExpectedSpawnCount() const
 {
     if (HasEventRules())
-        return *(const int32*)(Data + 0x10);
+        return *(const int32*)(Data + GetPlayerDistanceOffset() - 0x10);
 
     return GetFlagsOffset() ? *(const int32*)Data : 0;
 }
