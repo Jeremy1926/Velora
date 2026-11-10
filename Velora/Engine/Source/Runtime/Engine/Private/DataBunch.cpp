@@ -116,6 +116,8 @@ void FOutBunch::Reset()
 {
     static auto Reset = Anchor::VirtualFunction<void (*)(FOutBunch*)>(TEXT("FBitWriter::Reset"))
         .VirtualStartHas(*(const void* const* const*)this, "movsxd r8, dword ptr [rdi+0x*]; xor edx, edx; mov rcx, [rdi+0x*]; and qword ptr [rdi+0x*], 0x0")
+        .Or()
+        .VirtualStartHas(*(const void* const* const*)this, "movsxd r8, dword ptr [r14+0x*]; xor edi, edi; mov rcx, [r14+0x*]; xor edx, edx; mov [r14+0x*], rdi")
         .Get();
 
     Reset(this);
