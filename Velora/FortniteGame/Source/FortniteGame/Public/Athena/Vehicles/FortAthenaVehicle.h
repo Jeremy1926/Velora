@@ -87,6 +87,8 @@ public:
 
     void SetupToggleableShapeCollision();
 
+    void SetupDamageableParts();
+
     void OnRep_DamageableParts(const TRuntimeSizedArray<FVehicleDamageablePart>& PrevDamageableParts);
 
     TRuntimeSizedArray<FVehicleDamageablePart>& GetDamageableParts();

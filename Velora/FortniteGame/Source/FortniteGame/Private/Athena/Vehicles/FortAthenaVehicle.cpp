@@ -22,6 +22,7 @@
 #include "UObject/Stack.h"
 #include "Detour.h"
 #include "Scanner.h"
+#include "Config.h"
 
 UClass* AFortAthenaVehicle::StaticClass()
 {
@@ -601,17 +602,35 @@ float AFortAthenaVehicle::ModifyIncomingDamage(float Damage, const FGameplayTagC
 
 void AFortAthenaVehicle::AbsorbDamageIntoDamagablePart(float Damage, const FGameplayEffectContextHandle& EffectContext)
 {
+    static auto ShapeName = FVehicleDamageablePart::StaticStruct()->FindPropertyByName(FName(TEXT("ShapeName")));
+
     auto HitResult = EffectContext.GetHitResult();
     auto BulletCollisionComponent = GetVehicleBulletCollisionComponent();
+
+    if (Config::bLogReplication)
+        UE_LOG(LogVelora, Log, TEXT("Vehicle part hit %s damage %f hit %d component %s bullet component %s element %d parts %d"), *GetName(), Damage, HitResult != nullptr, HitResult && HitResult->GetComponent().Get() ? *HitResult->GetComponent().Get()->GetName() : TEXT("none"), BulletCollisionComponent ? *BulletCollisionComponent->GetName() : TEXT("none"), HitResult ? (int32)HitResult->GetElementIndex() : -1, GetDamageableParts().Num());
 
     if (!HasAuthority() || !HitResult || !BulletCollisionComponent || HitResult->GetComponent().Get() != BulletCollisionComponent)
         return;
 
     auto& DamageableParts = GetDamageableParts();
 
+    if (!DamageableParts.Num())
+    {
+        SetupDamageableParts();
+
+        if (DamageableParts.Num())
+            OnRep_DamageableParts(TRuntimeSizedArray<FVehicleDamageablePart>());
+    }
+
+    auto BodyInstance = ShapeName ? BulletCollisionComponent->GetBodyInstance(NAME_None, true) : nullptr;
+    auto BodySetup = BodyInstance ? BodyInstance->GetBodySetup() : nullptr;
+
     for (int32 Index = 0; Index < DamageableParts.Num(); Index++)
     {
-        if (DamageableParts[Index].ShapeIndex != HitResult->GetElementIndex() || DamageableParts[Index].Health <= 0.0f)
+        const int32 ShapeIndex = !ShapeName ? DamageableParts[Index].ShapeIndex : BodySetup ? BodySetup->GetAggGeom().GetElementIndexByName(ShapeName->GetPropertyValue_InContainer<FName>(&DamageableParts[Index])) : INDEX_NONE;
+
+        if (ShapeIndex != HitResult->GetElementIndex() || DamageableParts[Index].Health <= 0.0f)
             continue;
 
         const TRuntimeSizedArray<FVehicleDamageablePart> PrevDamageableParts = DamageableParts;
@@ -735,7 +754,16 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
         .Optional()
         .Inline());
 
+    SetupDamageableParts();
+
+    Original();
+}
+
+void AFortAthenaVehicle::SetupDamageableParts()
+{
     static auto FortVehicleInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleInterface"));
+    static auto BoneName = FVehicleDamageablePart::StaticStruct()->FindPropertyByName(FName(TEXT("BoneName")));
+    static auto ShapeName = FVehicleDamageablePart::StaticStruct()->FindPropertyByName(FName(TEXT("ShapeName")));
 
     auto& DamageableParts = GetDamageableParts();
     auto VehicleInterface = (IFortVehicleInterface*)GetInterfaceAddress(FortVehicleInterface);
@@ -760,14 +788,29 @@ void AFortAthenaVehicle::SetupToggleableShapeCollision()
 
             memset(&Part, 0, FVehicleDamageablePart::GetTypeSize());
             Part.ConfigIndex = ConfigIndex;
-            Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].GetBoneName()) : INDEX_NONE;
-            Part.ShapeIndex = ShapeIndex;
+
+            if (BoneName)
+            {
+                BoneName->SetPropertyValue_InContainer<FName>(&Part, PartConfigs[ConfigIndex].GetBoneName());
+            }
+            else
+            {
+                Part.BoneIndex = SkeletalMeshComponent ? SkeletalMeshComponent->GetBoneIndex(PartConfigs[ConfigIndex].GetBoneName()) : INDEX_NONE;
+            }
+
+            if (ShapeName)
+            {
+                ShapeName->SetPropertyValue_InContainer<FName>(&Part, PartConfigs[ConfigIndex].GetShapeName());
+            }
+            else
+            {
+                Part.ShapeIndex = ShapeIndex;
+            }
+
             Part.Health = PartConfigs[ConfigIndex].GetbStartsDisabled() ? 0.0f : PartConfigs[ConfigIndex].GetMaxHealth();
             Part.SetbConsideredCriticalHit(PartConfigs[ConfigIndex].GetbConsideredCriticalHit());
         }
     }
-
-    Original();
 }
 
 void AFortAthenaVehicle::OnRep_DamageableParts(const TRuntimeSizedArray<FVehicleDamageablePart>& PrevDamageableParts)
