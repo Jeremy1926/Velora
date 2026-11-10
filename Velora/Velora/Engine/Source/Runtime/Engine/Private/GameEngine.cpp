@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Engine/GameEngine.h"
+#include "Pawns/FortPawn.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
@@ -364,18 +366,28 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
     {
         VehicleLogCountdown = 300;
 
-        static auto CurrentVehicle = AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle")));
-        static auto VehicleLastTick = AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("VehicleLastTick")));
-
         TArray<AActor*> Pawns;
         UGameplayStatics::GetAllActorsOfClass(VehicleLogWorld, AFortPlayerPawn::StaticClass(), Pawns);
 
         for (auto Pawn : Pawns)
         {
-            auto Vehicle = CurrentVehicle ? *CurrentVehicle->ContainerPtrToValuePtr<AActor*>(Pawn) : nullptr;
-            auto LastVehicle = VehicleLastTick ? *VehicleLastTick->ContainerPtrToValuePtr<AActor*>(Pawn) : nullptr;
+            auto Weapon = ((AFortPawn*)Pawn)->GetCurrentWeapon();
+            static auto WeaponModSlots = AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+            static auto EquippedWeaponModSlots = AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("EquippedWeaponModSlots")));
 
-            UE_LOG(LogVelora, Log, TEXT("Pawn %s class %s vehicle %s last %s"), *Pawn->GetName(), *Pawn->GetClass()->GetName(), Vehicle ? *Vehicle->GetName() : TEXT("none"), LastVehicle ? *LastVehicle->GetName() : TEXT("none"));
+            if (!Weapon || !WeaponModSlots || !EquippedWeaponModSlots)
+                continue;
+
+            auto Item = Weapon->GetInventoryItem();
+            FString ModNames;
+
+            for (auto& WeaponModSlot : Weapon->GetWeaponModSlots())
+            {
+                ModNames += WeaponModSlot.WeaponMod ? WeaponModSlot.WeaponMod->GetName() : FString(TEXT("null"));
+                ModNames += TEXT(" ");
+            }
+
+            UE_LOG(LogVelora, Log, TEXT("Mods pawn %s weapon %s slots %d equipped %d item slots %d: %s"), *Pawn->GetName(), *Weapon->GetName(), Weapon->GetWeaponModSlots().Num(), EquippedWeaponModSlots->ContainerPtrToValuePtr<TArray<uint8>>(Weapon)->Num(), Item ? Item->GetItemEntry().GetWeaponModSlots().Num() : -1, *ModNames);
         }
     }
 

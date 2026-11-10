@@ -63,6 +63,8 @@ public:
 
     FGuid& GetItemEntryGuid();
 
+    void InitWeapon(UFortWorldItem* Item);
+
     UFortWorldItem* GetInventoryItem() const;
 
     const TArray<FFortWeaponModSlot>& GetWeaponModSlots() const;

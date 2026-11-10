@@ -295,6 +295,29 @@ FGameplayAbilitySpecHandle AFortWeapon::GetPrimaryAbilitySpecHandle() const
     return PrimaryAbilitySpecHandle ? *PrimaryAbilitySpecHandle->ContainerPtrToValuePtr<FGameplayAbilitySpecHandle>(this) : FGameplayAbilitySpecHandle();
 }
 
+void AFortWeapon::InitWeapon(UFortWorldItem* Item)
+{
+    DETOUR(AFortWeapon, InitWeapon, Anchor::Hook()
+        .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rdx, rax; mov rcx, *; call [r8+0x*]")
+        .Find("call [r8+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortWeapon"))
+        .Optional()
+        .Inline());
+
+    Original(Item);
+
+    static auto WeaponModSlots = FFortItemEntry::StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+
+    if (!Item || !WeaponModSlots || !HasAuthority())
+        return;
+
+    for (auto& WeaponModSlot : Item->GetItemEntry().GetWeaponModSlots())
+        AddWeaponModSlot(WeaponModSlot);
+}
+
 UFortWorldItem* AFortWeapon::GetInventoryItem() const
 {
     auto Pawn = Cast<AFortPawn>(GetOwner());
