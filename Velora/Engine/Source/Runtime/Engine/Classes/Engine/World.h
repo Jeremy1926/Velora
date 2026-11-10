@@ -127,6 +127,10 @@ public:
 
     ENetMode InternalGetNetMode() const;
 
+    ENetMode AttemptDeriveFromURL() const;
+
+    static void PatchInlinedNetMode();
+
     void SetNextSwitchCountdown(float InNextSwitchCountdown);
 
     FLevelCollection* FindCollectionByType(const ELevelCollectionType InType);

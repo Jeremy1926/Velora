@@ -6,6 +6,7 @@
 #include "Misc/OutputDeviceRedirector.h"
 #include "Windows/WindowsConsoleOutputDevice.h"
 #include "CoreGlobals.h"
+#include "Engine/World.h"
 #include "Scanner.h"
 #include "Detour.h"
 #include "Config.h"
@@ -87,6 +88,7 @@ BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)
     if (Reason == DLL_PROCESS_ATTACH)
     {
         DetourInstall();
+        UWorld::PatchInlinedNetMode();
         std::thread(Main).detach();
     }
 

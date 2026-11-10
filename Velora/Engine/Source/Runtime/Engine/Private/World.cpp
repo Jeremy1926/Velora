@@ -200,6 +200,182 @@ ENetMode UWorld::InternalGetNetMode() const
     return Original();
 }
 
+ENetMode UWorld::AttemptDeriveFromURL() const
+{
+    DETOUR(UWorld, AttemptDeriveFromURL, Anchor::Hook()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, rax; call 0x*")
+        .Call()
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, *; call 0x*; mov ebx, eax; lea eax, [rbx-0x1]")
+        .Call()
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 4C 8B C1 75 ? 48 8B 91 F0 00 00 00")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 75 ? 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75 ? 48 8B 81 ? ? 00 00 48 85 C0 74 ? 83 B8 34 01 00 00 01 74 ? 48 8B 01 FF 90 ? ? 00 00 84 C0 0F 85 ? ? ? ? B8 03 00 00 00 48 83 C4 28 C3")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("56 48 83 EC 20 BE 03 00 00 00 48 83 79 ? 00 75 ? 48 89 C8 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 74 ? B8 03 00 00 00 48 83 C4 28 C3 48 8B 89 ? ? 00 00")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Optional()
+        .Inline());
+
+    if (GetNetDriver() != nullptr)
+    {
+        return GetNetDriver()->GetNetMode();
+    }
+
+    return Original();
+}
+
+void UWorld::PatchInlinedNetMode()
+{
+    static auto AttemptDeriveFromURL = Anchor::Data<const uint8*>(TEXT("UWorld::AttemptDeriveFromURL"))
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, rax; call 0x*")
+        .Call()
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, *; call 0x*; mov ebx, eax; lea eax, [rbx-0x1]")
+        .Call()
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 4C 8B C1 75 ? 48 8B 91 F0 00 00 00")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 75 ? 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75 ? 48 8B 81 ? ? 00 00 48 85 C0 74 ? 83 B8 34 01 00 00 01 74 ? 48 8B 01 FF 90 ? ? 00 00 84 C0 0F 85 ? ? ? ? B8 03 00 00 00 48 83 C4 28 C3")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("56 48 83 EC 20 BE 03 00 00 00 48 83 79 ? 00 75 ? 48 89 C8 48 8B 89 ? ? 00 00 48 85 C9 74 ? 80 B9 ? ? 00 00 00 75")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 74 ? B8 03 00 00 00 48 83 C4 28 C3 48 8B 89 ? ? 00 00")
+        .Find("add rsp, 0x*; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    static auto NetDriver = StaticClass()->FindPropertyByName(FName(TEXT("NetDriver")));
+
+    if (!AttemptDeriveFromURL || !NetDriver || NetDriver->GetOffset_ForInternal() >= 0x80)
+        return;
+
+    char CompareText[48];
+    char CallText[40];
+    char JumpText[40];
+    snprintf(CompareText, sizeof(CompareText), "cmp qword ptr [*+0x%x], *", (uint32)NetDriver->GetOffset_ForInternal());
+    snprintf(CallText, sizeof(CallText), "call 0x%llx", (unsigned long long)AttemptDeriveFromURL);
+    snprintf(JumpText, sizeof(JumpText), "jmp 0x%llx", (unsigned long long)AttemptDeriveFromURL);
+
+    auto Image = Anchor::Base();
+    auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
+    auto Sections = IMAGE_FIRST_SECTION(Headers);
+    int32 NumPatched = 0;
+
+    for (int32 Index = 0; Index < Headers->FileHeader.NumberOfSections; Index++)
+    {
+        if (!(Sections[Index].Characteristics & IMAGE_SCN_MEM_EXECUTE))
+            continue;
+
+        for (auto Address = Image + Sections[Index].VirtualAddress; Address + 0x10 < Image + Sections[Index].VirtualAddress + Sections[Index].Misc.VirtualSize; Address++)
+        {
+            if ((Address[0] & 0xF8) != 0x48 || (Address[1] != 0x83 && Address[1] != 0x39) || (Address[2] & 0xC0) != 0x40 || Address[(Address[2] & 0x7) == 0x4 ? 4 : 3] != (uint8)NetDriver->GetOffset_ForInternal())
+                continue;
+
+            Anchor::FCode Compare(Address);
+
+            if (!Compare.Is(CompareText))
+                continue;
+
+            auto Branch = Compare.Find("*");
+
+            for (int32 Count = 0; Count < 6 && Branch.Get() && !Branch.Is("jz 0x*") && !Branch.Is("jnz 0x*") && !Branch.Is("jmp *") && !Branch.Is("call *") && !Branch.Is("ret*"); Count++)
+                Branch = Branch.Find("*");
+
+            if (!Branch.Get() || (!Branch.Is("jz 0x*") && !Branch.Is("jnz 0x*")))
+                continue;
+
+            Anchor::FCode Code(Branch.Is("jz 0x*") ? Branch.Target() : Branch.Find("*").Get());
+            bool bReachesFallback = false;
+
+            for (int32 Count = 0; Count < 14 && Code.Get() && !bReachesFallback; Count++)
+            {
+                if (Code.Is(CallText) || Code.Is(JumpText))
+                {
+                    bReachesFallback = true;
+                }
+                else if (Code.Is("jmp *") || Code.Is("ret*") || Code.Is("int3"))
+                {
+                    break;
+                }
+                else if (Code.Is("jz 0x*") || Code.Is("jnz 0x*"))
+                {
+                    Anchor::FCode Target(Code.Target());
+
+                    for (int32 TargetCount = 0; TargetCount < 6 && Target.Get() && !bReachesFallback; TargetCount++)
+                    {
+                        bReachesFallback = Target.Is(CallText) || Target.Is(JumpText);
+
+                        if (Target.Is("jmp *") || Target.Is("ret*") || Target.Is("int3"))
+                            break;
+
+                        Target = Target.Find("*");
+                    }
+                }
+
+                Code = Code.Find("*");
+            }
+
+            if (!bReachesFallback)
+                continue;
+
+            if (Branch.Is("jz 0x*"))
+                *Branch.Get() == 0x0F ? Anchor::Patch(TEXT("UWorld::InternalGetNetMode inlined"), Branch.Get(), { 0x90, 0xE9 }) : Anchor::Patch(TEXT("UWorld::InternalGetNetMode inlined"), Branch.Get(), { 0xEB });
+            else
+                *Branch.Get() == 0x0F ? Anchor::Patch(TEXT("UWorld::InternalGetNetMode inlined"), Branch.Get(), { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }) : Anchor::Patch(TEXT("UWorld::InternalGetNetMode inlined"), Branch.Get(), { 0x90, 0x90 });
+
+            NumPatched++;
+        }
+    }
+
+    UE_LOG(LogVelora, Log, TEXT("Patched %d inlined UWorld::InternalGetNetMode"), NumPatched);
+}
+
 AServerStreamingLevelsVisibility* UWorld::GetServerStreamingLevelsVisibility() const
 {
     static auto ServerStreamingLevelsVisibility = GetClass()->FindPropertyByName(FName(TEXT("ServerStreamingLevelsVisibility")));

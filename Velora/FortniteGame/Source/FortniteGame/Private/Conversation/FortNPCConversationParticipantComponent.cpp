@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Conversation/FortNPCConversationParticipantComponent.h"
 #include "AI/FortAthenaAIBotController.h"
+#include "Pawns/FortPlayerPawn.h"
+#include "Templates/Casts.h"
 #include "Engine/DataTable.h"
 #include "FortGameFeatureData.h"
 #include "UObject/Class.h"
@@ -22,6 +24,11 @@ void UFortNPCConversationParticipantComponent::InitializeServerConversation(AFor
         return;
 
     GetBotControllerOwner() = BotController;
+
+    static auto PlayerPawnOwner = StaticClass()->FindPropertyByName(FName(TEXT("PlayerPawnOwner")));
+
+    if (PlayerPawnOwner && !*PlayerPawnOwner->ContainerPtrToValuePtr<AFortPlayerPawn*>(this))
+        *PlayerPawnOwner->ContainerPtrToValuePtr<AFortPlayerPawn*>(this) = Cast<AFortPlayerPawn>(GetOwner());
 
     static auto OnAlertLevelChangedEventDelegate = AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("OnAlertLevelChangedEventDelegate")));
     static auto OnAgentDBNOStatusChangedEventDelegate = AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("OnAgentDBNOStatusChangedEventDelegate")));
