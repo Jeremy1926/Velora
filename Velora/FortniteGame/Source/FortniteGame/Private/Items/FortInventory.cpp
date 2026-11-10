@@ -41,9 +41,18 @@ void AFortInventory::HandleInventoryLocalUpdate()
     if (InterfaceHandleInventoryLocalUpdate)
     {
         static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
+        static auto InterfaceMarkArrayDirty = Anchor::VirtualFunction<void (*)(void*)>(TEXT("IFortInventoryInterface::MarkArrayDirty"))
+            .Virtual((const void* const*)Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortInventory"), TEXT("/Script/FortniteGame.FortInventoryInterface")), [](const Anchor::FCode& Entry) { return Entry.Is("push rbx; sub rsp, 0x20; mov rbx, rcx; add rcx, 0x*; call 0x*; xor eax, eax; mov [rbx+0x*], rax; mov [rbx+0x*], rax; mov [rbx+0x*], rax"); })
+            .Optional()
+            .Get();
 
         if (auto Interface = GetInterfaceAddress(FortInventoryInterface))
+        {
+            if (InterfaceMarkArrayDirty)
+                InterfaceMarkArrayDirty(Interface);
+
             InterfaceHandleInventoryLocalUpdate(Interface);
+        }
 
         return;
     }
