@@ -258,13 +258,3 @@ float IConsoleVariable::GetFloat() const
 
     return GetFloat(this);
 }
-
-bool IConsoleManager::ProcessUserConsoleInput(const TCHAR* InInput, FOutputDevice& Ar, UWorld* InWorld)
-{
-    static auto ProcessUserConsoleInput = Anchor::Function<bool (*)(IConsoleManager*, const TCHAR*, FOutputDevice&, UWorld*)>(TEXT("FConsoleManager::ProcessUserConsoleInput"))
-        .String(TEXT("%s = \"%s\"      LastSetBy: %s"))
-        .Start()
-        .Get();
-
-    return ProcessUserConsoleInput(this, InInput, Ar, InWorld);
-}

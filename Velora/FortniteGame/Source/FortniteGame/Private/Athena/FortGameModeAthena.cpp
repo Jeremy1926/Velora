@@ -44,7 +44,6 @@
 #include "Engine/GameEngine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/NetDriver.h"
-#include "UObject/ScriptDelegates.h"
 #include "Online/Iris/FortIrisHelper.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
@@ -464,23 +463,10 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         if (PlayerController->GetWorldInventory())
             PlayerController->GetWorldInventory()->GetInventoryType() = EFortInventoryType::World;
 
-        static auto OnViewTargetChanged = AFortPlayerController::StaticClass()->FindPropertyByName(FName(TEXT("OnViewTargetChanged")));
-
-        if (OnViewTargetChanged && GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem())
+        if (GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem())
         {
-            struct
-            {
-                AFortPlayerController* PlayerController;
-                AActor* NewViewTarget;
-                AActor* OldViewTarget;
-            } Parameters{ PlayerController, PlayerController->GetViewTarget(), PlayerController->GetViewTarget() };
-
-            OnViewTargetChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(PlayerController)->ProcessMulticastDelegate<UObject>(&Parameters);
-
             if (auto IrisHelper = UFortIrisHelper::Get())
                 IrisHelper->OnPlayerControllerInventorySwitched(PlayerController);
-
-            UE_LOG(LogVelora, Log, TEXT("Iris helper %s for %s"), UFortIrisHelper::Get() ? *UFortIrisHelper::Get()->GetName() : TEXT("none"), *PlayerController->GetName());
         }
     }
 
