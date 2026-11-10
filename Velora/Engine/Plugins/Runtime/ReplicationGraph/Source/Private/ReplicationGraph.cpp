@@ -24,6 +24,7 @@
 #include "UObject/Class.h"
 #include "UObject/CoreNet.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectArray.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -3802,8 +3803,21 @@ void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicatio
 
     for (auto List : GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::Default])
     {
-        for (auto Actor : List->RepList)
+        for (auto& Actor : List->RepList)
         {
+            if (Config::bLogReplication)
+            {
+                auto ObjectItem = Actor ? GUObjectArray.IndexToObject((int32)Actor->GetUniqueID()) : nullptr;
+
+                if (!ObjectItem || ObjectItem->Object != Actor)
+                {
+                    auto FirstItem = List->RepList[0] ? GUObjectArray.IndexToObject((int32)List->RepList[0]->GetUniqueID()) : nullptr;
+
+                    UE_LOG(LogVelora, Error, TEXT("Rep bad actor %p index %d in list %p num %d slot %d, gathered lists %d, first %s"), Actor, Actor ? (int32)Actor->GetUniqueID() : -1, List, List->RepList.Num(), (int32)(&Actor - List->RepList.GetData()), GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::Default].Num(), FirstItem && FirstItem->Object == List->RepList[0] ? *List->RepList[0]->GetName() : TEXT("bad"));
+                    continue;
+                }
+            }
+
             FConnectionReplicationActorInfo& ConnectionData = ConnectionActorInfoMap.FindOrAdd(Actor);
 
             if (ConnectionData.bDormantOnConnection)
