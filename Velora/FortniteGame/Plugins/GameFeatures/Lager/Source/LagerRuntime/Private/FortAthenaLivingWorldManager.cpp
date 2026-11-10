@@ -2266,7 +2266,7 @@ UFortAthenaLivingWorldManager::FEventDataRuntime& UFortAthenaLivingWorldManager:
 bool UFortAthenaLivingWorldManager::HasEventRuntimes()
 {
     static auto bHasEventRuntimes = Anchor::Exists()
-        .If(StaticClass() && StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer"))) && (GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD8 || ((StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter"))) || (StaticClass()->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData"))) && FEngineVersion::Current().GetChangelist() >= 29915848)) && GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD0)))
+        .If(StaticClass() && FEngineVersion::Current().GetChangelist() < 31978752 && StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer"))) && (GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD8 || ((StaticClass()->FindPropertyByName(FName(TEXT("SpawnerDataLimiter"))) || (StaticClass()->FindPropertyByName(FName(TEXT("SpawnedSingleUseSpawnerData"))) && FEngineVersion::Current().GetChangelist() >= 29915848)) && GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD0)))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
