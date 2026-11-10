@@ -3,7 +3,6 @@
 #include "Abilities/FortMovementSet.h"
 #include "Pawns/FortPawn.h"
 #include "HAL/IConsoleManager.h"
-#include "Misc/EngineVersion.h"
 #include "Templates/SharedPointer.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -67,7 +66,13 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
 
     static auto EndMMEOnServerIfNoUpdateReceived = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.CharacterMovement.EndMMEOnServerIfNoUpdateReceived"));
     static auto CharacterOwnerProperty = GetClass()->FindPropertyByName(FName(TEXT("CharacterOwner")));
+    static auto BaseCopyFromMoveData = Anchor::Data<const uint8*>(TEXT("FFortMovementMode_BaseExtRuntimeData::CopyFromMoveData"))
+        .Pattern("0F B6 42 0D 88 41 0D 0F B6 42 0E 88 41 0E C3")
+        .Optional()
+        .Get();
+
     static int32 ForceManualEndSlot = 0;
+    static int32 CopyFromMoveDataSlot = -1;
 
     if (ReceivedPackRuntimeData <= 0 || PushedRuntimeData <= 0 || NewlyPushedRuntimeData <= 0 || !CreateRuntimeDataForLogic || !CharacterOwnerProperty)
         return;
@@ -109,6 +114,35 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
                     ForceManualEndSlot = Slot;
             }
 
+            if (ForceManualEndSlot && CopyFromMoveDataSlot < 0)
+            {
+                CopyFromMoveDataSlot = 0;
+
+                auto Image = Anchor::Base();
+                auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
+                auto Sections = IMAGE_FIRST_SECTION(Headers);
+
+                for (int32 Index = 0; BaseCopyFromMoveData && !CopyFromMoveDataSlot && Index < Headers->FileHeader.NumberOfSections; Index++)
+                {
+                    if ((Sections[Index].Characteristics & IMAGE_SCN_MEM_EXECUTE) || !(Sections[Index].Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA))
+                        continue;
+
+                    for (auto Entry = (const uint8**)(Image + Sections[Index].VirtualAddress); !CopyFromMoveDataSlot && (const uint8*)(Entry + 0x10) < Image + Sections[Index].VirtualAddress + Sections[Index].Misc.VirtualSize; Entry++)
+                    {
+                        if (Entry[0] != BaseCopyFromMoveData || Entry[1] != BaseCopyFromMoveData)
+                            continue;
+
+                        for (int32 Slot = 2; !CopyFromMoveDataSlot && Slot < 0x10; Slot++)
+                        {
+                            if (Entry[Slot] > Image && Entry[Slot] < Image + Headers->OptionalHeader.SizeOfImage && Anchor::At(Entry[Slot]).Is("mov byte ptr [rcx+0xe], 0x1; ret"))
+                                CopyFromMoveDataSlot = ForceManualEndSlot - Slot * (int32)sizeof(void*);
+                        }
+                    }
+                }
+
+                UE_LOG(LogVelora, Log, TEXT("FFortMovementMode_BaseExtRuntimeData ForceManualEnd slot 0x%X, CopyFromMoveData slot 0x%X"), ForceManualEndSlot, CopyFromMoveDataSlot);
+            }
+
             bool bUpdateReceived = false;
 
             for (auto& ReceivedData : ReceivedPack)
@@ -116,8 +150,8 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
                 if (!ReceivedData.IsValid() || ReceivedData->LogicID != PushedData->LogicID || ReceivedData->RuntimeID != PushedData->RuntimeID)
                     continue;
 
-                if (ForceManualEndSlot)
-                    ((void (*)(FFortMovementMode_BaseExtRuntimeData*, const FFortMovementMode_BaseExtRuntimeData*))PushedData->VTable[(ForceManualEndSlot - (FEngineVersion::Current().GetChangelist() >= 29915848 ? 0x30 : 0x20)) / sizeof(void*)])(PushedData.Get(), ReceivedData.Get());
+                if (CopyFromMoveDataSlot > 0)
+                    ((void (*)(FFortMovementMode_BaseExtRuntimeData*, const FFortMovementMode_BaseExtRuntimeData*))PushedData->VTable[CopyFromMoveDataSlot / sizeof(void*)])(PushedData.Get(), ReceivedData.Get());
 
                 bUpdateReceived = true;
             }
