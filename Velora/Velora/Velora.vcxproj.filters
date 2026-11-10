@@ -295,6 +295,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake">
       <UniqueIdentifier>{632E64ED-E8ED-47F5-974A-923C1BBAF997}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\WeaponMods">
+      <UniqueIdentifier>{62ad6fe7-f764-4256-8066-ef2da05cf87d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\WeaponMods\Source">
+      <UniqueIdentifier>{53803571-90a6-48b6-8c1b-b37dd4f0f853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime">
+      <UniqueIdentifier>{956975ca-17a6-4cc1-92c2-3e95e9a92810}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public">
+      <UniqueIdentifier>{f23200d0-e827-4da3-9faa-cb6469138970}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private">
+      <UniqueIdentifier>{27a88108-92e9-40b9-88fa-7499601737b3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake\Source">
       <UniqueIdentifier>{25CF6D73-DE36-4C12-AA20-6CF9A65ED032}</UniqueIdentifier>
     </Filter>
@@ -1749,6 +1764,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeaponModItemDefinition.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public\FortWeaponModStationComponent.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortDecoTool.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Weapons</Filter>
     </ClInclude>
@@ -2881,6 +2899,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeaponModItemDefinition.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private\FortWeaponModStationComponent.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\WeaponMods\Source\WeaponModsCodeRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortDecoTool.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Weapons</Filter>

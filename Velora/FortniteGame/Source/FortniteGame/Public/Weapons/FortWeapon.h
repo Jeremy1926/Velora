@@ -9,6 +9,9 @@ struct FFrame;
 class UFortGameplayAbility;
 class UFortItemDefinition;
 class UFortWeaponItemDefinition;
+class UFortWeaponModItemDefinition;
+class UFortWorldItem;
+struct FFortWeaponModSlot;
 enum class EFortWeaponType : uint8;
 
 enum class EFortWeaponAbilityRemovalReason : uint8
@@ -59,6 +62,18 @@ public:
     bool GetPendingDestroyDueToDurabilityOrStackCount() const;
 
     FGuid& GetItemEntryGuid();
+
+    UFortWorldItem* GetInventoryItem() const;
+
+    const TArray<FFortWeaponModSlot>& GetWeaponModSlots() const;
+
+    bool CanAddWeaponMod(const UFortWeaponModItemDefinition* WeaponMod) const;
+
+    bool AddWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot);
+
+    bool RemoveWeaponModSlot(int32 SlotIndex);
+
+    void UpdateCurrentWeaponModSlotsOnWorldItem();
 
     float& GetLastFireTimeVerified();
 

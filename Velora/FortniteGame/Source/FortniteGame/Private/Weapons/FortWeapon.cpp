@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "Weapons/FortWeapon.h"
+#include "Weapons/FortWeaponModItemDefinition.h"
+#include "Items/FortInventory.h"
+#include "Items/FortWorldItem.h"
 #include "AI/FortAthenaAIBotController.h"
 #include "Player/FortPlayerController.h"
 #include "Items/FortQuickBars.h"
@@ -290,4 +293,88 @@ FGameplayAbilitySpecHandle AFortWeapon::GetPrimaryAbilitySpecHandle() const
     static auto PrimaryAbilitySpecHandle = StaticClass()->FindPropertyByName(FName(TEXT("PrimaryAbilitySpecHandle")));
 
     return PrimaryAbilitySpecHandle ? *PrimaryAbilitySpecHandle->ContainerPtrToValuePtr<FGameplayAbilitySpecHandle>(this) : FGameplayAbilitySpecHandle();
+}
+
+UFortWorldItem* AFortWeapon::GetInventoryItem() const
+{
+    auto Pawn = Cast<AFortPawn>(GetOwner());
+    auto PlayerController = Pawn ? Cast<AFortPlayerController>(Pawn->GetController()) : nullptr;
+    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory)
+        return nullptr;
+
+    for (auto Item : WorldInventory->GetInventory().GetItemInstances())
+    {
+        if (Item && Item->GetItemGuid() == ((AFortWeapon*)this)->GetItemEntryGuid())
+            return Item;
+    }
+
+    return nullptr;
+}
+
+const TArray<FFortWeaponModSlot>& AFortWeapon::GetWeaponModSlots() const
+{
+    static auto WeaponModSlots = StaticClass()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+
+    return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+}
+
+bool AFortWeapon::CanAddWeaponMod(const UFortWeaponModItemDefinition* WeaponMod) const
+{
+    static auto CanAddWeaponMod = Anchor::Function<bool (*)(const AFortWeapon*, const UFortWeaponModItemDefinition*)>(TEXT("AFortWeapon::CanAddWeaponMod"))
+        .Exec(TEXT("/Script/WeaponModsCodeRuntime.FortWeaponModStationComponent:ServerPurchaseWeaponModForWeapon"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/WeaponModsCodeRuntime.Default__FortWeaponModStationComponent"))
+        .Find("call 0x*; test al, al; jz 0x*", 1)
+        .Call()
+        .Get();
+
+    return CanAddWeaponMod(this, WeaponMod);
+}
+
+bool AFortWeapon::AddWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot)
+{
+    static auto AddWeaponModSlot = Anchor::Function<bool (*)(AFortWeapon*, const FFortWeaponModSlot&)>(TEXT("AFortWeapon::AddWeaponModSlot"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryAddPreviewWeaponMod"))
+        .Find("mov byte ptr [rbp-0x*], 0x1; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryAddPreviewWeaponMod"))
+        .Find("lea rdx, [rbp-0x*]; mov [rbp-0x*], *; mov rcx, *; mov [rbp-0x*], *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return AddWeaponModSlot(this, WeaponModSlot);
+}
+
+bool AFortWeapon::RemoveWeaponModSlot(int32 SlotIndex)
+{
+    static auto RemoveWeaponModSlot = Anchor::Function<bool (*)(AFortWeapon*, int32)>(TEXT("AFortWeapon::RemoveWeaponModSlot"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryRemovePreviewWeaponMod"))
+        .Find("jns 0x*; jmp 0x*; call 0x*; mov *, al")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryRemovePreviewWeaponMod"))
+        .Find("setz al; test al, al; jz 0x*; call 0x*; mov *, al")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryRemovePreviewWeaponMod"))
+        .Find("setz al; test al, al; jz 0x*; mov rcx, r8; call 0x*; mov *, al")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return RemoveWeaponModSlot(this, SlotIndex);
+}
+
+void AFortWeapon::UpdateCurrentWeaponModSlotsOnWorldItem()
+{
+    if (auto Item = GetInventoryItem())
+        Item->GetItemEntry().SetWeaponModSlots(GetWeaponModSlots());
 }

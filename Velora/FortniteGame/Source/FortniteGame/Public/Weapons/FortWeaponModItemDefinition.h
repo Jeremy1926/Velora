@@ -7,6 +7,8 @@
 #include "Containers/UnrealString.h"
 #include "GameplayTagContainer.h"
 
+class AFortPlayerStateAthena;
+class AFortWeapon;
 class UFortWeaponItemDefinition;
 class UFortWeaponModItemDefinition;
 struct FFortItemEntry;
@@ -90,4 +92,16 @@ public:
     static bool ApplyWeaponModToItemEntry(FFortItemEntry& ItemEntry, UFortWeaponModItemDefinition* WeaponMod);
 
     static bool ApplyModSetToItemEntry(const UFortWeaponModSetData* ModSet, FFortItemEntry& ItemEntry);
+
+    static bool TryAddWeaponMod(UFortWeaponModItemDefinition* WeaponMod, AFortWeapon* Weapon);
+
+    static bool TryRemoveWeaponMod(UFortWeaponModItemDefinition* WeaponMod, AFortWeapon* Weapon);
+
+    static void AssignPlayerNameToItemEntry(AFortPlayerStateAthena* PlayerState, FFortItemEntry& ItemEntry);
+
+    static void AssignPlayerNameToWeapon(AFortPlayerStateAthena* PlayerState, AFortWeapon* Weapon);
+
+    static void RemoveModSetNameFromItemEntry(FFortItemEntry& ItemEntry);
+
+    static void RemoveModSetNameFromWeapon(AFortWeapon* Weapon);
 };

@@ -1,5 +1,8 @@
 #include "pch.h"
 #include "Weapons/FortWeaponModItemDefinition.h"
+#include "Weapons/FortWeapon.h"
+#include "Athena/FortPlayerStateAthena.h"
+#include "Items/FortWorldItem.h"
 #include "Items/FortInventory.h"
 #include "Items/FortItemDefinition.h"
 #include "Items/FortWeaponItemDefinition.h"
@@ -267,4 +270,72 @@ bool UFortWeaponModFunctionLibrary::ApplyWeaponModToItemEntry(FFortItemEntry& It
 bool UFortWeaponModFunctionLibrary::ApplyModSetToItemEntry(const UFortWeaponModSetData* ModSet, FFortItemEntry& ItemEntry)
 {
     return ModSet && ModSet->ApplyModSetToItemEntry(ItemEntry);
+}
+
+bool UFortWeaponModFunctionLibrary::TryAddWeaponMod(UFortWeaponModItemDefinition* WeaponMod, AFortWeapon* Weapon)
+{
+    if (!WeaponMod || !Weapon)
+        return false;
+
+    if (!Weapon->AddWeaponModSlot(FFortWeaponModSlot{ WeaponMod, true }))
+        return false;
+
+    Weapon->UpdateCurrentWeaponModSlotsOnWorldItem();
+
+    return true;
+}
+
+bool UFortWeaponModFunctionLibrary::TryRemoveWeaponMod(UFortWeaponModItemDefinition* WeaponMod, AFortWeapon* Weapon)
+{
+    if (!WeaponMod || !Weapon)
+        return false;
+
+    auto& WeaponModSlots = Weapon->GetWeaponModSlots();
+
+    for (int32 SlotIndex = WeaponModSlots.Num() - 1; SlotIndex >= 0; SlotIndex--)
+    {
+        if (WeaponModSlots[SlotIndex].WeaponMod == WeaponMod)
+        {
+            if (!Weapon->RemoveWeaponModSlot(SlotIndex))
+                return false;
+
+            Weapon->UpdateCurrentWeaponModSlotsOnWorldItem();
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void UFortWeaponModFunctionLibrary::AssignPlayerNameToItemEntry(AFortPlayerStateAthena* PlayerState, FFortItemEntry& ItemEntry)
+{
+    const FGameplayTag NameModifierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("ItemStateValue.ConstObject.NameModifer")), false);
+
+    if (PlayerState && NameModifierTag.IsValid())
+        ItemEntry.SetStateConstObject(NameModifierTag, PlayerState);
+}
+
+void UFortWeaponModFunctionLibrary::AssignPlayerNameToWeapon(AFortPlayerStateAthena* PlayerState, AFortWeapon* Weapon)
+{
+    auto Item = Weapon ? Weapon->GetInventoryItem() : nullptr;
+
+    if (Item)
+        AssignPlayerNameToItemEntry(PlayerState, Item->GetItemEntry());
+}
+
+void UFortWeaponModFunctionLibrary::RemoveModSetNameFromItemEntry(FFortItemEntry& ItemEntry)
+{
+    const FGameplayTag NameModifierTag = FGameplayTag::RequestGameplayTag(FName(TEXT("ItemStateValue.ConstObject.NameModifer")), false);
+
+    if (NameModifierTag.IsValid() && Cast<UFortWeaponModSetData>(ItemEntry.GetStateConstObject(NameModifierTag)))
+        ItemEntry.RemoveStateConstObject(NameModifierTag);
+}
+
+void UFortWeaponModFunctionLibrary::RemoveModSetNameFromWeapon(AFortWeapon* Weapon)
+{
+    auto Item = Weapon ? Weapon->GetInventoryItem() : nullptr;
+
+    if (Item)
+        RemoveModSetNameFromItemEntry(Item->GetItemEntry());
 }
