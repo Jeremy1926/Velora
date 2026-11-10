@@ -566,6 +566,16 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnInitialSafeZone()
     if (OnSafeZoneIndicatorSpawned)
         OnSafeZoneIndicatorSpawned->ContainerPtrToValuePtr<FMulticastScriptDelegate>(GameMode)->ProcessMulticastDelegate<UObject>(&SafeZoneIndicator);
 
+    static auto OnRep_SafeZoneIndicator = Anchor::Optional<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::OnRep_SafeZoneIndicator"))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnRep_SafeZoneIndicator")))
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateComponent_BattleRoyaleGamePhaseLogic:OnRep_SafeZoneIndicator"))
+        .Find("jmp 0x*")
+        .Target()
+        .Get();
+
+    if (OnRep_SafeZoneIndicator)
+        OnRep_SafeZoneIndicator(this);
+
     SafeZoneIndicator->InitializeWithMapDefaultPhases();
     GameMode->SetSafeZonePhase(-1);
     GameMode->StartNewSafeZonePhase(-1);
