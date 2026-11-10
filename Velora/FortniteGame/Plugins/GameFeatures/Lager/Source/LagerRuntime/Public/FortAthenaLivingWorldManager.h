@@ -301,6 +301,8 @@ public:
 
     void UpdateSpawnedActors();
 
+    void UpdateEncounterInstancesFromRuntimes();
+
     void GenerateEventsFromRuntimes();
 
     void ProcessCategory(FFortAthenaLivingWorldCategory* Category, void* ConditionContext);

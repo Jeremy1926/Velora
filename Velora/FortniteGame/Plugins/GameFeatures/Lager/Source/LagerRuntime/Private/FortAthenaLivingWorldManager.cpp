@@ -2355,8 +2355,139 @@ void UFortAthenaLivingWorldManager::TickEventRuntimes(float DeltaTime)
         GenerateEventsFromRuntimes();
     }
 
+    UpdateEncounterInstancesFromRuntimes();
     ProcessPendingEventRequests();
     UpdateSpawnedActors();
+}
+
+void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
+{
+    static auto ConstructConditionContext = Anchor::Function<void* (*)(void*)>(TEXT("FWorldConditionContextData::FWorldConditionContextData"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 8)
+        .Target()
+        .Get();
+
+    static auto IsConditionTrue = Anchor::Function<bool (*)(void*, int32, void*)>(TEXT("FFortAthenaLivingWorldConditionContainer::IsTrue"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 9)
+        .Target()
+        .Get();
+
+    static auto GetCategoryActorBudget = Anchor::Function<int32 (*)(UFortAthenaLivingWorldManager*, FFortAthenaLivingWorldCategory*, FCategoryRuntime*)>(TEXT("UFortAthenaLivingWorldManager::GetCategoryActorBudget"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 12)
+        .Target()
+        .Get();
+
+    static auto GetCategoryEventInstanceBudget = Anchor::Function<int32 (*)(FFortAthenaLivingWorldCategory*, FCategoryRuntime*)>(TEXT("FFortAthenaLivingWorldCategory::GetEventInstanceBudget"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 14)
+        .Target()
+        .Get();
+
+    static auto EncounterEventRuntimes = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::EventRuntimes"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, r15; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
+        .Disp();
+
+    static auto GlobalConditionContainer = StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")));
+    static auto CurrentStageMaxActorCount = UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("CurrentStageMaxActorCount")));
+    static auto MaxSpawnCountPerEventGeneration = FFortAthenaLivingWorldEncounterStage::StaticStruct()->FindPropertyByName(FName(TEXT("MaxSpawnCountPerEventGeneration")));
+
+    auto World = GetWorld();
+
+    if (!World || !CurrentStageMaxActorCount)
+        return;
+
+    const float Now = World->GetTimeSeconds();
+
+    for (auto EncounterInstance : GetRunningEncounterInstances())
+    {
+        if (!EncounterInstance || EncounterInstance->GetbIsPaused())
+            continue;
+
+        auto Encounter = EncounterInstance->GetEncounterDefinition().LoadSynchronous();
+
+        if (!Encounter)
+            continue;
+
+        auto& LastGenerationTime = EncounterInstance->GetLastGenerationTime();
+
+        if ((LastGenerationTime == 0.0f && !EncounterInstance->GetRegisteredPointProviders().Num()) || !(Now > LastGenerationTime + Encounter->GetIntervalBetweenEventGeneration().GetValueAtLevel(0.0f)))
+            continue;
+
+        LastGenerationTime = Now;
+
+        auto Category = EncounterInstance->GetCategory();
+        auto CategoryRuntime = Category ? FindCategoryRuntime(Category) : nullptr;
+
+        if (!CategoryRuntime)
+            continue;
+
+        struct
+        {
+            void* Schema;
+            TArray<uint8> Views;
+        } ConditionContext{};
+
+        ConstructConditionContext(&ConditionContext);
+
+        if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), CategoryRuntime->ConditionHandle, &ConditionContext))
+            continue;
+
+        auto& Stages = Encounter->GetStages();
+        const int32 CurrentStageIndex = EncounterInstance->GetCurrentStageIndex();
+
+        if (CurrentStageIndex < 0 || CurrentStageIndex >= Stages.Num())
+            continue;
+
+        auto& Stage = Stages[CurrentStageIndex];
+        int32 TotalActorCount = 0;
+
+        for (auto& EventRuntime : *(TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>*)((uint8*)EncounterInstance + EncounterEventRuntimes))
+            TotalActorCount += EventRuntime.Value.CurrentSpawnedActorCount;
+
+        int32 ActorBudget = FMath::Max(0, *CurrentStageMaxActorCount->ContainerPtrToValuePtr<int32>(EncounterInstance) - TotalActorCount);
+
+        ActorBudget = FMath::Min(ActorBudget, GetCategoryActorBudget(this, Category, CategoryRuntime));
+
+        const int32 MaxSpawnCount = MaxSpawnCountPerEventGeneration ? (int32)MaxSpawnCountPerEventGeneration->ContainerPtrToValuePtr<FScalableFloat>(&Stage)->GetValueAtLevel(0.0f) : 0;
+
+        if (MaxSpawnCount > 0 && ActorBudget > MaxSpawnCount)
+            ActorBudget = MaxSpawnCount;
+        else if (ActorBudget <= 0)
+            continue;
+
+        auto EventTable = Stage.GetEventTable().LoadSynchronous();
+
+        if (!EventTable)
+            continue;
+
+        TArray<FFortAthenaLivingWorldEvent*> Events;
+
+        for (auto& EventPair : EventTable->RowMap)
+            Events.Add((FFortAthenaLivingWorldEvent*)EventPair.Value);
+
+        GenerateEventRequests(EncounterInstance, Category, Events, ActorBudget, GetCategoryEventInstanceBudget(Category, CategoryRuntime), &ConditionContext);
+    }
 }
 
 void UFortAthenaLivingWorldManager::UpdateSpawnedActors()
@@ -2728,6 +2859,7 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         .Disp();
 
     static auto GlobalConditionContainer = StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")));
+    static auto EncounterConditionContainer = UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("ConditionContainer")));
     static auto ActivationMinDelay = FFortAthenaLivingWorldEvent::StaticStruct()->FindPropertyByName(FName(TEXT("ActivationMinDelay")));
     static auto ActivationMaxDelay = FFortAthenaLivingWorldEvent::StaticStruct()->FindPropertyByName(FName(TEXT("ActivationMaxDelay")));
     static auto DeactivationMinDelay = FFortAthenaLivingWorldEvent::StaticStruct()->FindPropertyByName(FName(TEXT("DeactivationMinDelay")));
@@ -2750,7 +2882,7 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         if (!EventRuntime || EventRuntime->DeactivationReason != 0)
             continue;
 
-        if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), EventRuntime->ConditionHandle, ConditionContext))
+        if (!IsConditionTrue(EncounterInstance && EncounterConditionContainer ? EncounterConditionContainer->ContainerPtrToValuePtr<void>(EncounterInstance) : GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), EventRuntime->ConditionHandle, ConditionContext))
             continue;
 
         if (EventRuntime->ActivationTime == -1.0f)
