@@ -116,3 +116,29 @@ public:
         return FCrc::Strihash_DEPRECATED(*S);
     }
 };
+
+class FStringView
+{
+private:
+    const TCHAR* DataPtr = nullptr;
+    int32 Size = 0;
+
+public:
+    FStringView() = default;
+
+    FORCEINLINE FStringView(const FString& InString)
+        : DataPtr(*InString)
+        , Size(InString.Len())
+    {
+    }
+
+    FORCEINLINE const TCHAR* GetData() const
+    {
+        return DataPtr;
+    }
+
+    FORCEINLINE int32 Len() const
+    {
+        return Size;
+    }
+};

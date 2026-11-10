@@ -5,6 +5,20 @@
 
 void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArray<UFortAccountItem*>& OutInstances)
 {
+    static auto GetItemInstancesForTemplateView = Anchor::Optional<void (*)(UFortMcpProfile*, const FStringView&, TArray<UFortAccountItem*>&)>(TEXT("UFortMcpProfile::GetItemInstancesForTemplate<UFortAccountItem>"))
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov [rbp-0x*], *; mov rsi, rax")
+        .Find("lea r8, [rbp-0x*]; mov [rbp-0x*], edx; lea rdx, [rbp-0x*]; movaps xmm0, [rbp-0x*]; movdqa [rbp-0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (GetItemInstancesForTemplateView)
+    {
+        GetItemInstancesForTemplateView(this, FStringView(Template), OutInstances);
+        return;
+    }
+
     static auto GetItemInstancesForTemplate = Anchor::Function<void (*)(UFortMcpProfile*, const FString&, TArray<UFortAccountItem*>&)>(TEXT("UFortMcpProfile::GetItemInstancesForTemplate<UFortAccountItem>"))
         .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
         .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
