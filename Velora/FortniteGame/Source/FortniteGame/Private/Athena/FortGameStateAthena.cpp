@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Config.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Athena/FortSafeZoneIndicator.h"
@@ -464,6 +465,9 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
 
         if (!LivingWorldManager && LagerManagerClass && UFortAthenaLivingWorldManager::HasEventRuntimes() && HasAuthority())
             LivingWorldManager = (UFortAthenaLivingWorldManager*)AddComponentByClass(LagerManagerClass, false, FTransform::Identity, false);
+
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld manager: %s"), LivingWorldManager ? *LivingWorldManager->GetName() : TEXT("missing"));
 
         if (LivingWorldManager)
         {
