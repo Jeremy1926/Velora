@@ -87,7 +87,7 @@ namespace Scanner
         {
             auto Chunk = Anchor::At(Chunks[Index]);
 
-            for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *" })
+            for (auto Pattern : { "setnz *; add [*+0x20], *", "setnz *; *; add [*+0x20], *", "setnz *; *; *; add [*+0x20], *", "setnz *; *; *; *; add [*+0x20], *" })
             {
                 if (auto Finish = Chunk.Find(Pattern); Finish.Get())
                 {
@@ -98,6 +98,9 @@ namespace Scanner
                         Barrier = Body.Find("lock or *");
                         Body = Body.Find("call 0x*");
                     }
+
+                    while (Body.Get() && (Anchor::At(Body.Target()).Is("sub rsp, 0x28; mov eax, [rcx+0xc]; cmp eax, [0x*]; jnl 0x*") || Anchor::At(Body.Target()).Is("sub rsp, 0x28; mov r8d, [0x*]; mov r9, [0x*]; cmp [rcx+0xc], r8d; jnl 0x*")))
+                        Body = Body.Find("call 0x*");
 
                     auto Return = Finish.Find("ret*");
 

@@ -53,6 +53,9 @@ FQuat FRotator::Quaternion() const
 FRotator FQuat::Rotator() const
 {
     static auto Rotator = Anchor::Function<TGameValue<FRotator>* (*)(const TGameValue<FQuat>&, TGameValue<FRotator>*)>(TEXT("FQuat::Rotator"))
+        .If(::Anchor::Exists().Exec(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Find("setnz *").Find("add [*+0x20], *").Find("call 0x*").Target().Has("movups xmm*, [rcx+0x1c0]").Get())
+        .Native(TEXT("/Script/Engine.KismetMathLibrary:Quat_Rotator"))
+        .Or()
         .If(!::Anchor::Exists().Exec(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/Engine.SceneComponent:K2_GetComponentRotation"))
         .Find("setnz *")
