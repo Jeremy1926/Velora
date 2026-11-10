@@ -38,6 +38,8 @@ public:
 
     UFortAthenaLivingWorldManager** GetCachedLivingWorldManager();
 
+    static int32 GetbIsEnabledOffset();
+
     bool* GetbIsEnabled();
 
     void SetClusteredEnvironmentQueryResults(const TArray<FVector>& InClusteredEnvironmentQueryResults);

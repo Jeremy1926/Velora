@@ -8,6 +8,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "Templates/Casts.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+#include "UObject/ScriptDelegates.h"
 #include "GameplayTagContainer.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
@@ -61,8 +62,31 @@ void AFortAthenaLivingWorldVolume::EnablePointProvider()
     if (!EnvironmentQuery || !RootComponent)
         return;
 
+    static auto QueryConfig = GetClass()->FindPropertyByName(FName(TEXT("QueryConfig")));
+
     FEnvQueryRequest QueryRequest(EnvironmentQuery, this);
     QueryRequest.SetFloatParam(FName(TEXT("SimpleGrid.GridSize")), RootComponent->GetBounds().SphereRadius);
+
+    if (QueryConfig)
+    {
+        for (auto& RuntimeParam : *QueryConfig->ContainerPtrToValuePtr<TArray<FAIDynamicParam>>(this))
+        {
+            float Value = RuntimeParam.GetValue();
+
+            if (RuntimeParam.GetParamType() == EAIParamType::Int)
+            {
+                int32 IntValue = (int32)RuntimeParam.GetValue();
+                Value = *((float*)&IntValue);
+            }
+            else if (RuntimeParam.GetParamType() == EAIParamType::Bool)
+            {
+                Value = RuntimeParam.GetValue() > 0 ? 1.0f : -1.0f;
+            }
+
+            QueryRequest.SetFloatParam(RuntimeParam.GetParamName(), Value);
+        }
+    }
+
     QueryRequest.Execute(EEnvQueryRunMode::AllMatching, FQueryFinishedSignature::CreateUObject(this, &AFortAthenaLivingWorldVolume::OnEnvQueryFinished));
 }
 
@@ -142,6 +166,9 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
 
         SetPoints(Points);
 
+        if (PointProviderMaxRadiusSqr && UFortAthenaLivingWorldManager::HasEventRuntimes())
+            PointProviderMaxRadiusSqr[1] = FMath::Sqrt(*PointProviderMaxRadiusSqr);
+
         if (CachedLivingWorldManager && *CachedLivingWorldManager && Points.Num() > 0 && GetWorld())
         {
             TArray<FVector> ClusteredEnvironmentQueryResults;
@@ -152,6 +179,38 @@ void AFortAthenaLivingWorldVolume::OnEnvQueryFinished(TSharedPtr<FEnvQueryResult
     }
 
     auto bIsEnabled = GetbIsEnabled();
+
+    if (UFortAthenaLivingWorldManager::HasEventRuntimes())
+    {
+        static auto OnPointProviderRegistered = GetClass()->FindPropertyByName(FName(TEXT("OnPointProviderRegistered")));
+
+        auto CachedLivingWorldManager = GetCachedLivingWorldManager();
+
+        if (!CachedLivingWorldManager || !bIsEnabled)
+            return;
+
+        if (GetPoints().Num() <= 0)
+        {
+            *CachedLivingWorldManager = nullptr;
+            return;
+        }
+
+        if (!GetWorld() || !*CachedLivingWorldManager || bIsEnabled[1])
+            return;
+
+        bIsEnabled[1] = true;
+
+        UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
+
+        if (OnPointProviderRegistered)
+        {
+            auto PointProviderVolume = this;
+
+            OnPointProviderRegistered->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(&PointProviderVolume);
+        }
+
+        return;
+    }
 
     if (GetPoints().Num() > 0 && GetWorld() && (!bIsEnabled || *bIsEnabled))
         UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(this);
@@ -276,7 +335,7 @@ UFortAthenaLivingWorldManager** AFortAthenaLivingWorldVolume::GetCachedLivingWor
     return CachedLivingWorldManager ? CachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(this) : nullptr;
 }
 
-bool* AFortAthenaLivingWorldVolume::GetbIsEnabled()
+int32 AFortAthenaLivingWorldVolume::GetbIsEnabledOffset()
 {
     static auto bIsEnabled = Anchor::Offset(TEXT("AFortAthenaLivingWorldVolume::bIsEnabled"))
         .If(StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))))
@@ -285,7 +344,12 @@ bool* AFortAthenaLivingWorldVolume::GetbIsEnabled()
         .Find("mov al, [rcx+0x*]")
         .Disp();
 
-    return bIsEnabled > 0 ? (bool*)((uint8*)this + bIsEnabled) : nullptr;
+    return (int32)bIsEnabled;
+}
+
+bool* AFortAthenaLivingWorldVolume::GetbIsEnabled()
+{
+    return GetbIsEnabledOffset() > 0 ? (bool*)((uint8*)this + GetbIsEnabledOffset()) : nullptr;
 }
 
 void AFortAthenaLivingWorldVolume::SetClusteredEnvironmentQueryResults(const TArray<FVector>& InClusteredEnvironmentQueryResults)
@@ -303,10 +367,10 @@ void AFortAthenaLivingWorldVolume::SetClusteredEnvironmentQueryResults(const TAr
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
 
-    if (InterfaceClusteredEnvironmentQueryResults <= 0)
+    if (InterfaceClusteredEnvironmentQueryResults <= 0 && !(UFortAthenaLivingWorldManager::HasEventRuntimes() && GetbIsEnabledOffset() > 0))
         return;
 
-    auto ClusteredEnvironmentQueryResults = (uint8*)this + PointerOffset + InterfaceClusteredEnvironmentQueryResults;
+    auto ClusteredEnvironmentQueryResults = InterfaceClusteredEnvironmentQueryResults > 0 ? (uint8*)this + PointerOffset + InterfaceClusteredEnvironmentQueryResults : (uint8*)this + GetbIsEnabledOffset() + 0x68;
 
     if (!UE::LWC::IsEnabled())
     {
@@ -340,6 +404,9 @@ float* AFortAthenaLivingWorldVolume::GetPointProviderMaxRadiusSqr()
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
+
+    if (InterfacePointProviderMaxRadiusSqr <= 0 && UFortAthenaLivingWorldManager::HasEventRuntimes() && GetbIsEnabledOffset() > 0)
+        return (float*)((uint8*)this + GetbIsEnabledOffset() + 0x78);
 
     return InterfacePointProviderMaxRadiusSqr > 0 ? (float*)((uint8*)this + PointerOffset + InterfacePointProviderMaxRadiusSqr) : nullptr;
 }
@@ -388,7 +455,7 @@ int32 AFortAthenaLivingWorldVolume::GetPointsOffset() const
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
     static auto PointerOffset = (uint8*)DefaultObject->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()) - (uint8*)DefaultObject;
-    static auto Points = InterfacePoints > 0 ? (int32)PointerOffset + InterfacePoints : CachedGameState->GetOffset_ForInternal() + (int32)sizeof(AFortGameStateAthena*);
+    static auto Points = InterfacePoints > 0 ? (int32)PointerOffset + InterfacePoints : UFortAthenaLivingWorldManager::HasEventRuntimes() && GetbIsEnabledOffset() > 0 ? GetbIsEnabledOffset() + 0x8 : CachedGameState->GetOffset_ForInternal() + (int32)sizeof(AFortGameStateAthena*);
 
     return Points;
 }

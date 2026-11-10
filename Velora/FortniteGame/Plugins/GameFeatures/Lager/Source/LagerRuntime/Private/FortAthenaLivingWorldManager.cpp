@@ -8,6 +8,8 @@
 #include "FortAthenaLivingWorldEventData.h"
 #include "FortAthenaLivingWorldPlayerTracker.h"
 #include "FortAthenaLivingWorldPointProviderInterface.h"
+#include "FortAthenaLivingWorldVolume.h"
+#include "FortAthenaPatrolPathPointProvider.h"
 #include "Athena/AI/AthenaAISpawner.h"
 #include "Athena/AI/AthenaAISystem.h"
 #include "Athena/AI/FortAthenaAISpawnerData.h"
@@ -397,7 +399,7 @@ int32 UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequestsOffset()
 
 void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AActor* PointProvider)
 {
-    if (GetEventInstancesOffset() <= 0)
+    if (GetEventInstancesOffset() <= 0 && !HasEventRuntimes())
         return;
 
     auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
@@ -407,12 +409,34 @@ void UFortAthenaLivingWorldManager::LivingWorldManagerRegisterPointProvider(AAct
     if (!LivingWorldManager || !LivingWorldManager->IsLivingWorldEnabled() || !GameState->HasAuthority())
         return;
 
+    if (HasEventRuntimes())
+    {
+        auto CachedLivingWorldManager = PointProvider->GetClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager")));
+        auto RegisteredPointProvidersCount = StaticClass()->FindPropertyByName(FName(TEXT("RegisteredPointProvidersCount")));
+
+        if (CachedLivingWorldManager && *CachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PointProvider) != LivingWorldManager)
+        {
+            *CachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PointProvider) = LivingWorldManager;
+
+            if (RegisteredPointProvidersCount)
+                (*RegisteredPointProvidersCount->ContainerPtrToValuePtr<int32>(LivingWorldManager))++;
+        }
+
+        FScriptInterface PointProviderInterface;
+
+        PointProviderInterface.SetObject(PointProvider);
+        PointProviderInterface.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
+
+        LivingWorldManager->EnablePointProvider(PointProviderInterface);
+        return;
+    }
+
     LivingWorldManager->AddPointProvider(PointProvider);
 }
 
 void UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(AActor* PointProvider)
 {
-    if (GetEventInstancesOffset() <= 0)
+    if (GetEventInstancesOffset() <= 0 && !HasEventRuntimes())
         return;
 
     auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
@@ -421,6 +445,17 @@ void UFortAthenaLivingWorldManager::LivingWorldManagerUnregisterPointProvider(AA
 
     if (!LivingWorldManager || !GameState->HasAuthority())
         return;
+
+    if (HasEventRuntimes())
+    {
+        FScriptInterface PointProviderInterface;
+
+        PointProviderInterface.SetObject(PointProvider);
+        PointProviderInterface.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
+
+        LivingWorldManager->DisablePointProvider(PointProviderInterface);
+        return;
+    }
 
     LivingWorldManager->RemovePointProvider(PointProvider);
 }
@@ -3174,36 +3209,70 @@ void UFortAthenaLivingWorldManager::DisablePointProvider(const FScriptInterface&
 void UFortAthenaLivingWorldManager::RegisterStaticPointProviders()
 {
     static auto StaticPointProviderClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldStaticPointProvider"));
-    static auto CachedLivingWorldManager = StaticPointProviderClass ? StaticPointProviderClass->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))) : nullptr;
-    static auto bStartEnabled = StaticPointProviderClass ? (UBoolProperty*)StaticPointProviderClass->FindPropertyByName(FName(TEXT("bStartEnabled"))) : nullptr;
-    static auto RegisteredPointProvidersCount = StaticClass()->FindPropertyByName(FName(TEXT("RegisteredPointProvidersCount")));
+    static auto StaticCachedLivingWorldManager = StaticPointProviderClass ? StaticPointProviderClass->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))) : nullptr;
+    static auto bStaticStartEnabled = StaticPointProviderClass ? (UBoolProperty*)StaticPointProviderClass->FindPropertyByName(FName(TEXT("bStartEnabled"))) : nullptr;
+    static auto bVolumeStartEnabled = AFortAthenaLivingWorldVolume::StaticClass() ? (UBoolProperty*)AFortAthenaLivingWorldVolume::StaticClass()->FindPropertyByName(FName(TEXT("bStartEnabled"))) : nullptr;
+    static auto PatrolCachedLivingWorldManager = AFortAthenaPatrolPathPointProvider::StaticClass() ? AFortAthenaPatrolPathPointProvider::StaticClass()->FindPropertyByName(FName(TEXT("CachedLivingWorldManager"))) : nullptr;
 
-    if (!CachedLivingWorldManager || !GetOwner()->HasAuthority())
+    if (!GetOwner()->HasAuthority())
         return;
 
     TArray<AActor*> PointProviders;
-    UGameplayStatics::GetAllActorsOfClass(GetOwner(), StaticPointProviderClass, PointProviders);
+
+    if (StaticCachedLivingWorldManager)
+        UGameplayStatics::GetAllActorsOfClass(GetOwner(), StaticPointProviderClass, PointProviders);
 
     for (auto PointProvider : PointProviders)
     {
-        auto& Manager = *CachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PointProvider);
-
-        if (Manager == this)
+        if (*StaticCachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PointProvider) == this)
             continue;
 
-        Manager = this;
+        if (bStaticStartEnabled && !bStaticStartEnabled->GetPropertyValue_InContainer(PointProvider))
+        {
+            *StaticCachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PointProvider) = this;
+            continue;
+        }
 
-        if (RegisteredPointProvidersCount)
-            (*RegisteredPointProvidersCount->ContainerPtrToValuePtr<int32>(this))++;
+        LivingWorldManagerRegisterPointProvider(PointProvider);
+    }
 
-        if (bStartEnabled && !bStartEnabled->GetPropertyValue_InContainer(PointProvider))
+    TArray<AActor*> Volumes;
+
+    if (AFortAthenaLivingWorldVolume::StaticClass())
+        UGameplayStatics::GetAllActorsOfClass(GetOwner(), AFortAthenaLivingWorldVolume::StaticClass(), Volumes);
+
+    for (auto Actor : Volumes)
+    {
+        auto Volume = (AFortAthenaLivingWorldVolume*)Actor;
+        auto CachedLivingWorldManager = Volume->GetCachedLivingWorldManager();
+
+        if (!CachedLivingWorldManager || *CachedLivingWorldManager == this)
             continue;
 
-        FScriptInterface PointProviderInterface;
+        if (bVolumeStartEnabled && !bVolumeStartEnabled->GetPropertyValue_InContainer(Volume))
+        {
+            *CachedLivingWorldManager = this;
+            continue;
+        }
 
-        PointProviderInterface.SetObject(PointProvider);
-        PointProviderInterface.SetInterface(PointProvider->GetInterfaceAddress(IFortAthenaLivingWorldPointProviderInterface::StaticClass()));
+        Volume->EnablePointProvider();
+    }
 
-        EnablePointProvider(PointProviderInterface);
+    TArray<AActor*> PatrolPathPointProviders;
+
+    if (PatrolCachedLivingWorldManager)
+        UGameplayStatics::GetAllActorsOfClass(GetOwner(), AFortAthenaPatrolPathPointProvider::StaticClass(), PatrolPathPointProviders);
+
+    for (auto Actor : PatrolPathPointProviders)
+    {
+        auto PatrolPathPointProvider = (AFortAthenaPatrolPathPointProvider*)Actor;
+
+        if (*PatrolCachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PatrolPathPointProvider) == this)
+            continue;
+
+        if (!PatrolPathPointProvider->GetbStartEnabled() || !PatrolPathPointProvider->GetAssociatedPatrolPath())
+            continue;
+
+        LivingWorldManagerRegisterPointProvider(PatrolPathPointProvider);
     }
 }
