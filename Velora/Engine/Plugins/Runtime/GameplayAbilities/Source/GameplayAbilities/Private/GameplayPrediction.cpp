@@ -27,7 +27,7 @@ FPredictionKey::KeyType FPredictionKey::GetCurrent() const
 FScopedPredictionWindow::FScopedPredictionWindow(UAbilitySystemComponent* AbilitySystemComponent, FPredictionKey InPredictionKey, bool InSetReplicatedPredictionKey)
 {
     static auto Constructor = Anchor::Function<void (*)(FScopedPredictionWindow*, UAbilitySystemComponent*, FPredictionKey*, bool)>(TEXT("FScopedPredictionWindow::FScopedPredictionWindow"))
-        .If(!::Anchor::Exists().String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("call 0x*").IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov rdi, rcx; call 0x*; movzx eax, word ptr [rbx+0x8]").Get())
+        .If(!::Anchor::Exists().String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("call 0x*").IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov rdi, rcx; call 0x*; movzx eax, word ptr [rbx+0x8]").Or().String(TEXT("Ability %s is overriding pending replicated target data.")).Start().Find("call 0x*").IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [0x*], 0x0; mov rbx, rcx; mov rcx, [rdx]; mov rdi, rdx; mov [rbx], rcx; jnz 0x*; movzx eax, word ptr [rdi+0x8]").Get())
         .String(TEXT("Ability %s is overriding pending replicated target data."))
         .Start()
         .Call()
@@ -36,6 +36,13 @@ FScopedPredictionWindow::FScopedPredictionWindow(UAbilitySystemComponent* Abilit
         .Start()
         .Find("call 0x*")
         .IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov rdi, rcx; call 0x*; movzx eax, word ptr [rbx+0x8]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Ability %s is overriding pending replicated target data."))
+        .Start()
+        .Find("call 0x*")
+        .IsTarget("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; cmp byte ptr [0x*], 0x0; mov rbx, rcx; mov rcx, [rdx]; mov rdi, rdx; mov [rbx], rcx; jnz 0x*; movzx eax, word ptr [rdi+0x8]")
         .Find("call 0x*")
         .Target()
         .Get();
