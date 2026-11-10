@@ -13,6 +13,9 @@ void FObjectInitializer::AssertIfInConstructor(UObject* Outer, const TCHAR* Erro
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSuobject<> instead."), "lea rdx, [0x*]; call 0x*")
         .Call()
         .Or()
+        .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."), "lea rdx, [0x*]; mov rcx, rbx; call 0x*")
+        .Call()
+        .Or()
         .String(TEXT("NewObject with empty name can't be used to create default subobjects (inside of UObject derived class constructor) as it produces inconsistent object names. Use ObjectInitializer.CreateDefaultSubobject<> instead."))
         .Start()
         .Get();
