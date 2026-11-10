@@ -31,6 +31,11 @@ public:
         InterfacePointer = InInterfacePointer;
     }
 
+    FORCEINLINE void* GetInterface() const
+    {
+        return InterfacePointer;
+    }
+
 private:
     UObject* ObjectPointer;
     void* InterfacePointer;

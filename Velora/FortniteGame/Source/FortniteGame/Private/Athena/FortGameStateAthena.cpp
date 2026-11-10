@@ -433,9 +433,15 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         .Start()
         .Inline());
 
-    if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0)
+    if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes())
     {
-        if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
+        auto LagerManagerClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Lager/Lager/LagerManager.LagerManager_C"));
+        auto LivingWorldManager = (UFortAthenaLivingWorldManager*)FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass());
+
+        if (!LivingWorldManager && LagerManagerClass && UFortAthenaLivingWorldManager::HasEventRuntimes() && HasAuthority())
+            LivingWorldManager = (UFortAthenaLivingWorldManager*)AddComponentByClass(LagerManagerClass, false, FTransform::Identity, false);
+
+        if (LivingWorldManager)
         {
             LivingWorldManager->SetCachedGameState(this);
 

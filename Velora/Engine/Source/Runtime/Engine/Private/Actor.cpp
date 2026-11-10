@@ -550,6 +550,24 @@ FActorDestroyedSignature& AActor::GetOnDestroyed()
     return *OnDestroyed->ContainerPtrToValuePtr<FActorDestroyedSignature>(this);
 }
 
+UActorComponent* AActor::AddComponentByClass(TSubclassOf<UActorComponent> Class, bool bManualAttachment, const FTransform& RelativeTransform, bool bDeferredFinish)
+{
+    static auto AddComponentByClass = Anchor::Function<UActorComponent* (*)(AActor*, const TSubclassOf<UActorComponent>*, bool, const TGameValue<FTransform>&, bool)>(TEXT("AActor::AddComponentByClass"))
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov r9, rdi; mov [rsp+0x20], sil; mov r8b, r12b; lea rdx, [rbp-0x*]; mov rcx, r14; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (!AddComponentByClass)
+        return nullptr;
+
+    const TGameValue<FTransform> GameRelativeTransform(RelativeTransform);
+
+    return AddComponentByClass(this, &Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
+}
+
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
 {
     static auto FindComponentByClass = Anchor::VirtualFunction<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>)>(TEXT("AActor::FindComponentByClass"))

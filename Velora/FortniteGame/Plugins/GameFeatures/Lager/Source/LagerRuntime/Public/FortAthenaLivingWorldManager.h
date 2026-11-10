@@ -14,6 +14,7 @@
 
 class AActor;
 class AFortGameStateAthena;
+class UAthenaAISpawner;
 class UDataTable;
 class UFortAthenaLivingWorldConfigData;
 class UFortAthenaLivingWorldEncounterInstance;
@@ -181,6 +182,170 @@ public:
         const FFortAthenaLivingWorldEvent* Event = nullptr;
         FLivingWorldEventRuntimeData RuntimeData;
     };
+
+    struct FEventRuntimeSpawnData
+    {
+        struct FActorDescription
+        {
+            TArray<UClass*, TInlineAllocator<1>> SpawnerDataClasses;
+            TArray<uint8> TagDensityRegistrations;
+            uint8 Pad28[0x10];
+            int32 PrefabGuid[4];
+            UClass* ActorClass;
+            FWeakObjectPtr SpawnAroundEnvironmentQuery;
+            uint8 Pad58[0x20];
+            float DensityValue;
+            float DensityRangeOverride;
+            bool bSpawnAroundDefaultPoint;
+        };
+
+        TArray<FActorDescription> ActorDescriptions;
+        uint8 Pad10[0x10];
+        FString Name;
+        float DensityRange;
+        int32 MinActorCount;
+        int32 MaxActorCount;
+        float Weight;
+        int32 EventDataRuntimeIndex;
+        int32 ConditionHandle;
+    };
+
+    struct FEventDataRuntime
+    {
+        TArray<uint8> FilterEntries;
+        TArray<FScriptInterface> PointProviders;
+        FGameplayTagQuery ProviderFilters;
+        FWeakObjectPtr EventData;
+        FScriptInterface PointProviderSelector;
+        UObject* SpawnerDataFilterClass;
+        void* SpawnerDataFilter;
+        float TotalFilterWeight;
+    };
+
+    struct FEventRuntime
+    {
+        TArray<FEventDataRuntime> EventDataRuntimes;
+        TArray<FEventRuntimeSpawnData> SpawnDatas;
+        int32 Pad20;
+        float ActivationTime;
+        float DeactivationTime;
+        int32 GameSpawnedActorCount;
+        int32 CurrentSpawnedActorCount;
+        int32 GameEventInstanceCount;
+        int32 CurrentEventInstanceCount;
+        int32 ConditionHandle;
+        int32 DeactivationReason;
+    };
+
+    struct FCategoryRuntime
+    {
+        TArray<FFortAthenaLivingWorldEvent*> Events;
+        void* Pad10;
+        UDataTable* EventTable;
+        int32 GameSpawnedActorCount;
+        int32 CurrentSpawnedActorCount;
+        int32 GameEventInstanceCount;
+        int32 CurrentEventInstanceCount;
+        int32 ConditionHandle;
+    };
+
+    struct FEventRequest
+    {
+        FFortAthenaLivingWorldCategory* Category;
+        FFortAthenaLivingWorldEvent* Event;
+        FEventRuntimeSpawnData* SpawnData;
+        UFortAthenaLivingWorldEncounterInstance* EncounterInstance;
+        FScriptInterface PointProvider;
+        int32 ActorCount;
+        int32 RequestID;
+        bool bPad38;
+        uint8 Pad39[0x7];
+        bool bHasPointProvider;
+    };
+
+    struct FPendingActorSpawnEventRequest
+    {
+        struct FActorInfo
+        {
+            double Location[3];
+            int32 PrefabGuid[4];
+            FWeakObjectPtr Actor;
+            FWeakObjectPtr Spawner;
+            UClass* SpawnerDataClass;
+            UClass* ActorClass;
+            int32 RequestID;
+            int32 PreRegistrationHandle;
+            TArray<uint64, TInlineAllocator<1>> TagPreRegistrationHandles;
+            int32 Index;
+        };
+
+        FFortAthenaLivingWorldCategory* Category;
+        FFortAthenaLivingWorldEvent* Event;
+        FEventRuntimeSpawnData* SpawnData;
+        UFortAthenaLivingWorldEncounterInstance* EncounterInstance;
+        FScriptInterface PointProvider;
+        int32 ActorCount;
+        int32 RequestID;
+        bool bPad38;
+        double Location[3];
+        double Rotation[3];
+        TArray<FActorInfo> ActorInfos;
+        uint8 OnRequestFinished[0x10];
+    };
+
+    static bool HasEventRuntimes();
+
+    void TickEventRuntimes(float DeltaTime);
+
+    void GenerateEventsFromRuntimes();
+
+    void ProcessCategory(FFortAthenaLivingWorldCategory* Category, void* ConditionContext);
+
+    void ComputeActiveEvents(const TArray<FFortAthenaLivingWorldEvent*>& Events, UFortAthenaLivingWorldEncounterInstance* EncounterInstance, void* ConditionContext, TArray<FFortAthenaLivingWorldEvent*>& OutActiveEvents, float& OutTotalWeight);
+
+    void GenerateEventRequests(UFortAthenaLivingWorldEncounterInstance* EncounterInstance, FFortAthenaLivingWorldCategory* Category, const TArray<FFortAthenaLivingWorldEvent*>& Events, int32 ActorBudget, int32 EventInstanceBudget, void* ConditionContext);
+
+    FScriptInterface GetRandomPointProviderFromEventDataRuntime(FEventDataRuntime* EventDataRuntime, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, int32 StartIndex);
+
+    static FScriptInterface GetRandomPointProviderFromTagQuery(const TArray<FScriptInterface>& PointProviders, const FGameplayTagQuery& TagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter, int32 StartIndex);
+
+    static bool IsActivePointProvider(const FScriptInterface& PointProvider, const FGameplayTagQuery& TagQuery, const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter);
+
+    void ProcessPendingEventRequests();
+
+    void ProcessEventRequest(FEventRequest& EventRequest);
+
+    int32 RequestSpawnToAISpawnerSystem(UAthenaAISpawner* AISpawner, const FVector& Location, const FRotator& Rotation, UClass* SpawnerDataClass, UClass* ActorClass, AActor*& OutSpawnedActor, bool& bOutCompleted);
+
+    bool SelectDataToSpawn(FEventRuntimeSpawnData::FActorDescription& ActorDescription, FEventDataRuntime* EventDataRuntime, UClass*& OutSpawnerDataClass, UClass*& OutActorClass);
+
+    void CancelEventRequest(const FEventRequest& EventRequest);
+
+    void ReturnSpawnedCountToRuntime(const FEventRequest& EventRequest);
+
+    void RegisterStaticPointProviders();
+
+    int32 GetTotalActorCount();
+
+    FEventRuntime* FindEventRuntime(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);
+
+    FCategoryRuntime* FindCategoryRuntime(const FFortAthenaLivingWorldCategory* Category);
+
+    TMap<const FFortAthenaLivingWorldCategory*, FCategoryRuntime>& GetCategoryRuntimes();
+
+    TMap<const FFortAthenaLivingWorldEvent*, FEventRuntime>& GetEventRuntimes();
+
+    TArray<FEventRequest>& GetPendingEventRequests();
+
+    TArray<FPendingActorSpawnEventRequest>& GetPendingActorSpawnRequests();
+
+    void EnablePointProvider(const FScriptInterface& PointProvider);
+
+    void DisablePointProvider(const FScriptInterface& PointProvider);
+
+    void AddPointProviderToEventRuntime(const FScriptInterface& PointProvider);
+
+    void RemovePointProviderFromEventRuntime(const FScriptInterface& PointProvider);
 
     static UClass* StaticClass();
 

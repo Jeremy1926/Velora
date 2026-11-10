@@ -208,7 +208,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         AFriendChestNative::TickActivationTimers();
         UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
 
-        if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 && World->GetGameState())
+        if ((UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes()) && World->GetGameState())
         {
             if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
                 LivingWorldManager->TickComponent(DeltaSeconds);
