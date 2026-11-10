@@ -13,8 +13,18 @@ TArray<FItemAndCount> UFortAthenaAIBotInventoryItems::GetItems()
 
     TArray<FItemAndCount> ItemsAndCounts;
 
-    for (auto ItemDefinition : *Items->ContainerPtrToValuePtr<TArray<UFortItemDefinition*>>(this))
-        ItemsAndCounts.Add({ 1, ItemDefinition });
+    if (Items->GetInner()->GetSize() == sizeof(UFortItemDefinition*))
+    {
+        for (auto ItemDefinition : *Items->ContainerPtrToValuePtr<TArray<UFortItemDefinition*>>(this))
+            ItemsAndCounts.Add({ 1, ItemDefinition });
+
+        return ItemsAndCounts;
+    }
+
+    auto& Entries = *Items->ContainerPtrToValuePtr<TArray<uint8>>(this);
+
+    for (int32 Index = 0; Index < Entries.Num(); Index++)
+        ItemsAndCounts.Add(*(const FItemAndCount*)(Entries.GetData() + Index * Items->GetInner()->GetSize()));
 
     return ItemsAndCounts;
 }
