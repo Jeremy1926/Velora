@@ -231,7 +231,7 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
     if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(Item))
     {
         if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-            ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+            ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(nullptr, ItemEntry, WeaponStats, ItemEntry->GetLevel()));
     }
 
     ItemEntry->GetParentInventory() = WorldInventory;

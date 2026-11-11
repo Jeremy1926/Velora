@@ -140,7 +140,7 @@ void UFortVehicleSeatWeaponComponent::EquipVehicleWeapon(AFortPawn* FortPawn, FW
     if (bRestoreWeaponData)
         ItemEntry->SetLoadedAmmo(CachedWeaponState->AmmoInClip);
     else if (auto WeaponStats = VehicleWeapon->GetWeaponStats<FFortBaseWeaponStats>())
-        ItemEntry->SetLoadedAmmo(VehicleWeapon->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+        ItemEntry->SetLoadedAmmo(VehicleWeapon->GetBaseClipSizeWithMods(nullptr, ItemEntry, WeaponStats, ItemEntry->GetLevel()));
 
     ItemEntry->GetParentInventory() = WorldInventory;
     ItemEntry->GetIsReplicatedCopy() = true;

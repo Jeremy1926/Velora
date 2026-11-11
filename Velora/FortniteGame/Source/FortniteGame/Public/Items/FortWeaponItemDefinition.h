@@ -29,7 +29,7 @@ public:
         return GetWeaponStatHandle().GetRow<T>(TEXT("UFortWeaponItemDefinition::GetWeaponStats"));
     }
 
-    int32 GetBaseClipSizeWithMods(const FFortBaseWeaponStats* WeaponStats, int32 Level) const;
+    int32 GetBaseClipSizeWithMods(const UObject* WorldContextObject, const FFortItemEntry* ItemEntry, const FFortBaseWeaponStats* WeaponStats, int32 Level) const;
 
     const FDataTableRowHandle& GetWeaponStatHandle() const;
 

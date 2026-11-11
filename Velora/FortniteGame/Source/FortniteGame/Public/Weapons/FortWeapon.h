@@ -63,7 +63,11 @@ public:
 
     FGuid& GetItemEntryGuid();
 
-    void InitWeapon(UFortWorldItem* Item);
+    bool GetInitializedWeaponItem() const;
+
+    void SetAmmoCount(int32 NewAmmoCount);
+
+    void InitializeFromItem(UFortWorldItem* Item);
 
     UFortWorldItem* GetInventoryItem() const;
 

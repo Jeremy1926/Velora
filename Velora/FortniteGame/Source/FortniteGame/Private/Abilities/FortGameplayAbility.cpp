@@ -34,7 +34,7 @@ void UFortGameplayAbility::EquipAbilityWeapon(UFortWeaponItemDefinition* WeaponD
     const FGuid ItemGuid = ItemEntry->GetItemGuid();
 
     if (auto WeaponStats = WeaponDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-        ItemEntry->SetLoadedAmmo(WeaponDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+        ItemEntry->SetLoadedAmmo(WeaponDefinition->GetBaseClipSizeWithMods(nullptr, ItemEntry, WeaponStats, ItemEntry->GetLevel()));
 
     ItemEntry->GetParentInventory() = WorldInventory;
     ItemEntry->GetIsReplicatedCopy() = true;

@@ -220,7 +220,7 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
         if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition))
         {
             if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-                ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry->GetLevel()));
+                ItemEntry->SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(nullptr, ItemEntry, WeaponStats, ItemEntry->GetLevel()));
         }
 
         ItemEntry->GetParentInventory() = WorldInventory;
@@ -538,7 +538,7 @@ AFortPickup* UFortKismetLibrary::K2_SpawnPickupInWorldWithClass(UObject* WorldCo
     if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition))
     {
         if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
+            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(nullptr, &ItemEntry, WeaponStats, ItemEntry.GetLevel()));
     }
 
     auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, PickupClass);

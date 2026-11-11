@@ -43,10 +43,31 @@ UClass* UFortWeaponItemDefinition::StaticClass()
     return Class;
 }
 
-int32 UFortWeaponItemDefinition::GetBaseClipSizeWithMods(const FFortBaseWeaponStats* WeaponStats, int32 Level) const
+int32 UFortWeaponItemDefinition::GetBaseClipSizeWithMods(const UObject* WorldContextObject, const FFortItemEntry* ItemEntry, const FFortBaseWeaponStats* WeaponStats, int32 Level) const
 {
+    static auto GetBaseClipSizeWithMods = Anchor::Function<int32 (*)(const UFortWeaponItemDefinition*, const UObject*, const FFortItemEntry*, const FFortBaseWeaponStats*, int32, int32)>(TEXT("UFortWeaponItemDefinition::GetBaseClipSizeWithMods"))
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:TryGetBaseClipSizeWithMods"))
+        .Find("mov [rsp+0x20], *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:TryGetBaseClipSizeWithMods"))
+        .Find("mov r8, *; mov [rsp+0x20], *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:TryGetBaseClipSizeWithMods"))
+        .Find("mov r8, *; mov [rsp+0x20], *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
     if (!WeaponStats)
         return 0;
+
+    if (GetBaseClipSizeWithMods)
+        return GetBaseClipSizeWithMods(this, WorldContextObject, ItemEntry, WeaponStats, Level, -1);
 
     return (int32)((FMath::Max((float)Level - (float)WeaponStats->GetBaseLevel(), 0.0f) * WeaponStats->GetClipScale() + 1.0f) * (float)WeaponStats->GetClipSize());
 }

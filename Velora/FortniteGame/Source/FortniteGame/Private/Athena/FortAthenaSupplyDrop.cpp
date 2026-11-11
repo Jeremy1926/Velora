@@ -72,7 +72,7 @@ AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDe
     if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemDefinition))
     {
         if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
+            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(nullptr, &ItemEntry, WeaponStats, ItemEntry.GetLevel()));
     }
 
     auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), this, EFortPickupSourceTypeFlag::Container);

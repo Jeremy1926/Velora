@@ -295,23 +295,45 @@ FGameplayAbilitySpecHandle AFortWeapon::GetPrimaryAbilitySpecHandle() const
     return PrimaryAbilitySpecHandle ? *PrimaryAbilitySpecHandle->ContainerPtrToValuePtr<FGameplayAbilitySpecHandle>(this) : FGameplayAbilitySpecHandle();
 }
 
-void AFortWeapon::InitWeapon(UFortWorldItem* Item)
+bool AFortWeapon::GetInitializedWeaponItem() const
 {
-    DETOUR(AFortWeapon, InitWeapon, Anchor::Hook()
+    static auto bInitializedWeaponItem = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bInitializedWeaponItem")));
+
+    return bInitializedWeaponItem && bInitializedWeaponItem->GetPropertyValue_InContainer(this);
+}
+
+void AFortWeapon::SetAmmoCount(int32 NewAmmoCount)
+{
+    static auto AmmoCount = StaticClass()->FindPropertyByName(FName(TEXT("AmmoCount")));
+
+    if (*AmmoCount->ContainerPtrToValuePtr<int32>(this) != NewAmmoCount)
+        *AmmoCount->ContainerPtrToValuePtr<int32>(this) = NewAmmoCount;
+}
+
+void AFortWeapon::InitializeFromItem(UFortWorldItem* Item)
+{
+    DETOUR(AFortWeapon, InitializeFromItem, Anchor::Hook()
         .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
         .Find("call 0x*", 2)
         .Target()
         .Find("mov rdx, rax; mov rcx, *; call [r8+0x*]")
         .Find("call [r8+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortWeapon"))
+        .Is("test rdx, rdx; jz *")
         .Optional()
         .Inline());
 
     Original(Item);
 
+    if (!Item || !HasAuthority())
+        return;
+
+    if (!GetInitializedWeaponItem())
+        SetAmmoCount(Item->GetItemEntry().GetLoadedAmmo());
+
     static auto WeaponModSlots = FFortItemEntry::StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
 
-    if (!Item || !WeaponModSlots || !HasAuthority())
+    if (!WeaponModSlots)
         return;
 
     for (auto& WeaponModSlot : Item->GetItemEntry().GetWeaponModSlots())

@@ -185,7 +185,7 @@ void ABuildingItemCollectorActor::AthenaPostApplyPlaylistDataTables()
             if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(WorldItemDefinition))
             {
                 if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-                    ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WeaponStats, ItemEntry.GetLevel()));
+                    ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(nullptr, &ItemEntry, WeaponStats, ItemEntry.GetLevel()));
             }
         }
 
