@@ -10,6 +10,9 @@ bool FGameplayEffectAttributeCaptureSpec::AttemptCalculateAttributeMagnitudeWith
     static auto AttemptCalculateAttributeMagnitudeWithBase = Anchor::Function<bool (*)(const FGameplayEffectAttributeCaptureSpec*, const FAggregatorEvaluateParameters&, float, float&)>(TEXT("FGameplayEffectAttributeCaptureSpec::AttemptCalculateAttributeMagnitudeWithBase"))
         .Pattern("48 8B 59 40 49 8B F9 0F 29 74 24 20 0F 28 F2 48 85 DB")
         .Start()
+        .Or()
+        .Pattern("48 8B 59 40 4D 8B F1 0F 29 74 24 20 0F 28 F2 48 8B EA 48 85 DB")
+        .Start()
         .Get();
 
     return AttemptCalculateAttributeMagnitudeWithBase(this, InEvalParams, InBaseValue, OutMagnitude);
