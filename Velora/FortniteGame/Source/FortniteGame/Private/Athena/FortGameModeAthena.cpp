@@ -453,7 +453,9 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
         return nullptr;
     }
 
-    if (!PlayerController->GetWorldInventory())
+    const bool bCreatedWorldInventory = !PlayerController->GetWorldInventory();
+
+    if (bCreatedWorldInventory)
     {
         auto WorldInventoryClass = PlayerController->GetWorldInventoryClass();
 
@@ -464,12 +466,19 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
 
         if (PlayerController->GetWorldInventory())
             PlayerController->GetWorldInventory()->GetInventoryType() = EFortInventoryType::World;
+    }
 
-        if (GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem())
+    if (GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem())
+    {
+        auto IrisHelper = UFortIrisHelper::Get();
+
+        if (Config::bLogReplication)
         {
-            if (auto IrisHelper = UFortIrisHelper::Get())
-                IrisHelper->OnPlayerControllerInventorySwitched(PlayerController);
+            UE_LOG(LogVelora, Log, TEXT("World inventory %s for %s, created here %d, iris helper %s"), PlayerController->GetWorldInventory() ? *PlayerController->GetWorldInventory()->GetName() : TEXT("none"), *PlayerController->GetName(), (int32)bCreatedWorldInventory, IrisHelper ? *IrisHelper->GetName() : TEXT("none"));
         }
+
+        if (IrisHelper)
+            IrisHelper->OnPlayerControllerInventorySwitched(PlayerController);
     }
 
     auto Pawn = AGameModeBase::SpawnDefaultPawnFor_Implementation(NewPlayer, StartSpot);
