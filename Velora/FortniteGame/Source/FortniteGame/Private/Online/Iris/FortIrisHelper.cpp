@@ -5,7 +5,9 @@
 #include "UObject/UObjectArray.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
+#include "Logging/LogMacros.h"
 #include "Scanner.h"
+#include "Config.h"
 
 UClass* UFortIrisHelper::StaticClass()
 {
@@ -68,6 +70,11 @@ void UFortIrisHelper::OnPlayerControllerInventorySwitched(AFortPlayerController*
     void* Context[4] = {};
 
     GetConnectionContext(this, Context, PC);
+
+    if (Config::bLogReplication)
+    {
+        UE_LOG(LogVelora, Log, TEXT("Iris inventory switched for %s, connection info %d, replication system %d, bridge %d"), *PC->GetName(), (int32)(Context[1] != nullptr), (int32)(Context[2] != nullptr), (int32)(Context[3] != nullptr));
+    }
 
     if (Context[0] && Context[1] && Context[2] && Context[3])
         UpdateConnectionFilters(this, Context);

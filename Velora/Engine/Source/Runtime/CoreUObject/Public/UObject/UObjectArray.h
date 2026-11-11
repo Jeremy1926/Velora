@@ -23,10 +23,7 @@ struct FUObjectItem
         Flags |= int32(EInternalObjectFlags::RootSet);
     }
 
-    FORCEINLINE bool IsPendingKill() const
-    {
-        return !!(Flags & int32(EInternalObjectFlags::PendingKill));
-    }
+    bool IsPendingKill() const;
 
     FORCEINLINE bool IsUnreachable() const
     {
