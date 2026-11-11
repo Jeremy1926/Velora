@@ -14,12 +14,14 @@ UClass* AFortPoiManager::StaticClass()
 
 void AFortPoiManager::CheckPlayerControllerWithPoiGrid(AFortPlayerControllerZone* PlayerController)
 {
-    static auto CheckPlayerControllerWithPoiGrid = Anchor::Function<void (*)(AFortPoiManager*, AFortPlayerControllerZone*)>(TEXT("AFortPoiManager::CheckPlayerControllerWithPoiGrid"))
+    static auto CheckPlayerControllerWithPoiGrid = Anchor::Optional<void (*)(AFortPoiManager*, AFortPlayerControllerZone*)>(TEXT("AFortPoiManager::CheckPlayerControllerWithPoiGrid"))
         .String(TEXT("STAT_PoiManager_Tick"))
         .FieldFind("inc dword ptr [rbx+%x]", StaticClass()->FindPropertyByName(FName(TEXT("TestPlayerIndex"))))
         .Last("call 0x*")
         .Target()
+        .Is("test rdx, rdx; jz 0x*")
         .Get();
 
-    CheckPlayerControllerWithPoiGrid(this, PlayerController);
+    if (CheckPlayerControllerWithPoiGrid)
+        CheckPlayerControllerWithPoiGrid(this, PlayerController);
 }
