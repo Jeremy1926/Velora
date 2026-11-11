@@ -86,6 +86,27 @@ const AActor* IFortVehicleInterface::GetVehicleActorPtrConst() const
     return GetVehicleActorPtrConst(this);
 }
 
+AFortPlayerControllerZone* IFortVehicleInterface::GetVehicleController(AFortPlayerPawn* PlayerPawn) const
+{
+    static auto GetVehicleController = Anchor::VirtualFunction<AFortPlayerControllerZone* (*)(const IFortVehicleInterface*, AFortPlayerPawn*)>(TEXT("IFortVehicleInterface::GetVehicleController"))
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
+        .Has("call [rax+0x80]; test al, al")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
+        .Has("bt rax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Get();
+
+    return GetVehicleController(this, PlayerPawn);
+}
+
 void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
 {
     static auto SetForcedToAlwaysSpawn = Anchor::VirtualFunction<void (*)(IFortVehicleInterface*, bool)>(TEXT("IFortVehicleInterface::SetForcedToAlwaysSpawn"))

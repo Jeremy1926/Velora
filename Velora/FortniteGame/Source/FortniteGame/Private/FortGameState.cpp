@@ -97,6 +97,13 @@ AFortWorldManager* AFortGameState::GetWorldManager() const
     return *WorldManager->ContainerPtrToValuePtr<AFortWorldManager*>(this);
 }
 
+AFortPoiManager* AFortGameState::GetPoiManager() const
+{
+    static auto PoiManager = StaticClass()->FindPropertyByName(FName(TEXT("PoiManager")));
+
+    return PoiManager ? *PoiManager->ContainerPtrToValuePtr<AFortPoiManager*>(this) : nullptr;
+}
+
 int32 AFortGameState::GetTeamCount() const
 {
     static auto TeamCount = GetClass()->FindPropertyByName(FName(TEXT("TeamCount")));

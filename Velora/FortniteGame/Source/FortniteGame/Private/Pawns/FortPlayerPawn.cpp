@@ -306,6 +306,22 @@ AFortAthenaVehicle* AFortPlayerPawn::GetVehicle() const
     return Cast<AFortAthenaVehicle>(GetVehicleStateLocal().GetVehicle());
 }
 
+AActor* AFortPlayerPawn::GetCurrentVehicle() const
+{
+    static auto CurrentVehicle = StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle")));
+
+    return *CurrentVehicle->ContainerPtrToValuePtr<AActor*>(this);
+}
+
+IFortVehicleInterface* AFortPlayerPawn::GetVehicleInterface() const
+{
+    static auto GetVehicleInterface = Anchor::VirtualFunction<IFortVehicleInterface* (*)(const AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::GetVehicleInterface"))
+        .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rsi, [rcx+%x]; test rsi, rsi", StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle"))))
+        .Get();
+
+    return GetVehicleInterface(this);
+}
+
 AActor* AFortPlayerPawn::GetHeldObject() const
 {
     static auto HeldObject = GetClass()->FindPropertyByName(FName(TEXT("HeldObject")));

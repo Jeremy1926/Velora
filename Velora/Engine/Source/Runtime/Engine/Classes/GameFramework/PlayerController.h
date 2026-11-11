@@ -15,6 +15,8 @@ public:
 
     void Reset();
 
+    void ChangeState(FName NewState);
+
     void ClientGotoState(FName NewState);
 
     APawn* GetAcknowledgedPawn() const;

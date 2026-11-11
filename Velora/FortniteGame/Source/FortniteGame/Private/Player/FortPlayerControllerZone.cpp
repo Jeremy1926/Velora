@@ -1,12 +1,21 @@
 #include "pch.h"
 #include "Player/FortPlayerControllerZone.h"
 #include "Player/FortPlayerState.h"
+#include "Player/FortPlayerStateZone.h"
 #include "Pawns/FortPlayerPawn.h"
+#include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/FortPoiManager.h"
+#include "Athena/Vehicles/FortVehicleInterface.h"
+#include "FortGameState.h"
 #include "FortGlobals.h"
+#include "FortRuntimeOptions.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTypes.h"
 #include "GameplayTagContainer.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Engine/World.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
@@ -124,6 +133,124 @@ void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
         .Get(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"));
 
     ServerRestartPlayer(this);
+}
+
+void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewViewTarget, bool bAllowStateChange)
+{
+    DETOUR(AFortPlayerControllerZone, ServerSpectateActor_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ServerSpectateActor"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
+        .Optional()
+        .InChildVTablesCounted(StaticClass()));
+
+    if (!bAllowStateChange && GetStateName() != FName(TEXT("Spectating")))
+    {
+        UE_LOG(LogVelora, Log, TEXT("AFortPlayerControllerZone::ServerSpectateActor_Implementation Aborted, unable to set Player Controler [%s]'s Spectate Target to [%s] because state change is NOT allowed."), *GetName(), NewViewTarget ? *NewViewTarget->GetName() : TEXT("NULL"));
+        return;
+    }
+
+    if (!CanSpectateActor(NewViewTarget))
+    {
+        UE_LOG(LogVelora, Log, TEXT("AFortPlayerControllerZone::ServerSpectateActor_Implementation Aborted, unable to set Player Controler [%s]'s Spectate Target to [%s] because CanSpectateActor() failed."), *GetName(), NewViewTarget ? *NewViewTarget->GetName() : TEXT("NULL"));
+        return;
+    }
+
+    auto FortPlayerState = Cast<AFortPlayerStateZone>(GetPlayerState());
+
+    if (!FortPlayerState || !NewViewTarget)
+        return;
+
+    if (ShouldSuicideOnSpectate(NewViewTarget))
+    {
+        UE_LOG(LogVelora, Warning, TEXT("%s used ServerSpectateActor() while still alive, requesting suicide!"), *GetName());
+        ServerSuicide_Implementation();
+    }
+
+    AFortPlayerStateZone* TargetPlayerState = nullptr;
+
+    if (auto ViewPawn = Cast<APawn>(NewViewTarget))
+    {
+        TargetPlayerState = Cast<AFortPlayerStateZone>(ViewPawn->GetPlayerState());
+
+        auto PlayerPawn = TargetPlayerState ? nullptr : Cast<AFortPlayerPawn>(ViewPawn);
+
+        if (PlayerPawn && PlayerPawn->GetCurrentVehicle())
+        {
+            auto VehicleInterface = PlayerPawn->GetVehicleInterface();
+
+            if (auto VehicleController = VehicleInterface ? VehicleInterface->GetVehicleController(PlayerPawn) : nullptr)
+                TargetPlayerState = Cast<AFortPlayerStateZone>(VehicleController->GetPlayerState());
+
+            if (auto VehiclePawn = Cast<AFortPlayerPawnAthena>(PlayerPawn->GetCurrentVehicle()))
+                NewViewTarget = VehiclePawn;
+        }
+
+        if (TargetPlayerState && UFortRuntimeOptions::Get().GetEnableSpectatorUpdates())
+            FortPlayerState->BeginSpectating(TargetPlayerState);
+    }
+
+    ChangeState(FName(TEXT("Spectating")));
+    ClientGotoState(FName(TEXT("Spectating")));
+    SetViewTargetAndNotifyClient(NewViewTarget, FViewTargetTransitionParams());
+
+    UE_LOG(LogVelora, Log, TEXT("[Spectate] %s now spectating %s (player state %s, spectator updates %d)"), *GetName(), *NewViewTarget->GetName(), TargetPlayerState ? *TargetPlayerState->GetName() : TEXT("none"), (int32)UFortRuntimeOptions::Get().GetEnableSpectatorUpdates());
+
+    if (auto World = GetWorld())
+    {
+        if (auto GameState = Cast<AFortGameState>(World->GetGameState()))
+        {
+            if (auto PoiManager = GameState->GetPoiManager())
+                PoiManager->CheckPlayerControllerWithPoiGrid(this);
+        }
+    }
+}
+
+bool AFortPlayerControllerZone::CanSpectateActor(AActor* InActor)
+{
+    static auto CanSpectateActor = Anchor::VirtualFunction<bool (*)(AFortPlayerControllerZone*, AActor*)>(TEXT("AFortPlayerControllerZone::CanSpectateActor"))
+        .String("AFortPlayerControllerZone::FollowPlayer")
+        .Start()
+        .Find("call [rax+0x*]; test al, al; jnz 0x*")
+        .Get();
+
+    return CanSpectateActor(this, InActor);
+}
+
+bool AFortPlayerControllerZone::ShouldSuicideOnSpectate(AActor* NewViewTarget)
+{
+    static auto ShouldSuicideOnSpectate = Anchor::VirtualFunction<bool (*)(AFortPlayerControllerZone*, AActor*)>(TEXT("AFortPlayerControllerZone::ShouldSuicideOnSpectate"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateZone:IsPlayerDead"))
+        .Find("call [rax+0x*]")
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "mov rax, [rcx]; ")
+        .Get();
+
+    return ShouldSuicideOnSpectate(this, NewViewTarget);
+}
+
+void AFortPlayerControllerZone::StartSpectateAfterDeathTimer()
+{
+    DETOUR(AFortPlayerControllerZone, StartSpectateAfterDeathTimer, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(AFortPlayerControllerZone, ServerSpectateActor_Implementation) != nullptr)
+        .String(TEXT("Deaths"))
+        .Find("add rcx, 0x4; cmp rcx, rdx; jnz 0x*; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Optional()
+        .AtCall());
+
+    auto PlayerToSpectateOnDeath = GetPlayerToSpectateOnDeath();
+
+    UE_LOG(LogVelora, Log, TEXT("[Spectate] %s died, starting the spectate after death timer (preferred target %s)"), *GetName(), PlayerToSpectateOnDeath ? *PlayerToSpectateOnDeath->GetName() : TEXT("none"));
+
+    Original();
+}
+
+APawn* AFortPlayerControllerZone::GetPlayerToSpectateOnDeath() const
+{
+    static auto PlayerToSpectateOnDeath = StaticClass()->FindPropertyByName(FName(TEXT("PlayerToSpectateOnDeath")));
+
+    return *PlayerToSpectateOnDeath->ContainerPtrToValuePtr<APawn*>(this);
 }
 
 void AFortPlayerControllerZone::OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher)

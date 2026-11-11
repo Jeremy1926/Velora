@@ -252,6 +252,7 @@
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Pawn.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\Controller.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\PlayerController.h" />
+    <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Camera\PlayerCameraManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\CheatManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\WorldSettings.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\GameFramework\GameNetworkManager.h" />
@@ -330,6 +331,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\GameStateComponents\FortGameStateComponent_BattleRoyaleGamePhaseLogic.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Quests\FortQuestItemDefinition.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPoiVolume.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortPoiManager.h" />
     <ClInclude Include="..\Engine\Source\Runtime\Engine\Classes\Components\PrimitiveComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaExitCraft.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\Vehicles\FortAthenaVehicle.h" />
@@ -752,6 +754,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\GameStateComponents\FortGameStateComponent_BattleRoyaleGamePhaseLogic.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Quests\FortQuestItemDefinition.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiVolume.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPoiManager.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\PrimitiveComponent.cpp" />
     <ClCompile Include="..\Engine\Source\Runtime\Engine\Private\Components\SkinnedMeshComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\Vehicles\FortAthenaExitCraft.cpp" />

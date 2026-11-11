@@ -20,4 +20,6 @@ public:
     static void TickSimulatedAttributes(UWorld* World);
 
     void UpdateSimulatedAttributes();
+
+    void BeginSpectating(AFortPlayerStateZone* PlayerToSpectate);
 };

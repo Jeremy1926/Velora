@@ -12,4 +12,6 @@ public:
     float GetBRServerMaxTickRate() const;
 
     bool GetDisableReplicationGraph() const;
+
+    bool GetEnableSpectatorUpdates() const;
 };

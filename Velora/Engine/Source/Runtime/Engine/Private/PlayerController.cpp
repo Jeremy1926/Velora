@@ -87,6 +87,26 @@ void APlayerController::Reset()
         Reset(this);
 }
 
+void APlayerController::ChangeState(FName NewState)
+{
+    static auto ChangeState = Anchor::VirtualFunction<void (*)(APlayerController*, FName)>(TEXT("APlayerController::ChangeState"))
+        .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__PlayerController"))
+        .Find("jmp [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__PlayerController"))
+        .Find("jmp [rax+0x*]")
+        .Get();
+
+    ChangeState(this, NewState);
+}
+
 void APlayerController::ClientGotoState(FName NewState)
 {
     static auto ClientGotoState = Anchor::Function<void (*)(APlayerController*, FName)>(TEXT("APlayerController::ClientGotoState"))

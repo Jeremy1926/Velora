@@ -111,3 +111,13 @@ void AFortPlayerStateZone::UpdateSimulatedAttributes()
     if (bChanged)
         ForceNetUpdate();
 }
+
+void AFortPlayerStateZone::BeginSpectating(AFortPlayerStateZone* PlayerToSpectate)
+{
+    static auto BeginSpectating = Anchor::Function<void (*)(AFortPlayerStateZone*, AFortPlayerStateZone*)>(TEXT("AFortPlayerStateZone::BeginSpectating"))
+        .String(TEXT("BeginSpectating: Attempting to spectate self!"))
+        .Start()
+        .Get();
+
+    BeginSpectating(this, PlayerToSpectate);
+}

@@ -101,6 +101,10 @@ public:
 
     AFortAthenaVehicle* GetVehicle() const;
 
+    AActor* GetCurrentVehicle() const;
+
+    IFortVehicleInterface* GetVehicleInterface() const;
+
     AActor* GetHeldObject() const;
 
     void SetHeldObject(AActor* InHeldObject);

@@ -40,6 +40,16 @@ public:
 
     void ServerRestartPlayer_Implementation();
 
+    void ServerSpectateActor_Implementation(AActor* NewViewTarget, bool bAllowStateChange);
+
+    bool CanSpectateActor(AActor* InActor);
+
+    bool ShouldSuicideOnSpectate(AActor* NewViewTarget);
+
+    void StartSpectateAfterDeathTimer();
+
+    APawn* GetPlayerToSpectateOnDeath() const;
+
     void OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher);
 
     void OnPawnRevived(AController* EventInstigator);

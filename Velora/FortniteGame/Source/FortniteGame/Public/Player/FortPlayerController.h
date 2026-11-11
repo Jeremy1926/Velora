@@ -25,6 +25,7 @@ class UFortWorldItem;
 class UStatManager;
 struct FFrame;
 struct FTransform;
+struct FViewTargetTransitionParams;
 enum class EFortQuickBars : uint8;
 enum class EFortResourceType : uint8;
 
@@ -165,6 +166,10 @@ public:
     void ServerRemoveInventoryStateValue_Implementation(FGuid ItemGuid, EFortItemEntryState::Type StateValueType);
 
     void ServerPlayEmoteItem_Implementation(UFortMontageItemDefinitionBase* EmoteAsset);
+
+    void ServerSuicide_Implementation();
+
+    void SetViewTargetAndNotifyClient(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams);
 
     void ServerCheat_Implementation(const FString& Msg);
 

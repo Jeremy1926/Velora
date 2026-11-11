@@ -3,6 +3,7 @@
 #include "Math/TransformVectorized.h"
 
 class AActor;
+class AFortPlayerControllerZone;
 class AFortPlayerPawn;
 class UFortVehicleConfigs;
 class UFortVehicleSeatWeaponComponent;
@@ -18,6 +19,8 @@ public:
     UFortVehicleSeatWeaponComponent* GetSeatWeaponComponent(const int32 SeatIndex) const;
 
     const AActor* GetVehicleActorPtrConst() const;
+
+    AFortPlayerControllerZone* GetVehicleController(AFortPlayerPawn* PlayerPawn) const;
 
     void SetForcedToAlwaysSpawn(const bool bSetTo);
 

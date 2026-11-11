@@ -32,6 +32,7 @@
 #include "FortKismetLibrary.h"
 #include "FortniteGame.h"
 #include "AbilitySystemComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -2454,4 +2455,24 @@ void AFortPlayerController::SetBuildFree(bool bInBuildFree)
 
     if (bBuildFree)
         bBuildFree->SetPropertyValue_InContainer(this, bInBuildFree);
+}
+
+void AFortPlayerController::ServerSuicide_Implementation()
+{
+    static auto ServerSuicide = Anchor::VirtualFunction<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::ServerSuicide_Implementation"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerSuicide"))
+        .Find("jmp [rax+0x*]")
+        .Get();
+
+    ServerSuicide(this);
+}
+
+void AFortPlayerController::SetViewTargetAndNotifyClient(AActor* NewViewTarget, FViewTargetTransitionParams TransitionParams)
+{
+    static auto SetViewTargetAndNotifyClient = Anchor::VirtualFunction<void (*)(AFortPlayerController*, AActor*, FViewTargetTransitionParams*)>(TEXT("AFortPlayerController::SetViewTargetAndNotifyClient"))
+        .Event(TEXT("ClientSetViewTarget"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; mov rcx, rsi; movdqu *; ")
+        .Get();
+
+    SetViewTargetAndNotifyClient(this, NewViewTarget, &TransitionParams);
 }

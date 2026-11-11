@@ -2,6 +2,7 @@
 
 #include "GameFramework/GameStateBase.h"
 
+class AFortPoiManager;
 class AFortWorldManager;
 class ULevelStreamingDynamic;
 class UScriptStruct;
@@ -41,6 +42,8 @@ public:
     bool AreAllAdditionalPlaylistLevelsVisible() const;
 
     AFortWorldManager* GetWorldManager() const;
+
+    AFortPoiManager* GetPoiManager() const;
 
     int32 GetTeamCount() const;
 

@@ -29,3 +29,10 @@ bool UFortRuntimeOptions::GetDisableReplicationGraph() const
 
     return bDisableReplicationGraph->GetPropertyValue_InContainer(this);
 }
+
+bool UFortRuntimeOptions::GetEnableSpectatorUpdates() const
+{
+    static auto bEnableSpectatorUpdates = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bEnableSpectatorUpdates")));
+
+    return bEnableSpectatorUpdates->GetPropertyValue_InContainer(this);
+}
