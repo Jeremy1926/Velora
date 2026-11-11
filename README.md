@@ -27,6 +27,9 @@ Universal gameserver for Fortnite.
 | Chapter 2 Season 4 | 14.00 to 14.60 |
 | Chapter 2 Season 5 | 15.00 to 15.50 |
 | Chapter 3 Season 4 | 22.30 to 22.40 |
+| Chapter 5 Season 1 | 28.00 to 28.30 |
+| Chapter 5 Season 2 | 29.00 to 29.40 |
+| Chapter 5 Season 3 | 30.00 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
@@ -41,17 +44,21 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 - Chests, floor loot, ammo boxes, supply drops
 - Picking up, dropping, swapping
 - Traps, jump pads
+- Sprinting, mantling, hurdling (28.00+)
+- Weapon mods, mod bench (28.00+)
 - NPCs and bosses
 - Emotes (1.8+)
 - Locker cosmetics (1.8+)
 - Spectating, Victory Royale
 - Restart after every match
+- Host window: Lategame, Infinite Ammo, Infinite Materials, console commands, Start Bus
 
 ## To-do
 
 - XP and challenges
 - Chapter 2 Season 6 to Chapter 3 Season 3
-- Chapter 4 and newer
+- Chapter 4
+- 30.10 and newer
 
 ## Configuration
 
@@ -65,6 +72,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 | `WarmupRequiredPlayerCount` | Players needed to start warmup |
 | `bRestartAfterMatch` | Restart when the match ends |
 | `bConsole` | Open a console window |
+| `bGUI` | Open the host window |
 
 ## Building
 
