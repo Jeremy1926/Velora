@@ -27,6 +27,7 @@
 #include "UObject/UObjectArray.h"
 #include "Items/FortPickup.h"
 #include "Player/FortPlayerState.h"
+#include "Player/FortTeamPrivateInfo.h"
 #include "Items/FortInventory.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "FortniteGame.h"
@@ -48,7 +49,10 @@
 #include "Online/Iris/FortIrisHelper.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
+#include "GameFramework/Controller.h"
+#include "Math/IntVector.h"
 #include "Math/UnrealMathUtility.h"
+#include "UObject/WeakObjectPtr.h"
 #include "HAL/IConsoleManager.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
@@ -632,6 +636,123 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
 
     GameMemberInfoArray.MarkItemDirty(Member);
     GameState->NotifyGameMemberAdded(Member.SquadId, Member.TeamIndex, Member.GetMemberUniqueId());
+}
+
+void AFortGameModeAthena::UpdateLatentReplicatedTeamData()
+{
+    DETOUR(AFortGameModeAthena, UpdateLatentReplicatedTeamData, Anchor::Hook()
+        .If(Config::bLogReplication)
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "add rcx, %x; call 0x*", AFortTeamPrivateInfo::StaticClass() ? AFortTeamPrivateInfo::StaticClass()->FindPropertyByName(FName(TEXT("LatentTeamRepData"))) : nullptr, "cmp eax, 0x1; jg *")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    Original();
+
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+    if (!GameState)
+        return;
+
+    static float NextCheckTime = 0.0f;
+    static float NextSummaryTime = 0.0f;
+    static TMap<FIntVector, bool> InsideCullDistance;
+
+    const float ServerWorldTimeSeconds = GameState->GetServerWorldTimeSeconds();
+
+    if (ServerWorldTimeSeconds + 1.0f < NextCheckTime)
+    {
+        NextCheckTime = 0.0f;
+        NextSummaryTime = 0.0f;
+    }
+
+    if (ServerWorldTimeSeconds < NextCheckTime)
+        return;
+
+    const bool bSummary = ServerWorldTimeSeconds >= NextSummaryTime;
+    const bool bIris = GetWorld()->GetNetDriver() && GetWorld()->GetNetDriver()->GetReplicationSystem();
+
+    NextCheckTime = ServerWorldTimeSeconds + 0.25f;
+
+    if (bSummary)
+        NextSummaryTime = ServerWorldTimeSeconds + 10.0f;
+
+    for (auto ViewerPlayerState : GameState->GetPlayerArray())
+    {
+        auto Viewer = Cast<AFortPlayerStateAthena>(ViewerPlayerState);
+        auto ViewerController = Viewer ? Cast<AFortPlayerControllerAthena>(Viewer->GetOwner()) : nullptr;
+        auto ViewTarget = ViewerController ? ViewerController->GetViewTarget() : nullptr;
+
+        if (!ViewTarget)
+            continue;
+
+        for (auto TeammatePlayerState : GameState->GetPlayerArray())
+        {
+            auto Teammate = Cast<AFortPlayerStateAthena>(TeammatePlayerState);
+            auto TeammateController = Teammate && Teammate != Viewer && Teammate->GetSquadId() == Viewer->GetSquadId() ? Cast<AController>(Teammate->GetOwner()) : nullptr;
+            auto TeammatePawn = TeammateController ? TeammateController->GetPawn() : nullptr;
+
+            if (!TeammatePawn)
+                continue;
+
+            const float Distance = (TeammatePawn->GetActorLocation() - ViewTarget->GetActorLocation()).Size();
+            const float CullDistance = FMath::Sqrt(TeammatePawn->GetNetCullDistanceSquared());
+            const bool bInside = Distance < CullDistance;
+            const FIntVector Key = { (int32)ViewerController->GetUniqueID(), (int32)TeammatePawn->GetUniqueID(), 0 };
+            const bool* bWasInside = InsideCullDistance.Find(Key);
+
+            if (bSummary || !bWasInside || *bWasInside != bInside)
+            {
+                UE_LOG(LogVelora, Log, TEXT("[TeamIndicator] %.2f %s viewing %s, teammate %s pawn %s at %.0f, net cull distance %.0f, %s%s"), ServerWorldTimeSeconds, *ViewerController->GetName(), *ViewTarget->GetName(), *TeammateController->GetName(), *TeammatePawn->GetName(), Distance, CullDistance, bInside ? TEXT("inside") : TEXT("outside"), bIris ? TEXT(", iris") : TEXT(""));
+            }
+
+            InsideCullDistance.Add(Key, bInside);
+        }
+    }
+
+    if (!bSummary)
+        return;
+
+    static auto LatentTeamRepData = AFortTeamPrivateInfo::StaticClass() ? AFortTeamPrivateInfo::StaticClass()->FindPropertyByName(FName(TEXT("LatentTeamRepData"))) : nullptr;
+    static auto LatentRepTeamDataArray = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.LatentRepTeamDataArray"));
+    static auto LatentRepPlayerData = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.LatentRepPlayerData"));
+    static auto PlayerData = LatentRepTeamDataArray ? LatentRepTeamDataArray->FindPropertyByName(FName(TEXT("PlayerData"))) : nullptr;
+    static auto PlayerDataPlayerState = LatentRepPlayerData ? LatentRepPlayerData->FindPropertyByName(FName(TEXT("PlayerState"))) : nullptr;
+    static auto LastRepLocation = LatentRepPlayerData ? LatentRepPlayerData->FindPropertyByName(FName(TEXT("LastRepLocation"))) : nullptr;
+
+    if (!LatentTeamRepData || !PlayerData || !PlayerDataPlayerState || !LastRepLocation)
+        return;
+
+    TArray<AFortTeamPrivateInfo*> TeamPrivateInfos;
+
+    for (auto PlayerState : GameState->GetPlayerArray())
+    {
+        auto FortPlayerState = Cast<AFortPlayerStateAthena>(PlayerState);
+        auto TeamPrivateInfo = FortPlayerState ? FortPlayerState->GetPlayerTeamPrivate() : nullptr;
+
+        if (!TeamPrivateInfo || TeamPrivateInfos.Contains(TeamPrivateInfo))
+            continue;
+
+        TeamPrivateInfos.Add(TeamPrivateInfo);
+
+        auto& Entries = *PlayerData->ContainerPtrToValuePtr<TArray<uint8>>(LatentTeamRepData->ContainerPtrToValuePtr<void>(TeamPrivateInfo));
+
+        if (Entries.Num() == 0)
+        {
+            UE_LOG(LogVelora, Log, TEXT("[TeamIndicator] %.2f %s latent team data has no entries"), ServerWorldTimeSeconds, *TeamPrivateInfo->GetName());
+        }
+
+        for (int32 Index = 0; Index < Entries.Num(); Index++)
+        {
+            auto Entry = Entries.GetData() + Index * LatentRepPlayerData->GetPropertiesSize();
+            auto EntryPlayerState = Cast<AFortPlayerStateAthena>(PlayerDataPlayerState->ContainerPtrToValuePtr<FWeakObjectPtr>(Entry)->Get());
+            auto EntryController = EntryPlayerState ? Cast<AController>(EntryPlayerState->GetOwner()) : nullptr;
+            auto EntryPawn = EntryController ? EntryController->GetPawn() : nullptr;
+            const FVector Location = LastRepLocation->GetPropertyValue_InContainer<FVector>(Entry);
+            const FVector PawnLocation = EntryPawn ? EntryPawn->GetActorLocation() : FVector(ForceInitToZero);
+
+            UE_LOG(LogVelora, Log, TEXT("[TeamIndicator] %.2f %s latent team data %d/%d: %s replicated (%.0f, %.0f, %.0f), pawn %s (%.0f, %.0f, %.0f)"), ServerWorldTimeSeconds, *TeamPrivateInfo->GetName(), Index + 1, Entries.Num(), EntryController ? *EntryController->GetName() : TEXT("None"), Location.X, Location.Y, Location.Z, EntryPawn ? *EntryPawn->GetName() : TEXT("None"), PawnLocation.X, PawnLocation.Y, PawnLocation.Z);
+        }
+    }
 }
 
 void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController)

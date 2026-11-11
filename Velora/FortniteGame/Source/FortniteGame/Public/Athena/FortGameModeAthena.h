@@ -64,6 +64,8 @@ public:
 
     void PlacePlayerOnTeam(AController* Player);
 
+    void UpdateLatentReplicatedTeamData();
+
     void AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController);
 
     void RemoveFromAlivePlayers(AFortPlayerControllerAthena* PC, APlayerState* RemovalInstigator, APawn* FinisherPawn, UFortWeaponItemDefinition* FinishingWeapon, EDeathCause DeathCause, bool bIsTeamSwitching);

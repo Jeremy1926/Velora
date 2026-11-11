@@ -1,6 +1,15 @@
 #include "pch.h"
 #include "Player/FortTeamPrivateInfo.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+
+UClass* AFortTeamPrivateInfo::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortTeamPrivateInfo"));
+
+    return Class;
+}
 
 TMulticastDelegate<void, AFortTeamPrivateInfo*, AFortPlayerState*>& AFortTeamPrivateInfo::GetNotifyPlayerAdded()
 {
