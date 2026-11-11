@@ -11,6 +11,14 @@ void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArra
         .Find("lea r8, [rbp-0x*]; mov [rbp-0x*], edx; lea rdx, [rbp-0x*]; movaps xmm0, [rbp-0x*]; movdqa [rbp-0x*], xmm0; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movaps xmm0, [rsp+0x*]; movdqa [rsp+0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (GetItemInstancesForTemplateView)

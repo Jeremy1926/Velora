@@ -43,11 +43,21 @@ void UFortIrisHelper::OnPlayerControllerInventorySwitched(AFortPlayerController*
         .Find("movdqu [rbp-0x*], xmm1; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerInventorySwitched"))
+        .Find("movdqu [rsp+0x*], xmm1; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto UpdateConnectionFilters = Anchor::Optional<void (*)(UFortIrisHelper*, void**)>(TEXT("UFortIrisHelper::OnPlayerControllerInventorySwitched filter update"))
         .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerInventorySwitched"))
         .Find("lea rdx, [rbp-0x*]; call 0x*; test rbx, rbx")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerInventorySwitched"))
+        .Find("lea rdx, [rsp+0x*]; call 0x*; test rbx, rbx")
         .Find("call 0x*")
         .Target()
         .Get();
