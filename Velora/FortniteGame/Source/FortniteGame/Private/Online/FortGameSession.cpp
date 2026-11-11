@@ -48,6 +48,7 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
     if (auto PlaylistClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))
     {
         static auto PreloadPersistentLevel = PlaylistClass->FindPropertyByName(FName(TEXT("PreloadPersistentLevel")));
+        static auto MaxSquadSize = PlaylistClass->FindPropertyByName(FName(TEXT("MaxSquadSize")));
 
         auto PlaylistData = Config::bReload && PreloadPersistentLevel ? StaticLoadObject(PlaylistClass, nullptr, TEXT("/BlastBerry/Playlists/Playlist_BlastBerrySquad.Playlist_BlastBerrySquad")) : nullptr;
 
@@ -63,7 +64,10 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
                 return *PlaylistClass->FindPropertyByName(FName(Name))->ContainerPtrToValuePtr<int32>(PlaylistData);
             };
 
-            swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")));
+            if (MaxSquadSize)
+                swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d?SquadSizes=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")), *MaxSquadSize->ContainerPtrToValuePtr<int32>(PlaylistData));
+            else
+                swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")));
         }
     }
     else
@@ -75,7 +79,7 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
         int32 MaxPlayers;
 
         if (UFortPlaylistManager::GetMaxTeamInfoForPlaylist(nullptr, PlaylistId, MaxTeamCount, MaxTeamSize, MaxSquadSize, MaxPlayers))
-            swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), PlaylistId, MaxPlayers, MaxTeamSize);
+            swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d?SquadSizes=%d"), PlaylistId, MaxPlayers, MaxTeamSize, MaxSquadSize);
         else
             swprintf_s(Options, TEXT("playlistId=%d"), PlaylistId);
     }
