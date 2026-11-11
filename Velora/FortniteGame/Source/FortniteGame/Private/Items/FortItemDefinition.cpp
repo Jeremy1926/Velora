@@ -140,13 +140,13 @@ int32 UFortItemDefinition::GetMaxStackSize(const UAbilitySystemComponent* Abilit
 {
     static auto MaxStackSize = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("MaxStackSize")));
     static auto GetMaxStackSize = Anchor::VirtualFunction<int32 (*)(const UFortItemDefinition*, const UAbilitySystemComponent*)>(TEXT("UFortItemDefinition::GetMaxStackSize"))
-        .If(MaxStackSize->GetSize() != sizeof(int32))
+        .If(MaxStackSize && MaxStackSize->GetSize() != sizeof(int32))
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "add rcx, %x", MaxStackSize, "cmp eax, 0x7ffffffe")
         .Or()
-        .If(MaxStackSize->GetSize() != sizeof(int32))
+        .If(MaxStackSize && MaxStackSize->GetSize() != sizeof(int32))
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "add rcx, %x", MaxStackSize, "cvttss2si *, xmm0; cmp *, 0x7ffffffe")
         .Or()
-        .If(MaxStackSize->GetSize() == sizeof(int32))
+        .If(MaxStackSize && MaxStackSize->GetSize() == sizeof(int32))
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), "cmp dword ptr [*+%x], 0x7ffffffe", MaxStackSize)
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortItemDefinition:GetMaxStackSize"))

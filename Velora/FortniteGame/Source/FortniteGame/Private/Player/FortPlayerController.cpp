@@ -411,6 +411,11 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Start()
         .Find("call [r8+*]")
         .LogSlot(TEXT("UFortWorldItem::SetLoadedAmmo"))
+        .Or()
+        .VirtualStartHas(*(const void* const* const*)((uint8_t*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")) + InventoryOwnerOffset), "call r8; test rax, rax; jz *; mov r8, [rax]; mov edx, *; mov rcx, rax; call [r8+0x*]")
+        .Start()
+        .Find("call [r8+*]")
+        .LogSlot(TEXT("UFortWorldItem::SetLoadedAmmo"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortWorldItem"));
 
     auto bInitialized = Original(OnMcpProfilesInitialized, bForceSync);
