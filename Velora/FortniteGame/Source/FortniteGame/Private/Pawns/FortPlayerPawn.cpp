@@ -447,6 +447,12 @@ void AFortPlayerPawn::HandleInVehicleUpdate_ExitingVehicle(const FFortPlayerPawn
         .Find("mov byte ptr [*+0x*], 0x1; mov [*+0x*], *; call 0x*; lea rcx, [rbx+0x*]; xor edx, edx; call 0x*; lea rdx, [rsp+0x*]; mov rcx, rbx; call 0x*")
         .Find("call 0x*", 3)
         .Target()
+        .Or()
+        .If(!StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_InVehicle")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")))
+        .Body(TEXT("/Script/FortniteGame.FortVehicleSeatComponent:OnRep_PlayerSlots"))
+        .Find("mov byte ptr [*+0x*], 0x1; mov [*+0x*], *; call 0x*; lea rdx, [*]; mov [*+0x*], *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
         .Optional()
         .Inline());
 
