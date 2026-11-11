@@ -167,6 +167,19 @@ int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
 
 bool UFortItemDefinition::DoesAllowMultipleStacks() const
 {
+    static auto bAllowMultipleStacks = StaticClass()->FindPropertyByName(FName(TEXT("bAllowMultipleStacks")));
+    static auto TraitsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_Traits"));
+    static auto Traits = TraitsData ? TraitsData->FindPropertyByName(FName(TEXT("Traits"))) : nullptr;
+
+    if (!bAllowMultipleStacks && Traits)
+    {
+        static auto SingleStack = FGameplayTag::RequestGameplayTag(FName(TEXT("Item.Trait.SingleStack")), false);
+
+        auto Data = GetItemComponentData(TraitsData);
+
+        return !Data || !Traits->ContainerPtrToValuePtr<FGameplayTagContainer>(Data)->HasTag(SingleStack);
+    }
+
     static auto DoesAllowMultipleStacks = Anchor::VirtualFunction<bool (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"))
         .BoolGetter(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks"))))
         .Get();

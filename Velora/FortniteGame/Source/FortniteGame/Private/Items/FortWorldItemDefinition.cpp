@@ -3,6 +3,7 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "GameplayTagContainer.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -32,7 +33,16 @@ bool UFortWorldItemDefinition::SupportsQuickbarFocus() const
 {
     static auto bSupportsQuickbarFocus = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bSupportsQuickbarFocus")));
 
-    return bSupportsQuickbarFocus->GetPropertyValue_InContainer(this);
+    if (bSupportsQuickbarFocus)
+        return bSupportsQuickbarFocus->GetPropertyValue_InContainer(this);
+
+    static auto TraitsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_Traits"));
+    static auto Traits = TraitsData ? TraitsData->FindPropertyByName(FName(TEXT("Traits"))) : nullptr;
+    static auto DisallowQuickbarFocus = FGameplayTag::RequestGameplayTag(FName(TEXT("Item.Trait.DisallowQuickbarFocus")), false);
+
+    auto Data = Traits ? GetItemComponentData(TraitsData) : nullptr;
+
+    return !Data || !Traits->ContainerPtrToValuePtr<FGameplayTagContainer>(Data)->HasTag(DisallowQuickbarFocus);
 }
 
 UObject* UFortWorldItemDefinition::GetPickupItemComponent() const
