@@ -952,3 +952,10 @@ AFortBroadcastSpectatorInfo* AFortGameStateAthena::GetBroadcastSpectatorInfo() c
 
     return *BroadcastSpectatorInfo->ContainerPtrToValuePtr<AFortBroadcastSpectatorInfo*>(this);
 }
+
+AFortSpecialActorReplicationInfo* AFortGameStateAthena::GetSpecialActorData() const
+{
+    static auto SpecialActorData = GetClass()->FindPropertyByName(FName(TEXT("SpecialActorData")));
+
+    return SpecialActorData ? *SpecialActorData->ContainerPtrToValuePtr<AFortSpecialActorReplicationInfo*>(this) : nullptr;
+}

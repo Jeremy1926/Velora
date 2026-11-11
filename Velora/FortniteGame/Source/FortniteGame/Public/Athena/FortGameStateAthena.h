@@ -16,6 +16,7 @@ class AFortBroadcastSpectatorInfo;
 class AFortGameplayMutator;
 class AFortPawn;
 class AFortSafeZoneIndicator;
+class AFortSpecialActorReplicationInfo;
 class AFortVolumeManager;
 class UFortWorldItemDefinition;
 class UScriptStruct;
@@ -97,6 +98,8 @@ public:
     void SetSafeZoneIndicator(AFortSafeZoneIndicator* InSafeZoneIndicator);
 
     AFortBroadcastSpectatorInfo* GetBroadcastSpectatorInfo() const;
+
+    AFortSpecialActorReplicationInfo* GetSpecialActorData() const;
 
     float GetSafeZonePauseTime() const;
 

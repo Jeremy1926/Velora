@@ -322,6 +322,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortGameStateAthena.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaActorSpawnerData.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor\AthenaSpecialActorComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaAircraft.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaMapInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaSupplyDrop.h" />
@@ -387,6 +388,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStateZone.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Player\FortPlayerStatePvP.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameStateZone.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortSpecialActorReplicationInfo.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeapon.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeap_BuildingTool.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeap_EditingTool.h" />
@@ -744,6 +746,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortGameStateAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaActorSpawnerData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor\AthenaSpecialActorComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaAircraft.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaMapInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaSupplyDrop.cpp" />
@@ -840,6 +843,7 @@
     <ClCompile Include="..\Engine\Source\Runtime\Core\Private\Internationalization\Text.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerStateZone.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameStateZone.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortSpecialActorReplicationInfo.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeapon.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeap_BuildingTool.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeap_EditingTool.cpp" />

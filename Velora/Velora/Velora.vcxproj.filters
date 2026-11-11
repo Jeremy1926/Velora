@@ -1335,6 +1335,9 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor\AthenaSpecialActorComponent.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public\Athena\SpecialActor</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\FortAthenaActorSpawnerData.h">
       <Filter>FortniteGame\Source\FortniteGame\Public\Athena</Filter>
     </ClInclude>
@@ -1471,6 +1474,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Public\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortGameStateZone.h">
+      <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortSpecialActorReplicationInfo.h">
       <Filter>FortniteGame\Source\FortniteGame\Public</Filter>
     </ClInclude>
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Weapons\FortWeapon.h">
@@ -2510,6 +2516,9 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor\FortGlobalActorRegistrySubsystem.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor</Filter>
     </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor\AthenaSpecialActorComponent.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private\Athena\SpecialActor</Filter>
+    </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortAthenaActorSpawnerData.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private\Athena</Filter>
     </ClCompile>
@@ -2796,6 +2805,9 @@
       <Filter>FortniteGame\Source\FortniteGame\Private\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameStateZone.cpp">
+      <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortSpecialActorReplicationInfo.cpp">
       <Filter>FortniteGame\Source\FortniteGame\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Weapons\FortWeapon.cpp">
