@@ -52,6 +52,7 @@ FLogCategoryBase LogVelora(TEXT("LogVelora"), ELogVerbosity::Log, ELogVerbosity:
 static auto bAnchorHostSet = []
 {
     Anchor::SetHost({ .Log = &Scanner::Log, .FindVTable = &Scanner::FindVTable });
+    Anchor::Warm();
 
     return true;
 }();

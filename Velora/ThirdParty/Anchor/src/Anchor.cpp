@@ -246,6 +246,158 @@ namespace Anchor
         return Table;
     }
 
+    static uint64_t TextKey(const uint8_t* Address)
+    {
+        uint64_t Key = 0;
+
+        for (uint32_t Index = 0; Index < 8; Index++)
+            Key = Key << 8 | Address[Index];
+
+        return Key;
+    }
+
+    static const std::vector<std::pair<uint64_t, uint32_t>>& TextKeys(int32_t Kind)
+    {
+        static auto Build = [](int32_t Kind)
+        {
+            std::vector<std::pair<uint64_t, uint32_t>> Table;
+            auto Image = Base();
+            auto Size = ImageSize();
+            auto& Entries = References()[Kind];
+
+            for (auto Entry = Entries.begin(); Entry != Entries.end(); Entry++)
+            {
+                auto Target = *Entry >> 32;
+
+                if ((Entry == Entries.begin() || (Entry[-1] >> 32) != Target) && Target + 8 <= Size)
+                    Table.emplace_back(TextKey(Image + Target), (uint32_t)Target);
+            }
+
+            std::sort(Table.begin(), Table.end());
+
+            return Table;
+        };
+
+        static auto Leas = Build(1);
+        static auto Loads = Build(3);
+
+        return Kind == 1 ? Leas : Loads;
+    }
+
+    static const std::vector<std::pair<uint64_t, uint32_t>>& PointerTextKeys()
+    {
+        static auto Table = []
+        {
+            std::vector<std::pair<uint64_t, uint32_t>> Table;
+            auto Image = Base();
+            auto Size = ImageSize();
+            auto& Entries = Pointers();
+
+            for (size_t Index = 0; Index < Entries.size(); Index++)
+            {
+                if ((Entries[Index] >> 32) + 8 <= Size)
+                    Table.emplace_back(TextKey(Image + (Entries[Index] >> 32)), (uint32_t)Index);
+            }
+
+            std::sort(Table.begin(), Table.end());
+
+            return Table;
+        }();
+
+        return Table;
+    }
+
+    static const std::array<uint64_t, 256>& CodeByteCounts()
+    {
+        static auto Counts = []
+        {
+            std::array<uint64_t, 256> Counts{};
+
+            for (auto& Section : Sections())
+            {
+                if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                    continue;
+
+                auto Begin = Base() + Section.VirtualAddress;
+                auto End = Begin + Section.Misc.VirtualSize;
+
+                for (auto Address = Begin; Address < End; Address++)
+                    Counts[*Address]++;
+            }
+
+            return Counts;
+        }();
+
+        return Counts;
+    }
+
+    static const std::array<uint64_t, 256>& ImageByteCounts()
+    {
+        static auto Counts = []
+        {
+            std::array<uint64_t, 256> Counts{};
+
+            for (auto& Section : Sections())
+            {
+                auto Begin = Base() + Section.VirtualAddress;
+                auto End = Begin + Section.Misc.VirtualSize;
+
+                for (auto Address = Begin; Address < End; Address++)
+                    Counts[*Address]++;
+            }
+
+            return Counts;
+        }();
+
+        return Counts;
+    }
+
+    static std::vector<const uint8_t*> FindWideTexts(const wchar_t* Text, size_t Size)
+    {
+        std::vector<const uint8_t*> Found;
+        auto Bytes = (const uint8_t*)Text;
+        auto& Counts = ImageByteCounts();
+        size_t Rarest = 0;
+
+        for (size_t Index = 1; Index < Size; Index++)
+        {
+            if (Counts[Bytes[Index]] < Counts[Bytes[Rarest]])
+                Rarest = Index;
+        }
+
+        for (auto& Section : Sections())
+        {
+            auto Begin = Base() + Section.VirtualAddress;
+            auto End = Begin + Section.Misc.VirtualSize;
+
+            if (Begin + Size > End)
+                continue;
+
+            auto Last = End - Size + Rarest;
+
+            for (auto Hit = (const uint8_t*)memchr(Begin + Rarest, Bytes[Rarest], Last - (Begin + Rarest) + 1); Hit; Hit = Hit + 1 <= Last ? (const uint8_t*)memchr(Hit + 1, Bytes[Rarest], Last - Hit) : nullptr)
+            {
+                auto Address = Hit - Rarest;
+
+                if (!((Address - Begin) % sizeof(wchar_t)) && !memcmp(Address, Text, Size))
+                    Found.push_back(Address);
+            }
+        }
+
+        return Found;
+    }
+
+    void Warm()
+    {
+        References();
+        Pointers();
+        Texts();
+        TextKeys(1);
+        PointerTextKeys();
+        CodeByteCounts();
+        ImageByteCounts();
+    }
+
     template<typename PredicateType>
     static const uint8_t* FindIndexed(int32_t Kind, const void* Target, PredicateType Predicate)
     {
@@ -351,10 +503,24 @@ namespace Anchor
             return false;
         };
 
-        for (auto Entry = Table.begin(); Entry != Table.end() && !Found; Entry++)
+        if (Size >= 8)
         {
-            if ((Entry == Table.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)) && FindReference(Image + (*Entry >> 32)))
-                Found = Image + (*Entry >> 32);
+            auto& Keys = TextKeys(1);
+            auto Key = TextKey((const uint8_t*)Text);
+
+            for (auto Entry = std::lower_bound(Keys.begin(), Keys.end(), std::make_pair(Key, 0u)); Entry != Keys.end() && Entry->first == Key && !Found; Entry++)
+            {
+                if (IsText(Image + Entry->second) && FindReference(Image + Entry->second))
+                    Found = Image + Entry->second;
+            }
+        }
+        else
+        {
+            for (auto Entry = Table.begin(); Entry != Table.end() && !Found; Entry++)
+            {
+                if ((Entry == Table.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)) && FindReference(Image + (*Entry >> 32)))
+                    Found = Image + (*Entry >> 32);
+            }
         }
 
         AcquireSRWLockShared(&WrittenLock);
@@ -380,14 +546,43 @@ namespace Anchor
 
         auto& LoadTable = References()[3];
 
-        for (auto Entry = LoadTable.begin(); Entry != LoadTable.end() && !Found; Entry++)
+        if (Size >= 8)
         {
-            if ((Entry == LoadTable.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)))
-                Found = Image + (*Entry >> 32);
+            auto& Keys = TextKeys(3);
+            auto Key = TextKey((const uint8_t*)Text);
+
+            for (auto Entry = std::lower_bound(Keys.begin(), Keys.end(), std::make_pair(Key, 0u)); Entry != Keys.end() && Entry->first == Key && !Found; Entry++)
+            {
+                if (IsText(Image + Entry->second))
+                    Found = Image + Entry->second;
+            }
+        }
+        else
+        {
+            for (auto Entry = LoadTable.begin(); Entry != LoadTable.end() && !Found; Entry++)
+            {
+                if ((Entry == LoadTable.begin() || (Entry[-1] >> 32) != (*Entry >> 32)) && IsText(Image + (*Entry >> 32)))
+                    Found = Image + (*Entry >> 32);
+            }
         }
 
         if (Found)
             return FindIndexed(3, Found, [Found](const uint8_t* Address) { return InCode(Address, 0, 7) && Address[0] == 0x0F && (Address[1] == 0x10 || Address[1] == 0x28) && (Address[2] & 0xC7) == 0x05 && Address + 7 + *(int32_t*)(Address + 3) == Found; });
+
+        if (Size >= 8)
+        {
+            auto& Keys = PointerTextKeys();
+            auto Key = TextKey((const uint8_t*)Text);
+            auto& Entries = Pointers();
+
+            for (auto Entry = std::lower_bound(Keys.begin(), Keys.end(), std::make_pair(Key, 0u)); Entry != Keys.end() && Entry->first == Key; Entry++)
+            {
+                if (IsText(Image + (Entries[Entry->second] >> 32)))
+                    return FindReference(Image + (uint32_t)Entries[Entry->second]);
+            }
+
+            return nullptr;
+        }
 
         for (auto Entry : Pointers())
         {
@@ -467,6 +662,15 @@ namespace Anchor
                 Bytes.push_back((int)strtoul(Character, (char**)&Character, 16));
         }
 
+        auto& Counts = CodeByteCounts();
+        size_t Rarest = Bytes.size();
+
+        for (size_t Index = 0; Index < Bytes.size(); Index++)
+        {
+            if (Bytes[Index] != -1 && (Rarest == Bytes.size() || Counts[Bytes[Index]] < Counts[Bytes[Rarest]]))
+                Rarest = Index;
+        }
+
         for (auto& Section : Sections())
         {
             if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
@@ -475,8 +679,22 @@ namespace Anchor
             auto Begin = Base() + Section.VirtualAddress;
             auto End = Begin + Section.Misc.VirtualSize;
 
-            for (auto Address = Begin; Address + Bytes.size() <= End; Address++)
+            if (Rarest == Bytes.size())
             {
+                if (Begin + Bytes.size() <= End)
+                    return Begin;
+
+                continue;
+            }
+
+            if (Begin + Bytes.size() > End)
+                continue;
+
+            auto Last = End - Bytes.size() + Rarest;
+
+            for (auto Hit = (const uint8_t*)memchr(Begin + Rarest, Bytes[Rarest], Last - (Begin + Rarest) + 1); Hit; Hit = Hit + 1 <= Last ? (const uint8_t*)memchr(Hit + 1, Bytes[Rarest], Last - Hit) : nullptr)
+            {
+                auto Address = Hit - Rarest;
                 auto Index = 0ull;
 
                 while (Index < Bytes.size() && (Bytes[Index] == -1 || Address[Index] == Bytes[Index]))
@@ -1000,42 +1218,29 @@ namespace Anchor
         const uint8_t* Found = nullptr;
         int64_t FoundSize = 0;
 
-        for (auto& Section : Sections())
-        {
-            auto Begin = Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
+        auto Image = Base();
+        auto& Table = References()[1];
 
-            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
+        for (auto Address : FindWideTexts(Text, Size))
+        {
+            for (auto Item = std::lower_bound(Table.begin(), Table.end(), (uint64_t)(Address - Image) << 32); Item != Table.end() && (*Item >> 32) == (uint64_t)(Address - Image); Item++)
             {
-                if (*(wchar_t*)Address != *Text || memcmp(Address, Text, Size))
+                auto Reference = Image + (uint32_t)*Item;
+
+                if (std::any_of(Sections().begin(), Sections().end(), [&](auto& Section) { return Reference == Image + Section.VirtualAddress; }))
                     continue;
 
-                for (auto& CodeSection : Sections())
+                auto Entry = FindFunction(Reference);
+
+                if (!Entry)
+                    continue;
+
+                auto EntrySize = FindFunctionEnd(Entry) - (Image + Entry->BeginAddress);
+
+                if (!Found || EntrySize < FoundSize)
                 {
-                    if (!(CodeSection.Characteristics & IMAGE_SCN_MEM_EXECUTE))
-                        continue;
-
-                    auto CodeBegin = Base() + CodeSection.VirtualAddress;
-                    auto CodeEnd = CodeBegin + CodeSection.Misc.VirtualSize;
-
-                    for (auto Reference = CodeBegin + 1; Reference + 6 <= CodeEnd; Reference++)
-                    {
-                        if (Reference[0] != 0x8D || (Reference[1] & 0xC7) != 0x05 || Reference + 6 + *(int32_t*)(Reference + 2) != Address)
-                            continue;
-
-                        auto Entry = FindFunction(Reference);
-
-                        if (!Entry)
-                            continue;
-
-                        auto EntrySize = FindFunctionEnd(Entry) - (Base() + Entry->BeginAddress);
-
-                        if (!Found || EntrySize < FoundSize)
-                        {
-                            Found = (Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference;
-                            FoundSize = EntrySize;
-                        }
-                    }
+                    Found = (Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference;
+                    FoundSize = EntrySize;
                 }
             }
         }
@@ -1104,21 +1309,12 @@ namespace Anchor
         auto Size = (wcslen(Text) + 1) * sizeof(wchar_t);
         auto bFound = false;
 
-        for (auto& Section : Sections())
+        for (auto Address : FindWideTexts(Text, Size))
         {
-            auto Begin = Base() + Section.VirtualAddress;
-            auto End = Begin + Section.Misc.VirtualSize;
+            bFound = true;
 
-            for (auto Address = Begin; Address + Size <= End; Address += sizeof(wchar_t))
-            {
-                if (*(wchar_t*)Address == *Text && !memcmp(Address, Text, Size))
-                {
-                    bFound = true;
-
-                    if (auto Code = Reference(Address, Instructions); Code.Get())
-                        return Code;
-                }
-            }
+            if (auto Code = Reference(Address, Instructions); Code.Get())
+                return Code;
         }
 
         auto Narrow = NarrowText(Text);

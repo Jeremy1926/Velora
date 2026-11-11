@@ -22,6 +22,7 @@ namespace Anchor
     };
 
     void SetHost(const FHost& InHost);
+    void Warm();
 
     uint8_t* Base();
 
