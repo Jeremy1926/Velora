@@ -22,7 +22,6 @@
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
-#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -98,17 +97,11 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
             SetContainerLootTierKey(ContainerLootTierKey);
         }
 
-        if (Config::bLogReplication && ContainerLootTierKey == NAME_None)
-            UE_LOG(LogVelora, Log, TEXT("Container %s group %s has no loot tier key"), *GetName(), *GetSearchLootTierGroup().ToString());
-
         if (ContainerLootTierKey != NAME_None)
         {
             TArray<FFortItemEntry> LootToDrop;
 
             UFortLootPackage::PickLootDrops(LootToDrop, -1, ContainerLootTierKey, GetStaticGameplayTags(), true, false);
-
-            if (Config::bLogReplication)
-                UE_LOG(LogVelora, Log, TEXT("Container %s group %s key %s drops %d"), *GetName(), *GetSearchLootTierGroup().ToString(), *ContainerLootTierKey.ToString(), LootToDrop.Num());
 
             GetHighestRarity() = EFortRarity::Handmade;
 
