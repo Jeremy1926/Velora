@@ -185,7 +185,13 @@ void IConsoleVariable::Set(const TCHAR* InValue, EConsoleVariableFlags SetBy)
         .Last("call [rax+0x*]")
         .Get();
 
-    Set(this, InValue, SetBy, 0);
+    static auto SetByCode = Anchor::Offset(TEXT("ECVF_SetByCode"))
+        .String(TEXT("PLAYLIST: Garbage Collection is being overridden by Playlist: %s, and is setting it to %f"))
+        .Last("mov r8d, 0x*")
+        .Optional()
+        .Imm();
+
+    Set(this, InValue, SetBy == ECVF_SetByCode && SetByCode > 0 ? (EConsoleVariableFlags)SetByCode : SetBy, 0);
 }
 
 void IConsoleVariable::Set(int32 InValue, EConsoleVariableFlags SetBy)
