@@ -12,4 +12,6 @@ public:
     static UFortGameStateComponent_BlastBerryManager* Get(const UObject* WorldContextObject);
 
     void HandleTeamRemovedFromGame(uint8 TeamId);
+
+    float GetServerTimeForRespawnsDisabled() const;
 };

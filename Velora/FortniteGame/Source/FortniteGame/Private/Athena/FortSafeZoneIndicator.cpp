@@ -4,6 +4,7 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
+#include "FortGameStateComponent_BlastBerryManager.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameplayEffectTypes.h"
@@ -16,6 +17,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 UScriptStruct* FFortSafeZonePhaseInfo::StaticStruct()
 {
@@ -141,6 +143,15 @@ void AFortSafeZoneIndicator::StartPhase(int32 InPhaseIndex)
 
     ForceNetUpdate();
     OnSafeZonePhaseChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this)->ProcessMulticastDelegate<UObject>(nullptr);
+
+    if (Config::bLogReplication)
+    {
+        auto GameState = GetWorld()->GetGameState();
+        auto BlastBerryManager = UFortGameStateComponent_BlastBerryManager::Get(this);
+        const FVector PreviousCenterValue = PreviousCenter->GetPropertyValue_InContainer<FVector>(this);
+
+        UE_LOG(LogVelora, Log, TEXT("SafeZone phase %d at %.2f: previous (%.2f, %.2f) radius %.2f, next (%.2f, %.2f) radius %.2f, shrink %.2f to %.2f, reboots end %.2f"), InPhaseIndex, GameState ? GameState->GetServerWorldTimeSeconds() : 0.0f, PreviousCenterValue.X, PreviousCenterValue.Y, *PreviousRadius->ContainerPtrToValuePtr<float>(this), Center.X, Center.Y, SafeZonePhase.Radius, GetSafeZoneStartShrinkTime(), GetSafeZoneFinishShrinkTime(), BlastBerryManager ? BlastBerryManager->GetServerTimeForRespawnsDisabled() : 0.0f);
+    }
 }
 
 bool AFortSafeZoneIndicator::ConstructMapDefaultPhase(int32 PhaseToConstruct, FFortSafeZonePhaseInfo& OutConstructedPhase) const
@@ -288,6 +299,13 @@ void AFortSafeZoneIndicator::OnSafeZoneTimerPauseChanged(bool bIsPaused)
 
     if (!GameState || !GetClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
         return;
+
+    if (Config::bLogReplication)
+    {
+        auto BlastBerryManager = UFortGameStateComponent_BlastBerryManager::Get(this);
+
+        UE_LOG(LogVelora, Log, TEXT("SafeZone paused %d at %.2f: shrink %.2f to %.2f, remaining %.2f, reboots end %.2f"), (int32)bIsPaused, GameState->GetServerWorldTimeSeconds(), GetSafeZoneStartShrinkTime(), GetSafeZoneFinishShrinkTime(), GetTimeRemainingWhenPhasePaused(), BlastBerryManager ? BlastBerryManager->GetServerTimeForRespawnsDisabled() : 0.0f);
+    }
 
     auto& TimeRemainingWhenPhasePaused = GetTimeRemainingWhenPhasePaused();
 

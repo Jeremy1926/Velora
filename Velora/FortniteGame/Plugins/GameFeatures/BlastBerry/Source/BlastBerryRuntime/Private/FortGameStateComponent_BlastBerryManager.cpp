@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameStateBase.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
@@ -30,4 +31,11 @@ void UFortGameStateComponent_BlastBerryManager::HandleTeamRemovedFromGame(uint8 
         .Get();
 
     HandleTeamRemovedFromGame(this, TeamId);
+}
+
+float UFortGameStateComponent_BlastBerryManager::GetServerTimeForRespawnsDisabled() const
+{
+    static auto ServerTimeForRespawnsDisabled = GetClass()->FindPropertyByName(FName(TEXT("ServerTimeForRespawnsDisabled")));
+
+    return ServerTimeForRespawnsDisabled ? *ServerTimeForRespawnsDisabled->ContainerPtrToValuePtr<float>(this) : 0.0f;
 }
