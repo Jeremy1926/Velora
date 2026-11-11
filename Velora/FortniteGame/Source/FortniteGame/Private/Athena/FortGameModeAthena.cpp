@@ -44,6 +44,7 @@
 #include "Engine/GameEngine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/NetDriver.h"
+#include "Engine/NetConnection.h"
 #include "Online/Iris/FortIrisHelper.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
@@ -55,6 +56,7 @@
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 PATCH(AFortGameModeAthena, HandlePostSafeZonePhaseChanged, Anchor::Patch()
     .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:HandlePostSafeZonePhaseChanged"))
@@ -488,6 +490,18 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             }
 
             PlayerState->SetWorldPlayerId(WorldPlayerId);
+        }
+
+        if (Config::bLogReplication && bInitializeGameplay)
+        {
+            auto NetDriver = GetWorld()->GetNetDriver();
+            auto NetConnection = PlayerController->GetNetConnection();
+            auto GameState = GetWorld()->GetGameState();
+
+            if (NetDriver && NetDriver->GetReplicationSystem())
+                UE_LOG(LogVelora, Log, TEXT("Warmup pawn %s for %s, iris"), *Pawn->GetName(), *PlayerController->GetName());
+            else if (NetDriver && NetConnection && GameState)
+                UE_LOG(LogVelora, Log, TEXT("Warmup pawn %s for %s, GameState channel %d"), *Pawn->GetName(), *PlayerController->GetName(), (int32)(NetConnection->GetActorChannels().FindRef(TWeakObjectPtr<AActor>(GameState)) != nullptr));
         }
 
         PlayerState->ApplyCharacterCustomization(Pawn);

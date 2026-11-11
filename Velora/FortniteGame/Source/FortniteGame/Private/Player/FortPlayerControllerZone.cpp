@@ -14,6 +14,7 @@
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 UScriptStruct* FFortPlayerDeathReport::StaticStruct()
 {
@@ -99,6 +100,9 @@ void AFortPlayerControllerZone::ServerAcknowledgePossession_Implementation(APawn
     auto bInitializeGameplay = P && !GetAcknowledgedPawn();
 
     Super::ServerAcknowledgePossession_Implementation(P);
+
+    if (Config::bLogReplication)
+        UE_LOG(LogVelora, Log, TEXT("Acknowledged pawn %s for %s, initialize abilities %d"), P ? *P->GetName() : TEXT("none"), *GetName(), (int32)(bInitializeGameplay && UFortGlobals::HasInitializePlayerGameplayAbilities()));
 
     if (bInitializeGameplay && UFortGlobals::HasInitializePlayerGameplayAbilities())
     {
