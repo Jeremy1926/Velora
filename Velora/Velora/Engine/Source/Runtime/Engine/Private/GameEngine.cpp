@@ -91,6 +91,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         if (auto AllowEncryption = IConsoleManager::Get().FindConsoleVariable(TEXT("net.AllowEncryption")))
             AllowEncryption->Set(TEXT("1"), ECVF_SetByCode);
 
+        if (auto EnableWeaponMetaSoundParameterPack = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Rollback.EnableWeaponMetaSoundParameterPack")))
+            EnableWeaponMetaSoundParameterPack->Set(TEXT("0"), ECVF_SetByCode);
+
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 
