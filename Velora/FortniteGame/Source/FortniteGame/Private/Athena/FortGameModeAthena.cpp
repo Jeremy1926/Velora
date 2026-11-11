@@ -499,9 +499,13 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             auto GameState = GetWorld()->GetGameState();
 
             if (NetDriver && NetDriver->GetReplicationSystem())
+            {
                 UE_LOG(LogVelora, Log, TEXT("Warmup pawn %s for %s, iris"), *Pawn->GetName(), *PlayerController->GetName());
+            }
             else if (NetDriver && NetConnection && GameState)
+            {
                 UE_LOG(LogVelora, Log, TEXT("Warmup pawn %s for %s, GameState channel %d"), *Pawn->GetName(), *PlayerController->GetName(), (int32)(NetConnection->GetActorChannels().FindRef(TWeakObjectPtr<AActor>(GameState)) != nullptr));
+            }
         }
 
         PlayerState->ApplyCharacterCustomization(Pawn);
