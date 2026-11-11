@@ -43,6 +43,14 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
         .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("lea r14, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov rdx, r14; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; cmp byte ptr [0x*], 0x1"); })
+        .Find("add rsp, 0x*; pop r15; pop r14; pop *; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
         .Inline());
 
@@ -54,6 +62,107 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
 
 void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension()
 {
+    static auto RuntimeDataClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortMovementMode_BaseExtRuntimeData"));
+
+    if (RuntimeDataClass && RuntimeDataClass->IsA(UClass::StaticClass()))
+    {
+        static auto PushedProperty = GetClass()->FindPropertyByName(FName(TEXT("PushedMovementModeExtensionRuntimeData")));
+        static auto ReceivedPackProperty = GetClass()->FindPropertyByName(FName(TEXT("ReceivedPackMovementModeExtensionRuntimeData")));
+        static auto OwnerProperty = GetClass()->FindPropertyByName(FName(TEXT("CharacterOwner")));
+        static auto LogicID = RuntimeDataClass->FindPropertyByName(FName(TEXT("LogicID")));
+        static auto RuntimeID = RuntimeDataClass->FindPropertyByName(FName(TEXT("RuntimeID")));
+        static auto bForceManualEnd = RuntimeDataClass->FindPropertyByName(FName(TEXT("bForceManualEnd")));
+        static auto bForceManualActivationNetworked = RuntimeDataClass->FindPropertyByName(FName(TEXT("bForceManualActivationNetworked")));
+        static auto bForceManualEndNetworked = RuntimeDataClass->FindPropertyByName(FName(TEXT("bForceManualEndNetworked")));
+        static auto EndOnServerIfNoUpdateReceived = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.CharacterMovement.EndMMEOnServerIfNoUpdateReceived"));
+
+        static auto NewlyPushedExtensions = Anchor::Offset(TEXT("UFortMovementComp_Character::NewlyPushedMovementModeExtensions"))
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea r14, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov rdx, r14; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; cmp byte ptr [0x*], 0x1"); })
+            .Find("cmp byte ptr [0x*], 0x1")
+            .Find("lea r14, [rbx+0x*]")
+            .Disp();
+
+        static auto CreateRuntimeData = Anchor::Optional<UObject* (*)(UFortMovementComp_Character*, const int32*, uint8)>(TEXT("UFortMovementComp_Character::CreateRuntimeDataForLogic"))
+            .Pattern("33 DB 41 8A F0 4C 8B F2 48 8B F9 48 39 99 ? ? 00 00 74 ? E8")
+            .Start()
+            .Get();
+
+        static int32 ObjectForceManualEndSlot = 0;
+        static int32 ObjectCopyFromMoveDataSlot = 0;
+
+        if (!PushedProperty || !ReceivedPackProperty || !OwnerProperty || !LogicID || !RuntimeID || !bForceManualEnd || !bForceManualActivationNetworked || !bForceManualEndNetworked || NewlyPushedExtensions <= 0 || !CreateRuntimeData)
+            return;
+
+        if (!ObjectForceManualEndSlot)
+        {
+            auto Image = Anchor::Base();
+            auto Headers = (IMAGE_NT_HEADERS*)(Image + ((IMAGE_DOS_HEADER*)Image)->e_lfanew);
+            auto VTable = *(const uint8***)RuntimeDataClass->GetDefaultObject(false);
+            char ForceManualEnd[64];
+            char CopyFromMoveData[192];
+
+            snprintf(ForceManualEnd, sizeof(ForceManualEnd), "mov byte ptr [rcx+0x%x], 0x1; ret", bForceManualEnd->GetOffset_ForInternal());
+            snprintf(CopyFromMoveData, sizeof(CopyFromMoveData), "movzx eax, byte ptr [rdx+0x%x]; mov [rcx+0x%x], al; movzx eax, byte ptr [rdx+0x%x]; mov [rcx+0x%x], al; ret", bForceManualActivationNetworked->GetOffset_ForInternal(), bForceManualActivationNetworked->GetOffset_ForInternal(), bForceManualEndNetworked->GetOffset_ForInternal(), bForceManualEndNetworked->GetOffset_ForInternal());
+
+            for (int32 Slot = 0; !ObjectForceManualEndSlot && Slot < 0x600 && VTable[Slot / sizeof(void*)] > Image && VTable[Slot / sizeof(void*)] < Image + Headers->OptionalHeader.SizeOfImage; Slot += sizeof(void*))
+            {
+                if (Anchor::At(VTable[Slot / sizeof(void*)]).Is(CopyFromMoveData))
+                    ObjectCopyFromMoveDataSlot = Slot;
+                else if (Anchor::At(VTable[Slot / sizeof(void*)]).Is(ForceManualEnd))
+                    ObjectForceManualEndSlot = Slot;
+            }
+
+            UE_LOG(LogVelora, Log, TEXT("UFortMovementMode_BaseExtRuntimeData ForceManualEnd slot 0x%X, CopyFromMoveData slot 0x%X"), ObjectForceManualEndSlot, ObjectCopyFromMoveDataSlot);
+        }
+
+        struct FNewlyPushedObjectExtension
+        {
+            int32 LogicID;
+            uint8 RuntimeID;
+        };
+
+        auto& NewlyPushedObjects = *(TArray<FNewlyPushedObjectExtension>*)((uint8*)this + NewlyPushedExtensions);
+        auto& ReceivedObjects = *ReceivedPackProperty->ContainerPtrToValuePtr<TArray<UObject*>>(this);
+        auto& PushedObjects = *PushedProperty->ContainerPtrToValuePtr<TArray<UObject*>>(this);
+        auto Owner = *OwnerProperty->ContainerPtrToValuePtr<AActor*>(this);
+
+        if (Owner && Owner->GetLocalRole() == ROLE_Authority)
+        {
+            for (auto& NewExtension : NewlyPushedObjects)
+            {
+                if (auto RuntimeData = CreateRuntimeData(this, &NewExtension.LogicID, NewExtension.RuntimeID))
+                    PushedObjects.Add(RuntimeData);
+            }
+
+            for (auto PushedData : PushedObjects)
+            {
+                if (!PushedData)
+                    continue;
+
+                bool bUpdateReceived = false;
+
+                for (auto ReceivedData : ReceivedObjects)
+                {
+                    if (!ReceivedData || *LogicID->ContainerPtrToValuePtr<int32>(ReceivedData) != *LogicID->ContainerPtrToValuePtr<int32>(PushedData) || *RuntimeID->ContainerPtrToValuePtr<uint8>(ReceivedData) != *RuntimeID->ContainerPtrToValuePtr<uint8>(PushedData))
+                        continue;
+
+                    if (ObjectCopyFromMoveDataSlot)
+                        Scanner::Virtual<void (*)(UObject*, const UObject*)>(PushedData, ObjectCopyFromMoveDataSlot)(PushedData, ReceivedData);
+
+                    bUpdateReceived = true;
+                }
+
+                if (!bUpdateReceived && ObjectForceManualEndSlot && EndOnServerIfNoUpdateReceived && EndOnServerIfNoUpdateReceived->GetInt() != 0 && Owner->GetRemoteRole() == ROLE_AutonomousProxy)
+                    Scanner::Virtual<void (*)(UObject*)>(PushedData, ObjectForceManualEndSlot)(PushedData);
+            }
+        }
+
+        NewlyPushedObjects.Reset();
+        ReceivedObjects.Reset();
+
+        return;
+    }
+
     static auto ReceivedPackRuntimeData = Anchor::Offset(TEXT("UFortMovementComp_Character::ReceivedPackMovementModeExtensionRuntimeData"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; movsxd rax, dword ptr [rdi+0x*]; mov rsi, [rdi+0x*]; lea r15, [rsi+rax*8]"); })
         .Find("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]")
