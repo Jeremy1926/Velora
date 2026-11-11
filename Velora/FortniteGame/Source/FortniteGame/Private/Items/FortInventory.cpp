@@ -223,6 +223,22 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
     SetItemRequiresUpdate(this, ItemEntry);
 }
 
+FBoolPropertyReference::FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer)
+    : Property(InProperty)
+    , Container(InContainer)
+{
+}
+
+FBoolPropertyReference::operator bool() const
+{
+    return Property->GetPropertyValue_InContainer(Container);
+}
+
+void FBoolPropertyReference::operator=(bool NewValue)
+{
+    Property->SetPropertyValue_InContainer(Container, NewValue);
+}
+
 FFortItemEntryStateValue::FFortItemEntryStateValue(EFortItemEntryState::Type InStateType, int32 InIntValue)
 {
     memset(this, 0, GetTypeSize());
@@ -436,18 +452,18 @@ FGuid& FFortItemEntry::GetItemGuid()
     return ItemGuid;
 }
 
-bool& FFortItemEntry::GetIsReplicatedCopy()
+FBoolPropertyReference FFortItemEntry::GetIsReplicatedCopy()
 {
-    static auto bIsReplicatedCopy = StaticStruct()->FindPropertyByName(FName(TEXT("bIsReplicatedCopy")));
+    static auto bIsReplicatedCopy = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsReplicatedCopy")));
 
-    return *bIsReplicatedCopy->ContainerPtrToValuePtr<bool>(this);
+    return FBoolPropertyReference(bIsReplicatedCopy, this);
 }
 
-bool& FFortItemEntry::GetIsDirty()
+FBoolPropertyReference FFortItemEntry::GetIsDirty()
 {
-    static auto bIsDirty = StaticStruct()->FindPropertyByName(FName(TEXT("bIsDirty")));
+    static auto bIsDirty = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsDirty")));
 
-    return *bIsDirty->ContainerPtrToValuePtr<bool>(this);
+    return FBoolPropertyReference(bIsDirty, this);
 }
 
 TArray<FFortItemEntryStateValue>& FFortItemEntry::GetStateValues()

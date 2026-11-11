@@ -13,6 +13,7 @@
 #include "UObject/Class.h"
 
 class AFortInventory;
+class UBoolProperty;
 class UFortItemDefinition;
 class UFortWorldItem;
 struct FGameplayTag;
@@ -79,6 +80,20 @@ class TArray<FFortItemEntryStateValueConstObject, FDefaultAllocator> : public TR
 {
 };
 
+class FBoolPropertyReference
+{
+public:
+    FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer);
+
+    operator bool() const;
+
+    void operator=(bool NewValue);
+
+private:
+    const UBoolProperty* Property;
+    void* Container;
+};
+
 struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 {
     FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCount, int32 InLevel);
@@ -105,9 +120,9 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     FGuid& GetItemGuid();
 
-    bool& GetIsReplicatedCopy();
+    FBoolPropertyReference GetIsReplicatedCopy();
 
-    bool& GetIsDirty();
+    FBoolPropertyReference GetIsDirty();
 
     TArray<FFortItemEntryStateValue>& GetStateValues();
 

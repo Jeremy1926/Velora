@@ -19,6 +19,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "UObject/ScriptDelegates.h"
+#include "Config.h"
 #include "Scanner.h"
 
 struct FPendingSwap
@@ -455,6 +456,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
             SwapItemGuid = FGuid();
         }
+
+        if (Config::bLogReplication)
+            UE_LOG(LogVelora, Log, TEXT("Pickup %s swap %d can swap %d server quickbar %d overflow %d entries %d add %d give %d"), *ItemDefinition->GetName(), bSwapEquipped, bCanBeSwapped, PlayerController->CanServerTryAddToQuickBar(), WorldInventory->GetOverflowFromAddingItem(PickupItemEntry), Inventory.GetReplicatedEntries().Num(), bCanAddStack, NumberToGive);
 
         if (bSwapEquipped && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0)
             bCanAddStack = false;
