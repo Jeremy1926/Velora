@@ -344,7 +344,7 @@ int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* Pla
 void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UFortKismetLibrary, execK2_RemoveFortItemFromPlayer, Anchor::Hook()
-        .If(Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get())
+        .If(Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get() || ::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0").Or().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [*], *; add rsp, 0x*").Get())
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")));
 
     AFortPlayerController* PlayerController = nullptr;
@@ -1017,6 +1017,12 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayer(FFrame& Stack, void* const 
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
         .Find("xor ebp, ebp")
         .Find("setnz *; add r*, r*; mov [*+0x20], r*; cmp [rsp+0x*], rbp; jz *; call 0x*; mov [rsi], ebp; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+        .Find("setnz *; add [*+0x20], *; movdqa [rbp-0x*], xmm0; call 0x*; mov rdx, rax; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Is("push rbx; sub rsp, 0x20; cmp qword ptr [rdx], 0x0; mov rbx, rdx; jz 0x*; call 0x*; mov rdx, rax; mov rcx, rbx; call 0x*; xor eax, eax; add rsp, 0x20; pop rbx; ret")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")));
 
