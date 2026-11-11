@@ -59,6 +59,14 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
         .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("lea r15, [r14+rax*8]; jmp 0x*; mov rcx, r14; call 0x*; cmp byte ptr [0x*], 0x0; mov [rsp+0x*], rax; jz 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; movsxd rbp, dword ptr [rsi+0x8]; lea eax, [rbp+0x1]; mov [rsi+0x8], eax"); })
+        .Find("add rsp, 0x*; pop r15; pop r14; pop r12; pop rdi; pop rsi; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
         .Inline());
 
@@ -91,6 +99,11 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
             .Or()
             .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea r14, [rdi+0x*]; mov rdx, r14; lea rcx, [rbx+0x*]; call 0x*; cmp byte ptr [0x*], 0x1; jnz 0x*; mov rsi, [r14]"); })
             .Find("mov rsi, [r14]")
+            .Find("lea r14, [rbx+0x*]")
+            .Or()
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea r15, [r14+rax*8]; jmp 0x*; mov rcx, r14; call 0x*; cmp byte ptr [0x*], 0x0; mov [rsp+0x*], rax; jz 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; movsxd rbp, dword ptr [rsi+0x8]; lea eax, [rbp+0x1]; mov [rsi+0x8], eax"); })
+            .Find("lea r15, [r14+rax*8]; jmp 0x*; mov rcx, r14; call 0x*")
+            .Find("cmp byte ptr [0x*], 0x1")
             .Find("lea r14, [rbx+0x*]")
             .Disp();
 
