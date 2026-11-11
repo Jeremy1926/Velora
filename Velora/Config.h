@@ -12,6 +12,7 @@ namespace Config
     constexpr bool bConsole = true;
     constexpr bool bGUI = true;
     inline bool bLategame = false;
+    inline bool bReload = false;
     inline bool bInfiniteAmmo = false;
     inline bool bInfiniteMaterials = false;
     inline bool bPauseSafeZone = false;

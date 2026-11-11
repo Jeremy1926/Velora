@@ -7,6 +7,7 @@
 #include "Items/FortWorldItemDefinition.h"
 #include "Components/FortControllerComponent_Aircraft.h"
 #include "Components/FortControllerComponent_InventoryService.h"
+#include "FortGameStateComponent_BlastBerryManager.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "GameplayEffectTypes.h"
 #include "HAL/IConsoleManager.h"
@@ -194,12 +195,61 @@ void AFortPlayerControllerAthena::OnPawnDied(AFortPlayerPawn* KilledPawn, float 
         }
 
         if (bTeamEliminated)
+        {
             SetMatchPlacement(GameState->GetTeamsLeft());
+
+            if (auto BlastBerryManager = UFortGameStateComponent_BlastBerryManager::Get(this))
+                BlastBerryManager->HandleTeamRemovedFromGame(PlayerState->GetTeamIndex());
+        }
     }
 
     auto& PlayerDeathReport = GetPlayerDeathReport();
 
     GameMode->RemoveFromAlivePlayers(this, PlayerDeathReport.GetKillerPlayerState(), PlayerDeathReport.GetKillerPawn(), PlayerDeathReport.GetKillerWeapon(), AFortPlayerStateAthena::ToDeathCause(InTags, bWasDBNO), false);
+}
+
+void AFortPlayerControllerAthena::FixupInvalidRespawnStats()
+{
+    DETOUR(AFortPlayerControllerAthena, FixupInvalidRespawnStats, Anchor::Hook()
+        .String("AFortPlayerControllerAthena::FixupInvalidRespawnStats")
+        .Optional()
+        .Start()
+        .Inline());
+
+    Original();
+
+    auto World = GetWorld();
+    auto GameMode = Cast<AFortGameModeAthena>(World->GetAuthGameMode());
+    auto GameState = Cast<AFortGameStateAthena>(World->GetGameState());
+    auto PlayerState = Cast<AFortPlayerStateAthena>(GetPlayerState());
+
+    if (!UFortGameStateComponent_BlastBerryManager::Get(this) || !GameMode || !GameState || !PlayerState || GetMyFortPawn() || GameState->GetGamePhase() <= EAthenaGamePhase::Warmup || !GetMarkedAlive() || GameState->IsRespawningAllowed(PlayerState))
+        return;
+
+    if (GameState->GetGamePhase() > EAthenaGamePhase::Aircraft)
+    {
+        auto bTeamEliminated = true;
+
+        for (auto AlivePlayer : GameMode->GetAlivePlayers())
+        {
+            auto AlivePlayerState = AlivePlayer && AlivePlayer != this ? Cast<AFortPlayerStateAthena>(AlivePlayer->GetPlayerState()) : nullptr;
+
+            if (AlivePlayerState && AlivePlayerState->GetTeamIndex() == PlayerState->GetTeamIndex())
+                bTeamEliminated = false;
+        }
+
+        if (bTeamEliminated)
+        {
+            SetMatchPlacement(GameState->GetTeamsLeft());
+
+            if (auto BlastBerryManager = UFortGameStateComponent_BlastBerryManager::Get(this))
+                BlastBerryManager->HandleTeamRemovedFromGame(PlayerState->GetTeamIndex());
+        }
+    }
+
+    auto& PlayerDeathReport = GetPlayerDeathReport();
+
+    GameMode->RemoveFromAlivePlayers(this, PlayerDeathReport.GetKillerPlayerState(), PlayerDeathReport.GetKillerPawn(), PlayerDeathReport.GetKillerWeapon(), PlayerState->GetDeathInfo().GetDeathCause(), false);
 }
 
 void AFortPlayerControllerAthena::SetMatchPlacement(int32 Placement)

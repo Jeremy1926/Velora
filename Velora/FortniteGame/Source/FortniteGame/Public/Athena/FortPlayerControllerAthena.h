@@ -42,6 +42,8 @@ public:
 
     void OnPawnDied(AFortPlayerPawn* KilledPawn, float Damage, const FGameplayTagContainer& InTags, const FGameplayEffectContextHandle& EffectContext, AController* EventInstigator, AActor* DamageCauser, AController* DBNOFinisher);
 
+    void FixupInvalidRespawnStats();
+
     bool GetMarkedAlive() const;
 
     void SetMatchPlacement(int32 Placement);

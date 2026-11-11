@@ -292,6 +292,21 @@
     <Filter Include="FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public">
       <UniqueIdentifier>{E20DC464-C3A6-4DE1-A5B4-FB2DA0557D6F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\BlastBerry">
+      <UniqueIdentifier>{425DD15B-95D7-4D72-BE18-19575196E33B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\BlastBerry\Source">
+      <UniqueIdentifier>{48359591-26AB-41C3-A10D-AF97C013C30F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime">
+      <UniqueIdentifier>{8700FB8A-B7FB-4135-9640-B1FE4C2F3677}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Private">
+      <UniqueIdentifier>{851C0C9A-9B98-4AD2-B824-83BD6DEE501A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Public">
+      <UniqueIdentifier>{FAB5E6A3-7AE9-424D-B2E9-CB6F8FCBEF7F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="FortniteGame\Plugins\GameFeatures\Milkshake">
       <UniqueIdentifier>{632E64ED-E8ED-47F5-974A-923C1BBAF997}</UniqueIdentifier>
     </Filter>
@@ -1503,6 +1518,9 @@
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortGameStateComponent_Campsite.h">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Public\FortGameStateComponent_BlastBerryManager.h">
+      <Filter>FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Public</Filter>
+    </ClInclude>
     <ClInclude Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public\FortControllerComponent_CampsiteAccountItem.h">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Public</Filter>
     </ClInclude>
@@ -2674,6 +2692,9 @@
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortGameStateComponent_Campsite.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Private\FortGameStateComponent_BlastBerryManager.cpp">
+      <Filter>FortniteGame\Plugins\GameFeatures\BlastBerry\Source\BlastBerryRuntime\Private</Filter>
     </ClCompile>
     <ClCompile Include="..\FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private\FortControllerComponent_CampsiteAccountItem.cpp">
       <Filter>FortniteGame\Plugins\GameFeatures\CampsiteGameplay\Source\CampsiteRuntime\Private</Filter>
