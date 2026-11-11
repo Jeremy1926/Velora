@@ -86,6 +86,9 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
 
         if (ContainerLootTierKey == NAME_None)
         {
+            if (GetChosenRandomUpgrade() == INDEX_NONE)
+                AthenaPostApplyPlaylistDataTables(true, true, false);
+
             FName SearchLootTierGroup = GetSearchLootTierGroup();
 
             if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
@@ -95,6 +98,12 @@ bool ABuildingContainer::SpawnLoot(AFortPawn* Searcher)
 
             UFortLootTier::ChooseUnquotaedLootTierKey(ContainerLootTierKey, LootTier, SearchLootTierGroup, -1, GetStaticGameplayTags());
             SetContainerLootTierKey(ContainerLootTierKey);
+
+            if (ContainerLootTierKey != NAME_None)
+            {
+                SetReplicatedLootTier(LootTier);
+                OnRep_LootTier();
+            }
         }
 
         if (ContainerLootTierKey != NAME_None)
@@ -221,6 +230,47 @@ void ABuildingContainer::SetContainerLootTierKey(FName InContainerLootTierKey)
     static auto ContainerLootTierKey = GetClass()->FindPropertyByName(FName(TEXT("ContainerLootTierKey")));
 
     ContainerLootTierKey->SetPropertyValue_InContainer<FName>(this, InContainerLootTierKey);
+}
+
+bool ABuildingContainer::AthenaPostApplyPlaylistDataTables(bool bApplyRandomUpgrades, bool bReRollForLootExistence, bool bIgnorePotentialRandomUpgrades)
+{
+    static auto AthenaPostApplyPlaylistDataTables = Anchor::Function<bool (*)(ABuildingContainer*, bool, bool, bool)>(TEXT("ABuildingContainer::AthenaPostApplyPlaylistDataTables"))
+        .If(GetClass()->FindPropertyByName(FName(TEXT("PotentialRandomUpgrades"))))
+        .Native(TEXT("/Script/FortniteGame.BuildingContainer:SetSearchLootTierGroup"))
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    return AthenaPostApplyPlaylistDataTables && AthenaPostApplyPlaylistDataTables(this, bApplyRandomUpgrades, bReRollForLootExistence, bIgnorePotentialRandomUpgrades);
+}
+
+int32 ABuildingContainer::GetChosenRandomUpgrade() const
+{
+    static auto ChosenRandomUpgrade = GetClass()->FindPropertyByName(FName(TEXT("ChosenRandomUpgrade")));
+
+    return ChosenRandomUpgrade ? *ChosenRandomUpgrade->ContainerPtrToValuePtr<int32>(this) : INDEX_NONE;
+}
+
+void ABuildingContainer::SetReplicatedLootTier(int32 InReplicatedLootTier)
+{
+    static auto ReplicatedLootTier = GetClass()->FindPropertyByName(FName(TEXT("ReplicatedLootTier")));
+
+    if (ReplicatedLootTier && *ReplicatedLootTier->ContainerPtrToValuePtr<int32>(this) != InReplicatedLootTier)
+        *ReplicatedLootTier->ContainerPtrToValuePtr<int32>(this) = InReplicatedLootTier;
+}
+
+void ABuildingContainer::OnRep_LootTier()
+{
+    static auto OnRep_LootTier = Anchor::VirtualFunction<void (*)(ABuildingContainer*)>(TEXT("ABuildingContainer::OnRep_LootTier"))
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingContainer:OnRep_LootTier")))
+        .Exec(TEXT("/Script/FortniteGame.BuildingContainer:OnRep_LootTier"))
+        .Find("jmp [*+0x*]")
+        .Optional()
+        .Get();
+
+    OnRep_LootTier(this);
 }
 
 FVector ABuildingContainer::GetLootSpawnLocation() const

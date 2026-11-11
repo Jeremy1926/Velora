@@ -43,6 +43,14 @@ public:
 
     void SetContainerLootTierKey(FName InContainerLootTierKey);
 
+    bool AthenaPostApplyPlaylistDataTables(bool bApplyRandomUpgrades, bool bReRollForLootExistence, bool bIgnorePotentialRandomUpgrades);
+
+    int32 GetChosenRandomUpgrade() const;
+
+    void SetReplicatedLootTier(int32 InReplicatedLootTier);
+
+    void OnRep_LootTier();
+
     FVector GetLootSpawnLocation() const;
 
     EFortRarity& GetHighestRarity();
