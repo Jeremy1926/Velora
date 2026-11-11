@@ -5,6 +5,7 @@
 #include "UObject/WeakObjectPtrTemplates.h"
 
 class AFortAthenaAircraft;
+class AFortAthenaSupplyDrop;
 class AFortPlayerPawn;
 class AFortPlayerPawnAthena;
 class AFortSafeZoneIndicator;
@@ -84,6 +85,12 @@ public:
     void SafeZoneSetPlayerInside(AFortPlayerPawn* Pawn, int32 StormDamageLevel, bool bIsInsideSafeZone, bool bUseStormDamageLevelForShieldDamage);
 
     bool IsInCurrentSafeZone(const FVector& TestLocation, bool bClassicSafeZoneOnly);
+
+    const uint8* GetSupplyDropGamePhaseData(EAthenaGamePhase InGamePhase, const UClass* SupplyDropClass) const;
+
+    void GetSupplyDropSpawnData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpawnHeight, float& MaxSpawnHeight) const;
+
+    void GetSupplyDropSpeedData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpeed, float& MaxSpeed) const;
 
     void execSetStormDamagePaused(FFrame& Stack, void* const Z_Param__Result);
 

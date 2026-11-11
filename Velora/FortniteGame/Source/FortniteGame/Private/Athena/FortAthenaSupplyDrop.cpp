@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortAthenaSupplyDrop.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Items/FortInventory.h"
 #include "Items/FortPickup.h"
 #include "Items/FortPickupAthena.h"
@@ -12,6 +13,7 @@
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection)
 {
@@ -89,4 +91,56 @@ void AFortAthenaSupplyDrop::execSpawnPickup(FFrame& Stack, void* const Z_Param__
     Stack.Code += !!Stack.Code;
 
     *(AFortPickup**)Z_Param__Result = SpawnPickup(ItemDefinition, NumberToSpawn, TriggeringPawn, Position, Direction);
+}
+
+void AFortAthenaSupplyDrop::execGetSupplyDropSpawnData(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAthenaSupplyDrop, execGetSupplyDropSpawnData, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() && UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList"))))
+        .InExec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:GetSupplyDropSpawnData")));
+
+    auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+    if (!GamePhaseLogic)
+        return Original(Stack, Z_Param__Result);
+
+    float MinSpawnHeightTemp = 0.0f;
+    float MaxSpawnHeightTemp = 0.0f;
+    float& MinSpawnHeight = Stack.StepCompiledInRef<float>(&MinSpawnHeightTemp);
+    float& MaxSpawnHeight = Stack.StepCompiledInRef<float>(&MaxSpawnHeightTemp);
+    Stack.Code += !!Stack.Code;
+
+    GamePhaseLogic->GetSupplyDropSpawnData(this, MinSpawnHeight, MaxSpawnHeight);
+
+    if (Config::bLogReplication)
+    {
+        const FVector Location = GetActorLocation();
+
+        UE_LOG(LogVelora, Log, TEXT("SupplyDrop %s at %.0f %.0f %.0f spawn height %.0f to %.0f"), *GetName(), Location.X, Location.Y, Location.Z, MinSpawnHeight, MaxSpawnHeight);
+    }
+}
+
+void AFortAthenaSupplyDrop::execGetSupplyDropSpeedData(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(AFortAthenaSupplyDrop, execGetSupplyDropSpeedData, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() && UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList"))))
+        .InExec(TEXT("/Script/FortniteGame.FortAthenaSupplyDrop:GetSupplyDropSpeedData")));
+
+    auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this);
+
+    if (!GamePhaseLogic)
+        return Original(Stack, Z_Param__Result);
+
+    float MinSpeedTemp = 0.0f;
+    float MaxSpeedTemp = 0.0f;
+    float& MinSpeed = Stack.StepCompiledInRef<float>(&MinSpeedTemp);
+    float& MaxSpeed = Stack.StepCompiledInRef<float>(&MaxSpeedTemp);
+    Stack.Code += !!Stack.Code;
+
+    GamePhaseLogic->GetSupplyDropSpeedData(this, MinSpeed, MaxSpeed);
+
+    if (Config::bLogReplication)
+    {
+        UE_LOG(LogVelora, Log, TEXT("SupplyDrop %s fall speed %.0f to %.0f"), *GetName(), MinSpeed, MaxSpeed);
+    }
 }

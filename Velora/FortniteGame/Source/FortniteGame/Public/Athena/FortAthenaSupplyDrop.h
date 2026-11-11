@@ -14,4 +14,8 @@ public:
     AFortPickup* SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection);
 
     void execSpawnPickup(FFrame& Stack, void* const Z_Param__Result);
+
+    void execGetSupplyDropSpawnData(FFrame& Stack, void* const Z_Param__Result);
+
+    void execGetSupplyDropSpeedData(FFrame& Stack, void* const Z_Param__Result);
 };

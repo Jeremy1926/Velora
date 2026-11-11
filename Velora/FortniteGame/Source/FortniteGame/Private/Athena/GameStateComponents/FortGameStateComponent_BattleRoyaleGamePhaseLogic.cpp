@@ -4,6 +4,7 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortAthenaAircraft.h"
 #include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortAthenaSupplyDrop.h"
 #include "Athena/FortSafeZoneIndicator.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
@@ -765,6 +766,69 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsInCurrentSafeZone(con
         .Get();
 
     return IsInCurrentSafeZone(this, TGameValue<FVector>(TestLocation), bClassicSafeZoneOnly);
+}
+
+const uint8* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropGamePhaseData(EAthenaGamePhase InGamePhase, const UClass* SupplyDropClass) const
+{
+    static auto SupplyDropSpawnDataList = (UArrayProperty*)StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList")));
+    static auto SupplyDropInfo = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropSpawnData")))->FindPropertyByName(FName(TEXT("SupplyDropInfo")));
+    static auto SupplyDropClassProperty = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo")))->FindPropertyByName(FName(TEXT("SupplyDropClass")));
+    static auto GamePhaseData = (UArrayProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo")))->FindPropertyByName(FName(TEXT("GamePhaseData")));
+    static auto GamePhase = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("GamePhase")));
+
+    auto& SpawnDataList = *SupplyDropSpawnDataList->ContainerPtrToValuePtr<TArray<uint8>>(this);
+
+    for (int32 Index = 0; SupplyDropClass && Index < SpawnDataList.Num(); Index++)
+    {
+        auto Info = *SupplyDropInfo->ContainerPtrToValuePtr<UObject*>(SpawnDataList.GetData() + Index * SupplyDropSpawnDataList->GetInner()->GetSize());
+
+        if (!Info || *SupplyDropClassProperty->ContainerPtrToValuePtr<UClass*>(Info) != SupplyDropClass)
+            continue;
+
+        auto& PhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(Info);
+
+        for (int32 PhaseIndex = 0; PhaseIndex < PhaseDataList.Num(); PhaseIndex++)
+        {
+            auto PhaseData = PhaseDataList.GetData() + PhaseIndex * GamePhaseData->GetInner()->GetSize();
+
+            if (*GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(PhaseData) == InGamePhase)
+                return PhaseData;
+        }
+    }
+
+    return nullptr;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropSpawnData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpawnHeight, float& MaxSpawnHeight) const
+{
+    static auto SupplyDropMinSpawnHeight = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("SupplyDropMinSpawnHeight")));
+    static auto SupplyDropMaxSpawnHeight = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("SupplyDropMaxSpawnHeight")));
+
+    if (auto PhaseData = GetSupplyDropGamePhaseData(GetGamePhase(), SupplyDrop->GetClass()))
+    {
+        MinSpawnHeight = (float)FMath::TruncToInt(SupplyDropMinSpawnHeight->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f));
+        MaxSpawnHeight = (float)FMath::TruncToInt(SupplyDropMaxSpawnHeight->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f));
+        return;
+    }
+
+    MinSpawnHeight = 28000.0f;
+    MaxSpawnHeight = 32000.0f;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropSpeedData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpeed, float& MaxSpeed) const
+{
+    static auto SupplyDropMinSpeed = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("SupplyDropMinSpeed")));
+    static auto SupplyDropMaxSpeed = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("SupplyDropMaxSpeed")));
+
+    if (auto PhaseData = GetSupplyDropGamePhaseData(GetGamePhase(), SupplyDrop->GetClass()))
+    {
+        MinSpeed = (float)FMath::TruncToInt(SupplyDropMinSpeed->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f));
+        MaxSpeed = (float)FMath::TruncToInt(SupplyDropMaxSpeed->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f));
+        return;
+    }
+
+    MinSpeed = 280.0f;
+    MaxSpeed = 500.0f;
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execSetStormDamagePaused(FFrame& Stack, void* const Z_Param__Result)
