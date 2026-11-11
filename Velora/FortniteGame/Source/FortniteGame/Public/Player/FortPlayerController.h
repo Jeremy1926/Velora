@@ -93,7 +93,7 @@ public:
 
     bool HasRequiredBuildingLevel(int32 BuildingLevel, EFortResourceType ResourceType) const;
 
-    bool CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData) const;
+    bool CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData, EFortBuildPreviewMarkerOptionalAdjustment MarkerOptionalAdjustment) const;
 
     EFortStructuralGridQueryResults CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings, EFortBuildPreviewMarkerOptionalAdjustment& MarkerOptionalAdjustment);
 

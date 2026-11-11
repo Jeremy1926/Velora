@@ -49,6 +49,7 @@
 #include "GUI.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized& OnMcpProfilesInitialized, bool bForceSync)
 {
@@ -1600,7 +1601,7 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
 
     if (!bBuildingRestricted)
     {
-        bCanAfford = bIgnoreCostCheck || CanAffordToPlaceBuildableClass(BuildingClassData);
+        bCanAfford = bIgnoreCostCheck || CanAffordToPlaceBuildableClass(BuildingClassData, MarkerOptionalAdjustment);
 
         const bool bHasRequiredBuildingLevel = HasRequiredBuildingLevel(BuildingClassData);
         const FVector OldBuildLoc = BuildLoc;
@@ -1788,11 +1789,17 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
 void AFortPlayerController::ServerCreateBuildingActor_Implementation(const FCreateBuildingActorData& CreateBuildingData)
 {
     auto GameState = Cast<AFortGameStateZone>(GetWorld()->GetGameState());
+    auto BuildingClassData = CreateBuildingData.GetBuildingClassData(GameState);
+
+    if (Config::bLogReplication)
+    {
+        UE_LOG(LogVelora, Log, TEXT("ServerCreateBuildingActor %s class %s game state %d"), *GetName(), BuildingClassData.BuildingClass ? *BuildingClassData.BuildingClass->GetName() : TEXT("None"), (int32)(GameState != nullptr));
+    }
 
     if (!GameState)
         return;
 
-    ServerCreateBuildingActor_Implementation(CreateBuildingData.GetBuildingClassData(GameState), CreateBuildingData.GetBuildLoc(), CreateBuildingData.GetBuildRot(), CreateBuildingData.GetMirrored());
+    ServerCreateBuildingActor_Implementation(BuildingClassData, CreateBuildingData.GetBuildLoc(), CreateBuildingData.GetBuildRot(), CreateBuildingData.GetMirrored());
 }
 
 void AFortPlayerController::ServerBeginEditingBuildingActor_Implementation(ABuildingSMActor* BuildingActorToEdit)
@@ -2107,7 +2114,7 @@ bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortR
     return HasRequiredBuildingLevel(this, BuildingLevel, ResourceType);
 }
 
-bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData) const
+bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData, EFortBuildPreviewMarkerOptionalAdjustment MarkerOptionalAdjustment) const
 {
     static auto CanAffordToPlaceBuildableClass = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, FBuildingClassData)>(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass"))
         .Event(TEXT("ServerCreateBuildingActor"))
@@ -2153,9 +2160,35 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rbx, [rax+0x*]; call 0x*; mov rdx, rax; mov rcx, *; call rbx")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x20], al; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rbx, [rax+0x*]; call 0x*; mov r8b, [rbp+0x*]; mov rdx, rax; mov rcx, *; call rbx")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Find("call [*+0x*]")
         .Get();
+
+    static auto bMarkerOptionalAdjustment = Anchor::Exists()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x20], al; lea rdx, [rsp+0x*]; mov rcx, *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rbx, [rax+0x*]; call 0x*; mov r8b, [rbp+0x*]; mov rdx, rax; mov rcx, *; call rbx")
+        .Get();
+
+    if (bMarkerOptionalAdjustment)
+        return CanAffordToPlaceBuildableClass.As<bool (*)(const AFortPlayerController*, FBuildingClassData, EFortBuildPreviewMarkerOptionalAdjustment)>()(this, BuildingClassData, MarkerOptionalAdjustment);
 
     return CanAffordToPlaceBuildableClass(this, BuildingClassData);
 }
@@ -2174,7 +2207,6 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
         .String(TEXT("Failed to find intersection point!"))
         .Start()
         .Find("mov rdi, [rax+0x*]; call 0x*")
-        .Find("mov rdi, [rax+0x*]")
         .Or()
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
@@ -2327,6 +2359,13 @@ void AFortPlayerController::ClientExecuteInventoryItem(const FGuid& ItemGuid, fl
 void AFortPlayerController::TriggerUIFeedbackEvent(FName EventName)
 {
     static auto TriggerUIFeedbackEvent = Anchor::Function<void (*)(AFortPlayerController*, FName)>(TEXT("AFortPlayerController::TriggerUIFeedbackEvent"))
+        .Event(TEXT("ClientTriggerUIFeedbackEvent"))
+        .CallIn(Anchor::Address()
+            .Event(TEXT("ServerCreateBuildingActor"))
+            .Caller()
+            .Get())
+        .Target()
+        .Or()
         .Event(TEXT("ClientTriggerUIFeedbackEvent"))
         .Caller()
         .Get();
