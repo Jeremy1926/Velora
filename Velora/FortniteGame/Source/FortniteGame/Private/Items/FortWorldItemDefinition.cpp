@@ -63,7 +63,15 @@ bool UFortWorldItemDefinition::CanBeDropped() const
 
     auto PickupComponent = bCanBeDroppedFromInventory ? GetPickupItemComponent() : nullptr;
 
-    return PickupComponent ? bCanBeDroppedFromInventory->GetPropertyValue_InContainer(PickupComponent) : true;
+    if (PickupComponent)
+        return bCanBeDroppedFromInventory->GetPropertyValue_InContainer(PickupComponent);
+
+    static auto PickupData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Pickup"));
+    static auto bDataCanBeDroppedFromInventory = PickupData ? (UBoolProperty*)PickupData->FindPropertyByName(FName(TEXT("bCanBeDroppedFromInventory"))) : nullptr;
+
+    auto Data = bDataCanBeDroppedFromInventory ? GetItemComponentData(PickupData) : nullptr;
+
+    return Data ? bDataCanBeDroppedFromInventory->GetPropertyValue_InContainer(Data) : true;
 }
 
 bool UFortWorldItemDefinition::ShouldDropOnDeath() const
@@ -77,7 +85,15 @@ bool UFortWorldItemDefinition::ShouldDropOnDeath() const
 
     auto PickupComponent = bComponentDropOnDeath ? GetPickupItemComponent() : nullptr;
 
-    return PickupComponent ? bComponentDropOnDeath->GetPropertyValue_InContainer(PickupComponent) : true;
+    if (PickupComponent)
+        return bComponentDropOnDeath->GetPropertyValue_InContainer(PickupComponent);
+
+    static auto PickupData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Pickup"));
+    static auto bDataDropOnDeath = PickupData ? (UBoolProperty*)PickupData->FindPropertyByName(FName(TEXT("bDropOnDeath"))) : nullptr;
+
+    auto Data = bDataDropOnDeath ? GetItemComponentData(PickupData) : nullptr;
+
+    return Data ? bDataDropOnDeath->GetPropertyValue_InContainer(Data) : true;
 }
 
 float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const

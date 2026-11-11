@@ -2,6 +2,7 @@
 #include "Player/FortPlayerControllerZone.h"
 #include "Player/FortPlayerState.h"
 #include "Player/FortPlayerStateZone.h"
+#include "Online/Iris/FortIrisHelper.h"
 #include "Pawns/FortPlayerPawn.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPoiManager.h"
@@ -192,9 +193,14 @@ void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewVi
             FortPlayerState->BeginSpectating(TargetPlayerState);
     }
 
+    auto OldViewTarget = GetViewTarget();
+
     ChangeState(FName(TEXT("Spectating")));
     ClientGotoState(FName(TEXT("Spectating")));
     SetViewTargetAndNotifyClient(NewViewTarget, FViewTargetTransitionParams());
+
+    if (auto IrisHelper = UFortIrisHelper::Get())
+        IrisHelper->OnPlayerControllerViewTargetChanged(this, NewViewTarget, OldViewTarget);
 
     UE_LOG(LogVelora, Log, TEXT("[Spectate] %s now spectating %s (player state %s, spectator updates %d)"), *GetName(), *NewViewTarget->GetName(), TargetPlayerState ? *TargetPlayerState->GetName() : TEXT("none"), (int32)UFortRuntimeOptions::Get().GetEnableSpectatorUpdates());
 

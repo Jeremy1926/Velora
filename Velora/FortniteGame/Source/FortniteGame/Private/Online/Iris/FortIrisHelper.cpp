@@ -72,3 +72,16 @@ void UFortIrisHelper::OnPlayerControllerInventorySwitched(AFortPlayerController*
     if (Context[0] && Context[1] && Context[2] && Context[3])
         UpdateConnectionFilters(this, Context);
 }
+
+void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* NewViewTarget, AActor* OldViewTarget)
+{
+    static auto OnPlayerControllerViewTargetChanged = Anchor::Optional<void (*)(UFortIrisHelper*, AFortPlayerController*, AActor*, AActor*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; mov rbx, [rsp+0x*]; add rsp, 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (OnPlayerControllerViewTargetChanged)
+        OnPlayerControllerViewTargetChanged(this, PC, NewViewTarget, OldViewTarget);
+}

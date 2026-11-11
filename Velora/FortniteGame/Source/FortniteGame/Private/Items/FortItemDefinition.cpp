@@ -37,13 +37,16 @@ const uint8* UFortItemDefinition::GetItemComponentData(const UScriptStruct* Scri
 {
     static auto DataList = StaticClass()->FindPropertyByName(FName(TEXT("DataList")));
 
+    if (!DataList)
+        return nullptr;
+
     for (const FConstStructView& Data : *DataList->ContainerPtrToValuePtr<TArray<FConstStructView>>(this))
     {
         if (Data.ScriptStruct == ScriptStruct && Data.StructMemory)
             return Data.StructMemory;
     }
 
-    static auto GetDefaultInstance = Anchor::Function<FConstStructView* (*)(FConstStructView*, const UScriptStruct*)>(TEXT("FItemComponentData::GetDefaultInstance"))
+    static auto GetDefaultInstance = Anchor::Optional<FConstStructView* (*)(FConstStructView*, const UScriptStruct*)>(TEXT("FItemComponentData::GetDefaultInstance"))
         .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
         .Find("lea rcx, [rsp+0x20]; call 0x*; mov *, [rax+0x8]")
         .Find("call 0x*")
@@ -59,7 +62,7 @@ const uint8* UFortItemDefinition::GetItemComponentData(const UScriptStruct* Scri
 
     FConstStructView DefaultInstance;
 
-    return GetDefaultInstance(&DefaultInstance, ScriptStruct)->StructMemory;
+    return GetDefaultInstance ? GetDefaultInstance(&DefaultInstance, ScriptStruct)->StructMemory : nullptr;
 }
 
 int32 UFortItemDefinition::GetMinLevel() const
