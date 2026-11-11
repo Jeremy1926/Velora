@@ -94,6 +94,9 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
         .Find("xor r14d, r14d")
         .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov rbx, [rsp+0x*]; mov [rsi], r14; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Find("call 0x*; mov rcx, rbx; call 0x*; and qword ptr [*], 0x0; mov rbx, [rsp+0x*]; add rsp, 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
