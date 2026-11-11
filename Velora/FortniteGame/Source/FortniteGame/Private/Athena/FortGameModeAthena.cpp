@@ -622,6 +622,7 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
     Member.GetMemberUniqueId() = PlayerState->GetUniqueId();
 
     GameMemberInfoArray.MarkItemDirty(Member);
+    GameState->NotifyGameMemberAdded(Member.SquadId, Member.TeamIndex, Member.GetMemberUniqueId());
 }
 
 void AFortGameModeAthena::AddToAlivePlayers(AFortPlayerControllerAthena* PlayerController)

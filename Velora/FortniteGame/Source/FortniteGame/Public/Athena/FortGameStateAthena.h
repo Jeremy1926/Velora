@@ -137,6 +137,8 @@ public:
 
     FGameMemberInfoArray& GetGameMemberInfoArray();
 
+    void NotifyGameMemberAdded(uint8 SquadId, uint8 TeamIndex, const FUniqueNetIdRepl& MemberUniqueId);
+
     bool GetPlaylistDataIsLoaded() const;
 
     bool GetIsLargeTeamGame() const;

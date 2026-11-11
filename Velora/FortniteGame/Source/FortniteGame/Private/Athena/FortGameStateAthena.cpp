@@ -656,6 +656,19 @@ FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()
     return *GameMemberInfoArray->ContainerPtrToValuePtr<FGameMemberInfoArray>(this);
 }
 
+void AFortGameStateAthena::NotifyGameMemberAdded(uint8 SquadId, uint8 TeamIndex, const FUniqueNetIdRepl& MemberUniqueId)
+{
+    static auto NotifyGameMemberAdded = Anchor::Optional<void (*)(AFortGameStateAthena*, uint8, uint8, const FUniqueNetIdRepl&)>(TEXT("AFortGameStateAthena::NotifyGameMemberAdded"))
+        .String("AFortGameStateAthena::NotifyGameMemberAdded")
+        .Find("jmp 0x*")
+        .Target()
+        .Start()
+        .Get();
+
+    if (NotifyGameMemberAdded)
+        NotifyGameMemberAdded(this, SquadId, TeamIndex, MemberUniqueId);
+}
+
 bool AFortGameStateAthena::GetPlaylistDataIsLoaded() const
 {
     static auto bPlaylistDataIsLoaded = GetClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded")));
