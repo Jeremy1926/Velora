@@ -231,6 +231,15 @@ void AFortGameMode::GetLootTierDataTables(TArray<UDataTable*>& OutLootTierDataTa
             AthenaGameMode->PerformAsyncLoadForGameFeatureLootData();
 
         GetLootTierDataTables(this, OutLootTierDataTables);
+
+        static auto LootTierDataCache = GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("LootTierDataCache"))) : nullptr;
+
+        if (LootTierDataCache)
+        {
+            for (auto DataTable : *LootTierDataCache->ContainerPtrToValuePtr<TArray<UDataTable*>>(this))
+                OutLootTierDataTables.Add(DataTable);
+        }
+
         return;
     }
 
@@ -270,6 +279,15 @@ void AFortGameMode::GetLootPackageDataTables(TArray<UDataTable*>& OutLootPackage
             AthenaGameMode->PerformAsyncLoadForGameFeatureLootData();
 
         GetLootPackageDataTables(this, OutLootPackageDataTables);
+
+        static auto LootPackagesCache = GameModeAthena ? GameModeAthena->FindPropertyByName(FName(TEXT("LootPackagesCache"))) : nullptr;
+
+        if (LootPackagesCache)
+        {
+            for (auto DataTable : *LootPackagesCache->ContainerPtrToValuePtr<TArray<UDataTable*>>(this))
+                OutLootPackageDataTables.Add(DataTable);
+        }
+
         return;
     }
 
