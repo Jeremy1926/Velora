@@ -13,6 +13,136 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+UClass* AFortDecoTool::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoTool"));
+
+    return Class;
+}
+
+void AFortDecoTool::SpawnDecoInternal(const TGameValue<FVector>& Location, const TGameValue<FRotator>& Rotation, ABuildingSMActor* AttachedActor, EBuildingAttachmentType AttachmentType, bool bFreeDeco)
+{
+    DETOUR(AFortDecoTool, SpawnDecoInternal, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortDecoTool"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call r10")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortDecoTool"), "ret*")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    static auto SpawnDecoInternalSlot = Anchor::Slot(TEXT("AFortDecoTool::SpawnDecoInternal"))
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call r10")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .Get();
+
+    static auto GetDecoItemDefinitionSlot = Anchor::Slot(TEXT("AFortDecoTool::GetDecoItemDefinition"))
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortDecoTool"), -0x18)
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerSpawnDeco"))
+        .Find("call r10")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call [r10+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortDecoTool"), -0x18)
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto GetBlueprintClass = Anchor::Optional<UClass** (*)(const UFortItemDefinition*, UClass**)>(TEXT("UFortDecoItemDefinition::GetBlueprintClass"))
+        .Native(TEXT("/Script/FortniteGame.FortDecoItemDefinition:GetBlueprintClass"))
+        .Is("push rbx; sub rsp, 0x20; mov rbx, rdx")
+        .Get();
+
+    static auto GetSubclassOf = Anchor::Optional<UClass** (*)(UClass**, const void*, bool)>(TEXT("FFortAssets::GetSubclassOf"))
+        .If(!GetBlueprintClass)
+        .Native(TEXT("/Script/FortniteGame.FortDecoItemDefinition:GetBlueprintClass"))
+        .Get();
+
+    static auto InitializationReason = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildingInitializationReason"));
+    static auto TrapItemDefinition = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortTrapItemDefinition"));
+    static auto TrapTool = (int32)InitializationReason->GetValueByName(FName(TEXT("EFortBuildingInitializationReason::TrapTool")));
+    static auto PlacementTool = (int32)InitializationReason->GetValueByName(FName(TEXT("EFortBuildingInitializationReason::PlacementTool")));
+
+    auto PlayerController = GetPlayerController();
+    auto DecoItemDefinition = PlayerController ? GetDecoItemDefinition() : nullptr;
+
+    if (!DecoItemDefinition)
+        return;
+
+    static auto BlueprintClassProperty = DecoItemDefinition->GetClass()->FindPropertyByName(FName(TEXT("BlueprintClass")));
+
+    UClass* BlueprintClass = nullptr;
+
+    if (GetBlueprintClass)
+        GetBlueprintClass(DecoItemDefinition, &BlueprintClass);
+    else if (GetSubclassOf && BlueprintClassProperty)
+        GetSubclassOf(&BlueprintClass, BlueprintClassProperty->ContainerPtrToValuePtr<void>(DecoItemDefinition), true);
+
+    if (!BlueprintClass || !BlueprintClass->IsChildOf(ABuildingActor::StaticClass()))
+        return;
+
+    auto ShouldAllowServerSpawnDeco = Scanner::Virtual<bool (*)(AFortDecoTool*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, EBuildingAttachmentType)>(this, GetDecoItemDefinitionSlot, 0x10);
+
+    if (!ShouldAllowServerSpawnDeco(this, &Location, &Rotation, AttachedActor, AttachmentType))
+        return;
+
+    auto SpawnDeco = Scanner::Virtual<AActor* (*)(AFortDecoTool*, UClass**, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, int32, int32)>(this, SpawnDecoInternalSlot, -0x18);
+    auto Deco = SpawnDeco(this, &BlueprintClass, &Location, &Rotation, AttachedActor, (int32)AttachmentType, TrapItemDefinition && DecoItemDefinition->IsA(TrapItemDefinition) ? TrapTool : PlacementTool);
+
+    if (!Deco)
+        return;
+
+    auto AdjustDecoAfterSpawn = Scanner::Virtual<void (*)(AFortDecoTool*, AActor*, ABuildingSMActor*, EBuildingAttachmentType)>(this, GetDecoItemDefinitionSlot, 0x30);
+
+    AdjustDecoAfterSpawn(this, Deco, AttachedActor, AttachmentType);
+    FinishedSpawnAction(bFreeDeco);
+}
+
+void AFortDecoTool::FinishedSpawnAction(bool bFreeDeco)
+{
+    static auto ClientForceCancelBuildingTool = Anchor::Function<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::ClientForceCancelBuildingTool"))
+        .Event(TEXT("ClientForceCancelBuildingTool"))
+        .Get();
+
+    auto PlayerController = GetPlayerController();
+    auto DecoItemDefinition = PlayerController ? GetDecoItemDefinition() : nullptr;
+
+    if (!DecoItemDefinition)
+        return;
+
+    static auto bConsumeWhenPlaced = (UBoolProperty*)DecoItemDefinition->GetClass()->FindPropertyByName(FName(TEXT("bConsumeWhenPlaced")));
+    static auto bCancelToolWhenPlaced = (UBoolProperty*)DecoItemDefinition->GetClass()->FindPropertyByName(FName(TEXT("bCancelToolWhenPlaced")));
+
+    if (!bFreeDeco && bConsumeWhenPlaced && bConsumeWhenPlaced->GetPropertyValue_InContainer(DecoItemDefinition))
+        PlayerController->RemoveInventoryItem(GetItemEntryGuid(), 1, true);
+
+    if (bCancelToolWhenPlaced && bCancelToolWhenPlaced->GetPropertyValue_InContainer(DecoItemDefinition))
+        ClientForceCancelBuildingTool(PlayerController);
+}
+
 void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameValue<FVector>& GameBuildingLocation, const TGameValue<FRotator>& GameBuildingRotation, const TGameValue<FVector>& GameLocation, const TGameValue<FRotator>& GameRotation, EBuildingAttachmentType InBuildingAttachmentType, bool bSpawnDecoOnExtraPiece, const TGameValue<FVector>& GameBuildingExtraPieceLocation)
 {
     DETOUR(AFortDecoTool, ServerCreateBuildingAndSpawnDeco_Implementation, Anchor::Hook()
