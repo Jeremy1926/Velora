@@ -138,6 +138,7 @@ void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
 void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewViewTarget, bool bAllowStateChange)
 {
     DETOUR(AFortPlayerControllerZone, ServerSpectateActor_Implementation, Anchor::Hook()
+        .If(::Anchor::Exists().Event(TEXT("ClientSetViewTarget")).VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; mov rcx, rsi; movdqu *; ").Get())
         .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ServerSpectateActor"))
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]", 2)
@@ -224,9 +225,10 @@ bool AFortPlayerControllerZone::ShouldSuicideOnSpectate(AActor* NewViewTarget)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerStateZone:IsPlayerDead"))
         .Find("call [rax+0x*]")
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "mov rax, [rcx]; ")
+        .Optional()
         .Get();
 
-    return ShouldSuicideOnSpectate(this, NewViewTarget);
+    return ShouldSuicideOnSpectate && ShouldSuicideOnSpectate(this, NewViewTarget);
 }
 
 void AFortPlayerControllerZone::StartSpectateAfterDeathTimer()

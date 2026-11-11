@@ -102,9 +102,10 @@ AFortPlayerControllerZone* IFortVehicleInterface::GetVehicleController(AFortPlay
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
         .Find("add [*+0x20], *")
         .Find("call [*+0x*]")
+        .Optional()
         .Get();
 
-    return GetVehicleController(this, PlayerPawn);
+    return GetVehicleController ? GetVehicleController(this, PlayerPawn) : nullptr;
 }
 
 void IFortVehicleInterface::SetForcedToAlwaysSpawn(const bool bSetTo)
