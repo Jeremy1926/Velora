@@ -27,11 +27,13 @@
 #include "Misc/Parse.h"
 #include "UObject/Class.h"
 #include "UObject/ScriptDelegates.h"
+#include "UObject/SoftObjectPtr.h"
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
+#include "Config.h"
 
 UClass* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()
 {
@@ -67,6 +69,17 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TickComponent(float Del
         UpdateWarmupPhase();
     else if (GamePhase == EAthenaGamePhase::SafeZones && !Playlist)
         UpdateSafeZonesPhase();
+
+    auto& SupplyDropWaveStartedSoundCueTimer = GetSupplyDropWaveStartedSoundCueTimer();
+
+    if (SupplyDropWaveStartedSoundCueTimer >= 0.0f && GetWorld()->GetTimeSeconds() >= SupplyDropWaveStartedSoundCueTimer)
+    {
+        SupplyDropWaveStartedSoundCueTimer = -1.0f;
+        RemoveSupplyDropWaveStartedSoundCue();
+    }
+
+    if (GamePhase == EAthenaGamePhase::Aircraft || GamePhase == EAthenaGamePhase::SafeZones)
+        UpdateSupplyDrops();
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandleMatchHasStarted()
@@ -768,21 +781,140 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsInCurrentSafeZone(con
     return IsInCurrentSafeZone(this, TGameValue<FVector>(TestLocation), bClassicSafeZoneOnly);
 }
 
+template<>
+UEnum* StaticEnum<ESupplyDropSpawnType>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ESupplyDropSpawnType"));
+
+    return Enum;
+}
+
+UScriptStruct* FSupplyDropZoneBasedSpawnData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropZoneBasedSpawnData"));
+
+    return Struct;
+}
+
+void FSupplyDropZoneBasedSpawnData::ResetPhase(EAthenaGamePhase InCurrGamePhase)
+{
+    GetCurrSubPhase() = 0;
+    GetTotalSupplyDropsSpawnedInSubPhase() = 0;
+    GetCurrGamePhase() = InCurrGamePhase;
+    GetNextWaveSpawnTime() = -1.0f;
+    ResetWave();
+}
+
+void FSupplyDropZoneBasedSpawnData::ResetSubPhase(int32 InCurrSubPhase)
+{
+    GetTotalSupplyDropsSpawnedInSubPhase() = 0;
+    GetCurrSubPhase() = InCurrSubPhase;
+    ResetWave();
+}
+
+void FSupplyDropZoneBasedSpawnData::ResetWave()
+{
+    GetSpawnedSupplyDrops().Empty();
+    GetNumDropsRemainingInWave() = 0;
+    GetNextSpawnTime() = -1.0f;
+}
+
+TArray<AFortAthenaSupplyDrop*>& FSupplyDropZoneBasedSpawnData::GetSpawnedSupplyDrops()
+{
+    static auto SpawnedSupplyDrops = StaticStruct()->FindPropertyByName(FName(TEXT("SpawnedSupplyDrops")));
+
+    return *SpawnedSupplyDrops->ContainerPtrToValuePtr<TArray<AFortAthenaSupplyDrop*>>(this);
+}
+
+int32& FSupplyDropZoneBasedSpawnData::GetNumDropsRemainingInWave()
+{
+    static auto NumDropsRemainingInWave = StaticStruct()->FindPropertyByName(FName(TEXT("NumDropsRemainingInWave")));
+
+    return *NumDropsRemainingInWave->ContainerPtrToValuePtr<int32>(this);
+}
+
+float& FSupplyDropZoneBasedSpawnData::GetNextWaveSpawnTime()
+{
+    static auto NextWaveSpawnTime = StaticStruct()->FindPropertyByName(FName(TEXT("NextWaveSpawnTime")));
+
+    return *NextWaveSpawnTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& FSupplyDropZoneBasedSpawnData::GetNextSpawnTime()
+{
+    static auto NextSpawnTime = StaticStruct()->FindPropertyByName(FName(TEXT("NextSpawnTime")));
+
+    return *NextSpawnTime->ContainerPtrToValuePtr<float>(this);
+}
+
+EAthenaGamePhase& FSupplyDropZoneBasedSpawnData::GetCurrGamePhase()
+{
+    static auto CurrGamePhase = StaticStruct()->FindPropertyByName(FName(TEXT("CurrGamePhase")));
+
+    return *CurrGamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(this);
+}
+
+int32& FSupplyDropZoneBasedSpawnData::GetCurrSubPhase()
+{
+    static auto CurrSubPhase = StaticStruct()->FindPropertyByName(FName(TEXT("CurrSubPhase")));
+
+    return *CurrSubPhase->ContainerPtrToValuePtr<int32>(this);
+}
+
+int32& FSupplyDropZoneBasedSpawnData::GetTotalSupplyDropsSpawnedInSubPhase()
+{
+    static auto TotalSupplyDropsSpawnedInSubPhase = StaticStruct()->FindPropertyByName(FName(TEXT("TotalSupplyDropsSpawnedInSubPhase")));
+
+    return *TotalSupplyDropsSpawnedInSubPhase->ContainerPtrToValuePtr<int32>(this);
+}
+
+FSupplyDropSpawnData::~FSupplyDropSpawnData()
+{
+    StaticStruct()->DestroyStruct(this);
+}
+
+UScriptStruct* FSupplyDropSpawnData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropSpawnData"));
+
+    return Struct;
+}
+
+int32 FSupplyDropSpawnData::GetTypeSize()
+{
+    static auto TypeSize = ((UArrayProperty*)UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList"))))->GetInner()->GetSize();
+
+    return TypeSize;
+}
+
+UObject*& FSupplyDropSpawnData::GetSupplyDropInfo()
+{
+    static auto SupplyDropInfo = StaticStruct()->FindPropertyByName(FName(TEXT("SupplyDropInfo")));
+
+    return *SupplyDropInfo->ContainerPtrToValuePtr<UObject*>(this);
+}
+
+FSupplyDropZoneBasedSpawnData& FSupplyDropSpawnData::GetZoneBasedData()
+{
+    static auto ZoneBasedData = StaticStruct()->FindPropertyByName(FName(TEXT("ZoneBasedData")));
+
+    return *ZoneBasedData->ContainerPtrToValuePtr<FSupplyDropZoneBasedSpawnData>(this);
+}
+
 const uint8* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropGamePhaseData(EAthenaGamePhase InGamePhase, const UClass* SupplyDropClass) const
 {
-    static auto SupplyDropSpawnDataList = (UArrayProperty*)StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList")));
-    static auto SupplyDropInfo = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropSpawnData")))->FindPropertyByName(FName(TEXT("SupplyDropInfo")));
     static auto SupplyDropClassProperty = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo")))->FindPropertyByName(FName(TEXT("SupplyDropClass")));
     static auto GamePhaseData = (UArrayProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo")))->FindPropertyByName(FName(TEXT("GamePhaseData")));
     static auto GamePhase = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData")))->FindPropertyByName(FName(TEXT("GamePhase")));
 
-    auto& SpawnDataList = *SupplyDropSpawnDataList->ContainerPtrToValuePtr<TArray<uint8>>(this);
+    auto& SupplyDropSpawnDataList = GetSupplyDropSpawnDataList();
 
-    for (int32 Index = 0; SupplyDropClass && Index < SpawnDataList.Num(); Index++)
+    for (int32 Index = 0; SupplyDropClass && Index < SupplyDropSpawnDataList.Num(); Index++)
     {
-        auto Info = *SupplyDropInfo->ContainerPtrToValuePtr<UObject*>(SpawnDataList.GetData() + Index * SupplyDropSpawnDataList->GetInner()->GetSize());
+        auto Info = SupplyDropSpawnDataList[Index].GetSupplyDropInfo();
+        auto Class = Info ? *SupplyDropClassProperty->ContainerPtrToValuePtr<UClass*>(Info) : nullptr;
 
-        if (!Info || *SupplyDropClassProperty->ContainerPtrToValuePtr<UClass*>(Info) != SupplyDropClass)
+        if (!Class || !Class->IsChildOf(AFortAthenaSupplyDrop::StaticClass()) || Class != SupplyDropClass)
             continue;
 
         auto& PhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(Info);
@@ -794,6 +926,22 @@ const uint8* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropGa
             if (*GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(PhaseData) == InGamePhase)
                 return PhaseData;
         }
+    }
+
+    const int32 LastSpawnedSupplyDropType = GetLastSpawnedSupplyDropType();
+    auto LastSpawnedInfo = LastSpawnedSupplyDropType < SupplyDropSpawnDataList.Num() ? SupplyDropSpawnDataList[LastSpawnedSupplyDropType].GetSupplyDropInfo() : nullptr;
+
+    if (!LastSpawnedInfo)
+        return nullptr;
+
+    auto& LastSpawnedPhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(LastSpawnedInfo);
+
+    for (int32 PhaseIndex = 0; PhaseIndex < LastSpawnedPhaseDataList.Num(); PhaseIndex++)
+    {
+        auto PhaseData = LastSpawnedPhaseDataList.GetData() + PhaseIndex * GamePhaseData->GetInner()->GetSize();
+
+        if (*GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(PhaseData) == InGamePhase)
+            return PhaseData;
     }
 
     return nullptr;
@@ -829,6 +977,372 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropSpeedData(
 
     MinSpeed = 280.0f;
     MaxSpeed = 500.0f;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSupplyDropList(UObject* Playlist, AFortAthenaMapInfo* MapInfo)
+{
+    static auto PlaylistClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena"));
+    static auto bUseDefaultSupplyDrops = (UBoolProperty*)PlaylistClass->FindPropertyByName(FName(TEXT("bUseDefaultSupplyDrops")));
+    static auto PlaylistSupplyDropInfoList = PlaylistClass->FindPropertyByName(FName(TEXT("SupplyDropInfoList")));
+    static auto MapInfoSupplyDropInfoList = AFortAthenaMapInfo::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropInfoList")));
+    static auto SupplyDropInfoClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo"));
+    static auto SupplyDropID = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SupplyDropID")));
+    static auto SupplyDropClass = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SupplyDropClass")));
+    static auto SpawnType = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpawnType")));
+    static auto GamePhaseData = (UArrayProperty*)SupplyDropInfoClass->FindPropertyByName(FName(TEXT("GamePhaseData")));
+    static auto GamePhaseDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData"));
+    static auto GamePhase = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("GamePhase")));
+    static auto SubPhaseData = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SubPhaseData")));
+    static auto SubPhaseDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropSubPhaseData"));
+    static auto SupplyDropMinCount = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMinCount")));
+    static auto SupplyDropMaxCount = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMaxCount")));
+    static auto SupplyDropCap = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropCap")));
+    static auto ExcludedDefaultSupplyDrops = StaticClass()->FindPropertyByName(FName(TEXT("ExcludedDefaultSupplyDrops")));
+    static auto ExcludedLTMSupplyDrops = StaticClass()->FindPropertyByName(FName(TEXT("ExcludedLTMSupplyDrops")));
+
+    auto& SupplyDropSpawnDataList = GetSupplyDropSpawnDataList();
+
+    GetLastSpawnedSupplyDropType() = 0;
+    GetSupplyDropWaveStartedSoundCueTimer() = -1.0f;
+    SupplyDropSpawnDataList.Reset();
+
+    if (bUseDefaultSupplyDrops->GetPropertyValue_InContainer(Playlist))
+    {
+        auto& DefaultSupplyDropInfoList = *MapInfoSupplyDropInfoList->ContainerPtrToValuePtr<TArray<UObject*>>(MapInfo);
+        auto& ExcludedNames = *ExcludedDefaultSupplyDrops->ContainerPtrToValuePtr<TArray<uint8>>(this);
+
+        for (auto SupplyDropInfo : DefaultSupplyDropInfoList)
+        {
+            auto Class = SupplyDropInfo ? *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo) : nullptr;
+
+            if (!Class || !Class->IsChildOf(AFortAthenaSupplyDrop::StaticClass()))
+                continue;
+
+            const FName InfoSupplyDropID = SupplyDropID->GetPropertyValue_InContainer<FName>(SupplyDropInfo);
+            bool bExcluded = false;
+
+            for (int32 NameIndex = 0; NameIndex < ExcludedNames.Num() && !bExcluded; NameIndex++)
+                bExcluded = TGameLayout<FName>::Load(ExcludedNames.GetData() + NameIndex * TGameLayout<FName>::Size()) == InfoSupplyDropID;
+
+            if (bExcluded)
+                continue;
+
+            const int32 Index = SupplyDropSpawnDataList.AddUninitialized(1);
+            FSupplyDropSpawnData::StaticStruct()->InitializeStruct(&SupplyDropSpawnDataList[Index]);
+            SupplyDropSpawnDataList[Index].GetSupplyDropInfo() = SupplyDropInfo;
+        }
+    }
+
+    auto& LTMSupplyDropInfoList = *PlaylistSupplyDropInfoList->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UObject>>>(Playlist);
+    auto& ExcludedLTMNames = *ExcludedLTMSupplyDrops->ContainerPtrToValuePtr<TArray<uint8>>(this);
+
+    for (int32 InfoIndex = 0; InfoIndex < LTMSupplyDropInfoList.Num(); InfoIndex++)
+    {
+        auto SupplyDropInfo = LTMSupplyDropInfoList[InfoIndex].LoadSynchronous();
+        auto Class = SupplyDropInfo ? *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo) : nullptr;
+
+        if (!Class || !Class->IsChildOf(AFortAthenaSupplyDrop::StaticClass()))
+            continue;
+
+        const FName InfoSupplyDropID = SupplyDropID->GetPropertyValue_InContainer<FName>(SupplyDropInfo);
+        bool bExcluded = false;
+
+        for (int32 NameIndex = 0; NameIndex < ExcludedLTMNames.Num() && !bExcluded; NameIndex++)
+            bExcluded = TGameLayout<FName>::Load(ExcludedLTMNames.GetData() + NameIndex * TGameLayout<FName>::Size()) == InfoSupplyDropID;
+
+        if (bExcluded)
+            continue;
+
+        const int32 Index = SupplyDropSpawnDataList.AddUninitialized(1);
+        FSupplyDropSpawnData::StaticStruct()->InitializeStruct(&SupplyDropSpawnDataList[Index]);
+        SupplyDropSpawnDataList[Index].GetSupplyDropInfo() = SupplyDropInfo;
+    }
+
+    if (!Config::bLogReplication)
+        return;
+
+    UE_LOG(LogVelora, Log, TEXT("SupplyDrop list for %s: %d entries, bUseDefaultSupplyDrops %d, %d map infos, %d playlist infos"), *Playlist->GetName(), SupplyDropSpawnDataList.Num(), (int32)bUseDefaultSupplyDrops->GetPropertyValue_InContainer(Playlist), MapInfoSupplyDropInfoList->ContainerPtrToValuePtr<TArray<UObject*>>(MapInfo)->Num(), LTMSupplyDropInfoList.Num());
+
+    const int32 SafeZoneCount = MapInfo->GetSafeZoneCount();
+
+    for (int32 Index = 0; Index < SupplyDropSpawnDataList.Num(); Index++)
+    {
+        auto SupplyDropInfo = SupplyDropSpawnDataList[Index].GetSupplyDropInfo();
+        auto& PhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(SupplyDropInfo);
+
+        UE_LOG(LogVelora, Log, TEXT("SupplyDrop list %d: %s (%s), class %s, spawn type %d, %d game phases"), Index, *SupplyDropInfo->GetName(), *SupplyDropID->GetPropertyValue_InContainer<FName>(SupplyDropInfo).ToString(), *(*SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo))->GetName(), (int32)*SpawnType->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), PhaseDataList.Num());
+
+        for (int32 PhaseIndex = 0; PhaseIndex < PhaseDataList.Num(); PhaseIndex++)
+        {
+            auto PhaseData = PhaseDataList.GetData() + PhaseIndex * GamePhaseData->GetInner()->GetSize();
+            auto SubPhase = SubPhaseData->ContainerPtrToValuePtr<uint8>(PhaseData);
+            TCHAR Counts[512] = {};
+
+            for (int32 Level = 0; Level < SafeZoneCount && wcslen(Counts) < 480; Level++)
+                swprintf_s(Counts + wcslen(Counts), 512 - wcslen(Counts), TEXT(" %d:%d-%d/%d"), Level, FMath::TruncToInt(SupplyDropMinCount->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)Level)), FMath::TruncToInt(SupplyDropMaxCount->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)Level)), FMath::TruncToInt(SupplyDropCap->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)Level)));
+
+            UE_LOG(LogVelora, Log, TEXT("SupplyDrop list %d game phase %d, count min-max/cap per safe zone:%s"), Index, (int32)*GamePhase->ContainerPtrToValuePtr<uint8>(PhaseData), Counts);
+        }
+    }
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateSupplyDrops()
+{
+    static auto SupplyDropInfoClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo"));
+    static auto SupplyDropClass = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SupplyDropClass")));
+    static auto SpawnType = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpawnType")));
+    static auto SafeZoneDriven = (ESupplyDropSpawnType)StaticEnum<ESupplyDropSpawnType>()->GetValueByName(FName(TEXT("ESupplyDropSpawnType::SafeZoneDriven")));
+
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+    auto Playlist = GameState ? GameState->GetCurrentPlaylist() : nullptr;
+
+    if (!Playlist || GetSafeZoneLocations().Num() <= 0)
+        return;
+
+    auto MapInfo = GameState->GetMapInfo();
+
+    if (!MapInfo)
+        return;
+
+    const EAthenaGamePhase CurrentGamePhase = GetGamePhase();
+    const float CurrentTime = GetWorld()->GetTimeSeconds();
+    auto& SupplyDropSpawnDataList = GetSupplyDropSpawnDataList();
+
+    for (int32 Index = 0; Index < SupplyDropSpawnDataList.Num(); Index++)
+    {
+        auto SupplyDropInfo = SupplyDropSpawnDataList[Index].GetSupplyDropInfo();
+        auto Class = SupplyDropInfo ? *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo) : nullptr;
+
+        if (!Class || !Class->IsChildOf(AFortAthenaSupplyDrop::StaticClass()))
+            continue;
+
+        if (*SpawnType->ContainerPtrToValuePtr<ESupplyDropSpawnType>(SupplyDropInfo) == SafeZoneDriven)
+            UpdateZoneBasedSupplyDrops(Index, CurrentTime, CurrentGamePhase, GameState, Playlist, MapInfo);
+    }
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateZoneBasedSupplyDrops(int32 SupplyDropIndex, float CurrentTime, EAthenaGamePhase InGamePhase, AFortGameStateAthena* GameState, UObject* Playlist, AFortAthenaMapInfo* MapInfo)
+{
+    static auto SupplyDropInfoClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo"));
+    static auto SupplyDropID = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SupplyDropID")));
+    static auto GamePhaseData = (UArrayProperty*)SupplyDropInfoClass->FindPropertyByName(FName(TEXT("GamePhaseData")));
+    static auto SpecialActorTag = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpecialActorTag")));
+    static auto SpecialActorMinimapIconBrush = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpecialActorMinimapIconBrush")));
+    static auto SpecialActorMinimapIconScale = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpecialActorMinimapIconScale")));
+    static auto SpecialActorCompassIconBrush = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpecialActorCompassIconBrush")));
+    static auto SpecialActorCompassIconScale = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SpecialActorCompassIconScale")));
+    static auto bShouldDrawCompassIcon = (UBoolProperty*)SupplyDropInfoClass->FindPropertyByName(FName(TEXT("bShouldDrawCompassIcon")));
+    static auto GamePhaseDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData"));
+    static auto GamePhase = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("GamePhase")));
+    static auto SupplyDropTimeInterval = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropTimeInterval")));
+    static auto SupplyDropTimeDeviation = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropTimeDeviation")));
+    static auto SupplyDropSpawnMinWaitTime = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropSpawnMinWaitTime")));
+    static auto SupplyDropSpawnMaxWaitTime = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropSpawnMaxWaitTime")));
+    static auto SubPhaseData = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SubPhaseData")));
+    static auto SubPhaseDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropSubPhaseData"));
+    static auto SupplyDropMinCount = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMinCount")));
+    static auto SupplyDropMaxCount = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMaxCount")));
+    static auto SupplyDropCap = SubPhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropCap")));
+    static auto SupplyDropModifierList = (UArrayProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))->FindPropertyByName(FName(TEXT("SupplyDropModifierList")));
+    static auto ModifierDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropModifierData"));
+    static auto ModifierSupplyDropID = ModifierDataStruct->FindPropertyByName(FName(TEXT("SupplyDropID")));
+    static auto ModifierList = (UArrayProperty*)ModifierDataStruct->FindPropertyByName(FName(TEXT("ModifierList")));
+    static auto SubPhaseModifierStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SupplyDropSubPhaseModifier"));
+    static auto ModifierGamePhase = SubPhaseModifierStruct->FindPropertyByName(FName(TEXT("GamePhase")));
+    static auto SubPhaseIndex = SubPhaseModifierStruct->FindPropertyByName(FName(TEXT("SubPhaseIndex")));
+    static auto SpawnInPreviousZonePercentChance = SubPhaseModifierStruct->FindPropertyByName(FName(TEXT("SpawnInPreviousZonePercentChance")));
+    static auto PhaseCount = AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("PhaseCount")));
+    static auto SupplyDropWaveStartedSoundCue = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropWaveStartedSoundCue")));
+
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+    int32 SafeZoneCount = 0;
+
+    if (SafeZoneIndicator)
+        SafeZoneCount = *PhaseCount->ContainerPtrToValuePtr<int32>(SafeZoneIndicator);
+    else if (MapInfo)
+        SafeZoneCount = MapInfo->GetSafeZoneCount();
+
+    auto& SupplyDropSpawnData = GetSupplyDropSpawnDataList()[SupplyDropIndex];
+    auto& ZoneBasedData = SupplyDropSpawnData.GetZoneBasedData();
+
+    if (InGamePhase != ZoneBasedData.GetCurrGamePhase())
+        ZoneBasedData.ResetPhase(InGamePhase);
+
+    auto SupplyDropInfo = SupplyDropSpawnData.GetSupplyDropInfo();
+    auto& PhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(SupplyDropInfo);
+
+    for (int32 GamePhaseIndex = 0; GamePhaseIndex < PhaseDataList.Num(); GamePhaseIndex++)
+    {
+        auto PhaseData = PhaseDataList.GetData() + GamePhaseIndex * GamePhaseData->GetInner()->GetSize();
+
+        if (*GamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(PhaseData) != InGamePhase)
+            continue;
+
+        int32 SafeZonePhaseIndex = GetSafeZonePhaseIndex();
+
+        if (InGamePhase == EAthenaGamePhase::SafeZones && SafeZonePhaseIndex != ZoneBasedData.GetCurrSubPhase())
+        {
+            if (SafeZonePhaseIndex >= SafeZoneCount)
+            {
+                if (SafeZoneCount <= 0)
+                    return;
+
+                SafeZonePhaseIndex = SafeZoneCount - 1;
+            }
+
+            if (SafeZonePhaseIndex == -1)
+                return;
+
+            ZoneBasedData.ResetSubPhase(SafeZonePhaseIndex);
+        }
+
+        const int32 CurrSubPhase = ZoneBasedData.GetCurrSubPhase();
+        auto SubPhase = SubPhaseData->ContainerPtrToValuePtr<uint8>(PhaseData);
+
+        if (CurrentTime >= ZoneBasedData.GetNextWaveSpawnTime())
+        {
+            if (ZoneBasedData.GetNextWaveSpawnTime() >= 0.0f)
+            {
+                const int32 MinCount = FMath::TruncToInt(SupplyDropMinCount->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)CurrSubPhase));
+                const int32 MaxCount = FMath::TruncToInt(SupplyDropMaxCount->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)CurrSubPhase));
+
+                ZoneBasedData.GetNumDropsRemainingInWave() = FMath::RandRange(MinCount, MaxCount);
+
+                if (Config::bLogReplication)
+                {
+                    UE_LOG(LogVelora, Log, TEXT("SupplyDrop %s wave in game phase %d safe zone %d: %d drops (%d to %d)"), *SupplyDropInfo->GetName(), (int32)InGamePhase, CurrSubPhase, ZoneBasedData.GetNumDropsRemainingInWave(), MinCount, MaxCount);
+                }
+            }
+
+            const float TimeInterval = SupplyDropTimeInterval->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+            const float TimeDeviation = SupplyDropTimeDeviation->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+
+            ZoneBasedData.GetNextWaveSpawnTime() = TimeInterval + CurrentTime + TimeDeviation;
+        }
+
+        const int32 Cap = FMath::TruncToInt(SupplyDropCap->ContainerPtrToValuePtr<FScalableFloat>(SubPhase)->GetValueAtLevel((float)CurrSubPhase));
+
+        if ((ZoneBasedData.GetTotalSupplyDropsSpawnedInSubPhase() >= Cap && Cap > 0) || ZoneBasedData.GetNumDropsRemainingInWave() <= 0 || CurrentTime < ZoneBasedData.GetNextSpawnTime())
+            continue;
+
+        int32 SpawnSafeZoneIndex = CurrSubPhase;
+        auto& Modifiers = *SupplyDropModifierList->ContainerPtrToValuePtr<TArray<uint8>>(Playlist);
+        const FName InfoSupplyDropID = SupplyDropID->GetPropertyValue_InContainer<FName>(SupplyDropInfo);
+
+        for (int32 ModifierIndex = 0; ModifierIndex < Modifiers.Num(); ModifierIndex++)
+        {
+            auto Modifier = Modifiers.GetData() + ModifierIndex * SupplyDropModifierList->GetInner()->GetSize();
+
+            if (ModifierSupplyDropID->GetPropertyValue_InContainer<FName>(Modifier) != InfoSupplyDropID)
+                continue;
+
+            auto& SubPhaseModifiers = *ModifierList->ContainerPtrToValuePtr<TArray<uint8>>(Modifier);
+            const int32 ModifiedSubPhaseIndex = SpawnSafeZoneIndex;
+
+            for (int32 SubPhaseModifierIndex = 0; SubPhaseModifierIndex < SubPhaseModifiers.Num(); SubPhaseModifierIndex++)
+            {
+                auto SubPhaseModifier = SubPhaseModifiers.GetData() + SubPhaseModifierIndex * ModifierList->GetInner()->GetSize();
+
+                if (*ModifierGamePhase->ContainerPtrToValuePtr<EAthenaGamePhase>(SubPhaseModifier) != InGamePhase || *SubPhaseIndex->ContainerPtrToValuePtr<int32>(SubPhaseModifier) != ModifiedSubPhaseIndex)
+                    continue;
+
+                const int32 PreviousSafeZoneIndex = ModifiedSubPhaseIndex - 1;
+
+                if (PreviousSafeZoneIndex < 0 || PreviousSafeZoneIndex >= SafeZoneCount)
+                    continue;
+
+                const float PercentChance = *SpawnInPreviousZonePercentChance->ContainerPtrToValuePtr<float>(SubPhaseModifier);
+
+                if (FMath::FRand() < PercentChance || PercentChance >= 1.0f)
+                    SpawnSafeZoneIndex = PreviousSafeZoneIndex;
+            }
+
+            break;
+        }
+
+        GetLastSpawnedSupplyDropType() = SupplyDropIndex;
+
+        auto SafeZoneLocation = (const TGameValue<FVector>*)((const uint8*)GetSafeZoneLocations().GetData() + SpawnSafeZoneIndex * TGameLayout<FVector>::Size());
+        auto SupplyDrop = SpawnZoneBasedSupplyDrop(MapInfo, GamePhaseIndex, SpawnSafeZoneIndex, SupplyDropInfo, *SafeZoneLocation);
+
+        if (!SupplyDrop)
+            continue;
+
+        auto& SpawnedSupplyDrops = ZoneBasedData.GetSpawnedSupplyDrops();
+
+        if (!SpawnedSupplyDrops.Num() && GameState && SupplyDrop->GetWaveSpawnSoundCue())
+        {
+            *SupplyDropWaveStartedSoundCue->ContainerPtrToValuePtr<UObject*>(GameState) = SupplyDrop->GetWaveSpawnSoundCue();
+            GetSupplyDropWaveStartedSoundCueTimer() = GetWorld()->GetTimeSeconds() + 2.0f;
+        }
+
+        ZoneBasedData.GetNumDropsRemainingInWave()--;
+        ZoneBasedData.GetTotalSupplyDropsSpawnedInSubPhase()++;
+        SpawnedSupplyDrops.Add(SupplyDrop);
+
+        if (ZoneBasedData.GetNumDropsRemainingInWave() > 0)
+        {
+            const float MinWaitTime = SupplyDropSpawnMinWaitTime->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+            const float MaxWaitTime = SupplyDropSpawnMaxWaitTime->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+
+            ZoneBasedData.GetNextSpawnTime() = FMath::FRandRange(MinWaitTime, MaxWaitTime) + CurrentTime;
+        }
+        else
+        {
+            ZoneBasedData.ResetWave();
+        }
+
+        if (SpecialActorTag->GetPropertyValue_InContainer<FGameplayTag>(SupplyDropInfo).IsValid())
+            SupplyDrop->RegisterSpecialActor(SpecialActorTag->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), SpecialActorMinimapIconBrush->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), SpecialActorMinimapIconScale->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), SpecialActorCompassIconBrush->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), SpecialActorCompassIconScale->ContainerPtrToValuePtr<uint8>(SupplyDropInfo), bShouldDrawCompassIcon->GetPropertyValue_InContainer(SupplyDropInfo));
+
+        if (Config::bLogReplication)
+        {
+            const FVector Location = SupplyDrop->GetActorLocation();
+
+            UE_LOG(LogVelora, Log, TEXT("SupplyDrop %s spawned from %s in safe zone %d at %.0f %.0f %.0f, %d left in wave, %d in sub phase"), *SupplyDrop->GetName(), *SupplyDropInfo->GetName(), SpawnSafeZoneIndex, Location.X, Location.Y, Location.Z, ZoneBasedData.GetNumDropsRemainingInWave(), ZoneBasedData.GetTotalSupplyDropsSpawnedInSubPhase());
+        }
+    }
+}
+
+AFortAthenaSupplyDrop* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnZoneBasedSupplyDrop(AFortAthenaMapInfo* MapInfo, int32 GamePhaseIndex, int32 SafeZoneIndex, UObject* SupplyDropInfo, const TGameValue<FVector>& SafeZoneLocation)
+{
+    return MapInfo ? MapInfo->SpawnSupplyDropInSafeZone(GamePhaseIndex, SafeZoneIndex, SupplyDropInfo, SafeZoneLocation) : nullptr;
+}
+
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::RemoveSupplyDropWaveStartedSoundCue()
+{
+    static auto SupplyDropWaveStartedSoundCue = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropWaveStartedSoundCue")));
+
+    if (auto GameState = Cast<AFortGameStateAthena>(GetOwner()))
+        *SupplyDropWaveStartedSoundCue->ContainerPtrToValuePtr<UObject*>(GameState) = nullptr;
+}
+
+int32 UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZonePhaseIndex()
+{
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    return SafeZoneIndicator ? SafeZoneIndicator->GetCurrentPhase() : 0;
+}
+
+TArray<FSupplyDropSpawnData>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropSpawnDataList() const
+{
+    static auto SupplyDropSpawnDataList = StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList")));
+
+    return *SupplyDropSpawnDataList->ContainerPtrToValuePtr<TArray<FSupplyDropSpawnData>>((void*)this);
+}
+
+int32& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetLastSpawnedSupplyDropType() const
+{
+    static int32 LastSpawnedSupplyDropType = 0;
+
+    return LastSpawnedSupplyDropType;
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSupplyDropWaveStartedSoundCueTimer()
+{
+    static float SupplyDropWaveStartedSoundCueTimer = -1.0f;
+
+    return SupplyDropWaveStartedSoundCueTimer;
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::execSetStormDamagePaused(FFrame& Stack, void* const Z_Param__Result)

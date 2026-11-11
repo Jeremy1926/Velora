@@ -710,6 +710,9 @@ void AFortGameModeAthena::OnPlaylistDataLoaded()
             if (GamePhaseLogic && MapInfo->IsMapInfoValidForAircraft())
                 MapInfo->InitializeFlightPath(GameState, GamePhaseLogic, false, 0.0f, 0.0f, 360.0f);
 
+            if (GamePhaseLogic && GameState->GetCurrentPlaylist() && UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()->FindPropertyByName(FName(TEXT("SupplyDropSpawnDataList"))))
+                GamePhaseLogic->InitializeSupplyDropList(GameState->GetCurrentPlaylist(), MapInfo);
+
             MapInfo->SpawnLlamas();
         }
     }

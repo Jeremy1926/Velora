@@ -46,6 +46,10 @@ public:
 
     AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
 
+    AFortAthenaSupplyDrop* SpawnSupplyDropWithinCircle(const TGameValue<FVector>& Center, float Radius, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
+
+    AFortAthenaSupplyDrop* SpawnSupplyDropInSafeZone(int32 GamePhaseIndex, int32 SafeZoneIndex, const UObject* SupplyDropInfo, const TGameValue<FVector>& SafeZoneLocation) const;
+
     UClass* GetLlamaClass() const;
 
     UClass* GetAircraftClass() const;

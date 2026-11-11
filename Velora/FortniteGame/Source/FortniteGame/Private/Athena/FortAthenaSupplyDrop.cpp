@@ -10,10 +10,38 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 #include "Detour.h"
 #include "Config.h"
+
+UClass* AFortAthenaSupplyDrop::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaSupplyDrop"));
+
+    return Class;
+}
+
+void AFortAthenaSupplyDrop::RegisterSpecialActor(const uint8* InSpecialActorTag, const uint8* MinimapIconBrush, const uint8* MinimapIconScale, const uint8* CompassIconBrush, const uint8* CompassIconScale, bool bShouldDrawCompassIcon)
+{
+    static auto RegisterSpecialActor = Anchor::Function<void (*)(AFortAthenaSupplyDrop*, const uint8*, const uint8*, const uint8*, const uint8*, const uint8*, bool)>(TEXT("AFortAthenaSupplyDrop::RegisterSpecialActor"))
+        .String(TEXT("AFortAthenaMutator_Cobalt::SpawnAndRegisterSupplyDrop: Spawned and registered a supply drop"))
+        .Start()
+        .Find("lea rdx, [*+0x44]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    RegisterSpecialActor(this, InSpecialActorTag, MinimapIconBrush, MinimapIconScale, CompassIconBrush, CompassIconScale, bShouldDrawCompassIcon);
+}
+
+UObject* AFortAthenaSupplyDrop::GetWaveSpawnSoundCue() const
+{
+    static auto WaveSpawnSoundCue = StaticClass()->FindPropertyByName(FName(TEXT("WaveSpawnSoundCue")));
+
+    return *WaveSpawnSoundCue->ContainerPtrToValuePtr<UObject*>(this);
+}
 
 AFortPickup* AFortAthenaSupplyDrop::SpawnPickup(UFortWorldItemDefinition* ItemDefinition, int32 NumberToSpawn, AFortPawn* TriggeringPawn, const TGameValue<FVector>& GamePosition, const TGameValue<FVector>& GameDirection)
 {

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Athena/FortAthenaMapInfo.h"
+#include "Athena/FortAthenaSupplyDrop.h"
 #include "GameplayEffectTypes.h"
 #include "HAL/IConsoleManager.h"
 #include "Math/UnrealMathUtility.h"
@@ -180,6 +181,54 @@ AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropAtLocation(const FVect
         .Get();
 
     return SpawnSupplyDropAtLocation(this, SpawnLocation, SpawnRotation, InSupplyDropClass, TraceStartZ, TraceEndZ);
+}
+
+AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropWithinCircle(const TGameValue<FVector>& Center, float Radius, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const
+{
+    static auto SpawnSupplyDropWithinCircleByRef = Anchor::Optional<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const TGameValue<FVector>&, float, UClass* const*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropWithinCircle"))
+        .String(TEXT("AFortAthenaMutator_Cobalt::SpawnAndRegisterSupplyDrop: Spawned and registered a supply drop"))
+        .Start()
+        .Find("lea r9, *; movaps xmm2, xmm*; movss [rsp+0x20], xmm*; lea rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (SpawnSupplyDropWithinCircleByRef)
+        return SpawnSupplyDropWithinCircleByRef(this, Center, Radius, &InSupplyDropClass, TraceStartZ, TraceEndZ);
+
+    static auto SpawnSupplyDropWithinCircle = Anchor::Function<AFortAthenaSupplyDrop* (*)(const AFortAthenaMapInfo*, const TGameValue<FVector>&, float, UClass*, float, float)>(TEXT("AFortAthenaMapInfo::SpawnSupplyDropWithinCircle"))
+        .String(TEXT("AFortAthenaMutator_Cobalt::SpawnAndRegisterSupplyDrop: Spawned and registered a supply drop"))
+        .Start()
+        .Find("mov r9, [r9+0x38]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return SpawnSupplyDropWithinCircle(this, Center, Radius, InSupplyDropClass, TraceStartZ, TraceEndZ);
+}
+
+AFortAthenaSupplyDrop* AFortAthenaMapInfo::SpawnSupplyDropInSafeZone(int32 GamePhaseIndex, int32 SafeZoneIndex, const UObject* SupplyDropInfo, const TGameValue<FVector>& SafeZoneLocation) const
+{
+    static auto SupplyDropInfoClass = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropInfo"));
+    static auto SupplyDropClass = SupplyDropInfoClass->FindPropertyByName(FName(TEXT("SupplyDropClass")));
+    static auto GamePhaseData = (UArrayProperty*)SupplyDropInfoClass->FindPropertyByName(FName(TEXT("GamePhaseData")));
+    static auto GamePhaseDataStruct = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortSupplyDropGamePhaseData"));
+    static auto SupplyDropMinPlacementHeight = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMinPlacementHeight")));
+    static auto SupplyDropMaxPlacementHeight = GamePhaseDataStruct->FindPropertyByName(FName(TEXT("SupplyDropMaxPlacementHeight")));
+
+    auto Class = *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo);
+    auto& PhaseDataList = *GamePhaseData->ContainerPtrToValuePtr<TArray<uint8>>(SupplyDropInfo);
+
+    if (!GetSafeZoneDefinition() || !Class || !Class->IsChildOf(AFortAthenaSupplyDrop::StaticClass()) || GamePhaseIndex >= PhaseDataList.Num() || SafeZoneIndex >= GetSafeZoneCount())
+        return nullptr;
+
+    auto SafeZoneRadius = GetSafeZoneRadius();
+    const float Radius = SafeZoneIndex >= 0 && SafeZoneRadius ? SafeZoneRadius->GetValueAtLevel((float)SafeZoneIndex) : 0.0f;
+    auto PhaseData = PhaseDataList.GetData() + GamePhaseIndex * GamePhaseData->GetInner()->GetSize();
+    const float TraceStartZ = SupplyDropMaxPlacementHeight->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+    const float TraceEndZ = SupplyDropMinPlacementHeight->ContainerPtrToValuePtr<FScalableFloat>(PhaseData)->GetValueAtLevel(0.0f);
+
+    return SpawnSupplyDropWithinCircle(SafeZoneLocation, Radius, Class, TraceStartZ, TraceEndZ);
 }
 
 UClass* AFortAthenaMapInfo::GetLlamaClass() const

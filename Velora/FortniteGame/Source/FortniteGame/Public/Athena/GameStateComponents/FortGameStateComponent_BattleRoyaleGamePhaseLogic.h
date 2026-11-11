@@ -2,15 +2,20 @@
 
 #include "Components/ActorComponent.h"
 #include "Containers/Array.h"
+#include "Templates/UnrealTemplate.h"
+#include "UObject/Class.h"
 #include "UObject/WeakObjectPtrTemplates.h"
 
 class AFortAthenaAircraft;
+class AFortAthenaMapInfo;
 class AFortAthenaSupplyDrop;
+class AFortGameStateAthena;
 class AFortPlayerPawn;
 class AFortPlayerPawnAthena;
 class AFortSafeZoneIndicator;
 class APlayerState;
 class UObject;
+class UScriptStruct;
 struct FFrame;
 struct FScalableFloat;
 struct FVector;
@@ -18,6 +23,53 @@ struct FVector;
 enum class EAthenaGamePhase : uint8;
 enum class EAthenaGamePhaseStep : uint8;
 enum class ESafeZoneStartUp : uint8;
+enum class ESupplyDropSpawnType : uint8;
+
+template<>
+UEnum* StaticEnum<ESupplyDropSpawnType>();
+
+struct FSupplyDropZoneBasedSpawnData
+{
+    static UScriptStruct* StaticStruct();
+
+    void ResetPhase(EAthenaGamePhase InCurrGamePhase);
+
+    void ResetSubPhase(int32 InCurrSubPhase);
+
+    void ResetWave();
+
+    TArray<AFortAthenaSupplyDrop*>& GetSpawnedSupplyDrops();
+
+    int32& GetNumDropsRemainingInWave();
+
+    float& GetNextWaveSpawnTime();
+
+    float& GetNextSpawnTime();
+
+    EAthenaGamePhase& GetCurrGamePhase();
+
+    int32& GetCurrSubPhase();
+
+    int32& GetTotalSupplyDropsSpawnedInSubPhase();
+};
+
+struct FSupplyDropSpawnData
+{
+    ~FSupplyDropSpawnData();
+
+    static UScriptStruct* StaticStruct();
+
+    static int32 GetTypeSize();
+
+    UObject*& GetSupplyDropInfo();
+
+    FSupplyDropZoneBasedSpawnData& GetZoneBasedData();
+};
+
+template<>
+class TArray<FSupplyDropSpawnData, FDefaultAllocator> : public TRuntimeSizedArray<FSupplyDropSpawnData>
+{
+};
 
 class UFortGameStateComponent_BattleRoyaleGamePhaseLogic : public UActorComponent
 {
@@ -91,6 +143,24 @@ public:
     void GetSupplyDropSpawnData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpawnHeight, float& MaxSpawnHeight) const;
 
     void GetSupplyDropSpeedData(const AFortAthenaSupplyDrop* SupplyDrop, float& MinSpeed, float& MaxSpeed) const;
+
+    void InitializeSupplyDropList(UObject* Playlist, AFortAthenaMapInfo* MapInfo);
+
+    void UpdateSupplyDrops();
+
+    void UpdateZoneBasedSupplyDrops(int32 SupplyDropIndex, float CurrentTime, EAthenaGamePhase InGamePhase, AFortGameStateAthena* GameState, UObject* Playlist, AFortAthenaMapInfo* MapInfo);
+
+    AFortAthenaSupplyDrop* SpawnZoneBasedSupplyDrop(AFortAthenaMapInfo* MapInfo, int32 GamePhaseIndex, int32 SafeZoneIndex, UObject* SupplyDropInfo, const TGameValue<FVector>& SafeZoneLocation);
+
+    void RemoveSupplyDropWaveStartedSoundCue();
+
+    int32 GetSafeZonePhaseIndex();
+
+    TArray<FSupplyDropSpawnData>& GetSupplyDropSpawnDataList() const;
+
+    int32& GetLastSpawnedSupplyDropType() const;
+
+    float& GetSupplyDropWaveStartedSoundCueTimer();
 
     void execSetStormDamagePaused(FFrame& Stack, void* const Z_Param__Result);
 
