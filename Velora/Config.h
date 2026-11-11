@@ -14,6 +14,7 @@ namespace Config
     inline bool bLategame = false;
     inline bool bInfiniteAmmo = false;
     inline bool bInfiniteMaterials = false;
+    inline bool bPauseSafeZone = false;
     inline bool bLogReplication = true;
     inline bool bLogLivingWorld = true;
 }

@@ -143,6 +143,12 @@ bool AActor::TeleportTo(const FVector& DestLocation, const FRotator& DestRotatio
         .Find("call 0x*")
         .Target()
         .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_TeleportTo"))
+        .Find("setnz *")
+        .Find("mov [*+0x20], *")
+        .Find("call *")
+        .Is("call [*+0x*]")
         .Get();
 
     return TeleportTo(this, DestLocation, DestRotation, bIsATest, bNoCheck);

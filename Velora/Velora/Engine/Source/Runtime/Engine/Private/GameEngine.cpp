@@ -28,6 +28,7 @@
 #include "GameplayEffectTypes.h"
 #include "Athena/Abilities/FortGameplayAbilityAthena_PeriodicItemGrant.h"
 #include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
+#include "Components/FortControllerComponent_RechargeWeapons.h"
 #include "Building/BGAConsumableSpawner.h"
 #include "Building/BuildingGameplayActorTransientQuest.h"
 #include "Building/BuildingItemCollectorActor.h"
@@ -213,6 +214,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         AFriendChestNative::TickActivationTimers();
         UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
         AFortPlayerStateZone::TickSimulatedAttributes(World);
+        UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(World, DeltaSeconds);
 
         if ((UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes()) && World->GetGameState())
         {
@@ -236,7 +238,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         {
             static auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass();
 
-            if (auto GamePhaseLogicComponent = GamePhaseLogic && GameMode ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(GameState) : nullptr)
+            auto GamePhaseLogicComponent = GamePhaseLogic && GameMode ? UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(GameState) : nullptr;
+
+            if (GamePhaseLogicComponent)
             {
                 GamePhaseLogicComponent->TickComponent(DeltaSeconds);
 
@@ -249,10 +253,25 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             FGUI::bStartBus = false;
 
-            auto MapInfo = Config::bLategame && GameMode && !GamePhaseLogic && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
+            if (GameMode && GameMode->GetSafeZoneIndicator())
+            {
+                if (Config::bPauseSafeZone != GameMode->IsSafeZonePaused())
+                    GameMode->SetSafeZonePaused(Config::bPauseSafeZone);
+
+                if (FGUI::bStartShrinkSafeZone)
+                    GameMode->StartShrinkSafeZone();
+
+                if (FGUI::bSkipShrinkSafeZone)
+                    GameMode->SkipShrinkSafeZone();
+            }
+
+            FGUI::bStartShrinkSafeZone = false;
+            FGUI::bSkipShrinkSafeZone = false;
+
+            auto MapInfo = Config::bLategame && GameMode && (!GamePhaseLogic || GamePhaseLogicComponent) && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
             auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
 
-            if (SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::Aircraft)
+            if (SafeZoneRadius && (GamePhaseLogicComponent ? GamePhaseLogicComponent->GetGamePhase() : GameState->GetGamePhase()) == EAthenaGamePhase::Aircraft)
             {
                 auto Center = TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 5 * TGameLayout<FVector>::Size());
                 auto bAllJumped = true;
@@ -293,11 +312,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 if (bAllJumped)
                 {
                     GameState->SetSafeZonesStartTime(GameState->GetServerWorldTimeSeconds());
-                    GameMode->StartSafeZonesPhase(false);
+
+                    if (GamePhaseLogicComponent)
+                        GamePhaseLogicComponent->StartSafeZonesPhase(false);
+                    else
+                        GameMode->StartSafeZonesPhase(false);
                 }
             }
 
-            auto SafeZoneIndicator = SafeZoneRadius && GameState->GetGamePhase() == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
+            auto SafeZoneIndicator = SafeZoneRadius && (GamePhaseLogicComponent ? GamePhaseLogicComponent->GetGamePhase() : GameState->GetGamePhase()) == EAthenaGamePhase::SafeZones ? GameMode->GetSafeZoneIndicator() : nullptr;
             static auto SafeZonePhase = AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));
 
             if (SafeZoneIndicator && (DETOUR_ORIGINAL(AFortGameModeAthena, StartNewSafeZonePhase) || !SafeZonePhase) && GameMode->GetSafeZonePhase() < 5)

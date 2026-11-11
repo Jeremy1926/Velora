@@ -628,6 +628,36 @@ bool UFortGameStateComponent_BattleRoyaleGamePhaseLogic::IsSafeZoneTimerPaused()
     return *SafeZonePauseTime->ContainerPtrToValuePtr<float>(this) >= 0.0f;
 }
 
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneTimerPaused(bool bPaused)
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetOwner());
+
+    if (!GameState || bPaused == IsSafeZoneTimerPaused())
+        return;
+
+    auto& SafeZonePauseTime = GetSafeZonePauseTime();
+    auto& PlaylistEndTime = GetPlaylistEndTime();
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (bPaused)
+    {
+        SafeZonePauseTime = PlaylistEndTime >= 0.0f ? PlaylistEndTime - GameState->GetServerWorldTimeSeconds() : 0.0f;
+
+        if (SafeZoneIndicator)
+            SafeZoneIndicator->OnSafeZoneTimerPauseChanged(SafeZonePauseTime >= 0.0f);
+
+        return;
+    }
+
+    if (PlaylistEndTime >= 0.0f)
+        PlaylistEndTime = GameState->GetServerWorldTimeSeconds() + SafeZonePauseTime;
+
+    SafeZonePauseTime = -1.0f;
+
+    if (SafeZoneIndicator)
+        SafeZoneIndicator->OnSafeZoneTimerPauseChanged(false);
+}
+
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandlePawnPossessed(AFortPlayerPawnAthena* Pawn)
 {
     static auto GE_OutsideSafeZone = StaticClass()->FindPropertyByName(FName(TEXT("GE_OutsideSafeZone")));
@@ -916,6 +946,20 @@ float UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZonesStartTime(
     static auto SafeZonesStartTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonesStartTime")));
 
     return *SafeZonesStartTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZonePauseTime()
+{
+    static auto SafeZonePauseTime = StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));
+
+    return *SafeZonePauseTime->ContainerPtrToValuePtr<float>(this);
+}
+
+float& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetPlaylistEndTime()
+{
+    static auto PlaylistEndTime = StaticClass()->FindPropertyByName(FName(TEXT("PlaylistEndTime")));
+
+    return *PlaylistEndTime->ContainerPtrToValuePtr<float>(this);
 }
 
 AFortSafeZoneIndicator*& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZoneIndicator()

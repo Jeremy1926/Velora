@@ -75,6 +75,8 @@ public:
 
     bool IsSafeZoneTimerPaused() const;
 
+    void SetSafeZoneTimerPaused(bool bPaused);
+
     void HandlePawnPossessed(AFortPlayerPawnAthena* Pawn);
 
     void SafeZoneInsideChecks();
@@ -100,6 +102,10 @@ public:
     float GetSafeZonesStartTime() const;
 
     void SetSafeZonesStartTime(float InSafeZonesStartTime);
+
+    float& GetSafeZonePauseTime();
+
+    float& GetPlaylistEndTime();
 
     AFortSafeZoneIndicator*& GetSafeZoneIndicator();
 

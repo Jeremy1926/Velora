@@ -3,6 +3,7 @@
 #include "Athena/FortAthenaMapInfo.h"
 #include "Athena/FortGameModeAthena.h"
 #include "Athena/FortGameStateAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Engine/World.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameplayEffectTypes.h"
@@ -264,7 +265,7 @@ float AFortSafeZoneIndicator::GetShrinkDuration()
 void AFortSafeZoneIndicator::OnSafeZoneTimerPauseChanged(bool bIsPaused)
 {
     DETOUR(AFortSafeZoneIndicator, OnSafeZoneTimerPauseChanged, Anchor::Hook()
-        .If(AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .If(!UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() && AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
         .String(TEXT("PAUSESAFEZONE"))
         .Find("setz dl; call 0x*")
         .Find("call 0x*")
@@ -279,13 +280,13 @@ void AFortSafeZoneIndicator::OnSafeZoneTimerPauseChanged(bool bIsPaused)
         .Target()
         .Optional()
         .AtStubBranches(), Anchor::Hook()
-        .If(AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
+        .If(!UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass() && AFortSafeZoneIndicator::StaticClass() && AFortSafeZoneIndicator::StaticClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
         .String(TEXT("AFortGameStateAthena::StartPlaylistTimer(%f) Set PlaylistSecondsRemainingCount to: %d"))
         .AtStubBranches());
 
     auto GameState = GetWorld()->GetGameState();
 
-    if (!GameState)
+    if (!GameState || !GetClass()->FindPropertyByName(FName(TEXT("TimeRemainingWhenPhasePaused"))))
         return;
 
     auto& TimeRemainingWhenPhasePaused = GetTimeRemainingWhenPhasePaused();

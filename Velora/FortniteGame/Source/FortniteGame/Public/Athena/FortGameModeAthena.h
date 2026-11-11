@@ -122,6 +122,14 @@ public:
 
     void SetSafeZoneIndicatorShrinkTimes();
 
+    bool IsSafeZonePaused() const;
+
+    void SetSafeZonePaused(bool bPaused);
+
+    void StartShrinkSafeZone();
+
+    void SkipShrinkSafeZone();
+
     int32 GetSafeZonePhase() const;
 
     void SetSafeZonePhase(int32 InSafeZonePhase);

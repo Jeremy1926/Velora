@@ -1265,6 +1265,62 @@ void AFortGameModeAthena::StartAircraftPhase(bool bSkippedWarmup)
     StartAircraftPhase(this, bSkippedWarmup);
 }
 
+bool AFortGameModeAthena::IsSafeZonePaused() const
+{
+    static auto bSafeZonePaused = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bSafeZonePaused")));
+    static auto SafeZonePauseTime = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZonePauseTime")));
+
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+        return GamePhaseLogic->IsSafeZoneTimerPaused();
+
+    if (SafeZonePauseTime)
+    {
+        auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+
+        return GameState && GameState->GetSafeZonePauseTime() >= 0.0f;
+    }
+
+    return bSafeZonePaused && bSafeZonePaused->GetPropertyValue_InContainer(this);
+}
+
+void AFortGameModeAthena::SetSafeZonePaused(bool bPaused)
+{
+    if (auto GamePhaseLogic = UFortGameStateComponent_BattleRoyaleGamePhaseLogic::Get(this))
+    {
+        GamePhaseLogic->SetSafeZoneTimerPaused(bPaused);
+        return;
+    }
+
+    static auto SetSafeZonePaused = Anchor::Function<void (*)(AFortGameModeAthena*, bool)>(TEXT("AFortGameModeAthena::SetSafeZonePaused"))
+        .String(TEXT("PAUSESAFEZONE"))
+        .Find("setz dl; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    SetSafeZonePaused(this, bPaused);
+}
+
+void AFortGameModeAthena::StartShrinkSafeZone()
+{
+    auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (GameState && SafeZoneIndicator && GameState->GetServerWorldTimeSeconds() < SafeZoneIndicator->GetSafeZoneStartShrinkTime())
+        SafeZoneIndicator->OffsetShrinkTimesFromServerTime(0.0f);
+}
+
+void AFortGameModeAthena::SkipShrinkSafeZone()
+{
+    auto SafeZoneIndicator = GetSafeZoneIndicator();
+
+    if (!SafeZoneIndicator)
+        return;
+
+    SafeZoneIndicator->OffsetShrinkTimesFromServerTime(0.0f);
+    SafeZoneIndicator->SetShrinkDuration(0.2f);
+}
+
 int32 AFortGameModeAthena::GetSafeZonePhase() const
 {
     static auto SafeZonePhase = GetClass()->FindPropertyByName(FName(TEXT("SafeZonePhase")));

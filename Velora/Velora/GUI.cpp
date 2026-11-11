@@ -26,6 +26,8 @@ SRWLOCK FGUI::TitleLock = SRWLOCK_INIT;
 TCHAR FGUI::Title[128] = TEXT("Velora");
 bool FGUI::bTitleChanged = true;
 bool FGUI::bStartBus = false;
+bool FGUI::bStartShrinkSafeZone = false;
+bool FGUI::bSkipShrinkSafeZone = false;
 
 void FGUI::Run()
 {
@@ -322,6 +324,27 @@ void FGUI::Draw()
                 ImGui::Checkbox("Lategame", &Config::bLategame);
                 ImGui::Checkbox("Infinite Ammo", &Config::bInfiniteAmmo);
                 ImGui::Checkbox("Infinite Materials", &Config::bInfiniteMaterials);
+
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Safezone"))
+            {
+                ImGui::Dummy(ImVec2(0.f, ImGui::GetStyle().ItemSpacing.y * 2.f));
+
+                ImGui::Checkbox("Pause Zone", &Config::bPauseSafeZone);
+
+                ImGui::BeginDisabled(Config::bPauseSafeZone);
+
+                if (ImGui::Button("Start Shrinking"))
+                    bStartShrinkSafeZone = true;
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Skip Zone"))
+                    bSkipShrinkSafeZone = true;
+
+                ImGui::EndDisabled();
 
                 ImGui::EndTabItem();
             }
