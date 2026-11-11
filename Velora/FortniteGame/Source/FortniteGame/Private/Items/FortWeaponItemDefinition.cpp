@@ -6,6 +6,7 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
+#include "Scanner.h"
 
 UScriptStruct* FFortBaseWeaponStats::StaticStruct()
 {
@@ -61,7 +62,15 @@ const TArray<FFortWeaponModSlot>& UFortWeaponItemDefinition::GetWeaponModSlots()
 {
     static auto WeaponModSlots = StaticClass()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
 
-    return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+    if (WeaponModSlots)
+        return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+
+    static auto GetWeaponModSlots = Anchor::Function<const TArray<FFortWeaponModSlot>* (*)(const UFortWeaponItemDefinition*)>(TEXT("UFortWeaponItemDefinition::GetWeaponModSlots"))
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
+        .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x30; movsxd rdi, dword ptr [rcx+0x*]; mov rbx, [rcx+0x*]")
+        .Get();
+
+    return *GetWeaponModSlots(this);
 }
 
 bool UFortWeaponItemDefinition::SetDefaultWeaponModSlotsIfNeeded(FFortItemEntry& ItemEntry) const
