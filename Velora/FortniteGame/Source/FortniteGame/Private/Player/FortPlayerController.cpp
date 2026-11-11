@@ -1012,6 +1012,16 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
         .LogSlot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"))
         .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
+    static auto ShouldAlwaysDropItemOnDeathOrLogout = Anchor::VirtualFunction<bool (*)(AFortPlayerController*, const UFortWorldItem*, bool)>(TEXT("AFortPlayerController::ShouldAlwaysDropItemOnDeathOrLogout"))
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("mov rcx, rdx; mov dl, r8b; jmp 0x*"); })
+        .Optional()
+        .Get();
+
+    static auto ShouldDropOrDestroyByItemType = Anchor::VirtualFunction<void (*)(AFortPlayerController*, const UFortWorldItemDefinition*, bool*, bool*)>(TEXT("AFortPlayerController::ShouldDropOrDestroyByItemType"))
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("jmp 0x*") && ::Anchor::At(Entry.Target()).Has("mov [rsp+0x20], rsi; mov r8, *; mov rdx, *; mov rcx, *; call 0x*"); })
+        .Optional()
+        .Get();
+
     auto WorldInventory = GetWorldInventory();
 
     if (!WorldInventory || !DestroyedPawn)
@@ -1024,22 +1034,53 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
     {
         auto ItemDefinition = Cast<UFortWorldItemDefinition>(ReplicatedEntries[Index].GetItemDefinition());
 
-        if (!ItemDefinition || !ItemDefinition->ShouldDropOnDeath() || ReplicatedEntries[Index].GetCount() <= 0)
+        if (!ItemDefinition)
             continue;
 
-        FFortItemEntry DropItemEntry(ItemDefinition, ReplicatedEntries[Index].GetCount(), ReplicatedEntries[Index].GetLevel());
-        DropItemEntry.GetLoadedAmmo() = ReplicatedEntries[Index].GetLoadedAmmo();
-        DropItemEntry.GetDurability() = ReplicatedEntries[Index].GetDurability();
-        DropItemEntry.CopyWeaponModStateFrom(ReplicatedEntries[Index]);
-
         const FGuid ItemGuid = ReplicatedEntries[Index].GetItemGuid();
+        const int32 Count = ReplicatedEntries[Index].GetCount();
+        bool bShouldDrop = Count > 0 && ItemDefinition->ShouldDropOnDeath();
+        bool bShouldDestroy = false;
 
-        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::Player))
-            Pickup->TossPickup(Location, DestroyedPawn, 0, true);
+        if (ShouldAlwaysDropItemOnDeathOrLogout && ShouldDropOrDestroyByItemType)
+        {
+            static auto DropAsPickup = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickup")));
+            static auto DropAsPickupDestroyOnEmpty = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickupDestroyOnEmpty")));
+            static auto DropAsPickupEvenWhenEmpty = (EWorldItemDropBehavior)StaticEnum<EWorldItemDropBehavior>()->GetValueByName(FName(TEXT("EWorldItemDropBehavior::DropAsPickupEvenWhenEmpty")));
 
-        RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), true);
+            for (auto Item : WorldInventory->GetInventory().GetItemInstances())
+            {
+                if (Item && Item->GetItemGuid() == ItemGuid && ShouldAlwaysDropItemOnDeathOrLogout(this, Item, false))
+                    bShouldDrop = true;
+            }
 
-        bDroppedItems = true;
+            ShouldDropOrDestroyByItemType(this, ItemDefinition, &bShouldDrop, &bShouldDestroy);
+
+            if (bShouldDrop && !bShouldDestroy)
+            {
+                const auto DropBehavior = ItemDefinition->GetDropBehavior();
+
+                bShouldDestroy = DropBehavior != DropAsPickup && DropBehavior != DropAsPickupEvenWhenEmpty && (DropBehavior != DropAsPickupDestroyOnEmpty || Count <= 0);
+            }
+        }
+
+        if (!bShouldDrop && !bShouldDestroy)
+            continue;
+
+        if (!bShouldDestroy)
+        {
+            FFortItemEntry DropItemEntry(ItemDefinition, Count, ReplicatedEntries[Index].GetLevel());
+            DropItemEntry.GetLoadedAmmo() = ReplicatedEntries[Index].GetLoadedAmmo();
+            DropItemEntry.GetDurability() = ReplicatedEntries[Index].GetDurability();
+            DropItemEntry.CopyWeaponModStateFrom(ReplicatedEntries[Index]);
+
+            if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::Player))
+                Pickup->TossPickup(Location, DestroyedPawn, 0, true);
+
+            bDroppedItems = true;
+        }
+
+        RemoveInventoryItem(ItemGuid, Count, true);
     }
 }
 
