@@ -26,6 +26,7 @@ struct FPendingSwap
 {
     TWeakObjectPtr<AFortPickup> Pickup;
     FGuid SwapItemGuid;
+    bool bEquipNewItem;
 };
 
 static TArray<FPendingSwap> PendingSwaps;
@@ -306,14 +307,104 @@ void AFortPickup::GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, boo
         (this->*GameGivePickupTo)(InventoryOwner, DestoryAfterPickup);
 }
 
+bool AFortPickup::CanItemTypeBeSwapped(const UFortItemDefinition* ItemDefinition, AFortPlayerController* PlayerController)
+{
+    static auto DecoItemDefinitionClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoItemDefinition"));
+    static auto CanItemTypeBeSwapped = Anchor::Optional<bool (*)(AFortPickup*, EFortItemType, AFortPlayerController*)>(TEXT("AFortPickup::CanItemTypeBeSwapped"))
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov r8, rax; mov rcx, *; call 0x*")
+        .Call()
+        .Has("bt *")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("cmp [rsp+0x*], *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("mov r8, rax; mov rcx, *; call 0x*")
+        .Call()
+        .Has("bt *")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov *, [rsp+0x*]; test *, *; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("mov r8, rax; mov rcx, *; call 0x*")
+        .Call()
+        .Has("bt *")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov r8, rax; mov dl, *; mov rcx, *; call 0x*")
+        .Call()
+        .Has("bt *")
+        .Get();
+
+    if (CanItemTypeBeSwapped)
+        return CanItemTypeBeSwapped(this, ItemDefinition->GetItemType(), PlayerController);
+
+    return ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
+}
+
 void AFortPickup::SetSwapItemGuid(const FGuid& SwapItemGuid)
 {
-    PendingSwaps.Add(FPendingSwap{ this, SwapItemGuid });
+    auto PickupTarget = GetPickupLocationData().GetPickupTarget();
+    auto PlayerController = PickupTarget ? Cast<AFortPlayerControllerAthena>(PickupTarget->GetController()) : nullptr;
+    auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
+
+    if (!WorldInventory || PlayerController->CanServerTryAddToQuickBar())
+    {
+        PendingSwaps.Add(FPendingSwap{ this, SwapItemGuid, false });
+        return;
+    }
+
+    auto& PickupItemEntry = GetPrimaryPickupItemEntry();
+    auto ItemDefinition = PickupItemEntry.GetItemDefinition();
+    const int32 Overflow = ItemDefinition && CanItemTypeBeSwapped(ItemDefinition, PlayerController) ? WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) : 0;
+
+    if (Overflow <= 0)
+        return;
+
+    auto& Inventory = WorldInventory->GetInventory();
+    UFortItemDefinition* SwapItemDefinition = nullptr;
+    int32 SwapCount = 0;
+    auto bCanAddStack = true;
+
+    for (auto& ItemEntry : Inventory.GetReplicatedEntries())
+    {
+        if (ItemEntry.GetItemGuid() == SwapItemGuid)
+        {
+            SwapItemDefinition = ItemEntry.GetItemDefinition();
+            SwapCount = ItemEntry.GetCount();
+        }
+
+        if (ItemEntry.GetItemDefinition() == ItemDefinition)
+            bCanAddStack = ItemDefinition->DoesAllowMultipleStacks();
+    }
+
+    if (!bCanAddStack || SwapCount <= 0)
+        return;
+
+    const bool bEquipNewItem = PickupTarget->GetCurrentWeapon() && PickupTarget->GetCurrentWeapon()->GetItemEntryGuid() == SwapItemGuid;
+
+    PlayerController->ServerSpawnInventoryDrop_Implementation(SwapItemGuid, SwapCount);
+
+    auto bDropped = true;
+
+    for (auto& ItemEntry : Inventory.GetReplicatedEntries())
+        bDropped &= ItemEntry.GetItemGuid() != SwapItemGuid;
+
+    if (Config::bLogReplication)
+    {
+        UE_LOG(LogVelora, Log, TEXT("Pickup %s swap request drops %s count %d overflow %d dropped %d entries %d equip %d"), *ItemDefinition->GetName(), SwapItemDefinition ? *SwapItemDefinition->GetName() : TEXT("None"), SwapCount, Overflow, bDropped, Inventory.GetReplicatedEntries().Num(), bEquipNewItem);
+    }
+
+    if (bDropped)
+        PendingSwaps.Add(FPendingSwap{ this, FGuid(), bEquipNewItem });
 }
 
 void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* InventoryOwner)
 {
     FGuid SwapItemGuid;
+    auto bEquipSwappedItem = false;
 
     for (int32 Index = PendingSwaps.Num() - 1; Index >= 0; Index--)
     {
@@ -323,7 +414,10 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
             continue;
 
         if (Pickup)
+        {
             SwapItemGuid = PendingSwaps[Index].SwapItemGuid;
+            bEquipSwappedItem = PendingSwaps[Index].bEquipNewItem;
+        }
 
         PendingSwaps.RemoveAt(Index);
     }
@@ -348,35 +442,8 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         auto bCanAddStack = true;
 
         static auto DecoItemDefinitionClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDecoItemDefinition"));
-        static auto CanItemTypeBeSwapped = Anchor::Optional<bool (*)(AFortPickup*, EFortItemType, AFortPlayerController*)>(TEXT("AFortPickup::CanItemTypeBeSwapped"))
-            .String(TEXT("SwapEquippedText"))
-            .Find("mov r8, rax; mov rcx, *; call 0x*")
-            .Call()
-            .Has("bt *")
-            .Or()
-            .String(TEXT("SwapEquippedText"))
-            .Find("cmp [rsp+0x*], *; jnz 0x*")
-            .Find("jnz 0x*")
-            .Target()
-            .Find("mov r8, rax; mov rcx, *; call 0x*")
-            .Call()
-            .Has("bt *")
-            .Or()
-            .String(TEXT("SwapEquippedText"))
-            .Find("mov *, [rsp+0x*]; test *, *; jnz 0x*")
-            .Find("jnz 0x*")
-            .Target()
-            .Find("mov r8, rax; mov rcx, *; call 0x*")
-            .Call()
-            .Has("bt *")
-            .Or()
-            .String(TEXT("SwapEquippedText"))
-            .Find("mov r8, rax; mov dl, *; mov rcx, *; call 0x*")
-            .Call()
-            .Has("bt *")
-            .Get();
         auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
-        auto bCanBeSwapped = CanItemTypeBeSwapped ? CanItemTypeBeSwapped(this, ItemDefinition->GetItemType(), PlayerController) : bNeedsPrimarySlot;
+        auto bCanBeSwapped = CanItemTypeBeSwapped(ItemDefinition, PlayerController);
         auto bSwapEquipped = bCanBeSwapped && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
 
         for (auto& ItemEntry : Inventory.GetReplicatedEntries())
@@ -439,7 +506,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         if (bSwapEquipped && SwapItemGuid == FGuid() && PickupTarget->GetCurrentWeapon())
             SwapItemGuid = PickupTarget->GetCurrentWeapon()->GetItemEntryGuid();
 
-        auto bEquipNewItem = bSwapEquipped && PickupTarget->GetCurrentWeapon() && PickupTarget->GetCurrentWeapon()->GetItemEntryGuid() == SwapItemGuid;
+        auto bEquipNewItem = bEquipSwappedItem || (bSwapEquipped && PickupTarget->GetCurrentWeapon() && PickupTarget->GetCurrentWeapon()->GetItemEntryGuid() == SwapItemGuid);
 
         if (bCanAddStack && NumberToGive > 0 && SwapItemGuid != FGuid())
         {
@@ -458,7 +525,9 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         }
 
         if (Config::bLogReplication)
-            UE_LOG(LogVelora, Log, TEXT("Pickup %s swap %d can swap %d server quickbar %d overflow %d entries %d add %d give %d"), *ItemDefinition->GetName(), bSwapEquipped, bCanBeSwapped, PlayerController->CanServerTryAddToQuickBar(), WorldInventory->GetOverflowFromAddingItem(PickupItemEntry), Inventory.GetReplicatedEntries().Num(), bCanAddStack, NumberToGive);
+        {
+            UE_LOG(LogVelora, Log, TEXT("Pickup %s swap %d can swap %d server quickbar %d overflow %d entries %d add %d give %d equip %d"), *ItemDefinition->GetName(), bSwapEquipped, bCanBeSwapped, PlayerController->CanServerTryAddToQuickBar(), WorldInventory->GetOverflowFromAddingItem(PickupItemEntry), Inventory.GetReplicatedEntries().Num(), bCanAddStack, NumberToGive, bEquipNewItem);
+        }
 
         if (bSwapEquipped && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0)
             bCanAddStack = false;
@@ -497,6 +566,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
                     PlayerController->ClientEquipItem(ItemGuid, true);
 
                 bEquipNewItem = false;
+                bEquipSwappedItem = false;
 
                 continue;
             }

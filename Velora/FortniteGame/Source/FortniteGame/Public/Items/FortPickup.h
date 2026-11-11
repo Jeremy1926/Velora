@@ -10,6 +10,7 @@ class AFortPawn;
 class AFortPickup;
 class AFortPlayerController;
 class IFortInventoryOwnerInterface;
+class UFortItemDefinition;
 class UScriptStruct;
 class UWorld;
 struct FFortItemEntry;
@@ -93,6 +94,8 @@ public:
     void GivePickupTo(IFortInventoryOwnerInterface* InventoryOwner, bool DestoryAfterPickup);
 
     static void (AFortPickup::*GameGivePickupTo)(IFortInventoryOwnerInterface* InventoryOwner, bool DestoryAfterPickup);
+
+    bool CanItemTypeBeSwapped(const UFortItemDefinition* ItemDefinition, AFortPlayerController* PlayerController);
 
     void SetSwapItemGuid(const FGuid& SwapItemGuid);
 
