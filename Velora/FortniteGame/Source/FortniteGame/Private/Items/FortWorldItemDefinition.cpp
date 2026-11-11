@@ -111,16 +111,10 @@ const FDataTableCategoryHandle& UFortWorldItemDefinition::GetLootLevelData() con
     if (LootLevelData)
         return *LootLevelData->ContainerPtrToValuePtr<FDataTableCategoryHandle>(this);
 
-    static auto GetLootLevelData = Anchor::Function<const FDataTableCategoryHandle* (*)(const UFortWorldItemDefinition*)>(TEXT("UFortWorldItemDefinition::GetLootLevelData"))
-        .String(TEXT("UFortLootLevel::GetItemLevel"))
-        .Start()
-        .Caller()
-        .Find("mov rcx, rsi; call 0x*; mov edx, ebx; mov rcx, rax; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Get();
+    static auto LootLevelMapping = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_LootLevelMapping"));
+    static auto LootLevelCategoryHandle = LootLevelMapping->FindPropertyByName(FName(TEXT("LootLevelCategoryHandle")));
 
-    return *GetLootLevelData(this);
+    return *LootLevelCategoryHandle->ContainerPtrToValuePtr<FDataTableCategoryHandle>(GetItemComponentData(LootLevelMapping));
 }
 
 template<>

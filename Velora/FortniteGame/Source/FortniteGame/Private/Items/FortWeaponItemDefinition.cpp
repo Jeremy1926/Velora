@@ -65,12 +65,10 @@ const TArray<FFortWeaponModSlot>& UFortWeaponItemDefinition::GetWeaponModSlots()
     if (WeaponModSlots)
         return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
 
-    static auto GetWeaponModSlots = Anchor::Function<const TArray<FFortWeaponModSlot>* (*)(const UFortWeaponItemDefinition*)>(TEXT("UFortWeaponItemDefinition::GetWeaponModSlots"))
-        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
-        .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x30; movsxd rdi, dword ptr [rcx+0x*]; mov rbx, [rcx+0x*]")
-        .Get();
+    static auto WeaponModSlotsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponModSlots"));
+    static auto DataWeaponModSlots = WeaponModSlotsData->FindPropertyByName(FName(TEXT("WeaponModSlots")));
 
-    return *GetWeaponModSlots(this);
+    return *DataWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(GetItemComponentData(WeaponModSlotsData));
 }
 
 bool UFortWeaponItemDefinition::SetDefaultWeaponModSlotsIfNeeded(FFortItemEntry& ItemEntry) const

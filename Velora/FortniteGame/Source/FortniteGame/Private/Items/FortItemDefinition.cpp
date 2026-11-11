@@ -45,8 +45,14 @@ const uint8* UFortItemDefinition::GetItemComponentData(const UScriptStruct* Scri
 
     static auto GetDefaultInstance = Anchor::Function<FConstStructView* (*)(FConstStructView*, const UScriptStruct*)>(TEXT("FItemComponentData::GetDefaultInstance"))
         .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
-        .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x30; movsxd rdi, dword ptr [rcx+0x*]; mov rbx, [rcx+0x*]")
-        .Find("lea rcx, [rsp+0x20]; call 0x*")
+        .Find("lea rcx, [rsp+0x20]; call 0x*; mov *, [rax+0x8]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [rsp+0x20]; call 0x*; mov *, [rax+0x8]")
         .Find("call 0x*")
         .Target()
         .Get();
