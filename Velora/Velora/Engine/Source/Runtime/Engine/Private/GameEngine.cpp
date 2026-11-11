@@ -273,8 +273,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             auto MapInfo = Config::bLategame && GameMode && (!GamePhaseLogic || GamePhaseLogicComponent) && GameMode->GetSafeZoneLocations().Num() > 5 ? GameState->GetMapInfo() : nullptr;
             auto SafeZoneRadius = MapInfo ? MapInfo->GetSafeZoneRadius() : nullptr;
+            static auto BusLocked = (EAthenaGamePhaseStep)StaticEnum<EAthenaGamePhaseStep>()->GetValueByName(FName(TEXT("EAthenaGamePhaseStep::BusLocked")));
 
-            if (SafeZoneRadius && (GamePhaseLogicComponent ? GamePhaseLogicComponent->GetGamePhase() : GameState->GetGamePhase()) == EAthenaGamePhase::Aircraft)
+            if (SafeZoneRadius && (GamePhaseLogicComponent ? GamePhaseLogicComponent->GetGamePhase() : GameState->GetGamePhase()) == EAthenaGamePhase::Aircraft && GameState->GetGamePhaseStep() >= BusLocked)
             {
                 auto Center = TGameLayout<FVector>::Load((uint8*)GameMode->GetSafeZoneLocations().GetData() + 5 * TGameLayout<FVector>::Size());
                 auto bAllJumped = true;
