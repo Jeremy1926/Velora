@@ -33,11 +33,40 @@ FString UFortItemDefinition::GetPersistentName() const
     return PersistentName;
 }
 
+const uint8* UFortItemDefinition::GetItemComponentData(const UScriptStruct* ScriptStruct) const
+{
+    static auto DataList = StaticClass()->FindPropertyByName(FName(TEXT("DataList")));
+
+    for (const FConstStructView& Data : *DataList->ContainerPtrToValuePtr<TArray<FConstStructView>>(this))
+    {
+        if (Data.ScriptStruct == ScriptStruct && Data.StructMemory)
+            return Data.StructMemory;
+    }
+
+    static auto GetDefaultInstance = Anchor::Function<FConstStructView* (*)(FConstStructView*, const UScriptStruct*)>(TEXT("FItemComponentData::GetDefaultInstance"))
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
+        .Is("mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x30; movsxd rdi, dword ptr [rcx+0x*]; mov rbx, [rcx+0x*]")
+        .Find("lea rcx, [rsp+0x20]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    FConstStructView DefaultInstance;
+
+    return GetDefaultInstance(&DefaultInstance, ScriptStruct)->StructMemory;
+}
+
 int32 UFortItemDefinition::GetMinLevel() const
 {
     static auto MinLevel = GetClass()->FindPropertyByName(FName(TEXT("MinLevel")));
 
-    return *MinLevel->ContainerPtrToValuePtr<int32>(this);
+    if (MinLevel)
+        return *MinLevel->ContainerPtrToValuePtr<int32>(this);
+
+    static auto LevelLimits = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_LevelLimits"));
+    static auto LevelLimitsMinLevel = LevelLimits->FindPropertyByName(FName(TEXT("MinLevel")));
+
+    return *LevelLimitsMinLevel->ContainerPtrToValuePtr<int32>(GetItemComponentData(LevelLimits));
 }
 
 const FText& UFortItemDefinition::GetDisplayName() const
@@ -161,5 +190,14 @@ void UFortItemDefinition::GetOwnedGameplayTags(FGameplayTagContainer& TagContain
 {
     static auto GameplayTags = GetClass()->FindPropertyByName(FName(TEXT("GameplayTags")));
 
-    TagContainer.AppendTags(*GameplayTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this));
+    if (GameplayTags)
+    {
+        TagContainer.AppendTags(*GameplayTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this));
+        return;
+    }
+
+    static auto OwnedGameplayTags = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_OwnedGameplayTags"));
+    static auto Tags = OwnedGameplayTags->FindPropertyByName(FName(TEXT("Tags")));
+
+    TagContainer.AppendTags(*Tags->ContainerPtrToValuePtr<FGameplayTagContainer>(GetItemComponentData(OwnedGameplayTags)));
 }

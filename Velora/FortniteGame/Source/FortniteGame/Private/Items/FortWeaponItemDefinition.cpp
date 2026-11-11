@@ -86,9 +86,10 @@ bool UFortWeaponItemDefinition::SetDefaultWeaponModSlotsIfNeeded(FFortItemEntry&
 
 FGameplayTag UFortWeaponItemDefinition::GetWeaponModBucketTag() const
 {
-    static auto GameplayTags = StaticClass()->FindPropertyByName(FName(TEXT("GameplayTags")));
+    FGameplayTagContainer GameplayTags;
+    GetOwnedGameplayTags(GameplayTags);
 
-    for (const FGameplayTag& GameplayTag : GameplayTags->ContainerPtrToValuePtr<FGameplayTagContainer>(this)->GetGameplayTagArray())
+    for (const FGameplayTag& GameplayTag : GameplayTags.GetGameplayTagArray())
     {
         const FString TagString = GameplayTag.ToString();
 

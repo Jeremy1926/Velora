@@ -8,6 +8,12 @@
 class UAbilitySystemComponent;
 struct FGameplayTagContainer;
 
+struct FConstStructView
+{
+    const UScriptStruct* ScriptStruct;
+    const uint8* StructMemory;
+};
+
 enum class EFortItemType : uint8
 {
     WorldItem,
@@ -100,6 +106,8 @@ class UFortItemDefinition : public UMcpItemDefinitionBase
 {
 public:
     static UClass* StaticClass();
+
+    const uint8* GetItemComponentData(const UScriptStruct* ScriptStruct) const;
 
     int32 GetMinLevel() const;
 
