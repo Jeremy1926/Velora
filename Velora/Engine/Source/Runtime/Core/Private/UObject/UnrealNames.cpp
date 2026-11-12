@@ -210,6 +210,8 @@ FString FName::ToString() const
         .Find("call 0x*")
         .Target()
         .Or()
+        .Pattern("48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 20 8B 09 48 8B DA E8 ? ? ? ? 48 8B F0 0F B7 00 83 F8 40 72")
+        .Or()
         .String(TEXT("Failed to find function %s in %s"))
         .Start()
         .Call(3)
