@@ -144,6 +144,12 @@ void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewVi
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]", 2)
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
+        .Or()
+        .If(::Anchor::Exists().VirtualMatch(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x40; movups xmm0, [r8]; mov rax, [rcx]; mov rdi, r8; lea r8, [rsp+0x20]; mov rbx, rdx; movaps [rsp+0x20], xmm0; mov rsi, rcx; call [rax+0x*]; mov rax, [rsi]; mov rcx, rsi; movups xmm0, [rdi]; mov edx, [0x*]").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ServerSpectateActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]", 2)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
         .Optional()
         .InChildVTablesCounted(StaticClass()));
 
