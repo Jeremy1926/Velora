@@ -258,6 +258,10 @@ void AFortPawn::OnRep_LastReplicatedEmoteExecuted(const UFortItemDefinition* Pre
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPawn:OnRep_LastReplicatedEmoteExecuted"))
+            .Find("setnz *; add r*, r*")
+            .Find("call [rax+0x*]")
             .Get();
 
         OnRepWithPreviousValue(this, PreviousValue);
@@ -318,8 +322,15 @@ void AFortPawn::LaunchCharacterJump(const FVector& LaunchVelocity, bool bXYOverr
     static auto LaunchCharacterJump = Anchor::Optional<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
         .Native(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
         .Get();
+    static auto bVirtualAfterInlinedFinish = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:LaunchCharacterJump"))
+        .Has("bt rax, 0x8")
+        .Find("mov [*+0x20], *")
+        .Find("setnz *; *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Get();
 
-    if (LaunchCharacterJump)
+    if (LaunchCharacterJump && !bVirtualAfterInlinedFinish)
         return LaunchCharacterJump(this, LaunchVelocity, bXYOverride, bZOverride, bIgnoreFallDamage, bPlayFeedbackEvent);
 
     static auto VirtualLaunchCharacterJump = Anchor::VirtualFunction<void (*)(AFortPawn*, const TGameValue<FVector>&, bool, bool, bool, bool)>(TEXT("AFortPawn::LaunchCharacterJump"))
@@ -355,6 +366,11 @@ void AFortPawn::SetGravityMultiplier(float NewGravityVal)
         .Exec(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Find("call *")
+        .Is("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:SetGravityMultiplier"))
+        .Find("setnz *; add r*, r*")
         .Find("call *")
         .Is("call [rax+0x*]")
         .Optional()
