@@ -41,6 +41,18 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
             .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
             .Find("mov rcx, r*; call 0x*; movss xmm3, dword ptr [*]")
             .Call()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rcx, r*; call 0x*; cmp al, r*b; jnz 0x*")
+            .Call()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rcx, r*; call 0x*; mov *, 0x1; cmp al, *; jnz 0x*")
+            .Call()
             .Get();
 
         static auto bEventBeforeSubGame = Anchor::Exists()
