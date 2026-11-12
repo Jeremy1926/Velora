@@ -1908,6 +1908,13 @@ int32 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabl
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
+        .Find("test byte ptr [rbp+0x*], 0x*; mov [rsp+0x*], rbx; mov [rsp+0x*], rdi; jnz 0x*")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
         .FirstOf("cmp byte ptr [rbx+0x*], 0x0", "test byte ptr [rbx+0x*], 0x*")
         .Disp();
 
@@ -1917,6 +1924,13 @@ int32 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabl
 uint8 UFortReplicationGraphNode_AlwaysRelevantForSquad::GetSpecialRelevancyEnabledMask()
 {
     static auto Mask = (uint8)Anchor::Offset(TEXT("UFortReplicationGraphNode_AlwaysRelevantForSquad::bSpecialRelevancyEnabled"))
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
+        .Find("test byte ptr [rbp+0x*], 0x*; mov [rsp+0x*], rbx; mov [rsp+0x*], rdi; jnz 0x*")
+        .Or()
         .String(TEXT("Child: %s"))
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
