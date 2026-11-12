@@ -180,6 +180,13 @@ bool UFortItemDefinition::DoesAllowMultipleStacks() const
         return !Data || !Traits->ContainerPtrToValuePtr<FGameplayTagContainer>(Data)->HasTag(SingleStack);
     }
 
+    static auto bVirtualGetter = Anchor::Exists()
+        .BoolGetter(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), (UBoolProperty*)bAllowMultipleStacks)
+        .Get();
+
+    if (bAllowMultipleStacks && !bVirtualGetter)
+        return ((UBoolProperty*)bAllowMultipleStacks)->GetPropertyValue_InContainer(this);
+
     static auto DoesAllowMultipleStacks = Anchor::VirtualFunction<bool (*)(const UFortItemDefinition*)>(TEXT("UFortItemDefinition::DoesAllowMultipleStacks"))
         .BoolGetter(TEXT("/Script/FortniteGame.Default__FortItemDefinition"), (UBoolProperty*)((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemDefinition")))->FindPropertyByName(FName(TEXT("bAllowMultipleStacks"))))
         .Get();
