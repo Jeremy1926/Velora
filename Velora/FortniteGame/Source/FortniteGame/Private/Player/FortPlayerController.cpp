@@ -2407,6 +2407,16 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Find("call 0x*")
         .Target()
         .Find("mov rbx, [rax+0x*]; *; *; *; *; mov r8b, [rbp+0x*]; *; call rbx")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("call r10")
+        .Find("mov [rsp+0x20], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("call rbx; test al, al")
+        .Last("mov rbx, [rax+0x*]")
         .Get();
 
     static auto bMarkerOptionalAdjustment = Anchor::Exists()
@@ -2479,6 +2489,16 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Find("call 0x*")
         .Target()
         .Find("mov rbx, [rax+0x*]; *; *; *; *; mov r8b, [rbp+0x*]; *; call rbx")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("call r10")
+        .Find("mov [rsp+0x20], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("call rbx; test al, al")
+        .Last("mov r8b, [rbp+0x*]")
         .Get();
 
     if (bMarkerOptionalAdjustment)
