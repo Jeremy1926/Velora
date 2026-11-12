@@ -259,6 +259,10 @@ FSimpleMulticastDelegate* UFortServerBotManagerAthena::GetOnNoAIAlive()
         .String(TEXT("Can't update bot count if no GameMode set..."))
         .Find("add eax, [rcx+0x*]")
         .Find("lea rcx, [*+0x*]; call 0x*")
+        .Or()
+        .String(TEXT("Can't update bot count if no GameMode set..."))
+        .Find("test eax, eax; jnz 0x*; lea rcx, [*+0x*]; call 0x*")
+        .Find("lea rcx, [*+0x*]; call 0x*")
         .Disp();
 
     return OnNoAIAlive > 0 ? (FSimpleMulticastDelegate*)((uint8*)this + OnNoAIAlive) : nullptr;
