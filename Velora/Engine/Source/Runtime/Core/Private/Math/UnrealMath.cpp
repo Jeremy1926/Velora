@@ -24,6 +24,8 @@ FVector FRotator::Vector() const
 FRotator FVector::ToOrientationRotator() const
 {
     static auto ToOrientationRotator = Anchor::Function<TGameValue<FRotator>* (*)(const TGameValue<FVector>&, TGameValue<FRotator>*)>(TEXT("FVector::ToOrientationRotator"))
+        .Pattern("48 89 5C 24 08 57 48 83 EC 50 0F 29 74 24 40 48 8B DA 0F 29 7C 24 30 0F 57 F6 F2 0F 10 79 08 48 8B F9 44 0F 29 44 24 20 F2 44 0F 10 01 66 44 0F 2E C6 75 ? 66 0F 2E FE 75 ? 0F 57 C0 EB ? 41 0F 28 C8 0F 28 C7 E8")
+        .Or()
         .Exec(TEXT("/Script/Engine.KismetMathLibrary:Conv_VectorToRotator"))
         .Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *")
         .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_Vector4ToRotator"))
