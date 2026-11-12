@@ -271,6 +271,9 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .Pattern("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 56 41 57 48 83 EC 40 48 8B 01 41 8A E9 45 0F B6 F8 48 8B FA 4C 8B F1 FF 90 ? ? ? ?")
         .Has("mov rdx, [rdi+0x*]; mov rax, rdx; neg rax; sbb rbx, rbx")
+        .Or()
+        .Pattern("48 89 5C 24 10 48 89 6C 24 18 56 57 41 56 48 83 EC 40 48 8B 01 48 8B FA 41 0F B6 E8 4C 8B F1 FF 90 ? ? ? ?")
+        .Has("lea rdx, [rax+0x*]; call [rbx+0x*]; test al, al; jz 0x*; mov rax, [rsi]; mov r8d, ebp; mov rdx, rdi; mov rcx, rsi; call [rax+0x*]")
         .Optional()
         .Get();
 
