@@ -93,6 +93,10 @@ FVector USceneComponent::GetSocketLocation(FName InSocketName) const
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.SceneComponent:GetSocketLocation"))
         .Find("call [*+0x*]")
         .Get();
 

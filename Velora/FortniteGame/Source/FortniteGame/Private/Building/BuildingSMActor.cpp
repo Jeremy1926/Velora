@@ -150,6 +150,10 @@ void ABuildingSMActor::RepairBuilding(AFortPlayerController* RepairingController
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingSMActor:RepairBuilding"))
         .Find("call [*+0x*]")
         .Get();
 

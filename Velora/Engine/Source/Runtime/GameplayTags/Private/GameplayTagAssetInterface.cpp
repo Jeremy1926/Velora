@@ -7,6 +7,10 @@ void IGameplayTagAssetInterface::GetOwnedGameplayTags(FGameplayTagContainer& Tag
 {
     static auto GetOwnedGameplayTags = Anchor::VirtualFunction<void (*)(const IGameplayTagAssetInterface*, FGameplayTagContainer&)>(TEXT("IGameplayTagAssetInterface::GetOwnedGameplayTags"))
         .Exec(TEXT("/Script/GameplayTags.GameplayTagAssetInterface:GetOwnedGameplayTags"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayTags.GameplayTagAssetInterface:GetOwnedGameplayTags"))
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:GetOwnedGameplayTags"))
@@ -32,7 +36,7 @@ bool IGameplayTagAssetInterface::HasMatchingGameplayTag(FGameplayTag TagToCheck)
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/GameplayTags.GameplayTagAssetInterface:HasMatchingGameplayTag"))
-        .Find("setnz *; add r*, r*; mov [*+0x20], r*")
+        .Find("setnz *; add r*, r*")
         .Find("call [rax+0x*]")
         .Get();
 

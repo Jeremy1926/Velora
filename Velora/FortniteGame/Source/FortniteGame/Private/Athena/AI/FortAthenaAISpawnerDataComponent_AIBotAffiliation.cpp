@@ -49,6 +49,10 @@ bool UFortAthenaAISpawnerDataComponent_AIBotAffiliation::GetSquadID(int32* OutSq
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerDataComponent_AIBotAffiliation:GetSquadID"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerDataComponent_AIBotAffiliation:GetSquadID"))
         .Find("call [*+0x*]")
         .Get();
 

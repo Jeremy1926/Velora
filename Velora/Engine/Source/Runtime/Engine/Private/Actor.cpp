@@ -124,6 +124,10 @@ void AActor::SetLifeSpan(float InLifespan)
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:SetLifeSpan"))
         .Find("call [*+0x*]")
         .Get();
 

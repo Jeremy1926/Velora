@@ -12,6 +12,10 @@ void UCharacterMovementComponent::SetMovementMode(EMovementMode NewMovementMode,
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/Engine.CharacterMovementComponent:SetMovementMode"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.CharacterMovementComponent:SetMovementMode"))
         .Find("call [rax+0x*]")
         .Get();
 

@@ -93,6 +93,10 @@ bool AFortGameStateZone::IsRespawningAllowed(AFortPlayerState* PlayerState) cons
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortGameStateZone:IsRespawningAllowed"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateZone:IsRespawningAllowed"))
         .Find("call [rax+0x*]")
         .Get();
 

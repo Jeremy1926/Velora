@@ -18,6 +18,10 @@ bool UFortConversationChoiceWithPreviewNode::GenerateChoice(const FConversationC
 {
     static auto GenerateChoice = Anchor::VirtualFunction<bool (*)(const UConversationChoiceNode*, const FConversationContext&, FClientConversationOptionEntry&)>(TEXT("UConversationChoiceNode::GenerateChoice"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationChoiceNode:FillChoice"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationChoiceNode:FillChoice"))
         .Find("call [*+0x*]")
         .Get(sizeof(void*));
 

@@ -17,6 +17,10 @@ EConversationRequirementResult UConversationRequirementNode::IsRequirementSatisf
 {
     static auto IsRequirementSatisfied_Implementation = Anchor::VirtualFunction<EConversationRequirementResult (*)(const UConversationRequirementNode*, const FConversationContext&)>(TEXT("UConversationRequirementNode::IsRequirementSatisfied_Implementation"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationRequirementNode:IsRequirementSatisfied"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationRequirementNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .Get();
 

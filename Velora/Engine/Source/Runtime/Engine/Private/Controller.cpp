@@ -59,6 +59,10 @@ void AController::SetControlRotation(const FRotator& NewRotation)
 {
     static auto SetControlRotation = Anchor::VirtualFunction<void (*)(AController*, const TGameValue<FRotator>&)>(TEXT("AController::SetControlRotation"))
         .Exec(TEXT("/Script/Engine.Controller:SetControlRotation"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Controller:SetControlRotation"))
         .Find("call [*+0x*]")
         .Get();
 

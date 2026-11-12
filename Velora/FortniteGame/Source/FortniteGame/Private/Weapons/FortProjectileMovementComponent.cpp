@@ -67,6 +67,10 @@ void UFortProjectileMovementComponent::SetVelocity(const FVector& InReplicatedVe
         .Find("call [rax+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortProjectileMovementComponent:SetVelocity"))
         .Find("call [rax+0x*]")
         .Optional()
         .Get();

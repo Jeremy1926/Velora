@@ -124,6 +124,10 @@ float UFortWorldItemDefinition::GetMaxDurability(int32 ItemLevel) const
         .Find("call [*+0x*]")
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWorldItemDefinition:GetMaxDurability"))
         .Find("call [*+0x*]")
         .Get();
 

@@ -191,6 +191,10 @@ void IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags(FGameplayTagCo
 {
     static auto GetFiltersTags = Anchor::VirtualFunction<void (*)(const IFortAthenaLivingWorldPointProviderInterface*, FGameplayTagContainer&)>(TEXT("IFortAthenaLivingWorldPointProviderInterface::GetFiltersTags"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetFiltersTags"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldPointProviderInterface:GetFiltersTags"))
         .Find("call [rax+0x*]")
         .Get();
 

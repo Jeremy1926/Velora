@@ -94,6 +94,10 @@ EConversationRequirementResult UConversationTaskNode::IsRequirementSatisfied(con
 {
     static auto IsRequirementSatisfied_Implementation = Anchor::VirtualFunction<EConversationRequirementResult (*)(const UConversationTaskNode*, const FConversationContext&)>(TEXT("UConversationTaskNode::IsRequirementSatisfied_Implementation"))
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:IsRequirementSatisfied"))
         .Find("call [*+0x*]")
         .Get();
 
@@ -114,6 +118,10 @@ EConversationRequirementResult UConversationTaskNode::IsRequirementSatisfied(con
 FConversationTaskResult UConversationTaskNode::ExecuteTaskNode(const FConversationContext& Context) const
 {
     static auto ExecuteTaskNode_Implementation = Anchor::VirtualFunction<FConversationTaskResult* (*)(const UConversationTaskNode*, FConversationTaskResult*, const FConversationContext&)>(TEXT("UConversationTaskNode::ExecuteTaskNode_Implementation"))
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:ExecuteTaskNode"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:ExecuteTaskNode"))
         .Find("call [*+0x*]")
         .Get();
@@ -318,6 +326,10 @@ void UConversationTaskNode::GatherDynamicChoices(FConversationBranchPointBuilder
 void UConversationTaskNode::GatherStaticExtraData(const FConversationContext& Context, TArray<FConversationNodeParameterPair>& InOutExtraData) const
 {
     static auto GatherStaticExtraData = Anchor::VirtualFunction<void (*)(const UConversationTaskNode*, const FConversationContext&, TArray<FConversationNodeParameterPair>&)>(TEXT("UConversationTaskNode::GatherStaticExtraData"))
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:GatherStaticExtraData"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .Or()
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationTaskNode:GatherStaticExtraData"))
         .Find("call [*+0x*]")
         .Or()
