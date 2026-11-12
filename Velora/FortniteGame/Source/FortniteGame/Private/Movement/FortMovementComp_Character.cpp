@@ -67,6 +67,14 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
         .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]; mov [rdi+0x*], eax; mov al, [rbx+0x*]; mov [rdi+0x*], al; call 0x*; movsxd rax, dword ptr [rbx+0x*]; mov rsi, [rbx+0x*]; lea r12, [rsi+rax*8]"); })
+        .Find("add rsp, 0x*; pop r15; pop r14; pop r13; pop r12; pop rdi; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rcx; movaps xmm1, xmm*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
         .Inline());
 
@@ -192,18 +200,30 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
         .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; movsxd rax, dword ptr [rdi+0x*]; mov rsi, [rdi+0x*]; lea r15, [rsi+rax*8]"); })
         .Find("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]")
         .Find("lea rcx, [rbx+0x*]")
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]; mov [rdi+0x*], eax; mov al, [rbx+0x*]; mov [rdi+0x*], al; call 0x*; movsxd rax, dword ptr [rbx+0x*]; mov rsi, [rbx+0x*]; lea r12, [rsi+rax*8]"); })
+        .Find("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]")
+        .Find("lea rcx, [rdi+0x*]")
         .Disp();
 
     static auto PushedRuntimeData = Anchor::Offset(TEXT("UFortMovementComp_Character::PushedMovementModeExtensionRuntimeData"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; movsxd rax, dword ptr [rdi+0x*]; mov rsi, [rdi+0x*]; lea r15, [rsi+rax*8]"); })
         .Find("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]")
         .Find("mov rax, [rbx+0x*]")
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]; mov [rdi+0x*], eax; mov al, [rbx+0x*]; mov [rdi+0x*], al; call 0x*; movsxd rax, dword ptr [rbx+0x*]; mov rsi, [rbx+0x*]; lea r12, [rsi+rax*8]"); })
+        .Find("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]")
+        .Find("mov rax, [rdi+0x*]")
         .Disp();
 
     static auto NewlyPushedRuntimeData = Anchor::Offset(TEXT("UFortMovementComp_Character::NewlyPushedMovementModeExtensions"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]; mov [rbx+0x*], eax; mov al, [rdi+0x*]; mov [rbx+0x*], al; call 0x*; movsxd rax, dword ptr [rdi+0x*]; mov rsi, [rdi+0x*]; lea r15, [rsi+rax*8]"); })
         .Find("lea rdx, [rdi+0x*]; mov [rbx+0x*], eax; lea rcx, [rbx+0x*]; mov eax, [rdi+0x*]")
         .Find("lea r14, [rbx+0x*]")
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]; mov [rdi+0x*], eax; mov al, [rbx+0x*]; mov [rdi+0x*], al; call 0x*; movsxd rax, dword ptr [rbx+0x*]; mov rsi, [rbx+0x*]; lea r12, [rsi+rax*8]"); })
+        .Find("lea rdx, [rbx+0x*]; mov [rdi+0x*], eax; lea rcx, [rdi+0x*]; mov eax, [rbx+0x*]")
+        .Find("lea r15, [rdi+0x*]")
         .Disp();
 
     static auto CreateRuntimeDataForLogic = Anchor::Optional<void* (*)(AFortPawn*, TSharedPtr<FFortMovementMode_BaseExtRuntimeData, ESPMode::ThreadSafe>*, const int32*, uint8)>(TEXT("AFortPawn::CreateRuntimeDataForLogic"))
