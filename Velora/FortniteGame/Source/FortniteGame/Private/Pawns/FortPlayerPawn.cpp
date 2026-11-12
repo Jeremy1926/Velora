@@ -159,6 +159,10 @@ TMulticastDelegate<void, AFortPlayerPawn*, AActor*, AActor*>* AFortPlayerPawn::G
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp"))
         .Find("lea rcx, [0x*]; mov r8, *; mov rdx, *; call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:SetPossessedProp"))
+        .Find("lea rcx, [0x*]; mov r8, *; mov rdx, *; call 0x*")
+        .Target()
         .Get();
 
     return NotifyPossessedPropStateChange;
