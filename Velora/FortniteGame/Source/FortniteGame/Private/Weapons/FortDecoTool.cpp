@@ -134,6 +134,14 @@ void AFortDecoTool::SpawnDecoInternal(const TGameValue<FVector>& Location, const
 void AFortDecoTool::FinishedSpawnAction(bool bFreeDeco)
 {
     static auto ClientForceCancelBuildingTool = Anchor::Function<void (*)(AFortPlayerController*)>(TEXT("AFortPlayerController::ClientForceCancelBuildingTool"))
+        .If(!::Anchor::Exists().Event(TEXT("ClientForceCancelBuildingTool")).Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx]; mov rdi, rcx; mov edx, [0x*]").Get())
+        .String(TEXT("ClientForceCancelBuildingTool"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov edx, [0x*]; mov rbx, [rax+0x*]; call 0x*; xor r8d, r8d; mov rdx, rax; mov rcx, rdi; mov rax, rbx")
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx]; mov rdi, rcx; mov edx, [0x*]")
+        .Or()
         .Event(TEXT("ClientForceCancelBuildingTool"))
         .Get();
 
