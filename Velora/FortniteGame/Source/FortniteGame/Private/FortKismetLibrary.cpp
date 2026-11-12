@@ -36,6 +36,30 @@
 
 FFortAbilitySetHandle UFortKismetLibrary::EquipFortAbilitySet(TScriptInterface<IAbilitySystemInterface> AbilitySystemInterfaceActor, UFortAbilitySet* AbilitySet, UObject* OverrideSourceObject)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
+        .Find("setnz *; *; add r*, r*")
+        .Find("mov byte ptr [rsp+0x28], 0x1; mov [rsp+0x20], *; call 0x*; mov rdx, rax; lea rcx, [*]; call 0x*; lea rcx, [*]; call 0x*")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto GrantToAbilitySystem = Anchor::Function<FFortAbilitySetHandle* (*)(UFortAbilitySet*, FFortAbilitySetHandle*, void*, UObject*, void*, bool)>(TEXT("UFortAbilitySet::GrantToAbilitySystem"))
+            .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
+            .Find("setnz *; *; add r*, r*")
+            .Find("mov byte ptr [rsp+0x28], 0x1; mov [rsp+0x20], *; call 0x*; mov rdx, rax; lea rcx, [*]; call 0x*; lea rcx, [*]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        FFortAbilitySetHandle Handle;
+
+        if (AbilitySystemInterfaceActor.GetObject() && AbilitySystemInterfaceActor.GetInterface() && AbilitySet)
+            GrantToAbilitySystem(AbilitySet, &Handle, AbilitySystemInterfaceActor.GetInterface(), OverrideSourceObject, nullptr, true);
+
+        return Handle;
+    }
+
     static auto EquipFortAbilitySet = Anchor::Function<FFortAbilitySetHandle* (*)(FFortAbilitySetHandle*, TScriptInterface<IAbilitySystemInterface>*, UFortAbilitySet*, UObject*)>(TEXT("UFortKismetLibrary::EquipFortAbilitySet"))
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:EquipFortAbilitySet"))
         .Find("mov r8, [rsp+0x*]")
