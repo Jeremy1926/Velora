@@ -475,6 +475,8 @@ float UFortKismetLibrary::GetServerWorldTimeSeconds(const UObject* WorldContextO
 void UFortKismetLibrary::BroadcastAbilityImpactAtLocation(UObject* WorldContextObject, USoundBase* InSound, UObject* Instigator, const FVector& Position, float Radius, FName Tag, const bool bSubtractLocalNoise)
 {
     static auto BroadcastAbilityImpactAtLocation = Anchor::Function<void (*)(UObject*, USoundBase*, UObject*, const TGameValue<FVector>&, float, FName, bool)>(TEXT("UFortKismetLibrary::BroadcastAbilityImpactAtLocation"))
+        .Pattern("48 89 5C 24 18 48 89 6C 24 20 56 41 54 41 57 48 83 EC 70 0F 29 74 24 60 49 8B E9 F3 0F 10 B4 24 B0 00 00 00 49 8B F0 0F 2F 35")
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:BroadcastAbilityImpactAtLocation"))
         .Get();
 
