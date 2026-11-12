@@ -65,6 +65,14 @@ AActor*& UNetConnection::GetRepContextActor()
     static auto RepContextActor = Anchor::Offset(TEXT("UNetConnection::RepContextActor"))
         .Pattern("48 8B 01 48 85 C0 74 13 48 83 A0 ? ? ? ? 00 48 8B 01 48 83 A0 ? ? ? ? 00 C3")
         .Find("and qword ptr [rax+0x*], 0x0")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x58], 0x0; mov [rsp+0x50], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("test r13, r13; jz 0x*; mov [r13+0x*], rdi; mov [r13+0x*], rdi")
+        .Find("mov [r13+0x*], rdi")
         .Disp();
 
     return *(AActor**)((uint8*)this + RepContextActor);
@@ -76,6 +84,14 @@ ULevel*& UNetConnection::GetRepContextLevel()
         .Pattern("48 8B 01 48 85 C0 74 13 48 83 A0 ? ? ? ? 00 48 8B 01 48 83 A0 ? ? ? ? 00 C3")
         .Find("and qword ptr [rax+0x*], 0x0")
         .Find("and qword ptr [rax+0x*], 0x0")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x58], 0x0; mov [rsp+0x50], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("test r13, r13; jz 0x*; mov [r13+0x*], rdi; mov [r13+0x*], rdi")
+        .Find("mov [r13+0x*], rdi", 2)
         .Disp();
 
     return *(ULevel**)((uint8*)this + RepContextLevel);
@@ -444,6 +460,8 @@ void UNetConnection::Close()
         .Target()
         .Or()
         .Pattern("40 53 48 83 EC 50 48 8B D9 BA 0E 00 00 00 48 8D 4C 24 20 E8 ? ? ? ? 48 8B D0 48 8B CB E8")
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 50 48 8B F9 E8 ? ? ? ? 33 F6 48 C7 44 24 20 0E 00 00 00")
         .Get();
 
     Close(this);
@@ -475,6 +493,13 @@ UReplicationConnectionDriver*& UNetConnection::GetReplicationConnectionDriver()
         .Find("call 0x*")
         .Target()
         .Find("mov rcx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .CallSite()
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rsi+0x*]; test rcx, rcx; jz 0x*; mov rax, [rcx]; call [rax+0x*]")
         .Disp();
 
     return *(UReplicationConnectionDriver**)((uint8*)this + ReplicationConnectionDriver);
