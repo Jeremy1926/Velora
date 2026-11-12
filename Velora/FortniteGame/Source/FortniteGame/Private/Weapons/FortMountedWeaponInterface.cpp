@@ -35,7 +35,25 @@ AActor* IFortMountedWeaponInterface::GetHostVehicleCached()
         .Find("call [*+0x*]")
         .Get();
 
+    if (!GetHostVehicleCached)
+        return (AActor*)BP_GetHostVehicle().GetObject();
+
     return GetHostVehicleCached(this);
+}
+
+TScriptInterface<IFortVehicleInterface> IFortMountedWeaponInterface::BP_GetHostVehicle()
+{
+    static auto BP_GetHostVehicle = Anchor::VirtualFunction<TScriptInterface<IFortVehicleInterface>* (*)(IFortMountedWeaponInterface*, TScriptInterface<IFortVehicleInterface>*)>(TEXT("IFortMountedWeaponInterface::BP_GetHostVehicle"))
+        .Exec(TEXT("/Script/FortniteGame.FortMountedWeaponInterface:BP_GetHostVehicle"))
+        .Find("call [*+0x*]")
+        .Get();
+
+    TScriptInterface<IFortVehicleInterface> HostVehicle;
+
+    if (BP_GetHostVehicle)
+        HostVehicle = *BP_GetHostVehicle(this, &HostVehicle);
+
+    return HostVehicle;
 }
 
 FMountedWeaponInfoRepped& IFortMountedWeaponInterface::GetMountedWeaponInfoRepped()
