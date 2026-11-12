@@ -34,6 +34,8 @@ FWorldContext* UGameInstance::GetWorldContext() const
         .Pattern("48 8B 51 30 33 C0 48 85 D2 74 ? 8A 82 ? ? 00 00 C3")
         .Or()
         .Pattern("48 8B 41 30 48 85 C0 74 ? 8A 80 ? ? 00 00 C3")
+        .Or()
+        .Pattern("48 8B 42 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 84 C0 0F 94 C0 C3")
         .Disp();
 
     return WorldContext > 0 ? *(FWorldContext**)((uint8_t*)this + WorldContext) : nullptr;
