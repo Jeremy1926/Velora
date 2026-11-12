@@ -42,6 +42,12 @@ TMulticastDelegate<void, ABuildingActor*, float>& ABuildingActor::GetNotifyBuild
         .Pattern("0F 57 D2 F3 0F 11 89 ? ? ? ? F3 0F 51 D1 48 8D 91 ? ? ? ? 48 8D 0D")
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Pattern("0F 57 D2 F3 0F 11 89 ? ? ? ? F3 0F 51 D1 48 8D 91 ? ? ? ? E9")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyBuildingNetCullDistChange;
