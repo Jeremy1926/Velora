@@ -100,5 +100,10 @@ AActor* UGameplayStatics::FinishSpawningActor(AActor* Actor, const FTransform& S
         .Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
         .Get();
 
+    static auto bTakesScaleMethod = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor")))->FindPropertyByName(FName(TEXT("TransformScaleMethod"))) != nullptr;
+
+    if (bTakesScaleMethod)
+        return ((AActor* (*)(AActor*, const TGameValue<FTransform>&, ESpawnActorScaleMethod))FinishSpawningActor)(Actor, SpawnTransform, ESpawnActorScaleMethod::MultiplyWithRoot);
+
     return FinishSpawningActor(Actor, SpawnTransform);
 }
