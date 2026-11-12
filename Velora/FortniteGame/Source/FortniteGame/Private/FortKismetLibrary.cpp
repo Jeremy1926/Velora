@@ -22,6 +22,7 @@
 #include "GameplayTagContainer.h"
 #include "Containers/Map.h"
 #include "Engine/World.h"
+#include "GameFramework/GameStateBase.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
 #include "Math/Rotator.h"
@@ -448,6 +449,20 @@ EFortTeamAffiliation UFortKismetLibrary::GetTeamAffiliation(const AActor* ActorA
 
 float UFortKismetLibrary::GetServerWorldTimeSeconds(const UObject* WorldContextObject)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetServerWorldTimeSeconds"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]; test rax, rax; jnz 0x*")
+        .Get();
+
+    if (bInlined)
+    {
+        auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+        auto GameState = World ? World->GetGameState() : nullptr;
+
+        return GameState ? GameState->GetServerWorldTimeSeconds() : 0.0f;
+    }
+
     static auto GetServerWorldTimeSeconds = Anchor::Function<float (*)(const UObject*)>(TEXT("UFortKismetLibrary::GetServerWorldTimeSeconds"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetServerWorldTimeSeconds"))
         .Get();
