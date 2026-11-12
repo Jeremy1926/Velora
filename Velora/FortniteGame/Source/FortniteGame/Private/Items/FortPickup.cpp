@@ -280,6 +280,8 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
 void AFortPickup::TossPickup(const FVector& FinalLocation, AFortPawn* ItemOwner, int32 OverrideMaxStackCount, bool bToss, bool bShouldCombinePickupsWhenTossCompletes, EFortPickupSourceTypeFlag InPickupSourceTypeFlags, EFortPickupSpawnSource InPickupSpawnSource)
 {
     static auto TossPickup = Anchor::Function<const void*>(TEXT("AFortPickup::TossPickup"))
+        .Pattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 30 80 B9 ? ? ? ? 03 41 8B E9 0F B6 74 24 70 49 8B F8 4C 8B F2 48 8B D9 0F 85 ? ? ? ? 80 79 ? 00 74 ? BA 01 00 00 00 E8 ? ? ? ? EB ? E8 ? ? ? ? 0F B6 44 24 68 38 83")
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortPickup:TossPickup"))
         .Get();
 
