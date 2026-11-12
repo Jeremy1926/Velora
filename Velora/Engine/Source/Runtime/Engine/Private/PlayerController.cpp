@@ -119,6 +119,13 @@ void APlayerController::ClientGotoState(FName NewState)
         .Or()
         .Event(TEXT("ClientGotoState"))
         .Is("push rbx; sub rsp, 0x20; mov [rsp+0x38], edx; mov rbx, rcx; mov edx, [0x*]")
+        .Or()
+        .String(TEXT("ClientGotoState"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov edx, [0x*]; mov rbx, [rax+0x*]; call 0x*; lea r8, [rsp+0x38]; mov rdx, rax; mov rcx, rdi; call rbx")
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rax, [rcx]; mov rdi, rcx; mov [rsp+0x38], edx; mov edx, [0x*]")
         .Get();
 
     if (ClientGotoState)
