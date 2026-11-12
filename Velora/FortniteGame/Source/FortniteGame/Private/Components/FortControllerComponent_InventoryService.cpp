@@ -31,6 +31,10 @@ UCurveTable* UFortControllerComponent_InventoryService::GetDefaultCurrencyPayout
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultCurrencyPayoutTable"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -50,6 +54,19 @@ UCurveTable* UFortControllerComponent_InventoryService::GetDefaultCurrencyPayout
 
 UFortResourceItemDefinition* UFortControllerComponent_InventoryService::GetDefaultGlobalCurrencyItemDefinition()
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultGlobalCurrencyItemDefinition"))
+        .Find("setnz *; add r*, r*")
+        .Get();
+
+    if (bInlined)
+    {
+        auto GameDataBR = UFortAssetManager::Get().GetGameDataBR();
+        static auto DefaultGlobalCurrencyItemDefinition = GameDataBR ? GameDataBR->GetClass()->FindPropertyByName(FName(TEXT("DefaultGlobalCurrencyItemDefinition"))) : nullptr;
+
+        return GameDataBR && DefaultGlobalCurrencyItemDefinition ? DefaultGlobalCurrencyItemDefinition->ContainerPtrToValuePtr<TSoftObjectPtr<UFortResourceItemDefinition>>(GameDataBR)->LoadSynchronous() : nullptr;
+    }
+
     static auto GetDefaultGlobalCurrencyItemDefinition = Anchor::Optional<UFortResourceItemDefinition* (*)()>(TEXT("UFortControllerComponent_InventoryService::GetDefaultGlobalCurrencyItemDefinition"))
         .Native(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetDefaultGlobalCurrencyItemDefinition"))
         .Get();
@@ -64,6 +81,9 @@ UFortControllerComponent_InventoryService* UFortControllerComponent_InventorySer
         .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_InventoryService:GetInventoryServiceComponent"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
