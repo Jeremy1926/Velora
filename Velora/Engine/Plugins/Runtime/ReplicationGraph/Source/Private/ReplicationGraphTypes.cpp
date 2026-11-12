@@ -163,6 +163,15 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetDependentActorList()
         .Find("call 0x*")
         .Target()
         .Find("lea r*, [r*+0x*]; mov rdx, r*; lea rcx, [rbp-0x*]; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("test r8, r8; jz 0x*; mov rdx, *; lea rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r*, [r8+0x*]; mov [rsp+0x*], ecx; cmp [r*+0x8], ecx")
         .Disp();
 
     return *(TArray<AActor*>*)((uint8*)this + DependentActorList);
@@ -228,6 +237,15 @@ TArray<AActor*>& FGlobalActorReplicationInfo::GetParentActorList()
         .Find("call 0x*")
         .Target()
         .Find("lea rbx, [r*+0x*]; mov rdi, [rbx]; movsxd rax, dword ptr [rbx+0x8]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("test r8, r8; jz 0x*; mov rdx, *; lea rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea r14, [r13+0x*]; mov [rsp+0x*], *; mov rdi, [r14]; movsxd rax, dword ptr [r14+0x8]")
         .Disp();
 
     if (ParentActorList > 0)
@@ -373,6 +391,18 @@ FFastSharedReplicationInfo*& FGlobalActorReplicationInfo::GetFastSharedReplicati
         .Find("call 0x*")
         .Target()
         .Find("mov r*, [r*+0x*]; test r*, r*; jz 0x*; lea rcx, [r*+0x8]; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*; cmp [0x*], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, [r*+r*+0x8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [r*+0x*]; test r*, r*; jz 0x*; lea rcx, [r*+0x8]; call 0x*")
         .Disp();
 
     return *(FFastSharedReplicationInfo**)((uint8*)this + FastSharedReplicationInfo);
@@ -502,13 +532,31 @@ void FGlobalActorReplicationInfoMap::ResetActorMap()
         .Find("lea rcx, [rax+r9*8]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Optional()
+        .Get();
+    static auto DeleteInfo = DestructItem ? nullptr : Anchor::Function<void (*)(void*, FGlobalActorReplicationInfo*)>(TEXT("TDefaultDelete<FGlobalActorReplicationInfo>::operator()"))
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*; cmp [0x*], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, [r*+r*+0x8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (!ActorMap.Num())
         return;
 
     for (auto& Pair : ActorMap)
-        DestructItem((void*)&Pair);
+    {
+        if (DestructItem)
+            DestructItem((void*)&Pair);
+        else
+            DeleteInfo((void*)&Pair.Value, Pair.Value);
+    }
 
     ActorMap.Reset();
 }
@@ -531,6 +579,12 @@ FConnectionReplicationActorInfo& FPerConnectionActorInfoMap::FindOrAdd(AActor* c
         .Virtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"), [](const Anchor::FCode& Entry) { return Entry.Has("mov edx, 0x10; lea ecx, [rdx+0x20]; call 0x*; mov *, rax; test rax, rax; jz 0x*; mov rcx, [*+0x*]"); })
         .Find("mov edx, 0x10; lea ecx, [rdx+0x20]; call 0x*")
         .Find("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"), [](const Anchor::FCode& Entry) { return Entry.Has("mov edx, 0x10; lea ecx, [rdx+0x20]; call 0x*; mov *, rax; test rax, rax; jz 0x*; mov rcx, [*+0x*]"); })
+        .Find("mov edx, 0x10; mov [rsp+0x*], *; lea ecx, [rdx+0x8]; call 0x*")
+        .Find("mov [rax], r13")
+        .Last("lea r13, [0x*]")
         .Target()
         .Get();
 
