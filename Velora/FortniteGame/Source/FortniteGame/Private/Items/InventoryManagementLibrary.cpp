@@ -68,6 +68,9 @@ void UInventoryManagementLibrary::execGiveItemEntryToInventoryOwner(FFrame& Stac
     DETOUR(UInventoryManagementLibrary, execGiveItemEntryToInventoryOwner, Anchor::Hook()
         .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner"))
         .Find("setnz *; add [*+0x20], *; call 0x*; lea rcx, [rsp+0x*]; mov byte ptr [*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov byte ptr [*], 0x0; call 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner")));
 
