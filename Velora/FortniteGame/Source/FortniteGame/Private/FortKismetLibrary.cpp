@@ -781,6 +781,11 @@ void UFortKismetLibrary::execSpawnItemVariantPickupInWorld(FFrame& Stack, void* 
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
         .Has("call 0x*; lea rcx, [rax+0x8]; call 0x*; and qword ptr [*], 0x0; lea rcx, [rsp+0x*]; call 0x*; lea r11, [rsp+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld"))
+        .Has("xor ebp, ebp")
+        .Find("setnz *; *; add r*, r*")
+        .Find("lea rcx, [rsp+0x*]; mov [rsi], rbp; call 0x*; add rsp, 0x*; pop rsi; pop rbp; pop rbx; ret")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:SpawnItemVariantPickupInWorld")));
 
@@ -1169,6 +1174,9 @@ void UFortKismetLibrary::execPickLootDrops(FFrame& Stack, void* const Z_Param__R
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
         .Find("setnz *; add [*+0x20], *; call 0x*; mov [rsp+0x28], rax; call 0x*; lea rcx, [rbp-0x*]; mov [r14], al")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov edi, [rsp+0x*]; mov rbx, [rsp+0x*]; mov byte ptr [*], 0x0")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:PickLootDrops")));
 
@@ -1312,6 +1320,11 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithLootTier(FFrame& Stack, vo
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
         .Find("setnz *; mov [rbp-0x*], *; add [*+0x20], *; mov rcx, rdi; call 0x*; mov rcx, [rbp-0x*]; test rcx, rcx; jz 0x*; call 0x*; lea r11, [rsp+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier"))
+        .Has("xor r14d, r14d")
+        .Find("setnz *; add r*, r*; lea rax, [rbp+0x*]; mov [*+0x20], r*; cmp rsi, rax; jz 0x*; mov rbx, [rsi]; test rbx, rbx; jz 0x*")
+        .Find("mov [rsi], r14; mov [rsi+0x8], r14; add rsp, 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithLootTier")));
 
