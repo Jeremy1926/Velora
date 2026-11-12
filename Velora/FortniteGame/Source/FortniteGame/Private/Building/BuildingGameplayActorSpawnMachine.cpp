@@ -125,6 +125,12 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         .Find("mov rax, [r15]; mov rcx, r15; call [rax+0x*]; test al, al")
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("mov rdx, [rax]; mov rcx, rax; call [rdx+0x*]; test al, al")
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     if (!HasAuthority() || GetSpawnMachineState() != ESpawnMachineState::Active)
