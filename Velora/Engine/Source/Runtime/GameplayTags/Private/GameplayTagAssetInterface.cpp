@@ -19,6 +19,13 @@ void IGameplayTagAssetInterface::GetOwnedGameplayTags(FGameplayTagContainer& Tag
         .Target()
         .Find("mov rdx, rbx; mov rax, [rcx]; call [rax+0x*]")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:GetOwnedGameplayTags"))
+        .Find("mov [rsp+0x38], rax")
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp [rdx+0x8], rax; jz 0x*; mov rcx, [rdx+0x8]")
+        .Find("call [rax+0x*]")
         .Get();
 
     GetOwnedGameplayTags(this, TagContainer);
