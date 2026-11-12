@@ -107,6 +107,13 @@ void UNetDriver::SetReplicationDriver(UReplicationDriver* NewReplicationDriver)
         .Find("mov rdx, rax; mov rcx, rdi; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ReplicationDriverClass is null! Not using ReplicationDriver."))
+        .Start()
+        .CallSite()
+        .Find("mov rdx, rax; mov rcx, r13; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetReplicationDriver(this, NewReplicationDriver);
@@ -161,6 +168,10 @@ TSharedPtr<FClassNetCacheMgr>& UNetDriver::GetNetCache()
         .Start()
         .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
         .Find("mov rcx, [*+0x*]")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; mov [rsp+0x*], *; mov [rsp+0x*], *; mov *, *; cmovnz *")
         .Disp();
 
     return *(TSharedPtr<FClassNetCacheMgr>*)((uint8_t*)this + NetCache);
@@ -212,9 +223,15 @@ void UNetDriver::ProcessRemoteFunctionForChannelPrivate(UActorChannel* Ch, const
         .Or()
         .String("ProcessRemoteFunctionForChannelPrivate")
         .Start()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x58], 0x0; mov [rsp+0x50], al")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
-    ProcessRemoteFunctionForChannelPrivate(this, Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
+    ProcessRemoteFunctionForChannelPrivate(this,Ch, ClassCache, FieldCache, TargetObj, Connection, Function, Parms, OutParms, Stack, bIsServer, SendPolicy, RemoteFunctionFlags);
 }
 
 int32 UNetDriver::GetNetTag() const
@@ -356,6 +373,10 @@ TMap<FNetworkGUID, FActorDestructionInfo>& UNetDriver::GetDestroyedStartupOrDorm
         .Find("lea r*, [*+0x???]; lea rdx, [r*+0x10]; lea rcx, [rbp-0x*]")
         .Or()
         .String(TEXT("AddClientConnection: Added client connection: %s"))
+        .Find("mov rcx, [*+0x*]; call 0x*; lea r*, [*+0x???]; mov [rsp+0x*], *; mov r10d, [r*+0x28]")
+        .Find("lea r*, [*+0x???]")
+        .Or()
+        .String(TEXT("AddClientConnection: Added client connection: %s"))
         .Find("lea r*, [*+0x???]")
         .Or()
         .String(TEXT("AddClientConnection: Added client connection: %s"))
@@ -456,8 +477,13 @@ void UNetDriver::SetWorld(UWorld* InWorld)
         .Is("call 0x*")
         .Target()
         .Get();
+    static auto bVirtualSetWorldCall = Anchor::Exists()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("call r8; mov rax, [r*]; mov rdx, r*; mov rcx, r*; call [rax+0x*]")
+        .Get();
 
-    if (SetWorld)
+    if (SetWorld && !bVirtualSetWorldCall)
         return SetWorld(this, InWorld);
 
     static auto VirtualSetWorld = Anchor::VirtualFunction<void (*)(UNetDriver*, UWorld*)>(TEXT("UNetDriver::SetWorld"))
@@ -470,6 +496,11 @@ void UNetDriver::SetWorld(UWorld* InWorld)
         .Start()
         .Find("movsxd *, dword ptr [*+0x*]; test *, *; jz *; mov *, [*+0x*]; imul *, *, 0x*; cmp byte ptr [*], 0x0")
         .Last("call [*+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("call r8; mov rax, [r*]; mov rdx, r*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     VirtualSetWorld(this, InWorld);
