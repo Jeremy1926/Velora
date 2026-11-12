@@ -785,7 +785,35 @@ FGatheredReplicationActorLists* FConnectionGatherActorListParameters::GetOutGath
 
 bool FConnectionGatherActorListParameters::CheckClientVisibilityForLevel(const FName& StreamingLevelName) const
 {
-    static auto CheckClientVisibilityForLevel = Anchor::Function<bool (*)(const FConnectionGatherActorListParameters*, const FName&)>(TEXT("FConnectionGatherActorListParameters::CheckClientVisibilityForLevel"))
+    static auto bInlined = Anchor::Exists()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov eax, [r*]; cmp eax, [r*+0x*]; jz 0x*; mov r*, [r*+0x*]; mov r8d, eax; shr r8d, 0x10")
+        .Get();
+
+    if (bInlined)
+    {
+        auto Header = (const uint8*)this + 4 * FNetViewer::GetTypeSize() + sizeof(void*) + 2 * sizeof(int32) + 3 * sizeof(void*);
+        auto& ClientVisibleLevelNames = **(TSet<FName>* const*)Header;
+        auto LastCheckedVisibleLevelName = (uint8*)Header + sizeof(void*);
+        const FName LevelName = TGameLayout<FName>::Load(&StreamingLevelName);
+
+        if (TGameLayout<FName>::Load(LastCheckedVisibleLevelName) == LevelName)
+            return true;
+
+        const bool bVisible = FName::IsOutlineNumber() ? ((TSet<FNameEntryId>&)ClientVisibleLevelNames).Contains(LevelName.GetComparisonIndex()) : ClientVisibleLevelNames.Contains(LevelName);
+
+        if (bVisible)
+            TGameLayout<FName>::Store(LastCheckedVisibleLevelName, LevelName);
+
+        return bVisible;
+    }
+
+    static auto CheckClientVisibilityForLevel =Anchor::Function<bool (*)(const FConnectionGatherActorListParameters*, const FName&)>(TEXT("FConnectionGatherActorListParameters::CheckClientVisibilityForLevel"))
         .String(TEXT("Child: %s"))
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
