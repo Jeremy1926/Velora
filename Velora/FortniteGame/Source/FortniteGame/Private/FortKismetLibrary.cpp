@@ -1026,6 +1026,12 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayer(FFrame& Stack, void* const 
         .Find("call 0x*", 2)
         .Target()
         .Is("push rbx; sub rsp, 0x20; cmp qword ptr [rdx], 0x0; mov rbx, rdx; jz 0x*; call 0x*; mov rdx, rax; mov rcx, rbx; call 0x*; xor eax, eax; add rsp, 0x20; pop rbx; ret")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer"))
+        .Find("setnz *; add [*+0x20], *; movdqa [rbp-0x*], xmm0; call 0x*; mov rdx, rax; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Is("sub rsp, 0x28; cmp qword ptr [rdx], 0x0; jz 0x*; call 0x*; xor eax, eax; add rsp, 0x28; ret")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")));
 
