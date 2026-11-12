@@ -62,7 +62,7 @@ public:
 
     AFortBroadcastRemoteClientInfo* GetBroadcastRemoteClientInfo() const;
 
-    void RespawnPlayerAfterDeath(bool bEnterSkydiving);
+    void RespawnPlayerAfterDeath(bool bEnterSkydiving, bool bPeformValidRespawnCheck);
 
     static bool ExternalShouldAlwaysDropItemOnDeathOrLogout(const UFortWorldItem* Item, bool bIgnoreItemMutators);
 

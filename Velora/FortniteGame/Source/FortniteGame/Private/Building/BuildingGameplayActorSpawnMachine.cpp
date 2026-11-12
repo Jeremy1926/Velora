@@ -183,7 +183,7 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         if (!Contains(&GetPlayerIdsForResurrection(), GameAccountId))
             continue;
 
-        PlayerController->RespawnPlayerAfterDeath(RebootPlayersInAir());
+        PlayerController->RespawnPlayerAfterDeath(RebootPlayersInAir(), false);
 
         PendingResurrections.Add(FPendingResurrection{ this, PlayerController });
         PendingNextPlayers.Add(FPendingNextPlayer{ this, GetWorld()->GetTimeSeconds() + GetResurrectionNextPlayerDelay().GetValueAtLevel(0.0f) });

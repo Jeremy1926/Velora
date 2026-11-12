@@ -336,13 +336,13 @@ AFortPlayerState* AFortPlayerControllerAthena::GetSkydiveLeader() const
     return *SkydiveLeader->ContainerPtrToValuePtr<AFortPlayerState*>(this);
 }
 
-void AFortPlayerControllerAthena::RespawnPlayerAfterDeath(bool bEnterSkydiving)
+void AFortPlayerControllerAthena::RespawnPlayerAfterDeath(bool bEnterSkydiving, bool bPeformValidRespawnCheck)
 {
-    static auto RespawnPlayerAfterDeath = Anchor::Function<void (*)(AFortPlayerControllerAthena*, bool)>(TEXT("AFortPlayerControllerAthena::RespawnPlayerAfterDeath"))
+    static auto RespawnPlayerAfterDeath = Anchor::Function<void (*)(AFortPlayerControllerAthena*, bool, bool)>(TEXT("AFortPlayerControllerAthena::RespawnPlayerAfterDeath"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:RespawnPlayerAfterDeath"))
         .Get();
 
-    RespawnPlayerAfterDeath(this, bEnterSkydiving);
+    RespawnPlayerAfterDeath(this, bEnterSkydiving, bPeformValidRespawnCheck);
 }
 
 bool AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(const UFortWorldItem* Item, bool bIgnoreItemMutators)
