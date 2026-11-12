@@ -231,6 +231,10 @@ bool AFortPlayerControllerZone::ShouldSuicideOnSpectate(AActor* NewViewTarget)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerStateZone:IsPlayerDead"))
         .Find("call [rax+0x*]")
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "mov rax, [rcx]; ")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerStateZone:IsPlayerDead"))
+        .Find("call [rax+0x*]")
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "mov rax, [r10]; mov rcx, r10; ")
         .Optional()
         .Get();
 
