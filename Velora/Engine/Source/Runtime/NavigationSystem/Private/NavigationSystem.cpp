@@ -8,6 +8,11 @@ void UNavigationSystemV1::ProcessRegistrationCandidates()
 {
     static auto ProcessRegistrationCandidates = Anchor::VirtualFunction<void (*)(UNavigationSystemV1*)>(TEXT("UNavigationSystemV1::ProcessRegistrationCandidates"))
         .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("call [rax+0x*]; cmp dword ptr [r*+0x*], 0x0; jnz 0x*; cmp dword ptr [r*+0x*], 0x0; jle 0x*; mov rax, [r*]; mov rcx, r*; call [rax+0x*]")
+        .Find("jle 0x*")
+        .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("Auto generating navigation bounds: %s"))
         .Find("call [rax+0x*]")
         .Get();
 
