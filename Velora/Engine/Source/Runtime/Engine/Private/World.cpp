@@ -55,6 +55,12 @@ UObject* UWorld::GetSubsystemBase(UClass* SubsystemClass) const
         .Disp();
     static auto GetSubsystemInternal = Anchor::Function<UObject* (*)(void*, UClass*)>(TEXT("FSubsystemCollectionBase::GetSubsystemInternal"))
         .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]; test *, *; jz 0x*; call 0x*; test rax, rax; jz 0x*; lea rdx, [rax+0x*]")
+        .Find("mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
         .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]")
         .Find("lea *, [rax+0x*]")
         .Find("call 0x*")
@@ -140,6 +146,10 @@ float UWorld::GetTimeSeconds() const
         .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
         .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
         .Find("movsd xmm0, qword ptr [rax+*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("setnz cl; add rcx, rax; mov [*+0x20], rcx")
+        .Find("movsd xmm0, qword ptr [rax+*]")
         .Disp();
     static auto bDoubleTimeSeconds = Anchor::Exists()
         .Native(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
@@ -147,6 +157,10 @@ float UWorld::GetTimeSeconds() const
         .Or()
         .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
         .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("movsd xmm0, qword ptr [rax+*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetTimeSeconds"))
+        .Find("setnz cl; add rcx, rax; mov [*+0x20], rcx")
         .Find("movsd xmm0, qword ptr [rax+*]")
         .Get();
 
@@ -480,11 +494,21 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
         .Find("xor edx, edx; mov rcx, *")
         .Call()
         .Get();
+    static auto bInlinedFindCollectionByType = Anchor::Exists()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call r8")
+        .Find("call [rax+0x*]; mov rcx, [r*+0x*]; movsxd *, dword ptr [r*+0x*]; imul *, *, 0x*")
+        .Get();
 
-    if (FindCollectionByType)
+    if (FindCollectionByType && !bInlinedFindCollectionByType)
         return FindCollectionByType(this, InType);
 
     static auto LevelCollections = Anchor::Offset(TEXT("UWorld::LevelCollections"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("call r8")
+        .Find("call [rax+0x*]; mov rcx, [r*+0x*]; movsxd *, dword ptr [r*+0x*]; imul *, *, 0x*")
+        .Find("mov rcx, [r*+0x*]")
+        .Or()
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("call r8")
         .Find("call [rax+0x*]")
@@ -627,6 +651,8 @@ bool UWorld::AreActorsInitialized() const
         .Find("mov rcx, rax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("80 B9 ? ? 00 00 00 7D ? 48 8B 41 30 48 85 C0 74 ? 83 B8 ? ? 00 00 00 74 ? B0 01 C3 32 C0 C3")
         .Get();
 
     return AreActorsInitialized(this);
@@ -640,6 +666,9 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
         .Or()
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea rcx, [*+0x*]; mov [*], *; lea rdx, [*]; mov [*], *; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
+        .Or()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; lea rdx, [*]; mov [*], *; mov [*], *; call 0x*; mov ecx, [0x*]")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
