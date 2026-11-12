@@ -371,7 +371,7 @@ int32 UFortKismetLibrary::K2_RemoveFortItemFromPlayer(AFortPlayerController* Pla
 void UFortKismetLibrary::execK2_RemoveFortItemFromPlayer(FFrame& Stack, void* const Z_Param__Result)
 {
     DETOUR(UFortKismetLibrary, execK2_RemoveFortItemFromPlayer, Anchor::Hook()
-        .If(Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get() || ::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0").Or().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [*], *; add rsp, 0x*").Get())
+        .If(Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Get() == Anchor::Address().Native(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayer")).Get() || ::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; and dword ptr [*], 0x0").Or().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [*], *; add rsp, 0x*").Or().Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")).Has("xor ebp, ebp").Find("setnz *; add r*, r*; mov [*+0x20], r*; mov [*], ebp; add rsp, 0x*").Get())
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveFortItemFromPlayer")));
 
     AFortPlayerController* PlayerController = nullptr;
