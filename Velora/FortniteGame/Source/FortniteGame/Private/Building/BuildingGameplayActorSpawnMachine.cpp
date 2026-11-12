@@ -115,6 +115,11 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         .Start()
         .Find("lea rax, [0x*]; lea rdx, [rsp+0x*]; mov [rsp+0x*], rax")
         .IsTarget("ret*")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find("lea rax, [0x*]; xor r8d, r8d; mov [rsp+0x*], rax")
+        .IsTarget("ret*")
         .Optional()
         .AtReference());
 
