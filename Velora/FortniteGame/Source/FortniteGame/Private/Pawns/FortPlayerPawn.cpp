@@ -909,6 +909,18 @@ UScriptStruct* FFortClientObservedStatArray::StaticStruct()
 
 void FFortClientObservedStatArray::SetStatManager(UStatManager* InStatManager, AFortPlayerPawn* OwnerPawn)
 {
+    static auto SetStatManagerWithOwner = Anchor::Optional<void (*)(FFortClientObservedStatArray*, UStatManager*, AFortPlayerPawn*)>(TEXT("FFortClientObservedStatArray::SetStatManager with owner"))
+        .FieldPattern("48 8D ? %o 45 33 C0 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (SetStatManagerWithOwner)
+    {
+        SetStatManagerWithOwner(this, InStatManager, OwnerPawn);
+        return;
+    }
+
     static auto SetStatManager = Anchor::Function<void (*)(FFortClientObservedStatArray*, UStatManager*, AFortPlayerPawn*)>(TEXT("FFortClientObservedStatArray::SetStatManager"))
         .FieldPattern("48 8D ? %o 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
         .Find("call 0x*")
