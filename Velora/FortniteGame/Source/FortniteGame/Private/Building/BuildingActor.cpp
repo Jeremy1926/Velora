@@ -175,6 +175,12 @@ void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, A
         .FindEither("jmp [*+0x*]", "call [*+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Has("and qword ptr [rsp+0x20], 0x0*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Find("setnz *; add r*, r*")
+        .FindEither("jmp [*+0x*]", "call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Has("mov qword ptr [rsp+0x20], 0x0")
         .Get();
 
     if (bEffectContext)
@@ -215,6 +221,13 @@ void ABuildingActor::InitializeBuildingActor(EFortBuildingInitializationReason I
         .Find("call [*+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Find("mov r10, [r8+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
         .Get();
 
     InitializeBuildingActor(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
@@ -249,6 +262,13 @@ void ABuildingActor::PostInitializeSpawnedBuildingActor(EFortBuildingInitializat
         .Find("call [*+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Find("mov r10, [r8+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
         .Get(sizeof(void*));
 
     PostInitializeSpawnedBuildingActor(this, InitializationReason);
@@ -302,9 +322,19 @@ bool ABuildingActor::HasHealthLeft() const
 {
     static auto HasHealthLeft = Anchor::Function<bool (*)(const ABuildingActor*)>(TEXT("ABuildingActor::HasHealthLeft"))
         .Native(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft"))
+        .Optional()
         .Get();
 
-    return HasHealthLeft(this);
+    if (HasHealthLeft)
+        return HasHealthLeft(this);
+
+    static auto GetHealth = Anchor::VirtualFunction<float (*)(const ABuildingActor*)>(TEXT("ABuildingActor::GetHealth"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:HasHealthLeft"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov rax, [rcx]; call [rax+0x*]; xorps *; comiss xmm0, *; setnbe al")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return GetHealth(this) > 0.0f;
 }
 
 const FGameplayTagContainer& ABuildingActor::GetStaticGameplayTags() const
