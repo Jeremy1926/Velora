@@ -395,6 +395,9 @@ AFortPlayerController* UFortKismetLibrary::GetFortPlayerControllerFromActor(AAct
         .Find("setnz *")
         .Find("add [*+0x20], *")
         .Find("test *, *; jz 0x*; call 0x*; mov rcx, [*+0x10]; mov rdx, rax; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetFortPlayerControllerFromActor"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov r*, [rsp+0x*]; test r*, r*; jnz 0x*")
         .Get();
 
     if (bInlined)
