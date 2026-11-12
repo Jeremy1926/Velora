@@ -94,6 +94,9 @@ void UEngine::BroadcastNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENet
         .Find("mov r9d, 0x6")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("UEngine::BroadcastNetworkFailure: FailureType = %s, ErrorString = %s, Driver = %s"))
+        .Start()
         .Get();
 
     Broadcast((uint8_t*)this + NetworkFailureEvent, World, NetDriver, FailureType, ErrorString);
