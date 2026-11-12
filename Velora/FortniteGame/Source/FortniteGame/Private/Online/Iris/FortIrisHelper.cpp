@@ -80,7 +80,7 @@ void UFortIrisHelper::OnPlayerControllerInventorySwitched(AFortPlayerController*
         UpdateConnectionFilters(this, Context);
 }
 
-void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* NewViewTarget, AActor* OldViewTarget)
+void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* OldViewTarget, AActor* NewViewTarget)
 {
     static auto OnPlayerControllerViewTargetChanged = Anchor::Optional<void (*)(UFortIrisHelper*, AFortPlayerController*, AActor*, AActor*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged"))
         .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
@@ -90,5 +90,42 @@ void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController*
         .Get();
 
     if (OnPlayerControllerViewTargetChanged)
-        OnPlayerControllerViewTargetChanged(this, PC, NewViewTarget, OldViewTarget);
+    {
+        OnPlayerControllerViewTargetChanged(this, PC, OldViewTarget, NewViewTarget);
+        return;
+    }
+
+    static auto GetConnectionContext = Anchor::Optional<void (*)(UFortIrisHelper*, void**, AFortPlayerController*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged connection context"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
+        .Find("movdqu [rbp-0x*], xmm1; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto UpdateConnectionFilters = Anchor::Optional<void (*)(UFortIrisHelper*, void**)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged filter update"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
+        .Find("lea rdx, [rbp-0x*]; call 0x*; mov r9, *; lea rdx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto UpdateSpectatingGroup = Anchor::Optional<void (*)(UFortIrisHelper*, void**, AActor*, AActor*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged spectating group"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
+        .Find("lea rdx, [rbp-0x*]; call 0x*; mov r9, *; lea rdx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    if (!GetConnectionContext || !UpdateConnectionFilters || !UpdateSpectatingGroup)
+        return;
+
+    void* Context[4] = {};
+
+    GetConnectionContext(this, Context, PC);
+
+    if (Context[0] && Context[1] && Context[2] && Context[3])
+    {
+        UpdateConnectionFilters(this, Context);
+        UpdateSpectatingGroup(this, Context, OldViewTarget, NewViewTarget);
+    }
 }

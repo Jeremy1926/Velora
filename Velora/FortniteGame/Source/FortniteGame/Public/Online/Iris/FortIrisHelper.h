@@ -14,5 +14,5 @@ public:
 
     void OnPlayerControllerInventorySwitched(AFortPlayerController* PC);
 
-    void OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* NewViewTarget, AActor* OldViewTarget);
+    void OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* OldViewTarget, AActor* NewViewTarget);
 };

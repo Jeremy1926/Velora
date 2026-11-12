@@ -200,7 +200,7 @@ void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewVi
     SetViewTargetAndNotifyClient(NewViewTarget, FViewTargetTransitionParams());
 
     if (auto IrisHelper = UFortIrisHelper::Get())
-        IrisHelper->OnPlayerControllerViewTargetChanged(this, NewViewTarget, OldViewTarget);
+        IrisHelper->OnPlayerControllerViewTargetChanged(this, OldViewTarget, NewViewTarget);
 
     UE_LOG(LogVelora, Log, TEXT("[Spectate] %s now spectating %s (player state %s, spectator updates %d)"), *GetName(), *NewViewTarget->GetName(), TargetPlayerState ? *TargetPlayerState->GetName() : TEXT("none"), (int32)UFortRuntimeOptions::Get().GetEnableSpectatorUpdates());
 
