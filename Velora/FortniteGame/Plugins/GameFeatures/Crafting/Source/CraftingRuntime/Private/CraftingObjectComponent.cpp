@@ -446,6 +446,10 @@ bool UCraftingObjectComponent::HasStateChangeTimer() const
         .Find("call 0x*", 2)
         .Target()
         .Find("add rbx, 0x*")
+        .Or()
+        .String("Overcrafted")
+        .Caller()
+        .Find("lea rdi, [rbx+0x*]; call 0x*; mov rcx, rax; call 0x*; mov rcx, rax; mov rdx, rdi")
         .Get();
 
     return StateChangeTimerHandle > 0 && *(uint64*)((uint8*)this + StateChangeTimerHandle) != 0;
