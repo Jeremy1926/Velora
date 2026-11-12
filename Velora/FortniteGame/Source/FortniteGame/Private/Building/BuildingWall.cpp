@@ -36,6 +36,15 @@ void ABuildingWall::Open_Implementation(AController* ControllerInstigator)
         .Find("mov rcx, rax; call [r9+0x*]")
         .Find("call [r9+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:OpenActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("movzx r8d, *; mov rdx, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("add rcx, r*; jz 0x*; mov rax, [rcx]; movzx r8d, *; mov rdx, *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
@@ -65,6 +74,12 @@ void ABuildingWall::Close_Implementation(AController* ControllerInstigator)
         .Find("add [*+0x20], *")
         .Find("mov r8, [rax]; mov rdx, *; mov rcx, rax; call [r8+0x*]")
         .Find("call [r8+0x*]")
+        .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CloseActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("add rcx, r*; jz 0x*; mov rax, [rcx]; mov rdx, *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
