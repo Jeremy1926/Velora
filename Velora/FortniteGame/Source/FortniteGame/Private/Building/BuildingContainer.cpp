@@ -254,6 +254,12 @@ bool ABuildingContainer::AthenaPostApplyPlaylistDataTables(bool bApplyRandomUpgr
         .Find("test byte ptr [*+0x*], 0x2; jz 0x*; mov dl, 0x1; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(GetClass()->FindPropertyByName(FName(TEXT("PotentialRandomUpgrades"))))
+        .Native(TEXT("/Script/FortniteGame.BuildingContainer:SetSearchLootTierGroup"))
+        .Find("movzx r9d, *; movzx edx, al; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Optional()
         .Get();
 
