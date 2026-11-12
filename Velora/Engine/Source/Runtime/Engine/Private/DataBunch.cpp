@@ -67,9 +67,20 @@ FOutBunch::FOutBunch()
         .Pattern("40 53 48 83 EC 20 33 D2 48 8B D9 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 89 03 33 C0 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 8B C3 48 83 C4 20 5B C3")
         .Or()
         .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 89 03 33 C0 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 48 89 83 ? ? ? ? 89 83 ? ? ? ? 48 8B C3 C7 83 ? ? ? ? 04 00 00 00 48 83 C4 20 5B C3")
+        .Optional()
         .Get();
 
-    Constructor(this);
+    if (Constructor)
+    {
+        Constructor(this);
+        return;
+    }
+
+    static auto PackageMapConstructor = Anchor::Function<FOutBunch* (*)(FOutBunch*, UPackageMap*, int64)>(TEXT("FOutBunch::FOutBunch(UPackageMap*, int64)"))
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 49 8B C0 48 8B DA 48 8B D0 41 B0 01 48 8B F9 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 89 9F ? ? ? ? 48 8B 5C 24 30 48 89 07 33 C0")
+        .Get();
+
+    PackageMapConstructor(this, nullptr, 0);
 }
 
 FOutBunch::FOutBunch(UChannel* InChannel, bool bInClose)
@@ -107,6 +118,13 @@ int64 FOutBunch::GetNumBits() const
         .Call()
         .Call()
         .Find("mov [r*+0x*], rcx; mov [r*+0x*], cl")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Call()
+        .Find("mov [rdi+0x*], rax; mov [rdi+0x*], al")
         .Disp();
 
     return *(const int64*)((const uint8_t*)this + Num);
@@ -146,6 +164,13 @@ void FOutBunch::SetNext(FOutBunch* InNext)
         .Call()
         .Find("mov [rsi+0x*], rbx; mov [rsi+0x*], rcx")
         .Find("mov [rsi+0x*], rcx")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov [r14+0x*], rbx; mov [r14+0x*], rcx")
+        .Find("mov [r14+0x*], rcx")
         .Disp();
 
     *(FOutBunch**)((uint8_t*)this + Next) = InNext;
@@ -159,6 +184,13 @@ void FOutBunch::SetChannel(UChannel* InChannel)
         .Find("mov r8b, 0x1")
         .Call()
         .Find("mov [rsi+0x*], rbx; mov [rsi+0x*], rcx")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov [r14], rax; mov [r14+0x*], rsi")
+        .Find("mov [r14+0x*], rsi")
         .Disp();
 
     *(UChannel**)((uint8_t*)this + Channel) = InChannel;
@@ -173,6 +205,13 @@ void FOutBunch::SetChIndex(int32 InChIndex)
         .Call()
         .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
         .Find("mov [rsi+0x*], eax")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rsi+0x*]; mov [r14+0x*], eax")
+        .Find("mov [r14+0x*], eax")
         .Disp();
 
     *(int32*)((uint8_t*)this + ChIndex) = InChIndex;
@@ -188,6 +227,14 @@ void FOutBunch::SetChName(const FName& InChName)
         .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
         .Find("mov *, [rbx+0x*]")
         .Find("mov [rsi+0x*], *ax")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rsi+0x*]; mov [r14+0x*], eax")
+        .Find("mov *, [rsi+0x*]")
+        .Find("mov [r14+0x*], *ax")
         .Disp();
 
     TGameLayout<FName>::Store((uint8_t*)this + ChName, InChName);
@@ -220,6 +267,10 @@ void FOutBunch::SetReliable(bool bInReliable)
         .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
         .Start()
         .Find("test byte ptr [*+0x*], 0x4; jz *; cmp [*+0x*], *")
+        .Or()
+        .String(TEXT("SendBunch: Reliable partial bunch overflows reliable buffer! %s"))
+        .Start()
+        .Find("test byte ptr [*+0x*], 0x4; mov [rsp+0x*], *; mov [rsp+0x*], *; jz *; cmp byte ptr [*+0x*], 0x1")
         .Optional()
         .Disp();
 
