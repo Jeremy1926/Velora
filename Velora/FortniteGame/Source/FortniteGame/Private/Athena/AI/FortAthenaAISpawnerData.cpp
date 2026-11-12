@@ -19,6 +19,10 @@ UFortAthenaAISpawnerDataComponentList* UFortAthenaAISpawnerData::CreateComponent
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -47,6 +51,12 @@ UFortAthenaAISpawnerDataComponentList* UFortAthenaAISpawnerData::CreateComponent
             .Find("call 0x*")
             .Target()
             .Find("mov rcx, rax; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass"))
+            .Find("setnz *; add r*, r*")
+            .Find("mov rdx, *; call 0x*")
             .Find("call 0x*")
             .Target()
             .Get();

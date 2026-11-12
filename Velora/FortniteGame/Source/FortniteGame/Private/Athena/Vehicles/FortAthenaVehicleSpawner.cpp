@@ -139,6 +139,11 @@ UClass* AFortAthenaVehicleSpawner::GetVehicleClass() const
             .Find("add [*+0x20], *")
             .Find("call 0x*")
             .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetVehicleClass"))
+            .Find("setnz *; add r*, r*")
+            .Find("call 0x*")
+            .Target()
             .Get();
 
         static auto VehicleClassOffset = Anchor::Offset(TEXT("AFortAthenaVehicleSpawner::GetVehicleClass vehicle class"))
@@ -193,6 +198,10 @@ bool AFortAthenaVehicleSpawner::GetForceSpawnAlways() const
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -202,6 +211,11 @@ bool AFortAthenaVehicleSpawner::GetForceSpawnAlways() const
             .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
             .Find("add [*+0x20], *")
             .Find("cmp [0x*], r9d")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
+            .Find("setnz *; add r*, r*")
+            .Find("cmp dword ptr [0x*], 0x0")
             .Target()
             .Get();
 
