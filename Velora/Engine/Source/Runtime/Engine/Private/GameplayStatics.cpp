@@ -66,6 +66,28 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
 
 AActor* UGameplayStatics::FinishSpawningActor(AActor* Actor, const FTransform& SpawnTransform)
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("xor r9d, r9d; xor r8d, r8d; mov [rsp+0x20], *; mov rdx, *; mov rcx, *; call 0x*")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto FinishSpawning = Anchor::Function<void (*)(AActor*, const TGameValue<FTransform>&, bool, const void*, ESpawnActorScaleMethod)>(TEXT("AActor::FinishSpawning"))
+            .Exec(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
+            .Find("setnz *; add r*, r*")
+            .Find("xor r9d, r9d; xor r8d, r8d; mov [rsp+0x20], *; mov rdx, *; mov rcx, *; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        if (Actor)
+            FinishSpawning(Actor, SpawnTransform, false, nullptr, ESpawnActorScaleMethod::MultiplyWithRoot);
+
+        return Actor;
+    }
+
     static auto FinishSpawningActor = Anchor::Function<AActor* (*)(AActor*, const TGameValue<FTransform>&)>(TEXT("UGameplayStatics::FinishSpawningActor"))
         .Native(TEXT("/Script/Engine.GameplayStatics:FinishSpawningActor"))
         .Get();

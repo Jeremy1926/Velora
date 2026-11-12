@@ -46,6 +46,13 @@ enum class ESpawnActorCollisionHandlingMethod : uint8
     DontSpawnIfColliding,
 };
 
+enum class ESpawnActorScaleMethod : uint8
+{
+    OverrideRootScale,
+    MultiplyWithRoot,
+    SelectDefaultAtRuntime,
+};
+
 enum ENetDormancy
 {
     DORM_Never,
