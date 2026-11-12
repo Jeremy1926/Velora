@@ -149,6 +149,8 @@ void FMemory::Free(void* Original)
         .Or()
         .Pattern("85 C9 0F 84 ? ? ? ? 56 ? 81 ? ? ? ? ? ? 8B 05 ? ? ? ? ? 33 C4 ? 89 84 24 30 01 00 00 ? 89 B4 24 48 01 00 00")
         .Start()
+        .Or()
+        .Pattern("48 85 C9 74 ? 53 48 83 EC 20 48 8B D9 48 8B 0D ? ? ? ? 48 85 C9 75 ? E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B 01 48 8B D3 FF 50 48")
         .Get();
 
     Free(Original);
