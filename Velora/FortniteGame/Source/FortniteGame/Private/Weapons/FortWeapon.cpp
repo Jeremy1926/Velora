@@ -157,6 +157,10 @@ void AFortWeapon::OnUnEquip()
     DETOUR(AFortWeapon, OnUnEquip, Anchor::Hook()
         .If(AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("GrantedAbilityRemovalPolicy"))))
         .Event(TEXT("K2_OnUnEquip"))
+        .Is("mov rax, rsp; mov [rax+0x8], rcx; push rbp; push rdi; lea rbp, [rax-0x*]")
+        .Or()
+        .If(AFortWeapon::StaticClass()->FindPropertyByName(FName(TEXT("GrantedAbilityRemovalPolicy"))))
+        .Event(TEXT("K2_OnUnEquip"))
         .Caller()
         .Inline());
 
