@@ -30,6 +30,9 @@ void FWorldContext::SetRunAsDedicated(bool bInRunAsDedicated)
         .Or()
         .Pattern("48 8B 41 30 48 85 C0 74 ? 8A 80 ? ? 00 00 C3")
         .Find("mov al, [*+0x*]")
+        .Or()
+        .Pattern("48 8B 42 30 48 85 C0 74 ? 0F B6 80 ? ? 00 00 84 C0 0F 94 C0 C3")
+        .Find("movzx *, byte ptr [*+0x*]")
         .Disp();
 
     if (RunAsDedicated > 0)
@@ -108,8 +111,32 @@ bool UEngine::CreateNamedNetDriver(UWorld* InWorld, FName NetDriverName, FName N
         .Last("call 0x*")
         .Target()
         .Get();
+    static auto bInlinedCreateNamedNetDriver = Anchor::Exists()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("mov *, [0x*]; mov rdx, *; mov *, [rax+0x*]; mov rcx, *; call 0x*; mov rdx, rax; mov r9d, *; mov r8d, *; mov rcx, *; call 0x*")
+        .Get();
 
-    return CreateNamedNetDriver(this, InWorld, NetDriverName, NetDriverDefinition);
+    if (!bInlinedCreateNamedNetDriver)
+        return CreateNamedNetDriver(this, InWorld, NetDriverName, NetDriverDefinition);
+
+    static auto GetWorldContextFromWorldChecked = Anchor::Function<FWorldContext* (*)(UEngine*, const UWorld*)>(TEXT("UEngine::GetWorldContextFromWorldChecked"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("mov *, [0x*]; mov rdx, *; mov *, [rax+0x*]; mov rcx, *; call 0x*; mov rdx, rax; mov r9d, *; mov r8d, *; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto CreateNamedNetDriver_Local = Anchor::Function<bool (*)(UEngine*, FWorldContext*, FName, FName)>(TEXT("CreateNamedNetDriver_Local"))
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("mov *, [0x*]; mov rdx, *; mov *, [rax+0x*]; mov rcx, *; call 0x*; mov rdx, rax; mov r9d, *; mov r8d, *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    return CreateNamedNetDriver_Local(this, GetWorldContextFromWorldChecked(this, InWorld), NetDriverName, NetDriverDefinition);
 }
 
 UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
@@ -125,6 +152,8 @@ UNetDriver* UEngine::FindNamedNetDriver(UWorld* InWorld, FName NetDriverName)
         .Find("mov rcx, r14; mov rdx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("40 53 48 83 EC 20 41 8B D8 E8 ? ? ? ? 48 63 88 ? ? 00 00 85 C9 7E ? 48 8B 90 ? ? 00 00")
         .Or()
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("mov rcx, [0x*]")
@@ -144,7 +173,33 @@ void UEngine::ForceGarbageCollection(bool bFullPurge)
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:CollectGarbage"))
         .Find("jmp 0x*")
         .Target()
+        .Optional()
         .Get();
 
-    ForceGarbageCollection(this, bFullPurge);
+    if (ForceGarbageCollection)
+    {
+        ForceGarbageCollection(this, bFullPurge);
+        return;
+    }
+
+    static auto GetTimeBetweenGarbageCollectionPasses = Anchor::VirtualFunction<float (*)(const UEngine*, bool)>(TEXT("UEngine::GetTimeBetweenGarbageCollectionPasses"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:CollectGarbage"))
+        .Find("xor edx, edx; mov rax, [rbx]; mov rcx, rbx; call [rax+0x*]; addss xmm0, [0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto TimeSinceLastPendingKillPurge = Anchor::Offset(TEXT("UEngine::TimeSinceLastPendingKillPurge"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:CollectGarbage"))
+        .Find("addss xmm0, [0x*]; mov byte ptr [rbx+0x*], 0x1; movss [rbx+0x*], xmm0")
+        .Find("movss [rbx+0x*], xmm0")
+        .Disp();
+
+    static auto bFullPurgeTriggered = Anchor::Offset(TEXT("UEngine::bFullPurgeTriggered"))
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:CollectGarbage"))
+        .Find("addss xmm0, [0x*]; mov byte ptr [rbx+0x*], 0x1; movss [rbx+0x*], xmm0")
+        .Find("mov byte ptr [rbx+0x*], 0x1")
+        .Disp();
+
+    *(float*)((uint8*)this + TimeSinceLastPendingKillPurge) = 1.0f + GetTimeBetweenGarbageCollectionPasses(this, false);
+    *((uint8*)this + bFullPurgeTriggered) = *((uint8*)this + bFullPurgeTriggered) || bFullPurge;
 }
