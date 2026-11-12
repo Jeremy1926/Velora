@@ -184,6 +184,9 @@ void AFortPlayerStateAthena::InitializeDeathInfo(const FDeathInfo& NewDeathInfo)
         .Find("mov rcx, [rsp+0x*]; lea rdx, [rsp+0x*]; call 0x*")
         .Call()
         .FieldHas("*+%x]*", DeathInfo)
+        .Or()
+        .FieldPattern("48 8B D9 48 81 C1 %x E8 ? ? ? ? C6 83", DeathInfo)
+        .Start()
         .Get();
 
     if (InitializeDeathInfo)
