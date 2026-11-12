@@ -3410,6 +3410,13 @@ TArray<UReplicationGraphNode_TearOff_ForConnection::FTearOffActorInfo>& UReplica
         .Start()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
+        .Find("or byte ptr [rax+0x*], 0x2; mov rdi, [rdi+0x*]")
+        .Find("lea rcx, [rdi+0x*]; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
         .Find("lea rcx, [rdi+0x*]; call 0x*")
         .Optional()
         .Disp();
