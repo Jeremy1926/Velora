@@ -126,6 +126,9 @@ bool UBuildingStructuralSupportSystem::IsGridInitialized() const
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rdi; push rbp; mov rbp, rsp; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rbp+0x18], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
         .Find("movsd xmm1, qword ptr [rax+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x18], rbx; push rdi; sub rsp, 0x80; mov r8d, 0x1; mov rdx, rcx; mov rdi, rcx; call 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; test rax, rax; jz 0x*; mov rcx, [rax+0x*]; mov [rsp+0x*], rcx; test rcx, rcx; jz 0x*; movsd xmm1, qword ptr [rcx+0x*]")
+        .Find("movsd xmm1, qword ptr [rcx+0x*]")
         .Disp();
 
     return *((const uint8*)this + GridBoundsIsValid) != 0;
@@ -139,7 +142,10 @@ TMulticastDelegate<void>& UBuildingStructuralSupportSystem::GetOnGridInitialized
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rdi; push rbp; mov rbp, rsp; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rbp+0x18], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
         .Find("lea rdi, [rax+0x*]")
-        .Disp();
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x18], rbx; push rdi; sub rsp, 0x80; mov r8d, 0x1; mov rdx, rcx; mov rdi, rcx; call 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; test rax, rax; jz 0x*; mov rcx, [rax+0x*]; mov [rsp+0x*], rcx; test rcx, rcx; jz 0x*; movsd xmm1, qword ptr [rcx+0x*]")
+        .Find("add rcx, 0x*")
+        .Get();
 
     return *(TMulticastDelegate<void>*)((uint8*)this + OnGridInitialized);
 }
@@ -150,6 +156,8 @@ void UFortCurieManager::NotifyAllCurieManagerComponentsRegistered()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "push rbx; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rsp+0x98], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x8], rbx; mov [rsp+0x18], rdi; push rbp; mov rbp, rsp; sub rsp, 0x80; mov rbx, rcx; call 0x*; mov [rbp+0x18], rax; test rax, rax; jz 0x*; movsd xmm1, qword ptr [rax+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieManager"), "mov [rsp+0x18], rbx; push rdi; sub rsp, 0x80; mov r8d, 0x1; mov rdx, rcx; mov rdi, rcx; call 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; test rax, rax; jz 0x*; mov rcx, [rax+0x*]; mov [rsp+0x*], rcx; test rcx, rcx; jz 0x*; movsd xmm1, qword ptr [rcx+0x*]")
         .Optional()
         .LogSlot(TEXT("UFortCurieManager::NotifyAllCurieManagerComponentsRegistered"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortCurieManager")));
@@ -171,6 +179,8 @@ void UFortCurieManager::HandleBuildingGridInitialized()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; mov rax, rsp; push rbx; sub rsp, 0x*; movups xmm0, [rdx+0x*]")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; push rbx; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp; mov [rsp+0x*], rax; movups xmm0, [rdx+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; push rbx; sub rsp, 0x*; movups xmm0, [rdx+0x*]")
         .Get();
 
     static auto FortCurieManagerComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortCurieManagerComponent"));
