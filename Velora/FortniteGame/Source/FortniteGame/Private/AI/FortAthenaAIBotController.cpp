@@ -233,6 +233,8 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
 AFortWeapon* AFortAthenaAIBotController::EquipBestWeapon(bool bUpdateBB)
 {
     static auto EquipBestWeapon = Anchor::Optional<AFortWeapon* (*)(AFortAthenaAIBotController*, bool)>(TEXT("AFortAthenaAIBotController::EquipBestWeapon"))
+        .Pattern("40 53 48 83 EC 20 48 63 81 ? ? ? ? 48 8B D9 83 F8 FF 74 ? 85 C0 78 ? 3B 81 ? ? ? ? 7D ? 48 8D 14 80 48 C1 E2 06 48 03 91 ? ? ? ? EB ? 33 D2 45 33 C9 45 33 C0 E8 ? ? ? ? 48 8B D0 48 8B CB 48 83 C4 20 5B E9")
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortAthenaAIBotController:EquipBestWeapon"))
         .Get();
 
