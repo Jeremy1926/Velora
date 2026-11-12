@@ -218,6 +218,8 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
         .Call()
         .Find("mov rdx, rbx; mov rcx, rax; call 0x*")
         .Call()
+        .Or()
+        .Pattern("48 89 5C 24 10 57 48 83 EC 40 80 B9 ? ? 00 00 03 48 8B FA 48 8B D9 0F 85 ? ? ? ? 80 BA ? ? 00 00 00 48 89 74 24 50")
         .Get();
 
     SetItemRequiresUpdate(this, ItemEntry);
@@ -329,6 +331,9 @@ FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCo
         .Find("call 0x*")
         .Target()
         .Has("mov rax, [rsp+0x60]; movups xmm0, [rax]")
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 20 33 ED 48 89 51 18 48 8D B1 ? ? 00 00 48 C7 01 FF FF FF FF")
+        .Has("mov rax, [rsp+0x50]; movups xmm0, [rax]")
         .Get();
 
     if (VariantGuidConstructor)
@@ -393,6 +398,8 @@ FFortItemEntry::~FFortItemEntry()
         .Find("lea rcx, [*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 C7 81 88 01 00 00 00 00 00 00 48 8B D9 48 8B B1 80 01 00 00 48 85 F6 74 ? 48 8B 0D ? ? ? ? 48 85 C9 75 ? E8 ? ? ? ? 48 8B 0D ? ? ? ? 48 8B 01 48 8B D6 FF 50 48 48 8D 8B 40 01 00 00 E8")
         .Get();
 
     Destructor(this);
