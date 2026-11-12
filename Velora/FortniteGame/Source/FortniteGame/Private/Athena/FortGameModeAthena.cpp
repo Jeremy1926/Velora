@@ -120,6 +120,12 @@ TMulticastDelegate<void, AFortGameModeAthena*>& AFortGameModeAthena::GetNotifyPl
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
+        .Start()
+        .Find("lea rcx, [0x*]; call 0x*; mov ecx, [0x*]; xor *, *; mov edx, [0x*]; inc ecx")
+        .Find("mov rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPlaylistDataLoaded;
@@ -219,6 +225,11 @@ TMulticastDelegate<void, TSubclassOf<AFortPawn>>& AFortGameModeAthena::GetNotify
         .Native(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:AddAIClassToReplicationGraph"))
+        .Find("setnz cl; *; add rcx, rax; mov [*+0x20], rcx")
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyNewAIClass;
@@ -237,6 +248,16 @@ TMulticastDelegate<void, AActor*, AFortInventory*>& AFortGameModeAthena::GetNoti
         .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyAddReplicatedNonPlayerInventory;
@@ -251,6 +272,17 @@ TMulticastDelegate<void, AActor*, AFortInventory*>& AFortGameModeAthena::GetNoti
         .Reference("mov ?dx, *")
         .Start()
         .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8)
+        .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .SlotShift(TEXT("/Script/Engine.Default__Actor"), 0x8)
         .Entry(TEXT("/Script/CraftingRuntime.Default__CraftingObjectBGA"))
@@ -310,6 +342,8 @@ void AFortGameModeAthena::CreateAIDirector()
         .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
         .Optional()
         .Start()
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rax, [rcx+0x*]; test rax, rax; jz 0x*; test byte ptr [rax+0x30], 0x1; jz 0x*; mov rax, [rcx+0x*]; test rax, rax; jz 0x*; mov edx, [rcx+0x*]; test edx, edx; jle 0x*; mov [rax+0xdd0], edx")
         .Inline());
 
     AFortGameModeZone::CreateAIDirector();
@@ -551,6 +585,11 @@ APawn* AFortGameModeAthena::SpawnDefaultPawnFor_Implementation(AController* NewP
             .Find("add [*+0x20], *")
             .Find("call [rax+*]", 2)
             .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
+            .Or()
+            .Exec(TEXT("/Script/Engine.PlayerController:ServerAcknowledgePossession"))
+            .Find("call [rax+*]; test al, al; jnz 0x*")
+            .Find("call [rax+*]")
+            .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
             .Get();
 
         if (auto AbilitySet = UFortGameData::Get()->GetAthenaPlayerAbilitySet())
@@ -608,6 +647,11 @@ void AFortGameModeAthena::PlacePlayerOnTeam(AController* Player)
         .Start()
         .Log(TEXT("AFortGameMode::PlacePlayerOnTeam"))
         .Caller()
+        .Or()
+        .If(FGameMemberInfoArray::StaticStruct())
+        .String(TEXT("PlacePlayerOnTeam for %s Current: %d Actual: %d"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
         .Inline());
 
     auto PlayerState = Player ? Cast<AFortPlayerStateAthena>(Player->GetPlayerState()) : nullptr;

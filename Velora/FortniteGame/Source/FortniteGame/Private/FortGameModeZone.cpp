@@ -219,6 +219,8 @@ AFortAIDirector* AFortGameModeZone::GetAIDirector()
         .String(TEXT("AFortGameModeAthena::CreateAIDirector setting initial MaxActiveAlive override to %i"))
         .Start()
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"))
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rax, [rcx+0x*]; test rax, rax; jz 0x*; test byte ptr [rax+0x30], 0x1; jz 0x*; mov rax, [rcx+0x*]; test rax, rax; jz 0x*; mov edx, [rcx+0x*]; test edx, edx; jle 0x*; mov [rax+0xdd0], edx")
         .Get();
 
     if (!*AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this))
@@ -242,6 +244,8 @@ bool AFortGameModeZone::ShouldWeaponRemoveGrantedAbilities(AFortWeapon* Weapon, 
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "sub rsp, 0x28; mov al, 0x1; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; mov rcx, rdx; call 0x*")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x20; mov rbx, rdx; mov r10b, 0x1; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov r11, rdx; test rdx, rdx; jz *; cmp r8b, 0x2; jnz *; movsxd r10, dword ptr [rdx+0x*]; mov rax, [rdx+0x*]; shl r10, 0x6")
         .Get();
 
     return ShouldWeaponRemoveGrantedAbilities(this, Weapon, Reason);
