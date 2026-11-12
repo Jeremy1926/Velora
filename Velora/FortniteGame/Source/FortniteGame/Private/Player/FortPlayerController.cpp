@@ -2131,6 +2131,22 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
 
 bool AFortPlayerController::IsBuildingRestricted(const FBuildingClassData& BuildingClassData, const FVector& BuildLoc, const FRotator& BuildRot) const
 {
+    static auto IsBuildingRestrictedScheduled = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, const FBuildingClassData&, const TGameValue<FVector>&, const TGameValue<FRotator>&)>(TEXT("AFortPlayerController::IsBuildingRestricted scheduled call"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; mov *, al")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; lea *, *; lea *, *; mov rcx, *; call r10")
+        .Optional()
+        .Get();
+
+    if (IsBuildingRestrictedScheduled)
+        return IsBuildingRestrictedScheduled(this, BuildingClassData, BuildLoc, BuildRot);
+
     static auto IsBuildingRestricted = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, const FBuildingClassData&, const TGameValue<FVector>&, const TGameValue<FRotator>&)>(TEXT("AFortPlayerController::IsBuildingRestricted"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
@@ -2165,6 +2181,24 @@ bool AFortPlayerController::HasRequiredBuildingLevel(const FBuildingClassData& B
 
 bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortResourceType ResourceType) const
 {
+    static auto HasRequiredBuildingLevelScheduled = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, int32, EFortResourceType)>(TEXT("AFortPlayerController::HasRequiredBuildingLevel scheduled call"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; mov *, al")
+        .SlotShift(this, sizeof(void*))
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; lea *, *; lea *, *; mov rcx, *; call r10")
+        .SlotShift(this, sizeof(void*))
+        .Optional()
+        .Get();
+
+    if (HasRequiredBuildingLevelScheduled)
+        return HasRequiredBuildingLevelScheduled(this, BuildingLevel, ResourceType);
+
     static auto HasRequiredBuildingLevel = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, int32, EFortResourceType)>(TEXT("AFortPlayerController::HasRequiredBuildingLevel"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
