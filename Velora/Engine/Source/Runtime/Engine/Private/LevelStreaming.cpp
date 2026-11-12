@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Engine/LevelStreaming.h"
+#include "Engine/Level.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -49,6 +50,9 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Or()
         .Pattern("44 8A B9 ? ? ? ? 44 8A F2 4C 8B A1 ? ? ? ? 48 8B E9 88 91")
         .Find("mov [*+0x*], dl")
+        .Or()
+        .Pattern("48 89 6C 24 ? 48 8B E9 4C 89 64 24 ? 44 0F B6 E2 4C 89 6C 24 ? 44 0F B6 A9 ? ? ? ? 4C 89 74 24 ? 88 91")
+        .Find("mov [*+0x*], dl")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
@@ -70,9 +74,20 @@ bool ULevelStreaming::IsLevelVisible() const
 {
     static auto IsLevelVisible = Anchor::Function<bool (*)(const ULevelStreaming*)>(TEXT("ULevelStreaming::IsLevelVisible"))
         .Native(TEXT("/Script/Engine.LevelStreaming:IsLevelVisible"))
+        .Optional()
         .Get();
 
-    return IsLevelVisible(this);
+    if (IsLevelVisible)
+        return IsLevelVisible(this);
+
+    auto LoadedLevel = GetLoadedLevel();
+
+    if (!LoadedLevel)
+        return false;
+
+    static auto bIsVisible = (UBoolProperty*)ULevel::StaticClass()->FindPropertyByName(FName(TEXT("bIsVisible")));
+
+    return bIsVisible->GetPropertyValue_InContainer(LoadedLevel);
 }
 
 bool ULevelStreaming::ShouldBeLoaded() const
