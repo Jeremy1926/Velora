@@ -141,6 +141,8 @@ void UAthenaMarkerComponent::ServerAddMapMarker_Implementation(const FFortClient
         .Find("call 0x*")
         .Target()
         .Or()
+        .Pattern("48 89 5C 24 10 48 89 7C 24 18 4C 89 64 24 20 55 41 56 41 57 48 8B EC 48 83 EC 70 4C 8B B9 ? ? 00 00 49 8B F8 48 8B DA 4D 85 FF")
+        .Or()
         .String(TEXT("FortMarkableActorInterface"))
         .Start()
         .Caller()
