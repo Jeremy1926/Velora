@@ -66,6 +66,13 @@ void ABuildingActor::BeginPlay()
         .Caller()
         .Log(TEXT("AActor::BeginPlay"))
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .Get(TEXT("/Script/FortniteGame.Default__BuildingActor"));
 
     BeginPlay(this);

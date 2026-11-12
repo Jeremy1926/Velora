@@ -1192,6 +1192,14 @@ void AFortGameModeAthena::OnGivenMatchAssignment(const TMap<FString, FString>& M
         .Log(TEXT("AActor::BeginPlay"))
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .LogSlot(TEXT("AActor::BeginPlay"))
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingContainer"));
 
     static auto bTakesSucceeded = Anchor::Exists()

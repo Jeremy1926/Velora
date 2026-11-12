@@ -47,6 +47,15 @@ void AFortAthenaVehicleSpawner::BeginPlay()
         .Log(TEXT("AActor::BeginPlay"))
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .LogSlot(TEXT("AActor::BeginPlay"))
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:SpawnVehicle")))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaVehicleSpawner")));
 
     Original();
