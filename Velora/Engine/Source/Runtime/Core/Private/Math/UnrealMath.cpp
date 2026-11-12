@@ -9,6 +9,10 @@
 FVector FRotator::Vector() const
 {
     static auto Vector = Anchor::Function<TGameValue<FVector>* (*)(const TGameValue<FRotator>&, TGameValue<FVector>*)>(TEXT("FRotator::Vector"))
+        .Exec(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], *; call 0x*; movaps xmm2, xmm0")
+        .Pattern("48 89 5C 24 08 57 48 83 EC 40 F2 0F 10 0D ? ? ? ? 48 8B FA F2 0F 10 01 48 8B D9 44 0F 29 44 24 30 44 0F 29 4C 24 20 E8 ? ? ? ? 0F 28 D0 0F 57 C0 F2 0F 59 15 ? ? ? ? F2 0F 10 C2 E8")
+        .Or()
         .Native(TEXT("/Script/Engine.KismetMathLibrary:Conv_RotatorToVector"))
         .Get();
 
