@@ -83,6 +83,15 @@ int32& UNetReplicationGraphConnection::GetConnectionOrderNum()
         .Target()
         .Find("lea ecx, [rdx+0x1]; mov [*+0x*], edx")
         .Find("mov [*+0x*], edx")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x*], r*; mov r9, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], ecx")
         .Disp();
 
     return *(int32*)((uint8*)this + ConnectionOrderNum);
@@ -127,6 +136,16 @@ int32* UNetReplicationGraphConnection::GetConnectionId()
         .Find("call 0x*")
         .Target()
         .Find("lea ecx, [rdx+0x1]; mov [*+0x*], edx")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x*], r*; mov r9, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], ecx")
+        .Is("mov [*+0x*], ecx; lea eax, [rcx+0x1]")
         .Get();
 
     if (bConnectionIdStoreGone)
@@ -223,6 +242,12 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x28)
         .Find("mov rdx, [rbp+0x*]; cdqe; lea rcx, [rax+rax*4]")
+        .Or()
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x28)
+        .Find("mov rdx, [rbp+0x*]; nop *; cdqe; lea rcx, [rax+rax*4]")
         .Disp();
 
     return *(TMap<FName, TMulticastDelegate<void, FName, UWorld*>>*)((uint8*)this + OnClientVisibleLevelNameAddMap);
@@ -274,6 +299,12 @@ void UNetReplicationGraphConnection::SetActorNotDormantOnConnection(AActor* InAc
         .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
         .Start()
         .Find("mov rdx, [rbp+0x*]; mov rcx, [rbx]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .Find("mov rdx, [rsp+0x*]; mov rcx, [rbx]; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
@@ -653,6 +684,12 @@ TArray<UReplicationGraphNode*>& UReplicationGraphNode::GetAllChildNodes()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Find("mov rdi, [rbx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("mov r*, [r*+0x*]; movsxd rax, dword ptr [r*+0x*]")
         .Disp();
 
     return *(TArray<UReplicationGraphNode*>*)((uint8*)this + AllChildNodes);
@@ -688,6 +725,12 @@ FActorRepListRefView& UReplicationGraphNode_ActorList::GetReplicationActorList()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Find("lea rdx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("lea r*, [rcx+0x*]")
         .Disp();
 
     return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
@@ -701,6 +744,12 @@ FStreamingLevelActorListCollection& UReplicationGraphNode_ActorList::GetStreamin
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Find("lea rcx, [rbx+0x*]; mov rdx, rsi")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("lea rcx, [r*+0x*]; mov rdx, r*")
         .Disp();
 
     return *(FStreamingLevelActorListCollection*)((uint8*)this + StreamingLevelCollection);
@@ -1036,7 +1085,20 @@ UClass* UReplicationGraphNode_GridCell::StaticClass()
 
 void UReplicationGraphNode_GridCell::RemoveDynamicActor(const FNewReplicatedActorInfo& ActorInfo)
 {
-    static auto RemoveDynamicActor = Anchor::Function<void (*)(UReplicationGraphNode_GridCell*, const FNewReplicatedActorInfo&)>(TEXT("UReplicationGraphNode_GridCell::RemoveDynamicActor"))
+    static auto bRemoveDynamicActorInlined = Anchor::Exists()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x18)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*; mov r8b, 0x1; mov rdx, *; mov rcx, rax; mov r9, [rax]; call [r9+0x*]")
+        .Get();
+
+    if (bRemoveDynamicActorInlined)
+    {
+        GetDynamicNode()->NotifyRemoveNetworkActor(ActorInfo, true);
+        return;
+    }
+
+    static auto RemoveDynamicActor =Anchor::Function<void (*)(UReplicationGraphNode_GridCell*, const FNewReplicatedActorInfo&)>(TEXT("UReplicationGraphNode_GridCell::RemoveDynamicActor"))
         .Pattern("48 83 B9 ? ? 00 00 00 48 8B F2 48 8B D9 75 ? 48 8B B9 ? ? 00 00 48 85 FF 74")
         .Start()
         .Or()
@@ -1138,6 +1200,13 @@ UReplicationGraphNode* UReplicationGraphNode_GridCell::GetDynamicNode()
         .Find("call 0x*")
         .Target()
         .Find("lea r*, [rcx+0x*]; mov *, rcx; cmp qword ptr [r*], 0x0")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x18)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*; mov r8b, 0x1; mov rdx, *; mov rcx, rax")
+        .Target()
+        .Find("cmp qword ptr [rcx+0x*], 0x0")
         .Disp();
 
     auto& Node = *(UReplicationGraphNode**)((uint8*)this + DynamicNode);
@@ -1215,6 +1284,14 @@ TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>& UReplication
         .Find("call 0x*")
         .Target()
         .Find("mov rdi, [rcx+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x18)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*; mov r8b, 0x1; mov rdx, *; mov rcx, rax")
+        .Target()
+        .Has("cmp qword ptr [rcx+0x*], 0x0")
+        .Find("mov rdi, [rcx+0x*]")
         .Disp();
 
     return *(TFunction<UReplicationGraphNode*(UReplicationGraphNode_GridCell*)>*)((uint8*)this + CreateDynamicNodeOverride);
@@ -1275,9 +1352,31 @@ UReplicationGraphNode_DormancyNode* UReplicationGraphNode_GridCell::GetDormancyN
         .Target()
         .Find("call 0x*")
         .Target()
+        .Optional()
         .Get();
 
-    return GetDormancyNode(this);
+    if (GetDormancyNode)
+        return GetDormancyNode(this);
+
+    static auto DormancyNode = Anchor::Offset(TEXT("UReplicationGraphNode_GridCell::DormancyNode"))
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movzx r9d, *; mov r8, *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp qword ptr [rcx+0x*], 0x0")
+        .Disp();
+
+    if (DormancyNode <= 0)
+        return nullptr;
+
+    auto& Node = *(UReplicationGraphNode_DormancyNode**)((uint8*)this + DormancyNode);
+
+    if (!Node)
+        Node = CreateChildNode<UReplicationGraphNode_DormancyNode>();
+
+    return Node;
 }
 
 UClass* UReplicationGraphNode_GridSpatialization2D::StaticClass()
@@ -1337,6 +1436,13 @@ UReplicationGraphNode_GridSpatialization2D::FActorCellInfo UReplicationGraphNode
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movss [rsp+0x20], xmm0; lea rbx, [r*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FActorCellInfo CellInfo;
@@ -1394,6 +1500,13 @@ void UReplicationGraphNode_GridSpatialization2D::GetGridNodesForActor(AActor* Ac
         .Target()
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movss [rsp+0x20], xmm0; lea rbx, [r*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     GetGridNodesForActor(this, Actor, CellInfo, OutNodes);
@@ -1448,6 +1561,14 @@ float& UReplicationGraphNode_GridSpatialization2D::GetCellSize()
         .Target()
         .Find("mov dl, [r*+0x*]")
         .Find("movss xmm0, dword ptr [r*+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx r9d, byte ptr [rbx+0x*]")
+        .Find("movss xmm0, dword ptr [rbx+0x*]")
         .Disp();
 
     return *(float*)((uint8*)this + CellSize);
@@ -1507,6 +1628,11 @@ uint8* UReplicationGraphNode_GridSpatialization2D::GetGridBounds()
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
         .Find("cmp byte ptr [rbx+0x*], 0x0; jnz 0x*; comisd *")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("cmp byte ptr [rcx+0x*], 0x0")
         .Disp();
 
     return (uint8*)this + IsValid - 2 * TGameLayout<FVector>::Size();
@@ -1610,6 +1736,15 @@ TArray<TArray<UReplicationGraphNode_GridCell*>>& UReplicationGraphNode_GridSpati
         .Target()
         .Find("cmp [r*+0x*], esi; jnle 0x*; lea rdi, [r*+0x*]; movsxd *, dword ptr [rdi+0x8]")
         .Find("lea rdi, [r*+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movss [rsp+0x20], xmm0; lea rbx, [r*+0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("cmp [r*+0x*], r*; jnle 0x*; lea rsi, [r*+0x*]; movsxd *, dword ptr [rsi+0x8]")
+        .Find("lea rsi, [r*+0x*]")
         .Disp();
 
     return *(TArray<TArray<UReplicationGraphNode_GridCell*>>*)((uint8*)this + Grid);
@@ -1690,6 +1825,14 @@ TClassMap<bool>& UReplicationGraphNode_GridSpatialization2D::GetClassRebuildDeny
         .Target()
         .Has("add rcx, 0x*; mov r*, r8; call 0x*")
         .Find("add rcx, 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Has("movzx r9d, byte ptr [rbx+0x*]")
+        .Find("add rcx, 0x*")
         .Imm();
 
     return *(TClassMap<bool>*)((uint8*)this + ClassRebuildDenyList);
@@ -1735,6 +1878,13 @@ void UReplicationGraphNode_GridSpatialization2D::HandleActorOutOfSpatialBounds(A
         .Find("call 0x*")
         .Target()
         .Has("add rcx, 0x*; mov r*, r8; call 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("call 0x*")
+        .Target()
+        .Has("movzx r9d, byte ptr [rbx+0x*]")
         .Or()
         .String(TEXT("Child: %s"))
         .Start()
@@ -1782,9 +1932,30 @@ void UReplicationGraphNode_GridSpatialization2D::PutStaticActorIntoCell(const FN
         .Find("mov r9b, *; mov r8, *; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Optional()
         .Get();
 
-    PutStaticActorIntoCell(this, ActorInfo, ActorRepInfo, bDormancyDriven);
+    if (PutStaticActorIntoCell)
+    {
+        PutStaticActorIntoCell(this, ActorInfo, ActorRepInfo, bDormancyDriven);
+        return;
+    }
+
+    static auto AddStaticActor = Anchor::Function<void (*)(UReplicationGraphNode_GridCell*, const FNewReplicatedActorInfo&, FGlobalActorReplicationInfo&, bool)>(TEXT("UReplicationGraphNode_GridCell::AddStaticActor"))
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movzx r9d, *; mov r8, *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    auto& GatheredNodes = GetGatheredNodes();
+
+    GetGridNodesForActor(ActorInfo.Actor, GetCellInfoForActor(ActorInfo.Actor, ActorRepInfo.GetWorldLocation(), ActorRepInfo.GetCullDistance()), GatheredNodes);
+
+    for (auto Node : GatheredNodes)
+        AddStaticActor(Node, ActorInfo, ActorRepInfo, bDormancyDriven);
 }
 
 void UReplicationGraphNode_GridSpatialization2D::AddActor_Static(const FNewReplicatedActorInfo& ActorInfo, FGlobalActorReplicationInfo& ActorRepInfo)
@@ -2370,6 +2541,12 @@ TArray<UReplicationGraphNode_GridCell*>& UReplicationGraphNode_GridSpatializatio
         .Find("call 0x*")
         .Target()
         .Find("lea rbx, [rcx+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), "sub rsp, 0x38; mov [rsp+0x20], rdx; lea r8, [rsp+0x20]; mov [rsp+0x28], rdx; add rcx, 0x*; lea rdx, [rsp+0x40]; call 0x*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"), 0x10)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_GridSpatialization2D"))
+        .Find("movss [rsp+0x20], xmm0; lea rbx, [r*+0x*]; call 0x*")
+        .Find("lea rbx, [r*+0x*]")
         .Disp();
 
     return *(TArray<UReplicationGraphNode_GridCell*>*)((uint8*)this + GatheredNodes);
@@ -2560,6 +2737,13 @@ const UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGr
         .FindEither("call 0x*", "jmp 0x*")
         .Target()
         .Find("cmp qword ptr [rcx+0x*], 0x0")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("mov rax, [r*+0x*]; mov r8d, [r*+0x*]; mov *, [rsp+0x*]; inc r8d")
         .Disp();
 
     auto& SettingsPtr = *(TSharedPtr<FSettings>*)((uint8*)this + Settings);
@@ -2591,6 +2775,15 @@ UReplicationGraphNode_ActorListFrequencyBuckets::FSettings& UReplicationGraphNod
         .Target()
         .Find("lea rax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("mov rcx, [r*]; lea rdx, [0x*]; mov rax, [r*]")
+        .Find("lea rdx, [0x*]")
+        .Target()
         .Get();
 
     return *DefaultSettings;
@@ -2605,6 +2798,14 @@ TArray<FActorRepListRefView, TInlineAllocator<2>>& UReplicationGraphNode_ActorLi
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
         .Find("lea rax, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorListFrequencyBuckets"))
+        .Find("mov rax, [rcx+0x*]; lea r*, [rcx+0x*]")
+        .Find("lea r*, [rcx+0x*]")
         .Disp();
 
     return *(TArray<FActorRepListRefView, TInlineAllocator<2>>*)((uint8*)this + NonStreamingCollection);
@@ -2677,6 +2878,17 @@ void UReplicationGraphNode_ConnectionDormancyNode::SetNumFramesUntilObsolete(uin
         .Find("call 0x*", 4)
         .Target()
         .Find("mov ecx, [0x*]")
+        .Target()
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x28)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_DormancyNode"))
+        .Find("lea rdx, [rsp+0x*]; lea rax, [0x*]; mov rcx, *; mov [rsp+0x*], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov ecx, [0x*]; test ecx, ecx")
         .Target()
         .Get();
 
@@ -3420,6 +3632,12 @@ FFrameReplicationStats& UReplicationGraph::GetFrameReplicationStats()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("mov [rcx+0x*], rbx; mov [rcx+0x*], rbx")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movups [rcx+0x*], xmm0; mov word ptr [rcx+0x*], 0x0")
         .Disp();
 
     return *(FFrameReplicationStats*)((uint8*)this + FrameReplicationStats);
@@ -3481,6 +3699,13 @@ bool& UReplicationGraph::GetWasConnectionSaturated()
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("mov [rcx+0x*], rbx; mov [rcx+0x*], rbx")
         .Find("mov [rcx+0x*], bx")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .Find("movups [rcx+0x*], xmm0; mov word ptr [rcx+0x*], 0x0")
+        .Find("mov word ptr [rcx+0x*], 0x0")
         .Disp();
 
     return *(bool*)((uint8*)this + bWasConnectionSaturated);
@@ -3524,6 +3749,12 @@ TArray<UNetConnection*>& UReplicationGraph::GetConnectionsNeedingsPostTickDispat
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x40)
         .Find("lea rbx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x40)
+        .Find("lea r14, [rcx+0x*]; mov rdi, [r14]")
         .Disp();
 
     return *(TArray<UNetConnection*>*)((uint8*)this + ConnectionsNeedingsPostTickDispatchFlush);
@@ -3587,6 +3818,12 @@ int32 UReplicationGraph::ServerReplicateActors(float DeltaSeconds)
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; push rbp; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; mov [rsp+0x18], rdi; push rbp; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [0x*]; xor rax, rsp")
         .Optional()
         .InChildVTables(UReplicationGraph::StaticClass()));
 
@@ -4478,6 +4715,13 @@ FGlobalActorReplicationInfoMap& UReplicationGraph::GetGlobalActorReplicationInfo
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
         .Find("lea rcx, [*+0x*]; lea rdx, [*]; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*")
+        .Find("lea rcx, [*+0x*]")
         .Disp();
 
     return *(FGlobalActorReplicationInfoMap*)((uint8*)this + GlobalActorReplicationInfoMap);
