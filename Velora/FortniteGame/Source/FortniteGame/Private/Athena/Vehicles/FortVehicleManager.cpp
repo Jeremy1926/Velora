@@ -121,6 +121,10 @@ FMulticastScriptDelegate* AFortVehicleManager::GetOnVehicleSpawnsUpdated()
         .Find("lea rcx, [*+0x*]; mov rdx, *")
         .Or()
         .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated"))
+        .Last("mov r*, [r*+0x*]; test r*, r*; jz 0x*; lea rdx, [*]; add r*, 0x*")
+        .Find("add r*, 0x*")
+        .Or()
+        .String(TEXT("&UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated"))
         .Last("lea r*, [rax+0x*]")
         .Get();
 
