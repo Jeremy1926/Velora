@@ -667,6 +667,15 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
     return FindComponentByClass(this, ComponentClass);
 }
 
+UActorComponent* AActor::FindComponentByTag(const TSubclassOf<UActorComponent> ComponentClass, FName Tag) const
+{
+    static auto FindComponentByTag = Anchor::Function<UActorComponent* (*)(const AActor*, const TSubclassOf<UActorComponent>, FName)>(TEXT("AActor::FindComponentByTag"))
+        .Native(TEXT("/Script/Engine.Actor:FindComponentByTag"))
+        .Get();
+
+    return FindComponentByTag(this, ComponentClass, Tag);
+}
+
 ULevel* AActor::GetLevel() const
 {
     return (ULevel*)GetOuter();

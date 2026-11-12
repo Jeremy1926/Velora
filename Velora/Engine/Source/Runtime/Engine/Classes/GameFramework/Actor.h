@@ -95,6 +95,8 @@ public:
 
     UActorComponent* FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const;
 
+    UActorComponent* FindComponentByTag(const TSubclassOf<UActorComponent> ComponentClass, FName Tag) const;
+
     UActorComponent* AddComponentByClass(TSubclassOf<UActorComponent> Class, bool bManualAttachment, const FTransform& RelativeTransform, bool bDeferredFinish);
 
     template<class T>

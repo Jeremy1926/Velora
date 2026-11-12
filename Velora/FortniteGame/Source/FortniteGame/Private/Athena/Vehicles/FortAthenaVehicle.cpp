@@ -890,7 +890,19 @@ TRuntimeSizedArray<FVehicleDamageablePart>& AFortAthenaVehicle::GetDamageablePar
 
 UPrimitiveComponent* AFortAthenaVehicle::GetVehicleBulletCollisionComponent() const
 {
-    static auto GetVehicleBulletCollisionComponent = Anchor::Function<UPrimitiveComponent* (*)(const AFortAthenaVehicle*)>(TEXT("AFortAthenaVehicle::GetVehicleBulletCollisionComponent"))
+    static auto bInlined = Anchor::Exists()
+        .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
+        .Find("mov e*, [r*+0x*]; call 0x*; mov r8d, e*; mov rdx, rax; mov rcx, r*; call 0x*")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto BulletCollisionComponentTag = StaticClass()->FindPropertyByName(FName(TEXT("BulletCollisionComponentTag")));
+
+        return BulletCollisionComponentTag ? (UPrimitiveComponent*)FindComponentByTag(UPrimitiveComponent::StaticClass(), TGameLayout<FName>::Load(BulletCollisionComponentTag->ContainerPtrToValuePtr<FName>(this))) : nullptr;
+    }
+
+    static auto GetVehicleBulletCollisionComponent =Anchor::Function<UPrimitiveComponent* (*)(const AFortAthenaVehicle*)>(TEXT("AFortAthenaVehicle::GetVehicleBulletCollisionComponent"))
         .Body(TEXT("/Script/FortniteGame.FortAthenaVehicle:OnRep_DamageableParts"))
         .Find("call 0x*")
         .Target()
