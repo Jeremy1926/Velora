@@ -23,6 +23,7 @@
 #include "GameplayEffect.h"
 #include "GameplayTagAssetInterface.h"
 #include "GameplayTagContainer.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/Controller.h"
 #include "Engine/World.h"
 #include "Templates/Casts.h"
@@ -715,7 +716,60 @@ void AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation(bool bForce)
 
 void AFortPlayerPawn::AddIgnoredActor(AActor* InActorToIgnore, const float InIgnoreDuration)
 {
-    static auto AddIgnoredActor = Anchor::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(TEXT("AFortPlayerPawn::AddIgnoredActor"))
+    static auto IgnoredActors = Anchor::Offset(TEXT("AFortPlayerPawn::IgnoredActors"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:AddIgnoredActor"))
+        .Find("setnz *; add r*, r*")
+        .Find("call 0x*; mov r*, rax; test rax, rax; jz 0x*; lea r*, [r*+0x*]")
+        .Find("lea r*, [r*+0x*]")
+        .Optional()
+        .Disp();
+
+    if (IgnoredActors)
+    {
+        struct FIgnoredActorInfo
+        {
+            AActor* Actor;
+            float TimeAdded;
+            float Duration;
+        };
+
+        static auto RemoveExpiredIgnoredActorsAndCheckForNextTimer = Anchor::Function<void (*)(AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::RemoveExpiredIgnoredActorsAndCheckForNextTimer"))
+            .Body(TEXT("/Script/FortniteGame.FortPlayerPawn:RemoveExpiredIgnoredActorsAndCheckForNextTimer"))
+            .Get();
+
+        auto World = GetWorld();
+
+        if (!World)
+            return;
+
+        auto& IgnoredActorInfos = *(TArray<FIgnoredActorInfo>*)((uint8*)this + IgnoredActors);
+        const float TimeSeconds = World->GetTimeSeconds();
+
+        for (auto& IgnoredActorInfo : IgnoredActorInfos)
+        {
+            if (IgnoredActorInfo.Actor != InActorToIgnore)
+                continue;
+
+            if (InIgnoreDuration >= IgnoredActorInfo.Duration - (TimeSeconds - IgnoredActorInfo.TimeAdded))
+                return;
+
+            IgnoredActorInfo.Duration = InIgnoreDuration;
+            IgnoredActorInfo.TimeAdded = TimeSeconds;
+            RemoveExpiredIgnoredActorsAndCheckForNextTimer(this);
+
+            return;
+        }
+
+        if (auto CapsuleComponent = GetCapsuleComponent())
+            CapsuleComponent->IgnoreActorWhenMoving(InActorToIgnore, true);
+
+        IgnoredActorInfos.Add({ InActorToIgnore, TimeSeconds, InIgnoreDuration });
+        RemoveExpiredIgnoredActorsAndCheckForNextTimer(this);
+
+        return;
+    }
+
+    static auto AddIgnoredActor =Anchor::Function<void (*)(AFortPlayerPawn*, AActor*, float)>(TEXT("AFortPlayerPawn::AddIgnoredActor"))
         .Native(TEXT("/Script/FortniteGame.FortPlayerPawn:AddIgnoredActor"))
         .Get();
 
