@@ -694,6 +694,9 @@ float AActor::GetDistanceTo(const AActor* OtherActor) const
 {
     static auto GetDistanceTo = Anchor::Function<float (*)(const AActor*, const AActor*)>(TEXT("AActor::GetDistanceTo"))
         .Native(TEXT("/Script/Engine.Actor:GetDistanceTo"))
+        .Or()
+        .Pattern("48 83 EC 58 48 85 D2 0F 84 ? ? ? ? 48 8B 81 98 01 00 00 F2 0F 10 15 ? ? ? ? 0F 10 1D ? ? ? ? 48 85 C0 74 ? 0F 10 80 60 02 00 00")
+        .Has("sqrtpd xmm0, xmm4; cvtpd2ps xmm0, xmm0; add rsp, 0x58; ret")
         .Get();
 
     return GetDistanceTo(this, OtherActor);
