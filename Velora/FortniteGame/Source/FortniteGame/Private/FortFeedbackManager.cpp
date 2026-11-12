@@ -1,10 +1,30 @@
 #include "pch.h"
 #include "FortFeedbackManager.h"
+#include "Athena/FortGameStateAthena.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
+#include "UObject/UnrealType.h"
 #include "Scanner.h"
 
 AFortFeedbackManager* AFortFeedbackManager::GetFeedbackManager(UObject* WorldContextObject)
 {
-    static auto GetFeedbackManager = Anchor::Function<AFortFeedbackManager* (*)(UObject*)>(TEXT("AFortFeedbackManager::GetFeedbackManager"))
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortFeedbackManager:GetFeedbackManager"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; test rax, rax; jz 0x*; mov rax, [rax+0x*]")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto FeedbackManager = AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("FeedbackManager")));
+
+        auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+        auto GameState = World ? Cast<AFortGameStateAthena>(World->GetGameState()) : nullptr;
+
+        return GameState && FeedbackManager ? *FeedbackManager->ContainerPtrToValuePtr<AFortFeedbackManager*>(GameState) : nullptr;
+    }
+
+    static auto GetFeedbackManager =Anchor::Function<AFortFeedbackManager* (*)(UObject*)>(TEXT("AFortFeedbackManager::GetFeedbackManager"))
         .Native(TEXT("/Script/FortniteGame.FortFeedbackManager:GetFeedbackManager"))
         .Get();
 
