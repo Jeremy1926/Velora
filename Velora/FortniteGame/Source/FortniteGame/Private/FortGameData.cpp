@@ -113,6 +113,10 @@ FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) con
         .Target()
         .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
         .Call()
+        .Or()
+        .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FText Result(NoInit);
