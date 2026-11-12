@@ -86,6 +86,11 @@ void AController::GetPlayerViewPoint(FVector& Location, FRotator& Rotation) cons
         .Find("call [*+0x*]")
         .LogSlot(TEXT("AActor::GetActorEyesViewPoint"))
         .ForwarderIn(TEXT("/Script/Engine.Default__Controller"))
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:GetActorEyesViewPoint"))
+        .Find("call [*+0x*]", 2)
+        .LogSlot(TEXT("AActor::GetActorEyesViewPoint"))
+        .ForwarderIn(TEXT("/Script/Engine.Default__Controller"))
         .Get();
 
     TGameValue<FVector> GameLocation(Location);
