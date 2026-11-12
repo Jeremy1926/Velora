@@ -345,6 +345,15 @@ TMap<FObjectKey, UFortReplicationGraphNode_AlwaysRelevantForTeam*>& UFortReplica
         .Target()
         .Optional()
         .Find("mov rdx, [r10+0x*]; cdqe; lea rcx, [rax+rax*2]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Find("mov rdx, [r10+0x*]; nop *; cdqe; lea rcx, [rax+rax*2]")
         .Disp();
 
     if (ActorRepNodePolicies > 0)
@@ -376,6 +385,12 @@ UGlobalRepGraphActorClassSettings*& UFortReplicationGraph::GetGlobalActorClassSe
         .Caller()
         .CallSite()
         .Find("mov [*+0x*], rax")
+        .Or()
+        .String(TEXT("GlobalRepGraphActorClassSettings"))
+        .Start()
+        .Caller()
+        .Find("mov rax, *; mov [*+0x*], rbx; mov rcx, [rsp+0x*]; xor rcx, rsp")
+        .Find("mov [*+0x*], rbx")
         .Disp();
 
     return *(UGlobalRepGraphActorClassSettings**)((uint8*)this + GlobalActorClassSettings);
@@ -1163,6 +1178,16 @@ EClassRepNodeMapping UFortReplicationGraph::GetInstanceDynamicRepNodeMapping(AAc
         .Find("cmp al, 0x7; jnz 0x*; mov rdx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x50)
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp eax, 0x7; jnz 0x*; mov rdx, *; add rsp, 0x*; pop rbx; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
         .Get();
 
     return (EClassRepNodeMapping)(uint8)GetInstanceDynamicRepNodeMapping(this, Actor);
@@ -1800,6 +1825,9 @@ void UFortReplicationGraph::execOnGameStatePlaylistLoaded(FFrame& Stack, void* c
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded"))
         .Has("setnz al; add [*+0x20], rax; mov al, [0x*]; test al, al; cmovnz rcx, r*; mov [rbp+0x*], rcx; jz 0x*; test rcx, rcx; jz 0x*; lea rcx, [rbp+0x*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded"))
+        .Has("setnz dil; add rdi, rax; mov [rbx+0x20], rdi; mov rdi, [rsp+0x*]; test rsi, rsi; jz 0x*; mov rcx, [0x*]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortReplicationGraph:OnGameStatePlaylistLoaded")));
 
@@ -2553,6 +2581,15 @@ EFortDynamicNodeType& UFortReplicationGraphNode_DynamicSpatialFrequency::GetCurr
         .Find("call 0x*")
         .Target()
         .Find("mov [rax+0x*], bpl")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x38)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_DynamicSpatialFrequency"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [rax+0x*], sil")
         .Disp();
 
     return *(EFortDynamicNodeType*)((uint8*)this + CurrentDynamicNodeType);
@@ -2795,6 +2832,13 @@ FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForTeam::GetReplic
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForTeam"))
         .Find("lea rdx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForTeam"))
+        .Find("lea r*, [rcx+0x*]")
         .Disp();
 
     return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
@@ -2905,6 +2949,13 @@ bool& UReplicationGraphNode_FortVolumeGrid::GetIsWaitingNewStreamingLevel()
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
         .Entry(TEXT("/Script/FortniteGame.Default__ReplicationGraphNode_FortVolumeGrid"))
         .Find("lea r*, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x10)
+        .Entry(TEXT("/Script/FortniteGame.Default__ReplicationGraphNode_FortVolumeGrid"))
+        .Find("mov rsi, [r13+0x*]; add rsi, r15")
         .Disp();
 
     return *(bool*)((uint8*)this + PendingSpatializedActors - sizeof(void*));
