@@ -80,6 +80,8 @@ void UPrimitiveComponent::SetPhysicsAngularVelocityInRadians(FVector NewAngVel, 
 void UPrimitiveComponent::IgnoreActorWhenMoving(AActor* Actor, bool bShouldIgnore)
 {
     static auto IgnoreActorWhenMoving = Anchor::Function<void (*)(UPrimitiveComponent*, AActor*, bool)>(TEXT("UPrimitiveComponent::IgnoreActorWhenMoving"))
+        .Pattern("48 89 5C 24 10 48 89 74 24 18 57 48 83 EC 20 48 8D 99 ? ? 00 00 48 C7 44 24 30 00 00 00 00 48 8B FA 48 8B CB 48 8D 54 24 30 41 0F B6 F0 E8")
+        .Or()
         .Native(TEXT("/Script/Engine.PrimitiveComponent:IgnoreActorWhenMoving"))
         .Get();
 
