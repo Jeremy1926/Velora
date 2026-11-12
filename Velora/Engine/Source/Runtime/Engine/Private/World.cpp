@@ -2,6 +2,8 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "Engine/NetDriver.h"
+#include "Engine/Level.h"
+#include "Engine/LevelStreaming.h"
 #include "CoreGlobals.h"
 #include "Logging/LogMacros.h"
 #include "Misc/CommandLine.h"
@@ -169,6 +171,38 @@ float UWorld::GetTimeSeconds() const
 
 AWorldSettings* UWorld::GetWorldSettings(bool bCheckStreamingPesistent, bool bChecked) const
 {
+    static auto bInlined = Anchor::Exists()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation"))
+        .Find("setnz *; add r*, r*")
+        .Find("mov rax, [rax+0x*]; test rax, rax; jz 0x*; mov r*, [rax+0x*]; movss xmm0, dword ptr [r*+0x*]")
+        .Get();
+
+    if (bInlined)
+    {
+        static auto WorldSettings = ULevel::StaticClass()->FindPropertyByName(FName(TEXT("WorldSettings")));
+        static auto LevelStreamingPersistent = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.LevelStreamingPersistent"));
+
+        auto PersistentLevel = GetPersistentLevel();
+
+        if (!PersistentLevel)
+            return nullptr;
+
+        auto Result = *WorldSettings->ContainerPtrToValuePtr<AWorldSettings*>(PersistentLevel);
+
+        if (bCheckStreamingPesistent)
+        {
+            auto& StreamingLevels = GetStreamingLevels();
+
+            if (StreamingLevels.Num() > 0 && StreamingLevels[0] && StreamingLevels[0]->IsA(LevelStreamingPersistent))
+            {
+                if (auto Level = StreamingLevels[0]->GetLoadedLevel())
+                    Result = *WorldSettings->ContainerPtrToValuePtr<AWorldSettings*>(Level);
+            }
+        }
+
+        return Result;
+    }
+
     static auto GetWorldSettings = Anchor::Function<AWorldSettings* (*)(const UWorld*, bool, bool)>(TEXT("UWorld::GetWorldSettings"))
         .Native(TEXT("/Script/Engine.GameplayStatics:GetGlobalTimeDilation"))
         .Call(2)
