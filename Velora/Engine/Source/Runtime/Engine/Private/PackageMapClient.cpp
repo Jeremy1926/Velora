@@ -30,6 +30,8 @@ FNetworkGUID FNetGUIDCache::GetNetGUID(const UObject* Object) const
         .Pattern("48 85 D2 74 ? 53 48 83 EC 30 48 8B D9 4C 8B C2 48 8B 49 ? 48 8D 54 24 ? 48 8B 89 ? ? ? ? E8")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Pattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 20 57 48 83 EC 20 49 8B F8 48 8B DA 48 8B F1 4D 85 C0 74 ? 41 8B 68 0C 8B D5 89 6C 24 40 E8")
         .Get();
 
     FNetworkGUID NetGUID;
