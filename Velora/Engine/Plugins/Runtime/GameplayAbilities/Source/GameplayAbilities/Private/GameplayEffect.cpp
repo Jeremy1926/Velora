@@ -19,6 +19,11 @@ bool FGameplayEffectAttributeCaptureSpec::AttemptCalculateAttributeMagnitudeWith
         .Or()
         .Pattern("48 8B 59 40 4D 8B F1 0F 29 70 D8 0F 28 F2 48 85 DB 0F 84")
         .Start()
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("movaps xmm2, *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return AttemptCalculateAttributeMagnitudeWithBase(this, InEvalParams, InBaseValue, OutMagnitude);
