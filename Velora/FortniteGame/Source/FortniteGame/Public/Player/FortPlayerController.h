@@ -16,6 +16,7 @@ class AFortInventory;
 class AFortPawn;
 class AFortPlayerPawn;
 class AFortQuickBars;
+class UFortControllerComponent_Interaction;
 class UFortItem;
 class UFortItemDefinition;
 class UFortMcpProfile;
@@ -190,6 +191,8 @@ public:
     AFortQuickBars* GetQuickBars();
 
     void SetQuickBars(AFortQuickBars* InQuickBars);
+
+    UFortControllerComponent_Interaction* GetInteractionComponent();
 
     AFortInventory*& GetWorldInventory();
 

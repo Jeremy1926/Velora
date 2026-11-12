@@ -12,6 +12,7 @@
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
 #include "AI/FortAIPerceptionSystem.h"
+#include "Components/FortControllerComponent_Interaction.h"
 #include "Player/FortPlayerController.h"
 #include "Player/FortPlayerControllerZone.h"
 #include "Player/StatManager.h"
@@ -902,6 +903,122 @@ void AFortPlayerPawn::ForceReviveFromDBNO(AController* EventInstigator)
             }
         }
     }
+}
+
+UScriptStruct* FFortDBNOCarryHoisterData::StaticStruct()
+{
+    static auto Struct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortDBNOCarryHoisterData"));
+
+    return Struct;
+}
+
+AFortPlayerPawn*& FFortDBNOCarryHoisterData::GetDBNOHoister()
+{
+    static auto DBNOHoister = StaticStruct()->FindPropertyByName(FName(TEXT("DBNOHoister")));
+
+    return *DBNOHoister->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
+}
+
+EFortDBNOCarryEvent& FFortDBNOCarryHoisterData::GetDBNOCarryEvent()
+{
+    static auto DBNOCarryEvent = StaticStruct()->FindPropertyByName(FName(TEXT("DBNOCarryEvent")));
+
+    return *DBNOCarryEvent->ContainerPtrToValuePtr<EFortDBNOCarryEvent>(this);
+}
+
+void AFortPlayerPawn::ServerHoistDBNOPlayer_Implementation(AFortPlayerPawn* InDBNOHoistee)
+{
+    DETOUR(AFortPlayerPawn, ServerHoistDBNOPlayer_Implementation, Anchor::Hook()
+        .If(::Anchor::Exists()
+            .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Interaction:ServerAttemptInteract"))
+            .Find("call r10; test al, al")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Interaction"))
+            .Find("call 0x*")
+            .Target()
+            .Has("movss xmm6, dword ptr [rbx+0x*]; cmp byte ptr [rbx+0x*], 0x0")
+            .Get())
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerHoistDBNOPlayer"))
+        .Optional()
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerPawn::ServerHoistDBNOPlayer_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "ret*")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    if (!InDBNOHoistee)
+        return;
+
+    auto PlayerController = Cast<AFortPlayerController>(GetController());
+    auto InteractionComponent = PlayerController ? PlayerController->GetInteractionComponent() : nullptr;
+
+    if (!InteractionComponent)
+        return;
+
+    const float InteractDistance = InteractionComponent->GetInteractDistance() * 1.5f;
+
+    if ((InDBNOHoistee->GetActorLocation() - GetActorLocation()).SizeSquared() > InteractDistance * InteractDistance)
+        return;
+
+    InDBNOHoistee->HoistDBNOPlayer(this, EFortDBNOCarryEvent::PickedUp);
+}
+
+void AFortPlayerPawn::HoistDBNOPlayer(AFortPlayerPawn* InDBNOHoister, EFortDBNOCarryEvent InDBNOCarryEvent)
+{
+    if (!InDBNOHoister)
+        return;
+
+    auto HoisterController = Cast<AFortPlayerController>(InDBNOHoister->GetController());
+
+    if (!HoisterController || !CanBeHoistedFromDBNO(HoisterController))
+        return;
+
+    GetDBNOHoisterData().GetDBNOHoister() = InDBNOHoister;
+    GetDBNOHoisterData().GetDBNOCarryEvent() = InDBNOCarryEvent;
+    InDBNOHoister->GetDBNOHoistee() = this;
+
+    OnDBNOHoisterChanged(nullptr, InDBNOCarryEvent);
+    ForceNetUpdate();
+}
+
+bool AFortPlayerPawn::CanBeHoistedFromDBNO(AFortPlayerController* HoisterController)
+{
+    static auto CanBeHoistedFromDBNO = Anchor::VirtualFunction<bool (*)(AFortPlayerPawn*, AFortPlayerController*)>(TEXT("AFortPlayerPawn::CanBeHoistedFromDBNO"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:DBNOTryStartCarry"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, rbx; mov rcx, rdi; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    return CanBeHoistedFromDBNO(this, HoisterController);
+}
+
+void AFortPlayerPawn::OnDBNOHoisterChanged(AFortPlayerPawn* PreviousDBNOHoister, EFortDBNOCarryEvent DBNOCarryEvent)
+{
+    static auto OnDBNOHoisterChanged = Anchor::Function<void (*)(AFortPlayerPawn*, AFortPlayerPawn*, EFortDBNOCarryEvent)>(TEXT("AFortPlayerPawn::OnDBNOHoisterChanged"))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:OnRep_DBNOHoisterData"))
+        .Find("mov rdx, [rdx]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    OnDBNOHoisterChanged(this, PreviousDBNOHoister, DBNOCarryEvent);
+}
+
+FFortDBNOCarryHoisterData& AFortPlayerPawn::GetDBNOHoisterData()
+{
+    static auto DBNOHoisterData = StaticClass()->FindPropertyByName(FName(TEXT("DBNOHoisterData")));
+
+    return *DBNOHoisterData->ContainerPtrToValuePtr<FFortDBNOCarryHoisterData>(this);
+}
+
+AFortPlayerPawn*& AFortPlayerPawn::GetDBNOHoistee()
+{
+    static auto DBNOHoistee = StaticClass()->FindPropertyByName(FName(TEXT("DBNOHoistee")));
+
+    return *DBNOHoistee->ContainerPtrToValuePtr<AFortPlayerPawn*>(this);
 }
 
 UScriptStruct* FZiplinePawnState::StaticStruct()

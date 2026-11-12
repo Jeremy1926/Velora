@@ -1546,6 +1546,13 @@ void AFortPlayerController::SetQuickBars(AFortQuickBars* InQuickBars)
     *QuickBars->ContainerPtrToValuePtr<AFortQuickBars*>(this) = InQuickBars;
 }
 
+UFortControllerComponent_Interaction* AFortPlayerController::GetInteractionComponent()
+{
+    static auto InteractionComponent = StaticClass()->FindPropertyByName(FName(TEXT("InteractionComponent")));
+
+    return InteractionComponent ? *InteractionComponent->ContainerPtrToValuePtr<UFortControllerComponent_Interaction*>(this) : nullptr;
+}
+
 AFortInventory*& AFortPlayerController::GetWorldInventory()
 {
     static auto WorldInventory = GetClass()->FindPropertyByName(FName(TEXT("WorldInventory")));

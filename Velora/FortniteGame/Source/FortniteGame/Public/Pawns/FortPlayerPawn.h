@@ -11,6 +11,7 @@ class ABuildingGameplayActor;
 class AController;
 class AFortAthenaVehicle;
 class AFortPickup;
+class AFortPlayerController;
 class AFortPlayerPawn;
 class AFortPlayerPetRepState;
 class IFortVehicleInterface;
@@ -30,6 +31,23 @@ enum class ETryExitVehicleBehavior : uint8
     DoNotForce,
     ForceOnBlocking,
     ForceAlways,
+};
+
+enum class EFortDBNOCarryEvent : uint8
+{
+    PickedUp,
+    Interrogating,
+    Dropped,
+    Thrown,
+};
+
+struct FFortDBNOCarryHoisterData
+{
+    static UScriptStruct* StaticStruct();
+
+    AFortPlayerPawn*& GetDBNOHoister();
+
+    EFortDBNOCarryEvent& GetDBNOCarryEvent();
 };
 
 struct FVehiclePawnState
@@ -156,6 +174,18 @@ public:
     void ServerReviveFromDBNO_Implementation(AController* EventInstigator);
 
     void ForceReviveFromDBNO(AController* EventInstigator);
+
+    void ServerHoistDBNOPlayer_Implementation(AFortPlayerPawn* InDBNOHoistee);
+
+    void HoistDBNOPlayer(AFortPlayerPawn* InDBNOHoister, EFortDBNOCarryEvent InDBNOCarryEvent);
+
+    bool CanBeHoistedFromDBNO(AFortPlayerController* HoisterController);
+
+    void OnDBNOHoisterChanged(AFortPlayerPawn* PreviousDBNOHoister, EFortDBNOCarryEvent DBNOCarryEvent);
+
+    FFortDBNOCarryHoisterData& GetDBNOHoisterData();
+
+    AFortPlayerPawn*& GetDBNOHoistee();
 
     void PlayGroupEmote(const UFortMontageItemDefinitionBase* EmoteAsset);
 
