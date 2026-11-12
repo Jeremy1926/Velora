@@ -29,6 +29,9 @@ UObject* UObjectBaseUtility::GetOutermost() const
         .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 48 8B F1 E8 ? ? ? ? 80 3D ? ? ? ? 00 48 8B F8 74 ? E8 ? ? ? ? 84 C0 74 ? 33 DB EB ? 48 8B CF 48 8B DF FF 15")
         .Or()
         .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC ? 48 8B F1 E8 ? ? ? ? 80 3D ? ? ? ? 00 48 8B F8 74 ? 80 3D ? ? ? ? 00 74 ? 65 48 8B 14 25 58 00 00 00")
+        .Or()
+        .Pattern("48 8B CF 48 8B DF FF 15 ? ? ? ? 48 8B CE 48 C1 E9 04")
+        .Start()
         .Get();
 
     for (const UObjectBaseUtility* Top = this;; Top = Top->GetOuter())
