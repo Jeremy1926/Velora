@@ -55,6 +55,14 @@ FSoftObjectPath FSoftObjectPath::GetOrCreateIDForObject(const UObject* Object)
         .Find("mov rdx, *; lea rcx, [*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("test rbx, rbx; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
+        .Find("mov rdx, *; lea rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     TAlignedBytes<sizeof(FSoftObjectPath), alignof(FSoftObjectPath)> ResultBytes;
@@ -70,6 +78,13 @@ int32 FSoftObjectPath::GetCurrentTag()
 {
     static auto CurrentTag = Anchor::Data<volatile long*>(TEXT("FSoftObjectPath::CurrentTag"))
         .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("lock cmpxchg [0x*], *")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:Conv_ObjectToSoftObjectReference"))
+        .Find("test rbx, rbx; jnz 0x*")
+        .Find("jnz 0x*")
+        .Target()
         .Find("lock cmpxchg [0x*], *")
         .Target()
         .Get();

@@ -322,6 +322,13 @@ FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCo
         .Find("call 0x*")
         .Target()
         .Has("mov rax, [rsp+0x50]; movups xmm0, [rax]")
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; movups [*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov rax, [rsp+0x60]; movups xmm0, [rax]")
         .Get();
 
     if (VariantGuidConstructor)

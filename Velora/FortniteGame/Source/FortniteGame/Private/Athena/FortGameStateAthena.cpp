@@ -663,6 +663,9 @@ void AFortGameStateAthena::NotifyGameMemberAdded(uint8 SquadId, uint8 TeamIndex,
         .Find("jmp 0x*")
         .Target()
         .Start()
+        .Or()
+        .String("AFortGameStateAthena::NotifyGameMemberAdded")
+        .Start()
         .Get();
 
     if (NotifyGameMemberAdded)

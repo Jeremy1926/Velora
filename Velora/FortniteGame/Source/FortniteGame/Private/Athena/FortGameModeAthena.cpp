@@ -1274,6 +1274,13 @@ void AFortGameModeAthena::SetSafeZoneIndicatorShrinkTimes()
         .Target()
         .Find("cmp r15d, [rsi+0x*]; jnl 0x*; mov rax, [rsi+0x*]")
         .Find("mov rax, [rsi+0x*]")
+        .Or()
+        .String(TEXT("FortGameModeAthena: Starting MegaStorm on SafeZone[%d].  NumBuildingGridCellsThick=%d."))
+        .Last("sar ecx, 0x1; mov [rax+0x*], ecx; mov rcx, *; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("cmp eax, [rdi+0x*]; jnl 0x*; mov r8, [*+0x*]; movsxd rcx, eax; mov rax, [rdi+0x*]")
+        .Find("mov rax, [rdi+0x*]")
         .Disp();
 
     Original();
@@ -1655,6 +1662,12 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         .Find("jmp 0x*")
         .Target()
         .FirstOf("lea rcx, [0x*]; add *, *; mov r8d, *; call 0x*", "lea rcx, [0x*]; add *, *; lea r8, [*]; mov edx, *; call 0x*")
+        .Target()
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__UFortGameFeatureAction_LootTierGroups"), "lea rdx, [rcx+0x28]; mov rcx, [rcx+0x18]; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]; add *, *; mov r8d, *; call 0x*")
         .Target()
         .Optional()
         .Get();

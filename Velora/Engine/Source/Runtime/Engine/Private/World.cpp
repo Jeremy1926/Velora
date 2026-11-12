@@ -245,6 +245,14 @@ ENetMode UWorld::AttemptDeriveFromURL() const
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, rax; call 0x*")
+        .Call()
+        .Find("test rax, rax; jz 0x*; mov rcx, rax; jmp 0x*; jmp 0x*")
+        .Find("jmp 0x*", 2)
+        .Target()
         .Optional()
         .Inline());
 
@@ -290,6 +298,13 @@ int32 UWorld::PatchInlinedNetMode()
         .Pattern("48 83 EC 28 48 83 79 38 00 48 8B D1 74 ? B8 03 00 00 00 48 83 C4 28 C3 48 8B 89 ? ? 00 00")
         .Find("add rsp, 0x*; jmp 0x*")
         .Find("jmp 0x*")
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("mov rcx, rax; call 0x*")
+        .Call()
+        .Find("test rax, rax; jz 0x*; mov rcx, rax; jmp 0x*; jmp 0x*")
+        .Find("jmp 0x*", 2)
         .Optional()
         .Get();
 
