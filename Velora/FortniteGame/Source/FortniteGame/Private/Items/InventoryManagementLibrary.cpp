@@ -5,6 +5,7 @@
 #include "Player/FortPlayerController.h"
 #include "Misc/Guid.h"
 #include "Templates/Casts.h"
+#include "UObject/Stack.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -60,6 +61,26 @@ bool UInventoryManagementLibrary::GiveItemEntryToInventoryOwner(TScriptInterface
     }
 
     return true;
+}
+
+void UInventoryManagementLibrary::execGiveItemEntryToInventoryOwner(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(UInventoryManagementLibrary, execGiveItemEntryToInventoryOwner, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner"))
+        .Find("setnz *; add [*+0x20], *; call 0x*; lea rcx, [rsp+0x*]; mov byte ptr [*], 0x0")
+        .Optional()
+        .InExec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner")));
+
+    alignas(16) uint8 ItemEntryTemp[0x400] = {};
+    TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner;
+
+    Stack.StepCompiledIn(&InventoryOwner);
+
+    auto& ItemInstance = Stack.StepCompiledInRef<FFortItemEntry>(ItemEntryTemp);
+
+    Stack.Code += !!Stack.Code;
+
+    *(bool*)Z_Param__Result = GiveItemEntryToInventoryOwner(InventoryOwner, ItemInstance);
 }
 
 bool UInventoryManagementLibrary::RemoveItem(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, const FGuid& ItemGuid, int32 Count)
