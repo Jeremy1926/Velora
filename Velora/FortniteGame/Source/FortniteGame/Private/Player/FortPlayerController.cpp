@@ -2270,6 +2270,23 @@ bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortR
 
 bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData BuildingClassData, EFortBuildPreviewMarkerOptionalAdjustment MarkerOptionalAdjustment) const
 {
+    static auto CanAffordAfterRestricted = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, FBuildingClassData, EFortBuildPreviewMarkerOptionalAdjustment)>(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass after the restricted check"))
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("*, 0xffffffff")
+        .Find("call r10")
+        .Find("mov [rsp+0x20], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("call rbx; test al, al")
+        .Last("mov r8b, [rbp+0x*]")
+        .Last("mov rbx, [rax+0x*]")
+        .Optional()
+        .Get();
+
+    if (CanAffordAfterRestricted)
+        return CanAffordAfterRestricted(this, BuildingClassData, MarkerOptionalAdjustment);
+
     static auto CanAffordToPlaceBuildableClass = Anchor::VirtualFunction<bool (*)(const AFortPlayerController*, FBuildingClassData)>(TEXT("AFortPlayerController::CanAffordToPlaceBuildableClass"))
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
