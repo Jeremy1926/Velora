@@ -178,6 +178,11 @@ void UFortControllerComponent_RechargeWeapons::GetAmmoStackInfo(const FGuid& Ite
 {
     static auto GetAmmoStackInfo = Anchor::Function<void (*)(UFortControllerComponent_RechargeWeapons*, const FGuid&, int32&, int32&)>(TEXT("UFortControllerComponent_RechargeWeapons::GetAmmoStackInfo"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
+        .Find("cmp byte ptr [rax+0x*], 0x3; jnz 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
         .Find("call 0x*", 2)
         .Target()
         .Get();
