@@ -3318,6 +3318,13 @@ FActorRepListRefView& UReplicationGraphNode_AlwaysRelevant_ForConnection::GetRep
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x20)
         .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_AlwaysRelevant_ForConnection"))
+        .Find("lea rcx, [rbx+0x*]; cmp dword ptr [rcx+0xc], 0x0")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x20)
+        .Entry(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_AlwaysRelevant_ForConnection"))
         .Find("lea rcx, [rbx+0x*]")
         .Disp();
 
