@@ -669,6 +669,9 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
         .Or()
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea rcx, [*+0x*]; lea rdx, [*]; mov [*], *; mov [*], *; call 0x*; mov ecx, [0x*]")
+        .Or()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea rcx, [*+0x*]; mov [*], *; lea rdx, [*]; mov byte ptr [*], 0x1; call 0x*; lea rdx, [*]; lea rcx, [0x*]; call 0x*")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
