@@ -888,6 +888,9 @@ bool UFortKismetLibrary::AreAthenaVehiclesEnabled()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:AreAthenaVehiclesEnabled"))
+        .Find("setnz *; add r*, r*; mov [*+0x20], r*; call 0x*; cmp byte ptr [rax+0x*], 0x0; jz 0x*; call 0x*; cmp byte ptr [rax+0x*], 0x0")
         .Get();
 
     if (!bInlined)
