@@ -66,6 +66,12 @@ AFortWeapon* AFortPawn::GetCurrentWeapon() const
 AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid)
 {
     static auto EquipWeaponDefinition = Anchor::Function<AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&, const FGuid&)>(TEXT("AFortPawn::EquipWeaponDefinition"))
+        .Exec(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
+        .Find("setnz *; add r*, r*")
+        .Find("cmp byte ptr [*+0x*], 0x3")
+        .Smallest(TEXT("STAT_AFortPawn_EquipWeaponDefinition"))
+        .Start()
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
         .Get();
 
