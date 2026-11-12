@@ -189,6 +189,9 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
         .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -204,6 +207,10 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
             .Find("add [*+0x20], *")
             .Find("call 0x*")
             .Target()
+            .Find("call [*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *; add r*, r*")
             .Find("call [*+0x*]")
             .Get();
 
@@ -222,6 +229,12 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
             .Target()
             .Find("call [*+0x*]")
             .Find("jmp 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
+            .Find("setnz *; add r*, r*")
+            .Find("call [*+0x*]")
+            .Find("call 0x*")
             .Target()
             .Get();
 
@@ -250,6 +263,9 @@ void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule Ro
         .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+        .Find("setnz *; *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -265,6 +281,10 @@ void AActor::K2_DetachFromActor(EDetachmentRule LocationRule, EDetachmentRule Ro
             .Find("add [*+0x20], *")
             .Find("call 0x*")
             .Target()
+            .Find("call [*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/Engine.Actor:K2_DetachFromActor"))
+            .Find("setnz *; *; add r*, r*")
             .Find("call [*+0x*]")
             .Get();
 
@@ -611,6 +631,10 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
         .Find("call 0x*")
         .Target()
         .Find("mov *, [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
         .Get();
 
     static auto bClassByAddress = Anchor::Exists()
