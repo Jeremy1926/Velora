@@ -53,6 +53,12 @@ ULevelStreaming::ECurrentState ULevelStreaming::GetCurrentState() const
         .Or()
         .Pattern("48 89 6C 24 ? 48 8B E9 4C 89 64 24 ? 44 0F B6 E2 4C 89 6C 24 ? 44 0F B6 A9 ? ? ? ? 4C 89 74 24 ? 88 91")
         .Find("mov [*+0x*], dl")
+        .Or()
+        .String(TEXT("Couldn't find file for package %s."))
+        .Find("mov dl, 0x2; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], dl")
         .Disp();
 
     return *(ECurrentState*)((uint8*)this + CurrentState);
