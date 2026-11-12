@@ -110,7 +110,17 @@ void AFortDecoTool::SpawnDecoInternal(const TGameValue<FVector>& Location, const
         return;
 
     auto SpawnDeco = Scanner::Virtual<AActor* (*)(AFortDecoTool*, UClass**, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, int32, int32)>(this, SpawnDecoInternalSlot, -0x18);
-    auto Deco = SpawnDeco(this, &BlueprintClass, &Location, &Rotation, AttachedActor, (int32)AttachmentType, TrapItemDefinition && DecoItemDefinition->IsA(TrapItemDefinition) ? TrapTool : PlacementTool);
+
+    static auto bBlueprintClassByValue = Anchor::Exists()
+        .At(Scanner::Virtual<const void*>(StaticClass()->GetDefaultObject(false), SpawnDecoInternalSlot, -0x18))
+        .Find("call [rax+0x*]")
+        .Find("call 0x*")
+        .Find("test rax, rax")
+        .Is("test rax, rax; jz 0x*; test r*, r*; jz 0x*; test r*, r*; jz 0x*; call 0x*")
+        .Get();
+
+    const int32 InitializationReasonValue = TrapItemDefinition && DecoItemDefinition->IsA(TrapItemDefinition) ? TrapTool : PlacementTool;
+    auto Deco = bBlueprintClassByValue ? ((AActor* (*)(AFortDecoTool*, UClass*, const TGameValue<FVector>*, const TGameValue<FRotator>*, ABuildingSMActor*, int32, int32))SpawnDeco)(this, BlueprintClass, &Location, &Rotation, AttachedActor, (int32)AttachmentType, InitializationReasonValue) : SpawnDeco(this, &BlueprintClass, &Location, &Rotation, AttachedActor, (int32)AttachmentType, InitializationReasonValue);
 
     if (!Deco)
         return;
