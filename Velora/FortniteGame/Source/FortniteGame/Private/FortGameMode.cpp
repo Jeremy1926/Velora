@@ -54,6 +54,11 @@ void AFortGameMode::OnPlayerCreatedBuilding(AFortPlayerController* PlayerControl
         .Find("call [rax+*]")
         .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "push rbx; sub rsp, *; xor eax, eax; lea r9, [rsp+0x*]; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov rax, [rcx]; mov [rsp+0x*], r9; mov r9, r8; mov r8, rdx; mov dl, *; call [rax+*]")
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
         .Get();
 
     OnPlayerCreatedBuilding(this, PlayerController, BuildingActor);
@@ -88,6 +93,11 @@ void AFortGameMode::OnPlayerRepairedBuilding(AFortPlayerController* PlayerContro
         .Find("call [rax+*]")
         .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "push rbx; sub rsp, *; xor eax, eax; lea r9, [rsp+0x*]; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov rax, [rcx]; mov [rsp+0x*], r9; mov r9, r8; mov r8, rdx; mov dl, *; call [rax+*]")
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
         .Get(3 * sizeof(void*));
 
     OnPlayerRepairedBuilding(this, PlayerController, BuildingActor);
@@ -119,6 +129,11 @@ void AFortGameMode::OnPlayerEditedBuilding(AFortPlayerController* PlayerControll
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov dl, *; mov [rbp-0x*], *; mov [rbp-0x*], *; ")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov [rsp+0x8], rbx; push rdi; sub rsp, 0x60; mov rbx, rdx; mov rdi, rcx; mov rdx, r8; lea rcx, [rsp+0x30]; call 0x*; mov rax, [rdi]; lea rcx, [rsp+0x40]; and qword ptr [rsp+0x40], 0x0; lea r9, [rsp+0x30]")
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
+        .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "push rbx; sub rsp, *; xor eax, eax; lea r9, [rsp+0x*]; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov [rsp+0x*], rax; mov rax, [rcx]; mov [rsp+0x*], r9; mov r9, r8; mov r8, rdx; mov dl, *; call [rax+*]")
         .Find("call [rax+*]")
         .LogSlot(TEXT("AFortGameMode::OnPlayerBuildingAction"))
         .VirtualSlotCaller(TEXT("/Script/FortniteGame.Default__FortGameModeAthena"), "mov rcx, *; ")
