@@ -49,6 +49,8 @@ public:
 
     int32 GetSquadId() const;
 
+    uint8 GetActiveTeam() const;
+
     ESpawnMachineState GetSpawnMachineState() const;
 
     FScalableFloat& GetResurrectionNextPlayerDelay();

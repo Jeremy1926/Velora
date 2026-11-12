@@ -166,7 +166,7 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         auto PlayerStateAthena = Cast<AFortPlayerStateAthena>(PlayerState);
         auto PlayerController = PlayerStateAthena ? Cast<AFortPlayerControllerAthena>(PlayerStateAthena->GetOwner()) : nullptr;
 
-        if (!PlayerController || PlayerStateAthena->GetSquadId() != GetSquadId() || PlayerController->IsPlayerAlive())
+        if (!PlayerController || (GetSquadId() != INDEX_NONE ? PlayerStateAthena->GetSquadId() != GetSquadId() : PlayerStateAthena->GetTeamIndex() != GetActiveTeam()) || PlayerController->IsPlayerAlive())
             continue;
 
         bool bResurrecting = false;
@@ -607,6 +607,13 @@ int32 ABuildingGameplayActorSpawnMachine::GetSquadId() const
     static auto SquadId = GetClass()->FindPropertyByName(FName(TEXT("SquadId")));
 
     return SquadId ? *SquadId->ContainerPtrToValuePtr<uint8>(this) : INDEX_NONE;
+}
+
+uint8 ABuildingGameplayActorSpawnMachine::GetActiveTeam() const
+{
+    static auto ActiveTeam = GetClass()->FindPropertyByName(FName(TEXT("ActiveTeam")));
+
+    return *ActiveTeam->ContainerPtrToValuePtr<uint8>(this);
 }
 
 ESpawnMachineState ABuildingGameplayActorSpawnMachine::GetSpawnMachineState() const
