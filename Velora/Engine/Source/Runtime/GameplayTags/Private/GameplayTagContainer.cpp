@@ -90,6 +90,8 @@ void FGameplayTagContainer::AddTag(const FGameplayTag& TagToAdd)
         .Find("call 0x*")
         .Target()
         .Or()
+        .Pattern("48 89 5C 24 08 48 89 6C 24 18 48 89 74 24 20 57 48 83 EC 20 33 F6 48 8D 05 ? ? ? ? 8B DE 48 8B FA 38 1D ? ? ? ? 48 8B E9 48 0F 45 D8")
+        .Or()
         .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:AddGameplayTag"))
         .Call()
         .Get();
