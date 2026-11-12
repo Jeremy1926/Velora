@@ -108,6 +108,20 @@ void ABuildingWall::SetIsDoorOpen(EDoorOpenStyle InDoorOpenStyle, AFortPawn* Int
         .Find("mov dl, 0x1; mov r8, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.BuildingWall:OnNearDoorTriggerTouched"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.BuildingWall:OnNearDoorTriggerTouched"))
+        .Find("jnz 0x*", 2)
+        .Target()
+        .Find("mov dl, 0x1; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetIsDoorOpen(this, InDoorOpenStyle, InteractingPawn);
