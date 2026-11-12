@@ -45,6 +45,12 @@ const FFieldNetCache* FClassNetCache::GetFromField(FFieldVariant Field) const
         .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; mov [rsp+0x*], *; mov [rsp+0x*], *; mov *, *; cmovnz *")
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     static auto bVariantByReference = Anchor::Exists()
@@ -91,6 +97,12 @@ const FClassNetCache* FClassNetCacheMgr::GetClassNetCache(UClass* Class)
         .Find("test *, *; mov rcx, [*+0x*]; cmovz *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; mov [rsp+0x*], *; mov [rsp+0x*], *; mov *, *; cmovnz *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetClassNetCache(this, Class);
@@ -98,6 +110,19 @@ const FClassNetCache* FClassNetCacheMgr::GetClassNetCache(UClass* Class)
 
 int32 FNetBitWriter::GetTypeSize()
 {
+    static auto InlinedPackageMap = Anchor::Offset(TEXT("FNetBitWriter::PackageMap"))
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("call 0x*; xor ecx, ecx; mov [r14+0x*], rbx")
+        .Find("mov [r14+0x*], rbx")
+        .Optional()
+        .Disp();
+
+    if (InlinedPackageMap > 0)
+        return InlinedPackageMap + (int32)sizeof(UPackageMap*);
+
     static auto PackageMap = Anchor::Offset(TEXT("FNetBitWriter::PackageMap"))
         .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
         .Start()
@@ -122,7 +147,30 @@ void FNetBitWriter::operator delete(void* Ptr)
 
 FNetBitWriter::FNetBitWriter(UPackageMap* InPackageMap, int64 InMaxBits)
 {
-    static auto Constructor = Anchor::Function<FNetBitWriter* (*)(FNetBitWriter*, UPackageMap*, int64)>(TEXT("FNetBitWriter::FNetBitWriter"))
+    static auto VTable = Anchor::Data<void*>(TEXT("FNetBitWriter::vftable"))
+        .Pattern("B9 ? ? ? ? E8 ? ? ? ? 48 8B D8 48 85 C0 74 ? 41 B0 01 33 D2 48 8B C8 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 C7 83 ? ? ? ? 00 00 00 00 48 89 03")
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (VTable)
+    {
+        static auto BitWriterConstructor = Anchor::Function<void* (*)(void*, int64, bool)>(TEXT("FBitWriter::FBitWriter"))
+            .Pattern("B9 ? ? ? ? E8 ? ? ? ? 48 8B D8 48 85 C0 74 ? 41 B0 01 33 D2 48 8B C8 E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 C7 83 ? ? ? ? 00 00 00 00 48 89 03")
+            .Find("mov rcx, rax; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        BitWriterConstructor(this, InMaxBits, true);
+        *(UPackageMap**)((uint8*)this + GetTypeSize() - sizeof(UPackageMap*)) = InPackageMap;
+        *(void**)this = VTable;
+
+        return;
+    }
+
+    static auto Constructor =Anchor::Function<FNetBitWriter* (*)(FNetBitWriter*, UPackageMap*, int64)>(TEXT("FNetBitWriter::FNetBitWriter"))
         .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
         .Start()
         .Find("mov r8b, 0x1")
