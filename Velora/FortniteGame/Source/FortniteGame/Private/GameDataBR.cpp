@@ -15,7 +15,13 @@ UGameDataBR* UGameDataBR::Get()
 
 UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
 {
-    static auto GetPlayerAbilitySetBR = Anchor::Optional<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
+    static auto bInlined = Anchor::Exists()
+        .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Find("call 0x*; lea rcx, [rax+0x*]; mov r8b, 0x1; movzx edx, r8b; call 0x*")
+        .Get();
+
+    static auto GetPlayerAbilitySetBR =Anchor::Optional<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
         .If(!Anchor::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov rcx, rax; call 0x*; lea rcx, [rax+0x*]").Get() && !Anchor::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov dl, 0x1; lea rcx, [rax+0x*]").Get() && !Anchor::String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!")).Start().Find("call 0x*; mov r8b, 0x1; mov dl, r8b; lea rcx, [rax+0x*]").Get())
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
         .Start()
@@ -23,7 +29,7 @@ UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
         .Call(2)
         .Get();
 
-    if (GetPlayerAbilitySetBR)
+    if (GetPlayerAbilitySetBR && !bInlined)
         return GetPlayerAbilitySetBR(this);
 
     static auto PlayerAbilitySetBR = GetClass()->FindPropertyByName(FName(TEXT("PlayerAbilitySetBR")));
