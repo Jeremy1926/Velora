@@ -124,6 +124,9 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Or()
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("mov [rsp+0x20], rcx; lea rcx, [*]; call 0x*; lea rcx, [*]; call 0x*; lea rcx, [*]; call 0x*")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]; call 0x*; lea rcx, [*]; mov [*], *; mov r*, rax; call 0x*; mov rdx, r*; lea rcx, [*]; call 0x*")
         .Get();
 
     static auto bWeakOwners = Anchor::Exists()
@@ -159,6 +162,14 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Find("call 0x*")
         .Target()
         .Has("mov rax, [rsp+0x*]; movsd [*], xmm1; and dword ptr [*], 0x0; and dword ptr [*], 0x0; test rax, rax; jz *; mov eax, [rax+0xc]")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]; call 0x*; lea rcx, [*]; mov [*], *; mov r*, rax; call 0x*; mov rdx, r*; lea rcx, [*]; call 0x*")
+        .Call(5)
+        .Find("mov rdx, rsi; mov rcx, rax; mov rdi, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov eax, [rsi+0x1d0]; test eax, eax; js 0x*")
         .Get();
 
     static auto CreateFromData = Anchor::Function<const void*>(TEXT("AFortPickup::CreateFromData"))
@@ -176,6 +187,11 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
         .Find("lea r8d, [r9+0x1]")
         .Call(3)
+        .Or()
+        .If(!bArguments && bItemEntryByValue)
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]; call 0x*; lea rcx, [*]; mov [*], *; mov r*, rax; call 0x*; mov rdx, r*; lea rcx, [*]; call 0x*")
+        .Call(5)
         .Or()
         .If(!bArguments && bItemEntryByValue)
         .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
