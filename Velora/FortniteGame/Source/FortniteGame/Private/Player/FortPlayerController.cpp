@@ -377,6 +377,14 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
         .Find("call [*+0x*]")
         .Last("add rcx, 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem"))
+        .Find("setnz *; *; add r*, r*")
+        .Find("call [r*+*]")
+        .LogSlot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+        .Find("call [*+0x*]")
+        .Last("add rcx, 0x*")
         .Imm();
 
     static auto RemoveInventoryItem = THook(TEXT("AFortPlayerController::RemoveInventoryItem"), (void*)+[](uint8_t* InventoryOwnerInterface, const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
@@ -1015,6 +1023,8 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
 
     static auto ShouldAlwaysDropItemOnDeathOrLogout = Anchor::VirtualFunction<bool (*)(AFortPlayerController*, const UFortWorldItem*, bool)>(TEXT("AFortPlayerController::ShouldAlwaysDropItemOnDeathOrLogout"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("mov rcx, rdx; mov dl, r8b; jmp 0x*"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("mov rcx, rdx; movzx edx, r8b; jmp 0x*"); })
         .Optional()
         .Get();
 
@@ -1341,6 +1351,9 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -1349,6 +1362,10 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("call [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
             .Find("call [rax+0x*]")
             .Get();
 
@@ -1359,7 +1376,23 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("call [rax+0x*]")
             .Find("call 0x*")
             .Target()
+            .Optional()
             .Get();
+
+        static auto QuickbarItemTypeMax = Anchor::Offset(TEXT("AFortPlayerController::RemoveItemFromQuickBars item type check max"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
+            .Find("call [rax+0x*]")
+            .Find("cmp al, 0x*; jnbe 0x*; mov ecx, 0x*; bt ecx, eax")
+            .Imm();
+
+        static auto QuickbarItemTypeMask = Anchor::Offset(TEXT("AFortPlayerController::RemoveItemFromQuickBars item type check mask"))
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
+            .Find("call [rax+0x*]")
+            .Find("cmp al, 0x*; jnbe 0x*; mov ecx, 0x*; bt ecx, eax")
+            .Find("mov ecx, 0x*")
+            .Imm();
 
         static auto InventoryOwner = Anchor::Offset(TEXT("AFortPlayerController::RemoveItemFromQuickBars inventory owner"))
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
@@ -1381,6 +1414,10 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("lea r*, [r*+0x*]; mov rax, [r*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
+            .Find("lea rcx, [r*+0x*]; mov *, *; mov rax, [rcx]")
             .Disp();
 
         static auto FindItemInstancesFromDefinition = Anchor::VirtualFunction<int32 (*)(void*, UFortItemDefinition*, TArray<UFortItem*>*)>(TEXT("IFortInventoryOwnerInterface::FindItemInstancesFromDefinition"))
@@ -1400,6 +1437,10 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call [rax+0x*]", 2)
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
+            .Find("call [rax+0x*]", 2)
             .Get();
 
         static auto RemoveItemFromQuickBar = Anchor::VirtualFunction<void (*)(AFortPlayerController*, bool, UFortItem*, uint8, int32)>(TEXT("AFortPlayerController::RemoveItemFromQuickBars remove item"))
@@ -1418,6 +1459,11 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("call rbx")
+            .Find("call [rax+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *; add r*, r*")
+            .Find("mov r9b, 0x3")
             .Find("call [rax+0x*]")
             .Get();
 
@@ -1448,7 +1494,7 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             ItemType = GetItemType(ItemDefinition);
         }
 
-        if (!IsQuickbarItemType(ItemType))
+        if (IsQuickbarItemType ? !IsQuickbarItemType(ItemType) : (ItemType > QuickbarItemTypeMax || !((QuickbarItemTypeMask >> ItemType) & 1)))
             return;
 
         static auto ItemVariantHandleStruct = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.ItemVariantHandle"));
@@ -1700,6 +1746,10 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Caller()
         .Find("mov rax, [0x*]; mov [*], rax; mov rax, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
+        .Target()
         .Get();
 
     static auto UnableToAfford = Anchor::Data<const FText*>(TEXT("UnableToAfford"))
@@ -1769,6 +1819,10 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Find("call 0x*")
         .Target()
         .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
+        .Find("lea rdx, [0x*]")
+        .Target()
+        .Or()
+        .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
         .Find("lea rdx, [0x*]")
         .Target()
         .Get();
@@ -2067,6 +2121,9 @@ bool AFortPlayerController::CanPerformNativeAction(const FGameplayTag& ActionTag
         .Event(TEXT("ServerCreateBuildingActor"))
         .Caller()
         .Find("mov *, [rax+0x*]; call 0x*; lea rdx, [rax+0x*]; mov rcx, *; call r*")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("mov *, [rax+0x*]; call 0x*; mov rcx, *; lea rdx, [rax+0x*]; call r*")
         .Get();
 
     return CanPerformNativeAction(this, ActionTag);
@@ -2084,6 +2141,10 @@ bool AFortPlayerController::IsBuildingRestricted(const FBuildingClassData& Build
         .Caller()
         .Find("*, 0xffffffff")
         .Find("call [*+0x*]")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; movzx *, al")
         .Get();
 
     return IsBuildingRestricted(this, BuildingClassData, BuildLoc, BuildRot);
@@ -2116,6 +2177,12 @@ bool AFortPlayerController::HasRequiredBuildingLevel(int32 BuildingLevel, EFortR
         .Caller()
         .Find("*, 0xffffffff")
         .Find("call [*+0x*]")
+        .LogSlot(TEXT("AFortPlayerController::IsBuildingRestricted"))
+        .SlotShift(this, sizeof(void*))
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("*, 0xffffffff")
+        .Find("mov r10, [rcx+0x*]; mov rcx, *; call r10; movzx *, al")
         .LogSlot(TEXT("AFortPlayerController::IsBuildingRestricted"))
         .SlotShift(this, sizeof(void*))
         .Get();
@@ -2185,6 +2252,12 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Caller()
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Find("call [*+0x*]")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("lea rdx, [rsp+0x*]; call 0x*; test al, al")
+        .Call()
+        .Find("lea rdx, [rbp-0x*]; movaps xmm6, [rsp+0x*]; mov rcx, *; movdqa [rbp-0x*], xmm6; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     static auto bMarkerOptionalAdjustment = Anchor::Exists()
@@ -2223,6 +2296,10 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
         .Find("call [*+0x*]")
         .LogSlot(TEXT("AFortPlayerController::IsBuildingRestricted"))
         .SlotShift(this, 10 * sizeof(void*))
+        .Or()
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov r10, [rax+0x*]; movzx eax, byte ptr [*]")
         .Get();
 
     static auto bMarkerOptionalAdjustment = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortBuildPreviewMarkerOptionalAdjustment")) != nullptr;
@@ -2278,6 +2355,10 @@ FText AFortPlayerController::GetErrorMessageFromStructuralQuery(EFortStructuralG
         .Caller()
         .Find("mov r8d, *; call [*+0x*]; mov rdx, rax")
         .Find("call [*+0x*]")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("mov r8d, *; *; call [*+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     if (!GetErrorMessageFromStructuralQuery)
@@ -2308,6 +2389,10 @@ bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingAct
         .Or()
         .Event(TEXT("ServerRepairBuildingActor"))
         .Find("call [rax+0x*]; mov rcx, [*]; lea rdx, [*]; mov *, al")
+        .Find("mov *, [rcx+0x*]")
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; mov rcx, [*]; movzx *, al")
         .Find("mov *, [rcx+0x*]")
         .Get();
 
@@ -2561,6 +2646,8 @@ void AFortPlayerController::SetViewTargetAndNotifyClient(AActor* NewViewTarget, 
     static auto SetViewTargetAndNotifyClient = Anchor::VirtualFunction<void (*)(AFortPlayerController*, AActor*, FViewTargetTransitionParams*)>(TEXT("AFortPlayerController::SetViewTargetAndNotifyClient"))
         .Event(TEXT("ClientSetViewTarget"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; mov rcx, rsi; movdqu *; ")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x40; movups xmm0, [r8]; mov rax, [rcx]; mov rdi, r8; lea r8, [rsp+0x20]; mov rbx, rdx; movaps [rsp+0x20], xmm0; mov rsi, rcx; call [rax+0x*]; mov rax, [rsi]; mov rcx, rsi; movups xmm0, [rdi]; mov edx, [0x*]")
         .Get();
 
     SetViewTargetAndNotifyClient(this, NewViewTarget, &TransitionParams);
