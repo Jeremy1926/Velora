@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Internationalization/Text.h"
+#include "Containers/UnrealString.h"
 #include "Misc/EngineVersion.h"
 #include "HAL/UnrealMemory.h"
 #include "Templates/UnrealTemplate.h"
@@ -85,6 +86,10 @@ FText& FText::operator=(const FText& Source)
         .Caller()
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Call()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
+        .Call()
         .Get();
 
     if (CopyAssign)
@@ -136,9 +141,17 @@ bool FText::IsEmpty() const
         .Or()
         .Pattern("83 C4 D8 E8 ? ? ? ? 83 78 08 01 0F 9E C0 ? 83 ? ? C3")
         .Start()
+        .Optional()
         .Get();
 
-    return IsEmpty(this);
+    if (IsEmpty)
+        return IsEmpty(this);
+
+    static auto ToString = Anchor::Function<const FString& (*)(const FText*)>(TEXT("FText::ToString"))
+        .Pattern("40 53 48 83 EC 20 48 8B D9 E8 ? ? ? ? 48 8B 0B 48 8B 01 48 83 C4 20 5B 48 FF 60 10")
+        .Get();
+
+    return ToString(this).IsEmpty();
 }
 
 FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
@@ -263,6 +276,11 @@ FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
         .Find("call 0x*")
         .Target()
         .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x30; mov rbx, rdx; mov rdi, rcx; call 0x*")
+        .Or()
+        .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; lea rcx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (!Format)
@@ -361,6 +379,10 @@ FTextFormat::FTextFormat(const FText& InText)
         .Find("call 0x*")
         .Target()
         .Find("movzx r8d, byte ptr [rax+0x*]; call 0x*; mov r8b, 0x1; lea rdx, [0x*]")
+        .Find("lea rdx, [0x*]")
+        .Call()
+        .Or()
+        .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
         .Find("lea rdx, [0x*]")
         .Call()
         .Get();
