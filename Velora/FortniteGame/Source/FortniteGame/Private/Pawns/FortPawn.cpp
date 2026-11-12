@@ -75,6 +75,11 @@ AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* W
         .Native(TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition"))
         .Get();
 
+    static auto bTakesDisableEquipAnimation = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPawn:EquipWeaponDefinition")))->FindPropertyByName(FName(TEXT("bDisableEquipAnimation"))) != nullptr;
+
+    if (bTakesDisableEquipAnimation)
+        return ((AFortWeapon* (*)(AFortPawn*, const UFortWeaponItemDefinition*, const FGuid&, const FGuid&, bool))EquipWeaponDefinition)(this, WeaponData, ItemEntryGuid, TrackerGuid, false);
+
     return EquipWeaponDefinition(this, WeaponData, ItemEntryGuid, TrackerGuid);
 }
 
