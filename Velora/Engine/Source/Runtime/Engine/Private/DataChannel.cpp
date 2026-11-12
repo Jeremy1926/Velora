@@ -26,6 +26,12 @@ int32 UChannel::GetChIndex() const
         .Find("mov r8b, 0x1")
         .Call()
         .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rsi+0x*]; mov [r14+0x*], eax")
         .Disp();
 
     return *(const int32*)((const uint8_t*)this + ChIndex);
@@ -40,6 +46,13 @@ FName UChannel::GetChName() const
         .Call()
         .Find("mov eax, [rbx+0x*]; mov [rsi+0x*], eax")
         .Find("mov *, [rbx+0x*]")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov eax, [rsi+0x*]; mov [r14+0x*], eax")
+        .Find("mov *, [rsi+0x*]")
         .Disp();
 
     return TGameLayout<FName>::Load((const uint8_t*)this + ChName);
@@ -310,6 +323,9 @@ bool UActorChannel::GetHoldQueuedExportBunchesAndGUIDs()
         .Or()
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rbx, rcx; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; jnz 0x*; call 0x*; mov rax, [rbx+0x28]")
         .Find("test byte ptr [rcx+0x*], 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x20], rbx; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rdi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
@@ -329,6 +345,9 @@ bool UActorChannel::GetHoldQueuedExportBunchesAndGUIDs()
         .Find("test byte ptr [rcx+0x*], 0x*")
         .Or()
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rbx, rcx; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; jnz 0x*; call 0x*; mov rax, [rbx+0x28]")
+        .Find("test byte ptr [rcx+0x*], 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x20], rbx; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rdi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
         .Find("test byte ptr [rcx+0x*], 0x*")
         .Value();
 
@@ -355,6 +374,9 @@ void UActorChannel::SetHoldQueuedExportBunchesAndGUIDs(bool bInHoldQueuedExportB
         .Or()
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rbx, rcx; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; jnz 0x*; call 0x*; mov rax, [rbx+0x28]")
         .Find("test byte ptr [rcx+0x*], 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x20], rbx; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rdi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
+        .Find("test byte ptr [rcx+0x*], 0x*")
         .Disp();
 
     static auto Mask = Anchor::Offset(TEXT("UActorChannel::bHoldQueuedExportBunchesAndGUIDs"))
@@ -374,6 +396,9 @@ void UActorChannel::SetHoldQueuedExportBunchesAndGUIDs(bool bInHoldQueuedExportB
         .Find("test byte ptr [rcx+0x*], 0x*")
         .Or()
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rbx, rcx; test byte ptr [rcx+0x*], 0x*; mov rsi, rdx; jnz 0x*; call 0x*; mov rax, [rbx+0x28]")
+        .Find("test byte ptr [rcx+0x*], 0x*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorChannel"), "mov [rsp+0x20], rbx; push rdi; sub rsp, 0x20; test byte ptr [rcx+0x*], 0x*; mov rdi, rdx; mov rbx, rcx; jnz 0x*; mov rcx, [rcx+0x*]; mov rcx, [rcx+0x*]; call 0x*")
         .Find("test byte ptr [rcx+0x*], 0x*")
         .Value();
 
@@ -473,6 +498,14 @@ void UActorChannel::WriteFieldHeaderAndPayload(FNetBitWriter& Bunch, const FClas
         .Target()
         .Find("call 0x*; lea rax, [rbp+0x*]; xor r9d, r9d; lea r8, [rbp-0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x58], 0x0; mov [rsp+0x50], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; lea rax, [rbp+0x*]; xor r9d, r9d; lea r8, [rbp]")
+        .Target()
         .Get();
 
     WriteFieldHeaderAndPayload(this, Bunch, ClassCache, FieldCache, NetFieldExportGroup, Payload, bIgnoreInternalAck);
@@ -496,6 +529,15 @@ int32 UActorChannel::WriteContentBlockPayload(UObject* Obj, FNetBitWriter& Bunch
         .Find("call 0x*")
         .Target()
         .Find("xor r9d, r9d; lea r8, [rbp-0x*]; mov [rsp+0x20], rax; mov rdx, r*; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov dword ptr [rsp+0x58], 0x0; mov [rsp+0x50], al")
+        .Find("call 0x*")
+        .Target()
+        .Find("xor r9d, r9d; lea r8, [rbp]; mov [rsp+0x20], rax; mov rdx, r*; mov rcx, r*; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
