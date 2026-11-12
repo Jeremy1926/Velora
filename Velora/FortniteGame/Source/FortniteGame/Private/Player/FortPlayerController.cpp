@@ -569,6 +569,14 @@ void AFortPlayerController::ClientActivateSlot(EFortQuickBars InQuickBar, int32 
         .AtCall());
 
     static auto ClientActivateSlot = Anchor::Function<void (*)(AFortPlayerController*, EFortQuickBars, int32, float, bool, bool)>(TEXT("AFortPlayerController::ClientActivateSlot"))
+        .If(!::Anchor::Exists().Event(TEXT("ClientActivateSlot")).Is("push rbx; push rdi; sub rsp, 0x48; mov rax, [0x*]; xor rax, rsp").Get())
+        .String(TEXT("ClientActivateSlot"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov edx, [0x*]; movss [rsp+0x*], xmm3; mov rbx, [rax+0x*]; mov [rsp+0x*], r8d; call 0x*")
+        .Start()
+        .Is("push rbx; push rdi; sub rsp, 0x48; mov rax, [0x*]; xor rax, rsp")
+        .Or()
         .Event(TEXT("ClientActivateSlot"))
         .Get();
 
