@@ -30,6 +30,11 @@ UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
         .Start()
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
         .Call()
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [rbp+0x*]; call 0x*; movsxd rax, dword ptr [rbp-0x*]")
+        .Call()
         .Get();
 
     return Get ? Get() : nullptr;
@@ -90,6 +95,12 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
         .Call(2)
         .Find("cmp dword ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [rbp+0x*]; call 0x*; movsxd rax, dword ptr [rbp-0x*]")
+        .Call(2)
+        .Find("cmp dword ptr [*+0x*], 0x*")
         .Disp();
 
     static auto Active = (int32)Anchor::Offset(TEXT("EGameFeaturePluginState::Active"))
@@ -143,6 +154,12 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .String(TEXT(" - Adding preload object: '%s'"))
         .Start()
         .Find("call 0x*; mov rcx, rax; lea rdx, [*]; call 0x*; mov rsi, [*]")
+        .Call(2)
+        .Find("cmp dword ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [rbp+0x*]; call 0x*; movsxd rax, dword ptr [rbp-0x*]")
         .Call(2)
         .Find("cmp dword ptr [*+0x*], 0x*")
         .Imm();
@@ -291,6 +308,16 @@ void UGameFeaturesSubsystem::GetGameFeatureDataForActivePlugins(TArray<const UGa
         .Call(2)
         .Find("cmp dword ptr [*+0x*], 0x*")
         .Is("cmp dword ptr [*+0x*], 0x*; jnz *; mov *, [*+0x*]")
+        .Find("mov *, [*+0x*]")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; mov rcx, rax; lea rdx, [rbp+0x*]; call 0x*; movsxd rax, dword ptr [rbp-0x*]")
+        .Call(2)
+        .Find("cmp dword ptr [*+0x*], 0x*")
+        .Is("cmp dword ptr [*+0x*], 0x*; jz *")
+        .Find("jz 0x*")
+        .Target()
         .Find("mov *, [*+0x*]")
         .Disp();
 
