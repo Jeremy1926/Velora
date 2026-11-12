@@ -641,6 +641,10 @@ FGameplayTagContainer AFortGameStateAthena::GetAthenaPlaylistContextTags() const
         .Call(3)
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAthenaPlaylistContextTags"))
+        .Find("cmp *, cl; jz 0x*; lea rdx, [r*+0x*]; lea rcx, [rsp+0x*]; call 0x*")
+        .Pattern("48 89 5C 24 08 57 48 83 EC 20 33 C0 48 8B DA 48 89 02 48 8B F9 48 89 42 08 48 89 42 10 48 89 42 18 38 81 ? ? ? ? 74 ? 48 8D 91 ? ? ? ? 48 8B CB E8")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAthenaPlaylistContextTags"))
         .Call(1)
         .Optional()
         .Get();
