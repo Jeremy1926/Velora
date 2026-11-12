@@ -184,7 +184,7 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateWarmupPhase()
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSafeZoneLocations()
 {
-    static auto SetSafeZoneLocations = Anchor::Function<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, const void*)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations"))
+    static auto SetSafeZoneLocations = Anchor::Optional<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, const void*)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations"))
         .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations")
         .Start()
         .Get();
@@ -209,7 +209,18 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSafeZoneLocat
         int32 ArrayMax;
     } Locations{ SafeZoneLocations.GetData(), SafeZoneLocations.Num() / TGameLayout<FVector>::Size(), SafeZoneLocations.Num() / TGameLayout<FVector>::Size() };
 
-    SetSafeZoneLocations(this, &Locations);
+    if (SetSafeZoneLocations)
+    {
+        SetSafeZoneLocations(this, &Locations);
+        return;
+    }
+
+    auto ComponentLocations = (decltype(Locations)*)&GetSafeZoneLocations();
+
+    ComponentLocations->Data = (const uint8*)FMemory::Realloc((void*)ComponentLocations->Data, SafeZoneLocations.Num());
+    memcpy((void*)ComponentLocations->Data, SafeZoneLocations.GetData(), SafeZoneLocations.Num());
+    ComponentLocations->ArrayNum = Locations.ArrayNum;
+    ComponentLocations->ArrayMax = Locations.ArrayMax;
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SpawnAircrafts()
