@@ -39,6 +39,11 @@ bool ULevel::IsAssociatingLevel() const
         .Or()
         .String(TEXT("sorting actor list"))
         .Start()
+        .Find("mov [rbp+0x*], rax; or byte ptr [r15+0x*], 0x*")
+        .Find("or byte ptr [r15+0x*], 0x*")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
         .Find("lea *, [rdx+0x*]")
         .Or()
         .String(TEXT("sorting actor list"))
@@ -80,6 +85,11 @@ bool ULevel::IsAssociatingLevel() const
         .Start()
         .Find("mov [*], rax; cmp [*], r*; jz 0x*; or byte ptr [r*+0x*], 0x*")
         .Find("or byte ptr [*+0x*], 0x*")
+        .Or()
+        .String(TEXT("sorting actor list"))
+        .Start()
+        .Find("mov [rbp+0x*], rax; or byte ptr [r15+0x*], 0x*")
+        .Find("or byte ptr [r15+0x*], 0x*")
         .Value();
 
     return *((uint8_t*)this + Offset) & Mask;
