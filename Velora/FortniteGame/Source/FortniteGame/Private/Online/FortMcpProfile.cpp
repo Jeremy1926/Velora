@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Online/FortMcpProfile.h"
 #include "Items/FortAccountItem.h"
+#include "Templates/SharedPointer.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArray<UFortAccountItem*>& OutInstances)
@@ -41,6 +43,60 @@ void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArra
         .Find("call 0x*")
         .Target()
         .Get();
+    static auto bInlinedGetItemInstancesForTemplate = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rdx+0x*]; mov rdx, r8; mov rax, [rcx]; call [rax+0x*]")
+        .Get();
 
-    GetItemInstancesForTemplate(this, Template, OutInstances);
+    if (!bInlinedGetItemInstancesForTemplate)
+    {
+        GetItemInstancesForTemplate(this, Template, OutInstances);
+        return;
+    }
+
+    static auto ItemStore = Anchor::Offset(TEXT("UMcpProfile::ItemStore"))
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rdx+0x*]; mov rdx, r8; mov rax, [rcx]; call [rax+0x*]")
+        .Disp();
+
+    static auto FindItemsByTemplate = Anchor::VirtualFunction<const TArray<TSharedPtr<uint8>>* (*)(void*, const FString&)>(TEXT("UMcpProfile::ItemStore::FindItemsByTemplate"))
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rdx+0x*]; mov rdx, r8; mov rax, [rcx]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    static auto ItemInstance = Anchor::Offset(TEXT("UMcpProfile::ItemStore item Instance"))
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov r8, rax; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rax, [rbx]; mov rsi, [rax+0x*]; test rsi, rsi")
+        .Find("mov rsi, [rax+0x*]")
+        .Disp();
+
+    static auto AccountItemClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAccountItem"));
+
+    OutInstances.Empty();
+
+    auto Items = FindItemsByTemplate(*(void**)((uint8*)this + ItemStore), Template);
+
+    if (!Items)
+        return;
+
+    for (auto& Item : *Items)
+    {
+        auto Instance = *(UFortAccountItem**)(Item.Get() + ItemInstance);
+
+        if (Instance && Instance->IsA(AccountItemClass) && Instance->GetItemDefinitionBP())
+            OutInstances.Add(Instance);
+    }
 }
