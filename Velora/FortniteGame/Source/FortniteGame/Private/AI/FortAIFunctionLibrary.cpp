@@ -18,6 +18,11 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
         .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+        .Find("setnz *; add r*, r*")
+        .Find("call 0x*; mov rax, [r*]; mov rcx, r*; call [rax+0x*]")
         .Get();
 
     if (bInlined)
@@ -53,6 +58,8 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
             .Find("add [*+0x20], *")
             .Find("mov rcx, r*; call 0x*; mov *, 0x1; cmp al, *; jnz 0x*")
             .Call()
+            .Or()
+            .Native(TEXT("/Script/FortniteGame.FortGlobals:GetCurrentSubGame"))
             .Get();
 
         static auto bEventBeforeSubGame = Anchor::Exists()
