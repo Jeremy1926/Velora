@@ -58,8 +58,16 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
         .Find("mov rcx, [rbp-0x*]; lea rdx, [rbp-0x*]; mov r9b, *")
         .Get();
 
+    static auto bTakesScaleMethod = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass")))->FindPropertyByName(FName(TEXT("TransformScaleMethod"))) != nullptr;
+
+    if (bClassByAddress && bTakesScaleMethod)
+        return ((AActor* (*)(const UObject*, const TSubclassOf<AActor>*, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*, ESpawnActorScaleMethod))BeginDeferredActorSpawnFromClass)(WorldContextObject, &ActorClass, SpawnTransform, CollisionHandlingOverride, Owner, ESpawnActorScaleMethod::MultiplyWithRoot);
+
     if (bClassByAddress)
         return ((AActor* (*)(const UObject*, const TSubclassOf<AActor>*, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*))BeginDeferredActorSpawnFromClass)(WorldContextObject, &ActorClass, SpawnTransform, CollisionHandlingOverride, Owner);
+
+    if (bTakesScaleMethod)
+        return ((AActor* (*)(const UObject*, TSubclassOf<AActor>, const TGameValue<FTransform>&, ESpawnActorCollisionHandlingMethod, AActor*, ESpawnActorScaleMethod))BeginDeferredActorSpawnFromClass)(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner, ESpawnActorScaleMethod::MultiplyWithRoot);
 
     return BeginDeferredActorSpawnFromClass(WorldContextObject, ActorClass, SpawnTransform, CollisionHandlingOverride, Owner);
 }
