@@ -19,6 +19,11 @@ TMulticastDelegate<void, bool>& UFortReplicationGraphNode_SpecialRelevancy::GetO
         .Find("call 0x*")
         .Target()
         .Find("lea rcx, [rbx+0x*]; call 0x*; mov rcx, rbx; add rsp, 0x20; pop rbx; jmp 0x*")
+        .Or()
+        .UseSlot(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_SpecialRelevancy"), 0)
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rbx+0x*]; test rcx, rcx; jz 0x*; call 0x*; mov rcx, rbx; mov rbx, [rsp+0x*]; mov rsi, [rsp+0x*]; add rsp, 0x20; pop rdi; jmp 0x*")
         .Disp();
 
     return *(TMulticastDelegate<void, bool>*)((uint8*)this + OnSpecialRelevancyEnabled);

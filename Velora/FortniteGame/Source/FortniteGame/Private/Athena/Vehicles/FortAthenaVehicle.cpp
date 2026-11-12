@@ -37,6 +37,10 @@ TMulticastDelegate<void, AActor*>& AFortAthenaVehicle::GetNotifyNetCullDistanceC
         .FieldPattern("F3 0F 59 C0 48 8D 0D ? ? ? ? 48 8B D3 F3 0F 11 83 %o", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .FieldPattern("F3 0F 59 C0 40 32 ED F3 0F 11 86 %o", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyNetCullDistanceChange;
