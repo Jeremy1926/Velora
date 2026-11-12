@@ -356,6 +356,10 @@ bool ABuildingGameplayActorSpawnMachine::RebootPlayersInAir() const
         .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -365,11 +369,20 @@ bool ABuildingGameplayActorSpawnMachine::RebootPlayersInAir() const
             .Find("add [*+0x20], *")
             .Find("cmp dword ptr [0x*], 0x*")
             .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+            .Find("setnz *; add r*, r*")
+            .Find("cmp dword ptr [0x*], 0x*")
+            .Target()
             .Get();
 
         static auto RebootInAirValue = (int32)Anchor::Offset(TEXT("ABuildingGameplayActorSpawnMachine::RebootPlayersInAir compare"))
             .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
             .Find("add [*+0x20], *")
+            .Find("cmp dword ptr [0x*], 0x*")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSpawnMachine:RebootPlayersInAir"))
+            .Find("setnz *; add r*, r*")
             .Find("cmp dword ptr [0x*], 0x*")
             .Imm();
 

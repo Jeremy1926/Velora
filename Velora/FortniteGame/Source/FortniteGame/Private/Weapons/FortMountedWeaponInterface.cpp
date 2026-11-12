@@ -149,6 +149,11 @@ void IFortMountedWeaponInterface::FinishMountedWeaponInitialization(AFortWeaponR
         .Find("add [*+0x20], *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
+        .Find("setnz *; add r*, r*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FinishMountedWeaponInitialization(this, Weapon);

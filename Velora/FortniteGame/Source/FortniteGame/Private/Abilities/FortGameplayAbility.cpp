@@ -118,6 +118,10 @@ TArray<FActiveGameplayEffectHandle> UFortGameplayAbility::ApplyGameplayEffectCon
         .Exec(TEXT("/Script/FortniteGame.FortGameplayAbility:ApplyGameplayEffectContainer"))
         .Find("add [*+0x20], *")
         .Find("mov rsi, [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameplayAbility:ApplyGameplayEffectContainer"))
+        .Find("setnz *; add r*, r*")
+        .Find("mov rsi, [rax+0x*]")
         .Get();
 
     TArray<FActiveGameplayEffectHandle> Handles;

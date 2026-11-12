@@ -32,6 +32,12 @@ void UEnvQueryInstanceBlueprintWrapper::RunQuery(EEnvQueryRunMode::Type InRunMod
         .Find("lea r8, [*]; mov edx, *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *; add r*, r*")
+        .Find("lea r8, [*]; *; mov edx, *")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     RunQuery(this, (uint8)InRunMode, &QueryRequest);
@@ -68,6 +74,10 @@ void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Val
         .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -77,6 +87,10 @@ void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Val
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("mov rcx, [*+0x*]")
+            .Or()
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *; add r*, r*")
+            .Find("mov rcx, [*+0x*]")
             .Disp();
 
         static auto NamedParams = Anchor::Offset(TEXT("FEnvQueryInstance::NamedParams"))
@@ -84,12 +98,21 @@ void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Val
             .Find("setnz *")
             .Find("add [*+0x20], *")
             .Find("add rcx, 0x*")
+            .Or()
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *; add r*, r*")
+            .Find("add rcx, 0x*")
             .Imm();
 
         static auto Add = Anchor::Function<float* (*)(TMap<FName, float>*, FName*, float*)>(TEXT("TMap<FName, float>::Add"))
             .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+            .Find("setnz *; add r*, r*")
             .Find("call 0x*")
             .Target()
             .Get();

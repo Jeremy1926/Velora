@@ -114,6 +114,10 @@ AFortPlayerControllerZone* IFortVehicleInterface::GetVehicleController(AFortPlay
         .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
         .Find("add [*+0x20], *")
         .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortVehicleInterface:GetVehicleController"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
         .Optional()
         .Get();
 

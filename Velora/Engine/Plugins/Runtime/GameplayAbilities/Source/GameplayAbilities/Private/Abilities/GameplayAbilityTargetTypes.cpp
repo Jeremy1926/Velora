@@ -35,6 +35,14 @@ void FAbilityReplicatedDataCache::Reset()
         .LogSlot(TEXT("UAbilitySystemComponent::ServerSetReplicatedTargetDataCancelled_Implementation"))
         .Entry(TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"))
         .Call(4)
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:ServerSetReplicatedTargetDataCancelled"))
+        .Has("bt rax, 0x8")
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]", 2)
+        .LogSlot(TEXT("UAbilitySystemComponent::ServerSetReplicatedTargetDataCancelled_Implementation"))
+        .Entry(TEXT("/Script/GameplayAbilities.Default__AbilitySystemComponent"))
+        .Call(3)
         .Get();
 
     Reset(this);

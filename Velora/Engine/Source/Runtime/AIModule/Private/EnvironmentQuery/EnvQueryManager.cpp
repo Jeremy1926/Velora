@@ -77,6 +77,11 @@ UEnvQueryManager* UEnvQueryManager::GetCurrent(UObject* WorldContextObject)
         .Find("add [*+0x20], *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *; add r*, r*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetCurrent(WorldContextObject);
@@ -89,6 +94,10 @@ UEnvQueryInstanceBlueprintWrapper* UEnvQueryManager::RunEQSQuery(UObject* WorldC
         .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)

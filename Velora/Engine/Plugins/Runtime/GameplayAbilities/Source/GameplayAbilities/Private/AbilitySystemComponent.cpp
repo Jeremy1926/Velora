@@ -126,6 +126,10 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
         .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("setnz *; add r*, r*")
+        .Find("mov r9, [rax+0x*]")
         .Optional()
         .Get();
 
@@ -179,6 +183,10 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::ApplyGameplayEffectSpecToSe
         .Or()
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf"))
         .Find("sbb rax, 0xffffffffffffffff; mov [*+0x20], rax")
+        .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectSpecToSelf"))
+        .Find("setnz *; add r*, r*")
         .Find("call [rax+0x*]")
         .Optional()
         .Get();

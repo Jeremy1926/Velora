@@ -41,6 +41,10 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
         .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -49,6 +53,11 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
             .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
             .Find("setnz *")
             .Find("add [*+0x20], *")
+            .Find("call 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.AthenaAISpawner:RequestSpawn"))
+            .Find("setnz *; add r*, r*")
             .Find("call 0x*")
             .Target()
             .Get();

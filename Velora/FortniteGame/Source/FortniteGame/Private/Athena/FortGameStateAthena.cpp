@@ -405,6 +405,10 @@ int32 AFortGameStateAthena::GetAvgPlayerMMR() const
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
@@ -413,6 +417,10 @@ int32 AFortGameStateAthena::GetAvgPlayerMMR() const
             .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
             .Find("add [*+0x20], *")
             .Find("mov eax, 0x*")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("setnz *; add r*, r*")
+            .Find("mov eax, 0x*")
             .Imm();
 
         static auto bOverrideMMR = Anchor::Data<const uint8*>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR override"))
@@ -420,11 +428,21 @@ int32 AFortGameStateAthena::GetAvgPlayerMMR() const
             .Find("add [*+0x20], *")
             .Find("cmp byte ptr [0x*], 0x0")
             .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("setnz *; add r*, r*")
+            .Find("cmp byte ptr [0x*], 0x0")
+            .Target()
             .Get();
 
         static auto OverrideMMR = Anchor::Data<const int32*>(TEXT("AFortGameStateAthena::GetAvgPlayerMMR value"))
             .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
             .Find("add [*+0x20], *")
+            .Find("cmovnz eax, [0x*]")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetAvgPlayerMMR"))
+            .Find("setnz *; add r*, r*")
             .Find("cmovnz eax, [0x*]")
             .Target()
             .Get();

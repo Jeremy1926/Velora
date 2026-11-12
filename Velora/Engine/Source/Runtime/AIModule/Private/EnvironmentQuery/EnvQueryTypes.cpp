@@ -27,6 +27,11 @@ FEnvQueryRequest& FEnvQueryRequest::SetFloatParam(FName ParamName, float Value)
         .Find("add [*+0x20], *")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *; add r*, r*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Add(&NamedParams, &ParamName, &Value);

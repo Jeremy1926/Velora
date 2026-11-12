@@ -91,6 +91,10 @@ FGameplayTag UActorRegisterData_GameplayTagBased::GetGameplayTag()
         .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
         .Find("add [*+0x20], *")
         .Find("mov ?ax, [rcx+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
+        .Find("setnz *; add r*, r*")
+        .Find("mov ?ax, [rcx+0x*]")
         .Disp();
 
     return TGameLayout<FGameplayTag>::Load((uint8*)this + GameplayTag);
@@ -101,6 +105,10 @@ void UActorRegisterData_GameplayTagBased::SetGameplayTag(const FGameplayTag& InG
     static auto GameplayTag = Anchor::Offset(TEXT("UActorRegisterData_GameplayTagBased::GameplayTag"))
         .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
         .Find("add [*+0x20], *")
+        .Find("mov ?ax, [rcx+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.ActorRegisterData_GameplayTagBased:GetGameplayTag"))
+        .Find("setnz *; add r*, r*")
         .Find("mov ?ax, [rcx+0x*]")
         .Disp();
 

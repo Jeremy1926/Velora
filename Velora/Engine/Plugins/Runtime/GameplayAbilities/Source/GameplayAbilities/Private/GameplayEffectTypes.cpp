@@ -14,6 +14,10 @@ const FHitResult* FGameplayEffectContext::GetHitResult() const
         .Find("setnz *")
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EffectContextGetHitResult"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
         .Get();
 
     return GetHitResult(this);

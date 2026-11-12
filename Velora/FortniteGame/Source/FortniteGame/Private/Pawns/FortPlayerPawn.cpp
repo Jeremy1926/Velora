@@ -661,6 +661,10 @@ void AFortPlayerPawn::ServerEquipLastWeaponOrGadget_Implementation(bool bForce)
         .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
         .Find("add [*+0x20], *")
         .Find("call [rax+*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerEquipLastWeaponOrGadget"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+*]")
         .Get();
 
     ServerEquipLastWeaponOrGadget(this, bForce);

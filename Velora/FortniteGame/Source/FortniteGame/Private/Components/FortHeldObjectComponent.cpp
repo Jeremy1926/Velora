@@ -327,6 +327,10 @@ float UFortHeldObjectComponent::GetMaxSpeed() const
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
+        .Find("setnz *; add r*, r*")
         .Get();
 
     if (bInlined)
