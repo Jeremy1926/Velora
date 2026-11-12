@@ -117,6 +117,14 @@ FText UFortGameData::GetBuildingResourceName(EFortResourceType ResourceType) con
         .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; call 0x*; mov r8d, *; lea rdx, *; mov rcx, rax; call 0x*")
+        .Call(3)
         .Get();
 
     FText Result(NoInit);

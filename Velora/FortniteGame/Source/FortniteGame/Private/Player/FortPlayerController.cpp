@@ -1825,6 +1825,15 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
         .Find("lea rdx, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("movzx *, byte ptr [rax+0x*]; call 0x*; mov rcx, rax; call 0x*; mov r8d, *; lea rdx, *; mov rcx, rax; call 0x*")
+        .Find("lea rdx, [0x*]")
+        .Target()
         .Get();
 
     FText Message;
@@ -2328,6 +2337,14 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
         .Find("call 0x*")
         .Target()
         .Find("mov rbx, [rax+0x*]; *; *; mov r8b, [rbp+0x*]; *; call rbx")
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; lea rdx, [rbp-0x*]; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r8, [*]; lea rdx, [rbp-0x*]; mov rcx, *; movdqa [rbp-0x*], xmm6; call [r8+0x*]")
+        .Find("call [r8+0x*]")
         .Get();
 
     static auto bMarkerOptionalAdjustment = Anchor::Exists()
