@@ -17,6 +17,16 @@ TMulticastDelegate<void, AFortAthenaExitCraft*, float>& AFortAthenaExitCraft::Ge
         .Target()
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortAthenaExitCraft"))
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *OnExitVehicleCullDistChange;
