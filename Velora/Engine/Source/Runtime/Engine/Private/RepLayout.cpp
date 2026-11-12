@@ -112,6 +112,11 @@ void FRepLayout::BuildSharedSerializationForRPC(void* Data, UE::Net::FNetTokenSt
         .Start()
         .Find("call 0x*; mov r8, [rsp+0x*]; lea rax, [rbp-0x*]; mov [rsp+0x*], rax")
         .Target()
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("call 0x*; lea rax, [rsp+0x*]; mov r9, r*; mov [rsp+0x*], rax")
+        .Target()
         .Get();
 
     BuildSharedSerializationForRPC(this, Data, NetTokenStore);
@@ -144,6 +149,11 @@ void FRepLayout::ClearSharedSerializationForRPC()
         .Start()
         .Find("mov rcx, [rsp+0x*]; lea rbx, [rcx+0x*]; cmp byte ptr [rbx+0x18], 0x0")
         .Find("lea rbx, [rcx+0x*]")
+        .Or()
+        .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+        .Start()
+        .Find("jl 0x*; mov r*, [rbp+0x*]; lea rcx, [r*+0x*]; call 0x*; lea rcx, [rbp+0x*]; mov [r*+0x*], e*")
+        .Find("lea rcx, [r*+0x*]")
         .Disp();
 
     if (SharedInfoRPC > 0)
@@ -174,6 +184,12 @@ void FRepLayout::ClearSharedSerializationForRPC()
             .Target()
             .Or()
             .Pattern("40 53 48 83 EC 20 80 79 18 00 48 8B D9 74 ? 8B 41 0C C7 41 08 00 00 00 00 85 C0 79 ? E8 ? ? ? ? 48 8B 4B 10 48 8B 01 FF 90 ? ? ? ? C6 43 18 00")
+            .Or()
+            .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+            .Start()
+            .Find("jl 0x*; mov r*, [rbp+0x*]; lea rcx, [r*+0x*]; call 0x*; lea rcx, [rbp+0x*]; mov [r*+0x*], e*")
+            .Find("call 0x*")
+            .Target()
             .Get();
 
         static auto SharedInfoRPCParmsChanged = Anchor::Offset(TEXT("FRepLayout::SharedInfoRPCParmsChanged"))
@@ -202,6 +218,11 @@ void FRepLayout::ClearSharedSerializationForRPC()
             .Find("mov rcx, [rsp+0x*]; lea rbx, [rcx+0x*]; cmp byte ptr [rbx+0x18], 0x0")
             .Find("mov byte ptr [rbx+0x18], 0x0")
             .Find("mov [rcx+0x*], r*d")
+            .Or()
+            .String(TEXT("UNetDriver::ProcessRemoteFunction: No owning connection for actor %s. Function %s will not be processed."))
+            .Start()
+            .Find("jl 0x*; mov r*, [rbp+0x*]; lea rcx, [r*+0x*]; call 0x*; lea rcx, [rbp+0x*]; mov [r*+0x*], e*")
+            .Find("mov [r*+0x*], e*")
             .Disp();
 
         Reset((uint8*)this + SharedInfoRPC);
