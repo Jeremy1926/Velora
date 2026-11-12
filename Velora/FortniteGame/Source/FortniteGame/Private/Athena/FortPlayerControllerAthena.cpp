@@ -294,6 +294,14 @@ FFortAthenaLoadout* AFortPlayerControllerAthena::GetCustomizationLoadout()
 void AFortPlayerControllerAthena::ClientEquipItem(const FGuid& ItemGuid, bool bForceExecution)
 {
     static auto ClientEquipItem = Anchor::Function<void (*)(AFortPlayerControllerAthena*, const FGuid&, bool)>(TEXT("AFortPlayerControllerAthena::ClientEquipItem"))
+        .If(!::Anchor::Exists().Event(TEXT("ClientEquipItem")).Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x40; movups xmm0, [rdx]; mov rax, [rcx]").Get())
+        .String(TEXT("ClientEquipItem"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov edx, [0x*]; movups [rsp+0x*], xmm0; mov [rsp+0x*], r8b; mov rbx, [rax+0x*]; call 0x*")
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x40; movups xmm0, [rdx]; mov rax, [rcx]")
+        .Or()
         .Event(TEXT("ClientEquipItem"))
         .Get();
 
