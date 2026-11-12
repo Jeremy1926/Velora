@@ -156,6 +156,30 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
         .Find("mov r8, rdi")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Has("movzx r10d, r8b; test r8b, r8b")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Find("call rbx; test eax, eax; jz 0x*")
+        .Find("lea r8, [rsp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto bExtraPieceClassByAddress = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Has("movzx r10d, r8b; test r8b, r8b")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+        .Find("call rbx; test eax, eax; jz 0x*")
+        .Find("lea r8, [rsp+0x*]")
         .Get();
 
     auto ContextTrapItemDefinition = GetContextTrapItemDefinition();
@@ -249,7 +273,10 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
         const TGameValue<FVector> GameSnappedLocation(SnappedLocation);
         const TGameValue<FRotator> GameBuildRotation(BuildRotation);
 
-        BuildExtraPieceForSupport(PlayerController, GetWorld(), BuildingClass, &GameSnappedLocation, &GameBuildRotation, false, 0, EFortBuildPreviewMarkerOptionalAdjustment::FreeWallPieceOnBottom);
+        if (bExtraPieceClassByAddress)
+            ((void (*)(AFortPlayerController*, UWorld*, UClass* const*, const TGameValue<FVector>*, const TGameValue<FRotator>*, bool, int32, EFortBuildPreviewMarkerOptionalAdjustment))BuildExtraPieceForSupport)(PlayerController, GetWorld(), &BuildingClass, &GameSnappedLocation, &GameBuildRotation, false, 0, EFortBuildPreviewMarkerOptionalAdjustment::FreeWallPieceOnBottom);
+        else
+            BuildExtraPieceForSupport(PlayerController, GetWorld(), BuildingClass, &GameSnappedLocation, &GameBuildRotation, false, 0, EFortBuildPreviewMarkerOptionalAdjustment::FreeWallPieceOnBottom);
     }
 
     const bool bIgnoreCostCheck = DoesItemDefinitionHaveGameplayTag(ContextTrapItemDefinition, &ExtraPieceCostIgnoreTag);
@@ -300,6 +327,19 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
             .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
             .Find("call 0x*; test rax, rax; jz 0x*; mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
             .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+            .Find("call *r10*; test al, al")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Has("movzx r10d, r8b; test r8b, r8b")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Find("call rbx; test eax, eax; jz 0x*")
+            .Last("mov rbx, [rax+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+            .Find("call 0x*; test rax, rax; jz 0x*; mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
+            .Target()
             .Get();
 
         static auto GetExistingBuildingInGridLocation = Anchor::Function<ABuildingSMActor* (*)(UObject*, const ABuildingSMActor*, const TGameValue<FVector>*)>(TEXT("UBuildingStructuralSupportSystem::GetExistingBuildingInGridLocation"))
@@ -308,6 +348,20 @@ void AFortDecoTool_ContextTrap::ServerCreateBuildingAndSpawnDeco_Implementation(
             .Find("call [r10+0x*]")
             .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
             .Find("call [*+0x*]; test eax, eax; jz 0x*")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+            .Find("mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+            .Find("call *r10*; test al, al")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Has("movzx r10d, r8b; test r8b, r8b")
+            .Find("call [r10+0x*]")
+            .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool_ContextTrap"))
+            .Find("call rbx; test eax, eax; jz 0x*")
+            .Last("mov rbx, [rax+0x*]")
             .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
             .Find("mov r8, *; mov rdx, *; mov rcx, rax; call 0x*")
             .Find("call 0x*")
