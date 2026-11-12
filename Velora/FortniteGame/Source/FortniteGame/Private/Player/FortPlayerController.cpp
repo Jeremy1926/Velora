@@ -2383,6 +2383,30 @@ bool AFortPlayerController::CanAffordToPlaceBuildableClass(FBuildingClassData Bu
 
 EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInStructuralGrid(UClass* BuildingClass, FVector& BuildLoc, FRotator& BuildRot, bool bMirrored, TArray<ABuildingActor*>* ExistingBuildings, EFortBuildPreviewMarkerOptionalAdjustment& MarkerOptionalAdjustment)
 {
+    static auto CanPlaceAfterClassCopy = Anchor::VirtualFunction<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass* const*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid after the class copy"))
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov rdi, [rax+0x*]; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("push rbx; *; *; *; mov rcx, [rdx]; mov [rbx], rcx")
+        .Last("mov rdi, [rax+0x*]")
+        .Or()
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov rdi, [rax+0x*]; and *, 0x1; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("push rbx; *; *; *; mov rcx, [rdx]; mov [rbx], rcx")
+        .Last("mov rdi, [rax+0x*]")
+        .Or()
+        .String(TEXT("Failed to find intersection point!"))
+        .Start()
+        .Find("mov rdi, [rax+0x*]; mov rdx, *; and *, 0x1; call 0x*")
+        .Find("call 0x*")
+        .IsTarget("push rbx; *; *; *; mov rcx, [rdx]; mov [rbx], rcx")
+        .Last("mov rdi, [rax+0x*]")
+        .Optional()
+        .Get();
+
     static auto CanPlaceBuildableClassInStructuralGrid = Anchor::VirtualFunction<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*)>(TEXT("AFortPlayerController::CanPlaceBuildableClassInStructuralGrid"))
         .String(TEXT("Failed to find intersection point!"))
         .Start()
@@ -2422,7 +2446,9 @@ EFortStructuralGridQueryResults AFortPlayerController::CanPlaceBuildableClassInS
 
     EFortStructuralGridQueryResults QueryResults;
 
-    if (bClassByAddress)
+    if (CanPlaceAfterClassCopy)
+        QueryResults = CanPlaceAfterClassCopy(this, &BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
+    else if (bClassByAddress)
         QueryResults = CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass* const*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, &BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
     else if (bMarkerOptionalAdjustment)
         QueryResults = CanPlaceBuildableClassInStructuralGrid.As<EFortStructuralGridQueryResults (*)(AFortPlayerController*, UClass*, TGameValue<FVector>&, TGameValue<FRotator>&, bool, TArray<ABuildingActor*>*, EFortBuildPreviewMarkerOptionalAdjustment&)>()(this, BuildingClass, GameBuildLoc, GameBuildRot, bMirrored, ExistingBuildings, MarkerOptionalAdjustment);
