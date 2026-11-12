@@ -226,6 +226,9 @@ float UFortHeldObjectComponent::GetGravityScale() const
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
         .Find("setnz *")
         .Find("add [*+0x20], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetGravityScale"))
+        .Find("setnz *; add rcx, 0x*; add r*, r*; xor r8d, r8d; mov [*+0x20], r*; call 0x*")
         .Get();
 
     if (bInlined)
@@ -331,6 +334,9 @@ float UFortHeldObjectComponent::GetMaxSpeed() const
         .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
         .Find("setnz *; add r*, r*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetMaxSpeed"))
+        .Find("setnz *; add rcx, 0x*; add r*, r*; xor r8d, r8d; mov [*+0x20], r*; call 0x*")
         .Get();
 
     if (bInlined)
