@@ -41,6 +41,12 @@ PATCH(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, ChoosePlayerStart, Anc
     .Find("mov rcx, rsi; mov edx, [rax+0x*]; call rbx; test al, al; jnz 0x*")
     .Optional()
     .Find("jnz 0x*")
+    .Or()
+    .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::ChoosePlayerStart")
+    .Start()
+    .Find("mov rcx, r*; mov edx, [rax+0x*]; call rbx; test al, al; jnz 0x*")
+    .Optional()
+    .Find("jnz 0x*")
     .Jump())
 
 UClass* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()
