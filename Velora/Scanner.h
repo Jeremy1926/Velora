@@ -140,6 +140,37 @@ namespace Scanner
             }
         }
 
+        for (size_t Index = 0; Exec.Get() && Index < Chunks.size() && Index < 64; Index++)
+        {
+            for (auto Finish = Anchor::At(Chunks[Index]).Find("setnz *"); Finish.Get(); Finish = Finish.Find("setnz *"))
+            {
+                auto Add = Finish.Find("*");
+
+                for (auto Step = 0; Step < 3 && Add.Get() && !Add.Is("add r*, rax"); Step++)
+                    Add = Add.Find("*");
+
+                auto Store = Add.Find("*");
+
+                for (auto Step = 0; Step < 12 && Store.Get() && (!Store.Is("mov [*+0x20], r*") || Store.Is("mov [rsp*")); Step++)
+                    Store = Store.Find("*");
+
+                if (!Add.Is("add r*, rax") || !Store.Is("mov [*+0x20], r*") || Store.Is("mov [rsp*"))
+                    continue;
+
+                auto Body = Finish.Find("call 0x*");
+
+                for (auto Barrier = Finish.Find("lock or *"); Body.Get() && Barrier.Get() && Barrier.Get() < Body.Get(); )
+                {
+                    Barrier = Body.Find("lock or *");
+                    Body = Body.Find("call 0x*");
+                }
+
+                auto Return = Finish.Find("ret*");
+
+                return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
+            }
+        }
+
         for (auto Finish = Exec.Find("mov [*+0x20], *"); Finish.Get(); Finish = Finish.Find("mov [*+0x20], *"))
         {
             if (!Finish.Is("mov [rsp*"))
