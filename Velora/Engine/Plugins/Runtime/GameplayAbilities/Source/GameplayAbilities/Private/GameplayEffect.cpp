@@ -13,6 +13,9 @@ bool FGameplayEffectAttributeCaptureSpec::AttemptCalculateAttributeMagnitudeWith
         .Or()
         .Pattern("48 8B 59 40 4D 8B F1 0F 29 74 24 20 0F 28 F2 48 8B EA 48 85 DB")
         .Start()
+        .Or()
+        .Pattern("40 53 48 83 EC 20 48 8B 49 40 49 8B D9 48 85 C9 74 ? 4C 8B C2 0F 28 CA E8")
+        .Start()
         .Get();
 
     return AttemptCalculateAttributeMagnitudeWithBase(this, InEvalParams, InBaseValue, OutMagnitude);
