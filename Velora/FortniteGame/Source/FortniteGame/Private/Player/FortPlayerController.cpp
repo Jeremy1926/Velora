@@ -1408,6 +1408,7 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
         .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
         .Get();
 
     if (bInlined)

@@ -78,6 +78,7 @@ void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Val
         .If(!::Anchor::Exists().Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
         .Find("setnz *; add r*, r*")
+        .Find("add rcx, 0x*")
         .Get();
 
     if (bInlined)

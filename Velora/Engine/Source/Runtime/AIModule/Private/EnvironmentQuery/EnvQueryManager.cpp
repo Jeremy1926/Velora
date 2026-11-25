@@ -107,6 +107,7 @@ UEnvQueryInstanceBlueprintWrapper* UEnvQueryManager::RunEQSQuery(UObject* WorldC
         .If(!::Anchor::Exists().Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
         .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
         .Find("setnz *; add r*, r*")
+        .Find("lea r8, [*]; *; mov edx, *")
         .Get();
 
     if (bInlined)

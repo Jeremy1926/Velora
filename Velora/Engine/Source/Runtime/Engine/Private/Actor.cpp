@@ -192,6 +192,7 @@ void AActor::K2_AttachToActor(AActor* ParentActor, FName SocketName, EAttachment
         .Or()
         .Exec(TEXT("/Script/Engine.Actor:K2_AttachToActor"))
         .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
         .Get();
 
     if (bInlined)
