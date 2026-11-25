@@ -1439,7 +1439,7 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
         .Target()
         .IsCode()
         .Log(TEXT("AFortPlayerControllerZone::ResurrectHere"))
-        .Find("call [*+0x*]")
+        .Find("call [*+0x*]; test al, al")
         .Or()
         .BoolTestIn(this, (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO"))), "; mov r*, rdx; mov r*, rcx")
         .Get();
