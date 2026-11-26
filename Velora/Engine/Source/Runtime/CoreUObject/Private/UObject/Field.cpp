@@ -28,6 +28,22 @@ FFieldClass* FField::StaticClass()
     return StaticClass ? StaticClass() : nullptr;
 }
 
+FField* FField::GetNext() const
+{
+    static auto NextField = Anchor::Field<FField*>(TEXT("FField::Next"))
+        .String(TEXT("Divide by zero: Divide_DoubleDouble"))
+        .Start()
+        .Find("mov *, [r*]; mov *, [r*+0x*]")
+        .Find("mov *, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    if (NextField)
+        return NextField(this);
+
+    return FFieldVariant::IsTaggedPointer() ? ((const FTaggedOwnerField*)this)->Next : Next;
+}
+
 int32 FField::GetFieldSize()
 {
     struct FOutlineNumberField
@@ -57,6 +73,46 @@ bool FFieldVariant::IsTaggedPointer()
     }();
 
     return bTaggedPointer;
+}
+
+int32 UProperty::GetOffset_ForInternal() const
+{
+    static auto Offset_Internal = Anchor::Field<int32>(TEXT("FProperty::Offset_Internal"))
+        .String(TEXT("'{Message}': Bad or missing property '{PropertyName}' when trying to call {FunctionName}"))
+        .Start()
+        .Find("movsxd r*, e*; add r*, r*; call [r*+0x*]")
+        .Last("mov *, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    return Offset_Internal ? Offset_Internal(this) : GetProperty()->Offset_Internal;
+}
+
+int32 UProperty::GetElementSize() const
+{
+    static auto ElementSizeField = Anchor::Field<int32>(TEXT("FProperty::ElementSize"))
+        .String(TEXT("Attempted to access index %d from array '%s' of length %d in '%s'!"))
+        .Start()
+        .Find("movsxd r*, dword ptr [r*+0x*]; imul r*, r*")
+        .Last("mov e*, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    return ElementSizeField ? ElementSizeField(this) : GetProperty()->ElementSize;
+}
+
+int32 UProperty::GetArrayDim() const
+{
+    static auto ArrayDimField = Anchor::Field<int32>(TEXT("FProperty::ArrayDim"))
+        .String(TEXT("Attempted to access index %d from array '%s' of length %d in '%s'!"))
+        .Start()
+        .Find("movsxd r*, dword ptr [r*+0x*]; imul r*, r*")
+        .Last("mov e*, [r*+0x*]")
+        .Decoded()
+        .Find("movsxd r*, dword ptr [r*+0x*]")
+        .Get();
+
+    return ArrayDimField ? ArrayDimField(this) : GetProperty()->ArrayDim;
 }
 
 UProperty* UArrayProperty::GetInner() const

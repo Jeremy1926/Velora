@@ -59,10 +59,7 @@ public:
 
     static int32 GetFieldSize();
 
-    FORCEINLINE FField* GetNext() const
-    {
-        return FFieldVariant::IsTaggedPointer() ? ((const FTaggedOwnerField*)this)->Next : Next;
-    }
+    FField* GetNext() const;
 
     virtual ~FField();
 

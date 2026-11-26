@@ -11,13 +11,14 @@ class UProperty : public UField
 public:
     FORCEINLINE int32 GetSize() const
     {
-        return GetProperty()->ArrayDim * GetProperty()->ElementSize;
+        return GetArrayDim() * GetElementSize();
     }
 
-    FORCEINLINE int32 GetOffset_ForInternal() const
-    {
-        return GetProperty()->Offset_Internal;
-    }
+    int32 GetElementSize() const;
+
+    int32 GetArrayDim() const;
+
+    int32 GetOffset_ForInternal() const;
 
     FORCEINLINE bool IsWeakObjectProperty() const
     {
@@ -32,7 +33,7 @@ public:
 private:
     FORCEINLINE void* ContainerVoidPtrToValuePtrInternal(void* ContainerPtr, int32 ArrayIndex) const
     {
-        return (uint8*)ContainerPtr + GetProperty()->Offset_Internal + GetProperty()->ElementSize * ArrayIndex;
+        return (uint8*)ContainerPtr + GetOffset_ForInternal() + GetElementSize() * ArrayIndex;
     }
 
 public:
