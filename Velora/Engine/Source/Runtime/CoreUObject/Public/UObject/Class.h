@@ -40,20 +40,11 @@ public:
         return GetStruct()->SuperStruct;
     }
 
-    FORCEINLINE int32 GetPropertiesSize() const
-    {
-        return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertiesSize : GetStruct()->PropertiesSize;
-    }
+    int32 GetPropertiesSize() const;
 
-    FORCEINLINE int32 GetMinAlignment() const
-    {
-        return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->MinAlignment : GetStruct()->MinAlignment;
-    }
+    int32 GetMinAlignment() const;
 
-    FORCEINLINE UProperty* GetPropertyLink() const
-    {
-        return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertyLink : GetStruct()->PropertyLink;
-    }
+    UProperty* GetPropertyLink() const;
 
     bool IsChildOf(const UStruct* SomeBase) const
     {

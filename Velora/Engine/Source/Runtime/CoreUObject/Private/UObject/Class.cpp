@@ -72,6 +72,63 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
     return nullptr;
 }
 
+int32 UStruct::GetPropertiesSize() const
+{
+    static auto PropertiesSize = Anchor::Field<int32>(TEXT("UStruct::PropertiesSize"))
+        .String(TEXT("STAT_AllocateObject"))
+        .Start()
+        .Find("cmovl r8d, e*")
+        .Last("mov *, [r*+0x*]")
+        .Last("mov *, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    if (PropertiesSize)
+        return PropertiesSize(this);
+
+    return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertiesSize : GetStruct()->PropertiesSize;
+}
+
+int32 UStruct::GetMinAlignment() const
+{
+    static auto MinAlignment = Anchor::Field<int32>(TEXT("UStruct::MinAlignment"))
+        .String(TEXT("STAT_AllocateObject"))
+        .Start()
+        .Find("cmovl r8d, e*")
+        .Last("mov *, [r*+0x*]")
+        .Last("mov *, [r*+0x*]")
+        .Decoded()
+        .Find("mov *, [r*+0x*]")
+        .Get();
+
+    if (MinAlignment)
+        return MinAlignment(this);
+
+    return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->MinAlignment : GetStruct()->MinAlignment;
+}
+
+UProperty* UStruct::GetPropertyLink() const
+{
+    static auto PropertyLink = Anchor::Field<UProperty*>(TEXT("UStruct::PropertyLink"))
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("call 0x*; mov rcx, *; mov edx, [rax]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Decoded()
+        .Or()
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("call 0x*; mov edx, [rax]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Decoded()
+        .Get();
+
+    if (PropertyLink)
+        return PropertyLink(this);
+
+    return FField::StaticClass() ? ((const UStruct*)((const uint8*)GetStruct() + sizeof(FField*)))->PropertyLink : GetStruct()->PropertyLink;
+}
+
 void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
 {
     static auto InitializeStruct = Anchor::VirtualFunction<void (*)(const UStruct*, void*, int32)>(TEXT("UStruct::InitializeStruct"))
