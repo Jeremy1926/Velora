@@ -224,6 +224,10 @@ void UConversationContextHelpers::execMakeConversationParticipant(FFrame& Stack,
         .If(UConversationInstance::HasServerLayout())
         .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
         .Has("setnz al; add [*+0x20], rax; test rdi, rdi; jz 0x*; mov rsi, [0x*]; test rsi, rsi; jnz 0x*; call 0x*; mov rcx, [0x*]")
+        .Or()
+        .If(UConversationInstance::HasServerLayout())
+        .Exec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant"))
+        .Has("setnz al; add [*+0x20], rax; mov rdi, [rbp-0x*]; test rdi, rdi; jz 0x*; mov rcx, [0x*]; test rcx, rcx; jnz 0x*")
         .Optional()
         .InExec(TEXT("/Script/CommonDialogueRuntime.ConversationContextHelpers:MakeConversationParticipant")));
 
