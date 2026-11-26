@@ -1441,6 +1441,9 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorldWithClass(FFrame& Stack, void*
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
         .Find("xor esi, esi")
         .Find("setnz *; mov [rbp*], rcx; add [*+0x20], *; cmp [0x*], sil; jz 0x*; test rcx, rcx; jz 0x*; call 0x*; lea rdx, [rbp*]; lea rcx, [rbp*]; call 0x*; mov rbx, [rsp+0x*]; mov [rdi], rsi; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass"))
+        .Find("mov [rsi], r14; add rsp, 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorldWithClass")));
 
