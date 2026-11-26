@@ -43,6 +43,48 @@ FName::FName(EName N)
         if (N != NAME_None)
             FromValidEName(&ComparisonIndex, N);
 
+        if (N == NAME_None || ComparisonIndex != NAME_None)
+            return;
+
+        static auto ToUnstableInt = Anchor::Optional<NAME_INDEX* (*)(const NAME_INDEX*, NAME_INDEX*)>(TEXT("FNameEntryId::ToUnstableInt"))
+            .String(TEXT("RecordReplay: failed to create demo net driver!"))
+            .Last("lea rcx, [rax+0x*]")
+            .Find("call 0x*")
+            .Target()
+            .Is("mov ecx, [rcx]; test ecx, ecx; jnz 0x*")
+            .Get();
+
+        static auto FromUnstableInt = Anchor::Optional<NAME_INDEX* (*)(NAME_INDEX*, uint32)>(TEXT("FNameEntryId::FromUnstableInt"))
+            .If(!!ToUnstableInt)
+            .String(TEXT("RecordReplay: failed to create demo net driver!"))
+            .Last("lea rcx, [rax+0x*]")
+            .Find("call 0x*", 2)
+            .Target()
+            .Is("test edx, edx; jnz 0x*")
+            .Get();
+
+        static auto GetNamePool = Anchor::Optional<const uint8* (*)()>(TEXT("GetNamePool"))
+            .If(!!FromUnstableInt)
+            .String(TEXT("RecordReplay: failed to create demo net driver!"))
+            .Last("lea rcx, [rax+0x*]")
+            .Last("call 0x*")
+            .Target()
+            .Get();
+
+        static auto DemoNetDriverEntry = Anchor::Offset(TEXT("FNamePool::ENameToEntry[NAME_DemoNetDriver]"))
+            .If(!!GetNamePool)
+            .String(TEXT("RecordReplay: failed to create demo net driver!"))
+            .Last("lea rcx, [rax+0x*]")
+            .Optional()
+            .Disp();
+
+        if (!DemoNetDriverEntry)
+            return;
+
+        NAME_INDEX Entry = NAME_None;
+        ToUnstableInt((const NAME_INDEX*)(GetNamePool() + DemoNetDriverEntry + (N - NAME_DemoNetDriver) * (int32)sizeof(NAME_INDEX)), &Entry);
+        FromUnstableInt(&ComparisonIndex, (uint32)Entry);
+
         return;
     }
 
