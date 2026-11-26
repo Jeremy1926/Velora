@@ -86,9 +86,9 @@ class UBoolProperty : public UProperty
 public:
     FORCEINLINE bool GetPropertyValue(void const* A) const
     {
-        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetByteOffset();
 
-        return !!(*ByteValue & GetProperty()->FieldMask);
+        return !!(*ByteValue & GetFieldMask());
     }
 
     FORCEINLINE bool GetPropertyValue_InContainer(void const* A, int32 ArrayIndex = 0) const
@@ -98,9 +98,9 @@ public:
 
     FORCEINLINE void SetPropertyValue(void* A, bool Value) const
     {
-        uint8* ByteValue = (uint8*)A + GetProperty()->ByteOffset;
+        uint8* ByteValue = (uint8*)A + GetByteOffset();
 
-        *ByteValue = ((*ByteValue) & ~GetProperty()->FieldMask) | (Value ? GetProperty()->ByteMask : 0);
+        *ByteValue = ((*ByteValue) & ~GetFieldMask()) | (Value ? GetByteMask() : 0);
     }
 
     FORCEINLINE void SetPropertyValue_InContainer(void* A, bool Value, int32 ArrayIndex = 0) const
@@ -108,15 +108,11 @@ public:
         SetPropertyValue(ContainerPtrToValuePtr<void>(A, ArrayIndex), Value);
     }
 
-    FORCEINLINE uint8 GetByteOffset() const
-    {
-        return GetProperty()->ByteOffset;
-    }
+    uint8 GetByteOffset() const;
 
-    FORCEINLINE uint8 GetFieldMask() const
-    {
-        return GetProperty()->FieldMask;
-    }
+    uint8 GetFieldMask() const;
+
+    uint8 GetByteMask() const;
 
 private:
     FORCEINLINE const UBoolProperty* GetProperty() const
