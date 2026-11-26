@@ -97,7 +97,7 @@ void FortRepGraphOnHotFixApplied(EUpdateCompletionStatus Status)
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
         auto ObjectItem = GUObjectArray.IndexToValidObject(Index, true);
-        auto NetDriver = ObjectItem ? Cast<UNetDriver>((UObject*)ObjectItem->Object) : nullptr;
+        auto NetDriver = ObjectItem ? Cast<UNetDriver>((UObject*)ObjectItem->GetObject()) : nullptr;
 
         if (!NetDriver || (NetDriver->GetFlags() & (RF_ClassDefaultObject | 0x60000000)))
             continue;
@@ -658,7 +658,7 @@ void UFortReplicationGraph::InitGlobalActorClassSettings()
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
         auto ObjectItem = GUObjectArray.IndexToValidObject(Index, true);
-        auto Class = ObjectItem ? Cast<UClass>((UObject*)ObjectItem->Object) : nullptr;
+        auto Class = ObjectItem ? Cast<UClass>((UObject*)ObjectItem->GetObject()) : nullptr;
 
         if (!Class || (Class->GetFlags() & RF_ClassDefaultObject))
             continue;
@@ -1658,7 +1658,7 @@ void UFortReplicationGraph::OnChangeOverrideActorDiscoveryBudget(IConsoleVariabl
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
         auto ObjectItem = GUObjectArray.IndexToObject(Index);
-        auto ReplicationGraph = ObjectItem && !ObjectItem->IsUnreachable() ? Cast<UFortReplicationGraph>((UObject*)ObjectItem->Object) : nullptr;
+        auto ReplicationGraph = ObjectItem && !ObjectItem->IsUnreachable() ? Cast<UFortReplicationGraph>((UObject*)ObjectItem->GetObject()) : nullptr;
 
         if (ReplicationGraph && !(ReplicationGraph->GetFlags() & RF_ClassDefaultObject))
             ReplicationGraph->SetActorDiscoveryBudget(OverrideActorDiscoveryBudget->GetInt());

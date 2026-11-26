@@ -212,7 +212,7 @@ public:
         for (int32 Index = 0; Stub && Index < GUObjectArray.GetObjectArrayNum(); Index++)
         {
             auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+            auto Object = ObjectItem ? (UObject*)ObjectItem->GetObject() : nullptr;
 
             if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(OwnerClass))
                 continue;
@@ -236,7 +236,7 @@ public:
         for (int32 Index = 0; !bSkipped && Index < GUObjectArray.GetObjectArrayNum(); Index++)
         {
             auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+            auto Object = ObjectItem ? (UObject*)ObjectItem->GetObject() : nullptr;
 
             if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(OwnerClass))
                 continue;
@@ -265,7 +265,7 @@ public:
         for (int32 Index = 0; !bSkipped && Index < GUObjectArray.GetObjectArrayNum(); Index++)
         {
             auto ObjectItem = GUObjectArray.IndexToObject(Index);
-            auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+            auto Object = ObjectItem ? (UObject*)ObjectItem->GetObject() : nullptr;
 
             if (!Object || !Object->IsA(UClass::StaticClass()) || !((UClass*)Object)->IsChildOf(BaseClass))
                 continue;

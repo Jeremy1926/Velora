@@ -100,7 +100,7 @@ private:
 
             if (ObjectItem)
             {
-                Result = (UObject*)ObjectItem->Object;
+                Result = (UObject*)ObjectItem->GetObject();
             }
         }
 

@@ -47,28 +47,8 @@ void FWeakObjectPtr::operator=(const UObject* Object)
         return;
     }
 
-    static auto MasterSerialNumber = Anchor::Data<volatile long*>(TEXT("FUObjectArray::MasterSerialNumber"))
-        .Pattern("F0 0F C1 0D ? ? ? ? FF C1 89 4D ? 81 F9 E8 03 00 00")
-        .Target()
-        .Or()
-        .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
-        .Target()
-        .Get();
-
     ObjectIndex = (int32)Object->GetUniqueID();
-
-    auto ObjectItem = GUObjectArray.IndexToObject(ObjectIndex);
-    auto SerialNumber = ObjectItem->SerialNumber;
-
-    if (!SerialNumber && MasterSerialNumber)
-    {
-        SerialNumber = _InterlockedIncrement(MasterSerialNumber);
-
-        if (auto ValueWas = _InterlockedCompareExchange((volatile long*)&ObjectItem->SerialNumber, SerialNumber, 0))
-            SerialNumber = ValueWas;
-    }
-
-    ObjectSerialNumber = SerialNumber;
+    ObjectSerialNumber = GUObjectArray.AllocateSerialNumber(ObjectIndex);
 }
 
 UObject* FWeakObjectPtr::Get() const

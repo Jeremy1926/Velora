@@ -107,7 +107,7 @@ void UFortDagwoodVehicleManager::UpdatePropReplacement()
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
         auto ObjectItem = GUObjectArray.IndexToObject(Index);
-        auto GameFeatureData = ObjectItem ? Cast<UFortValetGameFeatureData>((UObject*)ObjectItem->Object) : nullptr;
+        auto GameFeatureData = ObjectItem ? Cast<UFortValetGameFeatureData>((UObject*)ObjectItem->GetObject()) : nullptr;
 
         if (!GameFeatureData)
             continue;

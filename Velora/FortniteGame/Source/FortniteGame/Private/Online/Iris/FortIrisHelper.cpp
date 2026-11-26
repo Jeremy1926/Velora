@@ -26,7 +26,7 @@ UFortIrisHelper* UFortIrisHelper::Get()
     for (int32 Index = 0; Index < GUObjectArray.GetObjectArrayNum(); Index++)
     {
         auto ObjectItem = GUObjectArray.IndexToObject(Index);
-        auto Object = ObjectItem ? (UObject*)ObjectItem->Object : nullptr;
+        auto Object = ObjectItem ? (UObject*)ObjectItem->GetObject() : nullptr;
 
         if (Object && Object->GetClass() == StaticClass() && !(Object->GetFlags() & RF_ClassDefaultObject))
         {

@@ -13,21 +13,19 @@ struct FUObjectItem
     int32 ClusterRootIndex;
     int32 SerialNumber;
 
-    FORCEINLINE int32 GetSerialNumber() const
-    {
-        return SerialNumber;
-    }
+    UObjectBase* GetObject() const;
 
-    FORCEINLINE void SetRootSet()
-    {
-        Flags |= int32(EInternalObjectFlags::RootSet);
-    }
+    int32 GetSerialNumber() const;
+
+    int32 GetFlags() const;
+
+    void SetRootSet();
 
     bool IsPendingKill() const;
 
     FORCEINLINE bool IsUnreachable() const
     {
-        return !!(Flags & int32(EInternalObjectFlags::Unreachable));
+        return !!(GetFlags() & int32(EInternalObjectFlags::Unreachable));
     }
 };
 
@@ -73,22 +71,11 @@ public:
 class FUObjectArray
 {
 public:
-    FORCEINLINE int32 GetObjectArrayNum() const
-    {
-        auto& Version = FEngineVersion::Current();
+    int32 GetObjectArrayNum() const;
 
-        return Version.GetMajor() > 4 || Version.GetMinor() >= 21 ? ((const FChunkedFixedUObjectArray&)ObjObjects).Num() : ObjObjects.Num();
-    }
+    FUObjectItem* IndexToObject(int32 Index);
 
-    FORCEINLINE FUObjectItem* IndexToObject(int32 Index)
-    {
-        auto& Version = FEngineVersion::Current();
-
-        if (Index < GetObjectArrayNum())
-            return const_cast<FUObjectItem*>(Version.GetMajor() > 4 || Version.GetMinor() >= 21 ? &((const FChunkedFixedUObjectArray&)ObjObjects)[Index] : &ObjObjects[Index]);
-
-        return nullptr;
-    }
+    int32 AllocateSerialNumber(int32 Index);
 
     FORCEINLINE bool IsValid(FUObjectItem* ObjectItem, bool bEvenIfPendingKill)
     {

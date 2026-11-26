@@ -4060,11 +4060,11 @@ void UReplicationGraph::ReplicateActorListsForConnections_Default(UNetReplicatio
             {
                 auto ObjectItem = Actor ? GUObjectArray.IndexToObject((int32)Actor->GetUniqueID()) : nullptr;
 
-                if (!ObjectItem || ObjectItem->Object != Actor)
+                if (!ObjectItem || ObjectItem->GetObject() != Actor)
                 {
                     auto FirstItem = List->RepList[0] ? GUObjectArray.IndexToObject((int32)List->RepList[0]->GetUniqueID()) : nullptr;
 
-                    UE_LOG(LogVelora, Error, TEXT("Rep bad actor %p index %d in list %p num %d slot %d, gathered lists %d, first %s"), Actor, Actor ? (int32)Actor->GetUniqueID() : -1, List, List->RepList.Num(), (int32)(&Actor - List->RepList.GetData()), GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::Default].Num(), FirstItem && FirstItem->Object == List->RepList[0] ? *List->RepList[0]->GetName() : TEXT("bad"));
+                    UE_LOG(LogVelora, Error, TEXT("Rep bad actor %p index %d in list %p num %d slot %d, gathered lists %d, first %s"), Actor, Actor ? (int32)Actor->GetUniqueID() : -1, List, List->RepList.Num(), (int32)(&Actor - List->RepList.GetData()), GatheredReplicationListsForConnection.ReplicationLists[(uint32)EActorRepListTypeFlags::Default].Num(), FirstItem && FirstItem->GetObject() == List->RepList[0] ? *List->RepList[0]->GetName() : TEXT("bad"));
                     continue;
                 }
             }
