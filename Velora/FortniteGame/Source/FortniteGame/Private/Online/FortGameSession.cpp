@@ -3,6 +3,7 @@
 #include "Online/FortPlaylistManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Misc/CommandLine.h"
 #include "UObject/Class.h"
 #include "UObject/SoftObjectPtr.h"
@@ -56,6 +57,12 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
             Map = PreloadPersistentLevel->ContainerPtrToValuePtr<TSoftObjectPtr<UWorld>>(PlaylistData)->ToString();
         else
             PlaylistData = StaticLoadObject(PlaylistClass, nullptr, Playlist);
+
+        if (!PlaylistData)
+        {
+            auto PlaylistName = wcsrchr(Playlist, '.');
+            PlaylistData = UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FPrimaryAssetId{ { PlaylistClass->GetFName() }, FName(PlaylistName ? PlaylistName + 1 : Playlist) }).LoadSynchronous();
+        }
 
         if (PlaylistData)
         {
