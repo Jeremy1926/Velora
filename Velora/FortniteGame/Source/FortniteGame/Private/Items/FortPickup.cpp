@@ -371,6 +371,11 @@ bool AFortPickup::CanItemTypeBeSwapped(const UFortItemDefinition* ItemDefinition
         .Find("mov r8, rax; mov dl, *; mov rcx, *; call 0x*")
         .Call()
         .Has("bt *")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov dl, *; mov r8, rax; call 0x*")
+        .Call()
+        .Has("bt *")
         .Get();
 
     if (CanItemTypeBeSwapped)
