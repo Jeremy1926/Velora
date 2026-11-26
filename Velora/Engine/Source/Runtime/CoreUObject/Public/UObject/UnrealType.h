@@ -137,10 +137,7 @@ private:
 class UMapProperty : public UProperty
 {
 public:
-    FORCEINLINE UProperty* GetKeyProp() const
-    {
-        return GetProperty()->KeyProp;
-    }
+    UProperty* GetKeyProp() const;
 
 private:
     FORCEINLINE const UMapProperty* GetProperty() const

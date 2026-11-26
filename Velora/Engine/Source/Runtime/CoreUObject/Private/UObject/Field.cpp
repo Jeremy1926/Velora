@@ -223,3 +223,16 @@ UProperty* UArrayProperty::GetInner() const
 
     return Inner > 0 ? *(UProperty* const*)((const uint8*)this + Inner) : GetProperty()->Inner;
 }
+
+UProperty* UMapProperty::GetKeyProp() const
+{
+    static auto KeyProp = Anchor::Field<UProperty*>(TEXT("FMapProperty::KeyProp"))
+        .Exec(TEXT("/Script/Engine.BlueprintMapLibrary:Map_Find"))
+        .Find("test [r*], r*")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
+        .Find("mov r*, [r*+0x*]")
+        .Get();
+
+    return KeyProp ? KeyProp(this) : GetProperty()->KeyProp;
+}
