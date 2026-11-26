@@ -122,6 +122,9 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
         .Find("call 0x*; mov rcx, rbx; call 0x*; and qword ptr [*], 0x0; mov rbx, [rsp+0x*]; add rsp, 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Find("mov rax, [rbp+0x*]; mov rbx, [rsp+0x*]; and qword ptr [rax], 0x0; add rsp, 0x*")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
