@@ -829,6 +829,12 @@ void UFortReplicationGraph::InitGlobalGraphNodes()
         .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x18)
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "ret*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; push *; sub rsp, 0x20; mov rbx, rcx; mov *, rdx; lea rdx, [rcx+0x*]; mov rcx, *; call 0x*; cmp byte ptr [*+0x*], 0x0")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x8)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x18)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), "ret*")
         .Optional()
         .InChildVTables(UFortReplicationGraph::StaticClass()));
 
