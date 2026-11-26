@@ -21,6 +21,7 @@ UFortAthenaAISpawnerDataComponentList* UFortAthenaAISpawnerData::CreateComponent
         .Find("add [*+0x20], *")
         .Or()
         .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass")).Find("setnz *; add r*, r*; mov [*+0x20], r*; call 0x*").Get())
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass"))
         .Find("setnz *; add r*, r*")
         .Get();
