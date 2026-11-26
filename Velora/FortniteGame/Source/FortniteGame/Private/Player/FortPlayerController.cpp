@@ -1033,6 +1033,9 @@ void AFortPlayerController::execSpawnToyInstance(FFrame& Stack, void* const Z_Pa
         .Exec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
         .Find("xor ebp, ebp")
         .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov [rsi], rbp")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance"))
+        .Find("and qword ptr [*], 0x0; mov rcx, [rbp+0x*]; xor rcx, rsp")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortPlayerController:SpawnToyInstance")));
 
