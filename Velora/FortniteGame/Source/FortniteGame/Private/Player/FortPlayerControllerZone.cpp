@@ -139,7 +139,7 @@ void AFortPlayerControllerZone::ServerRestartPlayer_Implementation()
 void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewViewTarget, bool bAllowStateChange)
 {
     DETOUR(AFortPlayerControllerZone, ServerSpectateActor_Implementation, Anchor::Hook()
-        .If(::Anchor::Exists().Event(TEXT("ClientSetViewTarget")).VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; mov rcx, rsi; movdqu *; ").Get())
+        .If(::Anchor::Exists().Event(TEXT("ClientSetViewTarget")).VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; mov rcx, rsi; movdqu *; ").Or().Event(TEXT("ClientSetViewTarget")).VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rcx, rsi; ").Get())
         .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ServerSpectateActor"))
         .Find("add [*+0x20], *")
         .Find("call [rax+0x*]", 2)
