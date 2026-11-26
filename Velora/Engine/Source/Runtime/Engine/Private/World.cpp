@@ -638,6 +638,30 @@ void UWorld::InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegist
     Original(InURL, bResetTime, Context);
 }
 
+void UWorld::UpdateWorldComponents(bool bRerunConstructionScripts, bool bCurrentLevelOnly, FRegisterComponentContext* Context)
+{
+    DETOUR(UWorld, UpdateWorldComponents, Anchor::Hook()
+        .String(TEXT("Loading Map %s"))
+        .Start()
+        .Find("lea r9, [*]; mov rcx, *; mov r8b, 0x1; xor edx, edx; call 0x*")
+        .Find("call 0x*")
+        .Or()
+        .String(TEXT("Loading Map %s"))
+        .Start()
+        .Find("lea r9, [*]; mov r8b, 0x1; mov rcx, *; xor edx, edx; call 0x*")
+        .Find("call 0x*")
+        .Optional()
+        .AtCall());
+
+    if (!GIsClient && !GetNetDriver())
+    {
+        FURL URL{};
+        Listen(URL);
+    }
+
+    Original(bRerunConstructionScripts, bCurrentLevelOnly, Context);
+}
+
 bool UWorld::Listen(FURL& InURL)
 {
     DETOUR(UWorld, Listen, Anchor::Hook()

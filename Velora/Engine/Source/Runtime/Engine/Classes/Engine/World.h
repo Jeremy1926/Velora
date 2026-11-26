@@ -139,6 +139,8 @@ public:
 
     void InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context);
 
+    void UpdateWorldComponents(bool bRerunConstructionScripts, bool bCurrentLevelOnly, FRegisterComponentContext* Context);
+
     bool Listen(FURL& InURL);
 
     bool AreActorsInitialized() const;
