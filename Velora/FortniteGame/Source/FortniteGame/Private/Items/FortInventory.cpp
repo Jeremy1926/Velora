@@ -86,6 +86,10 @@ int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry)
     static auto InterfaceGetOverflowFromAddingItem = Anchor::VirtualFunction<int32 (*)(const void*, const FFortItemEntry&)>(TEXT("IFortInventoryInterface::GetOverflowFromAddingItem"))
         .String(TEXT("SwapEquippedText"))
         .Find("mov r8, [rcx+0x*]; mov rcx, r*; call r8; test eax, eax")
+        .Or()
+        .String(TEXT("SwapEquippedText"))
+        .Find("mov rcx, r*; call r8; test eax, eax")
+        .Last("mov r8, [rcx+0x*]")
         .Optional()
         .Get();
 
