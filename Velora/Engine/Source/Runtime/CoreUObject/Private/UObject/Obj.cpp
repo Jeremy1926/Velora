@@ -46,7 +46,7 @@ UWorld* UObject::GetWorld() const
     return GetWorld(this);
 }
 
-bool UObject::NeedsLoadForServer() const
+int64 UObject::GetNeedsLoadForServerSlot()
 {
     static auto NeedsLoadForClient = Anchor::VirtualFunction<bool (*)(const UObject*)>(TEXT("UObject::NeedsLoadForClient"))
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
@@ -66,9 +66,30 @@ bool UObject::NeedsLoadForServer() const
         .Last("call 0x*; xor ecx, ecx; test al, al")
         .Call()
         .Find("jmp [rax+0x*]")
-        .Get(sizeof(void*));
+        .Get();
 
-    return NeedsLoadForClient(this);
+    if (!NeedsLoadForClient)
+        return 0;
+
+    static auto DefaultObject = StaticFindObject(nullptr, nullptr, TEXT("/Script/CoreUObject.Default__Object"));
+    static auto NeedsLoadForClientEntry = DefaultObject ? (*(const uint8* const* const*)DefaultObject)[NeedsLoadForClient.Slot / sizeof(void*)] : nullptr;
+    static auto ExcludedClassesContains = Anchor::Address()
+        .At(NeedsLoadForClientEntry)
+        .Find("call 0x*")
+        .Target()
+        .Get();
+    static auto NeedsLoadForServer = Anchor::VirtualFunction<bool (*)(const UObject*)>(TEXT("UObject::NeedsLoadForServer"))
+        .If(ExcludedClassesContains != nullptr)
+        .Virtual(TEXT("/Script/CoreUObject.Default__Object"), [](const ::Anchor::FCode& Entry) { return Entry.Get() != NeedsLoadForClientEntry && Entry.Has("mov rdx, [rcx+0x*]; lea rcx, [0x*]; call 0x*; xor al, 0x1") && Entry.Find("call 0x*").Target() == ExcludedClassesContains; })
+        .Optional()
+        .Get();
+
+    return NeedsLoadForServer ? NeedsLoadForServer.Slot : NeedsLoadForClient.Slot + (int64)sizeof(void*);
+}
+
+bool UObject::NeedsLoadForServer() const
+{
+    return Scanner::Virtual<bool (*)(const UObject*)>(this, GetNeedsLoadForServerSlot())(this);
 }
 
 bool UObject::CanCreateInCurrentContext(UObject* Template)
@@ -88,7 +109,9 @@ void UObject::PatchCanCreateInCurrentContext()
         .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
         .Get();
 
-    static auto bPatched = NeedsLoadForClientCall && Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), NeedsLoadForClientCall + 2, { (uint8_t)(NeedsLoadForClientCall[2] + sizeof(void*)) });
+    static auto Slot = GetNeedsLoadForServerSlot();
+    static auto ModRM = NeedsLoadForClientCall ? NeedsLoadForClientCall + (NeedsLoadForClientCall[0] == 0xFF ? 1 : 2) : nullptr;
+    static auto bPatched = ModRM && Slot && ((*ModRM & 0xC0) == 0x80 ? Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), ModRM + 1, { (uint8_t)Slot, (uint8_t)(Slot >> 8), (uint8_t)(Slot >> 16), (uint8_t)(Slot >> 24) }) : Slot < 0x80 && Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), ModRM + 1, { (uint8_t)Slot }));
 
     (void)bPatched;
 }

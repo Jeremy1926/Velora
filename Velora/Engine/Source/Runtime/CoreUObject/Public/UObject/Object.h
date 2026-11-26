@@ -16,6 +16,8 @@ public:
 
     bool NeedsLoadForServer() const;
 
+    static int64 GetNeedsLoadForServerSlot();
+
     static bool CanCreateInCurrentContext(UObject* Template);
 
     static void PatchCanCreateInCurrentContext();
