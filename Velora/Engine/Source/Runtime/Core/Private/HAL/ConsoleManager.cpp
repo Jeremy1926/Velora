@@ -34,6 +34,12 @@ IConsoleManager*& IConsoleManager::Singleton = *Anchor::Data<IConsoleManager**>(
     .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
     .Last("mov rcx, [0x*]; test rcx, rcx")
     .Target()
+    .Or()
+    .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; call 0x*")
+    .Find("call 0x*")
+    .Target()
+    .Find("mov rcx, [0x*]")
+    .Target()
     .Get();
 
 void IConsoleManager::SetupSingleton()
@@ -66,6 +72,15 @@ void IConsoleManager::SetupSingleton()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
         .Last("mov rcx, [0x*]; test rcx, rcx")
         .Call()
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [0x*]")
+        .Find("jz 0x*")
+        .Target()
+        .Is("call 0x*")
+        .Target()
         .Get();
 
     SetupSingleton();
