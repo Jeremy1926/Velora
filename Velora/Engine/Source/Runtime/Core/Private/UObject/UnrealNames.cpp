@@ -166,6 +166,18 @@ FName::FName(const WIDECHAR* Name, EFindName FindType)
 
 uint32 GetTypeHash(FNameEntryId Id)
 {
+    static auto ToUnstableInt = Anchor::Optional<FNameEntryId* (*)(const FNameEntryId*, FNameEntryId*)>(TEXT("FNameEntryId::ToUnstableInt"))
+        .String(TEXT("STAT_NetConnection_CreateChannelByName"))
+        .Start()
+        .Find("imul *, *, 0x80001")
+        .Last("call 0x*")
+        .Target()
+        .Is("mov ecx, [rcx]; test ecx, ecx; jnz 0x*")
+        .Get();
+
+    if (ToUnstableInt)
+        ToUnstableInt(&Id, &Id);
+
     const uint32 Block = Id.ToUnstableInt() >> 16;
     const uint32 Offset = Id.ToUnstableInt() & 0xFFFF;
 
