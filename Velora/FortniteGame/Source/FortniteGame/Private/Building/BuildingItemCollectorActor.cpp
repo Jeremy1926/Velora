@@ -222,6 +222,11 @@ void ABuildingItemCollectorActor::CheckDepositGoalReached(AFortPlayerController*
         .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
         .Reference("call 0x*; mov *, eax; test rsi, rsi; jz 0x*; mov r9b, 0x1")
         .Start()
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; *; *; *; mov rcx, *; call 0x*; cmp ebx, eax; jnz 0x*")
+        .Start()
         .Inline());
 
     auto& ControllingPlayer = GetControllingPlayer();
