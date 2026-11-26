@@ -17,6 +17,12 @@ float FRealCurve::Eval(float InTime, float InDefaultValue) const
         .Call()
         .Find("xorps xmm2, xmm2; movaps xmm1, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
+        .Or()
+        .Smallest(TEXT("FScalableFloat::GetValueAtLevel"))
+        .Start()
+        .Call()
+        .Find("xorps xmm2, xmm2; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     return Eval(this, InTime, InDefaultValue);
