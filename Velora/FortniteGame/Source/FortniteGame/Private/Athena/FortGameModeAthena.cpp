@@ -200,6 +200,16 @@ TMulticastDelegate<void, AFortLiveSpectatorController*>& AFortGameModeAthena::Ge
         .Find("mov [rax+*], *; mov ecx, [0x*]; mov edx, [0x*]; inc ecx")
         .Find("mov rax, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("PlayerJoin,%s,%d,%d"))
+        .Start()
+        .Find("call 0x*; mov rdx, rdi; call 0x*")
+        .Find("mov rdx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Has("call [rax+0x60]")
+        .Find("mov rax, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyLiveSpectatorJoined;
