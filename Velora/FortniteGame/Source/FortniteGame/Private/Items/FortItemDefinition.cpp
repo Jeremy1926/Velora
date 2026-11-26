@@ -146,6 +146,15 @@ int32 UFortItemDefinition::ClampItemLevel(int32 ItemLevel) const
         .Find("mov edx, [rbx+0x*]; mov rcx, [rbx+0x*]; call 0x*; mov rbp, [rsp+0x*]; mov rsi, [rsp+0x*]; mov [rbx+0x*], eax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; call 0x*")
+        .Find("call 0x*")
+        .Call()
+        .Find("mov edx, [rbx+0x*]; call 0x*; mov rbp, [rsp+0x*]; mov rsi, [rsp+0x*]; mov [rbx+0x*], eax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (NonVirtualClampItemLevel)
