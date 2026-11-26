@@ -54,7 +54,11 @@ UObject* UWorld::GetSubsystemBase(UClass* SubsystemClass) const
         .Find("call 0x*")
         .Target()
         .Find("lea r*, [rcx+0x*]")
-        .Disp();
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call 0x*; mov r*, rax; mov [r*], r*")
+        .Last("sub r*, 0x*")
+        .Get();
     static auto GetSubsystemInternal = Anchor::Function<UObject* (*)(void*, UClass*)>(TEXT("FSubsystemCollectionBase::GetSubsystemInternal"))
         .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
         .Find("call [rax+0x*]; test rax, rax; jz 0x*; lea *, [rax+0x*]; test *, *; jz 0x*; call 0x*; test rax, rax; jz 0x*; lea rdx, [rax+0x*]")
@@ -81,6 +85,10 @@ UObject* UWorld::GetSubsystemBase(UClass* SubsystemClass) const
         .Find("call 0x*")
         .Target()
         .Find("jmp 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.SubsystemBlueprintLibrary:GetWorldSubsystem"))
+        .Find("call 0x*; mov r*, rax; mov [r*], r*")
         .Target()
         .Get();
 

@@ -1289,7 +1289,7 @@ namespace Anchor
 
         int64_t Get() const
         {
-            return this->bMissing ? 0 : Scanner::Offset(this->Name, this->Code.Disp() ? (int64_t)this->Code.Disp() - this->OriginValue : this->Code.Imm());
+            return this->bMissing ? 0 : Scanner::Offset(this->Name, this->Code.Disp() ? (int64_t)this->Code.Disp() - this->OriginValue : this->Code.Is("sub *") ? -this->Code.Imm() : this->Code.Imm());
         }
 
         int64_t Sum() const
