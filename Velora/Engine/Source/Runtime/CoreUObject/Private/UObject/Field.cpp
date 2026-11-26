@@ -28,6 +28,32 @@ FFieldClass* FField::StaticClass()
     return StaticClass ? StaticClass() : nullptr;
 }
 
+bool FField::IsClassEncoded()
+{
+    static auto bEncoded = Anchor::Exists()
+        .String(TEXT("Attempted to access index {0} from array {1} of length {2}!"))
+        .Start()
+        .Find("call 0x*; cmp r*, rax")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    return bEncoded;
+}
+
+FFieldClass* FField::GetClass() const
+{
+    static auto ClassField = Anchor::Field<FFieldClass*>(TEXT("FField::ClassPrivate"))
+        .String(TEXT("Attempted to access index {0} from array {1} of length {2}!"))
+        .Start()
+        .Find("call 0x*; cmp r*, rax")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    return ClassField ? ClassField(this) : ClassPrivate;
+}
+
 FField* FField::GetNext() const
 {
     static auto NextField = Anchor::Field<FField*>(TEXT("FField::Next"))

@@ -59,6 +59,10 @@ public:
 
     static int32 GetFieldSize();
 
+    static bool IsClassEncoded();
+
+    FFieldClass* GetClass() const;
+
     FField* GetNext() const;
 
     virtual ~FField();
