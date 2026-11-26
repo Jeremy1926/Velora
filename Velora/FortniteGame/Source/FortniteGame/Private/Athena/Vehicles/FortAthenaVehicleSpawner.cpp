@@ -209,6 +209,7 @@ bool AFortAthenaVehicleSpawner::GetForceSpawnAlways() const
         .Find("add [*+0x20], *")
         .Or()
         .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways")).Find("cmp *, 0x1; sbb *, 0xffffffffffffffff; mov [*+0x20], *").Get())
+        .If(!::Anchor::Exists().Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways")).Find("setnz *; add r*, r*; mov [*+0x20], r*; call 0x*").Get())
         .Exec(TEXT("/Script/FortniteGame.FortAthenaVehicleSpawner:GetForceSpawnAlways"))
         .Find("setnz *; add r*, r*")
         .Get();
