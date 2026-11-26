@@ -58,6 +58,11 @@ const uint8* UFortItemDefinition::GetItemComponentData(const UScriptStruct* Scri
         .Find("lea rcx, [rsp+0x20]; call 0x*; mov *, [rax+0x8]")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:GetWeaponModSlots"))
+        .Find("lea rcx, [rsp+0x20]; mov rdx, rax; call 0x*; mov *, [rax+0x8]")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FConstStructView DefaultInstance;
