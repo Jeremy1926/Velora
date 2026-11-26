@@ -179,6 +179,10 @@ bool FUObjectItem::IsPendingKill() const
     static auto RefCountedBit = Anchor::Offset(TEXT("EInternalObjectFlags::RefCounted bit"))
         .Pattern("F0 FF 41 14 8B 41 08 0F BA E0 ?")
         .Find("bt eax, 0x*")
+        .Or()
+        .Pattern("0F BA ? ? 73 ? 8B ? 08 85 C0 74 ? 0F BA ? ?")
+        .Or()
+        .Pattern("0F BA ? ? 73 ? 8B ? 85 C0 74 ? 0F BA ? ?")
         .Optional()
         .Imm();
 
