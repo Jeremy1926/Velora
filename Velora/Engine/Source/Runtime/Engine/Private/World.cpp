@@ -686,6 +686,10 @@ bool UWorld::Listen(FURL& InURL)
             .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
             .Last("movzx *, byte ptr [0x*]")
             .Target()
+            .Or()
+            .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
+            .Find("lea rcx, [0x*]")
+            .Target()
             .Get();
 
         UE_LOG(LogWorld, Log, TEXT("Failed to listen: %s"), *Error);

@@ -463,6 +463,14 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
         .Find("movsxd *, dword ptr [*+0x*]; test *, *; jz *; mov *, [*+0x*]; imul *, *, 0x*; cmp byte ptr [*], 0x0")
         .Find("xor r9d, r9d; call [*+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor r9d, r9d; mov rcx, *; lea rdx, [*]; lea r8, [*]; call [rax+0x*]")
+        .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("xor r9d, r9d; mov [rsp+0x20], rcx; mov rcx, *; lea r8, [*]; call [rax+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return InitListen(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
@@ -500,6 +508,16 @@ void UNetDriver::SetWorld(UWorld* InWorld)
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Start()
         .Find("call r8; mov rax, [r*]; mov rdx, r*; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("call r8; mov rcx, r*; mov rax, [r*]; mov rdx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Start()
+        .Find("call r8; mov rax, [r*]; mov rcx, r*; mov rdx, r*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get();
 
