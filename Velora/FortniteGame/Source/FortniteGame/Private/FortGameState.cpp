@@ -64,6 +64,11 @@ const TRuntimeSizedArray<FPlaylistStreamedLevelData>& AFortGameState::GetAdditon
         .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
         .Call(3)
         .Find("mov *, [rbx+0x*]")
+        .Or()
+        .String(TEXT("PLAYLIST: Failed to locate valid level to be streamed %s"))
+        .Start()
+        .Find("movsxd r9, dword ptr [r*+0x8]")
+        .Last("lea r*, [r*+0x*]")
         .Disp();
 
     return *(const TRuntimeSizedArray<FPlaylistStreamedLevelData>*)((const uint8*)this + AdditonalPlaylistLevels);
