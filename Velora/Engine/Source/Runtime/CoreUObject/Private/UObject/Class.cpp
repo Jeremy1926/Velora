@@ -283,7 +283,16 @@ EFunctionFlags UFunction::GetFunctionFlags() const
 
 int64 UEnum::GetValueByName(FName InName) const
 {
-    for (auto& Kvp : Names)
+    static auto NamesOffset = Anchor::Offset(TEXT("UEnum::Names"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("Action Router - Player [%d]: Input Type[%s]"))
+        .Last("call 0x*")
+        .Target()
+        .Find("mov r*, [rcx+0x*]")
+        .Optional()
+        .Disp();
+
+    for (auto& Kvp : NamesOffset ? *(const TArray<TPair<FName, int64>>*)((const uint8*)this + NamesOffset) : Names)
     {
         if (TGameLayout<FName>::Load(&Kvp.Key) == InName)
             return Kvp.Value;
