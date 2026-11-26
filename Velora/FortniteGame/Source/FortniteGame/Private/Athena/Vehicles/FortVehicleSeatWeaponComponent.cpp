@@ -100,6 +100,12 @@ void UFortVehicleSeatWeaponComponent::OnPawnEnterSeat(IFortVehicleInterface* Veh
         .Start()
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r9b, 0x1; mov r8, *; mov rdx, *; mov rcx, *; ")
         .SlotShift(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), -(int64_t)sizeof(void*))
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleSeatWeaponComponent:EquipVehicleWeapon")) && StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp")))
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r9b, 0x1; mov rcx, *; mov r8, *; mov rdx, *; ")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), -(int64_t)sizeof(void*))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortVehicleAimingWeaponComp")));
 
     static auto AimingWeaponComp = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortVehicleAimingWeaponComp"));
