@@ -654,6 +654,9 @@ UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent>
         .Exec(TEXT("/Script/Engine.Actor:GetComponentByClass"))
         .Find("setnz *; add r*, r*")
         .Find("call [rax+0x*]")
+        .Or()
+        .Native(TEXT("/Script/Engine.Actor:GetComponentByClass"))
+        .Find("mov *, [rax+0x*]")
         .Get();
 
     static auto bClassByAddress = Anchor::Exists()
