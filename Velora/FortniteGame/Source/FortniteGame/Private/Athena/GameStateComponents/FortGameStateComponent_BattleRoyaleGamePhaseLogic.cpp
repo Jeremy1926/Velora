@@ -1590,6 +1590,16 @@ TArray<FVector>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZone
         .Start()
         .Find("cmp *, [rax]; jnl 0x*; mov rax, [*+0x*]")
         .Find("mov rax, [*+0x*]")
+        .Or()
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Find("cmp *, [*+0x*]; jnl 0x*; mov rcx, [*+0x*]")
+        .Find("mov rcx, [*+0x*]")
+        .Or()
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Find("cmp *, [*+0x*]; jnl 0x*; lea rax, [*]; mov rcx, [*+0x*]")
+        .Find("mov rcx, [*+0x*]")
         .Disp();
 
     return *(TArray<FVector>*)((uint8*)this + SafeZoneLocations);
