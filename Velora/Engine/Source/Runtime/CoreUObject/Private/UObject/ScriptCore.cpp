@@ -71,6 +71,11 @@ void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
         .Pattern("41 8B 40 30 4D 8B C8 48 0F BA E0 08 73 ? 48 8B 81 80 00 00 00")
         .Or()
         .Pattern("41 8B 40 30 4D 8B C8 4C 8B D1 48 0F BA E0 08 73 ? 48 8B 81 ? ? 00 00")
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_TeleportTo"))
+        .Find("mov [r*+0x*], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     StepExplicitProperty(this, Result, Property);
