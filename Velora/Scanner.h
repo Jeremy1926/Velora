@@ -590,6 +590,13 @@ namespace Anchor
             return Chain.IsActive() && !Anchor::IsCode((Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Get()) ? Chain.At(FCode()) : Chain;
         }
 
+        ChainType& Decoded()
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && !(Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Decoder().Num() ? Chain.At(FCode()) : Chain;
+        }
+
         template<typename PropertyType>
         ChainType& BoolTestIn(const void* Object, const PropertyType* Property, std::string_view After)
         {
@@ -1207,6 +1214,58 @@ namespace Anchor
         FunctionType Get() const
         {
             return Scanner::Function<FunctionType>(this->Code.Get());
+        }
+    };
+
+    template<typename ValueType>
+    struct TField
+    {
+        int32_t Offset = 0;
+        FDecoder Decoder;
+        bool bFound = false;
+
+        explicit operator bool() const
+        {
+            return bFound;
+        }
+
+        ValueType operator()(const void* Object) const
+        {
+            uint64_t Value = 0;
+            memcpy(&Value, (const uint8_t*)Object + Offset, sizeof(ValueType));
+            Value = Decoder(Value);
+
+            ValueType Result;
+            memcpy(&Result, &Value, sizeof(ValueType));
+
+            return Result;
+        }
+    };
+
+    template<typename ValueType>
+    class Field : public TChain<Field<ValueType>>
+    {
+    public:
+        explicit Field(const wchar_t* InName)
+            : TChain<Field<ValueType>>(InName)
+        {
+        }
+
+        TField<ValueType> Get(const void* Origin = nullptr) const
+        {
+            if (!this->Code.Get())
+                return {};
+
+            auto Target = this->Code.Target();
+            TField<ValueType> Result = { Target ? (int32_t)(Target - (const uint8_t*)Origin) : this->Code.Disp(), this->Code.Decoder(), true };
+            wchar_t Steps[256];
+
+            if (Result.Decoder.Describe(Steps, 256))
+                Private::Log(ELogLevel::Log, L"Found %s offset %s0x%X, decoded by %s", this->Name, Result.Offset < 0 ? L"-" : L"", Result.Offset < 0 ? -Result.Offset : Result.Offset, Steps);
+            else
+                Private::Log(ELogLevel::Log, L"Found %s offset %s0x%X", this->Name, Result.Offset < 0 ? L"-" : L"", Result.Offset < 0 ? -Result.Offset : Result.Offset);
+
+            return Result;
         }
     };
 
