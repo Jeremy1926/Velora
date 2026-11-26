@@ -1073,6 +1073,12 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
         .Find("mov *[r?p+0x*], *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"))
+        .Or()
+        .String(TEXT("Deaths"))
+        .Start()
+        .Find("mov [rsp+0x20], rcx")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerController::DropItemsOnPawnDestruction"))
         .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
     static auto ShouldAlwaysDropItemOnDeathOrLogout = Anchor::VirtualFunction<bool (*)(AFortPlayerController*, const UFortWorldItem*, bool)>(TEXT("AFortPlayerController::ShouldAlwaysDropItemOnDeathOrLogout"))
