@@ -627,6 +627,7 @@ FLevelCollection* UWorld::FindCollectionByType(const ELevelCollectionType InType
 void UWorld::InitializeActorsForPlay(const FURL& InURL, bool bResetTime, FRegisterComponentContext* Context)
 {
     DETOUR(UWorld, InitializeActorsForPlay, Anchor::Hook()
+        .If(::Anchor::String(TEXT("Bringing up level for play took: %f")).Start().Get() != ::Anchor::String(TEXT("Loading Map %s")).Start().Get())
         .String(TEXT("Bringing up level for play took: %f"))
         .Start()
         .Optional()
