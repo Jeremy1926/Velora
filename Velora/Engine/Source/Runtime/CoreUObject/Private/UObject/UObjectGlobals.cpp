@@ -146,6 +146,9 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Or()
         .Pattern("4C 8B 39 48 8D 05 ? ? ? ? 44 8B 71 70")
         .Start()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"), "lea *, [0x*]; mov *, rcx; mov *, [rcx]; mov *, [rcx+0x8]")
+        .Start()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
