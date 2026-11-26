@@ -537,6 +537,9 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftLock(bool bL
     static auto SetAircraftLock = Anchor::Function<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, bool)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftLock"))
         .FieldPattern("80 B9 %o 00 ? ? ? 48 8B D9 74 ? 84 D2 75 ? 80 B9 ? ? 00 00 03 77", StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked"))))
         .Start()
+        .Or()
+        .FieldPattern("80 B9 %o 00 ? 8B D9 40 8A FA 74 ? 84 D2 75 ? 80 B9 ? ? 00 00 03 77", StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked"))))
+        .Start()
         .Get();
 
     SetAircraftLock(this, bLock);
