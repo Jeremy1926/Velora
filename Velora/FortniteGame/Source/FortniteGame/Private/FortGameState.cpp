@@ -88,6 +88,12 @@ bool AFortGameState::AreAllAdditionalPlaylistLevelsVisible() const
         .Pattern("4C 63 8B ? ? 00 00 4C 8B 83 ? ? 00 00 44 8A 93 ? 01 00 00 49 C1 E1 04")
         .Start()
         .Or()
+        .Pattern("63 8B ? ? 00 00 4C 8B 83 ? ? 00 00 ? C1 E1 04 44 8A 93 ? 01 00 00")
+        .Start()
+        .Or()
+        .Pattern("63 8B ? ? 00 00 ? 8B 83 ? ? 00 00 ? 8A 93 ? 01 00 00 ? C1 E1 04")
+        .Start()
+        .Or()
         .String(TEXT("PLAYLIST: Garbage Collection is being left alone by both Hotfix and Playlist: %s, it remains at %f"))
         .Call(3)
         .Get();
