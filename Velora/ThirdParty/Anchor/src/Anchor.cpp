@@ -1076,11 +1076,6 @@ namespace Anchor
         return FCode(Target()).Get(Name);
     }
 
-    static ZydisRegister Enclosing(ZydisRegister Register)
-    {
-        return Register == ZYDIS_REGISTER_NONE ? Register : ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Register);
-    }
-
     static bool FindConstant(const uint8_t* Begin, const uint8_t* End, ZydisRegister Register, uint64_t& Value)
     {
         auto bKnown = false;
@@ -1098,7 +1093,7 @@ namespace Anchor
             {
                 auto& Operand = Instruction.Operands[Index];
 
-                if (Operand.type != ZYDIS_OPERAND_TYPE_REGISTER || !(Operand.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) || Enclosing(Operand.reg.value) != Register)
+                if (Operand.type != ZYDIS_OPERAND_TYPE_REGISTER || !(Operand.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.reg.value) != Register)
                     continue;
 
                 bKnown = Index == 0 && Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE;
@@ -1117,7 +1112,7 @@ namespace Anchor
         if (!Address || !Decode(Address, Load) || Load.Info.operand_count_visible != 2 || Load.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Load.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
             return Result;
 
-        auto Register = Enclosing(Load.Operands[0].reg.value);
+        auto Register = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Load.Operands[0].reg.value);
         auto Begin = FindRange(Address).first;
         FInstruction Instruction;
 
@@ -1135,10 +1130,10 @@ namespace Anchor
             {
                 auto& Operand = Instruction.Operands[Index];
 
-                if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && Enclosing(Operand.reg.value) == Register)
+                if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.reg.value) == Register)
                     bTouched = true;
 
-                if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && (Enclosing(Operand.mem.base) == Register || Enclosing(Operand.mem.index) == Register))
+                if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && (ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.base) == Register || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.index) == Register))
                 {
                     bTouched = true;
                     Memory = &Operand;
@@ -1152,7 +1147,7 @@ namespace Anchor
             auto& Source = Instruction.Operands[1];
             auto Mnemonic = Instruction.Info.mnemonic;
             auto Width = (uint8_t)Target.size;
-            auto bSelf = Target.type == ZYDIS_OPERAND_TYPE_REGISTER && Enclosing(Target.reg.value) == Register && (Width == 32 || Width == 64);
+            auto bSelf = Target.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Target.reg.value) == Register && (Width == 32 || Width == 64);
             uint64_t Value = 0;
 
             if (bSelf && Instruction.Info.operand_count_visible == 1 && (Mnemonic == ZYDIS_MNEMONIC_NOT || Mnemonic == ZYDIS_MNEMONIC_NEG || Mnemonic == ZYDIS_MNEMONIC_BSWAP))
@@ -1167,8 +1162,8 @@ namespace Anchor
 
                 if (bConstant)
                     Value = Source.imm.value.u;
-                else if (Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Mnemonic != ZYDIS_MNEMONIC_ROR && Mnemonic != ZYDIS_MNEMONIC_ROL && Enclosing(Source.reg.value) != Register)
-                    bConstant = FindConstant(Begin ? Begin : Address, Next, Enclosing(Source.reg.value), Value);
+                else if (Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Mnemonic != ZYDIS_MNEMONIC_ROR && Mnemonic != ZYDIS_MNEMONIC_ROL && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value) != Register)
+                    bConstant = FindConstant(Begin ? Begin : Address, Next, ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value), Value);
 
                 if (bConstant)
                 {
@@ -1178,13 +1173,13 @@ namespace Anchor
                 }
             }
 
-            if (bSelf && Mnemonic == ZYDIS_MNEMONIC_LEA && Memory && Enclosing(Memory->mem.base) == Register && Memory->mem.index == ZYDIS_REGISTER_NONE)
+            if (bSelf && Mnemonic == ZYDIS_MNEMONIC_LEA && Memory && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Memory->mem.base) == Register && Memory->mem.index == ZYDIS_REGISTER_NONE)
             {
                 Result.Steps[Result.Count++] = { FDecoder::EOperation::Add, Width, Width == 32 ? (uint32_t)Memory->mem.disp.value : (uint64_t)Memory->mem.disp.value };
                 continue;
             }
 
-            if (Result.Count && Memory && Enclosing(Memory->mem.base) == Register && Memory->mem.index != ZYDIS_REGISTER_NONE && Memory->mem.disp.value)
+            if (Result.Count && Memory && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Memory->mem.base) == Register && Memory->mem.index != ZYDIS_REGISTER_NONE && Memory->mem.disp.value)
                 Result.Steps[Result.Count++] = { FDecoder::EOperation::Add, 64, (uint64_t)Memory->mem.disp.value };
 
             break;
