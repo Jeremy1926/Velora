@@ -5004,6 +5004,10 @@ void UReplicationGraph::InitializeForWorld(UWorld* World)
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x80)
         .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; push *; sub rsp, 0x20; mov rbx, rcx; mov *, rdx; lea rdx, [rcx+0x*]; mov rcx, *; call 0x*; cmp byte ptr [*+0x*], 0x0")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x8)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
         .Optional()
         .InChildVTables(UReplicationGraph::StaticClass()));
 
