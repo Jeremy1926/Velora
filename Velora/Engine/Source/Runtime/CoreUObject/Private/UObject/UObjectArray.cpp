@@ -87,6 +87,11 @@ int32 FUObjectArray::AllocateSerialNumber(int32 Index)
         .Find("mov r*, [0x*]")
         .Decoded()
         .Find("mov e*, [r*+0x*]; test e*, e*")
+        .Or()
+        .String(TEXT("UObject serial numbers overflowed (trying to allocate serial number %d)."))
+        .Last("mov r*, [0x*]")
+        .Decoded()
+        .Find("mov e*, [r*+0x*]; test e*, e*")
         .Get();
 
     auto SerialNumberPtr = (volatile long*)((uint8*)IndexToObject(Index) + (SerialNumberField ? SerialNumberField.Offset : (int32)offsetof(FUObjectItem, SerialNumber)));
@@ -110,6 +115,11 @@ int32 FUObjectItem::GetSerialNumber() const
         .Start()
         .Find("cmp e*, e*; jnl 0x*")
         .Find("mov r*, [0x*]")
+        .Decoded()
+        .Find("mov e*, [r*+0x*]; test e*, e*")
+        .Or()
+        .String(TEXT("UObject serial numbers overflowed (trying to allocate serial number %d)."))
+        .Last("mov r*, [0x*]")
         .Decoded()
         .Find("mov e*, [r*+0x*]; test e*, e*")
         .Get();
