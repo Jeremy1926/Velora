@@ -20,6 +20,8 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
         .Find("call [rax+0x*]", 2)
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__AthenaNavSystem"), [](const ::Anchor::FCode& Entry) { return Entry.Has("mov rbx, rcx; sub al, 0x2; test al, 0xfb; jz 0x*; test byte ptr [rcx+0x*], 0x2"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__AthenaNavSystem"), [](const ::Anchor::FCode& Entry) { return Entry.Has("mov al, [rcx+0x*]; *; *; test al, 0xfb; jz 0x*; test byte ptr [rcx+0x*], 0x2"); })
         .Optional()
         .InVTable(TEXT("/Script/FortniteGame.Default__AthenaNavSystem")));
 
