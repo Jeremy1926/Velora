@@ -12,10 +12,7 @@ class UObjectBase
 public:
     virtual ~UObjectBase();
 
-    FORCEINLINE uint32 GetUniqueID() const
-    {
-        return (uint32)InternalIndex;
-    }
+    uint32 GetUniqueID() const;
 
     FORCEINLINE UClass* GetClass() const
     {
@@ -27,15 +24,9 @@ public:
         return OuterPrivate;
     }
 
-    FORCEINLINE FName GetFName() const
-    {
-        return TGameLayout<FName>::Load(&NamePrivate);
-    }
+    FName GetFName() const;
 
-    FORCEINLINE EObjectFlags GetFlags() const
-    {
-        return ObjectFlags;
-    }
+    EObjectFlags GetFlags() const;
 
 private:
     EObjectFlags ObjectFlags;

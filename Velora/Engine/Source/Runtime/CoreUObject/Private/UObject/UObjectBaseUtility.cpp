@@ -3,6 +3,47 @@
 #include "UObject/Class.h"
 #include "Scanner.h"
 
+uint32 UObjectBase::GetUniqueID() const
+{
+    static auto Index = Anchor::Field<int32>(TEXT("UObjectBase::InternalIndex"))
+        .String(TEXT("%s failed to route PostInitializeComponents.  Please call Super::PostInitializeComponents() in your <className>::PostInitializeComponents() function. "))
+        .Start()
+        .Find("cmp e*, e*; jnl 0x*")
+        .Last("mov *, [r*+0x*]")
+        .Decoded()
+        .Get();
+
+    return (uint32)(Index ? Index(this) : InternalIndex);
+}
+
+FName UObjectBase::GetFName() const
+{
+    static auto Name = Anchor::Field<NAME_INDEX>(TEXT("UObjectBase::NamePrivate"))
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Has("lea e*, [r*-0x1]; xor e*, e*")
+        .Find("movsxd r*, dword ptr [r*+0x*]")
+        .Find("mov *, [r*+0x*]")
+        .Get();
+
+    return TGameLayout<FName>::Load(Name ? (const uint8*)this + Name.Offset : (const uint8*)&NamePrivate);
+}
+
+EObjectFlags UObjectBase::GetFlags() const
+{
+    static auto Flags = Anchor::Field<EObjectFlags>(TEXT("UObjectBase::ObjectFlags"))
+        .String(TEXT("STAT_AllocateObject"))
+        .Start()
+        .Find("cmp *, e*; jnl 0x*")
+        .Find("mov r*, [0x*]")
+        .Decoded()
+        .Find("mov e*, [r*+0x*]; mov [rsp+0x*], e*; mov e*, [r*+0x*]")
+        .Find("mov e*, [r*+0x*]")
+        .Get();
+
+    return Flags ? Flags(this) : ObjectFlags;
+}
+
 bool UObjectBaseUtility::IsA(const UClass* SomeBase) const
 {
     return GetClass()->IsChildOf(SomeBase);
