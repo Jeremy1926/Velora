@@ -251,6 +251,11 @@ FGameplayTagContainer& UAbilitySystemComponent::GetInternalTryActivateAbilityFai
     static auto Offset = Anchor::Offset(TEXT("UAbilitySystemComponent::InternalTryActivateAbilityFailureTags"))
         .String(TEXT("InternalTryActivateAbility called with invalid Ability"))
         .Start()
+        .Find("call 0x*; lea r*, [rax+0x*]; xor edx, edx; lea r*, [r*+0x*]; mov rcx, r*")
+        .Find("lea r*, [r*+0x*]", 2)
+        .Or()
+        .String(TEXT("InternalTryActivateAbility called with invalid Ability"))
+        .Start()
         .Find("xor edx, edx")
         .AdjacentOrLast("lea rcx, [*]", "lea *, [*]")
         .Disp();
