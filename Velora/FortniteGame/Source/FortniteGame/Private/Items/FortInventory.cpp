@@ -334,6 +334,13 @@ FFortItemEntry::FFortItemEntry(UFortItemDefinition* InItemDefinition, int32 InCo
         .Or()
         .Pattern("48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 48 89 7C 24 20 41 56 48 83 EC 20 33 ED 48 89 51 18 48 8D B1 ? ? 00 00 48 C7 01 FF FF FF FF")
         .Has("mov rax, [rsp+0x50]; movups xmm0, [rax]")
+        .Or()
+        .String(TEXT("%s HostUpgradeLevel: %i"))
+        .Start()
+        .Find("mov rdx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Has("mov rax, [rsp+0x50]; movups xmm0, [rax]")
         .Get();
 
     if (VariantGuidConstructor)
