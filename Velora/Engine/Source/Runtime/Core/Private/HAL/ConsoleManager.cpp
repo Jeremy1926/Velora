@@ -105,6 +105,9 @@ IConsoleVariable* IConsoleManager::FindConsoleVariable(const TCHAR* Name) const
         .Or()
         .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; *; *; call [rax+0x*]; *; *; call [*+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("sg.ViewDistanceQuality"), "lea rdx, [0x*]; call [rax+0x*]; mov rdx, [rax]; mov rcx, rax; call [rdx+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return FindConsoleVariable(this, Name);
