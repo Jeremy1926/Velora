@@ -101,6 +101,38 @@ bool FFieldVariant::IsTaggedPointer()
     return bTaggedPointer;
 }
 
+bool UProperty::IsWeakObjectProperty() const
+{
+    static auto WeakObjectPropertyClass = Anchor::Optional<FFieldClass*>(TEXT("FWeakObjectProperty::StaticClass"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("FWeakObjectProperty"))
+        .Find("call 0x*")
+        .Last("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    if (WeakObjectPropertyClass)
+        return ((const FField*)this)->GetClass() == WeakObjectPropertyClass;
+
+    return FField::StaticClass() && TGameLayout<FName>::Load(((const FField*)this)->GetClass()) == FName(TEXT("WeakObjectProperty"));
+}
+
+bool UProperty::IsSoftObjectProperty() const
+{
+    static auto SoftObjectPropertyClass = Anchor::Optional<FFieldClass*>(TEXT("FSoftObjectProperty::StaticClass"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("FSoftObjectProperty"))
+        .Find("call 0x*")
+        .Last("lea rcx, [0x*]")
+        .Target()
+        .Get();
+
+    if (SoftObjectPropertyClass)
+        return ((const FField*)this)->GetClass() == SoftObjectPropertyClass;
+
+    return FField::StaticClass() && TGameLayout<FName>::Load(((const FField*)this)->GetClass()) == FName(TEXT("SoftObjectProperty"));
+}
+
 int32 UProperty::GetOffset_ForInternal() const
 {
     static auto Offset_Internal = Anchor::Field<int32>(TEXT("FProperty::Offset_Internal"))
