@@ -1673,6 +1673,8 @@ FName AFortGameModeAthena::RedirectLootTierGroup(FName LootTierGroup) const
         .Or()
         .If(!RedirectAthenaLootTierGroups)
         .NameUserOf(this, "Loot_AthenaSupplyDrop")
+        .Or()
+        .FieldUserOf(this, "lea *, [*+%x]", RedirectAthenaLootTierGroups)
         .Get();
 
     FName Result(LootTierGroup);
