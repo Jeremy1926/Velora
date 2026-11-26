@@ -254,6 +254,10 @@ void AFortPlayerControllerZone::StartSpectateAfterDeathTimer()
         .String(TEXT("Deaths"))
         .Find("add rcx, 0x4; cmp rcx, rdx; jnz 0x*; mov rcx, r*; call 0x*")
         .Find("call 0x*")
+        .Or()
+        .String(TEXT("Deaths"))
+        .Find("test al, al; jnz 0x*; mov rcx, rdi; call 0x*; mov rcx, rdi; call 0x*; test al, al")
+        .Find("call 0x*")
         .Optional()
         .AtCall());
 
