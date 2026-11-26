@@ -29,6 +29,16 @@ FStreamingManagerCollection& IStreamingManager::Get()
         .Target()
         .Reference("mov rax, [0x*]; test rax, rax; jnz 0x*; lea edx, [rax+0x10]; lea ecx, [rax+0x*]; call 0x*; test rax, rax; jz 0x*; mov rcx, rax; call 0x*; mov [0x*], rax; add rsp, 0x28")
         .Start()
+        .Or()
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Find("call 0x*; mov rdx, [rax]; xor r8d, r8d; movaps xmm1, xmm*; mov rcx, rax; call [rdx+0x8]")
+        .Target()
+        .Or()
+        .String(TEXT("Slow GT frame detected (GT frame %u, delta time %f s)"))
+        .Start()
+        .Find("call 0x*; xor r8d, r8d; mov rcx, rax; movaps xmm1, xmm*; mov rdx, [rax]; call [rdx+0x8]")
+        .Target()
         .Get();
 
     return Get();
@@ -46,6 +56,11 @@ void IStreamingManager::RemoveStreamingViews(ERemoveStreamingViews RemovalType)
         .Pattern("40 53 48 83 EC 30 83 25 ? ? ? ? 00 8B DA 83 3D ? ? ? ? 00")
         .Or()
         .Pattern("56 48 83 EC 30 89 D6 C7 05 ? ? ? ? 00 00 00 00 83 3D ? ? ? ? 00 74 ? 48 8D 05 ? ? ? ? 48 89 44 24 28")
+        .Or()
+        .String(TEXT("Loading Map %s"))
+        .Start()
+        .Find("call 0x*; mov edx, 0x1; call 0x*")
+        .Call(2)
         .Optional()
         .Get();
 
