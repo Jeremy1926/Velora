@@ -81,6 +81,13 @@ void ABuildingWall::Close_Implementation(AController* ControllerInstigator)
         .Find("add rcx, r*; jz 0x*; mov rax, [rcx]; mov rdx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:CloseActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .FindEither("mov r8, [rax]; mov rcx, rax; mov rdx, *; call [r8+0x*]", "mov rdx, *; mov r8, [rax]; mov rcx, rax; call [r8+0x*]")
+        .Find("call [r8+0x*]")
+        .LogSlot(TEXT("IOpenableInterface::Close_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
