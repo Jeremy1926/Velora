@@ -23,11 +23,20 @@ uint32 FCrc::Strihash_DEPRECATED(const TCHAR* Data)
         .Or()
         .Pattern("4C 8B D2 85 C9 7F ? 48 83 C4 08 C3 48 89 1C 24 48 8D 1D ? ? ? ? 44 8B D9")
         .Start()
+        .Or()
+        .Pattern("4C 8B D2 85 C9 7E ? 48 89 1C 24 ? 8D 1D ? ? ? ? ? 8B D9")
+        .Start()
+        .Or()
+        .Pattern("85 C9 4C 8B D2 7E ? 48 89 1C 24 ? 8D 1D ? ? ? ? ? 8B D9")
+        .Start()
         .Get();
 
     static auto bLength = Anchor::Exists()
         .At(Strihash_DEPRECATED)
         .Has("test ecx, ecx; j*le 0x*")
+        .Or()
+        .At(Strihash_DEPRECATED)
+        .Has("test ecx, ecx; mov r10, rdx; j*le 0x*")
         .Get();
 
     if (bLength)
