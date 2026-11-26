@@ -24,6 +24,12 @@ FName UObjectBase::GetFName() const
         .Has("lea e*, [r*-0x1]; xor e*, e*")
         .Find("movsxd r*, dword ptr [r*+0x*]")
         .Find("mov *, [r*+0x*]")
+        .Or()
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Has("lea e*, [r*-0x1]; ror e*, 0x*")
+        .Find("movsxd r*, dword ptr [r*+0x*]")
+        .Find("mov *, [r*+0x*]")
         .Get();
 
     return TGameLayout<FName>::Load(Name ? (const uint8*)this + Name.Offset : (const uint8*)&NamePrivate);
