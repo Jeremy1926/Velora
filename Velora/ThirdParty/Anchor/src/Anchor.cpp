@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstdarg>
 #include <cstdlib>
 #include <span>
@@ -1073,6 +1074,184 @@ namespace Anchor
     const uint8_t* FCode::Target(const wchar_t* Name) const
     {
         return FCode(Target()).Get(Name);
+    }
+
+    static ZydisRegister Enclosing(ZydisRegister Register)
+    {
+        return Register == ZYDIS_REGISTER_NONE ? Register : ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Register);
+    }
+
+    static bool FindConstant(const uint8_t* Begin, const uint8_t* End, ZydisRegister Register, uint64_t& Value)
+    {
+        auto bKnown = false;
+        FInstruction Instruction;
+
+        for (auto Address = Begin; Address && Address < End; Address += Instruction.Info.length)
+        {
+            if (!Decode(Address, Instruction))
+            {
+                Instruction.Info.length = 1;
+                continue;
+            }
+
+            for (ZyanU8 Index = 0; Index < Instruction.Info.operand_count; Index++)
+            {
+                auto& Operand = Instruction.Operands[Index];
+
+                if (Operand.type != ZYDIS_OPERAND_TYPE_REGISTER || !(Operand.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) || Enclosing(Operand.reg.value) != Register)
+                    continue;
+
+                bKnown = Index == 0 && Instruction.Info.mnemonic == ZYDIS_MNEMONIC_MOV && Instruction.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE;
+                Value = bKnown ? (Operand.size == 32 ? (uint32_t)Instruction.Operands[1].imm.value.u : Instruction.Operands[1].imm.value.u) : 0;
+            }
+        }
+
+        return bKnown;
+    }
+
+    FDecoder FCode::Decoder() const
+    {
+        FDecoder Result;
+        FInstruction Load;
+
+        if (!Address || !Decode(Address, Load) || Load.Info.operand_count_visible != 2 || Load.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Load.Operands[1].type != ZYDIS_OPERAND_TYPE_MEMORY)
+            return Result;
+
+        auto Register = Enclosing(Load.Operands[0].reg.value);
+        auto Begin = FindRange(Address).first;
+        FInstruction Instruction;
+
+        for (auto Next = Address + Load.Info.length; Result.Count < (int32_t)std::size(Result.Steps) && Decode(Next, Instruction); Next += Instruction.Info.length)
+        {
+            auto Category = Instruction.Info.meta.category;
+
+            if (Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET)
+                break;
+
+            const ZydisDecodedOperand* Memory = nullptr;
+            auto bTouched = false;
+
+            for (ZyanU8 Index = 0; Index < Instruction.Info.operand_count; Index++)
+            {
+                auto& Operand = Instruction.Operands[Index];
+
+                if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && Enclosing(Operand.reg.value) == Register)
+                    bTouched = true;
+
+                if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && (Enclosing(Operand.mem.base) == Register || Enclosing(Operand.mem.index) == Register))
+                {
+                    bTouched = true;
+                    Memory = &Operand;
+                }
+            }
+
+            if (!bTouched)
+                continue;
+
+            auto& Target = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+            auto Mnemonic = Instruction.Info.mnemonic;
+            auto Width = (uint8_t)Target.size;
+            auto bSelf = Target.type == ZYDIS_OPERAND_TYPE_REGISTER && Enclosing(Target.reg.value) == Register && (Width == 32 || Width == 64);
+            uint64_t Value = 0;
+
+            if (bSelf && Instruction.Info.operand_count_visible == 1 && (Mnemonic == ZYDIS_MNEMONIC_NOT || Mnemonic == ZYDIS_MNEMONIC_NEG || Mnemonic == ZYDIS_MNEMONIC_BSWAP))
+            {
+                Result.Steps[Result.Count++] = { Mnemonic == ZYDIS_MNEMONIC_NOT ? FDecoder::EOperation::Not : Mnemonic == ZYDIS_MNEMONIC_NEG ? FDecoder::EOperation::Neg : FDecoder::EOperation::Bswap, Width, 0 };
+                continue;
+            }
+
+            if (bSelf && Instruction.Info.operand_count_visible == 2 && (Mnemonic == ZYDIS_MNEMONIC_XOR || Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB || Mnemonic == ZYDIS_MNEMONIC_ROR || Mnemonic == ZYDIS_MNEMONIC_ROL))
+            {
+                auto bConstant = Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE;
+
+                if (bConstant)
+                    Value = Source.imm.value.u;
+                else if (Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Mnemonic != ZYDIS_MNEMONIC_ROR && Mnemonic != ZYDIS_MNEMONIC_ROL && Enclosing(Source.reg.value) != Register)
+                    bConstant = FindConstant(Begin ? Begin : Address, Next, Enclosing(Source.reg.value), Value);
+
+                if (bConstant)
+                {
+                    auto Operation = Mnemonic == ZYDIS_MNEMONIC_XOR ? FDecoder::EOperation::Xor : Mnemonic == ZYDIS_MNEMONIC_ADD ? FDecoder::EOperation::Add : Mnemonic == ZYDIS_MNEMONIC_SUB ? FDecoder::EOperation::Sub : Mnemonic == ZYDIS_MNEMONIC_ROR ? FDecoder::EOperation::Ror : FDecoder::EOperation::Rol;
+                    Result.Steps[Result.Count++] = { Operation, Width, Width == 32 ? (uint32_t)Value : Value };
+                    continue;
+                }
+            }
+
+            if (bSelf && Mnemonic == ZYDIS_MNEMONIC_LEA && Memory && Enclosing(Memory->mem.base) == Register && Memory->mem.index == ZYDIS_REGISTER_NONE)
+            {
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Add, Width, Width == 32 ? (uint32_t)Memory->mem.disp.value : (uint64_t)Memory->mem.disp.value };
+                continue;
+            }
+
+            if (Result.Count && Memory && Enclosing(Memory->mem.base) == Register && Memory->mem.index != ZYDIS_REGISTER_NONE && Memory->mem.disp.value)
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Add, 64, (uint64_t)Memory->mem.disp.value };
+
+            break;
+        }
+
+        return Result;
+    }
+
+    uint64_t FDecoder::operator()(uint64_t Value) const
+    {
+        for (int32_t Index = 0; Index < Count; Index++)
+        {
+            auto& Step = Steps[Index];
+            auto Mask = Step.Width == 64 ? ~0ull : 0xFFFFFFFFull;
+            auto Low = Value & Mask;
+
+            switch (Step.Operation)
+            {
+            case EOperation::Xor:
+                Low ^= Step.Value;
+                break;
+            case EOperation::Add:
+                Low += Step.Value;
+                break;
+            case EOperation::Sub:
+                Low -= Step.Value;
+                break;
+            case EOperation::Ror:
+                Low = Step.Width == 64 ? std::rotr(Low, (int)(Step.Value & 63)) : std::rotr((uint32_t)Low, (int)(Step.Value & 31));
+                break;
+            case EOperation::Rol:
+                Low = Step.Width == 64 ? std::rotl(Low, (int)(Step.Value & 63)) : std::rotl((uint32_t)Low, (int)(Step.Value & 31));
+                break;
+            case EOperation::Not:
+                Low = ~Low;
+                break;
+            case EOperation::Neg:
+                Low = 0 - Low;
+                break;
+            case EOperation::Bswap:
+                Low = Step.Width == 64 ? _byteswap_uint64(Low) : _byteswap_ulong((uint32_t)Low);
+                break;
+            }
+
+            Value = Low & Mask;
+        }
+
+        return Value;
+    }
+
+    int32_t FDecoder::Describe(wchar_t* Text, int32_t Size) const
+    {
+        static const wchar_t* const Names[] = { L"xor", L"add", L"sub", L"ror", L"rol", L"not", L"neg", L"bswap" };
+        int32_t Length = 0;
+
+        if (Size > 0)
+            Text[0] = 0;
+
+        for (int32_t Index = 0; Index < Count && Length >= 0 && Length < Size; Index++)
+        {
+            auto& Step = Steps[Index];
+            auto Written = Step.Operation >= EOperation::Not ? _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width) : _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d 0x%llX", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width, (unsigned long long)Step.Value);
+
+            Length = Written < 0 ? Size : Length + Written;
+        }
+
+        return Count;
     }
 
     bool FCode::Is(std::string_view Instructions) const

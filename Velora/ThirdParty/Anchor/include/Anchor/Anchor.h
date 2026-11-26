@@ -35,6 +35,44 @@ namespace Anchor
         return Value > 0 && Value < 0x10000 && !(Value % sizeof(void*));
     }
 
+    class FDecoder
+    {
+    public:
+        uint64_t operator()(uint64_t Value) const;
+
+        int32_t Num() const
+        {
+            return Count;
+        }
+
+        int32_t Describe(wchar_t* Text, int32_t Size) const;
+
+    private:
+        friend class FCode;
+
+        enum class EOperation : uint8_t
+        {
+            Xor,
+            Add,
+            Sub,
+            Ror,
+            Rol,
+            Not,
+            Neg,
+            Bswap
+        };
+
+        struct FStep
+        {
+            EOperation Operation;
+            uint8_t Width;
+            uint64_t Value;
+        };
+
+        FStep Steps[8] = {};
+        int32_t Count = 0;
+    };
+
     class FCode
     {
     public:
@@ -56,6 +94,7 @@ namespace Anchor
         int64_t Imm(const wchar_t* Name) const;
         const uint8_t* Target() const;
         const uint8_t* Target(const wchar_t* Name) const;
+        FDecoder Decoder() const;
 
         bool Is(std::string_view Instructions) const;
         bool Has(std::string_view Instructions) const;
