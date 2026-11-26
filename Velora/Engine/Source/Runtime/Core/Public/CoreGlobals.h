@@ -9,7 +9,7 @@ extern bool& GIsClient;
 extern bool& GIsServer;
 extern uint32& GGameThreadId;
 extern uint32* GSlateLoadingThreadId;
-extern bool& GIsGameThreadIdInitialized;
+extern bool* GIsGameThreadIdInitialized;
 
 FOutputDeviceRedirector* GetGlobalLogSingleton();
 
@@ -17,7 +17,7 @@ FOutputDeviceRedirector* GetGlobalLogSingleton();
 
 FORCEINLINE bool IsInGameThread()
 {
-    if (GIsGameThreadIdInitialized)
+    if (!GIsGameThreadIdInitialized || *GIsGameThreadIdInitialized)
     {
         const uint32 CurrentThreadId = FPlatformTLS::GetCurrentThreadId();
 

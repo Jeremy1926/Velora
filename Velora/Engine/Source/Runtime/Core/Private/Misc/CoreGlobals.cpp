@@ -24,7 +24,7 @@ bool& GIsServer = *Anchor::Data<bool*>(TEXT("GIsServer"))
     .Target()
     .Get();
 
-bool& GIsGameThreadIdInitialized = *Anchor::Data<bool*>(TEXT("GIsGameThreadIdInitialized"))
+bool* GIsGameThreadIdInitialized = Anchor::Data<bool*>(TEXT("GIsGameThreadIdInitialized"))
     .String(TEXT("FDistanceFieldVolumeTextureAtlas::UpdateAllocations took %.1fms"))
     .Start()
     .Find("cmp byte ptr [0x*], 0x0")
@@ -117,6 +117,12 @@ uint32& GGameThreadId = *Anchor::Data<uint32*>(TEXT("GGameThreadId"))
     .Or()
     .String(TEXT("GameThread"), "lea r*, [0x*]; mov [0x*], *; mov rcx, r*; mov [0x*], eax")
     .Find("mov [0x*], eax")
+    .Target()
+    .Or()
+    .String(TEXT("GameThread"))
+    .Last("call 0x*")
+    .Target()
+    .Find("mov eax, [0x*]")
     .Target()
     .Get();
 
