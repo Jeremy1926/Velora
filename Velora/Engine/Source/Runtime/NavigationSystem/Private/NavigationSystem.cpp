@@ -23,6 +23,12 @@ void UNavigationSystemV1::SpawnMissingNavigationData()
 {
     static auto SpawnMissingNavigationData = Anchor::VirtualFunction<void (*)(UNavigationSystemV1*)>(TEXT("UNavigationSystemV1::SpawnMissingNavigationData"))
         .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("call [rax+0x*]; mov rax, [r*]; mov rcx, r*; call [rax+0x*]; cmp qword ptr [r*+0x*], 0x0")
+        .Or()
+        .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("call [rax+0x*]; mov rcx, r*; mov rax, [r*]; call [rax+0x*]; cmp qword ptr [r*+0x*], 0x0")
+        .Or()
+        .String(TEXT("Auto generating navigation bounds: %s"))
         .Find("mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Get();
