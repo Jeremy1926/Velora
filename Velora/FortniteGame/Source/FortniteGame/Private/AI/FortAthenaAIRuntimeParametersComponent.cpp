@@ -19,6 +19,12 @@ UObject* UFortAthenaAIRuntimeParametersComponent::GetOrCreateAIRuntimeParameters
         .Find("lea r9d, [*+0x1]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Need a AIRuntimeParametersComponent to retrieve skillset on AI [%s]"))
+        .Start()
+        .Find("mov r9b, *; mov [rsp+0x20], *; *; lea rdx, [rsp+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetOrCreateAIRuntimeParameters(this, &RuntimeParametersClass, SkillLevel, ConflictBehavior, nullptr);
