@@ -2347,6 +2347,28 @@ bool UFortAthenaLivingWorldManager::HasEventRuntimes()
     return bHasEventRuntimes;
 }
 
+const uint8* UFortAthenaLivingWorldManager::GetQueryEventBudget()
+{
+    static auto QueryEventBudget = Anchor::Address()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rdx, rax; mov r8, rbx; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rcx, *; mov rdx, rax; mov r8, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return QueryEventBudget;
+}
+
 UFortAthenaLivingWorldManager::FEventRuntime* UFortAthenaLivingWorldManager::FindEventRuntime(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance)
 {
     static auto FindEventRuntime = Anchor::Function<FEventRuntime* (*)(UFortAthenaLivingWorldManager*, const FFortAthenaLivingWorldEvent*, UFortAthenaLivingWorldEncounterInstance*)>(TEXT("UFortAthenaLivingWorldManager::FindEventRuntime"))
@@ -2354,6 +2376,10 @@ UFortAthenaLivingWorldManager::FEventRuntime* UFortAthenaLivingWorldManager::Fin
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 2)
         .Target()
         .Get();
@@ -2368,6 +2394,10 @@ UFortAthenaLivingWorldManager::FCategoryRuntime* UFortAthenaLivingWorldManager::
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 4)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 4)
         .Target()
         .Get();
@@ -2385,6 +2415,11 @@ TMap<const FFortAthenaLivingWorldCategory*, UFortAthenaLivingWorldManager::FCate
         .Find("call 0x*", 4)
         .Target()
         .Find("lea r11, [rcx+0x*]")
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 4)
+        .Target()
+        .Find("lea r11, [rcx+0x*]")
         .Disp();
 
     return *(TMap<const FFortAthenaLivingWorldCategory*, FCategoryRuntime>*)((uint8*)this + CategoryRuntimes);
@@ -2397,6 +2432,11 @@ TMap<const FFortAthenaLivingWorldEvent*, UFortAthenaLivingWorldManager::FEventRu
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("add rcx, 0x*")
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 2)
         .Target()
         .Find("add rcx, 0x*")
@@ -2707,6 +2747,10 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Target()
         .Find("call 0x*", 8)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 8)
+        .Target()
         .Get();
 
     static auto IsConditionTrue = Anchor::Function<bool (*)(void*, int32, void*)>(TEXT("FFortAthenaLivingWorldConditionContainer::IsTrue"))
@@ -2714,6 +2758,10 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 9)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 9)
         .Target()
         .Get();
@@ -2725,6 +2773,10 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Target()
         .Find("call 0x*", 12)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 12)
+        .Target()
         .Get();
 
     static auto GetCategoryEventInstanceBudget = Anchor::Function<int32 (*)(FFortAthenaLivingWorldCategory*, FCategoryRuntime*)>(TEXT("FFortAthenaLivingWorldCategory::GetEventInstanceBudget"))
@@ -2734,6 +2786,10 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Target()
         .Find("call 0x*", 14)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 14)
+        .Target()
         .Get();
 
     static auto EncounterEventRuntimes = Anchor::Offset(TEXT("UFortAthenaLivingWorldEncounterInstance::EventRuntimes"))
@@ -2741,6 +2797,11 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 2)
         .Target()
         .Find("lea rbx, [r8+0x*]")
@@ -3089,6 +3150,10 @@ void UFortAthenaLivingWorldManager::GenerateEventsFromRuntimes()
         .Target()
         .Find("call 0x*", 8)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 8)
+        .Target()
         .Get();
 
     auto Config = GetConfig();
@@ -3127,6 +3192,10 @@ void UFortAthenaLivingWorldManager::ProcessCategory(FFortAthenaLivingWorldCatego
         .Target()
         .Find("call 0x*", 9)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 9)
+        .Target()
         .Get();
 
     static auto GetCategoryActorBudget = Anchor::Function<int32 (*)(UFortAthenaLivingWorldManager*, FFortAthenaLivingWorldCategory*, FCategoryRuntime*)>(TEXT("UFortAthenaLivingWorldManager::GetCategoryActorBudget"))
@@ -3136,6 +3205,10 @@ void UFortAthenaLivingWorldManager::ProcessCategory(FFortAthenaLivingWorldCatego
         .Target()
         .Find("call 0x*", 12)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 12)
+        .Target()
         .Get();
 
     static auto GetCategoryEventInstanceBudget = Anchor::Function<int32 (*)(FFortAthenaLivingWorldCategory*, FCategoryRuntime*)>(TEXT("FFortAthenaLivingWorldCategory::GetEventInstanceBudget"))
@@ -3143,6 +3216,10 @@ void UFortAthenaLivingWorldManager::ProcessCategory(FFortAthenaLivingWorldCatego
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 14)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 14)
         .Target()
         .Get();
@@ -3176,6 +3253,11 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         .Find("call 0x*", 6)
         .Target()
         .Is("sub rsp, 0x28; mov rcx, [rcx+0x*]; call 0x*; mov rcx, rax; xor eax, eax; test rcx, rcx; jz 0x*; call 0x*")
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 6)
+        .Target()
+        .Is("sub rsp, 0x28; mov rcx, [rcx+0x*]; call 0x*; mov rcx, rax; xor eax, eax; test rcx, rcx; jz 0x*; call 0x*")
         .Get();
 
     static auto IsEventActive = Anchor::Function<bool (*)(FFortAthenaLivingWorldEvent*, UFortAthenaLivingWorldManager*, FGameplayTagContainer*)>(TEXT("FFortAthenaLivingWorldEvent::IsActive"))
@@ -3183,6 +3265,12 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 7)
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 7)
         .Target()
         .Find("call 0x*")
@@ -3196,6 +3284,10 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         .Target()
         .Find("call 0x*", 9)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 9)
+        .Target()
         .Get();
 
     static auto GetEventInstanceBudget = Anchor::Function<int32 (*)(FFortAthenaLivingWorldEvent*, FEventRuntime*, int32)>(TEXT("FFortAthenaLivingWorldEvent::GetEventInstanceBudget"))
@@ -3203,6 +3295,10 @@ void UFortAthenaLivingWorldManager::ComputeActiveEvents(const TArray<FFortAthena
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 13)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 13)
         .Target()
         .Get();
@@ -3356,6 +3452,10 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         .Target()
         .Find("call 0x*", 11)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 11)
+        .Target()
         .Get();
 
     static auto GetEventInstanceBudget = Anchor::Function<int32 (*)(FFortAthenaLivingWorldEvent*, FEventRuntime*, int32)>(TEXT("FFortAthenaLivingWorldEvent::GetEventInstanceBudget"))
@@ -3363,6 +3463,10 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 13)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 13)
         .Target()
         .Get();
@@ -3374,6 +3478,10 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         .Target()
         .Find("call 0x*", 15)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 15)
+        .Target()
         .Get();
 
     static auto ComputeEventRuntimeSpawnData = Anchor::Function<void (*)(UFortAthenaLivingWorldManager*, void*, FEventRuntime*, void*, int32, bool, void*, TArray<FEventRuntimeSpawnData*>*, TArray<int32>*, float*)>(TEXT("UFortAthenaLivingWorldManager::ComputeEventRuntimeSpawnData"))
@@ -3382,6 +3490,10 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         .Find("call 0x*")
         .Target()
         .Find("call 0x*", 19)
+        .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*; comiss xmm7, *")
         .Target()
         .Get();
 
@@ -3822,6 +3934,10 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
         .Target()
         .Find("call 0x*", 15)
         .Target()
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 15)
+        .Target()
         .Get();
 
     auto SpawnData = EventRequest.SpawnData;
@@ -4133,6 +4249,11 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
         .Find("call 0x*", 2)
         .Target()
         .Find("lea rbx, [r8+0x*]")
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
         .Disp();
 
     for (auto EncounterInstance : GetRunningEncounterInstances())
@@ -4198,6 +4319,11 @@ void UFortAthenaLivingWorldManager::RemovePointProviderFromEventRuntime(const FS
         .Find("mov r8, rbx; mov rdx, rax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("lea rbx, [r8+0x*]")
+        .Or()
+        .At(GetQueryEventBudget())
         .Find("call 0x*", 2)
         .Target()
         .Find("lea rbx, [r8+0x*]")

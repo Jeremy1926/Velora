@@ -323,6 +323,8 @@ public:
 
     static bool HasEventRuntimes();
 
+    static const uint8* GetQueryEventBudget();
+
     void TickEventRuntimes(float DeltaTime);
 
     void ReleasePendingEventInstances();
