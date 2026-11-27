@@ -21,6 +21,14 @@ void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArra
         .Find("movaps xmm0, [rsp+0x*]; movdqa [rsp+0x*], xmm0; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov rdx, *; mov r8, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("movaps xmm0, [rsp+0x*]; movdqa [rsp+0x*], xmm0; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (GetItemInstancesForTemplateView)
@@ -40,6 +48,13 @@ void UFortMcpProfile::GetItemInstancesForTemplate(const FString& Template, TArra
         .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
         .Find("call [rax+0x*]")
         .Find("lea r8, [rbp-0x*]; mov rdx, rax; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortMcpContext:GetAccountItemWithDefinition"))
+        .Find("call [rax+0x*]; mov rdx, *; mov r8, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Find("call 0x*")
         .Target()
         .Get();
