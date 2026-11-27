@@ -365,6 +365,11 @@ bool AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(co
         .FindEither("xor edx, edx; mov rcx, r*; call 0x*", "xor edx, edx; mov [rbp+0x*], r*; mov rcx, r*; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Find("mov rcx, r*; xor edx, edx; mov [rbp+0x*], r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return ExternalShouldAlwaysDropItemOnDeathOrLogout(Item, bIgnoreItemMutators);
