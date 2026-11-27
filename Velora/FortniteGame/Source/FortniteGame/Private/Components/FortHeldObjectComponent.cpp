@@ -104,19 +104,37 @@ void UFortHeldObjectComponent::PlaceHeldObject()
         .Find("mov dword ptr [rsp+0x28], 0x*")
         .Imm();
 
+    static auto PlacementHit = Anchor::Optional<bool (*)(UFortHeldObjectComponent*, FHitResult*)>(TEXT("UFortHeldObjectComponent::UpdatePlacementPreview placement hit"))
+        .If(!PlacementForwardDistance || !PlacementDownDistance)
+        .String(TEXT("FortTrajectoryBlocksWater"))
+        .Start()
+        .Get();
+
     auto Owner = GetOwner();
     auto RootComponent = Owner ? Owner->GetRootComponent() : nullptr;
     auto PlayerPawn = GetOwningPawn();
 
-    if (!RootComponent || !PlayerPawn || !Owner->HasAuthority() || GetHeldObjectState() != EHeldObjectState::Held || !PlacementForwardDistance || !PlacementDownDistance)
+    if (!RootComponent || !PlayerPawn || !Owner->HasAuthority() || GetHeldObjectState() != EHeldObjectState::Held)
         return;
 
-    const FVector Start = PlayerPawn->GetActorLocation() + PlayerPawn->GetActorForwardVector() * *PlacementForwardDistance;
-    const FVector End(Start.X, Start.Y, Start.Z - *PlacementDownDistance);
     FHitResult Hit;
 
-    if (!GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity, PlacementTraceChannel, FCollisionShape::MakeSphere(RootComponent->CalcLocalBounds().SphereRadius)))
-        return;
+    if (PlacementHit)
+    {
+        if (!PlacementHit(this, &Hit))
+            return;
+    }
+    else
+    {
+        if (!PlacementForwardDistance || !PlacementDownDistance)
+            return;
+
+        const FVector Start = PlayerPawn->GetActorLocation() + PlayerPawn->GetActorForwardVector() * *PlacementForwardDistance;
+        const FVector End(Start.X, Start.Y, Start.Z - *PlacementDownDistance);
+
+        if (!GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity, PlacementTraceChannel, FCollisionShape::MakeSphere(RootComponent->CalcLocalBounds().SphereRadius)))
+            return;
+    }
 
     Owner->FlushNetDormancy();
 
@@ -305,6 +323,12 @@ AFortPlayerPawn* UFortHeldObjectComponent::GetInstigator() const
             .Find("add [*+0x20], *")
             .Find("mov rax, [rcx+0x*]; test rax, rax; jnz 0x*; add rcx, 0x*; call 0x*")
             .Find("add rcx, 0x*; call 0x*")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortHeldObjectComponent:GetInstigator"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rax, [rcx+0x*]; test rax, rax; jnz 0x*; sub rcx, *; call 0x*")
+            .Find("sub rcx, *; call 0x*")
             .Get();
 
         if (!CachedInstigator || !WeakInstigator)
