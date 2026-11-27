@@ -360,6 +360,11 @@ bool AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(co
         .Find("mov byte ptr [rbp+0x*], 0x0; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .FindEither("xor edx, edx; mov rcx, r*; call 0x*", "xor edx, edx; mov [rbp+0x*], r*; mov rcx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return ExternalShouldAlwaysDropItemOnDeathOrLogout(Item, bIgnoreItemMutators);
@@ -367,6 +372,17 @@ bool AFortPlayerControllerAthena::ExternalShouldAlwaysDropItemOnDeathOrLogout(co
 
 void AFortPlayerControllerAthena::ExternalShouldDropOrDestroyByItemType(AController* Controller, const UFortWorldItemDefinition* ItemDefinition, bool* bShouldDrop, bool* bShouldDestroy)
 {
+    static auto ExternalShouldDropOrDestroyByItemType = Anchor::Optional<void (*)(AController*, const UFortWorldItemDefinition*, bool*, bool*)>(TEXT("AFortPlayerControllerAthena::ExternalShouldDropOrDestroyByItemType"))
+        .At(DETOUR_ORIGINAL(AFortAthenaAIBotController, DropInventoryItems))
+        .Find("lea r9, [rbp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Has("test byte ptr [r*+0x*], 0x*; jnz 0x*; mov byte ptr [r*], 0x0")
+        .Get();
+
+    if (ExternalShouldDropOrDestroyByItemType)
+        return ExternalShouldDropOrDestroyByItemType(Controller, ItemDefinition, bShouldDrop, bShouldDestroy);
+
     auto World = Controller ? Controller->GetWorld() : nullptr;
 
     if (auto GameState = World ? Cast<AFortGameStateAthena>(World->GetGameState()) : nullptr)
