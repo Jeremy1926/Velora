@@ -171,6 +171,11 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
         .String("STAT_ConstructObject")
         .Find("call 0x*; mov cl, 0x1; cmp *, rax")
         .Call()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"))
+        .Start()
+        .Find("call 0x*; xor r9d, r9d; cmp r*, rax")
+        .Call()
         .Get();
 
     return GetArchetypeFromRequiredInfoImpl(Class, Outer, Name, ObjectFlags, false, nullptr);
