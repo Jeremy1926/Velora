@@ -2808,6 +2808,9 @@ bool AFortPlayerController::CanAffordToRepair(ABuildingSMActor* BuildingActorToR
         .Or()
         .Event(TEXT("ServerRepairBuildingActor"))
         .Find("call [rax+0x*]; test al, al; jz 0x*; mov rax, [*]; mov rcx, *; mov edx, [0x*]")
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; test al, al; jz 0x*; mov edx, [0x*]")
         .Get();
 
     return CanAffordToRepair(this, BuildingActorToRepair);
