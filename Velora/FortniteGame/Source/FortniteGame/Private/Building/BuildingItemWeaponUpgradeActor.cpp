@@ -210,6 +210,13 @@ void ABuildingItemWeaponUpgradeActor::GrantOutput(AFortPlayerController* Player,
         .Find("lea rdx, [*+0x1a]; mov *, eax; mov rcx, *; call 0x*")
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov rcx, *; call 0x*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
         .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemWeaponUpgradeActor")));
 
     auto PlayerController = Cast<AFortPlayerControllerAthena>(Player);
@@ -328,6 +335,13 @@ int32 ABuildingItemWeaponUpgradeActor::GetCostForRessource(const uint8* UpgradeC
         .Find("lea rdx, [*+0x1a]; mov *, eax; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(ABuildingItemWeaponUpgradeActor::StaticClass() && !AreConsumedItemsRemovedByGame())
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Inline());
 
     static auto BrickCost = FWeaponUpgradeItemRow::StaticStruct()->FindPropertyByName(FName(TEXT("BrickCost")));
@@ -382,6 +396,14 @@ bool ABuildingItemWeaponUpgradeActor::AreConsumedItemsRemovedByGame()
         .Is("call 0x*")
         .Target()
         .Is("mov [rsp+0x8], rbx; push rdi; add rsp, 0x*; mov rbx, rcx; cmp byte ptr [0x*], 0x0; mov rdi, r8; mov [rcx], rdx")
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]")
+        .Find("call *", 2)
+        .Is("call 0x*")
+        .Target()
+        .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x*; *; *; *; *; jz 0x*; test rdx, rdx; jz 0x*")
         .Get();
 
     return bRemovesItems;
