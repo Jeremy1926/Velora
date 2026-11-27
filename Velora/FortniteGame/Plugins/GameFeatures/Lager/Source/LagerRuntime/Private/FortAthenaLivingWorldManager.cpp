@@ -1960,6 +1960,12 @@ float& UFortAthenaLivingWorldManager::GetNextEventGenerationTime()
         .Find("call 0x*", 2)
         .Target()
         .Find("movss [*+0x*], xmm0; call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("movss [*+0x*], xmm0; call [rax+0x*]")
         .Disp();
 
     return *(float*)((uint8*)this + NextEventGenerationTime);
@@ -1973,6 +1979,10 @@ FGameplayTagContainer& UFortAthenaLivingWorldManager::GetPlaylistContextTags()
         .Or()
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
         .Find("lea rcx, [*+0x*]; mov rdx, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*; mov rcx, *; call 0x*")
+        .Find("lea rcx, [*+0x*]")
         .Disp();
 
     return *(FGameplayTagContainer*)((uint8*)this + PlaylistContextTags);
