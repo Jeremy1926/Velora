@@ -1,10 +1,13 @@
 #include "pch.h"
 #include "Building/BuildingActor.h"
+#include "Building/FortDynamicBuilder.h"
 #include "FortGameStateZone.h"
 #include "UObject/Class.h"
+#include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 template<>
 UEnum* StaticEnum<EFortBuildingType>()
@@ -51,6 +54,62 @@ TMulticastDelegate<void, ABuildingActor*, float>& ABuildingActor::GetNotifyBuild
         .Get();
 
     return *NotifyBuildingNetCullDistChange;
+}
+
+ABuildingActor* ABuildingActor::BeginDeferredBuildingActorSpawnFromClass(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, const TGameValue<FTransform>& SpawnTransform, AActor* OptionalOwner, bool bTransient)
+{
+    static auto BeginDeferredBuildingActorSpawnFromClass = Anchor::Function<ABuildingActor* (*)(UObject*, const TSubclassOf<AActor>*, const TGameValue<FTransform>&, AActor*, bool)>(TEXT("ABuildingActor::BeginDeferredBuildingActorSpawnFromClass"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:BeginDeferredBuildingActorSpawnFromClass"))
+        .Find("call 0x*; mov [r*], rax")
+        .Target()
+        .Get();
+
+    return BeginDeferredBuildingActorSpawnFromClass(WorldContextObject, &ActorClass, SpawnTransform, OptionalOwner, bTransient);
+}
+
+void ABuildingActor::execBeginDeferredBuildingActorSpawnFromClass(FFrame& Stack, void* const Z_Param__Result)
+{
+    DETOUR(ABuildingActor, execBeginDeferredBuildingActorSpawnFromClass, Anchor::Hook()
+        .InExec(TEXT("/Script/FortniteGame.BuildingActor:BeginDeferredBuildingActorSpawnFromClass")));
+
+    auto Code = Stack.Code;
+    UObject* WorldContextObject = nullptr;
+    UClass* ActorClass = nullptr;
+
+    if (Code)
+    {
+        Stack.StepCompiledIn(&WorldContextObject);
+        Stack.StepCompiledIn(&ActorClass);
+    }
+
+    auto BuilderClass = Code && !ActorClass ? AFortDynamicBuilder::FindServerOnlyBuilderClass(Stack, WorldContextObject) : nullptr;
+
+    if (!BuilderClass)
+    {
+        Stack.Code = Code;
+
+        return Original(Stack, Z_Param__Result);
+    }
+
+    TGameValue<FTransform> SpawnTransform;
+    AActor* OptionalOwner = nullptr;
+    uint32 bTransient = 0;
+
+    Stack.StepCompiledIn(&SpawnTransform);
+    Stack.StepCompiledIn(&OptionalOwner);
+    Stack.StepCompiledIn(&bTransient);
+    Stack.Code += !!Stack.Code;
+
+    UObject::SetServerContext();
+
+    auto Builder = (AFortDynamicBuilder*)BeginDeferredBuildingActorSpawnFromClass(WorldContextObject, AFortDynamicBuilder::StaticClass(), SpawnTransform, OptionalOwner, bTransient);
+
+    if (Builder)
+        Builder->SetServerOnlyBuilderClassDefaults(*BuilderClass);
+
+    UE_LOG(LogVelora, Log, TEXT("%s spawns %s for its empty %s: %s"), *WorldContextObject->GetName(), BuilderClass->Name, BuilderClass->BuilderClassProperty, Builder ? *Builder->GetName() : TEXT("None"));
+
+    *(ABuildingActor**)Z_Param__Result = Builder;
 }
 
 void ABuildingActor::BeginPlay()

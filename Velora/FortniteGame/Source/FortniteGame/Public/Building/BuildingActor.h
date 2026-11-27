@@ -4,10 +4,13 @@
 #include "Delegates/Delegate.h"
 #include "Math/Vector.h"
 #include "Math/Rotator.h"
+#include "Math/TransformVectorized.h"
+#include "Templates/SubclassOf.h"
 #include "GameplayTagContainer.h"
 
 class AController;
 class AFortGameStateZone;
+struct FFrame;
 class UScriptStruct;
 struct FGameplayEffectContextHandle;
 
@@ -71,6 +74,10 @@ public:
     static UClass* StaticClass();
 
     static TMulticastDelegate<void, ABuildingActor*, float>& GetNotifyBuildingNetCullDistChange();
+
+    static ABuildingActor* BeginDeferredBuildingActorSpawnFromClass(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, const TGameValue<FTransform>& SpawnTransform, AActor* OptionalOwner, bool bTransient);
+
+    void execBeginDeferredBuildingActorSpawnFromClass(FFrame& Stack, void* const Z_Param__Result);
 
     void BeginPlay();
 

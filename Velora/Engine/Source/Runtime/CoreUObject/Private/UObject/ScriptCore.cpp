@@ -86,6 +86,17 @@ UField*& FFrame::GetPropertyChainForCompiledIn()
     return *(UField**)((uint8*)&PropertyChainForCompiledIn + (FEngineVersion::Current().GetChangelist() >= 19598943 ? sizeof(uint8*) : 0));
 }
 
+FFrame* FFrame::GetPreviousFrame() const
+{
+    static auto PreviousFrame = Anchor::Offset(TEXT("FFrame::PreviousFrame"))
+        .String(TEXT("Script call stack:\n"))
+        .Start()
+        .Find("mov r*, [r*+0x*]; test r*, r*; jz 0x*")
+        .Disp();
+
+    return PreviousFrame ? *(FFrame* const*)((const uint8*)this + PreviousFrame) : nullptr;
+}
+
 template<>
 template<>
 void TMulticastScriptDelegate<FWeakObjectPtr>::ProcessMulticastDelegate<UObject>(void* Parameters) const

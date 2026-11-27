@@ -19,6 +19,8 @@ public:
 
     UField*& GetPropertyChainForCompiledIn();
 
+    FFrame* GetPreviousFrame() const;
+
     FORCEINLINE void StepCompiledIn(void* const Result)
     {
         if (Code)

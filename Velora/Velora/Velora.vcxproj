@@ -365,6 +365,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingContainer.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingFoundation.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActor.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\FortDynamicBuilder.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\FortVolumeManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortAIPawn.h" />
@@ -786,6 +787,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortMontageItemDefinitionBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingSMActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingWall.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\FortDynamicBuilder.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\FortVolumeManager.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortWorldItem.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Items\FortLootTier.cpp" />
