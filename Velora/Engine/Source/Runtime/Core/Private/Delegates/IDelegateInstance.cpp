@@ -81,7 +81,7 @@ int32 IDelegateInstance::GetLayout()
 
         for (int32 SectionIndex = 0; SectionIndex < Headers->FileHeader.NumberOfSections; SectionIndex++, Section++)
         {
-            if (strncmp((const char*)Section->Name, ".rdata", sizeof(Section->Name)))
+            if ((Section->Characteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_CNT_INITIALIZED_DATA)) != (IMAGE_SCN_MEM_READ | IMAGE_SCN_CNT_INITIALIZED_DATA))
                 continue;
 
             auto VTable = (const uint8* const*)(Image + Section->VirtualAddress);
