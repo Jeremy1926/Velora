@@ -400,6 +400,12 @@ int32 UAbilitySystemComponent::HandleGameplayEvent(FGameplayTag EventTag, const 
         .Call()
         .Find("mov r*, [r*]; mov r8, *; mov ?dx, *; mov rcx, *; call [r*+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:SendGameplayEventToActor"))
+        .Find("mov rcx, [rsp+0x*]; mov r8, rax; call 0x*")
+        .Call()
+        .Find("mov r*, [r*]; mov r8, *; mov rcx, *; mov ?dx, *; call [r*+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return HandleGameplayEvent(this, EventTag, Payload);
