@@ -151,6 +151,9 @@ double AFortGameState::GetServerWorldRealTimeSeconds() const
     static auto GetServerWorldRealTimeSeconds = Anchor::Function<double (*)(const AFortGameState*)>(TEXT("AFortGameState::GetServerWorldRealTimeSeconds"))
         .Native(TEXT("/Script/FortniteGame.FortGameState:GetServerWorldRealTimeSeconds"))
         .Is("push rbx; sub rsp, 0x20; cmp byte ptr [0x*], 0x1")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortGameState:GetServerWorldRealTimeSeconds"))
+        .Is("push rbx; sub rsp, 0x20; mov rbx, rcx; cmp byte ptr [0x*], 0x1")
         .Get();
 
     return GetServerWorldRealTimeSeconds ? GetServerWorldRealTimeSeconds(this) : GetServerWorldTimeSeconds();
