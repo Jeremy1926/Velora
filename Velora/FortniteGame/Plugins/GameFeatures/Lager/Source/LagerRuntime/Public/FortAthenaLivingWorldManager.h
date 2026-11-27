@@ -247,14 +247,18 @@ public:
 
     struct FCategoryRuntime
     {
+        int32& GetGameSpawnedActorCount();
+
+        int32& GetCurrentSpawnedActorCount();
+
+        int32& GetGameEventInstanceCount();
+
+        int32& GetCurrentEventInstanceCount();
+
+        int32& GetConditionHandle();
+
         TArray<FFortAthenaLivingWorldEvent*> Events;
-        void* Pad10;
-        UDataTable* EventTable;
-        int32 GameSpawnedActorCount;
-        int32 CurrentSpawnedActorCount;
-        int32 GameEventInstanceCount;
-        int32 CurrentEventInstanceCount;
-        int32 ConditionHandle;
+        uint8 Data[0x28];
     };
 
     struct FEventRequest

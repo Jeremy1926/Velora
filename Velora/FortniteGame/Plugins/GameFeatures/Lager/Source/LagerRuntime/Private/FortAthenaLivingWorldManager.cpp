@@ -2369,6 +2369,65 @@ const uint8* UFortAthenaLivingWorldManager::GetQueryEventBudget()
     return QueryEventBudget;
 }
 
+int32& UFortAthenaLivingWorldManager::FCategoryRuntime::GetGameSpawnedActorCount()
+{
+    static auto GameSpawnedActorCount = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FCategoryRuntime::GameSpawnedActorCount"))
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 12)
+        .Target()
+        .Find("sub r9d, [r8+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + GameSpawnedActorCount);
+}
+
+int32& UFortAthenaLivingWorldManager::FCategoryRuntime::GetCurrentSpawnedActorCount()
+{
+    static auto CurrentSpawnedActorCount = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FCategoryRuntime::CurrentSpawnedActorCount"))
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 12)
+        .Target()
+        .Find("sub eax, [r8+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + CurrentSpawnedActorCount);
+}
+
+int32& UFortAthenaLivingWorldManager::FCategoryRuntime::GetGameEventInstanceCount()
+{
+    static auto GameEventInstanceCount = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FCategoryRuntime::GameEventInstanceCount"))
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 14)
+        .Target()
+        .Find("sub ecx, [rdx+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + GameEventInstanceCount);
+}
+
+int32& UFortAthenaLivingWorldManager::FCategoryRuntime::GetCurrentEventInstanceCount()
+{
+    static auto CurrentEventInstanceCount = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FCategoryRuntime::CurrentEventInstanceCount"))
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 14)
+        .Target()
+        .Find("sub r9d, [rdx+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + CurrentEventInstanceCount);
+}
+
+int32& UFortAthenaLivingWorldManager::FCategoryRuntime::GetConditionHandle()
+{
+    static auto ConditionHandle = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FCategoryRuntime::ConditionHandle"))
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 8)
+        .Find("mov edx, [r*+0x*]")
+        .Disp();
+
+    return *(int32*)((uint8*)this + ConditionHandle);
+}
+
 UFortAthenaLivingWorldManager::FEventRuntime* UFortAthenaLivingWorldManager::FindEventRuntime(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance)
 {
     static auto FindEventRuntime = Anchor::Function<FEventRuntime* (*)(UFortAthenaLivingWorldManager*, const FFortAthenaLivingWorldEvent*, UFortAthenaLivingWorldEncounterInstance*)>(TEXT("UFortAthenaLivingWorldManager::FindEventRuntime"))
@@ -2464,7 +2523,7 @@ int32 UFortAthenaLivingWorldManager::GetTotalActorCount()
     for (auto& CategoryRuntime : GetCategoryRuntimes())
     {
         if (CategoryRuntime.Key && !((FFortAthenaLivingWorldCategory*)CategoryRuntime.Key)->GetbExcludeFromGlobalAIBudget())
-            TotalActorCount += CategoryRuntime.Value.CurrentSpawnedActorCount;
+            TotalActorCount += ((FCategoryRuntime&)CategoryRuntime.Value).GetCurrentSpawnedActorCount();
     }
 
     return TotalActorCount;
@@ -2849,7 +2908,7 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
 
         ConstructConditionContext(&ConditionContext);
 
-        if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), CategoryRuntime->ConditionHandle, &ConditionContext))
+        if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), CategoryRuntime->GetConditionHandle(), &ConditionContext))
             continue;
 
         auto& Stages = Encounter->GetStages();
@@ -3234,7 +3293,7 @@ void UFortAthenaLivingWorldManager::ProcessCategory(FFortAthenaLivingWorldCatego
     if (!CategoryRuntime || CategoryRuntime->Events.Num() == 0)
         return;
 
-    if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), CategoryRuntime->ConditionHandle, ConditionContext))
+    if (!IsConditionTrue(GlobalConditionContainer->ContainerPtrToValuePtr<void>(this), CategoryRuntime->GetConditionHandle(), ConditionContext))
         return;
 
     const int32 ActorBudget = GetCategoryActorBudget(this, Category, CategoryRuntime);
@@ -3621,10 +3680,10 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         EventRuntime->CurrentSpawnedActorCount += ActorCount;
         EventRuntime->GameEventInstanceCount++;
         EventRuntime->CurrentEventInstanceCount++;
-        CategoryRuntime->GameSpawnedActorCount += ActorCount;
-        CategoryRuntime->CurrentSpawnedActorCount += ActorCount;
-        CategoryRuntime->GameEventInstanceCount++;
-        CategoryRuntime->CurrentEventInstanceCount++;
+        CategoryRuntime->GetGameSpawnedActorCount() += ActorCount;
+        CategoryRuntime->GetCurrentSpawnedActorCount() += ActorCount;
+        CategoryRuntime->GetGameEventInstanceCount()++;
+        CategoryRuntime->GetCurrentEventInstanceCount()++;
 
         struct
         {
@@ -3676,10 +3735,10 @@ void UFortAthenaLivingWorldManager::ReturnSpawnedCountToRuntime(const FEventRequ
 
     if (auto CategoryRuntime = FindCategoryRuntime(EventRequest.Category))
     {
-        CategoryRuntime->GameSpawnedActorCount -= EventRequest.ActorCount;
-        CategoryRuntime->CurrentSpawnedActorCount -= EventRequest.ActorCount;
-        CategoryRuntime->GameEventInstanceCount--;
-        CategoryRuntime->CurrentEventInstanceCount--;
+        CategoryRuntime->GetGameSpawnedActorCount() -= EventRequest.ActorCount;
+        CategoryRuntime->GetCurrentSpawnedActorCount() -= EventRequest.ActorCount;
+        CategoryRuntime->GetGameEventInstanceCount()--;
+        CategoryRuntime->GetCurrentEventInstanceCount()--;
     }
 }
 
