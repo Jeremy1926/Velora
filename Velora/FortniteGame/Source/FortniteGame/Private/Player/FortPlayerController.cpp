@@ -417,7 +417,15 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
         .Find("call [*+0x*]")
         .Last("add rcx, 0x*")
-        .Imm();
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerRemoveInventoryItem"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+*]")
+        .LogSlot(TEXT("AFortPlayerController::ServerRemoveInventoryItem_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
+        .Find("call [*+0x*]")
+        .Last("sub rcx, 0x*")
+        .Get();
 
     static auto RemoveInventoryItem = THook(TEXT("AFortPlayerController::RemoveInventoryItem"), (void*)+[](uint8_t* InventoryOwnerInterface, const FGuid& ItemGuid, int32 Count, bool bForceRemoveFromQuickBars)
         {
