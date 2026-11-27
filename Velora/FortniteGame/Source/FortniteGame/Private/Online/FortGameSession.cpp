@@ -51,7 +51,10 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
         static auto PreloadPersistentLevel = PlaylistClass->FindPropertyByName(FName(TEXT("PreloadPersistentLevel")));
         static auto MaxSquadSize = PlaylistClass->FindPropertyByName(FName(TEXT("MaxSquadSize")));
 
-        auto PlaylistData = Config::bReload && PreloadPersistentLevel ? StaticLoadObject(PlaylistClass, nullptr, TEXT("/BlastBerry/Playlists/Playlist_BlastBerrySquad.Playlist_BlastBerrySquad")) : nullptr;
+        auto PlaylistData = Config::bReload && PreloadPersistentLevel ? StaticLoadObject(PlaylistClass, nullptr, TEXT("/BlastBerry/Playlists/Playlist_BlastBerrySolo.Playlist_BlastBerrySolo")) : nullptr;
+
+        if (!PlaylistData && Config::bReload && PreloadPersistentLevel)
+            PlaylistData = StaticLoadObject(PlaylistClass, nullptr, TEXT("/BlastBerry/Playlists/Playlist_BlastBerrySquad.Playlist_BlastBerrySquad"));
 
         if (PlaylistData)
             Map = PreloadPersistentLevel->ContainerPtrToValuePtr<TSoftObjectPtr<UWorld>>(PlaylistData)->ToString();
