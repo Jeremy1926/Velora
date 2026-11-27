@@ -5,6 +5,8 @@
 #include "Athena/FortGameModeAthena.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "TimerManager.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -20,6 +22,8 @@ struct FPendingBotBrainActivation
 };
 
 static TArray<FPendingBotBrainActivation> PendingBotBrainActivations;
+
+static FTimerHandle BotBrainActivationTimerHandle;
 
 const UFortAthenaAIBotCustomizationData* UFortServerBotManagerAthena::SpawningBotData = nullptr;
 
@@ -119,7 +123,10 @@ void UFortServerBotManagerAthena::AssignTeam(AFortAthenaAIBotController* BotCont
 
 void UFortServerBotManagerAthena::SetBotBrainActivationTimer()
 {
-    PendingBotBrainActivations.Add(FPendingBotBrainActivation{ this, GetWorld()->GetTimeSeconds() + 1.0f });
+    if (FTimerManager::CanSetTimers())
+        GetWorld()->GetTimerManager().SetTimer(BotBrainActivationTimerHandle, this, &UFortServerBotManagerAthena::CheckForBotBrainActivation, 1.0f, true);
+    else
+        PendingBotBrainActivations.Add(FPendingBotBrainActivation{ this, GetWorld()->GetTimeSeconds() + 1.0f });
 }
 
 void UFortServerBotManagerAthena::TickBotBrainActivationTimers()
@@ -174,6 +181,8 @@ void UFortServerBotManagerAthena::CheckForBotBrainActivation()
                 return;
         }
     }
+
+    UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, BotBrainActivationTimerHandle);
 
     for (int32 Index = PendingBotBrainActivations.Num() - 1; Index >= 0; Index--)
     {
