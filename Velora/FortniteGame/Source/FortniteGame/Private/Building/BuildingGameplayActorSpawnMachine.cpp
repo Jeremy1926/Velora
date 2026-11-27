@@ -713,6 +713,9 @@ FTimerHandle* ABuildingGameplayActorSpawnMachine::GetResurrectTimerHandle()
         .Or()
         .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
         .Find("lea rdx, [r*+0x*]; mov dword ptr [rsp+0x3c], 0x*")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Find("lea rdx, [r*+0x*]; mov [rsp+0x38], *; lea rcx, [rsp+0x38]; mov [rsp+0x20], rcx")
         .Disp();
 
     return ResurrectTimerHandle ? (FTimerHandle*)((uint8*)this + ResurrectTimerHandle + (bInterfaceThis ? PointerOffset : 0)) : nullptr;
