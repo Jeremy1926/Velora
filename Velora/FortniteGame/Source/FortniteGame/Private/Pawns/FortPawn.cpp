@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Pawns/FortPawn.h"
 #include "Abilities/FortAbilitySystemComponent.h"
+#include "Athena/FortPlayerPawnAthena.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
@@ -307,6 +309,22 @@ UFortHealthSet* AFortPawn::GetHealthSet() const
     static auto HealthSet = GetClass()->FindPropertyByName(FName(TEXT("HealthSet")));
 
     return *HealthSet->ContainerPtrToValuePtr<UFortHealthSet*>(this);
+}
+
+void AFortPawn::SetHealth(float NewHealth)
+{
+    DETOUR(AFortPawn, SetHealth, Anchor::Hook()
+        .String(TEXT("UFortPawnComponent_Convert::InternalConvertPawn"))
+        .Start()
+        .Find("call [rax+0x*]; mov rcx, *; movaps xmm1, xmm0; call 0x*")
+        .Find("call 0x*")
+        .Optional()
+        .AtCall());
+
+    Original(NewHealth);
+
+    if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(this); PlayerPawn && GetIsDBNO())
+        PlayerPawn->ForceReviveFromDBNO(GetController());
 }
 
 UFortMovementSet* AFortPawn::GetMovementSet() const

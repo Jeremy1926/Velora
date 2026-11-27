@@ -71,6 +71,8 @@ public:
 
     UFortHealthSet* GetHealthSet() const;
 
+    void SetHealth(float NewHealth);
+
     UFortMovementSet* GetMovementSet() const;
 
     void SetCustomTimeDilation(float InCustomTimeDilation);
