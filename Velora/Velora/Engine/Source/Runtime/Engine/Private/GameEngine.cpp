@@ -8,6 +8,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerState.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 #include "Templates/Casts.h"
 #include "Player/FortPlayerController.h"
 #include "Player/FortPlayerStateZone.h"
@@ -177,7 +178,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABGAConsumableSpawner::TickPendingSpawns();
         ABuildingItemCollectorActor::TickPendingOutputs();
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
-        ABuildingGameplayActorSentry::TickPendingAggros();
+
+        if (!FTimerManager::CanSetTimers())
+            ABuildingGameplayActorSentry::TickPendingAggros();
+
         UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
         UFortServerBotManagerAthena::TickBotBrainActivationTimers();
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();

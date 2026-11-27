@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/SceneComponent.h"
+#include "Containers/Map.h"
+#include "TimerManager.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -21,6 +23,8 @@ struct FPendingSentryAggro
 };
 
 static TArray<FPendingSentryAggro> PendingAggros;
+
+static TMap<const ABuildingGameplayActorSentry*, FTimerHandle> TrackedToAggroTimerHandles;
 
 UClass* ABuildingGameplayActorSentry::StaticClass()
 {
@@ -80,13 +84,20 @@ void ABuildingGameplayActorSentry::SetActorToTrack(AActor* InActorToTrack)
 
     const float TrackedToAggroDelay = GetTrackedToAggroDelay().GetValueAtLevel(0.0f) * FMath::Max(GetTrackedToAggroDelayMultiplier(), 0.0f);
 
-    for (int32 Index = PendingAggros.Num() - 1; Index >= 0; Index--)
+    if (FTimerManager::CanSetTimers())
     {
-        if (PendingAggros[Index].Sentry.Get() == this)
-            PendingAggros.RemoveAt(Index);
+        World->GetTimerManager().SetTimer(TrackedToAggroTimerHandles.FindOrAdd(this), this, &ABuildingGameplayActorSentry::StartAggro, TrackedToAggroDelay);
     }
+    else
+    {
+        for (int32 Index = PendingAggros.Num() - 1; Index >= 0; Index--)
+        {
+            if (PendingAggros[Index].Sentry.Get() == this)
+                PendingAggros.RemoveAt(Index);
+        }
 
-    PendingAggros.Add(FPendingSentryAggro{ this, (float)World->GetTimeSeconds() + TrackedToAggroDelay });
+        PendingAggros.Add(FPendingSentryAggro{ this, (float)World->GetTimeSeconds() + TrackedToAggroDelay });
+    }
 
     SetSentryState(EBuildingGameplayActorSentry_State::Tracking);
     K2_ExecuteGameplayCue(GetTrackedGameplayCueTag(), FGameplayEffectContextHandle());
