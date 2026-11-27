@@ -329,6 +329,8 @@ public:
 
     static const uint8* GetQueryEventBudget();
 
+    static const uint8* GetDestroyEncounterSpawnedActors();
+
     void TickEventRuntimes(float DeltaTime);
 
     void ReleasePendingEventInstances();
