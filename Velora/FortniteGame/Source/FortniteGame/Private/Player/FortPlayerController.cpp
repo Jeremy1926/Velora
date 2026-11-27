@@ -2961,6 +2961,12 @@ void AFortPlayerController::ResetQuickBarToPrimary()
         .LogSlot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"))
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Call(2)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ClientOnPawnDied"))
+        .Find("mov rbx, [rax+0x*]; call 0x*; mov rcx, *; mov rdx, rax; call rbx")
+        .LogSlot(TEXT("AFortPlayerControllerZone::ClientOnPawnDied_Implementation"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Call(2)
         .Get();
 
     ResetQuickBarToPrimary(this, false);
