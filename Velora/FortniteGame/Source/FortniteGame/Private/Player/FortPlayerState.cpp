@@ -17,7 +17,7 @@ UClass* AFortPlayerState::StaticClass()
 
 void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
 {
-    static auto ApplyCharacterCustomization = Anchor::Function<void (*)(AFortPlayerState*, APawn*)>(TEXT("AFortPlayerState::ApplyCharacterCustomization"))
+    static auto ApplyCharacterCustomization = Anchor::Function<void (*)(AFortPlayerState*, APawn*, bool)>(TEXT("AFortPlayerState::ApplyCharacterCustomization"))
         .Exec(TEXT("/Script/FortniteGame.FortPlayerState:ServerSetShowHeroBackpack"))
         .Find("call [rax+*]", 2)
         .LogSlot(TEXT("AFortPlayerState::ServerSetShowHeroBackpack_Implementation"))
@@ -57,7 +57,7 @@ void AFortPlayerState::ApplyCharacterCustomization(APawn* Pawn)
         .Start()
         .Get();
 
-    ApplyCharacterCustomization(this, Pawn);
+    ApplyCharacterCustomization(this, Pawn, false);
 }
 
 APawn* AFortPlayerState::GetCurrentPawn() const
