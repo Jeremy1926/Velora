@@ -147,8 +147,66 @@ void ABuildingGameplayActorSentry::ReturnToIdle()
     if (CurrentSentryState != EBuildingGameplayActorSentry_State::ReturningToIdle && CurrentSentryState != EBuildingGameplayActorSentry_State::LocatingDamager)
         return;
 
+    if (!GetbDoesNotRotate())
+        SelectClosestIdleRotation();
+
     SetSentryState(GetTargetActorsInRange().Num() > 0 ? EBuildingGameplayActorSentry_State::ActiveIdle : GetbGoDormantAfterPassiveIdle() ? EBuildingGameplayActorSentry_State::Dormant : EBuildingGameplayActorSentry_State::PassiveIdle);
     K2_ExecuteGameplayCue(GetReturnToIdleGameplayCueTag(), FGameplayEffectContextHandle());
+}
+
+void ABuildingGameplayActorSentry::IdleRestart()
+{
+    DETOUR(ABuildingGameplayActorSentry, IdleRestart, Anchor::Hook()
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("cmp byte ptr [*+%x], 0x0; jnz 0x*", StaticClass()->FindPropertyByName(FName(TEXT("bDoesNotRotate"))))
+        .Find("jnz 0x*", 2)
+        .Target()
+        .Call()
+        .FieldFind("cmp *[*+%x], *; jnz 0x*", StaticClass()->FindPropertyByName(FName(TEXT("bIdleRotationStopped"))))
+        .Find("jnz 0x*")
+        .Target()
+        .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("IdleRotationPauseTime"))))
+        .Find("lea rax, [0x*]")
+        .IsTarget("ret*")
+        .Optional()
+        .AtReference());
+
+    SetbIdleRotationStopped(false);
+
+    const auto FixedRotationGoal = GetbIdleRotatingRight() ? GetTargetRotationRight() : GetTargetRotationLeft();
+
+    SetFixedRotationGoal(FixedRotationGoal);
+    SetFixedRotationGoalForReplication(FixedRotationGoal);
+}
+
+void ABuildingGameplayActorSentry::SelectClosestIdleRotation()
+{
+    const auto TargetDirection = GetTargetRotation().Vector();
+    const auto TargetRotationLeft = GetTargetRotationLeft();
+    const auto TargetRotationRight = GetTargetRotationRight();
+    const auto FixedRotationGoal = (TargetDirection | TargetRotationLeft.Vector()) > (TargetDirection | TargetRotationRight.Vector()) ? TargetRotationLeft : TargetRotationRight;
+
+    SetFixedRotationGoal(FixedRotationGoal);
+    SetFixedRotationGoalForReplication(FixedRotationGoal);
+}
+
+void ABuildingGameplayActorSentry::SetFixedRotationGoal(const FRotator& InFixedRotationGoal)
+{
+    static auto FixedRotationGoal = Anchor::Offset(TEXT("ABuildingGameplayActorSentry::FixedRotationGoal"))
+        .Exec(TEXT("/Script/FortniteGame.BuildingGameplayActorSentry:OnRep_FixedRotationGoalReplicated"))
+        .Find("movups [*+0x*], xmm0")
+        .Disp();
+
+    if (FixedRotationGoal)
+        TGameLayout<FRotator>::Store((uint8*)this + FixedRotationGoal, InFixedRotationGoal);
+}
+
+void ABuildingGameplayActorSentry::SetFixedRotationGoalForReplication(const FRotator& InFixedRotationGoal)
+{
+    static auto FixedRotationGoalReplicated = StaticClass()->FindPropertyByName(FName(TEXT("FixedRotationGoalReplicated")));
+
+    FlushNetDormancy();
+    TGameLayout<FRotator>::Store(FixedRotationGoalReplicated->ContainerPtrToValuePtr<void>(this), InFixedRotationGoal);
 }
 
 void ABuildingGameplayActorSentry::OnRep_CurrentSentryState(EBuildingGameplayActorSentry_State PreviousSentryState)
@@ -217,11 +275,53 @@ FGameplayTag ABuildingGameplayActorSentry::GetAggroedGameplayCueTag()
     return *AggroedGameplayCueTag->ContainerPtrToValuePtr<FGameplayTag>(this);
 }
 
+bool ABuildingGameplayActorSentry::GetbDoesNotRotate()
+{
+    static auto bDoesNotRotate = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bDoesNotRotate")));
+
+    return bDoesNotRotate->GetPropertyValue_InContainer(this);
+}
+
 bool ABuildingGameplayActorSentry::GetbGoDormantAfterPassiveIdle()
 {
     static auto bGoDormantAfterPassiveIdle = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bGoDormantAfterPassiveIdle")));
 
     return bGoDormantAfterPassiveIdle->GetPropertyValue_InContainer(this);
+}
+
+bool ABuildingGameplayActorSentry::GetbIdleRotatingRight()
+{
+    static auto bIdleRotatingRight = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIdleRotatingRight")));
+
+    return bIdleRotatingRight->GetPropertyValue_InContainer(this);
+}
+
+void ABuildingGameplayActorSentry::SetbIdleRotationStopped(bool bInIdleRotationStopped)
+{
+    static auto bIdleRotationStopped = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bIdleRotationStopped")));
+
+    bIdleRotationStopped->SetPropertyValue_InContainer(this, bInIdleRotationStopped);
+}
+
+FRotator ABuildingGameplayActorSentry::GetTargetRotation()
+{
+    static auto TargetRotation = StaticClass()->FindPropertyByName(FName(TEXT("TargetRotation")));
+
+    return TGameLayout<FRotator>::Load(TargetRotation->ContainerPtrToValuePtr<void>(this));
+}
+
+FRotator ABuildingGameplayActorSentry::GetTargetRotationRight()
+{
+    static auto TargetRotationRight = StaticClass()->FindPropertyByName(FName(TEXT("TargetRotationRight")));
+
+    return TGameLayout<FRotator>::Load(TargetRotationRight->ContainerPtrToValuePtr<void>(this));
+}
+
+FRotator ABuildingGameplayActorSentry::GetTargetRotationLeft()
+{
+    static auto TargetRotationLeft = StaticClass()->FindPropertyByName(FName(TEXT("TargetRotationLeft")));
+
+    return TGameLayout<FRotator>::Load(TargetRotationLeft->ContainerPtrToValuePtr<void>(this));
 }
 
 TArray<AActor*>& ABuildingGameplayActorSentry::GetTargetActorsInRange()

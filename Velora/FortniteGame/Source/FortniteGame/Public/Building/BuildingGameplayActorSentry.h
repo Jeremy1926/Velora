@@ -2,6 +2,7 @@
 
 #include "Building/BuildingGameplayActor.h"
 #include "Containers/Array.h"
+#include "Math/Rotator.h"
 
 struct FFrame;
 struct FScalableFloat;
@@ -39,13 +40,33 @@ public:
 
     void ReturnToIdle();
 
+    void IdleRestart();
+
+    void SelectClosestIdleRotation();
+
+    void SetFixedRotationGoal(const FRotator& InFixedRotationGoal);
+
+    void SetFixedRotationGoalForReplication(const FRotator& InFixedRotationGoal);
+
     void OnRep_CurrentSentryState(EBuildingGameplayActorSentry_State PreviousSentryState);
 
     FTimerHandle* GetReturnToIdleTimerHandle();
 
     EBuildingGameplayActorSentry_State& GetCurrentSentryState();
 
+    bool GetbDoesNotRotate();
+
     bool GetbGoDormantAfterPassiveIdle();
+
+    bool GetbIdleRotatingRight();
+
+    void SetbIdleRotationStopped(bool bInIdleRotationStopped);
+
+    FRotator GetTargetRotation();
+
+    FRotator GetTargetRotationRight();
+
+    FRotator GetTargetRotationLeft();
 
     TArray<AActor*>& GetTargetActorsInRange();
 
