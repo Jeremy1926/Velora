@@ -242,17 +242,57 @@ void ABuildingItemCollectorActor::CheckDepositGoalReached(AFortPlayerController*
         return;
     }
 
+    if (DETOUR_ORIGINAL(ABuildingItemCollectorActor, GrantOutput))
+        return;
+
     if (GetDespensingDelayTime() > 0.0f)
     {
         PendingOutputs.Add(FPendingOutput{ this, Player, Item, GetWorld()->GetTimeSeconds() + GetDespensingDelayTime() });
         return;
     }
 
-    GrantOutput(Item);
+    GrantOutput(Player, Item);
 }
 
-void ABuildingItemCollectorActor::GrantOutput(UFortWorldItemDefinition* Item)
+void ABuildingItemCollectorActor::GrantOutput(AFortPlayerController* Player, UFortWorldItemDefinition* Item)
 {
+    DETOUR(ABuildingItemCollectorActor, GrantOutput, Anchor::Hook()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; xor *, *; mov *, eax; test *, *")
+        .Start()
+        .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; mov r8, *; mov rdx, *; mov rcx, *; mov ebx, eax")
+        .Start()
+        .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; mov *, eax; test rsi, rsi; jz 0x*; mov r9b, 0x1")
+        .Start()
+        .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; *; *; *; mov rcx, *; call 0x*; cmp ebx, eax; jnz 0x*")
+        .Start()
+        .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .InVTable(TEXT("/Script/FortniteGame.Default__BuildingItemCollectorActor")));
+
+    if (!Player)
+        return;
+
     const FVector LootSpawnLocation = GetTransform().TransformPosition(GetLootSpawnLocation());
 
     for (auto& ItemCollection : GetItemCollections())
@@ -289,8 +329,8 @@ void ABuildingItemCollectorActor::TickPendingOutputs()
 
         PendingOutputs.RemoveAt(Index);
 
-        if (ItemCollector && Player)
-            ItemCollector->GrantOutput(Item);
+        if (ItemCollector)
+            ItemCollector->GrantOutput(Player, Item);
     }
 }
 

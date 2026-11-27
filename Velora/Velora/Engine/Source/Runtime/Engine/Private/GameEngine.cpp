@@ -176,7 +176,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         }
 
         ABGAConsumableSpawner::TickPendingSpawns();
-        ABuildingItemCollectorActor::TickPendingOutputs();
+
+        if (!DETOUR_ORIGINAL(ABuildingItemCollectorActor, GrantOutput))
+            ABuildingItemCollectorActor::TickPendingOutputs();
+
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
 
         if (!FTimerManager::CanSetTimers())

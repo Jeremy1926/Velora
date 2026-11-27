@@ -46,7 +46,7 @@ public:
 
     void CheckDepositGoalReached(AFortPlayerController* Player, UFortWorldItemDefinition* Item);
 
-    void GrantOutput(UFortWorldItemDefinition* Item);
+    void GrantOutput(AFortPlayerController* Player, UFortWorldItemDefinition* Item);
 
     static void TickPendingOutputs();
 
