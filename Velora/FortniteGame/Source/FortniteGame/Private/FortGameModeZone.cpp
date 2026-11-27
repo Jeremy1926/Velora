@@ -160,19 +160,7 @@ void AFortGameModeZone::CreateAIDirector()
 
     auto& AIDirectorAsset = AIDirectors ? (*AIDirectors)[AIDirectorIndex] : *AIDirectorBR;
     auto AIDirectorClass = AIDirectorAsset.LoadSynchronous();
-    static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
-        .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
-        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
-        .Last("call 0x*; test al, al")
-        .Or()
-        .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; xor ecx, ecx; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
-        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
-        .Last("call 0x*; xor ecx, ecx; test al, al")
-        .Optional()
-        .AtCall();
-
-    if (!CanCreateInCurrentContext)
-        UObject::PatchCanCreateInCurrentContext();
+    UObject::SetServerContext();
 
     auto NewAIDirector = (AFortAIDirector*)GetWorld()->SpawnActor(AIDirectorClass ? AIDirectorClass : AAthenaAIDirector::StaticClass());
 

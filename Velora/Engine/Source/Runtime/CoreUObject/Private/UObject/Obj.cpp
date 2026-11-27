@@ -2,6 +2,7 @@
 #include "UObject/Object.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* UObject::StaticClass()
 {
@@ -114,6 +115,23 @@ void UObject::PatchCanCreateInCurrentContext()
     static auto bPatched = ModRM && Slot && ((*ModRM & 0xC0) == 0x80 ? Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), ModRM + 1, { (uint8_t)Slot, (uint8_t)(Slot >> 8), (uint8_t)(Slot >> 16), (uint8_t)(Slot >> 24) }) : Slot < 0x80 && Anchor::Patch(TEXT("UObject::CanCreateInCurrentContext"), ModRM + 1, { (uint8_t)Slot }));
 
     (void)bPatched;
+}
+
+void UObject::SetServerContext()
+{
+    static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
+        .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Last("call 0x*; test al, al")
+        .Or()
+        .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; xor ecx, ecx; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
+        .String(TEXT("Unable to spawn class '%s' due to client/server context."))
+        .Last("call 0x*; xor ecx, ecx; test al, al")
+        .Optional()
+        .AtCall();
+
+    if (!CanCreateInCurrentContext)
+        PatchCanCreateInCurrentContext();
 }
 
 UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FName Name, EObjectFlags ObjectFlags)

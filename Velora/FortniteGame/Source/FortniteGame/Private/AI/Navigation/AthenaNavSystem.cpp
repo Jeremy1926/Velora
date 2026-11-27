@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "AI/Navigation/AthenaNavSystem.h"
+#include "NavigationData.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
@@ -32,29 +33,41 @@ void UAthenaNavSystem::ReleaseInitialBuildingLock()
 
         if (GetNavDataSet().Num() == 0)
         {
-            static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
-                .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
-                .String(TEXT("Unable to spawn class '%s' due to client/server context."))
-                .Last("call 0x*; test al, al")
-                .Or()
-                .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; xor ecx, ecx; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
-                .String(TEXT("Unable to spawn class '%s' due to client/server context."))
-                .Last("call 0x*; xor ecx, ecx; test al, al")
-                .Optional()
-                .AtCall();
-
-            if (!CanCreateInCurrentContext)
-                UObject::PatchCanCreateInCurrentContext();
-
-            SpawnMissingNavigationData();
+            UObject::SetServerContext();
+            UNavigationSystemV1::SpawnMissingNavigationData();
             ProcessRegistrationCandidates();
-
-            static auto bRebuildOnInitialUnlock = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bRebuildOnInitialUnlock")));
-
-            if (bRebuildOnInitialUnlock)
-                bRebuildOnInitialUnlock->SetPropertyValue_InContainer(this, true);
         }
     }
+
+    static auto bRebuildOnInitialUnlock = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bRebuildOnInitialUnlock")));
+
+    for (auto NavData : GetNavDataSet())
+    {
+        if (bRebuildOnInitialUnlock && NavData && !(NavData->GetFlags() & RF_WasLoaded))
+        {
+            bRebuildOnInitialUnlock->SetPropertyValue_InContainer(this, true);
+            break;
+        }
+    }
+
+    Original();
+}
+
+void UAthenaNavSystem::SpawnMissingNavigationData()
+{
+    DETOUR(UAthenaNavSystem, SpawnMissingNavigationData, Anchor::Hook()
+        .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("call [rax+0x*]; mov rax, [r*]; mov rcx, r*; call [rax+0x*]; cmp qword ptr [r*+0x*], 0x0")
+        .Or()
+        .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("call [rax+0x*]; mov rcx, r*; mov rax, [r*]; call [rax+0x*]; cmp qword ptr [r*+0x*], 0x0")
+        .Or()
+        .String(TEXT("Auto generating navigation bounds: %s"))
+        .Find("mov rcx, *; call 0x*; mov rax, [*]; mov rcx, *; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .InVTable(TEXT("/Script/FortniteGame.Default__AthenaNavSystem")));
+
+    UObject::SetServerContext();
 
     Original();
 }

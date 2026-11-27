@@ -22,6 +22,8 @@ public:
 
     static void PatchCanCreateInCurrentContext();
 
+    static void SetServerContext();
+
     FORCEINLINE UObject* GetArchetype() const
     {
         return GetArchetypeFromRequiredInfo(GetClass(), GetOuter(), GetFName(), GetFlags());
