@@ -95,6 +95,24 @@ FText& FText::operator=(const FText& Source)
     if (CopyAssign)
         return CopyAssign(this, Source);
 
+    if (HasRefCountedTextData())
+    {
+        auto NewData = *(ITextData* const*)Source.TextData;
+        auto OldData = *(ITextData**)TextData;
+
+        if (NewData)
+            (*(void (***)(ITextData*))NewData)[1](NewData);
+
+        *(ITextData**)TextData = NewData;
+
+        if (OldData)
+            (*(void (***)(ITextData*))OldData)[2](OldData);
+
+        GetFlags() = const_cast<FText&>(Source).GetFlags();
+
+        return *this;
+    }
+
     *(TSharedRef<ITextData, ESPMode::ThreadSafe>*)TextData = *(const TSharedRef<ITextData, ESPMode::ThreadSafe>*)Source.TextData;
     Flags = Source.Flags;
 
