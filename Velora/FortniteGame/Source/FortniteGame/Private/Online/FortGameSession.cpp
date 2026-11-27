@@ -43,13 +43,14 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
         wcsncpy_s(Playlist, Arg, wcscspn(Arg, TEXT(" ")));
     }
 
-    TCHAR Options[128] = {};
+    TCHAR Options[256] = {};
     FString Map;
 
     if (auto PlaylistClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlaylistAthena")))
     {
         static auto PreloadPersistentLevel = PlaylistClass->FindPropertyByName(FName(TEXT("PreloadPersistentLevel")));
         static auto MaxSquadSize = PlaylistClass->FindPropertyByName(FName(TEXT("MaxSquadSize")));
+        static auto PlaylistName = PlaylistClass->FindPropertyByName(FName(TEXT("PlaylistName")));
 
         auto PlaylistData = Config::bReload && PreloadPersistentLevel ? StaticLoadObject(PlaylistClass, nullptr, TEXT("/BlastBerry/Playlists/Playlist_BlastBerrySolo.Playlist_BlastBerrySolo")) : nullptr;
 
@@ -78,6 +79,12 @@ void AFortGameSession::OpenMatchLevel(const UObject* WorldContextObject)
                 swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d?SquadSizes=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")), *MaxSquadSize->ContainerPtrToValuePtr<int32>(PlaylistData));
             else
                 swprintf_s(Options, TEXT("playlistId=%d?MaxPlayers=%d?MaxTeamSize=%d"), Value(TEXT("PlaylistId")), Value(TEXT("MaxPlayers")), Value(TEXT("MaxTeamSize")));
+
+            if (PlaylistName)
+            {
+                wcscat_s(Options, TEXT("?Playlist="));
+                wcscat_s(Options, *PlaylistName->GetPropertyValue_InContainer<FName>(PlaylistData).ToString());
+            }
         }
     }
     else
