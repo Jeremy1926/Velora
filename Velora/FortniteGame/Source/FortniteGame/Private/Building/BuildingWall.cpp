@@ -45,6 +45,14 @@ void ABuildingWall::Open_Implementation(AController* ControllerInstigator)
         .Find("add rcx, r*; jz 0x*; mov rax, [rcx]; movzx r8d, *; mov rdx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:OpenActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Call(3)
+        .Find("mov r9, [rax]; mov rcx, rax; *; *; call [r9+0x*]")
+        .Find("call [r9+0x*]")
+        .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
@@ -147,6 +155,11 @@ void ABuildingWall::SetIsDoorOpen(EDoorOpenStyle InDoorOpenStyle, AFortPawn* Int
         .Or()
         .Native(TEXT("/Script/FortniteGame.BuildingWall:OnNearDoorTriggerTouched"))
         .Find("mov rcx, *; mov r8, *; mov dl, 0x1; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.BuildingWall:OnNearDoorTriggerTouched"))
+        .Find("mov r8, *; mov rcx, *; mov dl, 0x1; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
