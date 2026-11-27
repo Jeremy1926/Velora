@@ -54,6 +54,11 @@ void UFortNPCConversationParticipantComponent::UpdateCanStartConversation()
         .Find("setnz dil; add [*+0x20], rdi; mov rax, [*]; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortNPCConversationParticipantComponent"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortNPCConversationParticipantComponent:OnBotControllerDBNOStatusChanged"))
+        .Find("setnz dil; mov rcx, *; add [*+0x20], rdi; mov rax, [*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortNPCConversationParticipantComponent"))
         .Get();
 
     UpdateCanStartConversation(this);
