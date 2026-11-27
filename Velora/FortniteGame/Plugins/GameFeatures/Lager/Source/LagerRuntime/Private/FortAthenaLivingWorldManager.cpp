@@ -2401,6 +2401,12 @@ bool UFortAthenaLivingWorldManager::HasEventRuntimes()
         .Find("call 0x*", 2)
         .Target()
         .Is("push rbx; sub rsp, 0x20; add rcx, 0x*; mov [rsp+0x38], rdx; lea rbx, [r8+0x*]")
+        .Or()
+        .If(StaticClass() && FEngineVersion::Current().GetChangelist() >= 37505882 && FEngineVersion::Current().GetChangelist() <= 37770125 && StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer"))) && GetPendingActorSpawnEventRequestsOffset() == StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")))->GetOffset_ForInternal() + 0xD8)
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 2)
+        .Target()
+        .Is("push rbx; sub rsp, 0x20; add rcx, 0x*; xor r11d, r11d; mov [rsp+0x38], rdx; lea rbx, [r8+0x*]")
         .Get();
 
     return bHasEventRuntimes;
