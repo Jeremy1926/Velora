@@ -26,6 +26,10 @@ struct FFortAthenaLivingWorldDensityGrid
 
     static bool HasActorDensityValues();
 
+    static const uint8* GetReplacePreRegistrationWithActor();
+
+    static bool HasVerticalCuts();
+
     bool IsInitialized() const;
 
     FIntVector GetCellCoordinates(const FVector& Location) const;

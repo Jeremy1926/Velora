@@ -28,6 +28,45 @@ bool FFortAthenaLivingWorldDensityGrid::HasActorDensityValues()
     return bHasActorDensityValues;
 }
 
+const uint8* FFortAthenaLivingWorldDensityGrid::GetReplacePreRegistrationWithActor()
+{
+    static auto ReplacePreRegistrationWithActor = Anchor::Address()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r13+0x*]; mov rdx, rsi; lea r8, [r14+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r13+0x*]; mov rdx, rdi; lea r8, [r14+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov rdx, rdi; lea rcx, [r13+0x*]; lea r8, [r14+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    return ReplacePreRegistrationWithActor;
+}
+
+bool FFortAthenaLivingWorldDensityGrid::HasVerticalCuts()
+{
+    static auto bHasVerticalCuts = Anchor::Exists()
+        .At(GetReplacePreRegistrationWithActor())
+        .Find("jmp 0x*")
+        .Target()
+        .Find("cvtpd2ps xmm1, xmm1")
+        .Get();
+
+    return bHasVerticalCuts;
+}
+
 bool FFortAthenaLivingWorldDensityGrid::IsInitialized() const
 {
     static auto Flags = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
@@ -421,6 +460,9 @@ void FFortAthenaLivingWorldDensityGrid::UpdateActor(AActor* InActor)
 {
     if (UFortAthenaLivingWorldManager::HasEventRuntimes())
     {
+        if (HasVerticalCuts())
+            return;
+
         static auto bInitialized = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
             .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
             .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
@@ -786,6 +828,124 @@ TSparseArray<FFortAthenaLivingWorldDensityData>& FFortAthenaLivingWorldDensityGr
 
 int32 FFortAthenaLivingWorldDensityGrid::PreRegisterActor(const FVector& Location, float DensityRange, float DensityValue)
 {
+    if (HasVerticalCuts())
+    {
+        static auto bVerticalInitialized = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("test byte ptr [rcx+0x*], 0x1")
+            .Disp();
+
+        static auto VerticalBuildAABB = Anchor::Function<void* (*)(void*, const FVector3d*, const FVector3d*)>(TEXT("FBox::BuildAABB"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea r8, [rsp+0x*]; call 0x*; test al, al")
+            .Last("call 0x*")
+            .Target()
+            .Get();
+
+        static auto VerticalGetGridCellMinAndMaxForBounds = Anchor::Function<bool (*)(FFortAthenaLivingWorldDensityGrid*, const void*, int32*, int32*)>(TEXT("FFortSpatialGrid::GetGridCellMinAndMaxForBounds"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea r8, [rsp+0x*]; call 0x*; test al, al")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto GetVerticalCutIndex = Anchor::Function<int32 (*)(FFortAthenaLivingWorldDensityGrid*, float)>(TEXT("FFortAthenaLivingWorldDensityGrid::GetVerticalCutIndex"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("cvtpd2ps xmm1, xmm1")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto ConstructActorData = Anchor::Function<void* (*)(void*, AActor*, const int32*, const int32*, int32, float, float)>(TEXT("FFortAthenaLivingWorldDensityData::FFortAthenaLivingWorldDensityData"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("cvtpd2ps xmm1, xmm1")
+            .Find("call 0x*")
+            .Find("mov [rsp+0x20], eax")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto bPreRegistration = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityData::bPreRegistration"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("cvtpd2ps xmm1, xmm1")
+            .Find("call 0x*")
+            .Find("mov [rsp+0x20], eax")
+            .Find("call 0x*")
+            .Target()
+            .Find("mov byte ptr [rdi+0x*], 0x0")
+            .Disp();
+
+        static auto VerticalActorDataArray = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::ActorDataArray"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea r14, [rsi+0x*]; mov rbx, rax")
+            .Disp();
+
+        static auto AddUninitializedActorData = Anchor::Function<void* (*)(void*, void*)>(TEXT("TSparseArray<FFortAthenaLivingWorldDensityData>::AddUninitialized"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("lea r14, [rsi+0x*]; mov rbx, rax")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        static auto VerticalAddActorDataToOccupiedCellIndex = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, void*)>(TEXT("FFortAthenaLivingWorldDensityGrid::AddActorDataToOccupiedCellIndex"))
+            .At(GetReplacePreRegistrationWithActor())
+            .Find("jmp 0x*")
+            .Target()
+            .Find("shl rdx, 0x4; add rdx, [r14]; call 0x*")
+            .Find("call 0x*")
+            .Target()
+            .Get();
+
+        if (bVerticalInitialized <= 0 || bPreRegistration <= 0 || VerticalActorDataArray <= 0 || !(*((uint8*)this + bVerticalInitialized) & 1))
+            return INDEX_NONE;
+
+        const FVector3d Origin(Location);
+        const FVector3d Extent(FVector(DensityRange, DensityRange, DensityRange));
+        alignas(8) uint8 Bounds[0x38] = {};
+        int32 MinCell[3] = {};
+        int32 MaxCell[3] = {};
+
+        VerticalBuildAABB(Bounds, &Origin, &Extent);
+
+        if (!VerticalGetGridCellMinAndMaxForBounds(this, Bounds, MinCell, MaxCell))
+            return INDEX_NONE;
+
+        struct
+        {
+            int32 Index;
+            uint8* Data;
+        } Allocation{ INDEX_NONE, nullptr };
+
+        AddUninitializedActorData((uint8*)this + VerticalActorDataArray, &Allocation);
+
+        if (!Allocation.Data)
+            return INDEX_NONE;
+
+        ConstructActorData(Allocation.Data, nullptr, MinCell, MaxCell, GetVerticalCutIndex(this, (float)Location.Z), DensityValue, DensityRange);
+
+        Allocation.Data[bPreRegistration] = 1;
+
+        VerticalAddActorDataToOccupiedCellIndex(this, Allocation.Data);
+
+        return Allocation.Index;
+    }
+
     static auto bInitialized = Anchor::Offset(TEXT("FFortAthenaLivingWorldDensityGrid::bInitialized"))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea rcx, [r14+0x*]; mov rdx, rdi; lea r8, [r15+0x*]; call 0x*")
@@ -962,6 +1122,10 @@ int32 FFortAthenaLivingWorldDensityGrid::MovePreRegistration(int32 Handle, const
         .Target()
         .Find("call 0x*")
         .Target()
+        .Or()
+        .At(GetReplacePreRegistrationWithActor())
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto GetPreRegistrationDensityRange = Anchor::Function<float (*)(FFortAthenaLivingWorldDensityGrid*, int32*)>(TEXT("FFortAthenaLivingWorldDensityGrid::GetPreRegistrationDensityRange"))
@@ -978,6 +1142,10 @@ int32 FFortAthenaLivingWorldDensityGrid::MovePreRegistration(int32 Handle, const
         .Target()
         .Find("call 0x*", 2)
         .Target()
+        .Or()
+        .At(GetReplacePreRegistrationWithActor())
+        .Find("call 0x*", 2)
+        .Target()
         .Get();
 
     static auto RemoveRegistration = Anchor::Function<void (*)(FFortAthenaLivingWorldDensityGrid*, int32*)>(TEXT("FFortAthenaLivingWorldDensityGrid::RemoveRegistration"))
@@ -992,6 +1160,10 @@ int32 FFortAthenaLivingWorldDensityGrid::MovePreRegistration(int32 Handle, const
         .Find("lea rcx, [r13+0x*]; mov rdx, rsi; lea r8, [r14+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 3)
+        .Target()
+        .Or()
+        .At(GetReplacePreRegistrationWithActor())
         .Find("call 0x*", 3)
         .Target()
         .Get();
@@ -1018,6 +1190,10 @@ void FFortAthenaLivingWorldDensityGrid::RemoveRegistration(int32& Handle)
         .Find("lea rcx, [r13+0x*]; mov rdx, rsi; lea r8, [r14+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Find("call 0x*", 3)
+        .Target()
+        .Or()
+        .At(GetReplacePreRegistrationWithActor())
         .Find("call 0x*", 3)
         .Target()
         .Get();

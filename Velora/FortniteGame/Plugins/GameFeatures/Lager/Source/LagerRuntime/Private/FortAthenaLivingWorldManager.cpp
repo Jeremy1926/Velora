@@ -2031,6 +2031,15 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea rcx, [r13+0x*]; mov rdx, rsi; lea r8, [r14+0x*]; call 0x*")
         .Optional()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [r13+0x*]; mov rdx, rdi; lea r8, [r14+0x*]; call 0x*")
+        .Optional()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov rdx, rdi; lea rcx, [r13+0x*]; lea r8, [r14+0x*]; call 0x*")
+        .Find("lea rcx, [r13+0x*]")
+        .Optional()
         .Disp();
 
     return ActorDensityGrid > 0 ? (FFortAthenaLivingWorldDensityGrid*)((uint8*)this + ActorDensityGrid) : nullptr;
@@ -2059,6 +2068,14 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetTagDensityG
         .Or()
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .Pattern("48 83 EC 28 8B 02 4C 8D 99 ? ? ? ? 4C 8B CA C1 E8 10 0F B7 12 8B CA 44 69 C0 01 00 08 00 C1 E1 10 44 03 C2 C1 EA 04 44 03 C1 49 8B CB 41 03 D0 4D 8B C1 E8 ? ? ? ? 83 F8 FF 74 0E 48 98 48 69 D0 ? ? ? ? 49 03 13")
+        .Or()
+        .At(GetQueryEventBudget())
+        .Find("call 0x*", 17)
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (NativeGetTagDensityGrid)
@@ -2650,6 +2667,12 @@ void UFortAthenaLivingWorldManager::TickDestroyedActorDensities()
         .Find("call 0x*")
         .Target()
         .Find("lea rcx, [r15+0x*]; movss [rbp+0x*], xmm6; mov [rbp+0x*], eax; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnSpawnedActorDestroy"))
+        .Find("xor r8d, r8d; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [r15+0x*]; or dword ptr [rsp+0x*], 0xffffffff")
         .Disp();
 
     auto World = GetWorld();
@@ -4085,6 +4108,11 @@ void UFortAthenaLivingWorldManager::RemovePreRegistrationFromDensityGrids(FPendi
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("mov r8, [rbx+0x18]; lea r9, [r14+0x*]; lea rdx, [r14+0x*]; mov rcx, r13; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("mov rcx, r13; lea rdx, [r14+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
