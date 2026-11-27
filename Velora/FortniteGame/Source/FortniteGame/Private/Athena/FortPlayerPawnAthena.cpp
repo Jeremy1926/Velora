@@ -78,6 +78,13 @@ void AFortPlayerPawnAthena::HandleDeath(float Damage, const FGameplayTagContaine
 
     UE_LOG(LogVelora, Log, TEXT("[DropDiag] %s died, ItemDropOnDeath mutator %s, game mode mutators %d, WID_Paprika_ShieldSmall %s"), *GetName(), DiagMutator ? *DiagMutator->GetName() : TEXT("null"), DiagMutators ? DiagMutators->ContainerPtrToValuePtr<TArray<UObject*>>(DiagMutatorList)->Num() : -1, DiagShield ? TEXT("resolves") : TEXT("not loaded"));
 
+    TArray<AActor*> DiagDropMutators;
+
+    if (ItemDropOnDeathClass)
+        UGameplayStatics::GetAllActorsOfClass(this, ItemDropOnDeathClass, DiagDropMutators);
+
+    UE_LOG(LogVelora, Log, TEXT("[DropDiag] item drop on death mutators in the world %d, first %s"), DiagDropMutators.Num(), DiagDropMutators.Num() && DiagDropMutators[0] ? *DiagDropMutators[0]->GetName() : TEXT("none"));
+
     Original(Damage, DamageTags, EffectContext, InstigatedBy, DamageCauser);
 
     TArray<AActor*> DiagPickupsAfter;
