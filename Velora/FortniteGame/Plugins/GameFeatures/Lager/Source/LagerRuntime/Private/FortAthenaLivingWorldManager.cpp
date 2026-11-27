@@ -3690,6 +3690,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
         .Get();
 
     static auto NextEventRequestID = 0;
+    static TSet<const UObject*> NoProviderEventDatas;
 
     if (ActorBudget == 0 || EventInstanceBudget == 0 || !Category)
         return;
@@ -3787,7 +3788,7 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
 
             PointProvider = GetRandomPointProviderFromEventDataRuntime(EventDataRuntime, *(FFortAthenaLivingWorldPointProviderFilterRules*)PointFilter, StartIndices.IsValidIndex(SpawnDataIndex) ? StartIndices[SpawnDataIndex] : INDEX_NONE);
 
-            if (Config::bLogLivingWorld && !PointProvider.GetObject())
+            if (Config::bLogLivingWorld && !PointProvider.GetObject() && !NoProviderEventDatas.Contains(EventDataRuntime->EventData.Get()))
             {
                 static FGameplayTagQuery EmptyTagQuery;
 
@@ -3842,8 +3843,13 @@ void UFortAthenaLivingWorldManager::GenerateEventRequests(UFortAthenaLivingWorld
 
         AddPendingEventRequest(EventRequest);
 
-        if (Config::bLogLivingWorld)
+        if (Config::bLogLivingWorld && (bHasPointProvider || !NoProviderEventDatas.Contains(RequestedEvent.EventData)))
+        {
             UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d: %s, %d actors, provider %s"), EventRequest.RequestID, RequestedEvent.EventData ? *RequestedEvent.EventData->GetName() : TEXT("None"), ActorCount, bHasPointProvider ? *PointProvider.GetObject()->GetName() : TEXT("None"));
+
+            if (!bHasPointProvider)
+                NoProviderEventDatas.Add(RequestedEvent.EventData);
+        }
 
         SpawnedActorCount += ActorCount;
         EventInstanceBudget--;
@@ -4162,8 +4168,14 @@ void UFortAthenaLivingWorldManager::ProcessEventRequest(FEventRequest& EventRequ
 
     if (!PointProviderInterface)
     {
-        if (Config::bLogLivingWorld)
-            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d cancelled: no point provider"), EventRequest.RequestID);
+        static TSet<const FFortAthenaLivingWorldEvent*> NoProviderEvents;
+
+        if (Config::bLogLivingWorld && !NoProviderEvents.Contains(Event))
+        {
+            NoProviderEvents.Add(Event);
+
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld request %d cancelled: no point provider, further cancels for this event are not logged"), EventRequest.RequestID);
+        }
 
         CancelEventRequest(EventRequest);
         return;
