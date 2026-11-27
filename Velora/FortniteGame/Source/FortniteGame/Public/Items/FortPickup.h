@@ -64,6 +64,10 @@ struct FFortPickupRequestInfo
     bool GetPlayPickupSound() const;
 
     bool GetUseRequestedSwap() const;
+
+    bool GetIsAutoPickup() const;
+
+    bool GetTrySwapWithWeapon() const;
 };
 
 struct FortPickupCreationData

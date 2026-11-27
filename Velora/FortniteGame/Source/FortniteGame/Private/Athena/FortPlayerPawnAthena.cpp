@@ -29,6 +29,7 @@
 #include "UObject/Stack.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
+#include "Config.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -238,6 +239,13 @@ void AFortPlayerPawnAthena::ServerHandlePickupWithRequestedSwap_Implementation(A
 
 void AFortPlayerPawnAthena::ServerHandlePickupInfo_Implementation(AFortPickup* Pickup, const FFortPickupRequestInfo& Params)
 {
+    if (Config::bLogReplication && Pickup)
+    {
+        auto ItemDefinition = Pickup->GetPrimaryPickupItemEntry().GetItemDefinition();
+
+        UE_LOG(LogVelora, Log, TEXT("Pickup request %s level %d auto %d try swap %d requested swap %d swap with %d"), ItemDefinition ? *ItemDefinition->GetName() : TEXT("None"), Pickup->GetPrimaryPickupItemEntry().GetLevel(), Params.GetIsAutoPickup(), Params.GetTrySwapWithWeapon(), Params.GetUseRequestedSwap(), Params.GetSwapWithItem().IsValid());
+    }
+
     if (Params.GetUseRequestedSwap())
         return ServerHandlePickupWithRequestedSwap_Implementation(Pickup, Params.GetSwapWithItem(), Params.GetFlyTime(), Params.GetDirection(), Params.GetPlayPickupSound());
 

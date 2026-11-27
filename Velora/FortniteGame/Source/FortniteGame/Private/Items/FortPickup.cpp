@@ -485,11 +485,16 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
         auto bNeedsPrimarySlot = ItemDefinition->IsA(UFortWeaponItemDefinition::StaticClass()) && !ItemDefinition->IsA(DecoItemDefinitionClass);
         auto bCanBeSwapped = CanItemTypeBeSwapped(ItemDefinition, PlayerController);
         auto bSwapEquipped = bCanBeSwapped && !PlayerController->CanServerTryAddToQuickBar() && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0;
+        auto HeldWeapon = PickupTarget->GetCurrentWeapon();
+        auto HeldItemDefinition = HeldWeapon ? HeldWeapon->GetWeaponData() : nullptr;
+        int32 StackLevel = -1;
 
         for (auto& ItemEntry : Inventory.GetReplicatedEntries())
         {
             if (ItemEntry.GetItemDefinition() != ItemDefinition)
                 continue;
+
+            StackLevel = ItemEntry.GetLevel();
 
             const int32 NumberToStack = ItemEntry.GetLevel() == PickupItemEntry.GetLevel() ? FMath::Min(NumberToGive, MaxStackSize - ItemEntry.GetCount()) : 0;
 
@@ -566,7 +571,7 @@ void AFortPickup::GivePickupItemsToInventoryOwner(IFortInventoryOwnerInterface* 
 
         if (Config::bLogReplication)
         {
-            UE_LOG(LogVelora, Log, TEXT("Pickup %s swap %d can swap %d server quickbar %d overflow %d entries %d add %d give %d equip %d"), *ItemDefinition->GetName(), bSwapEquipped, bCanBeSwapped, PlayerController->CanServerTryAddToQuickBar(), WorldInventory->GetOverflowFromAddingItem(PickupItemEntry), Inventory.GetReplicatedEntries().Num(), bCanAddStack, NumberToGive, bEquipNewItem);
+            UE_LOG(LogVelora, Log, TEXT("Pickup %s swap %d can swap %d server quickbar %d overflow %d entries %d add %d give %d equip %d held %s level %d stack level %d"), *ItemDefinition->GetName(), bSwapEquipped, bCanBeSwapped, PlayerController->CanServerTryAddToQuickBar(), WorldInventory->GetOverflowFromAddingItem(PickupItemEntry), Inventory.GetReplicatedEntries().Num(), bCanAddStack, NumberToGive, bEquipNewItem, HeldItemDefinition ? *HeldItemDefinition->GetName() : TEXT("None"), PickupItemEntry.GetLevel(), StackLevel);
         }
 
         if (bSwapEquipped && WorldInventory->GetOverflowFromAddingItem(PickupItemEntry) > 0)
@@ -744,6 +749,20 @@ bool FFortPickupRequestInfo::GetUseRequestedSwap() const
     static auto bUseRequestedSwap = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bUseRequestedSwap")));
 
     return bUseRequestedSwap->GetPropertyValue_InContainer(this);
+}
+
+bool FFortPickupRequestInfo::GetIsAutoPickup() const
+{
+    static auto bIsAutoPickup = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsAutoPickup")));
+
+    return bIsAutoPickup && bIsAutoPickup->GetPropertyValue_InContainer(this);
+}
+
+bool FFortPickupRequestInfo::GetTrySwapWithWeapon() const
+{
+    static auto bTrySwapWithWeapon = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bTrySwapWithWeapon")));
+
+    return bTrySwapWithWeapon && bTrySwapWithWeapon->GetPropertyValue_InContainer(this);
 }
 
 FFortPickupLocationData& AFortPickup::GetPickupLocationData()
