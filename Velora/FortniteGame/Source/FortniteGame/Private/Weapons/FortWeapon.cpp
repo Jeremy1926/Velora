@@ -440,6 +440,11 @@ bool AFortWeapon::AddWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot)
         .Find("lea rdx, [rbp-0x*]; mov [rbp-0x*], *; mov rcx, *; mov [rbp-0x*], *; call 0x*; test al, al")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponModFunctionLibrary:TryAddPreviewWeaponMod"))
+        .Find("mov byte ptr [rbp-0x*], 0x1; mov rcx, *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return AddWeaponModSlot(this, WeaponModSlot);
