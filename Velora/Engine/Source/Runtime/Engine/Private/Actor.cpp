@@ -627,10 +627,48 @@ UActorComponent* AActor::AddComponentByClass(TSubclassOf<UActorComponent> Class,
         .Optional()
         .Get();
 
-    if (!AddComponentByClassByValue)
+    if (AddComponentByClassByValue)
+        return AddComponentByClassByValue(this, Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
+
+    static auto NewComponentObject = Anchor::Function<UActorComponent* (*)(AActor*, UClass*, NAME_INDEX, EObjectFlags, UObject*)>(TEXT("NewObject<UActorComponent>"))
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov [rsp+0x20], rdi; xor r9d, r9d; and rdx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    static auto AddCreatedComponent = Anchor::Function<void (*)(AActor*, UActorComponent*)>(TEXT("AActor::AddComponentByClass created component"))
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov [rsp+0x20], rdi; xor r9d, r9d; and rdx, rbx; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Optional()
+        .Get();
+
+    static auto FinishAddComponent = Anchor::Function<void (*)(AActor*, UActorComponent*, bool, const TGameValue<FTransform>*)>(TEXT("AActor::FinishAddComponent"))
+        .Exec(TEXT("/Script/Engine.Actor:AddComponentByClass"))
+        .Find("mov [rsp+0x20], rdi; xor r9d, r9d; and rdx, rbx; call 0x*")
+        .Find("test sil, sil; jnz 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Optional()
+        .Get();
+
+    if (!NewComponentObject || !AddCreatedComponent || !FinishAddComponent || !Class)
         return nullptr;
 
-    return AddComponentByClassByValue(this, Class, bManualAttachment, GameRelativeTransform, bDeferredFinish);
+    auto NewComponent = NewComponentObject(this, Class, NAME_None, RF_NoFlags, nullptr);
+
+    if (!NewComponent)
+        return nullptr;
+
+    AddCreatedComponent(this, NewComponent);
+
+    if (!bDeferredFinish)
+        FinishAddComponent(this, NewComponent, bManualAttachment, &GameRelativeTransform);
+
+    return NewComponent;
 }
 
 UActorComponent* AActor::FindComponentByClass(const TSubclassOf<UActorComponent> ComponentClass) const
