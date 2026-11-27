@@ -2790,6 +2790,10 @@ bool AFortPlayerController::HasPermissionToEditWorld(ABuildingActor* BuildingAct
         .Event(TEXT("ServerRepairBuildingActor"))
         .Find("call [rax+0x*]; mov rcx, [*]; movzx *, al")
         .Find("mov *, [rcx+0x*]")
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; mov rcx, [r*]; mov r*, [rcx+0x*]; mov r*b, al")
+        .Find("mov r*, [rcx+0x*]")
         .Get();
 
     return HasPermissionToEditWorld(this, BuildingActor, Location, Rotation);
