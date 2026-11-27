@@ -43,6 +43,10 @@ FGameplayAbilitySpecHandle UAbilitySystemComponent::GiveAbility(const FGameplayA
         .String(TEXT("GiveAbility called with an invalid Ability Class."))
         .Start()
         .Is("mov [rsp+0x8], rbx; push rbp; push rsi; push rdi; push r12; push r13; push r14; push r15; lea rbp, [rsp-0x*]; sub rsp, 0x*; mov rax, [r8+0x10]")
+        .Or()
+        .String(TEXT("GiveAbility called with an invalid Ability Class."))
+        .Start()
+        .Is("mov [rsp+0x8], rbx; push rbp; push rsi; push rdi; push r12; push r13; push r14; push r15; lea rbp, [rsp-0x*]; add rsp, 0x*; xor edi, edi; mov rax, [r8+0x10]")
         .Get();
 
     static auto InternalServerTryActiveAbility = Anchor::Hook(TEXT("UAbilitySystemComponent::InternalServerTryActiveAbility"), &UAbilitySystemComponent::InternalServerTryActiveAbility)
