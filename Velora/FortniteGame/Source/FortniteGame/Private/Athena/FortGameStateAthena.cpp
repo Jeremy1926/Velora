@@ -503,6 +503,15 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
             if (auto CachedWorld = LivingWorldManager->GetCachedWorld())
                 *CachedWorld = GetWorld();
 
+            auto& PrimaryComponentTick = LivingWorldManager->GetPrimaryComponentTick();
+
+            if (DETOUR_ORIGINAL(UFortAthenaLivingWorldManager, TickComponent) && !PrimaryComponentTick.GetbCanEverTick())
+            {
+                PrimaryComponentTick.SetbCanEverTick(true);
+                PrimaryComponentTick.SetbStartWithTickEnabled(true);
+                LivingWorldManager->RegisterComponentTickFunctions(true);
+            }
+
             FScriptDelegate OnCurrentPlaylistLoadedDelegate;
             OnCurrentPlaylistLoadedDelegate.BindUFunction(LivingWorldManager, FName(TEXT("OnCurrentPlaylistLoaded")));
             GetOnCurrentPlaylistLoaded().AddUnique(OnCurrentPlaylistLoadedDelegate);

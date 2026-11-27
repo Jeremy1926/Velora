@@ -190,8 +190,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         if ((UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes()) && World->GetGameState())
         {
-            if (auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()))
-                LivingWorldManager->TickComponent(DeltaSeconds);
+            auto LivingWorldManager = (UFortAthenaLivingWorldManager*)World->GetGameState()->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass());
+
+            if (LivingWorldManager && !LivingWorldManager->GetPrimaryComponentTick().GetbCanEverTick())
+                LivingWorldManager->TickComponent(DeltaSeconds, LEVELTICK_All, nullptr);
         }
 
         if (auto GameStateBase = World->GetGameState())

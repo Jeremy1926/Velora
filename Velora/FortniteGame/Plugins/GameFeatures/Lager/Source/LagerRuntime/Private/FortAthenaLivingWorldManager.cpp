@@ -40,6 +40,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 #include <cfloat>
 
 TArray<UFortAthenaLivingWorldManager::FLivingWorldEventRuntimeDataEntry> UFortAthenaLivingWorldManager::EventRuntimeData;
@@ -479,8 +480,23 @@ bool UFortAthenaLivingWorldManager::IsLivingWorldEnabled()
     return GetLagerEnabled().GetValueAtLevel(0.0f) > 0.0f && !FParse::Param(FCommandLine::Get(), TEXT("NoLager"));
 }
 
-void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime)
+void UFortAthenaLivingWorldManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    DETOUR(UFortAthenaLivingWorldManager, TickComponent, Anchor::Hook()
+        .If(StaticClass() && (GetEventInstancesOffset() > 0 || HasEventRuntimes()))
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .Or()
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Call()
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .InChildVTablesCounted(StaticClass()));
+
+    if (ThisTickFunction)
+        Original(DeltaTime, TickType, ThisTickFunction);
+
     if (HasEventRuntimes())
     {
         TickEventRuntimes(DeltaTime);

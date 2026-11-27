@@ -12,5 +12,7 @@ public:
 
     AActor* GetOwner() const;
 
+    void RegisterComponentTickFunctions(bool bRegister);
+
     FActorComponentTickFunction& GetPrimaryComponentTick();
 };

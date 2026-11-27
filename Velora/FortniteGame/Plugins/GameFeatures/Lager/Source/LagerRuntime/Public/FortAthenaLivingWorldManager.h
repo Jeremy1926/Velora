@@ -2,6 +2,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Containers/Queue.h"
+#include "Engine/EngineBaseTypes.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
@@ -425,7 +426,7 @@ public:
 
     bool IsLivingWorldEnabled();
 
-    void TickComponent(float DeltaTime);
+    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
     void GenerateEvents();
 

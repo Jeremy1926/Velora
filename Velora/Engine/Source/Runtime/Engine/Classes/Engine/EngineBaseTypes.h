@@ -29,7 +29,22 @@ enum ELevelTick
     LEVELTICK_PauseTick,
 };
 
-struct FActorComponentTickFunction;
+class UScriptStruct;
+
+struct FTickFunction
+{
+    static UScriptStruct* StaticStruct();
+
+    bool GetbCanEverTick() const;
+
+    void SetbCanEverTick(bool bInCanEverTick);
+
+    void SetbStartWithTickEnabled(bool bInStartWithTickEnabled);
+};
+
+struct FActorComponentTickFunction : public FTickFunction
+{
+};
 
 namespace ENetworkFailure
 {
