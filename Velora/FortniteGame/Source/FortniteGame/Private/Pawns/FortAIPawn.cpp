@@ -79,7 +79,7 @@ void AFortAIPawn::DropLoot()
         if (!Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()))
             continue;
 
-        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
+        if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), UFortKismetLibrary::GiveItemEntryFullAmmo(this, ItemEntry), LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
             Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
     }
 }

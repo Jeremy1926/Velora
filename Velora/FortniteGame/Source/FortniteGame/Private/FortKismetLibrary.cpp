@@ -660,7 +660,7 @@ TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObje
         if (!Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()))
             continue;
 
-        auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, SourceType);
+        auto Pickup = AFortPickup::CreateFromData(World, GiveItemEntryFullAmmo(WorldContextObject, ItemEntry), Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, SourceType);
 
         if (!Pickup)
             continue;
@@ -791,7 +791,7 @@ AFortPickup* UFortKismetLibrary::SpawnItemVariantPickupInWorld(UObject* WorldCon
     if (!World || !WorldItemDefinition)
         return nullptr;
 
-    FFortItemEntry ItemEntry(WorldItemDefinition, NumberToSpawn, 0);
+    auto ItemEntry = GiveItemEntryFullAmmo(WorldContextObject, FFortItemEntry(WorldItemDefinition, NumberToSpawn, 0));
 
     auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, Direction.ToOrientationRotator(), OptionalOwnerPC, nullptr, nullptr, SourceType, bRandomRotation, bPickupOnlyRelevantToOwner, Source);
 
