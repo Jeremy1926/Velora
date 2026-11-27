@@ -295,6 +295,18 @@ FWeaponUpgradeItemRow* ABuildingItemWeaponUpgradeActor::GetItemRow(UFortWeaponIt
         .Find("mov dl, 0x1; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz dl; *; add dl, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("setz dl; *; *; add dl, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (StaticGetItemRow)
