@@ -817,7 +817,7 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
             Pickup->TossPickup(Location, Pawn, 0, true);
         }
 
-        RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), false);
+        RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), DropItemEntry.GetCount() >= ItemEntry.GetCount());
 
         return;
     }
@@ -1402,11 +1402,25 @@ bool AFortPlayerController::RemoveInventoryItem(const FGuid& ItemGuid, int32 Cou
         }
         else
         {
-            RemoveItemFromQuickBars(ItemDefinition);
+            auto WorldItemDefinition = Cast<UFortWorldItemDefinition>(ItemDefinition);
+            bool bFinalStack = !bForceRemoveFromQuickBars && WorldItemDefinition && WorldItemDefinition->ShouldPersistInInventoryWhenFinalStackEmpty();
 
-            Inventory.GetReplicatedEntries().RemoveAt(Index);
-            Inventory.MarkArrayDirty();
-            WorldInventory->ForceNetUpdate();
+            for (int32 OtherIndex = 0; bFinalStack && OtherIndex < Inventory.GetReplicatedEntries().Num(); OtherIndex++)
+                bFinalStack = OtherIndex == Index || Inventory.GetReplicatedEntries()[OtherIndex].GetItemDefinition() != ItemDefinition;
+
+            if (bFinalStack)
+            {
+                ItemEntry.SetCount(0);
+                Inventory.MarkItemDirty(ItemEntry);
+            }
+            else
+            {
+                RemoveItemFromQuickBars(ItemDefinition);
+
+                Inventory.GetReplicatedEntries().RemoveAt(Index);
+                Inventory.MarkArrayDirty();
+                WorldInventory->ForceNetUpdate();
+            }
         }
 
         WorldInventory->HandleInventoryLocalUpdate();

@@ -45,6 +45,22 @@ bool UFortWorldItemDefinition::SupportsQuickbarFocus() const
     return !Data || !Traits->ContainerPtrToValuePtr<FGameplayTagContainer>(Data)->HasTag(DisallowQuickbarFocus);
 }
 
+bool UFortWorldItemDefinition::ShouldPersistInInventoryWhenFinalStackEmpty() const
+{
+    static auto bPersistInInventoryWhenFinalStackEmpty = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bPersistInInventoryWhenFinalStackEmpty")));
+
+    if (bPersistInInventoryWhenFinalStackEmpty)
+        return bPersistInInventoryWhenFinalStackEmpty->GetPropertyValue_InContainer(this);
+
+    static auto TraitsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_Traits"));
+    static auto Traits = TraitsData ? TraitsData->FindPropertyByName(FName(TEXT("Traits"))) : nullptr;
+    static auto AllowEmptyFinalStack = FGameplayTag::RequestGameplayTag(FName(TEXT("Item.Trait.AllowEmptyFinalStack")), false);
+
+    auto Data = Traits ? GetItemComponentData(TraitsData) : nullptr;
+
+    return Data && Traits->ContainerPtrToValuePtr<FGameplayTagContainer>(Data)->HasTag(AllowEmptyFinalStack);
+}
+
 UObject* UFortWorldItemDefinition::GetPickupItemComponent() const
 {
     static auto PickupComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponent_Pickup"));
