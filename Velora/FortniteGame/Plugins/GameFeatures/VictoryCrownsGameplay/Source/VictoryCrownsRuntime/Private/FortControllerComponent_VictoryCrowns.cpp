@@ -45,6 +45,10 @@ void UFortControllerComponent_VictoryCrowns::BeginPlay()
         .If(StaticClass())
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "push rbx; sub rsp, 0x20; mov *, *; mov *, *; mov e*, [rax+0x*]; *; *; bt edx, 0x12")
         .LogSlot(TEXT("UActorComponent::BeginPlay"))
+        .Or()
+        .If(StaticClass())
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "push rbx; sub rsp, 0x20; mov rax, [rcx+0x10]; mov eax, [rax+0x*]; mov rbx, rcx; bt eax, 0x12")
+        .LogSlot(TEXT("UActorComponent::BeginPlay"))
         .InVTable(TEXT("/Script/VictoryCrownsRuntime.Default__FortControllerComponent_VictoryCrowns")));
 
     Original();
