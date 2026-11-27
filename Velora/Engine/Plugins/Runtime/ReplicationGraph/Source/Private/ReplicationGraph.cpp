@@ -759,6 +759,13 @@ FStreamingLevelActorListCollection& UReplicationGraphNode_ActorList::GetStreamin
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Find("lea rcx, [r*+0x*]; mov rdx, r*")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("mov rdx, r*; lea rcx, [r*+0x*]; call 0x*")
+        .Find("lea rcx, [r*+0x*]")
         .Disp();
 
     return *(FStreamingLevelActorListCollection*)((uint8*)this + StreamingLevelCollection);
