@@ -1492,6 +1492,11 @@ void AFortPlayerController::RemoveItemFromQuickBars(UFortItemDefinition* ItemDef
             .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
             .Find("setnz *; add r*, r*")
             .Find("lea rcx, [r*+0x*]; mov *, *; mov rax, [rcx]")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortPlayerController:RemoveItemFromQuickBars"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea r*, [r*+0x*]; cmp *[0x*], *; mov rax, [r*]")
             .Disp();
 
         static auto FindItemInstancesFromDefinition = Anchor::VirtualFunction<int32 (*)(void*, UFortItemDefinition*, TArray<UFortItem*>*)>(TEXT("IFortInventoryOwnerInterface::FindItemInstancesFromDefinition"))
