@@ -1038,11 +1038,15 @@ namespace Anchor
                 char Call[32];
                 char Jump[32];
                 char Load[48];
+                char LoadAfter[48];
+                char LoadAfterTwo[48];
                 snprintf(Call, sizeof(Call), "call [*+0x%llx]", (unsigned long long)(Index * sizeof(void*)));
                 snprintf(Jump, sizeof(Jump), "jmp [*+0x%llx]", (unsigned long long)(Index * sizeof(void*)));
                 snprintf(Load, sizeof(Load), "mov r10, [*+0x%llx]; jmp r10", (unsigned long long)(Index * sizeof(void*)));
+                snprintf(LoadAfter, sizeof(LoadAfter), "mov r10, [*+0x%llx]; *; jmp r10", (unsigned long long)(Index * sizeof(void*)));
+                snprintf(LoadAfterTwo, sizeof(LoadAfterTwo), "mov r10, [*+0x%llx]; *; *; jmp r10", (unsigned long long)(Index * sizeof(void*)));
 
-                if (auto Entry = Anchor::At(Anchor::Private::Unhooked((const uint8_t*)VTable[Index])); Entry.Has(Call) || Entry.Has(Jump) || Entry.Has(Load))
+                if (auto Entry = Anchor::At(Anchor::Private::Unhooked((const uint8_t*)VTable[Index])); Entry.Has(Call) || Entry.Has(Jump) || Entry.Has(Load) || Entry.Has(LoadAfter) || Entry.Has(LoadAfterTwo))
                 {
                     Found = Index * sizeof(void*);
                     break;
