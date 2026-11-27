@@ -246,6 +246,16 @@ UObject* UFortAssetManager::GetAssetForPersistentName(const FString& PersistentN
         .Find("lea rdx, [rsp+0x*]; mov rcx, r8; *; *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
+        .Find("lea rdx, [rsp+0x*]; *; *; mov rcx, rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteUI.FortUIBlueprintFunctionLibrary:GetAssetFromTemplateId"))
+        .Find("mov rcx, rax; lea rdx, [rsp+0x*]; *; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     const FStringView View{ *PersistentName, PersistentName.Len() };
