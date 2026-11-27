@@ -216,6 +216,14 @@ FFortAthenaLivingWorldCategory*& UFortAthenaLivingWorldEncounterInstance::GetCat
         .Find("call 0x*")
         .Target()
         .Find("mov [rcx+0x*], rdx")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:StartEncounter"))
+        .Find("mov [rsp+0x20], dil")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*; xor r12d, r12d; cmp dword ptr [*+0x*], 0x4")
+        .Target()
+        .Find("mov [rcx+0x*], rdx")
         .Disp();
 
     return *(FFortAthenaLivingWorldCategory**)((uint8*)this + Category);
