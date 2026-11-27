@@ -471,6 +471,10 @@ bool UNetDriver::InitListen(FNetworkNotify* InNotify, FURL& ListenURL, bool bReu
         .String(TEXT("RecordReplay: failed to create demo net driver!"))
         .Find("xor r9d, r9d; mov [rsp+0x20], rcx; mov rcx, *; lea r8, [*]; call [rax+0x*]")
         .Find("call [*+0x*]")
+        .Or()
+        .String(TEXT("RecordReplay: failed to create demo net driver!"))
+        .Find("lea r8, [rbp-0x*]; call [rax+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return InitListen(this, InNotify, ListenURL, bReuseAddressAndPort, Error);
