@@ -118,11 +118,23 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
             .Find("lea r15, [r14+rax*8]; jmp 0x*; mov rcx, r14; call 0x*")
             .Find("cmp byte ptr [0x*], 0x1")
             .Find("lea r14, [rbx+0x*]")
+            .Or()
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("mov rcx, r14; mov rbx, rax; call 0x*; mov r9b, [rbx+0x*]; lea rbx, [rdi+0x*]"); })
+            .Find("mov rcx, r14; mov rbx, rax; call 0x*; mov r9b, [rbx+0x*]; lea rbx, [rdi+0x*]")
+            .Find("lea rbx, [rdi+0x*]")
             .Disp();
 
         static auto CreateRuntimeData = Anchor::Optional<UObject* (*)(UFortMovementComp_Character*, const int32*, uint8)>(TEXT("UFortMovementComp_Character::CreateRuntimeDataForLogic"))
             .Pattern("33 DB 41 8A F0 4C 8B F2 48 8B F9 48 39 99 ? ? 00 00 74 ? E8")
             .Start()
+            .Or()
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("and qword ptr [rbp-0x*], 0x0; mov r8d, [rax+0x8]; mov rdx, [rax]; lea rcx, [rbp-0x*]") && Entry.Has("movsxd rsi, dword ptr [rbx+0x8]; lea eax, [rsi+0x1]; mov [rbx+0x8], eax"); })
+            .Find("movsxd rsi, dword ptr [rbx+0x8]; lea eax, [rsi+0x1]; mov [rbx+0x8], eax")
+            .Last("call 0x*")
+            .Target()
+            .Find("lea rdx, [rax+0x*]")
+            .Find("call 0x*")
+            .Target()
             .Get();
 
         static int32 ObjectForceManualEndSlot = 0;
