@@ -21,6 +21,15 @@ float UFortControllerComponent_Interaction::GetInteractDistance() const
         .Find("call 0x*")
         .Target()
         .Has("movss xmm6, dword ptr [rbx+0x*]; cmp byte ptr [rbx+0x*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_Interaction:ServerAttemptInteract"))
+        .Find("call r10; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortControllerComponent_Interaction"))
+        .Find("mov rcx, rbx; call 0x*", 2)
+        .Find("call 0x*")
+        .Target()
+        .Has("movss xmm6, dword ptr [rbx+0x*]; cmp byte ptr [rbx+0x*], 0x0")
         .Get();
 
     return GetInteractDistance(this);
