@@ -159,14 +159,16 @@ void UFortControllerComponent_VictoryCrowns::HandlePlayerPlaceChanged()
 
 bool UFortControllerComponent_VictoryCrowns::WasOwnerQualifyingWinner() const
 {
-    static auto MaxRankingForCrownAward = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/VictoryCrownsRuntime.VictoryCrownPlaylistData")))->FindPropertyByName(FName(TEXT("MaxRankingForCrownAward")));
+    static auto VictoryCrownPlaylistData = StaticClass()->FindPropertyByName(FName(TEXT("VictoryCrownPlaylistData")));
 
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
     auto PlayerState = PlayerController ? Cast<AFortPlayerStateAthena>(PlayerController->GetPlayerState()) : nullptr;
     auto RowData = PlayerState ? FindCurrentPlaylistRow() : nullptr;
+    auto RowStruct = RowData ? (*VictoryCrownPlaylistData->ContainerPtrToValuePtr<UDataTable*>(this))->RowStruct : nullptr;
+    auto MaxRankingForCrownAward = RowStruct ? RowStruct->FindPropertyByName(FName(TEXT("MaxRankingForCrownAward"))) : nullptr;
     const int32 Place = PlayerState ? PlayerState->GetPlace() : 0;
 
-    return RowData && Place > 0 && Place <= *MaxRankingForCrownAward->ContainerPtrToValuePtr<int32>(RowData);
+    return MaxRankingForCrownAward && Place > 0 && Place <= *MaxRankingForCrownAward->ContainerPtrToValuePtr<int32>(RowData);
 }
 
 void UFortControllerComponent_VictoryCrowns::SetWonCrownInMatch(bool bNewWonCrownInMatch)
