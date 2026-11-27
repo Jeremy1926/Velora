@@ -32,5 +32,5 @@ public:
 
     TArray<TSoftObjectPtr<UFortItemDefinition>>& GetBlacklistedItemDefinitions();
 
-    TArray<FString>& GetBlacklistedItemPaths();
+    TArray<FString>* GetBlacklistedItemPaths();
 };

@@ -89,8 +89,13 @@ void UFortGameStateComponent_Campsite::CacheAllowedItemDefinitions()
         }
     }
 
+    auto BlacklistedItemPaths = GetBlacklistedItemPaths();
+
+    if (!BlacklistedItemPaths)
+        return;
+
     for (auto& BlacklistedItemDefinition : GetBlacklistedItemDefinitions())
-        GetBlacklistedItemPaths().AddUnique(BlacklistedItemDefinition.ToString());
+        BlacklistedItemPaths->AddUnique(BlacklistedItemDefinition.ToString());
 }
 
 void UFortGameStateComponent_Campsite::execClaimUnusedBotName(FFrame& Stack, void* const Z_Param__Result)
@@ -179,9 +184,9 @@ TArray<TSoftObjectPtr<UFortItemDefinition>>& UFortGameStateComponent_Campsite::G
     return *BlacklistedItemDefinitions->ContainerPtrToValuePtr<TArray<TSoftObjectPtr<UFortItemDefinition>>>(this);
 }
 
-TArray<FString>& UFortGameStateComponent_Campsite::GetBlacklistedItemPaths()
+TArray<FString>* UFortGameStateComponent_Campsite::GetBlacklistedItemPaths()
 {
-    static auto BlacklistedItemPaths = StaticClass()->FindPropertyByName(FName(TEXT("BlacklistedItemPaths")));
+    static auto BlacklistedItemPaths = StaticClass()->FindPropertyByName(FName(TEXT("BlacklistedItemPaths"))) ? StaticClass()->FindPropertyByName(FName(TEXT("BlacklistedItemPaths"))) : StaticClass()->FindPropertyByName(FName(TEXT("DenyListItemPaths")));
 
-    return *BlacklistedItemPaths->ContainerPtrToValuePtr<TArray<FString>>(this);
+    return BlacklistedItemPaths ? BlacklistedItemPaths->ContainerPtrToValuePtr<TArray<FString>>(this) : nullptr;
 }
