@@ -148,6 +148,11 @@ void UAbilitySystemComponent::ClearAbility(const FGameplayAbilitySpecHandle& Han
         .Find("test al, al; jnz *; lea rdx, [*]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("GiveAbilityAndActivateOnce called on ability %s on the client, not allowed!"))
+        .Find("test al, al; jnz *; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     ClearAbility(this, Handle);
