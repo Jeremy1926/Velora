@@ -4,12 +4,14 @@
 #include "Containers/Array.h"
 #include "GameFramework/OnlineReplStructs.h"
 #include "UObject/NameTypes.h"
+#include "UObject/WeakObjectPtr.h"
 
 class AFortPlayerController;
 class AFortPlayerPawn;
 class UCapsuleComponent;
 class UStaticMeshComponent;
 struct FScalableFloat;
+struct FTimerHandle;
 
 enum class ESpawnMachineState : uint8
 {
@@ -43,7 +45,11 @@ public:
 
     void SkydiveIfAirborne(AFortPlayerPawn* Player);
 
+    void SkydiveIfStillAirborne(TWeakObjectPtr<AFortPlayerPawn> Player);
+
     static void TickPendingResurrections();
+
+    FTimerHandle* GetResurrectTimerHandle();
 
     TArray<FUniqueNetIdRepl>& GetPlayerIdsForResurrection();
 

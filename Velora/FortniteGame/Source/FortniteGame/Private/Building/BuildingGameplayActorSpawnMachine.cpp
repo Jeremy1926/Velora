@@ -8,6 +8,7 @@
 #include "Pawns/FortPlayerPawn.h"
 #include "Items/FortInventory.h"
 #include "Items/FortWorldItemDefinition.h"
+#include "FortInteractInterface.h"
 #include "FortKismetLibrary.h"
 #include "GameplayEffectTypes.h"
 #include "Components/CapsuleComponent.h"
@@ -20,6 +21,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
+#include "TimerManager.h"
 #include "UObject/Class.h"
 #include "UObject/ScriptInterface.h"
 #include "UObject/UnrealType.h"
@@ -202,7 +204,13 @@ void ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete()
         PlayerController->RespawnPlayerAfterDeath(RebootPlayersInAir(), false);
 
         PendingResurrections.Add(FPendingResurrection{ this, PlayerController });
-        PendingNextPlayers.Add(FPendingNextPlayer{ this, GetWorld()->GetTimeSeconds() + GetResurrectionNextPlayerDelay().GetValueAtLevel(0.0f) });
+
+        auto ResurrectTimerHandle = FTimerManager::CanSetTimers() ? GetResurrectTimerHandle() : nullptr;
+
+        if (ResurrectTimerHandle)
+            GetWorld()->GetTimerManager().SetTimer(*ResurrectTimerHandle, this, &ABuildingGameplayActorSpawnMachine::HandleOnResurrectTimerComplete, GetResurrectionNextPlayerDelay().GetValueAtLevel(0.0f));
+        else
+            PendingNextPlayers.Add(FPendingNextPlayer{ this, GetWorld()->GetTimeSeconds() + GetResurrectionNextPlayerDelay().GetValueAtLevel(0.0f) });
 
         return;
     }
@@ -419,9 +427,25 @@ void ABuildingGameplayActorSpawnMachine::OnPlayerPawnResurrected(AFortPlayerPawn
     TriggerRespawnFX(PlayerPawn);
     GiveWeaponsAndResources(UFortKismetLibrary::GetFortPlayerControllerFromActor(PlayerPawn));
 
-    if (DelayBeforeSkydiveCheck)
-        PendingSkydiveChecks.Add(FPendingSkydiveCheck{ this, PlayerPawn, GetWorld()->GetTimeSeconds() + *DelayBeforeSkydiveCheck->ContainerPtrToValuePtr<float>(this) });
+    if (!DelayBeforeSkydiveCheck)
+    {
+        SkydiveIfAirborne(PlayerPawn);
+    }
+    else if (FTimerManager::CanSetTimers())
+    {
+        FTimerHandle SkydiveCheckTimerHandle{};
+
+        GetWorld()->GetTimerManager().SetTimer(SkydiveCheckTimerHandle, FTimerDelegate::CreateUObject(this, &ABuildingGameplayActorSpawnMachine::SkydiveIfStillAirborne, TWeakObjectPtr<AFortPlayerPawn>(PlayerPawn)), *DelayBeforeSkydiveCheck->ContainerPtrToValuePtr<float>(this), false);
+    }
     else
+    {
+        PendingSkydiveChecks.Add(FPendingSkydiveCheck{ this, PlayerPawn, GetWorld()->GetTimeSeconds() + *DelayBeforeSkydiveCheck->ContainerPtrToValuePtr<float>(this) });
+    }
+}
+
+void ABuildingGameplayActorSpawnMachine::SkydiveIfStillAirborne(TWeakObjectPtr<AFortPlayerPawn> Player)
+{
+    if (auto PlayerPawn = Player.Get())
         SkydiveIfAirborne(PlayerPawn);
 }
 
@@ -638,6 +662,32 @@ void ABuildingGameplayActorSpawnMachine::TickPendingResurrections()
         if (SpawnMachine)
             SpawnMachine->HandleOnResurrectTimerComplete();
     }
+}
+
+FTimerHandle* ABuildingGameplayActorSpawnMachine::GetResurrectTimerHandle()
+{
+    static auto DefaultObject = StaticClass()->GetDefaultObject(false);
+    static auto InteractInterface = IFortInteractInterface::StaticClass() ? (uint8*)DefaultObject->GetInterfaceAddress(IFortInteractInterface::StaticClass()) : nullptr;
+    static auto PointerOffset = InteractInterface ? (int32)(InteractInterface - (uint8*)DefaultObject) : 0;
+    static char Adjust[48] = {};
+    static auto AdjustLength = snprintf(Adjust, sizeof(Adjust), "lea r*, [r*-0x%x]", PointerOffset);
+    static auto bInterfaceThis = PointerOffset > 0 && Anchor::Exists()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Start()
+        .Find(std::string_view(Adjust, AdjustLength))
+        .Get();
+    static auto ResurrectTimerHandle = Anchor::Offset(TEXT("ABuildingGameplayActorSpawnMachine::ResurrectTimerHandle"))
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Find("lea rdx, [r*+0x*]; movss [rsp+0x28], xmm0")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Find("lea rdx, [r*+0x*]; mov rcx, rbx; movaps xmm3, xmm6")
+        .Or()
+        .String(TEXT("[SCM] ABuildingGameplayActorSpawnMachine::ServerOnAttemptInteract - Start Rebooting"))
+        .Find("lea rdx, [r*+0x*]; mov dword ptr [rsp+0x3c], 0x*")
+        .Disp();
+
+    return ResurrectTimerHandle ? (FTimerHandle*)((uint8*)this + ResurrectTimerHandle + (bInterfaceThis ? PointerOffset : 0)) : nullptr;
 }
 
 TArray<FUniqueNetIdRepl>& ABuildingGameplayActorSpawnMachine::GetPlayerIdsForResurrection()
