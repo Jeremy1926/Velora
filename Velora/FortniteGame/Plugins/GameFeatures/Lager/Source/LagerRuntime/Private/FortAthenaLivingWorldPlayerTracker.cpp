@@ -69,6 +69,17 @@ void TBVTree<FSimpleBVTreeElement>::RecreateTree(const TArray<FSimpleBVTreeEleme
         .Target()
         .Find("jmp 0x*")
         .Target()
+        .Or()
+        .String(TEXT("STAT_FortAI_UpdateSpatialLookups"), "lea rsi, [0x*]")
+        .Start()
+        .Find("lea r8, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rbp-0x*]; call 0x*; mov rcx, r1*")
+        .Find("call 0x*")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
         .Get();
 
     Nodes.Reset();
