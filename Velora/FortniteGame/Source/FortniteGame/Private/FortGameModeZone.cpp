@@ -66,7 +66,12 @@ void AFortGameModeZone::CreateAIDirector()
     if ((!AIDirectors && !AIDirectorBR) || *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this))
         return;
 
-    static auto GameGetAIDirector = Anchor::Data<const uint8_t*>(TEXT("UFortKismetLibrary::GetAIDirector"))
+    static auto bGetAIDirectorStripped = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
+        .Find("setnz *; add [*+0x20], *; and qword ptr [*], 0x0")
+        .Get();
+
+    static auto GameGetAIDirector = bGetAIDirectorStripped ? nullptr : Anchor::Data<const uint8_t*>(TEXT("UFortKismetLibrary::GetAIDirector"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
         .Get();
 
