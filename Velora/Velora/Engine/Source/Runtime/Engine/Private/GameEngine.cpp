@@ -33,6 +33,7 @@
 #include "Building/BuildingGameplayActorTransientQuest.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingGameplayActorSpawnMachine.h"
+#include "Building/BuildingGameplayActorSentry.h"
 #include "FortAthenaLivingWorldManager.h"
 #include "AbandonedCampsiteManager.h"
 #include "FriendChestNative.h"
@@ -176,6 +177,7 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         ABGAConsumableSpawner::TickPendingSpawns();
         ABuildingItemCollectorActor::TickPendingOutputs();
         ABuildingGameplayActorSpawnMachine::TickPendingResurrections();
+        ABuildingGameplayActorSentry::TickPendingAggros();
         UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
         UFortServerBotManagerAthena::TickBotBrainActivationTimers();
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();

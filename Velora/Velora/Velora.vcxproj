@@ -363,6 +363,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingAutoNav.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingContainer.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingFoundation.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActor.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\FortVolumeManager.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortPawn.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Pawns\FortAIPawn.h" />
@@ -437,6 +438,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortKismetLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortInteractInterface.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorConversationCompatible.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingGameplayActorSentry.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Building\BuildingProp_ConversationCompatible.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortMissionLibrary.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\FortIndicatedActorManagementLibrary.h" />
@@ -791,6 +793,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingContainer.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingFoundation.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActor.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\FortPlayerPawnAthena.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameData.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortAssetManager.cpp" />
@@ -832,6 +835,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortKismetLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortInteractInterface.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorConversationCompatible.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingGameplayActorSentry.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Building\BuildingProp_ConversationCompatible.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortMissionLibrary.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortIndicatedActorManagementLibrary.cpp" />
