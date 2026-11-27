@@ -344,6 +344,14 @@ float ABuildingSMActor::DetermineMaxResourcesToSpawn(bool bRandomize)
         .Caller()
         .Log(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
         .SlotIn(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Or()
+        .String(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
+        .Last("lea rcx, [0x*]")
+        .Target()
+        .Reference("lea rdx, *")
+        .Start()
+        .Log(TEXT("ABuildingSMActor::DetermineMaxResourcesToSpawn"))
+        .SlotIn(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Get();
 
     return DetermineMaxResourcesToSpawn(this, bRandomize);
