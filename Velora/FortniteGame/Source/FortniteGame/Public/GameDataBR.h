@@ -19,6 +19,4 @@ public:
     const TArray<TAssetPtr<UDataTable>>& GetLootTierDataTablesBR() const;
 
     const TArray<TAssetPtr<UDataTable>>& GetLootPackageDataTablesBR() const;
-
-    const TAssetPtr<UClass>* GetAIDirectorBR() const;
 };

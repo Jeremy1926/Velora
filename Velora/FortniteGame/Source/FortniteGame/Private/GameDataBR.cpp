@@ -61,10 +61,3 @@ const TArray<TAssetPtr<UDataTable>>& UGameDataBR::GetLootPackageDataTablesBR() c
 
     return *LootPackageDataTablesBR->ContainerPtrToValuePtr<TArray<TAssetPtr<UDataTable>>>(this);
 }
-
-const TAssetPtr<UClass>* UGameDataBR::GetAIDirectorBR() const
-{
-    static auto AIDirectorBR = GetClass()->FindPropertyByName(FName(TEXT("AIDirectorBR")));
-
-    return AIDirectorBR && !AIDirectorBR->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this)->IsNull() ? AIDirectorBR->ContainerPtrToValuePtr<TAssetPtr<UClass>>(this) : nullptr;
-}
