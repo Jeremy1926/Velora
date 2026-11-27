@@ -39,6 +39,10 @@ FStreamingManagerCollection& IStreamingManager::Get()
         .Start()
         .Find("call 0x*; xor r8d, r8d; mov rcx, rax; movaps xmm1, xmm*; mov rdx, [rax]; call [rdx+0x8]")
         .Target()
+        .Or()
+        .String(TEXT("STAT_UGameEngine_Tick_IStreamingManager"))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return Get();
