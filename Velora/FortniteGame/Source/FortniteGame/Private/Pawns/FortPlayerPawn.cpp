@@ -1075,6 +1075,12 @@ bool AFortPlayerPawn::CanBeHoistedFromDBNO(AFortPlayerController* HoisterControl
         .Target()
         .Find("mov rdx, rbx; mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]")
         .Find("call [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:DBNOTryStartCarry"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, rdi; mov rax, [rdi]; mov rdx, rbx; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     return CanBeHoistedFromDBNO(this, HoisterController);
