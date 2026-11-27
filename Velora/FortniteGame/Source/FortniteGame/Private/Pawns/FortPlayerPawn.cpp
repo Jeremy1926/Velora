@@ -1040,6 +1040,12 @@ void AFortPlayerPawn::ServerInterrogateDBNOPlayer_Implementation(AFortPlayerPawn
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("AFortPlayerPawn::ServerInterrogateDBNOPlayer_Implementation"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "ret*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerInterrogateDBNOPlayer"))
+        .Find("setnz *; add r*, r*")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerPawn::ServerInterrogateDBNOPlayer_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "ret*")
         .Optional()
         .InChildVTables(StaticClass()));
 
