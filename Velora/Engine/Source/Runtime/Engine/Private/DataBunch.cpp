@@ -171,6 +171,13 @@ void FOutBunch::SetNext(FOutBunch* InNext)
         .Call()
         .Find("mov [r14+0x*], rbx; mov [r14+0x*], rcx")
         .Find("mov [r14+0x*], rcx")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov [rsi+0x*], rbx; xor ecx, ecx")
+        .Find("mov [rsi+0x*], rcx")
         .Disp();
 
     *(FOutBunch**)((uint8_t*)this + Next) = InNext;
@@ -191,6 +198,12 @@ void FOutBunch::SetChannel(UChannel* InChannel)
         .Call()
         .Find("mov [r14], rax; mov [r14+0x*], rsi")
         .Find("mov [r14+0x*], rsi")
+        .Or()
+        .String(TEXT("UChannel::Close: Sending CloseBunch. ChIndex == 0. Name: %s"))
+        .Start()
+        .Find("mov r8b, 0x1")
+        .Call()
+        .Find("mov [rsi+0x*], rbx; xor ecx, ecx")
         .Disp();
 
     *(UChannel**)((uint8_t*)this + Channel) = InChannel;
