@@ -1448,6 +1448,15 @@ bool AFortPlayerPawn::CanReviveFromDBNO(AController* EventInstigator)
         .Find("call [*+0x*]; test al, al")
         .Or()
         .BoolTestIn(this, (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsDBNO"))), "; mov r*, rdx; mov r*, rcx")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:DBNOTryStartCarry"))
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, rbx; mov rax, [rdi]; mov rcx, rdi; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerPawn::CanBeHoistedFromDBNO"))
+        .SlotShift(this, 3 * sizeof(void*))
+        .Has("jnz 0x*; test byte ptr [rcx+0x*], 0x*; jz 0x*; call 0x*")
         .Get();
 
     return CanReviveFromDBNO(this, EventInstigator);
