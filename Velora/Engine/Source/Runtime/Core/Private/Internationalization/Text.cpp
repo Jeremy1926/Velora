@@ -310,6 +310,12 @@ FText FText::Format(FTextFormat Fmt, FFormatOrderedArguments&& InArguments)
         .Find("mov r8, rax; lea rdx, *; lea rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteUI.AthenaGameOverDisplay:OnWinningScoreDetermined"))
+        .Find("add [*+0x20], *")
+        .Find("mov r8b, 0x1")
+        .Find("call 0x*", 3)
+        .Target()
         .Get();
 
     if (!Format)
@@ -414,6 +420,12 @@ FTextFormat::FTextFormat(const FText& InText)
         .Pattern("44 0F B6 80 ? ? 00 00 E8 ? ? ? ? 48 8D 15 ? ? ? ? 4C 8B E0 48 8D 4D ? E8")
         .Find("lea rdx, [0x*]")
         .Call()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetTextLibrary:Format"))
+        .Find("add [*+0x20], *")
+        .Find("mov r8b, 0x1")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Constructor(this, InText, 1);
