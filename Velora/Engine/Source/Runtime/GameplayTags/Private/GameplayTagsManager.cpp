@@ -69,6 +69,10 @@ FGameplayTag UGameplayTagsManager::RequestGameplayTag(FName TagName, bool ErrorI
         .String(TEXT("GameplayCue.Athena.Ostrich.SelfDestructPrime"))
         .Find("mov r9b, 0x1; lea rdx, *; mov r8d, *; mov rcx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("GameplayCue.Athena.Ostrich.SelfDestructPrime"))
+        .Find("mov r8d, [rsp+0x*]; lea rdx, *; mov rcx, *; mov r9b, 0x1; call 0x*")
+        .Call()
         .Get();
 
     FGameplayTag Result;
