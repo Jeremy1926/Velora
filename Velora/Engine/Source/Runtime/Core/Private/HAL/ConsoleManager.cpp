@@ -284,6 +284,9 @@ float IConsoleVariable::GetFloat() const
         .Or()
         .String(TEXT("r.ViewDistanceScale"), "lea rdx, [0x*]; mov r8b, *; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; mov rbx, rax; call [*+0x*]; movss *, *")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("r.ViewDistanceScale"), "lea rdx, [0x*]; call [*+0x*]; mov rdx, [rax]; mov rcx, rax; mov rbx, rax; call [*+0x*]; movss *, *")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return GetFloat(this);
