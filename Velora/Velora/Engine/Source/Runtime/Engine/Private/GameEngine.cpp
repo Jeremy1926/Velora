@@ -182,10 +182,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         if (!FTimerManager::CanSetTimers())
         {
             ABuildingGameplayActorSentry::TickPendingAggros();
+            UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
             UFortServerBotManagerAthena::TickBotBrainActivationTimers();
         }
 
-        UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
         ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();

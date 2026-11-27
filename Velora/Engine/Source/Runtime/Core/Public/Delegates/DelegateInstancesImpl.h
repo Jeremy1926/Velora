@@ -1,23 +1,26 @@
 #pragma once
 
+#include <tuple>
+#include <utility>
 #include "Delegates/DelegateBase.h"
 #include "Delegates/DelegateInstanceInterface.h"
 #include "Templates/UnrealTemplate.h"
 #include "UObject/WeakObjectPtr.h"
 
-template<bool bConst, class UserClass, typename FuncType, int32 Layout>
+template<bool bConst, class UserClass, typename FuncType, int32 Layout, typename... VarTypes>
 class TBaseUObjectMethodDelegateInstance;
 
-template<class UserClass, int32 Layout, typename RetValType, typename... ParamTypes>
-class TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), Layout> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
+template<class UserClass, int32 Layout, typename RetValType, typename... ParamTypes, typename... VarTypes>
+class TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), Layout, VarTypes...> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
 {
 public:
-    typedef RetValType (UserClass::*FMethodPtr)(ParamTypes...);
+    typedef RetValType (UserClass::*FMethodPtr)(ParamTypes..., VarTypes...);
 
-    TBaseUObjectMethodDelegateInstance(UserClass* InUserObject, FMethodPtr InMethodPtr)
+    TBaseUObjectMethodDelegateInstance(UserClass* InUserObject, FMethodPtr InMethodPtr, VarTypes... Vars)
         : Handle(FDelegateHandle::GenerateNewHandle)
         , UserObject(InUserObject)
         , MethodPtr(InMethodPtr)
+        , Payload(Vars...)
     {
     }
 
@@ -58,14 +61,14 @@ public:
 
     RetValType Execute(ParamTypes... Params) const override
     {
-        return (UserObject.Get()->*MethodPtr)(Forward<ParamTypes>(Params)...);
+        return Invoke(UserObject.Get(), std::index_sequence_for<VarTypes...>(), Forward<ParamTypes>(Params)...);
     }
 
     bool ExecuteIfSafe(ParamTypes... Params) const override
     {
         if (auto ActualUserObject = UserObject.Get())
         {
-            (ActualUserObject->*MethodPtr)(Forward<ParamTypes>(Params)...);
+            Invoke(ActualUserObject, std::index_sequence_for<VarTypes...>(), Forward<ParamTypes>(Params)...);
 
             return true;
         }
@@ -74,9 +77,16 @@ public:
     }
 
 private:
+    template<size_t... Indices>
+    RetValType Invoke(UserClass* ActualUserObject, std::index_sequence<Indices...>, ParamTypes... Params) const
+    {
+        return (ActualUserObject->*MethodPtr)(Forward<ParamTypes>(Params)..., std::get<Indices>(Payload)...);
+    }
+
     FDelegateHandle Handle;
     TWeakObjectPtr<UserClass> UserObject;
     FMethodPtr MethodPtr;
+    std::tuple<VarTypes...> Payload;
 };
 
 template<typename FuncType, typename FunctorType, int32 Layout>

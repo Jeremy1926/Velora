@@ -7,7 +7,9 @@
 #include "FortKismetLibrary.h"
 #include "GameplayEffectTypes.h"
 #include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Math/UnrealMathUtility.h"
+#include "TimerManager.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -90,13 +92,35 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::StartItemAwardTimers()
         auto GrantInfo = (const FActiveItemGrantInfo*)(ElementData + Index * ElementSize);
         const float Rate = ((const FScalableFloat*)((const uint8*)GrantInfo + ValueOffset))->GetValueAtLevel(0.f);
 
-        if (Rate > 0.f)
+        if (Rate <= 0.f)
+            continue;
+
+        if (FTimerManager::CanSetTimers())
+        {
+            FTimerHandle TimerHandle{};
+
+            Pawn->GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &UFortGameplayAbilityAthena_PeriodicItemGrant::AwardItem, *GrantInfo), Rate, true);
+
+            if (auto ActiveTimers = GetActiveTimers())
+                ActiveTimers->Add(TimerHandle);
+        }
+        else
+        {
             PendingItemAwards.Add(FPendingItemAward{ this, GrantInfo, Rate, Pawn->GetWorld()->GetTimeSeconds() + Rate });
+        }
     }
 }
 
 void UFortGameplayAbilityAthena_PeriodicItemGrant::StopItemAwardTimers()
 {
+    if (auto ActiveTimers = GetActiveTimers())
+    {
+        for (auto& TimerHandle : *ActiveTimers)
+            UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, TimerHandle);
+
+        ActiveTimers->Empty();
+    }
+
     for (int32 Index = PendingItemAwards.Num() - 1; Index >= 0; Index--)
     {
         if (PendingItemAwards[Index].Ability.Get() == this)
@@ -207,6 +231,13 @@ void UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers()
 
         Ability->AwardItem(*PendingItemAwards[Index].GrantInfo);
     }
+}
+
+TArray<FTimerHandle>* UFortGameplayAbilityAthena_PeriodicItemGrant::GetActiveTimers()
+{
+    static auto ActiveTimers = GetClass()->FindPropertyByName(FName(TEXT("ActiveTimers")));
+
+    return ActiveTimers ? ActiveTimers->ContainerPtrToValuePtr<TArray<FTimerHandle>>(this) : nullptr;
 }
 
 AFortPlayerController*& UFortGameplayAbilityAthena_PeriodicItemGrant::GetOwnerControllerCachedValue()

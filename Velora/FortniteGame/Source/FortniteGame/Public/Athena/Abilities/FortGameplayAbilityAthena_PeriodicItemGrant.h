@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Abilities/FortGameplayAbility.h"
+#include "Containers/Array.h"
+#include "Engine/EngineTypes.h"
 
 class AFortPlayerController;
 class UFortWorldItemDefinition;
@@ -35,6 +37,8 @@ public:
     void execStopItemAwardTimers(FFrame& Stack, void* const Z_Param__Result);
 
     static void TickItemAwardTimers();
+
+    TArray<FTimerHandle>* GetActiveTimers();
 
     AFortPlayerController*& GetOwnerControllerCachedValue();
 };

@@ -42,12 +42,12 @@ public:
         return Result;
     }
 
-    template<class UserClass>
-    static TDelegate CreateUObject(UserClass* InUserObject, RetValType (UserClass::*InFunc)(ParamTypes...))
+    template<class UserClass, typename... VarTypes>
+    static TDelegate CreateUObject(UserClass* InUserObject, RetValType (UserClass::*InFunc)(ParamTypes..., VarTypes...), std::type_identity_t<VarTypes>... Vars)
     {
         TDelegate Result;
 
-        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), decltype(Layout)::value>(InUserObject, InFunc); });
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), decltype(Layout)::value, VarTypes...>(InUserObject, InFunc, Vars...); });
 
         return Result;
     }
