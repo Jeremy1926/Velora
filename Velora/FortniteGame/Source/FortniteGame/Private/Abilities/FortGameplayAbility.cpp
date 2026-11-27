@@ -143,6 +143,8 @@ float UFortGameplayAbility::GetCurrentAbilitySourceLevel()
         .Find("lea rdx, [rsp+0x*]; mov rcx, rdi; call 0x*; mov rax, [rdi]")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortGameplayAbility:GetCurrentAbilitySourceLevel"))
         .Get();
 
     float Level = 0.0f;
