@@ -206,6 +206,9 @@ void AFortWeapon::AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason 
 {
     static auto GrantedAbilityRemovalPolicy = StaticClass()->FindPropertyByName(FName(TEXT("GrantedAbilityRemovalPolicy")));
 
+    if (!GrantedAbilityRemovalPolicy)
+        return;
+
     auto RemovalPolicy = *GrantedAbilityRemovalPolicy->ContainerPtrToValuePtr<EFortWeaponAbilityRemovalPolicy>(this, (int32)Reason);
     auto GameMode = Cast<AFortGameModeZone>(GetWorld()->GetAuthGameMode());
 

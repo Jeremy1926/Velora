@@ -817,6 +817,15 @@ void AFortPlayerController::ServerSpawnInventoryDrop_Implementation(FGuid ItemGu
             Pickup->TossPickup(Location, Pawn, 0, true);
         }
 
+        if (DropItemEntry.GetCount() >= ItemEntry.GetCount())
+        {
+            for (auto Weapon : Pawn->GetCurrentWeaponList())
+            {
+                if (Weapon && Weapon->GetItemEntryGuid() == ItemGuid)
+                    Weapon->AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason::RemovedFromInventory);
+            }
+        }
+
         RemoveInventoryItem(ItemGuid, DropItemEntry.GetCount(), DropItemEntry.GetCount() >= ItemEntry.GetCount());
 
         return;
