@@ -91,6 +91,13 @@ void UAthenaSpecialActorComponent::RegisterSpecialActor()
         .Find("mov r8, r*; lea rcx, [rsp+0x*]; mov rdx, r*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.BuildingProp_CaptureItemSpawner:RegisterSpecialActor"))
+        .Find("call 0x*; cmp eax, 0xffffffff")
+        .Target()
+        .Find("mov r8, r*; mov rdx, r*; lea rcx, [rsp+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto InitDataConstructor = Anchor::Address()
