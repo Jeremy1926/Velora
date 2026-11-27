@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "FortGameModeZone.h"
 #include "FortGameData.h"
+#include "GameDataBR.h"
 #include "AI/FortAIDirector.h"
 #include "Athena/AI/AthenaAIDirector.h"
 #include "Items/FortInventory.h"
@@ -59,11 +60,18 @@ void AFortGameModeZone::CreateAIDirector()
 
     static auto AIDirector = GetClass()->FindPropertyByName(FName(TEXT("AIDirector")));
     auto AIDirectors = UFortGameData::Get()->GetAIDirectors();
+    auto GameDataBR = AIDirectors ? nullptr : UGameDataBR::Get();
+    auto AIDirectorBR = GameDataBR ? GameDataBR->GetAIDirectorBR() : nullptr;
 
-    if (!AIDirectors)
+    if ((!AIDirectors && !AIDirectorBR) || *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this))
         return;
 
-    static auto GameGetAIDirector = Anchor::Data<const uint8_t*>(TEXT("UFortKismetLibrary::GetAIDirector"))
+    static auto bGetAIDirectorStripped = Anchor::Exists()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
+        .Find("setnz *; add [*+0x20], *; and qword ptr [*], 0x0")
+        .Get();
+
+    static auto GameGetAIDirector = bGetAIDirectorStripped ? nullptr : Anchor::Data<const uint8_t*>(TEXT("UFortKismetLibrary::GetAIDirector"))
         .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GetAIDirector"))
         .Get();
 
@@ -147,10 +155,11 @@ void AFortGameModeZone::CreateAIDirector()
 
     auto AIDirectorIndex = GetOverrideAIDirectorIndex();
 
-    if (AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors->Num())
+    if (AIDirectors && (AIDirectorIndex < 0 || AIDirectorIndex >= AIDirectors->Num()))
         return;
 
-    auto AIDirectorClass = (*AIDirectors)[AIDirectorIndex].LoadSynchronous();
+    auto& AIDirectorAsset = AIDirectors ? (*AIDirectors)[AIDirectorIndex] : *AIDirectorBR;
+    auto AIDirectorClass = AIDirectorAsset.LoadSynchronous();
     static auto CanCreateInCurrentContext = THook(TEXT("UObject::CanCreateInCurrentContext"), &UObject::CanCreateInCurrentContext)
         .If(!::Anchor::Exists().String(TEXT("Unable to spawn class '%s' due to client/server context.")).Last("call 0x*; test al, al").IsTarget("movaps xmm2, *; mov r8, rcx").Get())
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
@@ -169,7 +178,7 @@ void AFortGameModeZone::CreateAIDirector()
 
     *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(this) = NewAIDirector;
 
-    if (!NewAIDirector || AIDirectorClass || (*AIDirectors)[AIDirectorIndex].GetLongPackageName() != FString(TEXT("/Game/Athena/Deimos/AIDirector/Deimos_AIDirector")))
+    if (!NewAIDirector || AIDirectorClass || AIDirectorAsset.GetLongPackageName() != FString(TEXT("/Game/Athena/Deimos/AIDirector/Deimos_AIDirector")))
         return;
 
     NewAIDirector->GetBaseEncounterClass() = LoadObject<UClass>(nullptr, TEXT("/Game/Athena/Deimos/AIDirector/Encounters/Deimos_BaseEncounterSettings.Deimos_BaseEncounterSettings_C"));
