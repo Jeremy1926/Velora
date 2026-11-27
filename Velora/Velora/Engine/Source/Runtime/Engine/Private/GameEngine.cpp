@@ -214,7 +214,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
             if (GamePhaseLogicComponent)
             {
-                GamePhaseLogicComponent->TickComponent(DeltaSeconds);
+                if (!DETOUR_ORIGINAL(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, TickComponent))
+                    GamePhaseLogicComponent->TickComponent(DeltaSeconds, LEVELTICK_All, nullptr);
 
                 if (FGUI::bStartBus && GamePhaseLogicComponent->GetGamePhase() == EAthenaGamePhase::Warmup)
                     GamePhaseLogicComponent->StartAircraftPhase(false);

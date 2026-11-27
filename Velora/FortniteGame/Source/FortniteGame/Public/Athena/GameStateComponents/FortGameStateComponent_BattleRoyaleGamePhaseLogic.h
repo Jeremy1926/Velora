@@ -2,6 +2,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Containers/Array.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Templates/UnrealTemplate.h"
 #include "UObject/Class.h"
 #include "UObject/WeakObjectPtrTemplates.h"
@@ -78,7 +79,7 @@ public:
 
     static UFortGameStateComponent_BattleRoyaleGamePhaseLogic* Get(const UObject* WorldContextObject);
 
-    void TickComponent(float DeltaTime);
+    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
     void HandleMatchHasStarted();
 

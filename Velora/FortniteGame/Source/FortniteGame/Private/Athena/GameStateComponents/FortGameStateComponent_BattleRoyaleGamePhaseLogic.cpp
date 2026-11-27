@@ -70,36 +70,51 @@ UFortGameStateComponent_BattleRoyaleGamePhaseLogic* UFortGameStateComponent_Batt
     return GameState ? (UFortGameStateComponent_BattleRoyaleGamePhaseLogic*)GameState->FindComponentByClass(StaticClass()) : nullptr;
 }
 
-void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TickComponent(float DeltaTime)
+void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    DETOUR(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, TickComponent, Anchor::Hook()
+        .If(StaticClass())
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .Or()
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Call()
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .InChildVTablesCounted(StaticClass()));
+
     auto GameState = Cast<AFortGameStateAthena>(GetOwner());
 
-    if (!GameState)
-        return;
-
-    SafeZoneInsideChecks();
-
-    const EAthenaGamePhase GamePhase = GetGamePhase();
-    auto Playlist = GameState->GetCurrentPlaylist();
-
-    if (Playlist && HasSafeZoneAlreadyStarted(GamePhase, GameState->GetSafeZoneStartUp()))
-        UpdateSafeZonesPhase();
-
-    if (GamePhase == EAthenaGamePhase::Warmup)
-        UpdateWarmupPhase();
-    else if (GamePhase == EAthenaGamePhase::SafeZones && !Playlist)
-        UpdateSafeZonesPhase();
-
-    auto& SupplyDropWaveStartedSoundCueTimer = GetSupplyDropWaveStartedSoundCueTimer();
-
-    if (SupplyDropWaveStartedSoundCueTimer >= 0.0f && GetWorld()->GetTimeSeconds() >= SupplyDropWaveStartedSoundCueTimer)
+    if (GameState && Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
     {
-        SupplyDropWaveStartedSoundCueTimer = -1.0f;
-        RemoveSupplyDropWaveStartedSoundCue();
+        SafeZoneInsideChecks();
+
+        const EAthenaGamePhase GamePhase = GetGamePhase();
+        auto Playlist = GameState->GetCurrentPlaylist();
+
+        if (Playlist && HasSafeZoneAlreadyStarted(GamePhase, GameState->GetSafeZoneStartUp()))
+            UpdateSafeZonesPhase();
+
+        if (GamePhase == EAthenaGamePhase::Warmup)
+            UpdateWarmupPhase();
+        else if (GamePhase == EAthenaGamePhase::SafeZones && !Playlist)
+            UpdateSafeZonesPhase();
+
+        auto& SupplyDropWaveStartedSoundCueTimer = GetSupplyDropWaveStartedSoundCueTimer();
+
+        if (SupplyDropWaveStartedSoundCueTimer >= 0.0f && GetWorld()->GetTimeSeconds() >= SupplyDropWaveStartedSoundCueTimer)
+        {
+            SupplyDropWaveStartedSoundCueTimer = -1.0f;
+            RemoveSupplyDropWaveStartedSoundCue();
+        }
+
+        if (GamePhase == EAthenaGamePhase::Aircraft || GamePhase == EAthenaGamePhase::SafeZones)
+            UpdateSupplyDrops();
     }
 
-    if (GamePhase == EAthenaGamePhase::Aircraft || GamePhase == EAthenaGamePhase::SafeZones)
-        UpdateSupplyDrops();
+    if (DETOUR_ORIGINAL(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, TickComponent))
+        Original(DeltaTime, TickType, ThisTickFunction);
 }
 
 void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::HandleMatchHasStarted()
