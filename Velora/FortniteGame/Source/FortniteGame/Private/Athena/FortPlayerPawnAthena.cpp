@@ -71,6 +71,9 @@ void AFortPlayerPawnAthena::PossessedBy(AController* NewController)
     DETOUR(AFortPlayerPawnAthena, PossessedBy, Anchor::Hook()
         .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "mov rcx, *; inc al; and al, 0x3; mov [0x*], al")
         .Optional()
         .InChildVTables(StaticClass()));
 
