@@ -2059,6 +2059,10 @@ void AFortPlayerController::ServerRepairBuildingActor_Implementation(ABuildingSM
         .Event(TEXT("ServerRepairBuildingActor"))
         .Find("mov rax, [0x*]; mov [*], rax; mov rax, [0x*]")
         .Target()
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("mov rcx, [0x*]; mov r*, [rsp+0x*]; cmp r*, rcx")
+        .Target()
         .Get();
 
     static auto BuildingLocked = Anchor::Data<const FText*>(TEXT("BuildingLocked"))
