@@ -118,7 +118,7 @@ int32 IDelegateInstance::GetLayout()
             }
         }
 
-        return 0;
+        return -1;
     }();
 
     return Layout;

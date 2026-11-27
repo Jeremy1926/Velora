@@ -14,6 +14,7 @@ class AGameNetworkManager;
 class AGameStateBase;
 class APawn;
 class AWorldSettings;
+class FTimerManager;
 class UAISystemBase;
 class UGameInstance;
 class ULevel;
@@ -102,6 +103,8 @@ public:
     UAISystemBase* GetAISystem() const;
 
     UGameInstance* GetGameInstance() const;
+
+    FTimerManager& GetTimerManager() const;
 
     AGameNetworkManager* GetNetworkManager() const;
 

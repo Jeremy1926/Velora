@@ -109,6 +109,69 @@ UGameInstance* UWorld::GetGameInstance() const
     return *OwningGameInstance->ContainerPtrToValuePtr<UGameInstance*>(this);
 }
 
+FTimerManager& UWorld::GetTimerManager() const
+{
+    static auto bInlined = Anchor::Exists()
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:K2_SetTimerDelegate"))
+        .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+        .Or()
+        .String(TEXT("SetTimer passed a bad function (%s) or object (%s)"))
+        .Start()
+        .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+        .Get();
+
+    if (bInlined)
+    {
+        static auto GameInstanceTimerManager = Anchor::Offset(TEXT("UGameInstance::TimerManager"))
+            .Native(TEXT("/Script/Engine.KismetSystemLibrary:K2_SetTimerDelegate"))
+            .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+            .Find("mov *, [*+0x*]")
+            .Or()
+            .String(TEXT("SetTimer passed a bad function (%s) or object (%s)"))
+            .Start()
+            .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+            .Find("mov *, [*+0x*]")
+            .Disp();
+        static auto TimerManager = Anchor::Offset(TEXT("UWorld::TimerManager"))
+            .Native(TEXT("/Script/Engine.KismetSystemLibrary:K2_SetTimerDelegate"))
+            .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+            .Find("jz 0x*")
+            .Target()
+            .Is("mov *, [*+0x*]")
+            .Or()
+            .String(TEXT("SetTimer passed a bad function (%s) or object (%s)"))
+            .Start()
+            .FieldFind("mov *, [*+%x]; test *, *; jz 0x*; mov *, [*+0x*]; jmp 0x*", GetClass()->FindPropertyByName(FName(TEXT("OwningGameInstance"))))
+            .Find("jz 0x*")
+            .Target()
+            .Is("mov *, [*+0x*]")
+            .Disp();
+
+        auto GameInstance = GetGameInstance();
+
+        return **(FTimerManager**)(GameInstance ? (uint8*)GameInstance + GameInstanceTimerManager : (uint8*)this + TimerManager);
+    }
+
+    static auto GetTimerManager = Anchor::Function<FTimerManager* (*)(const UWorld*)>(TEXT("UWorld::GetTimerManager"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:K2_SetTimerDelegate"))
+        .Find("mov [rsp+0x20], *")
+        .Last("call 0x*")
+        .Last("call 0x*")
+        .IsTarget("mov rax, [rcx+0x*]; test rax, rax; jz 0x*; mov rax, [rax+0x*]; ret")
+        .Target()
+        .Or()
+        .String(TEXT("SetTimer passed a bad function (%s) or object (%s)"))
+        .Start()
+        .Find("mov [rsp+0x20], *")
+        .Last("call 0x*")
+        .Last("call 0x*")
+        .IsTarget("mov rax, [rcx+0x*]; test rax, rax; jz 0x*; mov rax, [rax+0x*]; ret")
+        .Target()
+        .Get();
+
+    return *GetTimerManager(this);
+}
+
 AGameNetworkManager* UWorld::GetNetworkManager() const
 {
     static auto NetworkManager = GetClass()->FindPropertyByName(FName(TEXT("NetworkManager")));
