@@ -393,6 +393,18 @@ void UAbilitySystemComponent::RemoveGameplayCue_Internal(const FGameplayTag Game
         .Target()
         .Is("mov rax, [rcx]; lea r8, [rcx+0x*]; jmp [rax+0x*]")
         .Find("jmp [rax+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.GameplayAbility:K2_RemoveGameplayCue"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("UGameplayAbility::K2_RemoveGameplayCue"))
+        .Entry(TEXT("/Script/GameplayAbilities.Default__GameplayAbility"))
+        .Find("mov rcx, rax; mov edx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Is("mov rax, [rcx]; lea r8, [rcx+0x*]; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
         .Optional()
         .Get();
 
