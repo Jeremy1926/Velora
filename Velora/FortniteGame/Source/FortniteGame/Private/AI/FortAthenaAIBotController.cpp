@@ -1,19 +1,28 @@
 #include "pch.h"
 #include "AI/FortAthenaAIBotController.h"
+#include "AI/FortAthenaAIRuntimeParameters_Inventory.h"
 #include "Athena/AI/FortAthenaAIBotCustomizationData.h"
 #include "Athena/AI/FortAthenaAIBotInventoryItems.h"
 #include "Athena/FortServerBotManagerAthena.h"
+#include "Athena/FortGameStateAthena.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/Cosmetics/AthenaPickaxeItemDefinition.h"
 #include "Items/FortInventory.h"
 #include "Items/FortInventoryOwnerInterface.h"
 #include "Items/FortItemDefinition.h"
+#include "Items/FortPickup.h"
+#include "Items/FortPickupAthena.h"
 #include "Items/FortWorldItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Items/FortWeaponItemDefinition.h"
 #include "Player/FortPlayerState.h"
 #include "Weapons/FortWeapon.h"
+#include "FortKismetLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayTagAssetInterface.h"
+#include "GameplayTagContainer.h"
+#include "Math/Rotator.h"
 #include "Templates/Casts.h"
 #include "Engine/World.h"
 #include "UObject/ScriptInterface.h"
@@ -497,4 +506,66 @@ void* AFortAthenaAIBotController::DropInventoryItems(void* OutPickupsOrFortPawn,
     }
 
     return Original(OutPickupsOrFortPawn, FortPawnOrPickupPostSpawnDelegate);
+}
+
+UFortAthenaAIRuntimeParameters_Inventory* AFortAthenaAIBotController::GetCachedInventoryRuntimeParameters() const
+{
+    static auto CachedInventoryRuntimeParameters = GetClass()->FindPropertyByName(FName(TEXT("CachedInventoryRuntimeParameters")));
+
+    return CachedInventoryRuntimeParameters ? *CachedInventoryRuntimeParameters->ContainerPtrToValuePtr<UFortAthenaAIRuntimeParameters_Inventory*>(this) : nullptr;
+}
+
+void AFortAthenaAIBotController::DropLootInfoOnDeath(AFortPawn* Pawn)
+{
+    auto InventoryParameters = GetCachedInventoryRuntimeParameters();
+    auto LootInfo = InventoryParameters ? InventoryParameters->GetLootInfo().GetRow<FFortAthenaAILootInfoDataTableRow>(TEXT("AFortAthenaAIBotController::DropLootOnDeath")) : nullptr;
+    auto World = GetWorld();
+    auto GameState = World ? Cast<AFortGameStateAthena>(World->GetGameState()) : nullptr;
+
+    if (!LootInfo || !GameState)
+        return;
+
+    static auto GameplayTagAssetInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/GameplayTags.GameplayTagAssetInterface"));
+
+    FGameplayTagContainer PawnTags;
+
+    if (auto AbilitySystemComponent = Pawn->GetAbilitySystemComponent())
+        ((IGameplayTagAssetInterface*)AbilitySystemComponent->GetInterfaceAddress(GameplayTagAssetInterface))->GetOwnedGameplayTags(PawnTags);
+
+    const FGameplayTagContainer PlaylistContextTags = GameState->GetAthenaPlaylistContextTags();
+    const FVector LootSpawnLocation = Pawn->GetActorLocation();
+
+    for (int32 Index = 0; Index < LootInfo->GetNumLootDroppingBehaviors(); Index++)
+    {
+        auto& Behavior = LootInfo->GetLootDroppingBehavior(Index);
+
+        if (!Behavior.GetOptionalTagQuery().IsEmpty() && !Behavior.GetOptionalTagQuery().Matches(PawnTags))
+            continue;
+
+        if (!Behavior.GetOptionalPlaylistTagQuery().IsEmpty() && !Behavior.GetOptionalPlaylistTagQuery().Matches(PlaylistContextTags))
+            continue;
+
+        if (Behavior.GetbShouldDropInventoryOnDeath())
+            DropInventoryItems(Pawn, nullptr);
+
+        if (!Behavior.GetbShouldDropLootOnDeath())
+            continue;
+
+        auto& LootTiers = Behavior.GetLootTiers();
+        const int32 RandomLootTier = Behavior.GetbShouldBotPickRandomLootTier() && LootTiers.Num() > 0 ? FMath::RandHelper(LootTiers.Num()) : -1;
+
+        for (int32 TierIndex = 0; TierIndex < LootTiers.Num(); TierIndex++)
+        {
+            TArray<FFortItemEntry> LootToDrop;
+
+            if ((RandomLootTier >= 0 && TierIndex != RandomLootTier) || !UFortKismetLibrary::PickLootDrops(&LootToDrop, LootTiers[TierIndex], -1, -1))
+                continue;
+
+            for (auto& ItemEntry : LootToDrop)
+            {
+                if (auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
+                    Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
+            }
+        }
+    }
 }

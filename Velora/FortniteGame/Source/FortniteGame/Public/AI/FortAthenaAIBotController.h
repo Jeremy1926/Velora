@@ -8,6 +8,7 @@ class AFortPawn;
 class AFortPlayerPawn;
 class UBehaviorTree;
 class UFortAthenaAIBotInventoryItems;
+class UFortAthenaAIRuntimeParameters_Inventory;
 class UFortAthenaAIRuntimeParametersComponent;
 class UFortBotNameSettings;
 class UFortItemDefinition;
@@ -76,4 +77,8 @@ public:
     FFortAthenaLoadout& GetCosmeticLoadoutBC();
 
     void* DropInventoryItems(void* OutPickupsOrFortPawn, void* FortPawnOrPickupPostSpawnDelegate);
+
+    UFortAthenaAIRuntimeParameters_Inventory* GetCachedInventoryRuntimeParameters() const;
+
+    void DropLootInfoOnDeath(AFortPawn* Pawn);
 };

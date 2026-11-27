@@ -73,6 +73,8 @@ public:
 
     void SetHealth(float NewHealth);
 
+    bool DropLootOnDeath();
+
     UFortMovementSet* GetMovementSet() const;
 
     void SetCustomTimeDilation(float InCustomTimeDilation);

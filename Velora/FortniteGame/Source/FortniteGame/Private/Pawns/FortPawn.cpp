@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Pawns/FortPawn.h"
 #include "Abilities/FortAbilitySystemComponent.h"
+#include "AI/FortAthenaAIBotController.h"
+#include "AI/FortAthenaAIRuntimeParameters_Inventory.h"
 #include "Athena/FortPlayerPawnAthena.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -325,6 +327,25 @@ void AFortPawn::SetHealth(float NewHealth)
 
     if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(this); PlayerPawn && GetIsDBNO())
         PlayerPawn->ForceReviveFromDBNO(GetController());
+}
+
+bool AFortPawn::DropLootOnDeath()
+{
+    DETOUR(AFortPawn, DropLootOnDeath, Anchor::Hook()
+        .If(FAILootInfoRowEntry::StaticStruct() && FAILootInfoRowEntry::StaticStruct()->FindPropertyByName(FName(TEXT("OptionalCondition"))))
+        .String(TEXT("AFortAthenaAIBotController::DropLootOnDeath"))
+        .Start()
+        .Find("cmp [rax+0x10], *; jz *; mov rcx, *; call 0x*; test *, *; jz *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Optional()
+        .AtCall());
+
+    const bool bIsPlayerPawn = Original();
+
+    if (auto BotController = bIsPlayerPawn ? Cast<AFortAthenaAIBotController>(GetController()) : nullptr)
+        BotController->DropLootInfoOnDeath(this);
+
+    return bIsPlayerPawn;
 }
 
 UFortMovementSet* AFortPawn::GetMovementSet() const
