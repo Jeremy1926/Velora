@@ -3,6 +3,7 @@
 #include "Building/BuildingContainer.h"
 #include "Containers/Array.h"
 #include "UObject/NameTypes.h"
+#include "UObject/WeakObjectPtr.h"
 
 struct FFrame;
 struct FHitResult;
@@ -35,6 +36,8 @@ public:
     void PlayerAdded(AFortPlayerPawnAthena* Player);
 
     void PlayerRemoved(AFortPlayerPawnAthena* Player);
+
+    void ActivatePlayer(TWeakObjectPtr<AFortPlayerPawnAthena> Player);
 
     static void TickActivationTimers();
 

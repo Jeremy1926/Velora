@@ -189,11 +189,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             UFortServerBotManagerAthena::TickBotBrainActivationTimers();
             UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
             ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
+            AFriendChestNative::TickActivationTimers();
         }
 
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
-        AFriendChestNative::TickActivationTimers();
         AFortPlayerStateZone::TickSimulatedAttributes(World);
         UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(World, DeltaSeconds);
 

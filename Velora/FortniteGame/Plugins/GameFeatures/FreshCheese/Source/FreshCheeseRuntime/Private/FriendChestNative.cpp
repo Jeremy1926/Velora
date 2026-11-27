@@ -10,6 +10,8 @@
 #include "FortKismetLibrary.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "TimerManager.h"
 #include "GameFramework/Actor.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
@@ -31,6 +33,15 @@ struct FFriendChestPendingActivation
 };
 
 static TArray<FFriendChestPendingActivation> PendingActivations;
+
+struct FFriendChestActivationTimer
+{
+    TWeakObjectPtr<AFriendChestNative> Chest;
+    TWeakObjectPtr<AFortPlayerPawnAthena> Player;
+    FTimerHandle TimerHandle;
+};
+
+static TArray<FFriendChestActivationTimer> ActivationTimers;
 
 UClass* AFriendChestNative::StaticClass()
 {
@@ -118,6 +129,18 @@ void AFriendChestNative::OnTriggerComponentBeginOverlap(UPrimitiveComponent* Ove
             return;
     }
 
+    for (int32 Index = ActivationTimers.Num() - 1; Index >= 0; Index--)
+    {
+        if (!ActivationTimers[Index].Chest.Get())
+        {
+            ActivationTimers.RemoveAt(Index);
+            continue;
+        }
+
+        if (ActivationTimers[Index].Chest.Get() == this && ActivationTimers[Index].Player.Get() == Player)
+            return;
+    }
+
     const float ActivationDelay = GetTrigerActivationDelayCurve().GetValueAtLevel(0.0f);
 
     if (ActivationDelay <= 0.0f)
@@ -126,7 +149,27 @@ void AFriendChestNative::OnTriggerComponentBeginOverlap(UPrimitiveComponent* Ove
         return;
     }
 
-    PendingActivations.Add(FFriendChestPendingActivation{ this, Player, GetWorld()->GetTimeSeconds() + ActivationDelay });
+    if (!FTimerManager::CanSetTimers())
+    {
+        PendingActivations.Add(FFriendChestPendingActivation{ this, Player, GetWorld()->GetTimeSeconds() + ActivationDelay });
+        return;
+    }
+
+    ActivationTimers.Add(FFriendChestActivationTimer{ this, Player, FTimerHandle{} });
+
+    GetWorld()->GetTimerManager().SetTimer(ActivationTimers[ActivationTimers.Num() - 1].TimerHandle, FTimerDelegate::CreateUObject(this, &AFriendChestNative::ActivatePlayer, TWeakObjectPtr<AFortPlayerPawnAthena>(Player)), ActivationDelay, false);
+}
+
+void AFriendChestNative::ActivatePlayer(TWeakObjectPtr<AFortPlayerPawnAthena> Player)
+{
+    for (int32 Index = ActivationTimers.Num() - 1; Index >= 0; Index--)
+    {
+        if (ActivationTimers[Index].Chest.Get() == this && ActivationTimers[Index].Player == Player)
+            ActivationTimers.RemoveAt(Index);
+    }
+
+    if (auto PlayerPawn = Player.Get())
+        PlayerAdded(PlayerPawn);
 }
 
 void AFriendChestNative::OnTriggerComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -135,6 +178,16 @@ void AFriendChestNative::OnTriggerComponentEndOverlap(UPrimitiveComponent* Overl
 
     if (!HasAuthority() || !Player)
         return;
+
+    for (int32 Index = 0; Index < ActivationTimers.Num(); Index++)
+    {
+        if (ActivationTimers[Index].Chest.Get() == this && ActivationTimers[Index].Player.Get() == Player)
+        {
+            UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, ActivationTimers[Index].TimerHandle);
+            ActivationTimers.RemoveAt(Index);
+            return;
+        }
+    }
 
     for (int32 Index = 0; Index < PendingActivations.Num(); Index++)
     {
