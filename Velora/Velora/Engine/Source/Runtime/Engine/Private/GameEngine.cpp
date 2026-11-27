@@ -90,6 +90,16 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         if (auto EnableWeaponMetaSoundParameterPack = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Rollback.EnableWeaponMetaSoundParameterPack")))
             EnableWeaponMetaSoundParameterPack->Set(TEXT("0"), ECVF_SetByCode);
 
+        auto MLOEnabled = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Rollback.MLOEnabled"));
+
+        if (MLOEnabled && MLOEnabled->GetInt())
+        {
+            MLOEnabled->Set(TEXT("0"), ECVF_SetByCode);
+
+            if (auto BlockMcpPresetsWhenUsingLockerService = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.BlockMcpPresetsWhenUsingLockerService")))
+                BlockMcpPresetsWhenUsingLockerService->Set(TEXT("0"), ECVF_SetByCode);
+        }
+
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 
