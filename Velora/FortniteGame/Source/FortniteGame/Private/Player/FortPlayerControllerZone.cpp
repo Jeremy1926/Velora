@@ -150,6 +150,12 @@ void AFortPlayerControllerZone::ServerSpectateActor_Implementation(AActor* NewVi
         .Find("setnz *; add r*, r*")
         .Find("call [rax+0x*]", 2)
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
+        .Or()
+        .If(::Anchor::Exists().Event(TEXT("ClientSetViewTarget")).VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; movdqu *; ").Get())
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerZone:ServerSpectateActor"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]", 2)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"), "ret*")
         .Optional()
         .InChildVTablesCounted(StaticClass()));
 

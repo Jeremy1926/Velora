@@ -3146,6 +3146,9 @@ void AFortPlayerController::SetViewTargetAndNotifyClient(AActor* NewViewTarget, 
         .Or()
         .Event(TEXT("ClientSetViewTarget"))
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rcx, rsi; ")
+        .Or()
+        .Event(TEXT("ClientSetViewTarget"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortPlayerController"), "mov rdx, rdi; movdqu *; ")
         .Get();
 
     SetViewTargetAndNotifyClient(this, NewViewTarget, &TransitionParams);
