@@ -29,7 +29,9 @@ Universal gameserver for Fortnite.
 | Chapter 3 Season 4 | 22.30 to 22.40 |
 | Chapter 5 Season 1 | 28.00 to 28.30 |
 | Chapter 5 Season 2 | 29.00 to 29.40 |
-| Chapter 5 Season 3 | 30.00 |
+| Chapter 5 Season 3 | 30.00 to 30.40 |
+| Chapter 5 Season 4 | 31.00 to 31.41 |
+| Chapter 2 Remix | 32.00 |
 
 If a build in these ranges doesn't work, [open an issue](https://github.com/Jeremy1926/Velora/issues).
 
@@ -58,7 +60,7 @@ If a build in these ranges doesn't work, [open an issue](https://github.com/Jere
 - XP and challenges
 - Chapter 2 Season 6 to Chapter 3 Season 3
 - Chapter 4
-- 30.10 and newer
+- 32.10 and newer
 
 ## Configuration
 
