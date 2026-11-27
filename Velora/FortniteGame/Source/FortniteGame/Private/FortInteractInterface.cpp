@@ -65,6 +65,13 @@ FInteractionType::FInteractionType(AFortPlayerPawn* InRequestingPawn, ETInteract
         .Find("sbb rdx, rdx; mov *, al; and rdx, r*; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String("AFortPlayerPawn::TryToAutoPickupWeapon")
+        .Start()
+        .Find("sbb rdx, rdx")
+        .Find("and rdx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Constructor(this, InRequestingPawn, InInteractionType);
