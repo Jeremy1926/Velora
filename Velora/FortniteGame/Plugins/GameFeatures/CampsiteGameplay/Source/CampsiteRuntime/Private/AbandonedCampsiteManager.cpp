@@ -72,14 +72,15 @@ void AAbandonedCampsiteManager::BeginPlay()
     Original();
 
     auto GameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto GamePhaseStepChanged = GameState ? GameState->GetGamePhaseStepChanged() : nullptr;
 
-    if (!HasAuthority() || !GameState)
+    if (!HasAuthority() || !GamePhaseStepChanged || !GetClass()->FindFunctionByName(FName(TEXT("OnGamePhaseStepChanged"))))
         return;
 
     FScriptDelegate Delegate;
     Delegate.BindUFunction(this, FName(TEXT("OnGamePhaseStepChanged")));
 
-    GameState->GetGamePhaseStepChanged().AddUnique(Delegate);
+    GamePhaseStepChanged->AddUnique(Delegate);
 }
 
 void AAbandonedCampsiteManager::execOnGamePhaseStepChanged(FFrame& Stack, void* const Z_Param__Result)

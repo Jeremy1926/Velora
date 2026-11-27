@@ -664,11 +664,11 @@ FMulticastScriptDelegate& AFortGameStateAthena::GetOnCurrentPlaylistLoaded()
     return *OnCurrentPlaylistLoaded->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
 }
 
-FMulticastScriptDelegate& AFortGameStateAthena::GetGamePhaseStepChanged()
+FMulticastScriptDelegate* AFortGameStateAthena::GetGamePhaseStepChanged()
 {
     static auto GamePhaseStepChanged = GetClass()->FindPropertyByName(FName(TEXT("GamePhaseStepChanged")));
 
-    return *GamePhaseStepChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this);
+    return GamePhaseStepChanged ? GamePhaseStepChanged->ContainerPtrToValuePtr<FMulticastScriptDelegate>(this) : nullptr;
 }
 
 FGameMemberInfoArray& AFortGameStateAthena::GetGameMemberInfoArray()

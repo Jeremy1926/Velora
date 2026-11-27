@@ -133,7 +133,7 @@ public:
 
     FMulticastScriptDelegate& GetOnCurrentPlaylistLoaded();
 
-    FMulticastScriptDelegate& GetGamePhaseStepChanged();
+    FMulticastScriptDelegate* GetGamePhaseStepChanged();
 
     FGameMemberInfoArray& GetGameMemberInfoArray();
 
