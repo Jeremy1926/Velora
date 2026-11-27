@@ -2302,9 +2302,13 @@ int32 UFortAthenaLivingWorldManager::FEventRequest::GetTypeSize()
 {
     static auto TypeSize = Anchor::Offset(TEXT("sizeof(UFortAthenaLivingWorldManager::FEventRequest)"))
         .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:HasPendingSpawnRequestForEncounter"))
+        .Find("cmp [r*+0x18], r*; jz 0x*; sub r*, 0x*")
+        .Find("sub r*, 0x*")
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:HasPendingSpawnRequestForEncounter"))
         .Find("cmp [r*+0x18], r*; jz 0x*; add r*, 0x*")
         .Find("add r*, 0x*")
-        .Imm();
+        .Get();
 
     return (int32)TypeSize;
 }
