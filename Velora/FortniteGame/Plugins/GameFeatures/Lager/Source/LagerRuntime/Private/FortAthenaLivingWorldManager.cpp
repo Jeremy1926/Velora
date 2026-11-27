@@ -4671,21 +4671,69 @@ void UFortAthenaLivingWorldManager::RegisterStaticPointProviders()
         Volume->EnablePointProvider();
     }
 
+    static auto AddWorldPatrolPaths = Anchor::Optional<void (*)(UFortAthenaLivingWorldManager*)>(TEXT("UFortAthenaLivingWorldManager::AddWorldPatrolPaths"))
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnCurrentPlaylistLoaded"))
+        .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Find("mov rcx, rsi; call 0x*; mov rcx, rsi; call 0x*; mov rcx, [rsi+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (AddWorldPatrolPaths)
+        AddWorldPatrolPaths(this);
+
     TArray<AActor*> PatrolPathPointProviders;
 
     if (PatrolCachedLivingWorldManager)
         UGameplayStatics::GetAllActorsOfClass(GetOwner(), AFortAthenaPatrolPathPointProvider::StaticClass(), PatrolPathPointProviders);
 
+    int32 RuntimePatrolPathPointProviders = 0;
+    int32 WaitingPatrolPathPointProviders = 0;
+
     for (auto Actor : PatrolPathPointProviders)
     {
         auto PatrolPathPointProvider = (AFortAthenaPatrolPathPointProvider*)Actor;
+        auto& CachedLivingWorldManager = *PatrolCachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PatrolPathPointProvider);
+        auto RuntimePatrolPath = AddWorldPatrolPaths && !PatrolPathPointProvider->GetAssociatedPatrolPath() ? PatrolPathPointProvider->GetRuntimePatrolPath() : nullptr;
 
-        if (*PatrolCachedLivingWorldManager->ContainerPtrToValuePtr<UFortAthenaLivingWorldManager*>(PatrolPathPointProvider) == this)
+        if (RuntimePatrolPath)
+        {
+            static auto bIsPatrolPathEnabled = (UBoolProperty*)RuntimePatrolPath->GetClass()->FindPropertyByName(FName(TEXT("bIsPatrolPathEnabled")));
+
+            RuntimePatrolPathPointProviders++;
+
+            if (CachedLivingWorldManager == this)
+                continue;
+
+            if (bIsPatrolPathEnabled && !bIsPatrolPathEnabled->GetPropertyValue_InContainer(RuntimePatrolPath))
+            {
+                WaitingPatrolPathPointProviders++;
+                continue;
+            }
+
+            LivingWorldManagerRegisterPointProvider(PatrolPathPointProvider);
+            continue;
+        }
+
+        if (CachedLivingWorldManager == this)
             continue;
 
         if (!PatrolPathPointProvider->GetbStartEnabled() || !PatrolPathPointProvider->GetAssociatedPatrolPath())
             continue;
 
         LivingWorldManagerRegisterPointProvider(PatrolPathPointProvider);
+    }
+
+    static int32 LoggedRuntimePatrolPathPointProviders = 0;
+    static int32 LoggedWaitingPatrolPathPointProviders = 0;
+
+    if (Config::bLogLivingWorld && AddWorldPatrolPaths && (RuntimePatrolPathPointProviders != LoggedRuntimePatrolPathPointProviders || WaitingPatrolPathPointProviders != LoggedWaitingPatrolPathPointProviders))
+    {
+        LoggedRuntimePatrolPathPointProviders = RuntimePatrolPathPointProviders;
+        LoggedWaitingPatrolPathPointProviders = WaitingPatrolPathPointProviders;
+
+        UE_LOG(LogVelora, Log, TEXT("LivingWorld patrol paths: %d runtime point providers, %d wait for their path to be enabled, %d point providers registered"), RuntimePatrolPathPointProviders, WaitingPatrolPathPointProviders, GetPointProviders().Num());
     }
 }
