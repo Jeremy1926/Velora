@@ -179,6 +179,11 @@ struct FAttachmentTransformRules
     bool bWeldSimulatedBodies;
 };
 
+struct FTimerHandle
+{
+    uint64 Handle;
+};
+
 struct FDetachmentTransformRules
 {
     FDetachmentTransformRules(EDetachmentRule InLocationRule, EDetachmentRule InRotationRule, EDetachmentRule InScaleRule, bool bInCallModify)

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Building/BuildingGameplayActor.h"
+#include "Containers/Array.h"
 
 struct FFrame;
 struct FScalableFloat;
+struct FTimerHandle;
 
 enum class EBuildingGameplayActorSentry_State : uint8
 {
@@ -35,9 +37,19 @@ public:
 
     static void TickPendingAggros();
 
+    void ReturnToIdle();
+
     void OnRep_CurrentSentryState(EBuildingGameplayActorSentry_State PreviousSentryState);
 
+    FTimerHandle* GetReturnToIdleTimerHandle();
+
     EBuildingGameplayActorSentry_State& GetCurrentSentryState();
+
+    bool GetbGoDormantAfterPassiveIdle();
+
+    TArray<AActor*>& GetTargetActorsInRange();
+
+    FGameplayTag GetReturnToIdleGameplayCueTag();
 
     AActor*& GetActorBeingTracked();
 

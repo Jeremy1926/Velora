@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "Building/BuildingGameplayActorSentry.h"
 #include "GameplayEffectTypes.h"
+#include "Engine/EngineTypes.h"
 #include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -32,6 +34,10 @@ void ABuildingGameplayActorSentry::SetSentryState(EBuildingGameplayActorSentry_S
     auto ActorBeingTracked = GetActorBeingTracked();
 
     FlushNetDormancy();
+
+    if (auto ReturnToIdleTimerHandle = GetReturnToIdleTimerHandle())
+        UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, *ReturnToIdleTimerHandle);
+
     GetCurrentSentryState() = InSentryState;
 
     UE_LOG(LogVelora, Log, TEXT("[Sentry] %s state %d -> %d, tracking %s"), *GetName(), (int32)PreviousSentryState, (int32)InSentryState, ActorBeingTracked ? *ActorBeingTracked->GetName() : TEXT("none"));
@@ -121,6 +127,30 @@ void ABuildingGameplayActorSentry::TickPendingAggros()
     }
 }
 
+void ABuildingGameplayActorSentry::ReturnToIdle()
+{
+    DETOUR(ABuildingGameplayActorSentry, ReturnToIdle, Anchor::Hook()
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("mov *, [*+%x]; cmp *, 0x2; jnb 0x*", StaticClass()->FindPropertyByName(FName(TEXT("CurrentSentryState"))))
+        .Find("jnb 0x*")
+        .Target()
+        .Find("cmp *, 0x6; jnz 0x*")
+        .Call()
+        .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("PauseTimeBeforeIdleState"))))
+        .Find("lea rax, [0x*]")
+        .IsTarget("ret*")
+        .Optional()
+        .AtReference());
+
+    const auto CurrentSentryState = GetCurrentSentryState();
+
+    if (CurrentSentryState != EBuildingGameplayActorSentry_State::ReturningToIdle && CurrentSentryState != EBuildingGameplayActorSentry_State::LocatingDamager)
+        return;
+
+    SetSentryState(GetTargetActorsInRange().Num() > 0 ? EBuildingGameplayActorSentry_State::ActiveIdle : GetbGoDormantAfterPassiveIdle() ? EBuildingGameplayActorSentry_State::Dormant : EBuildingGameplayActorSentry_State::PassiveIdle);
+    K2_ExecuteGameplayCue(GetReturnToIdleGameplayCueTag(), FGameplayEffectContextHandle());
+}
+
 void ABuildingGameplayActorSentry::OnRep_CurrentSentryState(EBuildingGameplayActorSentry_State PreviousSentryState)
 {
     static auto OnRep_CurrentSentryState = Anchor::Function<void (*)(ABuildingGameplayActorSentry*, EBuildingGameplayActorSentry_State)>(TEXT("ABuildingGameplayActorSentry::OnRep_CurrentSentryState"))
@@ -128,6 +158,21 @@ void ABuildingGameplayActorSentry::OnRep_CurrentSentryState(EBuildingGameplayAct
         .Get();
 
     OnRep_CurrentSentryState(this, PreviousSentryState);
+}
+
+FTimerHandle* ABuildingGameplayActorSentry::GetReturnToIdleTimerHandle()
+{
+    static auto ReturnToIdleTimerHandle = Anchor::Offset(TEXT("ABuildingGameplayActorSentry::ReturnToIdleTimerHandle"))
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("mov *, [*+%x]; cmp *, 0x2; jnb 0x*", StaticClass()->FindPropertyByName(FName(TEXT("CurrentSentryState"))))
+        .Find("jnb 0x*")
+        .Target()
+        .Find("cmp *, 0x6; jnz 0x*")
+        .Call()
+        .Find("lea *, [*+0x*]; mov *, [*]; mov [rsp+0x*], *")
+        .Disp();
+
+    return ReturnToIdleTimerHandle ? (FTimerHandle*)((uint8*)this + ReturnToIdleTimerHandle) : nullptr;
 }
 
 EBuildingGameplayActorSentry_State& ABuildingGameplayActorSentry::GetCurrentSentryState()
@@ -170,4 +215,25 @@ FGameplayTag ABuildingGameplayActorSentry::GetAggroedGameplayCueTag()
     static auto AggroedGameplayCueTag = StaticClass()->FindPropertyByName(FName(TEXT("AggroedGameplayCueTag")));
 
     return *AggroedGameplayCueTag->ContainerPtrToValuePtr<FGameplayTag>(this);
+}
+
+bool ABuildingGameplayActorSentry::GetbGoDormantAfterPassiveIdle()
+{
+    static auto bGoDormantAfterPassiveIdle = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bGoDormantAfterPassiveIdle")));
+
+    return bGoDormantAfterPassiveIdle->GetPropertyValue_InContainer(this);
+}
+
+TArray<AActor*>& ABuildingGameplayActorSentry::GetTargetActorsInRange()
+{
+    static auto TargetActorsInRange = StaticClass()->FindPropertyByName(FName(TEXT("TargetActorsInRange")));
+
+    return *TargetActorsInRange->ContainerPtrToValuePtr<TArray<AActor*>>(this);
+}
+
+FGameplayTag ABuildingGameplayActorSentry::GetReturnToIdleGameplayCueTag()
+{
+    static auto ReturnToIdleGameplayCueTag = StaticClass()->FindPropertyByName(FName(TEXT("ReturnToIdleGameplayCueTag")));
+
+    return *ReturnToIdleGameplayCueTag->ContainerPtrToValuePtr<FGameplayTag>(this);
 }

@@ -40,6 +40,15 @@ bool UKismetSystemLibrary::SphereOverlapActors(const UObject* WorldContextObject
     return SphereOverlapActors(WorldContextObject, SpherePos, SphereRadius, ObjectTypes, ActorClassFilter, ActorsToIgnore, OutActors);
 }
 
+void UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(const UObject* WorldContextObject, FTimerHandle& Handle)
+{
+    static auto K2_ClearAndInvalidateTimerHandle = Anchor::Function<void (*)(const UObject*, FTimerHandle&)>(TEXT("UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle"))
+        .Native(TEXT("/Script/Engine.KismetSystemLibrary:K2_ClearAndInvalidateTimerHandle"))
+        .Get();
+
+    K2_ClearAndInvalidateTimerHandle(WorldContextObject, Handle);
+}
+
 FSoftObjectPtr UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId(FPrimaryAssetId PrimaryAssetId)
 {
     static auto GetSoftObjectReferenceFromPrimaryAssetId = Anchor::Function<FSoftObjectPtr (*)(FPrimaryAssetId)>(TEXT("UKismetSystemLibrary::GetSoftObjectReferenceFromPrimaryAssetId"))
