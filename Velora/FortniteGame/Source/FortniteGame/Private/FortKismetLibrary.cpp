@@ -524,6 +524,11 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
     static auto ApplyGlobalEnvironmentGameplayEffectToActorByRef = Anchor::Optional<FActiveGameplayEffectHandle* (*)(FActiveGameplayEffectHandle*, AActor*, const TSubclassOf<UGameplayEffect>*, int32, const FGameplayTagContainer&)>(TEXT("UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEffectToActor"))
         .Pattern("83 09 FF 45 8B ? ? 8B ? 24 80 00 00 00 ? 8B ? C6 41 04 00")
         .Start()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Find("mov r9d, *; mov rdx, *; lea r8, [rsp+0x*]; *; *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
