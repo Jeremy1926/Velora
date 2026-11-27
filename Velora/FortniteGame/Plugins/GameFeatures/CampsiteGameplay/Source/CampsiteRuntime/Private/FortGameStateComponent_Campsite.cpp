@@ -118,10 +118,8 @@ void UFortGameStateComponent_Campsite::ClaimUnusedBotName(FString& OutBotName)
     static auto UseBotNames = IConsoleManager::Get().FindConsoleVariable(TEXT("Campsite.UseBotNames"));
     static auto BotNameDataTable = StaticClass()->FindPropertyByName(FName(TEXT("BotNameDataTable")));
     static auto BotNameDataAsset = StaticClass()->FindPropertyByName(FName(TEXT("BotNameDataAsset")));
-    static auto DefaultNameDataTable = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotNameDataAsset")))->FindPropertyByName(FName(TEXT("DefaultNameDataTable")));
-    static auto Name = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotNameDataTableRow")))->FindPropertyByName(FName(TEXT("Name")));
 
-    if ((UseBotNames && !UseBotNames->GetInt()) || !BotNameDataTable || !BotNameDataAsset || !DefaultNameDataTable || !Name)
+    if ((UseBotNames && !UseBotNames->GetInt()) || !BotNameDataTable || !BotNameDataAsset)
         return;
 
     auto& DataTable = *BotNameDataTable->ContainerPtrToValuePtr<UDataTable*>(this);
@@ -129,12 +127,15 @@ void UFortGameStateComponent_Campsite::ClaimUnusedBotName(FString& OutBotName)
     if (!DataTable)
     {
         auto NameDataAsset = BotNameDataAsset->ContainerPtrToValuePtr<TSoftObjectPtr<UObject>>(this)->LoadSynchronous();
+        auto DefaultNameDataTable = NameDataAsset ? NameDataAsset->GetClass()->FindPropertyByName(FName(TEXT("DefaultNameDataTable"))) : nullptr;
 
-        DataTable = NameDataAsset ? DefaultNameDataTable->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(NameDataAsset)->LoadSynchronous() : nullptr;
+        DataTable = DefaultNameDataTable ? DefaultNameDataTable->ContainerPtrToValuePtr<TSoftObjectPtr<UDataTable>>(NameDataAsset)->LoadSynchronous() : nullptr;
         ClaimedBotNames.Empty();
     }
 
-    if (!DataTable)
+    auto Name = DataTable && DataTable->RowStruct ? DataTable->RowStruct->FindPropertyByName(FName(TEXT("Name"))) : nullptr;
+
+    if (!Name)
         return;
 
     TArray<FName> UnclaimedRowNames;
