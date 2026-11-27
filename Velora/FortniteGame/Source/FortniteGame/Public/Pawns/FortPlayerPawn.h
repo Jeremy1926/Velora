@@ -177,6 +177,8 @@ public:
 
     void ServerHoistDBNOPlayer_Implementation(AFortPlayerPawn* InDBNOHoistee);
 
+    void ServerInterrogateDBNOPlayer_Implementation(AFortPlayerPawn* InDBNOHoistee);
+
     void HoistDBNOPlayer(AFortPlayerPawn* InDBNOHoister, EFortDBNOCarryEvent InDBNOCarryEvent);
 
     bool CanBeHoistedFromDBNO(AFortPlayerController* HoisterController);

@@ -1025,6 +1025,24 @@ void AFortPlayerPawn::ServerHoistDBNOPlayer_Implementation(AFortPlayerPawn* InDB
     InDBNOHoistee->HoistDBNOPlayer(this, EFortDBNOCarryEvent::PickedUp);
 }
 
+void AFortPlayerPawn::ServerInterrogateDBNOPlayer_Implementation(AFortPlayerPawn* InDBNOHoistee)
+{
+    DETOUR(AFortPlayerPawn, ServerInterrogateDBNOPlayer_Implementation, Anchor::Hook()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:ServerInterrogateDBNOPlayer"))
+        .Optional()
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("AFortPlayerPawn::ServerInterrogateDBNOPlayer_Implementation"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "ret*")
+        .Optional()
+        .InChildVTables(StaticClass()));
+
+    if (!InDBNOHoistee)
+        return;
+
+    InDBNOHoistee->HoistDBNOPlayer(this, EFortDBNOCarryEvent::Interrogating);
+}
+
 void AFortPlayerPawn::HoistDBNOPlayer(AFortPlayerPawn* InDBNOHoister, EFortDBNOCarryEvent InDBNOCarryEvent)
 {
     if (!InDBNOHoister)
