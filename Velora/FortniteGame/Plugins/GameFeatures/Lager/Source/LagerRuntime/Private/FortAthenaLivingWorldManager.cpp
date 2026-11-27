@@ -2254,19 +2254,43 @@ int32 UFortAthenaLivingWorldManager::FEventDataRuntime::GetTypeSize()
         .Find("call 0x*", 3)
         .Target()
         .Find("imul rax, rax, 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Find("mov r13d, 0x*")
         .Imm();
 
     return (int32)TypeSize;
 }
 
-float& UFortAthenaLivingWorldManager::FEventDataRuntime::GetTotalFilterWeight()
+int32 UFortAthenaLivingWorldManager::FEventDataRuntime::GetbRequirePointProvidersOffset()
 {
-    return *(float*)((uint8*)this + GetTypeSize() - 0x8);
+    static auto bRequirePointProviders = Anchor::Offset(TEXT("UFortAthenaLivingWorldManager::FEventDataRuntime::bRequirePointProviders"))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Optional()
+        .Find("cmp [rbx+0x*], r12b; jz 0x*; lea rax, [rsp+0x*]")
+        .Disp();
+
+    return bRequirePointProviders;
+}
+
+float UFortAthenaLivingWorldManager::FEventDataRuntime::GetTotalFilterWeight()
+{
+    float TotalFilterWeight = 0.0f;
+
+    for (int32 Index = 0; Index < FilterEntries.Num(); Index++)
+        TotalFilterWeight += ((FPointProviderFilterEntry*)(FilterEntries.GetData() + Index * FPointProviderFilterEntry::GetTypeSize()))->GetWeight().GetValueAtLevel(0.0f);
+
+    return TotalFilterWeight;
+}
+
+bool UFortAthenaLivingWorldManager::FEventDataRuntime::RequiresPointProviders()
+{
+    return GetbRequirePointProvidersOffset() <= 0 || *((uint8*)this + GetbRequirePointProvidersOffset());
 }
 
 void* UFortAthenaLivingWorldManager::FEventDataRuntime::GetSpawnerDataFilter()
 {
-    return GetTypeSize() == sizeof(FEventDataRuntime) && SpawnerDataFilterClass ? SpawnerDataFilter : nullptr;
+    return GetTypeSize() >= (int32)sizeof(FEventDataRuntime) && SpawnerDataFilterClass ? SpawnerDataFilter : nullptr;
 }
 
 UFortAthenaLivingWorldManager::FEventDataRuntime& UFortAthenaLivingWorldManager::FEventRuntime::GetEventDataRuntime(int32 Index)
@@ -4357,7 +4381,7 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
         {
             auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
 
-            if (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags))
+            if (EventDataRuntime.RequiresPointProviders() && (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags)))
                 EventDataRuntime.PointProviders.Add(PointProvider);
         }
     }
@@ -4412,7 +4436,7 @@ void UFortAthenaLivingWorldManager::AddPointProviderToEventRuntime(const FScript
             {
                 auto& EventDataRuntime = ((FEventRuntime&)EventRuntime.Value).GetEventDataRuntime(EventDataRuntimeIndex);
 
-                if (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags))
+                if (EventDataRuntime.RequiresPointProviders() && (EventDataRuntime.ProviderFilters.IsEmpty() || EventDataRuntime.ProviderFilters.Matches(FiltersTags)))
                     EventDataRuntime.PointProviders.Add(PointProvider);
             }
         }

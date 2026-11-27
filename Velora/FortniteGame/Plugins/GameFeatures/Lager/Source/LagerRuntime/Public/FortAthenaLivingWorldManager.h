@@ -214,7 +214,11 @@ public:
     {
         static int32 GetTypeSize();
 
-        float& GetTotalFilterWeight();
+        static int32 GetbRequirePointProvidersOffset();
+
+        float GetTotalFilterWeight();
+
+        bool RequiresPointProviders();
 
         void* GetSpawnerDataFilter();
 
