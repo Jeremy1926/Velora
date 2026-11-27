@@ -271,6 +271,12 @@ void AFortPlayerControllerAthena::SetMatchPlacement(int32 Placement)
         .Find("mov edx, 0x1; mov rcx, r*; mov *, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("FortGameModeAthena: %s won the match!"))
+        .Start()
+        .Find("mov rcx, r*; mov edx, 0x1; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetMatchPlacement(this, Placement);
