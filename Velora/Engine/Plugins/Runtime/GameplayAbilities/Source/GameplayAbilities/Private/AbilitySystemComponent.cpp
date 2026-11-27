@@ -51,6 +51,11 @@ void UAbilitySystemComponent::CaptureAttributeForGameplayEffect(FGameplayEffectA
         .Target()
         .Find("movdqa [*], xmm0; call 0x*")
         .Call()
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:EvaluateAttributeValueWithTagsAndBase"))
+        .Find("call 0x*; test al, al; jz 0x*")
+        .Find("call 0x*; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Call(2)
         .Get();
 
     CaptureAttributeForGameplayEffect(this, OutCaptureSpec);
