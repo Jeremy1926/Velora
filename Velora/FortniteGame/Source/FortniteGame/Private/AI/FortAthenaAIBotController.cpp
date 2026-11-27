@@ -392,6 +392,13 @@ FFortBotInventoryInfo& AFortAthenaAIBotController::GetSlotItems(int32 Index)
 {
     static auto SlotItems = GetClass()->FindPropertyByName(FName(TEXT("SlotItems")));
 
+    if (SlotItems->GetArrayDim() == 1)
+    {
+        static auto ElementSize = ((UArrayProperty*)SlotItems)->GetInner()->GetElementSize();
+
+        return *(FFortBotInventoryInfo*)(SlotItems->ContainerPtrToValuePtr<TArray<uint8>>(this)->GetData() + Index * ElementSize);
+    }
+
     return *SlotItems->ContainerPtrToValuePtr<FFortBotInventoryInfo>(this, Index);
 }
 
