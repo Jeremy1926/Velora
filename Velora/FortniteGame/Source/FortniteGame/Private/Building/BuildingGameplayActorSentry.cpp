@@ -4,6 +4,7 @@
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Components/SceneComponent.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -127,6 +128,48 @@ void ABuildingGameplayActorSentry::TickPendingAggros()
     }
 }
 
+void ABuildingGameplayActorSentry::HandleDamaged(float Damage, const FGameplayTagContainer& DamageTags, const TGameValue<FVector>& Momentum, const FHitResult& HitInfo, AController* InstigatedBy, AActor* DamageCauser, const FGameplayEffectContextHandle& EffectContext)
+{
+    DETOUR(ABuildingGameplayActorSentry, HandleDamaged, Anchor::Hook()
+        .Event(TEXT("OnDamageServer"))
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__BuildingGameplayActor"))
+        .VirtualIs(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "jmp %t")
+        .Optional()
+        .InVTable(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry")));
+
+    Original(Damage, DamageTags, Momentum, HitInfo, InstigatedBy, DamageCauser, EffectContext);
+
+    const auto CurrentSentryState = GetCurrentSentryState();
+
+    if (!GetbLocateDamagerIfHitWhileIdle() || !DamageCauser || !HasAuthority() || (CurrentSentryState > EBuildingGameplayActorSentry_State::ActiveIdle && CurrentSentryState != EBuildingGameplayActorSentry_State::ReturningToIdle))
+        return;
+
+    SetSentryState(EBuildingGameplayActorSentry_State::LocatingDamager);
+    SetLocatingDamageRotationDestination((DamageCauser->GetActorLocation() - GetCameraStaticMeshComp()->GetComponentLocation()).GetSafeNormal().ToOrientationRotator());
+}
+
+void ABuildingGameplayActorSentry::SetLocatingDamageRotationDestination(const FRotator& InLocatingDamageRotationDestination)
+{
+    static auto SetLocatingDamageRotationDestination = Anchor::Function<void (*)(ABuildingGameplayActorSentry*, const TGameValue<FRotator>&)>(TEXT("ABuildingGameplayActorSentry::SetLocatingDamageRotationDestination"))
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("mov *, [*+%x]; cmp *, 0x2; jnb 0x*", StaticClass()->FindPropertyByName(FName(TEXT("CurrentSentryState"))))
+        .Find("jnb 0x*")
+        .Target()
+        .Find("cmp *, 0x7; jnz 0x*")
+        .Call()
+        .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LocatingDamage_UpdateTarget_PauseTime"))))
+        .Find("jbe 0x*")
+        .Target()
+        .Call()
+        .Find("movsd [rbp-0x*], xmm1; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (SetLocatingDamageRotationDestination)
+        SetLocatingDamageRotationDestination(this, TGameValue<FRotator>(InLocatingDamageRotationDestination));
+}
+
 void ABuildingGameplayActorSentry::ReturnToIdle()
 {
     DETOUR(ABuildingGameplayActorSentry, ReturnToIdle, Anchor::Hook()
@@ -135,6 +178,21 @@ void ABuildingGameplayActorSentry::ReturnToIdle()
         .Find("jnb 0x*")
         .Target()
         .Find("cmp *, 0x6; jnz 0x*")
+        .Call()
+        .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("PauseTimeBeforeIdleState"))))
+        .Find("lea rax, [0x*]")
+        .IsTarget("ret*")
+        .Optional()
+        .AtReference(), Anchor::Hook()
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("mov *, [*+%x]; cmp *, 0x2; jnb 0x*", StaticClass()->FindPropertyByName(FName(TEXT("CurrentSentryState"))))
+        .Find("jnb 0x*")
+        .Target()
+        .Find("cmp *, 0x7; jnz 0x*")
+        .Call()
+        .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LocatingDamage_UpdateTarget_PauseTime"))))
+        .Find("jbe 0x*")
+        .Target()
         .Call()
         .FieldFind("movss *, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("PauseTimeBeforeIdleState"))))
         .Find("lea rax, [0x*]")
@@ -275,11 +333,25 @@ FGameplayTag ABuildingGameplayActorSentry::GetAggroedGameplayCueTag()
     return *AggroedGameplayCueTag->ContainerPtrToValuePtr<FGameplayTag>(this);
 }
 
+USceneComponent* ABuildingGameplayActorSentry::GetCameraStaticMeshComp()
+{
+    static auto CameraStaticMeshComp = StaticClass()->FindPropertyByName(FName(TEXT("CameraStaticMeshComp")));
+
+    return *CameraStaticMeshComp->ContainerPtrToValuePtr<USceneComponent*>(this);
+}
+
 bool ABuildingGameplayActorSentry::GetbDoesNotRotate()
 {
     static auto bDoesNotRotate = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bDoesNotRotate")));
 
     return bDoesNotRotate->GetPropertyValue_InContainer(this);
+}
+
+bool ABuildingGameplayActorSentry::GetbLocateDamagerIfHitWhileIdle()
+{
+    static auto bLocateDamagerIfHitWhileIdle = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bLocateDamagerIfHitWhileIdle")));
+
+    return bLocateDamagerIfHitWhileIdle->GetPropertyValue_InContainer(this);
 }
 
 bool ABuildingGameplayActorSentry::GetbGoDormantAfterPassiveIdle()

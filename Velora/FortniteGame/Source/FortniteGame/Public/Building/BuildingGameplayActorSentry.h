@@ -3,8 +3,13 @@
 #include "Building/BuildingGameplayActor.h"
 #include "Containers/Array.h"
 #include "Math/Rotator.h"
+#include "Templates/UnrealTemplate.h"
 
+class AController;
+class USceneComponent;
 struct FFrame;
+struct FGameplayEffectContextHandle;
+struct FHitResult;
 struct FScalableFloat;
 struct FTimerHandle;
 
@@ -38,6 +43,10 @@ public:
 
     static void TickPendingAggros();
 
+    void HandleDamaged(float Damage, const FGameplayTagContainer& DamageTags, const TGameValue<FVector>& Momentum, const FHitResult& HitInfo, AController* InstigatedBy, AActor* DamageCauser, const FGameplayEffectContextHandle& EffectContext);
+
+    void SetLocatingDamageRotationDestination(const FRotator& InLocatingDamageRotationDestination);
+
     void ReturnToIdle();
 
     void IdleRestart();
@@ -54,7 +63,11 @@ public:
 
     EBuildingGameplayActorSentry_State& GetCurrentSentryState();
 
+    USceneComponent* GetCameraStaticMeshComp();
+
     bool GetbDoesNotRotate();
+
+    bool GetbLocateDamagerIfHitWhileIdle();
 
     bool GetbGoDormantAfterPassiveIdle();
 
