@@ -276,8 +276,36 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
 
     const FVector Location = Pawn->GetActorLocation();
 
-    if (auto Pickup = AFortPickup::CreateFromData(PlayerController->GetWorld(), FFortItemEntry(ItemDefinition, NumberToDrop, ItemLevel), Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
+    if (auto Pickup = AFortPickup::CreateFromData(PlayerController->GetWorld(), GiveItemEntryFullAmmo(PlayerController, FFortItemEntry(ItemDefinition, NumberToDrop, ItemLevel)), Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
         Pickup->TossPickup(Location, Pawn, 0, true);
+}
+
+FFortItemEntry UFortKismetLibrary::GiveItemEntryFullAmmo(UObject* WorldContextObject, const FFortItemEntry& InItemEntry)
+{
+    static auto GiveItemEntryFullAmmo = Anchor::Optional<FFortItemEntry* (*)(FFortItemEntry*, UObject*, const FFortItemEntry&)>(TEXT("UFortKismetLibrary::GiveItemEntryFullAmmo"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemEntryFullAmmo"))
+        .Get();
+
+    if (GiveItemEntryFullAmmo)
+    {
+        alignas(FFortItemEntry) uint8 FullAmmoItemEntryData[sizeof(FFortItemEntry)];
+        auto FullAmmoItemEntry = GiveItemEntryFullAmmo((FFortItemEntry*)FullAmmoItemEntryData, WorldContextObject, InItemEntry);
+        FFortItemEntry ItemEntry(*FullAmmoItemEntry);
+
+        FullAmmoItemEntry->~FFortItemEntry();
+
+        return ItemEntry;
+    }
+
+    FFortItemEntry ItemEntry(InItemEntry);
+
+    if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemEntry.GetItemDefinition()))
+    {
+        if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
+            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WorldContextObject, &ItemEntry, WeaponStats, ItemEntry.GetLevel()));
+    }
+
+    return ItemEntry;
 }
 
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)

@@ -90,6 +90,8 @@ public:
 
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);
 
+    static FFortItemEntry GiveItemEntryFullAmmo(UObject* WorldContextObject, const FFortItemEntry& InItemEntry);
+
     static int32 K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval);
 
     void execK2_RemoveItemFromPlayer(FFrame& Stack, void* const Z_Param__Result);
