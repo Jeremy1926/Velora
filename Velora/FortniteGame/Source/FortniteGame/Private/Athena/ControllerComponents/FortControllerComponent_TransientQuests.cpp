@@ -10,8 +10,10 @@
 #include "GameFramework/Controller.h"
 #include "GameplayTagAssetInterface.h"
 #include "GameplayTagContainer.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "Templates/Casts.h"
+#include "TimerManager.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -27,6 +29,7 @@ struct FPendingThreatLevelUpdate
     float ThreatRefreshRate;
     float NextUpdateTime;
     EPlayerBountyThreatLevel PlayerBountyThreatLevel;
+    bool bGameTimer;
 };
 
 static TArray<FPendingThreatLevelUpdate> PendingThreatLevelUpdates;
@@ -170,8 +173,16 @@ void UFortControllerComponent_TransientQuests::StartPlayerBountyThreatLevelUpdat
     }
 
     const float RefreshRate = ThreatRefreshRate < *MinimumThreatLevelRefreshRate ? *MinimumThreatLevelRefreshRate : FMath::Min(*MaximumThreatLevelRefreshRate, ThreatRefreshRate);
+    auto ThreatLevelTimerHandle = FTimerManager::CanSetTimers() ? GetPlayerBountyThreatLevelTimerHandle() : nullptr;
 
-    PendingThreatLevelUpdates.Add(FPendingThreatLevelUpdate{ this, MediumThreatRange, HighThreatRange, RefreshRate, Pawn->GetWorld()->GetTimeSeconds() + RefreshRate, EPlayerBountyThreatLevel::Low });
+    PendingThreatLevelUpdates.Add(FPendingThreatLevelUpdate{ this, MediumThreatRange, HighThreatRange, RefreshRate, Pawn->GetWorld()->GetTimeSeconds() + RefreshRate, EPlayerBountyThreatLevel::Low, ThreatLevelTimerHandle != nullptr });
+
+    if (ThreatLevelTimerHandle)
+    {
+        UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, *ThreatLevelTimerHandle);
+
+        Pawn->GetWorld()->GetTimerManager().SetTimer(*ThreatLevelTimerHandle, FTimerDelegate::CreateUObject(this, &UFortControllerComponent_TransientQuests::UpdatePlayerBountyThreatLevel, MediumThreatRange, HighThreatRange), RefreshRate, true);
+    }
 
     UpdatePlayerBountyThreatLevel(MediumThreatRange, HighThreatRange);
 }
@@ -267,13 +278,35 @@ void UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdate
             continue;
         }
 
-        if (Owner->GetWorld()->GetTimeSeconds() < PendingThreatLevelUpdates[Index].NextUpdateTime)
+        if (PendingThreatLevelUpdates[Index].bGameTimer || Owner->GetWorld()->GetTimeSeconds() < PendingThreatLevelUpdates[Index].NextUpdateTime)
             continue;
 
         PendingThreatLevelUpdates[Index].NextUpdateTime += PendingThreatLevelUpdates[Index].ThreatRefreshRate;
 
         Component->UpdatePlayerBountyThreatLevel(PendingThreatLevelUpdates[Index].MediumThreatRange, PendingThreatLevelUpdates[Index].HighThreatRange);
     }
+}
+
+FTimerHandle* UFortControllerComponent_TransientQuests::GetPlayerBountyThreatLevelTimerHandle()
+{
+    static auto PlayerBountyThreatLevelTimerHandle = Anchor::Offset(TEXT("UFortControllerComponent_TransientQuests::PlayerBountyThreatLevelTimerHandle"))
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_TransientQuests:StopPlayerBountyThreatLevelUpdates"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("and qword ptr [r*+0x*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_TransientQuests:StopPlayerBountyThreatLevelUpdates"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov qword ptr [r*+0x*], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortControllerComponent_TransientQuests:StopPlayerBountyThreatLevelUpdates"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("lea *, [r*+0x*]; mov rcx, rax; mov rdx, *")
+        .Disp();
+
+    return PlayerBountyThreatLevelTimerHandle ? (FTimerHandle*)((uint8*)this + PlayerBountyThreatLevelTimerHandle) : nullptr;
 }
 
 void UFortControllerComponent_TransientQuests::GetPlayerBountyTargets(const AController* Hunter, const FGameplayTagQuery& TargetFilter, TArray<AFortPlayerStateAthena*>& OutHumanTargets, TArray<AFortPlayerStateAthena*>& OutBotTargets)

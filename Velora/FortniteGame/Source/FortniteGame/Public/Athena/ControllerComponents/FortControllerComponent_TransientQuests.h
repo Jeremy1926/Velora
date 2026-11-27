@@ -8,6 +8,7 @@ class AController;
 class AFortPlayerStateAthena;
 class UFortQuestItemDefinition;
 struct FGameplayTagQuery;
+struct FTimerHandle;
 
 enum class EPlayerBountyThreatLevel : uint8
 {
@@ -37,6 +38,8 @@ public:
     void ClientBroadcastOnPlayerBountyThreatLevelUpdated(EPlayerBountyThreatLevel NewPlayerBountyThreatLevel);
 
     static void TickPlayerBountyThreatLevelUpdates();
+
+    FTimerHandle* GetPlayerBountyThreatLevelTimerHandle();
 
     static void GetPlayerBountyTargets(const AController* Hunter, const FGameplayTagQuery& TargetFilter, TArray<AFortPlayerStateAthena*>& OutHumanTargets, TArray<AFortPlayerStateAthena*>& OutBotTargets);
 
