@@ -31,6 +31,10 @@ public:
 
     int32 GetBaseClipSizeWithMods(const UObject* WorldContextObject, const FFortItemEntry* ItemEntry, const FFortBaseWeaponStats* WeaponStats, int32 Level) const;
 
+    void GetInitialAmmunitionQuantities(UObject* WorldContextObject, const FFortBaseWeaponStats* WeaponStats, const FFortItemEntry* ItemEntry, int32 Level, int32 AmmoOverride, int32& OutMagazineAmmoQuantity, int32& OutExtraAmmoQuantity) const;
+
+    bool UsesPhantomReserveAmmo() const;
+
     const FDataTableRowHandle& GetWeaponStatHandle() const;
 
     const TArray<FFortWeaponModSlot>& GetWeaponModSlots() const;

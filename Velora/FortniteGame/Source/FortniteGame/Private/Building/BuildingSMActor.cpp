@@ -9,7 +9,6 @@
 #include "Pawns/FortPawn.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "FortGameData.h"
-#include "FortKismetLibrary.h"
 #include "FortniteGame.h"
 #include "Logging/LogMacros.h"
 #include "Math/Rotator.h"
@@ -247,7 +246,8 @@ void ABuildingSMActor::AttemptSpawnResources(AFortPawn* InstigatorPawn, float Da
                 {
                     const FVector SpawnLocation = GetRootComponent()->GetBounds().Origin + FMath::VRand() * 200.0f;
 
-                    auto ItemEntry = UFortKismetLibrary::GiveItemEntryFullAmmo(this, FFortItemEntry(LootDrop.GetItemDefinition(), LootDrop.GetCount(), 0));
+                    FFortItemEntry ItemEntry(LootDrop.GetItemDefinition(), LootDrop.GetCount(), 0);
+                    ItemEntry.GiveFullAmmo(this);
                     ItemEntry.SetStateValue(EFortItemEntryState::DoNotShowSpawnParticles, 1);
 
                     if (auto Pickup = AFortPickup::CreateFromData(GetWorld(), ItemEntry, SpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, nullptr, nullptr, EFortPickupSourceTypeFlag::Destruction))

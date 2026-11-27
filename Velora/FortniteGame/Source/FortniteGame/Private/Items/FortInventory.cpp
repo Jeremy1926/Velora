@@ -1,12 +1,23 @@
 #include "pch.h"
 #include "Items/FortInventory.h"
+#include "Items/FortWeaponItemDefinition.h"
 #include "Weapons/FortWeaponModItemDefinition.h"
 #include "GameplayTagContainer.h"
+#include "Engine/World.h"
 #include "Misc/EngineVersion.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "Scanner.h"
+
+template<>
+UEnum* StaticEnum<EFortItemEntryState::Type>()
+{
+    static auto Enum = (UEnum*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.EFortItemEntryState"));
+
+    return Enum;
+}
 
 UClass* AFortInventory::StaticClass()
 {
@@ -474,6 +485,13 @@ int32& FFortItemEntry::GetLoadedAmmo()
     return *LoadedAmmo->ContainerPtrToValuePtr<int32>(this);
 }
 
+int32& FFortItemEntry::GetPhantomReserveAmmo()
+{
+    static auto PhantomReserveAmmo = StaticStruct()->FindPropertyByName(FName(TEXT("PhantomReserveAmmo")));
+
+    return *PhantomReserveAmmo->ContainerPtrToValuePtr<int32>(this);
+}
+
 FGuid& FFortItemEntry::GetItemGuid()
 {
     static auto ItemGuidProperty = StaticStruct()->FindPropertyByName(FName(TEXT("ItemGuid")));
@@ -559,6 +577,44 @@ void FFortItemEntry::SetLoadedAmmo(int32 NewLoadedAmmo)
 
         GetIsDirty() = true;
     }
+}
+
+void FFortItemEntry::SetPhantomReserveAmmo(int32 NewPhantomReserveAmmo)
+{
+    if (GetPhantomReserveAmmo() != NewPhantomReserveAmmo)
+    {
+        GetPhantomReserveAmmo() = NewPhantomReserveAmmo;
+
+        if (GetParentInventory().IsValid())
+        {
+            GetParentInventory().Get()->SetItemRequiresUpdate(*this);
+        }
+
+        GetIsDirty() = true;
+    }
+}
+
+void FFortItemEntry::GiveFullAmmo(UObject* WorldContextObject)
+{
+    static auto WeaponAmmoOverride = (EFortItemEntryState::Type)StaticEnum<EFortItemEntryState::Type>()->GetValueByName(FName(TEXT("EFortItemEntryState::WeaponAmmoOverride")));
+
+    auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(GetItemDefinition());
+    auto WeaponStats = WeaponItemDefinition ? WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>() : nullptr;
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+
+    if (!WeaponStats || !World)
+        return;
+
+    int32 AmmoOverride = -1;
+    int32 MagazineAmmoQuantity = 0;
+    int32 ExtraAmmoQuantity = 0;
+
+    GetStateValue(WeaponAmmoOverride, AmmoOverride);
+    WeaponItemDefinition->GetInitialAmmunitionQuantities(World, WeaponStats, this, GetLevel(), AmmoOverride, MagazineAmmoQuantity, ExtraAmmoQuantity);
+    SetLoadedAmmo(MagazineAmmoQuantity);
+
+    if (ExtraAmmoQuantity > 0 && WeaponItemDefinition->UsesPhantomReserveAmmo())
+        SetPhantomReserveAmmo(ExtraAmmoQuantity);
 }
 
 bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue)

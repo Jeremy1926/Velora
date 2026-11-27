@@ -573,7 +573,9 @@ void AFortAthenaAIBotController::DropLootInfoOnDeath(AFortPawn* Pawn)
 
             for (auto& ItemEntry : LootToDrop)
             {
-                if (auto Pickup = AFortPickup::CreateFromData(World, UFortKismetLibrary::GiveItemEntryFullAmmo(World, ItemEntry), LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
+                ItemEntry.GiveFullAmmo(World);
+
+                if (auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, LootSpawnLocation, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, EFortPickupSourceTypeFlag::AI))
                     Pickup->TossPickup(LootSpawnLocation, nullptr, 0, true);
             }
         }

@@ -275,37 +275,12 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
         return;
 
     const FVector Location = Pawn->GetActorLocation();
+    FFortItemEntry DropItemEntry(ItemDefinition, NumberToDrop, ItemLevel);
 
-    if (auto Pickup = AFortPickup::CreateFromData(PlayerController->GetWorld(), GiveItemEntryFullAmmo(PlayerController, FFortItemEntry(ItemDefinition, NumberToDrop, ItemLevel)), Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
+    DropItemEntry.GiveFullAmmo(PlayerController);
+
+    if (auto Pickup = AFortPickup::CreateFromData(PlayerController->GetWorld(), DropItemEntry, Location, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass()))
         Pickup->TossPickup(Location, Pawn, 0, true);
-}
-
-FFortItemEntry UFortKismetLibrary::GiveItemEntryFullAmmo(UObject* WorldContextObject, const FFortItemEntry& InItemEntry)
-{
-    static auto GiveItemEntryFullAmmo = Anchor::Optional<FFortItemEntry* (*)(FFortItemEntry*, UObject*, const FFortItemEntry&)>(TEXT("UFortKismetLibrary::GiveItemEntryFullAmmo"))
-        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemEntryFullAmmo"))
-        .Get();
-
-    if (GiveItemEntryFullAmmo)
-    {
-        alignas(FFortItemEntry) uint8 FullAmmoItemEntryData[sizeof(FFortItemEntry)];
-        auto FullAmmoItemEntry = GiveItemEntryFullAmmo((FFortItemEntry*)FullAmmoItemEntryData, WorldContextObject, InItemEntry);
-        FFortItemEntry ItemEntry(*FullAmmoItemEntry);
-
-        FullAmmoItemEntry->~FFortItemEntry();
-
-        return ItemEntry;
-    }
-
-    FFortItemEntry ItemEntry(InItemEntry);
-
-    if (auto WeaponItemDefinition = Cast<UFortWeaponItemDefinition>(ItemEntry.GetItemDefinition()))
-    {
-        if (auto WeaponStats = WeaponItemDefinition->GetWeaponStats<FFortBaseWeaponStats>())
-            ItemEntry.SetLoadedAmmo(WeaponItemDefinition->GetBaseClipSizeWithMods(WorldContextObject, &ItemEntry, WeaponStats, ItemEntry.GetLevel()));
-    }
-
-    return ItemEntry;
 }
 
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
@@ -660,7 +635,9 @@ TArray<AFortPickup*> UFortKismetLibrary::K2_SpawnPickupInWorldWithLootTier(UObje
         if (!Cast<UFortWorldItemDefinition>(ItemEntry.GetItemDefinition()))
             continue;
 
-        auto Pickup = AFortPickup::CreateFromData(World, GiveItemEntryFullAmmo(WorldContextObject, ItemEntry), Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, SourceType);
+        ItemEntry.GiveFullAmmo(WorldContextObject);
+
+        auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, FRotator{ 0.0f, 0.0f, 0.0f }, nullptr, AFortPickupAthena::StaticClass(), nullptr, SourceType);
 
         if (!Pickup)
             continue;
@@ -791,7 +768,9 @@ AFortPickup* UFortKismetLibrary::SpawnItemVariantPickupInWorld(UObject* WorldCon
     if (!World || !WorldItemDefinition)
         return nullptr;
 
-    auto ItemEntry = GiveItemEntryFullAmmo(WorldContextObject, FFortItemEntry(WorldItemDefinition, NumberToSpawn, 0));
+    FFortItemEntry ItemEntry(WorldItemDefinition, NumberToSpawn, 0);
+
+    ItemEntry.GiveFullAmmo(WorldContextObject);
 
     auto Pickup = AFortPickup::CreateFromData(World, ItemEntry, Position, Direction.ToOrientationRotator(), OptionalOwnerPC, nullptr, nullptr, SourceType, bRandomRotation, bPickupOnlyRelevantToOwner, Source);
 

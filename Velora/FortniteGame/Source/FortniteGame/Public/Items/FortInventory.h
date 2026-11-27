@@ -38,6 +38,9 @@ namespace EFortItemEntryState
     };
 }
 
+template<>
+UEnum* StaticEnum<EFortItemEntryState::Type>();
+
 struct FItemAndCount
 {
     int32 Count;
@@ -118,6 +121,8 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     int32& GetLoadedAmmo();
 
+    int32& GetPhantomReserveAmmo();
+
     FGuid& GetItemGuid();
 
     FBoolPropertyReference GetIsReplicatedCopy();
@@ -133,6 +138,10 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
     void SetDurability(float NewDurability);
 
     void SetLoadedAmmo(int32 NewLoadedAmmo);
+
+    void SetPhantomReserveAmmo(int32 NewPhantomReserveAmmo);
+
+    void GiveFullAmmo(UObject* WorldContextObject);
 
     bool GetStateValue(EFortItemEntryState::Type StateType, int32& OutIntValue);
 

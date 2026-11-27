@@ -78,6 +78,32 @@ int32 UFortWeaponItemDefinition::GetBaseClipSizeWithMods(const UObject* WorldCon
     return (int32)((FMath::Max((float)Level - (float)WeaponStats->GetBaseLevel(), 0.0f) * WeaponStats->GetClipScale() + 1.0f) * (float)WeaponStats->GetClipSize());
 }
 
+void UFortWeaponItemDefinition::GetInitialAmmunitionQuantities(UObject* WorldContextObject, const FFortBaseWeaponStats* WeaponStats, const FFortItemEntry* ItemEntry, int32 Level, int32 AmmoOverride, int32& OutMagazineAmmoQuantity, int32& OutExtraAmmoQuantity) const
+{
+    static auto GetInitialAmmunitionQuantities = Anchor::Optional<void (*)(const UFortWeaponItemDefinition*, UObject*, const FFortBaseWeaponStats*, const FFortItemEntry*, int32, int32, int32*, int32*)>(TEXT("UFortWeaponItemDefinition::GetInitialAmmunitionQuantities"))
+        .Native(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemEntryFullAmmo"))
+        .Find("call [rdx+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Is("test rdx, rdx; jz 0x*; push rbx")
+        .Get();
+
+    if (GetInitialAmmunitionQuantities)
+    {
+        GetInitialAmmunitionQuantities(this, WorldContextObject, WeaponStats, ItemEntry, Level, AmmoOverride, &OutMagazineAmmoQuantity, &OutExtraAmmoQuantity);
+        return;
+    }
+
+    OutMagazineAmmoQuantity = GetBaseClipSizeWithMods(WorldContextObject, ItemEntry, WeaponStats, Level);
+}
+
+bool UFortWeaponItemDefinition::UsesPhantomReserveAmmo() const
+{
+    static auto bUsesPhantomReserveAmmo = (UBoolProperty*)StaticClass()->FindPropertyByName(FName(TEXT("bUsesPhantomReserveAmmo")));
+
+    return bUsesPhantomReserveAmmo && bUsesPhantomReserveAmmo->GetPropertyValue_InContainer(this);
+}
+
 const FDataTableRowHandle& UFortWeaponItemDefinition::GetWeaponStatHandle() const
 {
     static auto WeaponStatHandle = GetClass()->FindPropertyByName(FName(TEXT("WeaponStatHandle")));
