@@ -172,6 +172,11 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         .Find("add rcx, 0x*; add rcx, rsi; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Find("add rcx, [rsi+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (!bFindWeaponTypeForStats && !SetItem)
@@ -323,7 +328,7 @@ void AFortAthenaAIBotController::SetHaveInfiniteFuelOnVehicle(bool bInSetInfinit
 
 bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item, int32& OutSlotIndex, bool& bOutIsItemSupported)
 {
-    static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&, bool&)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))
+    static auto WouldItemFitInBotInventory = Anchor::Function<bool (*)(AFortAthenaAIBotController*, UFortWorldItem*, int32&, bool&, bool*)>(TEXT("AFortAthenaAIBotController::WouldItemFitInBotInventory"))
         .FieldPattern("41 C7 00 FF FF FF FF ? 8B ? 48 83 B9 %o 00", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("Inventory"))) : nullptr)
         .Start()
         .Or()
@@ -332,9 +337,14 @@ bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item
         .Or()
         .FieldPattern("48 83 BF %o 00 88 03", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
         .Start()
+        .Or()
+        .FieldPattern("? 83 BF %o 00 88 03", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
+        .Start()
         .Get();
 
-    return WouldItemFitInBotInventory(this, Item, OutSlotIndex, bOutIsItemSupported);
+    bool bOutSlotEvaluation = false;
+
+    return WouldItemFitInBotInventory(this, Item, OutSlotIndex, bOutIsItemSupported, &bOutSlotEvaluation);
 }
 
 void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLoadout* InCustomizationLoadout, const UFortBotNameSettings* InBotNameSettings, bool bRequiresUniqueNetId)
