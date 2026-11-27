@@ -6,6 +6,7 @@
 #include "Player/FortControllerEffect.h"
 #include "Player/FortPlayerController.h"
 #include "Engine/World.h"
+#include "TimerManager.h"
 #include "GameFramework/Actor.h"
 #include "GameplayEffectTypes.h"
 #include "HAL/IConsoleManager.h"
@@ -69,6 +70,7 @@ FConversationTaskResult UFortConversationTaskNode_SupplyDrop::ExecuteTaskNode_Im
     const int32 GuaranteedCloseRangeSupplyDropCount = (int32)GetScalableFloat(TEXT("GuaranteedCloseRangeSupplyDropCount")).GetValueAtLevel(0.0f);
     const float ProcessPendingSupplyDropInterval = GetScalableFloat(TEXT("ProcessPendingSupplyDropInterval")).GetValueAtLevel(0.0f);
     float ProcessTime = World->GetTimeSeconds();
+    float ProcessDelay = 0.0f;
 
     for (int32 Index = 0; Index < SupplyDropCount; Index++)
     {
@@ -82,8 +84,23 @@ FConversationTaskResult UFortConversationTaskNode_SupplyDrop::ExecuteTaskNode_Im
         Info.SpawnLocation = NPCActor->GetActorLocation();
         Info.ProcessTime = ProcessTime;
 
-        PendingSupplyDrops.Add(Info);
+        if (!FTimerManager::CanSetTimers())
+        {
+            PendingSupplyDrops.Add(Info);
+        }
+        else if (ProcessDelay > 0.0f)
+        {
+            FTimerHandle TimerHandle{};
+
+            World->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &UFortConversationTaskNode_SupplyDrop::ProcessPendingSupplyDrop, Info), ProcessDelay, false);
+        }
+        else
+        {
+            ProcessSupplyDrop(Info);
+        }
+
         ProcessTime += ProcessPendingSupplyDropInterval;
+        ProcessDelay += ProcessPendingSupplyDropInterval;
     }
 
     if (Stock)
@@ -118,6 +135,11 @@ void UFortConversationTaskNode_SupplyDrop::ProcessSupplyDrop(const FPendingSuppl
     const FRotator SpawnRotation{ 0.0f, FMath::FRand() * 360.0f, 0.0f };
 
     MapInfo->SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo), TraceStartZ, TraceEndZ);
+}
+
+void UFortConversationTaskNode_SupplyDrop::ProcessPendingSupplyDrop(FPendingSupplyDropInfo Info) const
+{
+    ProcessSupplyDrop(Info);
 }
 
 void UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops()

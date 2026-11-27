@@ -10,15 +10,15 @@
 template<bool bConst, class UserClass, typename FuncType, int32 Layout, typename... VarTypes>
 class TBaseUObjectMethodDelegateInstance;
 
-template<class UserClass, int32 Layout, typename RetValType, typename... ParamTypes, typename... VarTypes>
-class TBaseUObjectMethodDelegateInstance<false, UserClass, RetValType(ParamTypes...), Layout, VarTypes...> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
+template<bool bConst, class UserClass, int32 Layout, typename RetValType, typename... ParamTypes, typename... VarTypes>
+class TBaseUObjectMethodDelegateInstance<bConst, UserClass, RetValType(ParamTypes...), Layout, VarTypes...> : public IBaseDelegateInstance<RetValType(ParamTypes...), Layout>
 {
 public:
-    typedef RetValType (UserClass::*FMethodPtr)(ParamTypes..., VarTypes...);
+    typedef std::conditional_t<bConst, RetValType (UserClass::*)(ParamTypes..., VarTypes...) const, RetValType (UserClass::*)(ParamTypes..., VarTypes...)> FMethodPtr;
 
-    TBaseUObjectMethodDelegateInstance(UserClass* InUserObject, FMethodPtr InMethodPtr, VarTypes... Vars)
+    TBaseUObjectMethodDelegateInstance(std::conditional_t<bConst, const UserClass*, UserClass*> InUserObject, FMethodPtr InMethodPtr, VarTypes... Vars)
         : Handle(FDelegateHandle::GenerateNewHandle)
-        , UserObject(InUserObject)
+        , UserObject(const_cast<UserClass*>(InUserObject))
         , MethodPtr(InMethodPtr)
         , Payload(Vars...)
     {

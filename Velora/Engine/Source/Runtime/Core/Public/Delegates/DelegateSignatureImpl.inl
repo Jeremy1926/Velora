@@ -52,6 +52,16 @@ public:
         return Result;
     }
 
+    template<class UserClass, typename... VarTypes>
+    static TDelegate CreateUObject(const UserClass* InUserObject, RetValType (UserClass::*InFunc)(ParamTypes..., VarTypes...) const, std::type_identity_t<VarTypes>... Vars)
+    {
+        TDelegate Result;
+
+        IDelegateInstance::WithLayout(nullptr, [&](auto, auto Layout) { new (Result) TBaseUObjectMethodDelegateInstance<true, UserClass, RetValType(ParamTypes...), decltype(Layout)::value, VarTypes...>(InUserObject, InFunc, Vars...); });
+
+        return Result;
+    }
+
     template<typename FunctorType>
     static TDelegate CreateLambda(FunctorType&& InFunctor)
     {

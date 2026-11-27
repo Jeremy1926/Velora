@@ -36,6 +36,8 @@ public:
 
     void ProcessSupplyDrop(const FPendingSupplyDropInfo& Info) const;
 
+    void ProcessPendingSupplyDrop(FPendingSupplyDropInfo Info) const;
+
     static void TickPendingSupplyDrops();
 
     UObject* GetSupplyDropInfo() const;
