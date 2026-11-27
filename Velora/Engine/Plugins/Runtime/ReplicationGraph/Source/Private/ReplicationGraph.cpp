@@ -92,6 +92,15 @@ int32& UNetReplicationGraphConnection::GetConnectionOrderNum()
         .Find("call 0x*")
         .Target()
         .Find("mov [*+0x*], ecx")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x20)
+        .Find("lea r8, [*]; mov [*], rdx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov [*+0x*], edx; lea ecx, [rdx+0x1]")
         .Disp();
 
     return *(int32*)((uint8*)this + ConnectionOrderNum);
