@@ -1827,6 +1827,11 @@ ABuildingSMActor* AFortPlayerController::ServerCreateBuildingActorInternal(FBuil
         .Event(TEXT("ServerCreateBuildingActor"))
         .Find("lea rdx, [0x*]; lea rcx, *; call 0x*")
         .Target()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("mov rcx, [0x*]; mov r*, [rsp+0x*]; cmp r*, rcx")
+        .Target()
         .Get();
 
     static auto UnableToAfford = Anchor::Data<const FText*>(TEXT("UnableToAfford"))
