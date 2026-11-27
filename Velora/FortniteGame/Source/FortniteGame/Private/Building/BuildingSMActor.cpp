@@ -133,6 +133,9 @@ bool ABuildingSMActor::NeedsRepair() const
         .Or()
         .Event(TEXT("ServerRepairBuildingActor"))
         .Find("call [rax+0x*]; mov rcx, [r*]; mov r*, [rcx+0x*]; mov r*b, al")
+        .Or()
+        .Event(TEXT("ServerRepairBuildingActor"))
+        .Find("call [rax+0x*]; mov r*b, al; mov rcx, [r*]; mov r*, [rcx+0x*]")
         .Get();
 
     return NeedsRepair(this);
