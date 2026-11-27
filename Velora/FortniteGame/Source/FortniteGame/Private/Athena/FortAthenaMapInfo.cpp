@@ -350,6 +350,11 @@ const FScalableFloat& AFortAthenaMapInfo::GetSafeZoneStartDelay() const
 void AFortAthenaMapInfo::GenerateSafeZoneLocations(TArray<uint8>& OutLocations, const FVector& MapCenter, int32 BaseSafeZoneIndex)
 {
     static auto ConstructSafeZoneLocationParams = Anchor::Function<void* (*)(AFortAthenaMapInfo*, void*, int32, const TGameValue<FVector>&, const TGameValue<FVector>&, bool, int32)>(TEXT("AFortAthenaMapInfo::ConstructSafeZoneLocationParams"))
+        .Exec(TEXT("/Script/FortniteGame.FortAthenaMapInfo:ConstructSafeZoneLocationParams"))
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .Native(TEXT("/Script/FortniteGame.FortAthenaMapInfo:ConstructSafeZoneLocationParams"))
         .Get();
 
