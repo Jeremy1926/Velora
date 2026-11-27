@@ -39,6 +39,8 @@ public:
 
     void execSetActorToTrack(FFrame& Stack, void* const Z_Param__Result);
 
+    void BPOnTrackedActorSet(AActor* TrackedActorPrevious);
+
     void StartAggro();
 
     static void TickPendingAggros();

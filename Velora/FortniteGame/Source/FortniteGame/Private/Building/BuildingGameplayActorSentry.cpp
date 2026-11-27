@@ -67,7 +67,11 @@ void ABuildingGameplayActorSentry::SetActorToTrack(AActor* InActorToTrack)
         return;
 
     FlushNetDormancy();
+
+    const auto TrackedActorPrevious = GetActorBeingTracked();
+
     GetActorBeingTracked() = InActorToTrack;
+    BPOnTrackedActorSet(TrackedActorPrevious);
 
     auto World = GetWorld();
 
@@ -101,6 +105,35 @@ void ABuildingGameplayActorSentry::execSetActorToTrack(FFrame& Stack, void* cons
     Stack.Code += !!Stack.Code;
 
     SetActorToTrack(InActorToTrack);
+}
+
+void ABuildingGameplayActorSentry::BPOnTrackedActorSet(AActor* TrackedActorPrevious)
+{
+    static auto BPOnTrackedActorSet = Anchor::Function<void (*)(ABuildingGameplayActorSentry*, AActor*)>(TEXT("ABuildingGameplayActorSentry::BPOnTrackedActorSet"))
+        .Event(TEXT("BPOnTrackedActorSet"))
+        .Optional()
+        .Get();
+
+    auto ActorBeingTracked = GetActorBeingTracked();
+
+    UE_LOG(LogVelora, Log, TEXT("[Sentry] %s BPOnTrackedActorSet %s -> %s through %s"), *GetName(), TrackedActorPrevious ? *TrackedActorPrevious->GetName() : TEXT("none"), ActorBeingTracked ? *ActorBeingTracked->GetName() : TEXT("none"), BPOnTrackedActorSet ? TEXT("the event thunk") : TEXT("ProcessEvent"));
+
+    if (BPOnTrackedActorSet)
+        return BPOnTrackedActorSet(this, TrackedActorPrevious);
+
+    auto Function = FindFunctionChecked(FName(TEXT("BPOnTrackedActorSet")));
+    auto Parameter = Function ? Function->GetPropertyLink() : nullptr;
+
+    if (!Parameter)
+        return;
+
+    TArray<uint8> Parms;
+    Parms.SetNum(Function->GetPropertiesSize());
+    memset(Parms.GetData(), 0, Parms.Num());
+
+    *Parameter->ContainerPtrToValuePtr<AActor*>(Parms.GetData()) = TrackedActorPrevious;
+
+    ProcessEvent(Function, Parms.GetData());
 }
 
 void ABuildingGameplayActorSentry::StartAggro()
