@@ -188,10 +188,10 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             UFortGameplayAbilityAthena_PeriodicItemGrant::TickItemAwardTimers();
             UFortServerBotManagerAthena::TickBotBrainActivationTimers();
             UFortConversationTaskNode_SupplyDrop::TickPendingSupplyDrops();
+            ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
         }
 
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
-        ABuildingGameplayActorTransientQuest::TickInteractionTextUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
         AFriendChestNative::TickActivationTimers();
         AFortPlayerStateZone::TickSimulatedAttributes(World);

@@ -6,6 +6,9 @@
 #include "Player/FortPlayerController.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Containers/Map.h"
+#include "TimerManager.h"
 #include "GameplayTagContainer.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -31,6 +34,8 @@ struct FPendingInteractionTextUpdate
 
 static TArray<FPendingInteractionTextUpdate> PendingInteractionTextUpdates;
 
+static TMap<const ABuildingGameplayActorTransientQuest*, FTimerHandle> InteractionTextTimerHandles;
+
 UClass* ABuildingGameplayActorTransientQuest::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.BuildingGameplayActorTransientQuest"));
@@ -45,15 +50,25 @@ void ABuildingGameplayActorTransientQuest::StartUpdatingInteractionText(const AA
     if (!Pawn || !HasAuthority())
         return;
 
+    const bool bTimerRunning = GetPawnsInTriggerVolume().Num() > 0;
+
     GetPawnsInTriggerVolume().AddUnique(Pawn);
 
-    auto bUpdating = false;
+    if (FTimerManager::CanSetTimers())
+    {
+        if (!bTimerRunning)
+            GetWorld()->GetTimerManager().SetTimer(InteractionTextTimerHandles.FindOrAdd(this), this, &ABuildingGameplayActorTransientQuest::ServerUpdateInteractionText_Implementation, GetInteractionTextRefreshRate(), true);
+    }
+    else
+    {
+        auto bUpdating = false;
 
-    for (auto& Update : PendingInteractionTextUpdates)
-        bUpdating |= Update.TransientQuest.Get() == this;
+        for (auto& Update : PendingInteractionTextUpdates)
+            bUpdating |= Update.TransientQuest.Get() == this;
 
-    if (!bUpdating)
-        PendingInteractionTextUpdates.Add(FPendingInteractionTextUpdate{ this, GetWorld()->GetTimeSeconds() + GetInteractionTextRefreshRate() });
+        if (!bUpdating)
+            PendingInteractionTextUpdates.Add(FPendingInteractionTextUpdate{ this, GetWorld()->GetTimeSeconds() + GetInteractionTextRefreshRate() });
+    }
 
     ServerUpdateInteractionText_Implementation();
 }
@@ -69,6 +84,12 @@ void ABuildingGameplayActorTransientQuest::StopUpdatingInteractionText(const AAc
 
     if (GetPawnsInTriggerVolume().Num())
         return;
+
+    if (auto TimerHandle = InteractionTextTimerHandles.Find(this))
+    {
+        UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, *TimerHandle);
+        InteractionTextTimerHandles.Remove(this);
+    }
 
     for (int32 Index = PendingInteractionTextUpdates.Num() - 1; Index >= 0; Index--)
     {
