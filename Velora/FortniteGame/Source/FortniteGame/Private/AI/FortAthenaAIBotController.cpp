@@ -309,6 +309,9 @@ void AFortAthenaAIBotController::InitializeSkills(const float* InSkill, const TA
     static auto InitializeSkills = Anchor::Function<void (*)(AFortAthenaAIBotController*, const float*, const TArray<UClass*>*)>(TEXT("AFortAthenaAIBotController::InitializeSkills"))
         .FieldPattern("48 85 D2 74 ? 8B 02 89 81 %o", StaticClass()->FindPropertyByName(FName(TEXT("Skill"))))
         .Start()
+        .Or()
+        .FieldPattern("74 ? 8B 02 89 81 %o", StaticClass()->FindPropertyByName(FName(TEXT("Skill"))))
+        .Start()
         .Get();
 
     InitializeSkills(this, InSkill, InSkillSets);
