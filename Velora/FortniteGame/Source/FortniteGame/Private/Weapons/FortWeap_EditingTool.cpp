@@ -22,6 +22,12 @@ void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
         .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; sub rsp, 0x20; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; add rcx, %x; call 0x*", StaticClass()->FindPropertyByName(FName(TEXT("EditActor"))))
         .Or()
         .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; add rsp, 0x*; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; add rcx, %x; call 0x*", StaticClass()->FindPropertyByName(FName(TEXT("EditActor"))))
+        .Or()
+        .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; mov rbx, rcx; cmp byte ptr [rcx+0x*], 0x3; jnz *; add rcx, %x; call 0x*", StaticClass()->FindPropertyByName(FName(TEXT("EditActor"))))
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; mov rbx, rcx; cmp byte ptr [rcx+0x*], 0x3; jnz *; sub rcx, *; call 0x*; mov rcx, rbx")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; sub rcx, *; call 0x*; mov rcx, rbx")
         .Get();
 
     SetEditActor(this, InEditActor);
