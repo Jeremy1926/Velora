@@ -7,6 +7,11 @@
 #include "HAL/IConsoleManager.h"
 #include "Athena/FortPlayerControllerAthena.h"
 #include "Athena/FortPlayerStateAthena.h"
+#include "Athena/FortGameModeAthena.h"
+#include "Athena/FortGameStateAthena.h"
+#include "Modifiers/FortGameplayMutator.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "GameFramework/Controller.h"
 #include "GameplayTagAssetInterface.h"
@@ -57,7 +62,38 @@ void AFortPlayerPawnAthena::HandleDeath(float Damage, const FGameplayTagContaine
 
     auto BotController = DropCurrencyOnPawnDeath ? Cast<AFortAthenaAIBotController>(GetController()) : nullptr;
 
+    static auto ItemDropOnDeathClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaMutator_ItemDropOnDeath"));
+    static auto MutatorListComponent = AFortGameModeAthena::StaticClass()->FindPropertyByName(FName(TEXT("MutatorListComponent")));
+
+    auto DiagGameState = Cast<AFortGameStateAthena>(GetWorld()->GetGameState());
+    auto DiagGameMode = GetWorld()->GetAuthGameMode();
+    auto DiagMutator = DiagGameState && ItemDropOnDeathClass ? DiagGameState->GetMutatorByClass_Implementation(this, ItemDropOnDeathClass) : nullptr;
+    auto DiagMutatorList = DiagGameMode && MutatorListComponent ? *MutatorListComponent->ContainerPtrToValuePtr<UObject*>(DiagGameMode) : nullptr;
+    auto DiagMutators = DiagMutatorList ? DiagMutatorList->GetClass()->FindPropertyByName(FName(TEXT("Mutators"))) : nullptr;
+    auto DiagShield = StaticFindObject(nullptr, nullptr, TEXT("/PaprikaConsumables/Gameplay/ShieldSmallRefresh/WID_Paprika_ShieldSmall.WID_Paprika_ShieldSmall"));
+    const FVector DiagLocation = GetActorLocation();
+
+    TArray<AActor*> DiagPickupsBefore;
+    UGameplayStatics::GetAllActorsOfClass(this, AFortPickup::StaticClass(), DiagPickupsBefore);
+
+    UE_LOG(LogVelora, Log, TEXT("[DropDiag] %s died, ItemDropOnDeath mutator %s, game mode mutators %d, WID_Paprika_ShieldSmall %s"), *GetName(), DiagMutator ? *DiagMutator->GetName() : TEXT("null"), DiagMutators ? DiagMutators->ContainerPtrToValuePtr<TArray<UObject*>>(DiagMutatorList)->Num() : -1, DiagShield ? TEXT("resolves") : TEXT("not loaded"));
+
     Original(Damage, DamageTags, EffectContext, InstigatedBy, DamageCauser);
+
+    TArray<AActor*> DiagPickupsAfter;
+    UGameplayStatics::GetAllActorsOfClass(this, AFortPickup::StaticClass(), DiagPickupsAfter);
+
+    for (auto Actor : DiagPickupsAfter)
+    {
+        auto Pickup = (AFortPickup*)Actor;
+
+        if (!Pickup || DiagPickupsBefore.Contains(Actor) || (Pickup->GetActorLocation() - DiagLocation).Size() > 1000.0f)
+            continue;
+
+        auto ItemDefinition = Pickup->GetPrimaryPickupItemEntry().GetItemDefinition();
+
+        UE_LOG(LogVelora, Log, TEXT("[DropDiag] %s pickup %s count %d"), *GetName(), ItemDefinition ? *ItemDefinition->GetName() : TEXT("null"), Pickup->GetPrimaryPickupItemEntry().GetCount());
+    }
 
     auto RuntimeParametersComponent = BotController ? BotController->GetCachedAIRuntimeParametersComponent() : nullptr;
     auto InventoryParameters = RuntimeParametersComponent && UFortAthenaAIRuntimeParameters_Inventory::StaticClass() ? Cast<UFortAthenaAIRuntimeParameters_Inventory>(RuntimeParametersComponent->GetOrCreateAIRuntimeParameters(UFortAthenaAIRuntimeParameters_Inventory::StaticClass(), 0, 2)) : nullptr;
