@@ -478,6 +478,13 @@ FGameplayTagCountContainer& UAbilitySystemComponent::GetGameplayTagCountContaine
         .Start()
         .Find("or r8d, 0xffffffff; lea rdx, [*+0x*]; lea rcx, [*+0x*]")
         .Find("lea rcx, [*+0x*]")
+        .Or()
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Find("lea rcx, [*+0x*]; lea rdx, [*+0x*]; or r8d, 0xffffffff")
+        .Or()
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Find("lea rdx, [*+0x*]; or r8d, 0xffffffff; lea rcx, [*+0x*]")
+        .Find("lea rcx, [*+0x*]")
         .Disp();
 
     return *(FGameplayTagCountContainer*)((uint8_t*)this + GameplayTagCountContainer);
