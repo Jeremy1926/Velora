@@ -749,7 +749,7 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SafeZoneInsideChecks()
 
         for (auto Pawn : PlayerPawns)
         {
-            if (!Pawn || Pawn->IsPendingKill())
+            if (!Pawn || Pawn->IsPendingKill() || !Pawn->GetController())
                 continue;
 
             Pawn->SetIsInAnyStorm(Pawn->InPortaStorm() == bIsInsideSafeZone);
@@ -761,7 +761,7 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SafeZoneInsideChecks()
 
     for (auto Pawn : PlayerPawns)
     {
-        if (!Pawn || Pawn->IsPendingKill())
+        if (!Pawn || Pawn->IsPendingKill() || !Pawn->GetController())
             continue;
 
         const bool bIsInsideSafeZone = IsInCurrentSafeZone(Pawn->GetActorLocation(), false);
