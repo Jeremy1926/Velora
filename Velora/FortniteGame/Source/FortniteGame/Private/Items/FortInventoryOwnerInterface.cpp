@@ -61,6 +61,11 @@ bool IFortInventoryOwnerInterface::CreateInventory()
         .Optional()
         .Find("mov rax, [*]; mov rcx, *; call [rax+0x*]")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Optional()
+        .Find("mov rcx, *; mov rax, [*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .LogSlot(TEXT("IFortInventoryOwnerInterface::CreateInventory"))
         .InInterfaceVTables(AFortAthenaAIBotController::StaticClass(), StaticClass(), "xor al, al; ret*"));
 
@@ -86,6 +91,11 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
         .Find("jmp [rax+0x*]")
         .Or()
         .FieldPattern("48 83 EC 28 48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("[%hs] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)"))
+        .Start()
+        .Find("mov rcx, r15; mov rax, [r15]; mov rdx, [rsp+0x*]; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("IFortInventoryOwnerInterface::InitializeInventory"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface")));
