@@ -77,6 +77,9 @@ void UInventoryManagementLibrary::execGiveItemEntryToInventoryOwner(FFrame& Stac
         .Or()
         .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner"))
         .Find("mov byte ptr [*], 0x0; call 0x*; mov rcx, [rsp+0x*]; xor rcx, rsp")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner"))
+        .Find("mov byte ptr [*], 0x0; lea rcx, [rsp+0x*]; call 0x*; mov rcx, [rsp+0x*]; xor rcx, rsp")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.InventoryManagementLibrary:GiveItemEntryToInventoryOwner")));
 
