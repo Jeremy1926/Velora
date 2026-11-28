@@ -3133,6 +3133,10 @@ bool AFortPlayerController::ForceEquipValidWeapon()
         .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
         .Last("mov rbx, [rbx+0x*]; test rbx, rbx; jz 0x*; mov rcx, rbx; call 0x*; test al, al; jz 0x*")
         .Find("call [rax+0x*]")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Last("mov r*, [r*+0x*]; test r*, r*; jz 0x*; mov rcx, r*; call 0x*; test al, al; jz 0x*")
+        .Find("call [rax+0x*]")
         .AtCall(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena")));
 
     auto MyFortPawn = GetMyFortPawn();
