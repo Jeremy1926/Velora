@@ -386,6 +386,10 @@ public:
 
     void RegisterStaticPointProviders();
 
+    void RegisterStaticPointProvider(AActor* PointProvider);
+
+    static void (*GetAddWorldPatrolPaths())(UFortAthenaLivingWorldManager*);
+
     int32 GetTotalActorCount();
 
     FEventRuntime* FindEventRuntime(const FFortAthenaLivingWorldEvent* Event, UFortAthenaLivingWorldEncounterInstance* EncounterInstance);

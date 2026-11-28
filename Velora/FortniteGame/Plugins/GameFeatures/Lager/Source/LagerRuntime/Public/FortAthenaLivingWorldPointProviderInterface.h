@@ -71,4 +71,6 @@ public:
     void DisablePointProvider();
 
     bool IsEnabled(const FFortAthenaLivingWorldPointProviderFilterRules& PointFilter) const;
+
+    void RegisterToLivingWorldManager(AActor* PointProvider);
 };

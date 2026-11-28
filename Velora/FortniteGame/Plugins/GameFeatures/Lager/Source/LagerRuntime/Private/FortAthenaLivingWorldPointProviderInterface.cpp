@@ -9,6 +9,8 @@
 #include "UObject/UObjectGlobals.h"
 #include "UObject/UnrealType.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/GameStateBase.h"
+#include "Engine/World.h"
 #include "GameplayEffectTypes.h"
 #include "Scanner.h"
 #include "Detour.h"
@@ -269,4 +271,23 @@ bool IFortAthenaLivingWorldPointProviderInterface::IsEnabled(const FFortAthenaLi
         .Get();
 
     return IsEnabled(this, PointFilter);
+}
+
+void IFortAthenaLivingWorldPointProviderInterface::RegisterToLivingWorldManager(AActor* PointProvider)
+{
+    DETOUR(IFortAthenaLivingWorldPointProviderInterface, RegisterToLivingWorldManager, Anchor::Hook()
+        .If(UFortAthenaLivingWorldManager::HasEventRuntimes())
+        .Optional()
+        .String("IFortAthenaLivingWorldPointProviderInterface::RegisterToLivingWorldManager")
+        .Start()
+        .Inline());
+
+    Original(PointProvider);
+
+    auto World = PointProvider ? PointProvider->GetWorld() : nullptr;
+    auto GameState = World ? World->GetGameState() : nullptr;
+    auto LivingWorldManager = GameState ? (UFortAthenaLivingWorldManager*)GameState->FindComponentByClass(UFortAthenaLivingWorldManager::StaticClass()) : nullptr;
+
+    if (LivingWorldManager && GameState->HasAuthority())
+        LivingWorldManager->RegisterStaticPointProvider(PointProvider);
 }
