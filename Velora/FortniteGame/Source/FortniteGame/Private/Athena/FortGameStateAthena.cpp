@@ -733,6 +733,11 @@ void AFortGameStateAthena::NotifyGameMemberAdded(uint8 SquadId, uint8 TeamIndex,
         .Or()
         .String("AFortGameStateAthena::NotifyGameMemberAdded")
         .Start()
+        .Or()
+        .FieldPattern("? 8A 41 0D ? 8D 49 10 ? 8B C2 8A 51 0C ? 8B 88 %o E9", FGameMemberInfoArray::StaticStruct() ? FGameMemberInfoArray::StaticStruct()->FindPropertyByName(FName(TEXT("OwningGameState"))) : nullptr)
+        .Find("jmp 0x*")
+        .Target()
+        .Has("mov rdx, r9; *; call 0x*")
         .Get();
 
     if (NotifyGameMemberAdded)
