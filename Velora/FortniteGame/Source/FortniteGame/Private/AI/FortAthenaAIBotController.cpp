@@ -284,7 +284,8 @@ void AFortAthenaAIBotController::AddStartingItemsToInventory()
     if (auto Pickaxe = GetCosmeticLoadoutBC().GetPickaxe())
         Items.Add({ 1, Pickaxe->GetWeaponDefinition() });
 
-    static auto bAllowUnsupportedItems = Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
+    static auto bGameSetsAllowUnsupportedItems = UFortAthenaAIRuntimeParameters_Inventory::StaticClass() && UFortAthenaAIRuntimeParameters_Inventory::StaticClass()->FindPropertyByName(FName(TEXT("bDefaultInventoryIgnoresRestrictions")));
+    static auto bAllowUnsupportedItems = bGameSetsAllowUnsupportedItems ? 0 : Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
         .Find("mov [rcx+0x*], al")
         .Or()
