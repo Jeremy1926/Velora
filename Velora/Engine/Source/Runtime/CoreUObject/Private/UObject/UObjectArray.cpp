@@ -196,6 +196,8 @@ bool FUObjectItem::IsPendingKill() const
         .Pattern("0F BA ? ? 73 ? 8B ? 85 C0 74 ? 0F BA ? ?")
         .Or()
         .Pattern("0F BA ? ? 73 ? 8B ? 10 85 C0 74 ? 0F BA ? ?")
+        .Or()
+        .Pattern("0F BA ? ? 73 ? 8B ? 0C 85 C0 74 ? 0F BA ? ?")
         .Optional()
         .Imm();
 
