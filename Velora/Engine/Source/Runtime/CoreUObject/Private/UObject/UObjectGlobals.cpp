@@ -155,6 +155,9 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Or()
         .String(TEXT("STAT_ConstructObject"), "lea *, [0x*]; mov *, [rcx+0x14]; lea *, [0x*]")
         .Start()
+        .Or()
+        .String(TEXT("STAT_ConstructObject"), "lea *, [0x*]; mov *, [rcx]; cmp [0x*], *")
+        .Start()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
