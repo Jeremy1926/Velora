@@ -220,6 +220,8 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
         .VirtualStartHas(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortInventory"), TEXT("/Script/FortniteGame.FortInventoryInterface")), "cmp byte ptr [rcx-0x*], 0x3; mov rdi, rdx; mov rbx, rcx")
         .Or()
         .VirtualStartHas(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortInventory"), TEXT("/Script/FortniteGame.FortInventoryInterface")), "cmp byte ptr [rcx-0x*], 0x3; mov rbx, rcx")
+        .Or()
+        .VirtualStartHas(Scanner::FindVTable(TEXT("/Script/FortniteGame.Default__FortInventory"), TEXT("/Script/FortniteGame.FortInventoryInterface")), "mov rbx, rcx; cmp byte ptr [rcx-0x*], 0x3; mov rdi, rdx")
         .Optional()
         .Get();
 
