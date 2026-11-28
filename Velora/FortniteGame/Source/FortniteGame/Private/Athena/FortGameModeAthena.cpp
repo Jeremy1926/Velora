@@ -135,6 +135,15 @@ TMulticastDelegate<void, AFortGameModeAthena*>& AFortGameModeAthena::GetNotifyPl
         .Target()
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("PLAYLIST: Playlist Object finished loading its assets and GameMode can now use the assets AFortGameModeAthena::OnPlaylistDataLoaded(), PlaylistName is %s (Server Only)"))
+        .Start()
+        .Find("lea rcx, [0x*]; xor edx, edx; call 0x*; mov rdx, r*; call 0x*")
+        .Find("mov rdx, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPlaylistDataLoaded;
