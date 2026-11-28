@@ -74,6 +74,9 @@ void AFortPlayerPawnAthena::PossessedBy(AController* NewController)
         .Or()
         .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
         .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "mov rcx, *; inc al; and al, 0x3; mov [0x*], al")
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; and al, 0x3; mov rcx, *; mov [0x*], al")
         .Optional()
         .InChildVTables(StaticClass()));
 
