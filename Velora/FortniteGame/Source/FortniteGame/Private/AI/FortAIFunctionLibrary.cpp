@@ -74,6 +74,11 @@ void UFortAIFunctionLibrary::MakeNoiseEventAtLocation(AActor* NoiseMaker, float 
             .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
             .Find("mov rcx, r*; call 0x*; movss xmm3, dword ptr [*]")
             .Find("cmp al, 0x1; mov r8, r*; movss [rsp+0x20], xmm*; mov rdx, r*; lea rcx, [rbp-0x*]; jnz *; call 0x*")
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAIFunctionLibrary:MakeNoiseEventAtLocation"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("movss [rsp+0x20], xmm*; lea rcx, [rbp-0x*]; jnz *; call 0x*")
             .Get();
 
         static auto OnAthenaNoiseEvent = Anchor::Function<void (*)(UWorld*, const FAINoiseEvent&)>(TEXT("UAIPerceptionSystem::OnEvent<FAINoiseEvent> (Athena.AI.NoiseMaker)"))
