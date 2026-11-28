@@ -51,6 +51,10 @@ float UEngine::GetMaxTickRate(float DeltaTime, bool bAllowFrameRateSmoothing) co
     static auto GetMaxTickRate = Anchor::VirtualFunction<float (*)(const UEngine*, float, bool)>(TEXT("UEngine::GetMaxTickRate"))
         .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
         .Last("call [*+0x*]")
+        .Or()
+        .String(TEXT("Bringing %s up for play (max tick rate %i) at %s"))
+        .Find("xorps xmm1, xmm1; call [*+0x*]")
+        .Find("call [*+0x*]")
         .Get();
 
     return GetMaxTickRate(this, DeltaTime, bAllowFrameRateSmoothing);
