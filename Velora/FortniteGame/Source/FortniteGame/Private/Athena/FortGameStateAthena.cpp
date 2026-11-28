@@ -574,26 +574,11 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         }
     }
 
-    if (bBroadcastsCurrentPlaylistLoaded)
+    if (!bBroadcastsCurrentPlaylistLoaded)
     {
-        Original();
-
-        TArray<AActor*> BuildingContainers;
-        UGameplayStatics::GetAllActorsOfClass(this, ABuildingContainer::StaticClass(), BuildingContainers);
-
-        for (auto Actor : BuildingContainers)
-        {
-            auto BuildingContainer = (ABuildingContainer*)Actor;
-
-            if (BuildingContainer->GetStartAlreadySearched_Athena())
-                BuildingContainer->SpawnLoot(nullptr);
-        }
-
-        return;
+        if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
+            GameMode->PerformAsyncLoadForGameFeatureLootData();
     }
-
-    if (auto GameMode = Cast<AFortGameModeAthena>(GetWorld()->GetAuthGameMode()))
-        GameMode->PerformAsyncLoadForGameFeatureLootData();
 
     Original();
 
@@ -625,6 +610,9 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
                 ((AFortAthenaVehicleSpawner*)VehicleSpawner)->CheckForSelfSpawn();
         }
     }
+
+    if (bBroadcastsCurrentPlaylistLoaded)
+        return;
 
     if (ABuildingItemWeaponUpgradeActor::StaticClass())
     {
