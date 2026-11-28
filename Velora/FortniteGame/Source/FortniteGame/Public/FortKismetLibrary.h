@@ -86,6 +86,8 @@ public:
 
     static void GiveItemToInventoryOwner(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive, bool bNotifyPlayer);
 
+    static void GiveItemToInventoryOwnerWithVariant(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, const FGuid& ItemVariantGuid, int32 NumberToGive, bool bNotifyPlayer);
+
     void execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result);
 
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);
