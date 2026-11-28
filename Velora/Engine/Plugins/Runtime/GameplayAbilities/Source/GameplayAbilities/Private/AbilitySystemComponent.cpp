@@ -331,6 +331,10 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToSel
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToSelf"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov [rsp+0x20], *; movaps xmm3, *; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToSelf"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; lea rdx, [*]; call 0x*")
         .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
