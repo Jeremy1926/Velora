@@ -160,6 +160,10 @@ void UStruct::InitializeStruct(void* Dest, int32 ArrayDim) const
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, r*; mov r9, [*]; *; *; mov rcx, *; call [r9+0x*]")
         .Find("call [r9+0x*]")
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("movsxd rcx, dword ptr [rcx+0x8]; call 0x*")
+        .Find("call [r9+0x*]")
         .Get();
 
     InitializeStruct(this, Dest, ArrayDim);
@@ -226,6 +230,12 @@ void UScriptStruct::CopyScriptStruct(void* Dest, void const* Src, int32 ArrayDim
         .Or()
         .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
         .Find("mov r8d, r*; mov r9, [*]; *; *; mov rcx, *; call [r9+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Native(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:FilterTargetData"))
+        .Find("movsxd rcx, dword ptr [rcx+0x8]; call 0x*")
+        .Find("call [r9+0x*]")
         .Find("call 0x*")
         .Target()
         .Get();
