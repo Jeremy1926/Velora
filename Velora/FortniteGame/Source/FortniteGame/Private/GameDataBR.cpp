@@ -23,6 +23,10 @@ UFortAbilitySet* UGameDataBR::GetPlayerAbilitySetBR() const
         .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
         .Start()
         .Find("call 0x*; lea rcx, [rax+0x*]; mov r8b, 0x1; mov dl, r8b; call 0x*")
+        .Or()
+        .String(TEXT("InitializePlayerGameplayAbilities with invalid PlayerStateOrProxy!"))
+        .Start()
+        .Find("call 0x*; lea rcx, [rax+0x*]; mov r8b, *; mov dl, 0x1; call 0x*")
         .Get();
 
     static auto GetPlayerAbilitySetBR =Anchor::Optional<UFortAbilitySet* (*)(const UGameDataBR*)>(TEXT("UGameDataBR::GetPlayerAbilitySetBR"))
