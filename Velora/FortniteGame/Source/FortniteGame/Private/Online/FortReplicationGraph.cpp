@@ -1918,6 +1918,12 @@ FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForSquad::GetRepli
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForSquad"))
         .Find("lea *, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
+        .Find("lea *, [rcx+0x*]")
         .Disp();
 
     return *(FActorRepListRefView*)((uint8*)this + ReplicationActorList);
@@ -2904,6 +2910,12 @@ FActorRepListRefView& UFortReplicationGraphNode_AlwaysRelevantForTeam::GetReplic
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Entry(TEXT("/Script/FortniteGame.Default__FortReplicationGraphNode_AlwaysRelevantForTeam"))
+        .Find("lea r*, [rcx+0x*]")
+        .Or()
+        .String(TEXT("Child: %s"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraphNode_ActorList"), -0x18)
         .Find("lea r*, [rcx+0x*]")
         .Disp();
 
