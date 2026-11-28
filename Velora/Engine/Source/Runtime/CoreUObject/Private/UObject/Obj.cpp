@@ -115,6 +115,10 @@ void UObject::PatchCanCreateInCurrentContext()
         .String(TEXT("Unable to spawn class '%s' due to client/server context."))
         .Start()
         .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
+        .Or()
+        .Smallest(TEXT("STAT_SpawnActorTime"))
+        .Start()
+        .Find("call [rax+0x*]; xor r9d, r9d; test al, al")
         .Get();
 
     static auto Slot = GetNeedsLoadForServerSlot();
