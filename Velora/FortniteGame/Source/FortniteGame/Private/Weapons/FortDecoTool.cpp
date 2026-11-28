@@ -329,6 +329,16 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameV
         .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
         .Find("call 0x*; cmp eax, 0x*; mov esi, eax")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Has("sub r10d, 0x1; jz 0x*; sub r10d, 0x1; jz 0x*")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("call 0x*; mov e*, eax; cmp eax, 0x*")
+        .Target()
         .Get();
 
     static auto GameplayTags = Anchor::Function<const uint8* (*)()>(TEXT("UFortGlobals::GameplayTags"))
