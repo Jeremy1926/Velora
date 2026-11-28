@@ -69,6 +69,10 @@ ABuildingSMActor* ABuildingSMActor::ReplaceBuildingActor(EBuildingReplacementTyp
         .String(TEXT("STAT_Fort_BuildingSMActorReplaceBuildingActor"))
         .Start()
         .Find("mov [*], *; jnz 0x*; mov *, [r8]; test *, *")
+        .Or()
+        .String(TEXT("STAT_Fort_BuildingSMActorReplaceBuildingActor"))
+        .Start()
+        .Find("cmp byte ptr [*+0x*], 0x3; mov [*], *; jnz 0x*; mov *, [r*]; test *, *")
         .Get();
 
     if (bClassByAddress)
