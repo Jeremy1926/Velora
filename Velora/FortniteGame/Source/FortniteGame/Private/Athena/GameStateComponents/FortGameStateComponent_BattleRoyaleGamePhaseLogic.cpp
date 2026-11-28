@@ -224,6 +224,9 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSafeZoneLocat
     static auto SetSafeZoneLocations = Anchor::Optional<void (*)(UFortGameStateComponent_BattleRoyaleGamePhaseLogic*, const void*)>(TEXT("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations"))
         .String("UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetSafeZoneLocations")
         .Start()
+        .Or()
+        .String(TEXT("[%s] new safezone locations -->\n%s<--."))
+        .Start()
         .Get();
 
     auto GameState = Cast<AFortGameStateAthena>(GetOwner());
