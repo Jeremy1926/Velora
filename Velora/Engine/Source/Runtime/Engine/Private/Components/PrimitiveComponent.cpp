@@ -98,6 +98,14 @@ void UPrimitiveComponent::GetOverlappingActors(TArray<AActor*>& OverlappingActor
         .Exec(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov rdx, *; mov rcx, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, *; lea r8, [*]; mov rdx, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.PrimitiveComponent:GetOverlappingActors"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rcx, *; mov rdx, *; call 0x*")
         .Get();
 
     if (bClassByAddress)
