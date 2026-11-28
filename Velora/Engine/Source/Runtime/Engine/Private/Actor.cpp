@@ -735,6 +735,13 @@ ULevel* AActor::GetLevel() const
     return (ULevel*)GetOuter();
 }
 
+FActorTickFunction& AActor::GetPrimaryActorTick()
+{
+    static auto PrimaryActorTick = StaticClass()->FindPropertyByName(FName(TEXT("PrimaryActorTick")));
+
+    return *PrimaryActorTick->ContainerPtrToValuePtr<FActorTickFunction>(this);
+}
+
 const AActor* AActor::GetNetOwner() const
 {
     static auto GetNetOwner = Anchor::VirtualFunction<const AActor* (*)(const AActor*)>(TEXT("AActor::GetNetOwner"))

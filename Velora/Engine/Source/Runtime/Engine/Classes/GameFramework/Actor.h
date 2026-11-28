@@ -139,6 +139,8 @@ public:
 
     ULevel* GetLevel() const;
 
+    FActorTickFunction& GetPrimaryActorTick();
+
     const AActor* GetNetOwner() const;
 
     bool IsRelevancyOwnerFor(const AActor* ReplicatedActor, const AActor* ActorOwner, const AActor* ConnectionActor) const;

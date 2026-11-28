@@ -42,6 +42,10 @@ struct FTickFunction
     void SetbStartWithTickEnabled(bool bInStartWithTickEnabled);
 };
 
+struct FActorTickFunction : public FTickFunction
+{
+};
+
 struct FActorComponentTickFunction : public FTickFunction
 {
 };

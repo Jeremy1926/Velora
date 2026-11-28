@@ -194,7 +194,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
-        AFortPlayerStateZone::TickSimulatedAttributes(World);
+
+        if (!DETOUR_ORIGINAL(AFortPlayerStateZone, BeginPlay))
+            AFortPlayerStateZone::TickSimulatedAttributes(World);
 
         if (!DETOUR_ORIGINAL(UFortControllerComponent_RechargeWeapons, TickComponent))
             UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(World, DeltaSeconds);

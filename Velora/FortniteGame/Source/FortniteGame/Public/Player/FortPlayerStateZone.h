@@ -19,6 +19,10 @@ public:
 
     static void TickSimulatedAttributes(UWorld* World);
 
+    void BeginPlay();
+
+    void Tick(float DeltaSeconds);
+
     void UpdateSimulatedAttributes();
 
     void BeginSpectating(AFortPlayerStateZone* PlayerToSpectate);

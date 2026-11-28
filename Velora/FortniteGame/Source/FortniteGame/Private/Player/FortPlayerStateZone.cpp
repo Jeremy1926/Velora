@@ -8,6 +8,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* AFortPlayerStateZone::StaticClass()
 {
@@ -28,6 +29,70 @@ void AFortPlayerStateZone::TickSimulatedAttributes(UWorld* World)
         if (auto PlayerStateZone = Cast<AFortPlayerStateZone>(PlayerState))
             PlayerStateZone->UpdateSimulatedAttributes();
     }
+}
+
+void AFortPlayerStateZone::BeginPlay()
+{
+    DETOUR(AFortPlayerStateZone, BeginPlay, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(AFortPlayerStateZone, Tick))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerStateZone"))
+        .Or()
+        .If(DETOUR_ORIGINAL(AFortPlayerStateZone, Tick))
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .LogSlot(TEXT("AActor::BeginPlay"))
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerStateZone"))
+        .Inline());
+
+    auto& PrimaryActorTick = GetPrimaryActorTick();
+
+    if (!PrimaryActorTick.GetbCanEverTick())
+    {
+        PrimaryActorTick.SetbCanEverTick(true);
+        PrimaryActorTick.SetbStartWithTickEnabled(true);
+    }
+
+    Original();
+}
+
+void AFortPlayerStateZone::Tick(float DeltaSeconds)
+{
+    static auto SimulatedAttributeArray = StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.SimulatedAttributeArray"));
+
+    DETOUR(AFortPlayerStateZone, Tick, Anchor::Hook()
+        .If(StaticClass() && SimulatedAttributeArray)
+        .At(Scanner::Virtual<const void*>(&((AActor*)AActor::StaticClass()->GetDefaultObject(false))->GetPrimaryActorTick(), sizeof(void*)))
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .Entry(AActor::StaticClass()->GetDefaultObject(false))
+        .Find("call [*+0x*]")
+        .Or()
+        .If(StaticClass() && SimulatedAttributeArray)
+        .At(Scanner::Virtual<const void*>(&((AActor*)AActor::StaticClass()->GetDefaultObject(false))->GetPrimaryActorTick(), sizeof(void*)))
+        .Call()
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .Entry(AActor::StaticClass()->GetDefaultObject(false))
+        .Find("call [*+0x*]")
+        .InChildVTablesCounted(StaticClass()));
+
+    if (DETOUR_ORIGINAL(AFortPlayerStateZone, Tick))
+        Original(DeltaSeconds);
+
+    if (HasAuthority())
+        UpdateSimulatedAttributes();
 }
 
 void AFortPlayerStateZone::UpdateSimulatedAttributes()
