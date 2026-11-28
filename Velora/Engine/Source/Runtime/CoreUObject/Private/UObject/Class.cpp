@@ -148,6 +148,13 @@ UProperty* UStruct::GetPropertyLink() const
         .Target()
         .Find("mov r*, [rcx+0x*]")
         .Decoded()
+        .Or()
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("mov edx, [rsp+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r*, [rcx+0x*]")
+        .Decoded()
         .Get();
 
     if (PropertyLink)
