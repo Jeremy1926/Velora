@@ -47,6 +47,12 @@ UProperty* UStruct::FindPropertyByName(FName InName) const
         .Find("call 0x*; mov edx, [rax]; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(FField::StaticClass())
+        .String(TEXT("InitialBenchmarkState"))
+        .Find("mov edx, [rsp+0x*]; mov rcx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (FindPropertyByName)
