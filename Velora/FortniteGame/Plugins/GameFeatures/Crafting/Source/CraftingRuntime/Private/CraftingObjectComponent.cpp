@@ -62,6 +62,11 @@ void UCraftingObjectComponent::StartCrafting(AFortPlayerController* Instigator, 
         .Find("mov [rsp+0x20], rbx")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/CraftingRuntime.CraftingObjectComponent:HandlePickupCraftingItemPickedUp"))
+        .Find("mov [rsp+0x20], rbx")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     StartCrafting(this, Instigator, &FormulaRow, NumberToCraft, Key, OverriddenObjectStateLength);
