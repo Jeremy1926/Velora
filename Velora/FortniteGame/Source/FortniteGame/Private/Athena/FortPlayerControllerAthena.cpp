@@ -212,8 +212,16 @@ void AFortPlayerControllerAthena::FixupInvalidRespawnStats()
 {
     DETOUR(AFortPlayerControllerAthena, FixupInvalidRespawnStats, Anchor::Hook()
         .String("AFortPlayerControllerAthena::FixupInvalidRespawnStats")
-        .Optional()
         .Start()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerControllerAthena:RespawnPlayerAfterDeath"))
+        .Find("test r8b, r8b")
+        .Find("call 0x*; test al, al")
+        .Target()
+        .Find("call 0x*; mov al, 0x1")
+        .Target()
+        .Call()
+        .Optional()
         .Inline());
 
     Original();
