@@ -604,6 +604,13 @@ namespace Anchor
             return Chain.IsActive() && !Anchor::IsCode((Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Get()) ? Chain.At(FCode()) : Chain;
         }
 
+        ChainType& NotBarrier()
+        {
+            auto& Chain = static_cast<ChainType&>(*this);
+
+            return Chain.IsActive() && Scanner::IsReachabilityBarrier((Chain.*(&Scanner::TChainAccess<ChainType>::Code)).Start().Get()) ? Chain.At(FCode()) : Chain;
+        }
+
         ChainType& Decoded()
         {
             auto& Chain = static_cast<ChainType&>(*this);

@@ -36,6 +36,7 @@ AFortAthenaAircraft* AFortAthenaAircraft::SpawnAircraft(UWorld* World, int32 Air
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAircraft:SpawnAircraft"))
         .Find("add [*+0x20], *; cmp *")
         .Call(2)
+        .NotBarrier()
         .Or()
         .Exec(TEXT("/Script/FortniteGame.FortAthenaAircraft:SpawnAircraft"))
         .Find("setnz *; add *, *; mov [*+0x20], *; call 0x*")
