@@ -154,6 +154,10 @@ FGameplayEffectSpecHandle UAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; *; mov rcx, *; mov [rsp+0x20], *; lea rdx, [*]; call *")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:MakeOutgoingSpec"))
+        .Find("add [*+0x20], *")
+        .Find("mov [rsp+0x20], *; lea r8, [*]; lea rdx, [*]; mov rcx, *; call *")
         .Get();
 
     FGameplayEffectSpecHandle SpecHandle;
