@@ -414,6 +414,11 @@ void UAbilitySystemComponent::CancelAbilities(const FGameplayTagContainer* WithT
         .Start()
         .Find("xor r9d, r9d; mov rcx, *; lea rdx, *; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("Unexpected Gameplay.Action.Player.Sprint tag, attempting to recover (FORT-34412)"))
+        .Start()
+        .Find("lea rdx, *; xor r9d, r9d; mov rcx, *; call 0x*")
+        .Call()
         .Get();
 
     CancelAbilities(this, WithTags, WithoutTags, Ignore);
