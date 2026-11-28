@@ -3991,6 +3991,12 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
         .Find("call 0x*")
         .Target()
         .Find("call [r9+0x*]")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea rcx, [rsi+0x40]; mov r9, rdi; mov [rsp+0x28], rcx")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [r9+0x*]")
         .Disp();
 
     static auto SpawnActions = UFortAthenaLivingWorldEventData::StaticClass()->FindPropertyByName(FName(TEXT("SpawnActions")));
