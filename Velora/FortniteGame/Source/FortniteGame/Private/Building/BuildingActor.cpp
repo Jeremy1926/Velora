@@ -240,6 +240,13 @@ void ABuildingActor::Die(FGameplayTag DamageTag, AController* EventInstigator, A
         .FindEither("jmp [*+0x*]", "call [*+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Has("mov qword ptr [rsp+0x20], 0x0")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:SilentDie"))
+        .Has("bt eax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Has("and qword ptr [rsp+0x20], 0x0*")
         .Get();
 
     if (bEffectContext)
@@ -287,6 +294,14 @@ void ABuildingActor::InitializeBuildingActor(EFortBuildingInitializationReason I
         .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
         .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Has("bt eax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
         .Get();
 
     InitializeBuildingActor(this, InitializationReason, InOwnerPersistentID, BuildingOwner, ReplacedBuilding, bFlag);
@@ -324,6 +339,14 @@ void ABuildingActor::PostInitializeSpawnedBuildingActor(EFortBuildingInitializat
         .Or()
         .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
         .Find("setnz *; add r*, r*")
+        .Find("call [*+0x*]")
+        .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
+        .Find("call [*+0x*]")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.BuildingActor:InitializeKismetSpawnedBuildingActor"))
+        .Has("bt eax, 0x8")
+        .Find("add [*+0x20], *")
         .Find("call [*+0x*]")
         .LogSlot(TEXT("ABuildingActor::InitializeKismetSpawnedBuildingActor"))
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingSMActor"))
