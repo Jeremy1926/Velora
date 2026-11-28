@@ -1182,6 +1182,9 @@ void UFortKismetLibrary::execK2_RemoveItemFromPlayerByGuid(FFrame& Stack, void* 
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
         .Find("xor ebp, ebp")
         .Find("setnz *; add r*, r*; mov [*+0x20], r*; mov [rsi], ebp; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid"))
+        .Find("call [rax+0x*]; mov ebx, eax; movaps xmm6, [rsp+0x*]; mov [r15], ebx")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_RemoveItemFromPlayerByGuid")));
 
