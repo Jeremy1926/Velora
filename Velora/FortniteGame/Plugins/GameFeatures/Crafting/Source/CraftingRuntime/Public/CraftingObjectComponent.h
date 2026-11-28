@@ -39,7 +39,11 @@ public:
 
     void CancelCrafting();
 
+    void CancelCrafting(FCraftingMultiKey Key);
+
     void ClaimCraftingResults();
+
+    void ClaimCraftingResults(FCraftingMultiKey Key);
 
     void EjectItems();
 
@@ -49,7 +53,11 @@ public:
 
     void HandleCratingObjectResetting();
 
+    void HandleCratingObjectResetting(FCraftingMultiKey Key);
+
     void SetCraftingObjectState(ECraftingObjectState InCraftingObjectState);
+
+    void SetCraftingObjectState(FCraftingMultiKey Key, ECraftingObjectState InCraftingObjectState);
 
     int32 SendGameplayEvent(FGameplayTag EventTag, float EventMagnitude);
 

@@ -105,7 +105,7 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerPickupItemAndStartCra
     CraftingObjectComponent->PickupItemAndStartCrafting(PlayerController, Pickup, CraftingFormulaName);
 }
 
-void UFortControllerComponent_CraftingNetworkEvents::ServerCancelCrafting_Implementation(AActor* CraftingObject)
+void UFortControllerComponent_CraftingNetworkEvents::ServerCancelCrafting_Implementation(AActor* CraftingObject, FCraftingMultiKey Key)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerCancelCrafting_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerCancelCrafting"))
@@ -131,11 +131,21 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerCancelCrafting_Implem
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
     auto CraftingObjectComponent = CraftingObject ? CraftingObject->FindComponentByClass<UCraftingObjectComponent>() : nullptr;
 
-    if (PlayerController && PlayerController->HasAuthority() && CraftingObjectComponent)
-        CraftingObjectComponent->CancelCrafting();
+    if (!PlayerController || !PlayerController->HasAuthority() || !CraftingObjectComponent)
+        return;
+
+    static auto bMultiKey = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerCancelCrafting")))->FindPropertyByName(FName(TEXT("Key"))) != nullptr;
+
+    if (bMultiKey)
+    {
+        CraftingObjectComponent->CancelCrafting(Key);
+        return;
+    }
+
+    CraftingObjectComponent->CancelCrafting();
 }
 
-void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_Implementation(AActor* CraftingObject)
+void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_Implementation(AActor* CraftingObject, FCraftingMultiKey Key)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerClaimCraftingResults_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerClaimCraftingResults"))
@@ -161,8 +171,18 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerClaimCraftingResults_
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
     auto CraftingObjectComponent = CraftingObject ? CraftingObject->FindComponentByClass<UCraftingObjectComponent>() : nullptr;
 
-    if (PlayerController && PlayerController->HasAuthority() && CraftingObjectComponent)
-        CraftingObjectComponent->ClaimCraftingResults();
+    if (!PlayerController || !PlayerController->HasAuthority() || !CraftingObjectComponent)
+        return;
+
+    static auto bMultiKey = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerClaimCraftingResults")))->FindPropertyByName(FName(TEXT("Key"))) != nullptr;
+
+    if (bMultiKey)
+    {
+        CraftingObjectComponent->ClaimCraftingResults(Key);
+        return;
+    }
+
+    CraftingObjectComponent->ClaimCraftingResults();
 }
 
 void UFortControllerComponent_CraftingNetworkEvents::ServerEjectItems_Implementation(AActor* CraftingObject)

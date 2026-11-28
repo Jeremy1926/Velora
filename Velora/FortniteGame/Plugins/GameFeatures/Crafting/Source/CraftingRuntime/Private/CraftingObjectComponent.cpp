@@ -103,6 +103,19 @@ void UCraftingObjectComponent::CancelCrafting()
     SetCraftingObjectState(Resetting);
 }
 
+void UCraftingObjectComponent::CancelCrafting(FCraftingMultiKey Key)
+{
+    static auto CancelCrafting = Anchor::Function<void (*)(UCraftingObjectComponent*, FCraftingMultiKey)>(TEXT("UCraftingObjectComponent::CancelCrafting multi key"))
+        .String("Event.Athena.Crafting.CraftingCancelled")
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov r8d, [*]")
+        .Start()
+        .Get();
+
+    CancelCrafting(this, Key);
+}
+
 void UCraftingObjectComponent::ClaimCraftingResults()
 {
     auto Owner = GetOwner();
@@ -114,6 +127,19 @@ void UCraftingObjectComponent::ClaimCraftingResults()
 
     HandleCratingObjectResetting();
     SetCraftingObjectState(Resetting);
+}
+
+void UCraftingObjectComponent::ClaimCraftingResults(FCraftingMultiKey Key)
+{
+    auto Owner = GetOwner();
+
+    if (!Owner || !Owner->HasAuthority())
+        return;
+
+    static auto Resetting = (ECraftingObjectState)StaticEnum<ECraftingObjectState>()->GetValueByName(FName(TEXT("ECraftingObjectState::Resetting")));
+
+    HandleCratingObjectResetting(Key);
+    SetCraftingObjectState(Key, Resetting);
 }
 
 void UCraftingObjectComponent::EjectItems()
@@ -331,6 +357,22 @@ void UCraftingObjectComponent::HandleCratingObjectResetting()
     HandleCratingObjectResetting(this);
 }
 
+void UCraftingObjectComponent::HandleCratingObjectResetting(FCraftingMultiKey Key)
+{
+    static auto HandleCratingObjectResetting = Anchor::Function<void (*)(UCraftingObjectComponent*, FCraftingMultiKey)>(TEXT("UCraftingObjectComponent::HandleCratingObjectResetting multi key"))
+        .String("Event.Athena.Crafting.CraftingCancelled")
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov r8d, [*]")
+        .Start()
+        .Find("mov r8b, 0x7")
+        .Last("call 0x*")
+        .Target()
+        .Get();
+
+    HandleCratingObjectResetting(this, Key);
+}
+
 void UCraftingObjectComponent::SetCraftingObjectState(ECraftingObjectState InCraftingObjectState)
 {
     static auto SetCraftingObjectState = Anchor::Function<void (*)(UCraftingObjectComponent*, ECraftingObjectState)>(TEXT("UCraftingObjectComponent::SetCraftingObjectState"))
@@ -346,6 +388,33 @@ void UCraftingObjectComponent::SetCraftingObjectState(ECraftingObjectState InCra
         .Get();
 
     SetCraftingObjectState(this, InCraftingObjectState);
+}
+
+void UCraftingObjectComponent::SetCraftingObjectState(FCraftingMultiKey Key, ECraftingObjectState InCraftingObjectState)
+{
+    static auto SetCraftingObjectState = Anchor::Function<void (*)(UCraftingObjectComponent*, const FCraftingMultiKey*, ECraftingObjectState, float, float)>(TEXT("UCraftingObjectComponent::SetCraftingObjectState multi key"))
+        .String("Event.Athena.Crafting.CraftingCancelled")
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov r8d, [*]")
+        .Start()
+        .Find("mov r8b, 0x7")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto OverriddenObjectStateLength = Anchor::Optional<const float*>(TEXT("UCraftingObjectComponent::SetCraftingObjectState overridden object state length"))
+        .String("Event.Athena.Crafting.CraftingCancelled")
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov r8d, [*]")
+        .Start()
+        .Find("mov r8b, 0x7")
+        .Last("movss xmm0, dword ptr [*]")
+        .Target()
+        .Get();
+
+    SetCraftingObjectState(this, &Key, InCraftingObjectState, 0.0f, OverriddenObjectStateLength ? *OverriddenObjectStateLength : 0.0f);
 }
 
 int32 UCraftingObjectComponent::SendGameplayEvent(FGameplayTag EventTag, float EventMagnitude)
