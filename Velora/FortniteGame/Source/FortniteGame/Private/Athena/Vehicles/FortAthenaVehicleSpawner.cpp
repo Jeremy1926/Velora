@@ -67,6 +67,36 @@ void AFortAthenaVehicleSpawner::BeginPlay()
         SpawnVehicle();
 }
 
+void AFortAthenaVehicleSpawner::CheckForSelfSpawn()
+{
+    static auto bSelfSpawns = Anchor::Exists()
+        .String(TEXT("%s [%s] MinPercent[%.2f] MaxPercent[%.2f] SpawnPercent[%.2f]"))
+        .Start()
+        .Caller()
+        .Find("call 0x*")
+        .IsCallTo(::Anchor::String(TEXT("%s [%s] MinPercent[%.2f] MaxPercent[%.2f] SpawnPercent[%.2f]")).Start().Get())
+        .Get();
+
+    if (!bSelfSpawns)
+    {
+        SpawnVehicle();
+        return;
+    }
+
+    static auto CheckForSelfSpawn = Anchor::Function<void (*)(AFortAthenaVehicleSpawner*)>(TEXT("AFortAthenaVehicleSpawner::CheckForSelfSpawn"))
+        .String(TEXT("%s [%s] MinPercent[%.2f] MaxPercent[%.2f] SpawnPercent[%.2f]"))
+        .Start()
+        .Caller()
+        .Get();
+
+    CheckForSelfSpawn(this);
+
+    AFortAthenaVehicle* Vehicle = Cast<AFortAthenaVehicle>(GetSpawnedVehicle());
+
+    if (auto OnVehicleSpawnedEvent = Vehicle ? AFortPlayerPawn::GetOnVehicleSpawnedEvent() : nullptr)
+        OnVehicleSpawnedEvent->ProcessMulticastDelegate<UObject>(&Vehicle);
+}
+
 void AFortAthenaVehicleSpawner::SpawnVehicle()
 {
     auto YAxisForward = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("YAxisForward")));

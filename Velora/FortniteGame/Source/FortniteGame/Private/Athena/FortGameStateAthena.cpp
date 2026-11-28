@@ -622,7 +622,7 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
             UGameplayStatics::GetAllActorsOfClass(this, AFortAthenaVehicleSpawner::StaticClass(), VehicleSpawners);
 
             for (auto VehicleSpawner : VehicleSpawners)
-                ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+                ((AFortAthenaVehicleSpawner*)VehicleSpawner)->CheckForSelfSpawn();
         }
     }
 

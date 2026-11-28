@@ -72,7 +72,7 @@ void AFortVehicleManager::UpdateVehicleSpawns()
 
     for (auto VehicleSpawner : VehicleSpawners)
     {
-        ((AFortAthenaVehicleSpawner*)VehicleSpawner)->SpawnVehicle();
+        ((AFortAthenaVehicleSpawner*)VehicleSpawner)->CheckForSelfSpawn();
 
         auto SpawnedVehicle = OnVehicleSpawnsUpdated ? ((AFortAthenaVehicleSpawner*)VehicleSpawner)->GetSpawnedVehicle() : nullptr;
         auto VehicleItemDef = SpawnedVehicle ? ((AFortAthenaVehicleSpawner*)VehicleSpawner)->GetFortVehicleItemDef() : nullptr;

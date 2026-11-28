@@ -11,6 +11,8 @@ public:
 
     void BeginPlay();
 
+    void CheckForSelfSpawn();
+
     void SpawnVehicle();
 
     UClass* GetVehicleClass() const;
