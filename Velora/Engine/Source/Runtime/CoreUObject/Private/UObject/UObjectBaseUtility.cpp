@@ -71,6 +71,11 @@ FName UObjectBase::GetFName() const
 EObjectFlags UObjectBase::GetFlags() const
 {
     static auto Flags = Anchor::Field<EObjectFlags>(TEXT("UObjectBase::ObjectFlags"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("(garbage) "))
+        .Last("mov e*, [r*+0x*]; mov [rsp+0x*], e*; mov r*, [rsp+0x*]; mov e*, [r*+0x*]; mov [rsp+0x*], e*")
+        .Find("mov e*, [r*+0x*]")
+        .Or()
         .String(TEXT("STAT_AllocateObject"))
         .Start()
         .Find("cmp *, e*; jnl 0x*")
