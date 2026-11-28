@@ -311,6 +311,10 @@ TSet<FName>& UNetConnection::GetClientVisibleLevelNames()
     static auto ClientVisibleLevelNames = Anchor::Offset(TEXT("UNetConnection::ClientVisibleLevelNames"))
         .String(TEXT("ServerUpdateLevelVisibility() Added '%s'"))
         .Last("lea rcx, [*+0x*]; xor r9d, r9d")
+        .Or()
+        .String(TEXT("ServerUpdateLevelVisibility() Added '%s'"))
+        .Last("xor r9d, r9d; lea rcx, [*+0x*]")
+        .Find("lea rcx, [*+0x*]")
         .Disp();
 
     return *(TSet<FName>*)((uint8_t*)this + ClientVisibleLevelNames);
