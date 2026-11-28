@@ -58,7 +58,7 @@ void AFortPlayerStateZone::BeginPlay()
 
     auto& PrimaryActorTick = GetPrimaryActorTick();
 
-    if (!PrimaryActorTick.GetbCanEverTick())
+    if (IsA(StaticClass()) && !PrimaryActorTick.GetbCanEverTick())
     {
         PrimaryActorTick.SetbCanEverTick(true);
         PrimaryActorTick.SetbStartWithTickEnabled(true);
