@@ -312,6 +312,9 @@ void AFortAthenaAIBotController::InitializeSkills(const float* InSkill, const TA
         .Or()
         .FieldPattern("74 ? 8B 02 89 81 %o", StaticClass()->FindPropertyByName(FName(TEXT("Skill"))))
         .Start()
+        .Or()
+        .String(TEXT("STAT_AthenaBots_InitializeSkills"))
+        .Start()
         .Get();
 
     InitializeSkills(this, InSkill, InSkillSets);
