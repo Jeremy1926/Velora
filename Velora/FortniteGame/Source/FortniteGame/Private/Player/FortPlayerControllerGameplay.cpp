@@ -54,3 +54,16 @@ void AFortPlayerControllerGameplay::StartGhostMode(UFortWorldItemDefinition* Ite
 
     Original(ItemProvidingGhostMode);
 }
+
+void AFortPlayerControllerGameplay::EndGhostMode()
+{
+    DETOUR(AFortPlayerControllerGameplay, EndGhostMode, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(UFortKismetLibrary, GiveItemToInventoryOwnerWithVariant) != nullptr)
+        .Body(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:EndGhostMode"))
+        .Inline());
+
+    if (HasAuthority() && GetGhostModeRepData().GetGhostModeItemDef())
+        UFortKismetLibrary::RemoveItemFromPlayer(this, FItemVariantHandle(GetGhostModeRepData().GetGhostModeItemDef(), FGuid()), -1, true);
+
+    Original();
+}

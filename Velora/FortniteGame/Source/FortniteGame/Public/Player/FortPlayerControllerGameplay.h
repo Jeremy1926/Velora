@@ -20,4 +20,6 @@ public:
     FGhostModeRepData& GetGhostModeRepData();
 
     void StartGhostMode(UFortWorldItemDefinition* ItemProvidingGhostMode);
+
+    void EndGhostMode();
 };
