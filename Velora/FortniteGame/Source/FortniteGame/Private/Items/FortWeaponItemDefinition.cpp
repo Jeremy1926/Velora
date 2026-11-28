@@ -66,6 +66,11 @@ int32 UFortWeaponItemDefinition::GetBaseClipSizeWithMods(const UObject* WorldCon
         .Find("mov [rsp+0x20], *; mov *, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortWeaponItemDefinition:TryGetBaseClipSizeWithMods"))
+        .Find("or dword ptr [rsp+0x28], 0xffffffff")
+        .Find("call 0x*")
+        .Target()
         .Optional()
         .Get();
 
