@@ -87,6 +87,12 @@ int32 UStruct::GetPropertiesSize() const
         .Last("mov *, [r*+0x*]")
         .Last("mov *, [r*+0x*]")
         .Decoded()
+        .Or()
+        .String(TEXT("STAT_AllocateObject"))
+        .Start()
+        .Find("cmovl r8d, e*")
+        .Last("mov *, [r*+0x*]; xor *, 0x*")
+        .Decoded()
         .Get();
 
     if (PropertiesSize)
@@ -105,6 +111,14 @@ int32 UStruct::GetMinAlignment() const
         .Last("mov *, [r*+0x*]")
         .Decoded()
         .Find("mov *, [r*+0x*]")
+        .Or()
+        .String(TEXT("STAT_AllocateObject"))
+        .Start()
+        .Find("cmovl r8d, e*")
+        .Last("mov *, [r*+0x*]; xor *, 0x*")
+        .Decoded()
+        .Find("cmovl r8d, e*")
+        .Last("mov r8d, [r*+0x*]")
         .Get();
 
     if (MinAlignment)
