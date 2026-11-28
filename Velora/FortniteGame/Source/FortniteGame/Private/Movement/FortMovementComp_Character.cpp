@@ -144,6 +144,10 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
             .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("mov rbx, rax; mov rcx, r14; call 0x*; mov r9b, [rbx+0x*]; lea rbx, [rdi+0x*]"); })
             .Find("mov rbx, rax; mov rcx, r14; call 0x*; mov r9b, [rbx+0x*]; lea rbx, [rdi+0x*]")
             .Find("lea rbx, [rdi+0x*]")
+            .Or()
+            .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const Anchor::FCode& Entry) { return Entry.Has("cmp r8d, [rcx]; jnz 0x*; cmp [rcx+0x4], r9b"); })
+            .Find("cmp r8d, [rcx]; jnz 0x*; cmp [rcx+0x4], r9b")
+            .Last("lea r*, [r*+0x*]")
             .Disp();
 
         static auto CreateRuntimeData = Anchor::Optional<UObject* (*)(UFortMovementComp_Character*, const int32*, uint8)>(TEXT("UFortMovementComp_Character::CreateRuntimeDataForLogic"))
