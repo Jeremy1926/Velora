@@ -98,16 +98,15 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             EnableWeaponMetaSoundParameterPack->Set(TEXT("0"), ECVF_SetByCode);
 
         auto MLOEnabled = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Rollback.MLOEnabled"));
+        auto BlockMcpPresetsWhenUsingLockerService = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.BlockMcpPresetsWhenUsingLockerService"));
 
-        if (MLOEnabled && MLOEnabled->GetInt())
+        if (BlockMcpPresetsWhenUsingLockerService && MLOEnabled && MLOEnabled->GetInt())
         {
             MLOEnabled->Set(TEXT("0"), ECVF_SetByCode);
-
-            if (auto BlockMcpPresetsWhenUsingLockerService = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.BlockMcpPresetsWhenUsingLockerService")))
-                BlockMcpPresetsWhenUsingLockerService->Set(TEXT("0"), ECVF_SetByCode);
+            BlockMcpPresetsWhenUsingLockerService->Set(TEXT("0"), ECVF_SetByCode);
         }
 
-        if (!IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.BlockMcpPresetsWhenUsingLockerService")))
+        if (!BlockMcpPresetsWhenUsingLockerService)
         {
             if (auto QueryLockerOnClientWhenPlayerRegistered = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.QueryLockerOnClientWhenPlayerRegistered")))
                 QueryLockerOnClientWhenPlayerRegistered->Set(TEXT("1"), ECVF_SetByCode);
