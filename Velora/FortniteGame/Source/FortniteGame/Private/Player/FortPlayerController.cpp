@@ -82,6 +82,12 @@ bool AFortPlayerController::InitializeMcpProfile(const FOnMcpProfilesInitialized
         .Find("add [*+0x20], *")
         .FirstOf("mov *, [rax+0x*]; lea rcx, [*]; call 0x*; mov rdx, rax; mov rcx, *; call *", "mov *, [rax+0x*]; lea rdx, [*]; lea rcx, [*]; call 0x*; mov rdx, rax; mov rcx, *; call *")
         .LogSlot(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"))
+        .Or()
+        .If(((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor")))->FindPropertyByName(FName(TEXT("CreateBuildingData"))) != nullptr)
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerController:ServerCreateBuildingActor"))
+        .Find("add [*+0x20], *")
+        .Find("mov *, [rax+0x*]; lea rcx, [*]; call 0x*; mov rcx, *; mov rdx, rax; call *")
+        .LogSlot(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"));
 
     static auto ServerCreateBuildingActorClassData = THook(TEXT("AFortPlayerController::ServerCreateBuildingActor_Implementation"), (void (AFortPlayerController::*)(FBuildingClassData, const TGameValue<FVector>&, const TGameValue<FRotator>&, bool))&AFortPlayerController::ServerCreateBuildingActor_Implementation)
