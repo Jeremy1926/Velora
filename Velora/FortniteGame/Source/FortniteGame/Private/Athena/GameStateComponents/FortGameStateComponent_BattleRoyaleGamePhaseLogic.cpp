@@ -61,6 +61,12 @@ PATCH(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, ChoosePlayerStart, Anc
     .Find("mov rcx, r*; mov edx, [rsp+0x*]; mov r8, [rsp+0x*]; call rbx; test al, al; jnz 0x*")
     .Optional()
     .Find("jnz 0x*")
+    .Or()
+    .String(TEXT("[%s] Team is set to spectator! Game Phase is Aircraft"))
+    .Start()
+    .Find("mov edx, [rsp+0x*]; mov r8, [rsp+0x*]; mov rcx, r*; call rbx; test al, al; jnz 0x*")
+    .Optional()
+    .Find("jnz 0x*")
     .Jump())
 
 static FTimerHandle SupplyDropWaveStartedSoundCueTimerHandle;
