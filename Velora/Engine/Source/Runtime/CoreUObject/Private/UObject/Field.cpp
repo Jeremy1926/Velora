@@ -46,6 +46,11 @@ bool FField::IsClassEncoded()
         .Find("mov e*, 0x*; mov r*, [r*+0x8]; ror r*, 0x*")
         .Find("mov r*, [r*+0x8]")
         .Decoded()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Length"))
+        .Find("mov eax, [r*+0x*]; bt rax, 0x*")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
         .Get();
 
     return bEncoded;
@@ -68,6 +73,11 @@ FFieldClass* FField::GetClass() const
         .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Get"))
         .Find("mov e*, 0x*; mov r*, [r*+0x8]; ror r*, 0x*")
         .Find("mov r*, [r*+0x8]")
+        .Decoded()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Length"))
+        .Find("mov eax, [r*+0x*]; bt rax, 0x*")
+        .Last("mov r*, [r*+0x*]")
         .Decoded()
         .Get();
 
