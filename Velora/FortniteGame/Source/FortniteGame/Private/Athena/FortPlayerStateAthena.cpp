@@ -416,6 +416,18 @@ TMulticastDelegate<void, uint8, ABuildingGameplayActorSpawnChip*>* AFortPlayerSt
         .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
         .Find("lea rcx, [0x*]; mov r8, *; movzx edx, byte ptr [rax+0x*]; call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Caller()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Entry(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSpawnChip"))
+        .Find("mov rax, [r*]; lea rcx, [0x*]; movzx edx, byte ptr [rax+0x*]; call 0x*")
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Optional()
         .Get();
 
