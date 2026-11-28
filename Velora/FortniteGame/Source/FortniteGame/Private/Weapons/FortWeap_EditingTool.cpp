@@ -28,6 +28,8 @@ void AFortWeap_EditingTool::SetEditActor(ABuildingSMActor* InEditActor)
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; mov rbx, rcx; cmp byte ptr [rcx+0x*], 0x3; jnz *; sub rcx, *; call 0x*; mov rcx, rbx")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; cmp byte ptr [rcx+0x*], 0x3; mov rbx, rcx; jnz *; sub rcx, *; call 0x*; mov rcx, rbx")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortWeap_EditingTool"), "push rbx; *; mov rbx, rcx; cmp byte ptr [rcx+0x*], 0x3; jnz *; sub rcx, *; call 0x*; mov rax, [rbx]; mov rcx, rbx")
         .Get();
 
     SetEditActor(this, InEditActor);
