@@ -65,7 +65,7 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Impleme
     CraftingObjectComponent->StartCrafting(PlayerController, CraftingFormulaName);
 }
 
-void UFortControllerComponent_CraftingNetworkEvents::ServerPickupItemAndStartCrafting_Implementation(AActor* CraftingObject, AFortPickup* Pickup, const FName& CraftingFormulaName)
+void UFortControllerComponent_CraftingNetworkEvents::ServerPickupItemAndStartCrafting_Implementation(AActor* CraftingObject, AFortPickup* Pickup, const FName& CraftingFormulaName, FCraftingMultiKey Key)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerPickupItemAndStartCrafting_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerPickupItemAndStartCrafting"))
@@ -101,6 +101,14 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerPickupItemAndStartCra
 
     if (auto GameStateComponent = UFortGameStateComponent_Crafting::Get(PlayerController))
         GameStateComponent->UpdateCraftingResultsList();
+
+    static auto bMultiKey = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerPickupItemAndStartCrafting")))->FindPropertyByName(FName(TEXT("Key"))) != nullptr;
+
+    if (bMultiKey)
+    {
+        CraftingObjectComponent->PickupItemAndStartCrafting(PlayerController, Pickup, CraftingFormulaName, Key);
+        return;
+    }
 
     CraftingObjectComponent->PickupItemAndStartCrafting(PlayerController, Pickup, CraftingFormulaName);
 }

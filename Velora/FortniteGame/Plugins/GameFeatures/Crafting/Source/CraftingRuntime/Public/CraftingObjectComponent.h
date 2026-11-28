@@ -37,6 +37,8 @@ public:
 
     void PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow);
 
+    void PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow, FCraftingMultiKey Key);
+
     void CancelCrafting();
 
     void CancelCrafting(FCraftingMultiKey Key);

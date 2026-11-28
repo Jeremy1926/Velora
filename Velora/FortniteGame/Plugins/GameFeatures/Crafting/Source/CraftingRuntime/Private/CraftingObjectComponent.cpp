@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CraftingObjectComponent.h"
+#include "Containers/Set.h"
 #include "FortKismetLibrary.h"
 #include "GameFramework/Actor.h"
 #include "Items/FortPickup.h"
@@ -82,6 +83,69 @@ void UCraftingObjectComponent::PickupItemAndStartCrafting(AFortPlayerController*
 
     *PendingPickupCraftingItem->ContainerPtrToValuePtr<AFortPickup*>(this) = Pickup;
     PendingPickupCraftingFormula->SetPropertyValue_InContainer<FName>(this, FormulaRow);
+
+    FScriptDelegate Delegate;
+    Delegate.BindUFunction(this, FName(TEXT("HandlePickupCraftingItemPickedUp")));
+
+    OnPickup->ContainerPtrToValuePtr<FMulticastScriptDelegate>(Pickup)->AddUnique(Delegate);
+}
+
+void UCraftingObjectComponent::PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow, FCraftingMultiKey Key)
+{
+    auto Owner = GetOwner();
+
+    if (!Owner || !Owner->HasAuthority() || !Pickup)
+        return;
+
+    static auto FindIdByHash = Anchor::Optional<int32 (*)(void*, uint32, const FCraftingMultiKey*)>(TEXT("UCraftingObjectComponent::CraftingObjectServerStateData FindIdByHash"))
+        .String("Overcrafted")
+        .Start()
+        .Call(1)
+        .Is("mov eax, [rcx+0x8]; mov r10, rcx; cmp eax, [rcx+0x34]")
+        .Get();
+
+    static auto EmplaceByHash = Anchor::Optional<void (*)(void*, int32*, uint32, const FCraftingMultiKey**, bool*)>(TEXT("UCraftingObjectComponent::CraftingObjectServerStateData EmplaceByHash"))
+        .String("Overcrafted")
+        .Start()
+        .Find("lea r9, [rbp+0x*]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    static auto CraftingObjectServerStateData = StaticClass()->FindPropertyByName(FName(TEXT("CraftingObjectServerStateData")));
+    static auto KeyStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.CraftingMultiKey"));
+    static auto ServerStateStruct = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.CraftingObjectServerStateData"));
+    static auto PendingPickupCraftingItem = ServerStateStruct ? ServerStateStruct->FindPropertyByName(FName(TEXT("PendingPickupCraftingItem"))) : nullptr;
+    static auto PendingPickupCraftingFormula = ServerStateStruct ? ServerStateStruct->FindPropertyByName(FName(TEXT("PendingPickupCraftingFormula"))) : nullptr;
+    static auto OnPickup = Pickup->GetClass()->FindPropertyByName(FName(TEXT("OnPickup")));
+
+    if (!FindIdByHash || !EmplaceByHash || !CraftingObjectServerStateData || !KeyStruct || !PendingPickupCraftingItem || !PendingPickupCraftingFormula || !OnPickup)
+        return;
+
+    auto ServerStateMap = CraftingObjectServerStateData->ContainerPtrToValuePtr<uint8>(this);
+    auto KeyHash = (uint32)Key.Key;
+    auto ElementId = FindIdByHash(ServerStateMap, KeyHash, &Key);
+
+    if (ElementId == -1)
+    {
+        const FCraftingMultiKey* KeyInitializer = &Key;
+        EmplaceByHash(ServerStateMap, &ElementId, KeyHash, &KeyInitializer, nullptr);
+    }
+
+    if (ElementId < 0)
+        return;
+
+    const int32 KeyAlignment = KeyStruct->GetMinAlignment();
+    const int32 ValueAlignment = ServerStateStruct->GetMinAlignment();
+    const int32 PairAlignment = ValueAlignment > KeyAlignment ? ValueAlignment : KeyAlignment;
+    const int32 ElementAlignment = PairAlignment > (int32)alignof(int32) ? PairAlignment : (int32)alignof(int32);
+    const int32 ValueOffset = (KeyStruct->GetPropertiesSize() + ValueAlignment - 1) & ~(ValueAlignment - 1);
+    const int32 PairSize = (ValueOffset + ServerStateStruct->GetPropertiesSize() + PairAlignment - 1) & ~(PairAlignment - 1);
+    const int32 ElementSize = (PairSize + (int32)sizeof(FSetElementId) + (int32)sizeof(int32) + ElementAlignment - 1) & ~(ElementAlignment - 1);
+    auto ServerState = *(uint8**)ServerStateMap + ElementId * ElementSize + ValueOffset;
+
+    *PendingPickupCraftingItem->ContainerPtrToValuePtr<AFortPickup*>(ServerState) = Pickup;
+    *PendingPickupCraftingFormula->ContainerPtrToValuePtr<FName>(ServerState) = FormulaRow;
 
     FScriptDelegate Delegate;
     Delegate.BindUFunction(this, FName(TEXT("HandlePickupCraftingItemPickedUp")));
