@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "AI/FortNearbyActorsPerceptionComponent.h"
-#include "FortGameModeZone.h"
-#include "Engine/World.h"
-#include "Templates/Casts.h"
+#include "AI/FortAIDirector.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -39,13 +37,10 @@ void UFortNearbyActorsPerceptionComponent::TickComponent(float DeltaTime, ELevel
         .Last("lea r*, [r*+0x*]")
         .Disp();
 
-    auto World = CachedAIDirector ? GetWorld() : nullptr;
-    auto GameMode = World ? Cast<AFortGameModeZone>(World->GetAuthGameMode()) : nullptr;
-    auto& AIDirector = *(FWeakObjectPtr*)((uint8*)this + CachedAIDirector);
-    static auto GameModeAIDirector = AFortGameModeZone::StaticClass() ? AFortGameModeZone::StaticClass()->FindPropertyByName(FName(TEXT("AIDirector"))) : nullptr;
+    auto AIDirector = CachedAIDirector ? (FWeakObjectPtr*)((uint8*)this + CachedAIDirector) : nullptr;
 
-    if (GameMode && GameModeAIDirector && !AIDirector.Get())
-        AIDirector = *GameModeAIDirector->ContainerPtrToValuePtr<UObject*>(GameMode);
+    if (auto Current = AIDirector && !AIDirector->Get() ? AFortAIDirector::GetCurrent(this) : nullptr)
+        *AIDirector = Current;
 
     Original(DeltaTime, TickType, ThisTickFunction);
 }

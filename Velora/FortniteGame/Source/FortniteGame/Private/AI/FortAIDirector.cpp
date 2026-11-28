@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "AI/FortAIDirector.h"
 #include "Pawns/FortAIPawn.h"
+#include "Pawns/FortPlayerPawn.h"
+#include "FortGameModeZone.h"
+#include "GameFramework/PlayerState.h"
+#include "Engine/World.h"
+#include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
@@ -230,6 +235,57 @@ UClass* AFortAIDirector::StaticClass()
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAIDirector"));
 
     return Class;
+}
+
+AFortAIDirector* AFortAIDirector::GetCurrent(const UObject* WorldContextObject)
+{
+    static auto AIDirector = AFortGameModeZone::StaticClass() ? AFortGameModeZone::StaticClass()->FindPropertyByName(FName(TEXT("AIDirector"))) : nullptr;
+
+    auto World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr;
+    auto GameMode = World ? Cast<AFortGameModeZone>(World->GetAuthGameMode()) : nullptr;
+
+    return GameMode && AIDirector ? *AIDirector->ContainerPtrToValuePtr<AFortAIDirector*>(GameMode) : nullptr;
+}
+
+void AFortAIDirector::RegisterPawn(AFortPawn* Pawn)
+{
+    if (auto Pawns = GetPawnsFor(Pawn))
+        Pawns->Add(Pawn);
+}
+
+void AFortAIDirector::UnregisterPawn(AFortPawn* Pawn)
+{
+    if (auto Pawns = GetPawnsFor(Pawn))
+        Pawns->RemoveSingleSwap(Pawn, false);
+}
+
+bool AFortAIDirector::IsANonPlayerBotPawn(AFortPlayerPawn* Pawn)
+{
+    static auto IsANonPlayerBotPawn = Anchor::VirtualFunction<bool (*)(AFortAIDirector*, AFortPlayerPawn*)>(TEXT("AFortAIDirector::IsANonPlayerBotPawn"))
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__AthenaAIDirector"), "lea r*, [r*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawns"))))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__AthenaAIDirector"), 0x8)
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortAIDirector"), "xor al, al; ret*")
+        .Get();
+
+    return IsANonPlayerBotPawn(this, Pawn);
+}
+
+TArray<AFortPawn*>* AFortAIDirector::GetPawnsFor(AFortPawn* Pawn)
+{
+    static auto NonPlayerBotPawns = StaticClass()->FindPropertyByName(FName(TEXT("NonPlayerBotPawns")));
+    static auto PlayerBotPawns = StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawns")));
+    static auto PlayerPawns = StaticClass()->FindPropertyByName(FName(TEXT("PlayerPawns")));
+    static auto FortAIPawns = StaticClass()->FindPropertyByName(FName(TEXT("FortAIPawns")));
+
+    if (auto PlayerPawn = Cast<AFortPlayerPawn>(Pawn))
+    {
+        auto PlayerState = PlayerPawn->GetPlayerState();
+        auto Pawns = !PlayerState ? nullptr : !PlayerState->IsABot() ? PlayerPawns : IsANonPlayerBotPawn(PlayerPawn) ? NonPlayerBotPawns : PlayerBotPawns;
+
+        return Pawns ? Pawns->ContainerPtrToValuePtr<TArray<AFortPawn*>>(this) : nullptr;
+    }
+
+    return Cast<AFortAIPawn>(Pawn) && FortAIPawns ? FortAIPawns->ContainerPtrToValuePtr<TArray<AFortPawn*>>(this) : nullptr;
 }
 
 AFortAIPawn* AFortAIDirector::SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo)

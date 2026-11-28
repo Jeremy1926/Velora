@@ -1,9 +1,11 @@
 #include "pch.h"
 #include "Pawns/FortPawn.h"
 #include "Abilities/FortAbilitySystemComponent.h"
+#include "AI/FortAIDirector.h"
 #include "AI/FortAthenaAIBotController.h"
 #include "AI/FortAthenaAIRuntimeParameters_Inventory.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Athena/GameStateComponents/FortGameStateComponent_BattleRoyaleGamePhaseLogic.h"
 #include "Weapons/FortWeapon.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
@@ -488,6 +490,52 @@ TArray<AFortWeapon*>& AFortPawn::GetCurrentWeaponList()
     static auto CurrentWeaponList = GetClass()->FindPropertyByName(FName(TEXT("CurrentWeaponList")));
 
     return *CurrentWeaponList->ContainerPtrToValuePtr<TArray<AFortWeapon*>>(this);
+}
+
+void AFortPawn::PossessedBy(AController* NewController)
+{
+    DETOUR(AFortPawn, PossessedBy, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPawn"))
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "mov rcx, *; inc al; and al, 0x3; mov [0x*], al")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPawn"))
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; and al, 0x3; mov rcx, *; mov [0x*], al")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPawn"))
+        .Optional()
+        .Inline());
+
+    Original(NewController);
+
+    if (auto AIDirector = AFortAIDirector::GetCurrent(this))
+        AIDirector->RegisterPawn(this);
+}
+
+void AFortPawn::UnPossessed()
+{
+    DETOUR(AFortPawn, UnPossessed, Anchor::Hook()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; mov rcx, *; and al, 0x3; mov [0x*], al")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortPawn"), 0x8)
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "mov rcx, *; inc al; and al, 0x3; mov [0x*], al")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortPawn"), 0x8)
+        .Or()
+        .If(UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass())
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortPlayerPawnAthena"), "mov *, [*+%x]", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("SafeZoneAppliedGE"))), "inc al; and al, 0x3; mov rcx, *; mov [0x*], al")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortPawn"), 0x8)
+        .Optional()
+        .Inline());
+
+    if (auto AIDirector = AFortAIDirector::GetCurrent(this))
+        AIDirector->UnregisterPawn(this);
+
+    Original();
 }
 
 void AFortPawn::UpdateCullDistance()

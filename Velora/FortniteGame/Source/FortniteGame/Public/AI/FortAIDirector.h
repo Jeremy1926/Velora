@@ -8,6 +8,8 @@
 #include "Templates/SubclassOf.h"
 
 class AFortAIPawn;
+class AFortPawn;
+class AFortPlayerPawn;
 class UFortAIEncounterInfo;
 class UEnvQuery;
 class UScriptStruct;
@@ -128,6 +130,16 @@ class AFortAIDirector : public AActor
 {
 public:
     static UClass* StaticClass();
+
+    static AFortAIDirector* GetCurrent(const UObject* WorldContextObject);
+
+    void RegisterPawn(AFortPawn* Pawn);
+
+    void UnregisterPawn(AFortPawn* Pawn);
+
+    bool IsANonPlayerBotPawn(AFortPlayerPawn* Pawn);
+
+    TArray<AFortPawn*>* GetPawnsFor(AFortPawn* Pawn);
 
     AFortAIPawn* SpawnAIPawn(FPendingSpawnInfo& PendingSpawnInfo);
 

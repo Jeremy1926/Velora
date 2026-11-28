@@ -9,3 +9,10 @@ const FUniqueNetIdRepl& APlayerState::GetUniqueId() const
 
     return *UniqueId->ContainerPtrToValuePtr<FUniqueNetIdRepl>(this);
 }
+
+bool APlayerState::IsABot() const
+{
+    static auto bIsABot = (UBoolProperty*)GetClass()->FindPropertyByName(FName(TEXT("bIsABot")));
+
+    return bIsABot->GetPropertyValue_InContainer(this);
+}

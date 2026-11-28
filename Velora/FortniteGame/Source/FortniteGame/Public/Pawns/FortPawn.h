@@ -6,6 +6,7 @@
 #include "UObject/ScriptDelegates.h"
 #include "Delegates/Delegate.h"
 
+class AController;
 class AFortWeapon;
 class UAbilitySystemComponent;
 class UFortHealthSet;
@@ -88,6 +89,10 @@ public:
     void Suicide();
 
     TArray<AFortWeapon*>& GetCurrentWeaponList();
+
+    void PossessedBy(AController* NewController);
+
+    void UnPossessed();
 
     void UpdateCullDistance();
 

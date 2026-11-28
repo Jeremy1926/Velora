@@ -7,4 +7,6 @@ class APlayerState : public AInfo
 {
 public:
     const FUniqueNetIdRepl& GetUniqueId() const;
+
+    bool IsABot() const;
 };
