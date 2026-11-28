@@ -50,6 +50,22 @@ void UCraftingObjectComponent::StartCrafting(AFortPlayerController* Instigator, 
     StartCrafting(this, Instigator, &FormulaRow);
 }
 
+void UCraftingObjectComponent::StartCrafting(AFortPlayerController* Instigator, const FName& FormulaRow, int32 NumberToCraft, FCraftingMultiKey Key, float OverriddenObjectStateLength)
+{
+    static auto StartCrafting = Anchor::Function<void (*)(UCraftingObjectComponent*, AFortPlayerController*, const FName*, int32, FCraftingMultiKey, float)>(TEXT("UCraftingObjectComponent::StartCrafting multi key"))
+        .Exec(TEXT("/Script/CraftingRuntime.CraftingObjectComponent:HandlePickupCraftingItemPickedUp"))
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rbx, [rbx]; call 0x*")
+        .Find("mov [rsp+0x20], rbx")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    StartCrafting(this, Instigator, &FormulaRow, NumberToCraft, Key, OverriddenObjectStateLength);
+}
+
 void UCraftingObjectComponent::PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow)
 {
     auto Owner = GetOwner();

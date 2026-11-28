@@ -17,7 +17,7 @@ UClass* UFortControllerComponent_CraftingNetworkEvents::StaticClass()
     return Class;
 }
 
-void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Implementation(AActor* CraftingObject, const FName& CraftingFormulaName)
+void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Implementation(AActor* CraftingObject, const FName& CraftingFormulaName, int32 NumberToCraft, FCraftingMultiKey Key, float OverriddenObjectStateLength)
 {
     DETOUR(UFortControllerComponent_CraftingNetworkEvents, ServerStartCrafting_Implementation, Anchor::Hook()
         .Exec(TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerStartCrafting"))
@@ -53,6 +53,14 @@ void UFortControllerComponent_CraftingNetworkEvents::ServerStartCrafting_Impleme
 
     if (auto GameStateComponent = UFortGameStateComponent_Crafting::Get(PlayerController))
         GameStateComponent->UpdateCraftingResultsList();
+
+    static auto bMultiKey = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/CraftingRuntime.FortControllerComponent_CraftingNetworkEvents:ServerStartCrafting")))->FindPropertyByName(FName(TEXT("Key"))) != nullptr;
+
+    if (bMultiKey)
+    {
+        CraftingObjectComponent->StartCrafting(PlayerController, CraftingFormulaName, NumberToCraft, Key, OverriddenObjectStateLength);
+        return;
+    }
 
     CraftingObjectComponent->StartCrafting(PlayerController, CraftingFormulaName);
 }

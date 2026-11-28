@@ -10,6 +10,11 @@
 class AFortPickup;
 class AFortPlayerController;
 
+struct FCraftingMultiKey
+{
+    int64 Key;
+};
+
 enum class ECraftingObjectState : uint8
 {
     Invalid,
@@ -27,6 +32,8 @@ public:
     static UClass* StaticClass();
 
     void StartCrafting(AFortPlayerController* Instigator, const FName& FormulaRow);
+
+    void StartCrafting(AFortPlayerController* Instigator, const FName& FormulaRow, int32 NumberToCraft, FCraftingMultiKey Key, float OverriddenObjectStateLength);
 
     void PickupItemAndStartCrafting(AFortPlayerController* Instigator, AFortPickup* Pickup, const FName& FormulaRow);
 
