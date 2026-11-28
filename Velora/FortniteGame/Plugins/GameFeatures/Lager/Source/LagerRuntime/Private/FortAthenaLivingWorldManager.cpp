@@ -2304,6 +2304,12 @@ int32 UFortAthenaLivingWorldManager::FEventDataRuntime::GetTypeSize()
         .Or()
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
         .Find("mov r13d, 0x*")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Find("mov rdx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov r13d, 0x*")
         .Imm();
 
     return (int32)TypeSize;
@@ -2315,6 +2321,12 @@ int32 UFortAthenaLivingWorldManager::FEventDataRuntime::GetbRequirePointProvider
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
         .Optional()
         .Find("cmp [rbx+0x*], r12b; jz 0x*; lea rax, [rsp+0x*]")
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldVolume:SetFiltersTags"))
+        .Find("mov rdx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("cmp [rbx+0x*], r12b; jz 0x*; lea r*, [r*+0x*]")
         .Disp();
 
     return bRequirePointProviders;
