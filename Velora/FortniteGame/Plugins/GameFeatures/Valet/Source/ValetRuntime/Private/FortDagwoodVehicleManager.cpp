@@ -7,6 +7,7 @@
 #include "Items/FortVehicleItemDefinition.h"
 #include "GameplayEffectTypes.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Math/TransformVectorized.h"
@@ -167,7 +168,12 @@ AFortAthenaVehicleSpawner* UFortDagwoodVehicleManager::SwapOutProp(ABuildingActo
 
     BuildingProp->SilentDie(true);
 
-    auto VehicleSpawner = Cast<AFortAthenaVehicleSpawner>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, VehicleSpawnerClass, SpawnTransform, SpawnActorCollisionHandlingMethod));
+    FActorSpawnParameters SpawnParameters;
+    SpawnParameters.SpawnCollisionHandlingOverride = SpawnActorCollisionHandlingMethod;
+    SpawnParameters.bNoFail = true;
+    SpawnParameters.bDeferConstruction = true;
+
+    auto VehicleSpawner = Cast<AFortAthenaVehicleSpawner>(BuildingProp->GetWorld()->SpawnActor(VehicleSpawnerClass, &SpawnTransform, SpawnParameters));
 
     if (!VehicleSpawner)
         return nullptr;
