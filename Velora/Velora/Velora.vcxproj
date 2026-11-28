@@ -467,6 +467,7 @@
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Athena\AthenaMarkerComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Aircraft.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_IndicatedActorManagement.h" />
+    <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\AI\FortNearbyActorsPerceptionComponent.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_InventoryService.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_Interaction.h" />
     <ClInclude Include="..\FortniteGame\Source\FortniteGame\Public\Components\FortControllerComponent_RechargeWeapons.h" />
@@ -891,6 +892,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Athena\AthenaMarkerComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Aircraft.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_IndicatedActorManagement.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\AI\FortNearbyActorsPerceptionComponent.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_InventoryService.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_Interaction.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Components\FortControllerComponent_RechargeWeapons.cpp" />
