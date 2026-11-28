@@ -239,6 +239,10 @@ bool AFortPlayerControllerZone::CanSpectateActor(AActor* InActor)
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
         .Find("call [rax+0x*]; test al, al; jnz 0x*")
+        .Or()
+        .String(TEXT("[%s] For player [%s] unable to find current spectate target PlayerIndex when executing follow type [%d]."))
+        .Start()
+        .Find("call [rax+0x*]; test al, al; jnz 0x*")
         .Get();
 
     return CanSpectateActor(this, InActor);
