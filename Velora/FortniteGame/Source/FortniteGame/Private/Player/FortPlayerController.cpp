@@ -2823,6 +2823,10 @@ int32 AFortPlayerController::PayBuildableClassPlacementCost(FBuildingClassData B
         .String(TEXT("Failed to remove item %s during pay building costs, item duplicated!"))
         .Target()
         .InVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), TEXT("AFortPlayerController::PayBuildableClassPlacementCost"))
+        .Or()
+        .String(TEXT("Failed to remove item %s during pay building costs, item duplicated!"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"))
         .Get();
 
     return PayBuildableClassPlacementCost(this, BuildingClassData);
