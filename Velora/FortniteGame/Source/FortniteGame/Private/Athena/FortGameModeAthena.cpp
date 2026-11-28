@@ -1305,6 +1305,14 @@ TSubclassOf<AActor> AFortGameModeAthena::GetVehicleClassOverride(TSubclassOf<AAc
         .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov rcx, *; lea rdx, [*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [*]; lea r8, [*]; mov rcx, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameModeAthena:GetVehicleClassOverride"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; lea rdx, [*]; mov rcx, *; call 0x*")
         .Get();
 
     TSubclassOf<AActor> Result;
