@@ -289,6 +289,14 @@ FActiveGameplayEffectHandle UAbilitySystemComponent::BP_ApplyGameplayEffectToTar
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov r9, *; movss [rsp+0x20], xmm*; lea rdx, [*]; mov rcx, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; movss [rsp+0x20], xmm*; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemComponent:BP_ApplyGameplayEffectToTarget"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov r9, *; mov [rsp+0x28], *; lea rdx, [*]; movss [rsp+0x20], xmm*; call 0x*")
         .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
