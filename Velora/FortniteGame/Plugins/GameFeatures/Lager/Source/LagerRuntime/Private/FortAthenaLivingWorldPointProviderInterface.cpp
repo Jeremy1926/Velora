@@ -280,6 +280,11 @@ void IFortAthenaLivingWorldPointProviderInterface::RegisterToLivingWorldManager(
         .Optional()
         .String("IFortAthenaLivingWorldPointProviderInterface::RegisterToLivingWorldManager")
         .Start()
+        .Or()
+        .If(UFortAthenaLivingWorldManager::HasEventRuntimes())
+        .Optional()
+        .String(TEXT("[%s] %s - failed to register loaded PP because there is no LWM"))
+        .Start()
         .Inline());
 
     Original(PointProvider);
