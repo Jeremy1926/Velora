@@ -382,6 +382,9 @@ void AFortAthenaAIBotController::ApplyCharacterCustomization(const FFortAthenaLo
         .Or()
         .FieldPattern("? 83 B9 %o 00 ? 8B D9 74 ? ? 85 D2", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn"))) : nullptr)
         .Start()
+        .Or()
+        .FieldPattern("? 8B D9 ? 83 B9 %o 00 74 ? ? 85 D2", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("PlayerBotPawn"))) : nullptr)
+        .Start()
         .Optional()
         .Inline());
 
