@@ -129,7 +129,7 @@ bool AFortAthenaAIBotController::CreateInventory()
     return true;
 }
 
-void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Items)
+void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Items, bool bEquipBestWeapon)
 {
     auto Inventory = GetInventory();
 
@@ -240,7 +240,7 @@ void AFortAthenaAIBotController::GiveInventory(const TArray<FItemAndCount>& Item
         }
     }
 
-    if (SetItem)
+    if (SetItem && bEquipBestWeapon)
         EquipBestWeapon(true);
 }
 
@@ -286,7 +286,7 @@ void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryIt
         AddStartingItemsToInventory();
 }
 
-void AFortAthenaAIBotController::AddStartingItemsToInventory()
+void AFortAthenaAIBotController::AddStartingItemsToInventory(bool bEquipBestWeapon)
 {
     TArray<FItemAndCount> Items;
 
@@ -296,8 +296,7 @@ void AFortAthenaAIBotController::AddStartingItemsToInventory()
     if (auto Pickaxe = GetCosmeticLoadoutBC().GetPickaxe())
         Items.Add({ 1, Pickaxe->GetWeaponDefinition() });
 
-    static auto bGameSetsAllowUnsupportedItems = UFortAthenaAIRuntimeParameters_Inventory::StaticClass() && UFortAthenaAIRuntimeParameters_Inventory::StaticClass()->FindPropertyByName(FName(TEXT("bDefaultInventoryIgnoresRestrictions")));
-    static auto bAllowUnsupportedItems = bGameSetsAllowUnsupportedItems ? 0 : Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
+    static auto bAllowUnsupportedItems = HasRuntimeInventoryRestrictions() ? 0 : Anchor::Offset(TEXT("AFortAthenaAIBotController::InitializeInventory allow unsupported items"))
         .FieldPattern("48 85 D2 74 ? 48 89 91 %o", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("StartupInventory"))) : nullptr)
         .Find("mov [rcx+0x*], al")
         .Or()
@@ -311,10 +310,41 @@ void AFortAthenaAIBotController::AddStartingItemsToInventory()
     if (bAllowUnsupportedItems)
         *((uint8*)this + bAllowUnsupportedItems) = GetbAllowUnsupportedItemsInDefaultInventory();
 
-    GiveInventory(Items);
+    GiveInventory(Items, bEquipBestWeapon);
 
     if (bAllowUnsupportedItems)
         *((uint8*)this + bAllowUnsupportedItems) = false;
+}
+
+AFortWeapon* AFortAthenaAIBotController::EquipBestWeaponAfterStartingItems(bool bUpdateBB)
+{
+    DETOUR(AFortAthenaAIBotController, EquipBestWeaponAfterStartingItems, Anchor::Hook(TEXT("AFortAthenaAIBotController::EquipBestWeapon"), &AFortAthenaAIBotController::EquipBestWeaponAfterStartingItems)
+        .If(HasRuntimeInventoryRestrictions())
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Find("lea rcx, [r*-0x*]; mov dl, 0x1; call 0x*; mov *[r*+0x*], *")
+        .Find("call 0x*")
+        .Or()
+        .If(HasRuntimeInventoryRestrictions())
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Find("lea rcx, [r*-0x*]; mov dl, 0x1; call 0x*; lea rax, [r*+0x*]; mov *[rax], *")
+        .Find("call 0x*")
+        .Or()
+        .If(HasRuntimeInventoryRestrictions())
+        .At(DETOUR_ORIGINAL(IFortInventoryOwnerInterface, InitializeInventory))
+        .Find("mov dl, 0x1; lea rcx, [r*-0x*]; call 0x*; lea rax, [r*+0x*]; mov *[rax], *")
+        .Find("call 0x*")
+        .AtCall());
+
+    AddStartingItemsToInventory(false);
+
+    return Original(bUpdateBB);
+}
+
+bool AFortAthenaAIBotController::HasRuntimeInventoryRestrictions()
+{
+    static auto bHasRuntimeInventoryRestrictions = UFortAthenaAIRuntimeParameters_Inventory::StaticClass() && UFortAthenaAIRuntimeParameters_Inventory::StaticClass()->FindPropertyByName(FName(TEXT("bDefaultInventoryIgnoresRestrictions")));
+
+    return bHasRuntimeInventoryRestrictions;
 }
 
 void AFortAthenaAIBotController::InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets)

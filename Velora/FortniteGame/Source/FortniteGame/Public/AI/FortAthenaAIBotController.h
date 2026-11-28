@@ -41,11 +41,15 @@ public:
 
     bool CreateInventory();
 
-    void GiveInventory(const TArray<FItemAndCount>& Items);
+    void GiveInventory(const TArray<FItemAndCount>& Items, bool bEquipBestWeapon);
 
     void InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory);
 
-    void AddStartingItemsToInventory();
+    void AddStartingItemsToInventory(bool bEquipBestWeapon = true);
+
+    AFortWeapon* EquipBestWeaponAfterStartingItems(bool bUpdateBB);
+
+    static bool HasRuntimeInventoryRestrictions();
 
     AFortWeapon* EquipBestWeapon(bool bUpdateBB);
 

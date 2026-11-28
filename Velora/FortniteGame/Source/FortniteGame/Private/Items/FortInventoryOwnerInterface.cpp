@@ -150,5 +150,6 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
 
     auto BotController = (AFortAthenaAIBotController*)((uint8*)this - PointerOffset);
 
-    BotController->AddStartingItemsToInventory();
+    if (!DETOUR_ORIGINAL(AFortAthenaAIBotController, EquipBestWeaponAfterStartingItems))
+        BotController->AddStartingItemsToInventory();
 }
