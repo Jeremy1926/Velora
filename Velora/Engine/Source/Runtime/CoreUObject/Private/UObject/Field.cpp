@@ -72,6 +72,11 @@ FField* FField::GetNext() const
         .Find("mov *, [r*]; mov *, [r*+0x*]")
         .Find("mov *, [r*+0x*]")
         .Decoded()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:PrintString"))
+        .Find("mov rcx, [r*+0x88]; mov r*, [rcx+0x*]; test r*, r*")
+        .Find("mov r*, [rcx+0x*]")
+        .Decoded()
         .Get();
 
     if (NextField)
