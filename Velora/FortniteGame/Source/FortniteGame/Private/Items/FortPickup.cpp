@@ -182,6 +182,18 @@ AFortPickup* AFortPickup::CreateFromData(UWorld* World, const FFortItemEntry& It
         .Find("call 0x*")
         .Target()
         .Has("and dword ptr [*], 0x0; and dword ptr [*], 0x0; test rax, rax; jz *; mov ecx, [rax+0x*]")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]")
+        .Find("call 0x*", 2)
+        .Target()
+        .Has("mov ecx, [*+0x8]; xor ecx, *; mov [*+0x*], ecx")
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortMissionLibrary:SpawnMissionItemPickup"))
+        .Find("lea r8d, [r*+0x1]")
+        .Find("call 0x*", 2)
+        .Target()
+        .Has("mov ecx, [*+0x8]; xor ecx, *; ror ecx, 0x*; mov [*+0x*], ecx")
         .Get();
 
     static auto CreateFromData = Anchor::Function<const void*>(TEXT("AFortPickup::CreateFromData"))
