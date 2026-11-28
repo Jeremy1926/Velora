@@ -1676,6 +1676,54 @@ namespace Anchor
             Tested = ZYDIS_REGISTER_NONE;
         }
 
+        struct FContext
+        {
+            uint64_t Registers[16];
+            uint8_t Known[16];
+            uint8_t Vectors[16][16];
+            uint16_t VectorKnown[16];
+            uint32_t Aliases[16];
+            ZydisRegister Tested;
+            uint64_t TestedValue;
+            bool bFlags;
+            bool bZero;
+            bool bSign;
+            bool bCarry;
+            bool bOverflow;
+        };
+
+        void Capture(FContext& Context) const
+        {
+            memcpy(Context.Registers, Registers, sizeof(Registers));
+            memcpy(Context.Known, Known, sizeof(Known));
+            memcpy(Context.Vectors, Vectors, sizeof(Vectors));
+            memcpy(Context.VectorKnown, VectorKnown, sizeof(VectorKnown));
+            memcpy(Context.Aliases, Aliases, sizeof(Aliases));
+            Context.Tested = Tested;
+            Context.TestedValue = TestedValue;
+            Context.bFlags = bFlags;
+            Context.bZero = bZero;
+            Context.bSign = bSign;
+            Context.bCarry = bCarry;
+            Context.bOverflow = bOverflow;
+        }
+
+        void Apply(const FContext& Context)
+        {
+            memcpy(Registers, Context.Registers, sizeof(Registers));
+            memcpy(Known, Context.Known, sizeof(Known));
+            memcpy(Vectors, Context.Vectors, sizeof(Vectors));
+            memcpy(VectorKnown, Context.VectorKnown, sizeof(VectorKnown));
+            memcpy(Aliases, Context.Aliases, sizeof(Aliases));
+            Tested = Context.Tested;
+            TestedValue = Context.TestedValue;
+            bFlags = Context.bFlags;
+            bZero = Context.bZero;
+            bSign = Context.bSign;
+            bCarry = Context.bCarry;
+            bOverflow = Context.bOverflow;
+        }
+
         void Preserve(const FState& State)
         {
             for (auto Index : { 3, 4, 5, 6, 7, 12, 13, 14, 15 })
@@ -1725,6 +1773,7 @@ namespace Anchor
             {
                 Low = ~0ull;
                 High = 0;
+                Stores.clear();
             }
         }
 
@@ -1733,7 +1782,24 @@ namespace Anchor
             bCopy = bEnable;
 
             if (bEnable)
+            {
                 CopyLow = ~0ull;
+                Undo.clear();
+            }
+        }
+
+        void Rollback()
+        {
+            for (auto Entry = Undo.rbegin(); Entry != Undo.rend(); ++Entry)
+            {
+                if (auto Found = Page(Entry->Address, false))
+                {
+                    Found->Stamps[Entry->Address & 0xFFF] = Entry->Stamp;
+                    Found->Bytes[Entry->Address & 0xFFF] = Entry->Byte;
+                }
+            }
+
+            Undo.clear();
         }
 
         uint32_t Copied(const std::string& Text)
@@ -1758,9 +1824,26 @@ namespace Anchor
             if (Low > High || Overflowed())
                 return false;
 
-            Text.resize(High - Low + 1);
+            std::sort(Stores.begin(), Stores.end());
 
-            return Load(Low, (uint32_t)Text.size(), (uint8_t*)Text.data());
+            auto First = ~0ull;
+            uint64_t Last = 0;
+
+            for (size_t Index = 0; Index < Stores.size(); Index++)
+            {
+                if ((Index && Stores[Index - 1] == Stores[Index]) || (Index + 1 < Stores.size() && Stores[Index + 1] == Stores[Index]))
+                    continue;
+
+                First = std::min<uint64_t>(First, Stores[Index].first);
+                Last = std::max<uint64_t>(Last, Stores[Index].first + Stores[Index].second - 1);
+            }
+
+            if (First > Last)
+                return false;
+
+            Text.resize(Last - First + 1);
+
+            return Load(First, (uint32_t)Text.size(), (uint8_t*)Text.data());
         }
 
         bool Condition(ZydisMnemonic Mnemonic, bool& bTaken) const
@@ -2159,6 +2242,13 @@ namespace Anchor
             uint8_t Bytes[0x1000] = {};
         };
 
+        struct FUndo
+        {
+            uint64_t Address;
+            uint32_t Stamp;
+            uint8_t Byte;
+        };
+
         struct FRegister
         {
             int8_t Slot = -1;
@@ -2354,6 +2444,9 @@ namespace Anchor
 
                 if (auto Found = Page(Byte, bKnown))
                 {
+                    if (bCopy)
+                        Undo.push_back({ Byte, Found->Stamps[Byte & 0xFFF], Found->Bytes[Byte & 0xFFF] });
+
                     Found->Stamps[Byte & 0xFFF] = bKnown ? Generation : 0;
                     Found->Bytes[Byte & 0xFFF] = Bytes[Offset];
                 }
@@ -2363,6 +2456,7 @@ namespace Anchor
             {
                 Low = std::min<uint64_t>(Low, Address);
                 High = std::max<uint64_t>(High, Address + Count - 1);
+                Stores.emplace_back(Address, Count);
             }
 
             if (bCopy && Count && Address - Image < Size)
@@ -2542,6 +2636,8 @@ namespace Anchor
         bool bRecord = false;
         bool bCopy = false;
         uint64_t CopyLow = ~0ull;
+        std::vector<std::pair<uint64_t, uint32_t>> Stores;
+        std::vector<FUndo> Undo;
         bool bZero = false;
         bool bSign = false;
         bool bCarry = false;
@@ -2822,7 +2918,9 @@ namespace Anchor
     {
         FOperation Operation;
         auto Address = Decode(Branch, Operation) ? Branch + Operation.Info.length : Branch;
+        FMachine::FContext Context;
 
+        Machine.Capture(Context);
         Machine.Copy(true);
 
         for (int32_t Steps = 0; Steps < 64 && Decode(Address, Operation); Steps++)
@@ -2858,6 +2956,8 @@ namespace Anchor
 
         Machine.Copy(false);
         Copy = Machine.Copied(Text);
+        Machine.Rollback();
+        Machine.Apply(Context);
     }
 
     static bool Decrypt(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Head, const uint8_t* Branch, std::string& Text, uint32_t& Copy)
