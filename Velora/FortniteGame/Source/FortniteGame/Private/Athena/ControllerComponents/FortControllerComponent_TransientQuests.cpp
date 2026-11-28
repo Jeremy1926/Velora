@@ -107,6 +107,10 @@ void UFortControllerComponent_TransientQuests::StartPlayerBountyThreatLevelUpdat
         .String(TEXT("Fort.Bounty.MaximumThreatLevelRefreshRate"))
         .Last("lea r8, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Fort.Bounty.MaximumThreatLevelRefreshRate"))
+        .Find("lea r8, [0x*]")
+        .Target()
         .Get();
 
     auto Controller = Cast<AController>(GetOwner());
