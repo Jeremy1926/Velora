@@ -56,6 +56,14 @@ TMulticastDelegate<void, AFortPawn*, float>& AFortPawn::GetNotifyPawnNetCullDist
         .FieldPattern("F3 0F 10 93 %o 48 8D 0D ? ? ? ? 48 8B D3 E8", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .FieldPattern("F3 0F 11 83 %o ? 8D 0D ? ? ? ? F3 0F 10 93 %o ? 8B D3 E8", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .FieldPattern("F3 0F 10 93 %o ? 8B D3 ? 8D 0D ? ? ? ? E8", AActor::StaticClass() ? AActor::StaticClass()->FindPropertyByName(FName(TEXT("NetCullDistanceSquared"))) : nullptr)
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *NotifyPawnNetCullDistanceChanged;
