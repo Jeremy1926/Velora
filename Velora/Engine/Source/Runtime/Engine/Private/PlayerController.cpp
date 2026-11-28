@@ -132,6 +132,9 @@ void APlayerController::ClientGotoState(FName NewState)
         .Or()
         .Event(TEXT("ClientGotoState"))
         .Is("push rbx; add rsp, *; mov rbx, rcx; mov [rsp+0x38], edx; mov edx, [0x*]")
+        .Or()
+        .Event(TEXT("ClientGotoState"))
+        .Is("push rbx; sub rsp, *; mov rbx, rcx; mov [rsp+0x38], edx; mov edx, [0x*]")
         .Get();
 
     if (ClientGotoState)
