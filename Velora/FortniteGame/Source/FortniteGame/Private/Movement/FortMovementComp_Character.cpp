@@ -170,6 +170,12 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
             .Or()
             .Pattern("? 8B F2 33 DB ? 39 99 ? ? 00 00 ? 8A F0 ? 8B F9 74 ? E8")
             .Start()
+            .Or()
+            .Pattern("33 DB ? 8B F2 ? 8A F0 ? 39 99 ? ? 00 00 ? 8B F9 74 ? E8")
+            .Start()
+            .Or()
+            .Pattern("? 8B F2 ? 8A F0 33 DB ? 39 99 ? ? 00 00 ? 8B F9 74 ? E8")
+            .Start()
             .Get();
 
         static int32 ObjectForceManualEndSlot = 0;
