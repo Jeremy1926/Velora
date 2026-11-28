@@ -85,14 +85,14 @@ void UFortControllerComponent_VictoryCrowns::execHandlePawnChanged(FFrame& Stack
         .If(StaticClass())
         .InExec(TEXT("/Script/VictoryCrownsRuntime.FortControllerComponent_VictoryCrowns:HandlePawnChanged")));
 
-    APawn* OldPawn = nullptr;
-    APawn* NewPawn = nullptr;
+    static auto NewPawn = Stack.Node->FindPropertyByName(FName(TEXT("NewPawn")));
 
-    Stack.StepCompiledIn(&OldPawn);
-    Stack.StepCompiledIn(&NewPawn);
-    Stack.Code += !!Stack.Code;
+    auto NewPlayerPawn = Cast<AFortPlayerPawn>(*NewPawn->ContainerPtrToValuePtr<APawn*>(Stack.Locals));
 
-    HandlePawnChanged(OldPawn, NewPawn);
+    Original(Stack, Z_Param__Result);
+
+    if (NewPlayerPawn && GetShouldGrantCrownOnSpawn())
+        GrantVictoryCrownItem();
 }
 
 void UFortControllerComponent_VictoryCrowns::execOnAthenaProfileInitialized(FFrame& Stack, void* const Z_Param__Result)
