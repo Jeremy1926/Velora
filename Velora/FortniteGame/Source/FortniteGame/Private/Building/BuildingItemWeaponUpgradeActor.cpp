@@ -416,6 +416,13 @@ bool ABuildingItemWeaponUpgradeActor::AreConsumedItemsRemovedByGame()
         .Is("call 0x*")
         .Target()
         .Is("mov [rsp+0x8], rbx; push rdi; sub rsp, 0x*; *; *; *; *; jz 0x*; test rdx, rdx; jz 0x*")
+        .Or()
+        .String(TEXT("ABuildingItemWeaponUpgradeActor::ConsumeItems - The Player's current weapon is no longer in the inventory."))
+        .Start()
+        .Find("lea rdx, [*+0x1a]")
+        .Find("call 0x*")
+        .Find("mov rbx, [rcx+0x*]")
+        .Find("call rbx")
         .Get();
 
     return bRemovesItems;
