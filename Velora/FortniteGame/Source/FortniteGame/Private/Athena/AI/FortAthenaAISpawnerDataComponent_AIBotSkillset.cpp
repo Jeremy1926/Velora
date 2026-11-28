@@ -27,7 +27,13 @@ void UFortAthenaAISpawnerDataComponent_AIBotSkillset::OnSpawned(APawn* SpawnedPa
         .LogSlot(TEXT("UFortAthenaAISpawnerDataComponent::OnSpawned"))
         .IsVirtual(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotSkillset"), "ret*")
         .Or()
-        .If(::Anchor::Exists().String(TEXT("UFortAthenaAISpawnerDataComponent_InventoryBase::OnSpawned Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)")).Get() || ::Anchor::Exists().String(TEXT("[%hs] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)")).Get())
+        .String(TEXT("[%s] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)"))
+        .Start()
+        .SlotIn(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotInventory"))
+        .LogSlot(TEXT("UFortAthenaAISpawnerDataComponent::OnSpawned"))
+        .IsVirtual(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotSkillset"), "ret*")
+        .Or()
+        .If(::Anchor::Exists().String(TEXT("UFortAthenaAISpawnerDataComponent_InventoryBase::OnSpawned Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)")).Get() || ::Anchor::Exists().String(TEXT("[%hs] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)")).Get() || ::Anchor::Exists().String(TEXT("[%s] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)")).Get())
         .LogSlot(TEXT("UFortAthenaAISpawnerDataComponent::OnSpawned"))
         .InVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAISpawnerDataComponent_AIBotSkillset")));
 
