@@ -2997,7 +2997,7 @@ void UFortAthenaLivingWorldManager::UpdateEncounterInstancesFromRuntimes()
         .Disp();
 
     static auto GlobalConditionContainer = StaticClass()->FindPropertyByName(FName(TEXT("GlobalConditionContainer")));
-    static auto CurrentStageMaxActorCount = UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("CurrentStageMaxActorCount")));
+    static auto CurrentStageMaxActorCount = UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("CurrentStageMaxActorCount"))) ? UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("CurrentStageMaxActorCount"))) : UFortAthenaLivingWorldEncounterInstance::StaticClass()->FindPropertyByName(FName(TEXT("CurrentStageActorMaxCount")));
     static auto MaxSpawnCountPerEventGeneration = FFortAthenaLivingWorldEncounterStage::StaticStruct()->FindPropertyByName(FName(TEXT("MaxSpawnCountPerEventGeneration")));
 
     auto World = GetWorld();
