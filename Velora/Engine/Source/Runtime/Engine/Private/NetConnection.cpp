@@ -474,6 +474,17 @@ void UNetConnection::Close()
         .Pattern("40 53 48 83 EC 50 48 8B D9 BA 0E 00 00 00 48 8D 4C 24 20 E8 ? ? ? ? 48 8B D0 48 8B CB E8")
         .Or()
         .Pattern("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 50 48 8B F9 E8 ? ? ? ? 33 F6 48 C7 44 24 20 0E 00 00 00")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x18)
+        .Find("mov [rcx+0x*], rbx; lea rax, [*]; mov [rcx+0x*], rbx")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [rcx+rax*8]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     Close(this);

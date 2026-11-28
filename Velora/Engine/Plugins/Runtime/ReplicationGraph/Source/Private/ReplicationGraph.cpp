@@ -3694,6 +3694,12 @@ FFrameReplicationStats& UReplicationGraph::GetFrameReplicationStats()
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("movups [rcx+0x*], xmm0; mov word ptr [rcx+0x*], 0x0")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x18)
+        .Find("mov [rcx+0x*], rbx; lea rax, [*]; mov [rcx+0x*], rbx")
         .Disp();
 
     return *(FFrameReplicationStats*)((uint8*)this + FrameReplicationStats);
@@ -3762,6 +3768,13 @@ bool& UReplicationGraph::GetWasConnectionSaturated()
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x38)
         .Find("movups [rcx+0x*], xmm0; mov word ptr [rcx+0x*], 0x0")
         .Find("mov word ptr [rcx+0x*], 0x0")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x18)
+        .Find("mov [rcx+0x*], rbx; lea rax, [*]; mov [rcx+0x*], rbx")
+        .Find("mov [rcx+0x*], bx")
         .Disp();
 
     return *(bool*)((uint8*)this + bWasConnectionSaturated);
