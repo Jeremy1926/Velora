@@ -2466,6 +2466,11 @@ const uint8* UFortAthenaLivingWorldManager::GetQueryEventBudget()
         .Find("mov rcx, *; mov rdx, rax; mov r8, rbx; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget"))
+        .Find("mov rdx, rax; mov rcx, *; mov r8, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return QueryEventBudget;
