@@ -41,6 +41,12 @@ UGameFeaturesSubsystem* UGameFeaturesSubsystem::Get()
         .Find("call 0x*; call 0x*; lea rdx, [rbp+0x*]; lea rcx, [rbp+0x*]")
         .Call(2)
         .Is("mov [rsp+0x10], rbx; mov [rsp+0x18], rbp; mov [rsp+0x20], rsi; push rdi; push r14; push r15; sub rsp, 0x20; mov rbp, [0x*]; add rbp, 0x*")
+        .Or()
+        .String(TEXT(" - Adding preload object: '%s'"))
+        .Caller()
+        .Find("call 0x*; call 0x*; lea rdx, [rbp+0x*]; lea rcx, [rbp+0x*]")
+        .Call(2)
+        .Is("mov [rsp+0x10], rbx; mov [rsp+0x18], rbp; mov [rsp+0x20], rsi; push rdi; push r14; push r15; sub rsp, 0x20; mov rbp, [0x*]; sub rbp, *")
         .Get();
 
     return Get ? Get() : nullptr;
