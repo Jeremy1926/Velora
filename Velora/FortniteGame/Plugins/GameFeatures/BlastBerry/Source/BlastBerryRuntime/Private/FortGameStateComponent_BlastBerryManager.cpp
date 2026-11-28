@@ -28,6 +28,9 @@ void UFortGameStateComponent_BlastBerryManager::HandleTeamRemovedFromGame(uint8 
     static auto HandleTeamRemovedFromGame = Anchor::Function<void (*)(UFortGameStateComponent_BlastBerryManager*, uint8)>(TEXT("UFortGameStateComponent_BlastBerryManager::HandleTeamRemovedFromGame"))
         .String("UFortGameStateComponent_BlastBerryManager::HandleTeamRemovedFromGame")
         .Start()
+        .Or()
+        .String(TEXT("[%s] Team Removed from Game: TeamId=%d"))
+        .Start()
         .Get();
 
     HandleTeamRemovedFromGame(this, TeamId);
