@@ -2,6 +2,8 @@
 #include "Engine/World.h"
 #include "Math/TransformVectorized.h"
 #include "Misc/EngineVersion.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
 
 FActorSpawnParameters::FActorSpawnParameters()
@@ -31,10 +33,17 @@ AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, co
     if (FEngineVersion::Current().GetMajor() < 5)
         return SpawnActor(this, Class, GameTransformPtr, SpawnParameters);
 
+    static auto bTakesScaleMethod = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass")))->FindPropertyByName(FName(TEXT("TransformScaleMethod"))) != nullptr;
+
     alignas(FActorSpawnParameters) uint8 Parameters[0x90] = {};
 
     memcpy(Parameters, &SpawnParameters, 0x28);
     *(ESpawnActorCollisionHandlingMethod*)(Parameters + 0x30) = SpawnParameters.SpawnCollisionHandlingOverride;
+
+    if (bTakesScaleMethod)
+        *(ESpawnActorScaleMethod*)(Parameters + 0x31) = ESpawnActorScaleMethod::MultiplyWithRoot;
+
+    Parameters[bTakesScaleMethod ? 0x32 : 0x31] = (uint8)(SpawnParameters.bNoFail << 1 | SpawnParameters.bDeferConstruction << 2 | SpawnParameters.bAllowDuringConstructionScript << 3);
     *(EObjectFlags*)(Parameters + 0x34) = SpawnParameters.ObjectFlags;
 
     return SpawnActor(this, Class, GameTransformPtr, *(const FActorSpawnParameters*)Parameters);
