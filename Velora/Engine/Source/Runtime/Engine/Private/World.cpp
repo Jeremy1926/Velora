@@ -786,6 +786,10 @@ void UWorld::UpdateWorldComponents(bool bRerunConstructionScripts, bool bCurrent
         .Start()
         .Find("lea r9, [*]; mov r8b, 0x1; mov rcx, *; xor edx, edx; call 0x*")
         .Find("call 0x*")
+        .Or()
+        .String(TEXT("Loading Map %s"))
+        .Start()
+        .Find("call 0x*; cmp [r*+0x*], r*b; jnl 0x*; mov rax, [r*+0x*]; test rax, rax")
         .Optional()
         .AtCall());
 
