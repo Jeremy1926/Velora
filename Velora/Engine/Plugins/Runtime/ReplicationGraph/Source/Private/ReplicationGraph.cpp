@@ -3632,6 +3632,12 @@ TSharedPtr<FReplicationGraphGlobalData>& UReplicationGraph::GetGraphGlobals()
         .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
         .Find("lea rdx, [rcx+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "mov [rsp+0x10], rbx; push *; sub rsp, 0x20; mov rbx, rcx; mov *, rdx; lea rdx, [rcx+0x*]; mov rcx, *; call 0x*; cmp byte ptr [*+0x*], 0x0")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x8)
+        .IsVirtual(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), "ret*")
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x8)
+        .Find("lea rdx, [rcx+0x*]")
         .Disp();
 
     return *(TSharedPtr<FReplicationGraphGlobalData>*)((uint8*)this + GraphGlobals);
