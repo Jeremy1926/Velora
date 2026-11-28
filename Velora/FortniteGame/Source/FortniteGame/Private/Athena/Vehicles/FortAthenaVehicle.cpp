@@ -298,6 +298,10 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("lea rcx, [r*+0x*]; mov rax, [rcx]; call [rax+0x*]; test al, al")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("lea r*, [r*+0x*]; mov rcx, r*; mov rax, [r*]; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     static auto GameplayTags = Anchor::Function<const uint8* (*)()>(TEXT("UFortGlobals::GameplayTags"))
@@ -311,6 +315,10 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .At(ForceEnterSeatBody)
         .Find("call 0x*; mov *, 0x*; mov rcx, r*; lea rdx, [r*+r*]; call rbx")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("call 0x*; lea rdx, [rax+0x*]; mov rcx, r*; call rbx")
         .Target()
         .Get();
 
@@ -326,6 +334,10 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("call 0x*; mov *, 0x*; mov rcx, r*; lea rdx, [r*+r*]; call rbx")
         .Find("mov *, 0x*")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("call 0x*; lea rdx, [rax+0x*]; mov rcx, r*; call rbx")
+        .Find("lea rdx, [rax+0x*]")
         .Get();
 
     static auto CanPerformNativeAction = Anchor::VirtualFunction<bool (*)(const AFortPlayerPawn*, const FGameplayTag*)>(TEXT("AFortPawn::CanPerformNativeAction"))
@@ -354,6 +366,10 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("mov r*, r*; mov r8d, ebx; call [rax+0x*]; test al, al")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov r9b, 0x1")
+        .Find("call [rax+0x*]; test al, al")
         .Get();
 
     static auto SeatPlayerInternal = Anchor::VirtualFunction<void (*)(IFortVehicleInterface*, AFortPlayerPawn*, FName&, int32)>(TEXT("IFortVehicleInterface::SeatPlayerInternal"))
@@ -374,6 +390,12 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .At(ForceEnterSeatBody)
         .Find("cmp [rax+0x*], *; cmovnz r8, rcx")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; lea r8, [0x*]; mov rdx, r*; cmovz r8, rcx")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; mov rdx, r*; cmovz r8, rcx")
         .Disp();
 
     static auto SnapToTargetNotIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetNotIncludingScale"))
@@ -396,6 +418,16 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Find("cmp [rax+0x*], *; cmovnz r8, rcx")
         .Last("lea r8, [0x*]")
         .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; lea r8, [0x*]; mov rdx, r*; cmovz r8, rcx")
+        .Last("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; mov rdx, r*; cmovz r8, rcx")
+        .Last("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     static auto SnapToTargetIncludingScale = Anchor::Data<const FAttachmentTransformRules*>(TEXT("FAttachmentTransformRules::SnapToTargetIncludingScale"))
@@ -417,6 +449,16 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("cmp [rax+0x*], *; cmovnz r8, rcx")
         .Last("lea rcx, [0x*]")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; lea r8, [0x*]; mov rdx, r*; cmovz r8, rcx")
+        .Find("lea r8, [0x*]")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp [rax+0x*], *; mov rdx, r*; cmovz r8, rcx")
+        .Last("lea r8, [0x*]")
         .Target()
         .Get();
 
@@ -449,6 +491,9 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .At(ForceEnterSeatBody)
         .Find("mov rax, [r*+0x*]; mov ebx, *; test rax, rax; cmovnz rbx, rax; mov rcx, rbx; mov rax, [rbx]; call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov rbx, [r*+0x*]; mov rax, [rbx]; mov rcx, rbx; call [rax+0x*]")
         .Disp();
 
     static auto StopMovementImmediately = Anchor::VirtualFunction<void (*)(UObject*)>(TEXT("UMovementComponent::StopMovementImmediately"))
@@ -467,6 +512,10 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("mov rax, [r*+0x*]; mov ebx, *; test rax, rax; cmovnz rbx, rax; mov rcx, rbx; mov rax, [rbx]; call [rax+0x*]")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov rbx, [r*+0x*]; mov rax, [rbx]; mov rcx, rbx; call [rax+0x*]")
+        .Find("call [rax+0x*]")
         .Get();
 
     static auto ServerGetDriverPawn = Anchor::VirtualFunction<AFortPlayerPawn* (*)(const IFortVehicleInterface*)>(TEXT("IFortVehicleInterface::ServerGetDriverPawn"))
@@ -484,6 +533,9 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .At(ForceEnterSeatBody)
         .Find("mov rax, [rsi]; mov rcx, rsi; call [rax+0x*]; mov rdx, [rbx]")
         .Find("call [rax+0x*]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("call [rax+0x*]; cmp rax, r*; mov rcx, rbx; jnz 0x*")
         .Get();
 
     static auto SetMovementMode = Anchor::VirtualFunction<void (*)(UObject*, uint8, uint8)>(TEXT("UCharacterMovementComponent::SetMovementMode"))
@@ -508,6 +560,12 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .At(ForceEnterSeatBody)
         .Find("mov r9, [rdx+0x*]; lea edx, [r*+0x6]")
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("cmp rax, r*; mov rcx, rbx; jnz 0x*; call 0x*")
+        .Call()
+        .Is("mov rax, [rcx]; mov r8b, 0x1; mov edx, 0x6; jmp [rax+0x*]")
+        .Find("jmp [rax+0x*]")
         .Get();
 
     static auto SetBase = Anchor::VirtualFunction<void (*)(AFortPlayerPawn*, USceneComponent*, FName, bool)>(TEXT("ACharacter::SetBase"))
@@ -538,6 +596,21 @@ bool AFortAthenaVehicle::ForceEnterSeat(AFortPlayerPawn* Pawn, EVehicleSeats Sea
         .Or()
         .At(ForceEnterSeatBody)
         .Find("mov r8b, *; lea rdx, [r*+0x*]; mov rcx, rbx; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov rcx, rbx; mov r8b, 0x1; lea rdx, [rsp+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("mov r8b, 0x1; mov rcx, rbx; lea rdx, [rsp+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .At(ForceEnterSeatBody)
+        .Find("lea rdx, [rsp+0x*]; mov r8b, 0x1; mov rcx, rbx; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
