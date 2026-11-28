@@ -12,6 +12,7 @@ class UFortAthenaAIRuntimeParameters_Inventory;
 class UFortAthenaAIRuntimeParametersComponent;
 class UFortBotNameSettings;
 class UFortItemDefinition;
+class UFortMontageItemDefinitionBase;
 class AFortWeapon;
 class UFortWorldItem;
 class UScriptStruct;
@@ -47,6 +48,8 @@ public:
     void AddStartingItemsToInventory();
 
     AFortWeapon* EquipBestWeapon(bool bUpdateBB);
+
+    void PlayEmote(const UFortMontageItemDefinitionBase* EmoteAsset);
 
     void InitializeSkills(const float* InSkill, const TArray<UClass*>* InSkillSets);
 

@@ -255,6 +255,18 @@ AFortWeapon* AFortAthenaAIBotController::EquipBestWeapon(bool bUpdateBB)
     return EquipBestWeapon ? EquipBestWeapon(this, bUpdateBB) : nullptr;
 }
 
+void AFortAthenaAIBotController::PlayEmote(const UFortMontageItemDefinitionBase* EmoteAsset)
+{
+    static auto PlayEmote = Anchor::Function<void (*)(AFortAthenaAIBotController*, const UFortMontageItemDefinitionBase*)>(TEXT("AFortAthenaAIBotController::PlayEmote"))
+        .Native(TEXT("/Script/FortniteGame.FortAthenaAIBotController:PlayEmote"))
+        .Find("test al, al; jz *; mov r*, r*; mov r*, r*; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    PlayEmote(this, EmoteAsset);
+}
+
 void AFortAthenaAIBotController::InitializeInventory(UFortAthenaAIBotInventoryItems* InStartupInventory)
 {
     DETOUR(AFortAthenaAIBotController, InitializeInventory, Anchor::Hook()

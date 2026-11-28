@@ -6,12 +6,14 @@
 #include "Athena/Vehicles/FortAthenaVehicle.h"
 #include "Athena/Vehicles/FortVehicleInterface.h"
 #include "Athena/Vehicles/FortVehicleSeatWeaponComponent.h"
+#include "Items/FortMontageItemDefinitionBase.h"
 #include "Items/FortPickup.h"
 #include "Items/FortWeaponItemDefinition.h"
 #include "Items/FortWorldItem.h"
 #include "Abilities/FortAbilitySystemComponent.h"
 #include "Abilities/FortHealthSet.h"
 #include "AI/FortAIPerceptionSystem.h"
+#include "AI/FortAthenaAIBotController.h"
 #include "Components/FortControllerComponent_Interaction.h"
 #include "Player/FortPlayerController.h"
 #include "Player/FortPlayerControllerZone.h"
@@ -1338,8 +1340,12 @@ FZiplinePawnState& AFortPlayerPawn::GetZiplineState()
 
 void AFortPlayerPawn::PlayGroupEmote(const UFortMontageItemDefinitionBase* EmoteAsset)
 {
+    UE_LOG(LogVelora, Log, TEXT("PlayGroupEmote %s emote %s controller %s"), *GetName(), EmoteAsset ? *EmoteAsset->GetName() : TEXT("None"), GetController() ? *GetController()->GetName() : TEXT("None"));
+
     if (auto PlayerController = Cast<AFortPlayerController>(GetController()))
         PlayerController->ServerPlayEmoteItem_Implementation(const_cast<UFortMontageItemDefinitionBase*>(EmoteAsset));
+    else if (auto BotController = Cast<AFortAthenaAIBotController>(GetController()))
+        BotController->PlayEmote(EmoteAsset);
 }
 
 void AFortPlayerPawn::execPlayGroupEmote(FFrame& Stack, void* const Z_Param__Result)
