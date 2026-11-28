@@ -382,6 +382,17 @@ void AFortDecoTool::ServerCreateBuildingAndSpawnDeco_Implementation(const TGameV
         .Find("cmp eax, 0x*; mov esi, eax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortDecoTool:ServerCreateBuildingAndSpawnDeco"))
+        .Find("call *r10*; test al, al")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Has("sub r10d, 0x1; jz 0x*; sub r10d, 0x1; jz 0x*")
+        .Find("call [r10+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortDecoTool"))
+        .Find("mov e*, eax; cmp eax, 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     static auto TrapExtraPieceCostIgnore = Anchor::Offset(TEXT("FFortGlobalGameplayTags::TrapExtraPieceCostIgnore"))
