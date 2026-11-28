@@ -181,6 +181,15 @@ UFunction* UObject::FindFunctionChecked(FName InName) const
         .Start()
         .Find("mov r8d, 0x1; mov rcx, [rcx+0x10]")
         .Call()
+        .Or()
+        .If(FField::IsClassEncoded())
+        .String(TEXT("ReceiveBeginPlay"))
+        .Find("lea *, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *")
+        .Start()
+        .Find("mov rcx, [rcx+0x*]; mov [rax+0x8], edx; mov r8d, 0x1; call 0x*")
+        .Call()
         .Get();
 
     if (FindFunctionByName)
