@@ -141,6 +141,12 @@ UObjectBase* FUObjectItem::GetObject() const
         .Find("cmp e*, 0x*; js 0x*; mov *, [r*")
         .Find("mov *, [r*")
         .Decoded()
+        .Or()
+        .String(TEXT("'{Message}': Bad or missing property '{PropertyName}' when trying to call {FunctionName}"))
+        .Start()
+        .Find("xor e*, *; jl 0x*; mov *, [r*]")
+        .Find("mov *, [r*")
+        .Decoded()
         .Get();
 
     return ObjectField ? ObjectField(this) : Object;
