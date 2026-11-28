@@ -18,6 +18,9 @@ FActorSpawnParameters::FActorSpawnParameters()
 AActor* UWorld::SpawnActor(UClass* Class, FTransform const* UserTransformPtr, const FActorSpawnParameters& SpawnParameters)
 {
     static auto SpawnActor = Anchor::Function<AActor* (*)(UWorld*, UClass*, const TGameValue<FTransform>*, const FActorSpawnParameters&)>(TEXT("UWorld::SpawnActor"))
+        .Smallest(TEXT("STAT_SpawnActorTime"))
+        .Start()
+        .Or()
         .String(TEXT("SpawnActor failed because no class was specified"))
         .Start()
         .Get();
