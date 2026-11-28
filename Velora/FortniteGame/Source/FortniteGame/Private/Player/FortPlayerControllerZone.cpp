@@ -232,6 +232,13 @@ bool AFortPlayerControllerZone::CanSpectateActor(AActor* InActor)
         .String("AFortPlayerControllerZone::FollowPlayer")
         .Start()
         .Find("call [rax+0x*]; test al, al; jnz 0x*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:FollowPlayer"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerControllerZone"))
+        .Find("call [rax+0x*]; test al, al; jnz 0x*")
         .Get();
 
     return CanSpectateActor(this, InActor);
