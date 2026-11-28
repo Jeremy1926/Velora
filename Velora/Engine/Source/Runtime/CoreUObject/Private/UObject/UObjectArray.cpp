@@ -78,6 +78,11 @@ int32 FUObjectArray::AllocateSerialNumber(int32 Index)
         .Or()
         .Pattern("F0 0F C1 1D ? ? ? ? FF C3 81 FB E8 03 00 00")
         .Target()
+        .Or()
+        .String(TEXT("UObject serial numbers overflowed (trying to allocate serial number %d)."))
+        .Start()
+        .Find("lock xadd [0x*], e*")
+        .Target()
         .Get();
 
     static auto SerialNumberField = Anchor::Field<int32>(TEXT("FUObjectItem::SerialNumber"))
