@@ -144,6 +144,14 @@ AFortPlayerPawn* IFortMountedWeaponInterface::GetInstigatorPawn()
         .Find("call 0x*")
         .Target()
         .Find("call [rax+0x*]", 2)
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortWeaponRangedForVehicle:OnRep_MountedWeaponInfoRepped"))
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], *; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("call [rax+0x*]", 2)
         .Get();
 
     return GetInstigatorPawn(this);
