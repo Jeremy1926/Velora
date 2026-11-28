@@ -523,6 +523,9 @@ AFortAthenaAircraft* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetAirc
         .If(StaticClass())
         .Pattern("48 63 ? 0F B6 89 ? ? 00 00 83 E9 01 0F 84 ? ? ? ? 83 F9 01 0F 84")
         .Start()
+        .Or()
+        .String(TEXT("[%s] Aircraft Index is invalid. This might be ok. Index is [%d], num of Aircraft is [%d]"))
+        .Start()
         .Get();
 
     return GetAircraft(this, AircraftIndex);
