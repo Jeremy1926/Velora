@@ -15,4 +15,6 @@ public:
     void OnPlayerControllerInventorySwitched(AFortPlayerController* PC);
 
     void OnPlayerControllerViewTargetChanged(AFortPlayerController* PC, AActor* OldViewTarget, AActor* NewViewTarget);
+
+    void UpdateSpectatingGroup(void** Context, AActor* OldViewTarget, AActor* NewViewTarget);
 };

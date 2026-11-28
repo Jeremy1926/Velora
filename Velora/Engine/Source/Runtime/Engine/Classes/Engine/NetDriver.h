@@ -144,6 +144,12 @@ namespace UE::Net
         TickFlush,
     };
 
+    enum class ENetFilterStatus : uint32
+    {
+        Disallow,
+        Allow,
+    };
+
     class FNetTokenStore;
 }
 
@@ -158,6 +164,22 @@ public:
     };
 
     void PreSendUpdate(float DeltaSeconds);
+
+    uint64 CreateGroup(FName GroupName);
+
+    void AddToGroup(uint64 GroupHandle, uint64 NetRefHandle);
+
+    void RemoveFromGroup(uint64 GroupHandle, uint64 NetRefHandle);
+
+    bool AddInclusionFilterGroup(uint64 GroupHandle);
+
+    bool SetGroupFilterStatus(uint64 GroupHandle, uint32 ConnectionId, UE::Net::ENetFilterStatus ReplicationStatus);
+};
+
+class UObjectReplicationBridge : public UObject
+{
+public:
+    uint64 GetReplicatedRefHandle(const UObject* Instance);
 };
 
 class UNetDriver : public UObject

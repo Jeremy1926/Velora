@@ -760,6 +760,86 @@ void UReplicationSystem::PreSendUpdate(float DeltaSeconds)
     PreSendUpdate(this, DeltaSeconds);
 }
 
+uint64 UReplicationSystem::CreateGroup(FName GroupName)
+{
+    static auto CreateGroup = Anchor::Function<uint64* (*)(UReplicationSystem*, uint64*, FName)>(TEXT("UReplicationSystem::CreateGroup"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("mov r8d, [rax]")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    uint64 GroupHandle = 0;
+
+    CreateGroup(this, &GroupHandle, GroupName);
+
+    return GroupHandle;
+}
+
+void UReplicationSystem::AddToGroup(uint64 GroupHandle, uint64 NetRefHandle)
+{
+    static auto AddToGroup = Anchor::Function<void (*)(UReplicationSystem*, uint64, uint64)>(TEXT("UReplicationSystem::AddToGroup"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("xor r9d, r9d")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    AddToGroup(this, GroupHandle, NetRefHandle);
+}
+
+void UReplicationSystem::RemoveFromGroup(uint64 GroupHandle, uint64 NetRefHandle)
+{
+    static auto RemoveFromGroup = Anchor::Function<void (*)(UReplicationSystem*, uint64, uint64)>(TEXT("UReplicationSystem::RemoveFromGroup"))
+        .String(TEXT("Spectating_On_%s"))
+        .Last("cmp [r*+0x*], r*; jz 0x*; cmp [r*+0x*], r*; jz 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    RemoveFromGroup(this, GroupHandle, NetRefHandle);
+}
+
+bool UReplicationSystem::AddInclusionFilterGroup(uint64 GroupHandle)
+{
+    static auto AddInclusionFilterGroup = Anchor::Function<bool (*)(UReplicationSystem*, uint64)>(TEXT("UReplicationSystem::AddInclusionFilterGroup"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("mov r8d, [rax]")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    return AddInclusionFilterGroup(this, GroupHandle);
+}
+
+bool UReplicationSystem::SetGroupFilterStatus(uint64 GroupHandle, uint32 ConnectionId, UE::Net::ENetFilterStatus ReplicationStatus)
+{
+    static auto SetGroupFilterStatus = Anchor::Function<bool (*)(UReplicationSystem*, uint64, uint32, UE::Net::ENetFilterStatus)>(TEXT("UReplicationSystem::SetGroupFilterStatus"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("mov r8d, [rax]")
+        .Find("call 0x*", 3)
+        .Target()
+        .Get();
+
+    return SetGroupFilterStatus(this, GroupHandle, ConnectionId, ReplicationStatus);
+}
+
+uint64 UObjectReplicationBridge::GetReplicatedRefHandle(const UObject* Instance)
+{
+    static auto GetReplicatedRefHandle = Anchor::Function<uint64* (*)(UObjectReplicationBridge*, uint64*, const UObject*, uint32)>(TEXT("UObjectReplicationBridge::GetReplicatedRefHandle"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("xor r9d, r9d")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    uint64 NetRefHandle = 0;
+
+    GetReplicatedRefHandle(this, &NetRefHandle, Instance, 0);
+
+    return NetRefHandle;
+}
+
 void UNetDriver::FlushActorDormancy(AActor* Actor, bool bWasDormInitial)
 {
     static auto CVarSetNetDormancyEnabled = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("net.DormancyEnable"));

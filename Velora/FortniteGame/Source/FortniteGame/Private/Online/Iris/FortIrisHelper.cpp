@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Online/Iris/FortIrisHelper.h"
+#include "Engine/NetDriver.h"
+#include "GameFramework/Actor.h"
 #include "Player/FortPlayerController.h"
 #include "UObject/Class.h"
 #include "UObject/UObjectArray.h"
@@ -107,16 +109,14 @@ void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController*
         .Find("lea rdx, [rbp-0x*]; call 0x*; mov r9, *; lea rdx, [rbp-0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
-        .Get();
-
-    static auto UpdateSpectatingGroup = Anchor::Optional<void (*)(UFortIrisHelper*, void**, AActor*, AActor*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged spectating group"))
-        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
-        .Find("lea rdx, [rbp-0x*]; call 0x*; mov r9, *; lea rdx, [rbp-0x*]; call 0x*")
-        .Find("call 0x*", 2)
+        .Or()
+        .String(TEXT("Spectating_On_%s"))
+        .Last("lea rdx, [rbp-0x*]; call 0x*; mov r*, [rbp-0x*]; mov r*, [rbp-0x*]")
+        .Find("call 0x*")
         .Target()
         .Get();
 
-    if (!GetConnectionContext || !UpdateConnectionFilters || !UpdateSpectatingGroup)
+    if (!GetConnectionContext || !UpdateConnectionFilters)
         return;
 
     void* Context[4] = {};
@@ -126,6 +126,71 @@ void UFortIrisHelper::OnPlayerControllerViewTargetChanged(AFortPlayerController*
     if (Context[0] && Context[1] && Context[2] && Context[3])
     {
         UpdateConnectionFilters(this, Context);
-        UpdateSpectatingGroup(this, Context, OldViewTarget, NewViewTarget);
+        UpdateSpectatingGroup(Context, OldViewTarget, NewViewTarget);
     }
+}
+
+void UFortIrisHelper::UpdateSpectatingGroup(void** Context, AActor* OldViewTarget, AActor* NewViewTarget)
+{
+    static auto UpdateSpectatingGroup = Anchor::Optional<void (*)(UFortIrisHelper*, void**, AActor*, AActor*)>(TEXT("UFortIrisHelper::OnPlayerControllerViewTargetChanged spectating group"))
+        .Exec(TEXT("/Script/FortniteGame.FortIrisHelper:OnPlayerControllerViewTargetChanged"))
+        .Find("lea rdx, [rbp-0x*]; call 0x*; mov r9, *; lea rdx, [rbp-0x*]; call 0x*")
+        .Find("call 0x*", 2)
+        .Target()
+        .Get();
+
+    if (UpdateSpectatingGroup)
+    {
+        UpdateSpectatingGroup(this, Context, OldViewTarget, NewViewTarget);
+        return;
+    }
+
+    static auto SpectatingGroup = Anchor::Offset(TEXT("UFortIrisHelper::FConnectionInfo::SpectatingGroup"))
+        .String(TEXT("Spectating_On_%s"))
+        .Last("cmp [r*+0x*], r*; jz 0x*; cmp [r*+0x*], r*; jz 0x*")
+        .Disp();
+
+    static auto SpectatedHandle = Anchor::Offset(TEXT("UFortIrisHelper::FConnectionInfo::SpectatedHandle"))
+        .String(TEXT("Spectating_On_%s"))
+        .Last("cmp [r*+0x*], r*; jz 0x*; cmp [r*+0x*], r*; jz 0x*")
+        .Find("cmp [r*+0x*], r*")
+        .Disp();
+
+    static auto ConnectionId = Anchor::Offset(TEXT("UFortIrisHelper::FConnectionInfo::ConnectionId"))
+        .String(TEXT("Spectating_On_%s"))
+        .Find("mov r8d, [r*+0x*]")
+        .Disp();
+
+    if (SpectatingGroup <= 0 || SpectatedHandle <= 0 || ConnectionId <= 0)
+        return;
+
+    auto ConnectionInfo = (uint8*)Context[1];
+    auto ReplicationSystem = (UReplicationSystem*)Context[2];
+    auto ReplicationBridge = (UObjectReplicationBridge*)Context[3];
+    auto& GroupHandle = *(uint64*)(ConnectionInfo + SpectatingGroup);
+    auto& SpectatedRefHandle = *(uint64*)(ConnectionInfo + SpectatedHandle);
+
+    if (GroupHandle && SpectatedRefHandle)
+    {
+        ReplicationSystem->RemoveFromGroup(GroupHandle, SpectatedRefHandle);
+        SpectatedRefHandle = 0;
+    }
+
+    if (!NewViewTarget || NewViewTarget->GetOnlyRelevantToOwner())
+        return;
+
+    if (!GroupHandle)
+    {
+        FString GroupName(TEXT("Spectating_On_"));
+        GroupName += ((UObject*)Context[0])->GetName();
+
+        GroupHandle = ReplicationSystem->CreateGroup(FName(*GroupName));
+        ReplicationSystem->AddInclusionFilterGroup(GroupHandle);
+        ReplicationSystem->SetGroupFilterStatus(GroupHandle, *(uint32*)(ConnectionInfo + ConnectionId), UE::Net::ENetFilterStatus::Allow);
+    }
+
+    const uint64 NetRefHandle = ReplicationBridge->GetReplicatedRefHandle(NewViewTarget);
+
+    ReplicationSystem->AddToGroup(GroupHandle, NetRefHandle);
+    SpectatedRefHandle = NetRefHandle;
 }
