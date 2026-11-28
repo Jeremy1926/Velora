@@ -365,6 +365,12 @@ bool AFortPawn::DropLootOnDeath()
         .Start()
         .Find("cmp [rax+0x10], *; jz *; mov rcx, *; call 0x*; test *, *; jz *; mov rcx, *; call 0x*")
         .Find("call 0x*", 2)
+        .Or()
+        .If(FAILootInfoRowEntry::StaticStruct() && FAILootInfoRowEntry::StaticStruct()->FindPropertyByName(FName(TEXT("OptionalCondition"))))
+        .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+        .Start()
+        .Find("cmp [r*+0x10], *; jz *; mov rcx, *; call 0x*; test *, *; jz *; mov rcx, *; call 0x*")
+        .Find("call 0x*", 2)
         .Optional()
         .AtCall());
 
