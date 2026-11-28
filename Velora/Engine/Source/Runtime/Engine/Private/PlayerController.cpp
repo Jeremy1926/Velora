@@ -85,6 +85,13 @@ void APlayerController::Reset()
         .Reference("mov ?dx, *; mov rbx, [rax+0x*]; call 0x*; xor r8d, r8d; mov rdx, rax; mov rcx, rdi; mov rax, rbx")
         .Start()
         .SlotIn(TEXT("/Script/Engine.Default__Actor"))
+        .Or()
+        .String(TEXT("K2_OnReset"))
+        .Find("lea rcx, [0x*]")
+        .Target()
+        .Reference("mov ?dx, *; mov rbx, rcx; call 0x*; mov rcx, rbx; xor r8d, r8d; mov r9, [rbx]")
+        .Start()
+        .SlotIn(TEXT("/Script/Engine.Default__Actor"))
         .Get();
 
     if (Reset)
