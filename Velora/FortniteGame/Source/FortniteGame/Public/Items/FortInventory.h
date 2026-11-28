@@ -11,6 +11,7 @@
 #include "UObject/WeakObjectPtr.h"
 #include "GameplayAbilitySpec.h"
 #include "UObject/Class.h"
+#include "UObject/UnrealType.h"
 
 class AFortInventory;
 class UBoolProperty;
@@ -86,7 +87,7 @@ class TArray<FFortItemEntryStateValueConstObject, FDefaultAllocator> : public TR
 class FBoolPropertyReference
 {
 public:
-    FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer);
+    FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer, const UScriptStruct* InItemComponentData = nullptr);
 
     operator bool() const;
 
@@ -95,6 +96,33 @@ public:
 private:
     const UBoolProperty* Property;
     void* Container;
+    const UScriptStruct* ItemComponentData;
+};
+
+template<typename ValueType>
+class TPropertyReference
+{
+public:
+    TPropertyReference(const UProperty* InProperty, void* InContainer, const UScriptStruct* InItemComponentData = nullptr)
+        : Property(InProperty)
+        , Container(InContainer)
+        , ItemComponentData(InItemComponentData)
+    {
+    }
+
+    operator ValueType() const;
+
+    void operator=(ValueType NewValue);
+
+    void operator=(const TPropertyReference& Other)
+    {
+        *this = (ValueType)Other;
+    }
+
+private:
+    const UProperty* Property;
+    void* Container;
+    const UScriptStruct* ItemComponentData;
 };
 
 struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
@@ -111,17 +139,21 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     static int32 GetTypeSize();
 
-    int32& GetCount();
+    const uint8* GetItemComponentData(const UScriptStruct* ScriptStruct);
+
+    void SetItemComponentData(const UScriptStruct* ScriptStruct, const void* StructMemory);
+
+    int32 GetCount();
 
     UFortItemDefinition*& GetItemDefinition();
 
-    float& GetDurability();
+    TPropertyReference<float> GetDurability();
 
-    int32& GetLevel();
+    TPropertyReference<int32> GetLevel();
 
-    int32& GetLoadedAmmo();
+    TPropertyReference<int32> GetLoadedAmmo();
 
-    int32& GetPhantomReserveAmmo();
+    TPropertyReference<int32> GetPhantomReserveAmmo();
 
     FGuid& GetItemGuid();
 
@@ -129,7 +161,7 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     FBoolPropertyReference GetIsDirty();
 
-    TArray<FFortItemEntryStateValue>& GetStateValues();
+    const TArray<FFortItemEntryStateValue>& GetStateValues();
 
     TWeakObjectPtr<AFortInventory>& GetParentInventory();
 
@@ -149,7 +181,7 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     void RemoveStateValue(EFortItemEntryState::Type StateType);
 
-    TArray<FFortItemEntryStateValueConstObject>& GetStateValuesConstObject();
+    const TArray<FFortItemEntryStateValueConstObject>& GetStateValuesConstObject();
 
     const UObject* GetStateConstObject(const FGameplayTag& StateType);
 
@@ -157,9 +189,9 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 
     void RemoveStateConstObject(const FGameplayTag& StateType);
 
-    TArray<FFortWeaponModSlot>& GetWeaponModSlots();
+    const TArray<FFortWeaponModSlot>& GetWeaponModSlots();
 
-    TArray<FFortSavedWeaponModSlot>& GetSavedWeaponModSlots();
+    const TArray<FFortSavedWeaponModSlot>& GetSavedWeaponModSlots();
 
     void AppendWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot);
 
@@ -170,6 +202,38 @@ struct alignas(8) FFortItemEntry : public FFastArraySerializerItem
 private:
     uint8 Data[0x1F4];
 };
+
+template<typename ValueType>
+TPropertyReference<ValueType>::operator ValueType() const
+{
+    return *Property->ContainerPtrToValuePtr<ValueType>(ItemComponentData ? ((FFortItemEntry*)Container)->GetItemComponentData(ItemComponentData) : Container);
+}
+
+template<typename ValueType>
+void TPropertyReference<ValueType>::operator=(ValueType NewValue)
+{
+    if (!ItemComponentData)
+    {
+        *Property->ContainerPtrToValuePtr<ValueType>(Container) = NewValue;
+        return;
+    }
+
+    auto ItemEntry = (FFortItemEntry*)Container;
+    auto CurrentData = ItemEntry->GetItemComponentData(ItemComponentData);
+
+    if (*Property->ContainerPtrToValuePtr<ValueType>(CurrentData) == NewValue)
+        return;
+
+    TArray<uint8> NewData;
+    NewData.AddUninitialized(ItemComponentData->GetPropertiesSize());
+
+    ItemComponentData->InitializeStruct(NewData.GetData());
+    ItemComponentData->CopyScriptStruct(NewData.GetData(), CurrentData);
+    *Property->ContainerPtrToValuePtr<ValueType>(NewData.GetData()) = NewValue;
+
+    ItemEntry->SetItemComponentData(ItemComponentData, NewData.GetData());
+    ItemComponentData->DestroyStruct(NewData.GetData());
+}
 
 template<>
 class TArray<FFortItemEntry, FDefaultAllocator> : public TRuntimeSizedArray<FFortItemEntry>

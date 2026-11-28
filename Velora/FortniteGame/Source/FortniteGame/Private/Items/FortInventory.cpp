@@ -273,20 +273,41 @@ void AFortInventory::SetItemRequiresUpdate(FFortItemEntry& ItemEntry)
     SetItemRequiresUpdate(this, ItemEntry);
 }
 
-FBoolPropertyReference::FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer)
+FBoolPropertyReference::FBoolPropertyReference(const UBoolProperty* InProperty, void* InContainer, const UScriptStruct* InItemComponentData)
     : Property(InProperty)
     , Container(InContainer)
+    , ItemComponentData(InItemComponentData)
 {
 }
 
 FBoolPropertyReference::operator bool() const
 {
-    return Property->GetPropertyValue_InContainer(Container);
+    return Property->GetPropertyValue_InContainer(ItemComponentData ? ((FFortItemEntry*)Container)->GetItemComponentData(ItemComponentData) : Container);
 }
 
 void FBoolPropertyReference::operator=(bool NewValue)
 {
-    Property->SetPropertyValue_InContainer(Container, NewValue);
+    if (!ItemComponentData)
+    {
+        Property->SetPropertyValue_InContainer(Container, NewValue);
+        return;
+    }
+
+    auto ItemEntry = (FFortItemEntry*)Container;
+    auto CurrentData = ItemEntry->GetItemComponentData(ItemComponentData);
+
+    if (Property->GetPropertyValue_InContainer(CurrentData) == NewValue)
+        return;
+
+    TArray<uint8> NewData;
+    NewData.AddUninitialized(ItemComponentData->GetPropertiesSize());
+
+    ItemComponentData->InitializeStruct(NewData.GetData());
+    ItemComponentData->CopyScriptStruct(NewData.GetData(), CurrentData);
+    Property->SetPropertyValue_InContainer(NewData.GetData(), NewValue);
+
+    ItemEntry->SetItemComponentData(ItemComponentData, NewData.GetData());
+    ItemComponentData->DestroyStruct(NewData.GetData());
 }
 
 FFortItemEntryStateValue::FFortItemEntryStateValue(EFortItemEntryState::Type InStateType, int32 InIntValue)
@@ -488,11 +509,46 @@ int32 FFortItemEntry::GetTypeSize()
     return TypeSize;
 }
 
-int32& FFortItemEntry::GetCount()
+const uint8* FFortItemEntry::GetItemComponentData(const UScriptStruct* ScriptStruct)
+{
+    static auto GetData = Anchor::Function<FConstStructView* (*)(FFortItemEntry*, FConstStructView*, const UScriptStruct*)>(TEXT("FItemEntry::GetData"))
+        .Exec(TEXT("/Script/FortniteGame.FortItemEntryComponent:TrySetLoadedAmmo"))
+        .Find("mov edx, eax; call 0x*")
+        .Call(2)
+        .Find("call 0x*; mov rax, [rax+0x8]")
+        .Call()
+        .Get();
+
+    FConstStructView View;
+
+    return GetData(this, &View, ScriptStruct)->StructMemory;
+}
+
+void FFortItemEntry::SetItemComponentData(const UScriptStruct* ScriptStruct, const void* StructMemory)
+{
+    static auto SetData = Anchor::Function<void (*)(FFortItemEntry*, const FConstStructView*)>(TEXT("FItemEntry::SetData"))
+        .Exec(TEXT("/Script/FortniteGame.FortItemEntryComponent:TrySetLoadedAmmo"))
+        .Find("mov edx, eax; call 0x*")
+        .Call()
+        .Call(3)
+        .Get();
+
+    const FConstStructView View{ ScriptStruct, (const uint8*)StructMemory };
+
+    SetData(this, &View);
+}
+
+int32 FFortItemEntry::GetCount()
 {
     static auto Count = StaticStruct()->FindPropertyByName(FName(TEXT("Count")));
 
-    return *Count->ContainerPtrToValuePtr<int32>(this);
+    if (Count)
+        return *Count->ContainerPtrToValuePtr<int32>(this);
+
+    static auto StackSizeData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_StackSize"));
+    static auto StackSize = StackSizeData->FindPropertyByName(FName(TEXT("StackSize")));
+
+    return (int32)*StackSize->ContainerPtrToValuePtr<int64>(GetItemComponentData(StackSizeData));
 }
 
 UFortItemDefinition*& FFortItemEntry::GetItemDefinition()
@@ -502,42 +558,94 @@ UFortItemDefinition*& FFortItemEntry::GetItemDefinition()
     return *ItemDefinition->ContainerPtrToValuePtr<UFortItemDefinition*>(this);
 }
 
-float& FFortItemEntry::GetDurability()
+TPropertyReference<float> FFortItemEntry::GetDurability()
 {
     static auto Durability = StaticStruct()->FindPropertyByName(FName(TEXT("Durability")));
 
-    return *Durability->ContainerPtrToValuePtr<float>(this);
+    if (Durability)
+        return TPropertyReference<float>(Durability, this);
+
+    static auto DurabilityData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Durability"));
+    static auto DataDurability = DurabilityData->FindPropertyByName(FName(TEXT("Durability")));
+
+    return TPropertyReference<float>(DataDurability, this, DurabilityData);
 }
 
-int32& FFortItemEntry::GetLevel()
+TPropertyReference<int32> FFortItemEntry::GetLevel()
 {
     static auto Level = StaticStruct()->FindPropertyByName(FName(TEXT("Level")));
 
-    return *Level->ContainerPtrToValuePtr<int32>(this);
+    if (Level)
+        return TPropertyReference<int32>(Level, this);
+
+    static auto LevelData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Level"));
+    static auto DataLevel = LevelData->FindPropertyByName(FName(TEXT("Level")));
+
+    return TPropertyReference<int32>(DataLevel, this, LevelData);
 }
 
-int32& FFortItemEntry::GetLoadedAmmo()
+TPropertyReference<int32> FFortItemEntry::GetLoadedAmmo()
 {
     static auto LoadedAmmo = StaticStruct()->FindPropertyByName(FName(TEXT("LoadedAmmo")));
 
-    return *LoadedAmmo->ContainerPtrToValuePtr<int32>(this);
+    if (LoadedAmmo)
+        return TPropertyReference<int32>(LoadedAmmo, this);
+
+    static auto LoadedAmmoData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_LoadedAmmo"));
+    static auto DataLoadedAmmo = LoadedAmmoData->FindPropertyByName(FName(TEXT("LoadedAmmo")));
+
+    return TPropertyReference<int32>(DataLoadedAmmo, this, LoadedAmmoData);
 }
 
-int32& FFortItemEntry::GetPhantomReserveAmmo()
+TPropertyReference<int32> FFortItemEntry::GetPhantomReserveAmmo()
 {
     static auto PhantomReserveAmmo = StaticStruct()->FindPropertyByName(FName(TEXT("PhantomReserveAmmo")));
 
-    return *PhantomReserveAmmo->ContainerPtrToValuePtr<int32>(this);
+    if (PhantomReserveAmmo)
+        return TPropertyReference<int32>(PhantomReserveAmmo, this);
+
+    static auto PhantomReserveAmmoData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_PhantomReserveAmmo"));
+    static auto DataPhantomReserveAmmo = PhantomReserveAmmoData->FindPropertyByName(FName(TEXT("PhantomReserveAmmo")));
+
+    return TPropertyReference<int32>(DataPhantomReserveAmmo, this, PhantomReserveAmmoData);
 }
 
 FGuid& FFortItemEntry::GetItemGuid()
 {
     static auto ItemGuidProperty = StaticStruct()->FindPropertyByName(FName(TEXT("ItemGuid")));
 
-    auto& ItemGuid = *ItemGuidProperty->ContainerPtrToValuePtr<FGuid>(this);
+    if (ItemGuidProperty)
+    {
+        auto& ItemGuid = *ItemGuidProperty->ContainerPtrToValuePtr<FGuid>(this);
 
-    if (!ItemGuid.IsValid())
-        ItemGuid = FGuid::NewGuid();
+        if (!ItemGuid.IsValid())
+            ItemGuid = FGuid::NewGuid();
+
+        return ItemGuid;
+    }
+
+    static auto ItemEntryID = StaticStruct()->FindPropertyByName(FName(TEXT("ItemEntryID")));
+    static auto TrackingData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Tracking"));
+    static auto TrackerGuid = TrackingData->FindPropertyByName(FName(TEXT("TrackerGuid")));
+
+    auto& ItemGuid = *ItemEntryID->ContainerPtrToValuePtr<FGuid>(this);
+
+    if (ItemGuid.IsValid())
+        return ItemGuid;
+
+    ItemGuid = FGuid::NewGuid();
+
+    if (TrackerGuid->ContainerPtrToValuePtr<FGuid>(GetItemComponentData(TrackingData))->IsValid())
+        return ItemGuid;
+
+    TArray<uint8> NewTrackingData;
+    NewTrackingData.AddUninitialized(TrackingData->GetPropertiesSize());
+
+    TrackingData->InitializeStruct(NewTrackingData.GetData());
+    *TrackerGuid->ContainerPtrToValuePtr<FGuid>(NewTrackingData.GetData()) = FGuid::NewGuid();
+
+    SetItemComponentData(TrackingData, NewTrackingData.GetData());
+    TrackingData->DestroyStruct(NewTrackingData.GetData());
 
     return ItemGuid;
 }
@@ -546,26 +654,44 @@ FBoolPropertyReference FFortItemEntry::GetIsReplicatedCopy()
 {
     static auto bIsReplicatedCopy = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsReplicatedCopy")));
 
-    return FBoolPropertyReference(bIsReplicatedCopy, this);
+    if (bIsReplicatedCopy)
+        return FBoolPropertyReference(bIsReplicatedCopy, this);
+
+    static auto FlagsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Flags"));
+    static auto DataIsReplicatedCopy = (UBoolProperty*)FlagsData->FindPropertyByName(FName(TEXT("bIsReplicatedCopy")));
+
+    return FBoolPropertyReference(DataIsReplicatedCopy, this, FlagsData);
 }
 
 FBoolPropertyReference FFortItemEntry::GetIsDirty()
 {
     static auto bIsDirty = (UBoolProperty*)StaticStruct()->FindPropertyByName(FName(TEXT("bIsDirty")));
 
-    return FBoolPropertyReference(bIsDirty, this);
+    if (bIsDirty)
+        return FBoolPropertyReference(bIsDirty, this);
+
+    static auto FlagsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_Flags"));
+    static auto DataIsDirty = (UBoolProperty*)FlagsData->FindPropertyByName(FName(TEXT("bIsDirty")));
+
+    return FBoolPropertyReference(DataIsDirty, this, FlagsData);
 }
 
-TArray<FFortItemEntryStateValue>& FFortItemEntry::GetStateValues()
+const TArray<FFortItemEntryStateValue>& FFortItemEntry::GetStateValues()
 {
     static auto StateValues = StaticStruct()->FindPropertyByName(FName(TEXT("StateValues")));
 
-    return *StateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(this);
+    if (StateValues)
+        return *StateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(this);
+
+    static auto StateValuesData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValues = StateValuesData->FindPropertyByName(FName(TEXT("StateValues")));
+
+    return *DataStateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(GetItemComponentData(StateValuesData));
 }
 
 TWeakObjectPtr<AFortInventory>& FFortItemEntry::GetParentInventory()
 {
-    static auto ParentInventory = StaticStruct()->FindPropertyByName(FName(TEXT("ParentInventory")));
+    static auto ParentInventory = StaticStruct()->FindPropertyByName(FName(TEXT("ParentInventory"))) ? StaticStruct()->FindPropertyByName(FName(TEXT("ParentInventory"))) : StaticStruct()->FindPropertyByName(FName(TEXT("ParentObject")));
 
     return *ParentInventory->ContainerPtrToValuePtr<TWeakObjectPtr<AFortInventory>>(this);
 }
@@ -576,7 +702,27 @@ void FFortItemEntry::SetCount(int32 NewCount)
 
     if (GetCount() != NewCount)
     {
-        GetCount() = NewCount;
+        static auto Count = StaticStruct()->FindPropertyByName(FName(TEXT("Count")));
+
+        if (Count)
+        {
+            *Count->ContainerPtrToValuePtr<int32>(this) = NewCount;
+        }
+        else
+        {
+            static auto StackSizeData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/ItemizationCoreRuntime.ItemComponentData_StackSize"));
+            static auto StackSize = StackSizeData->FindPropertyByName(FName(TEXT("StackSize")));
+
+            TArray<uint8> NewStackSizeData;
+            NewStackSizeData.AddUninitialized(StackSizeData->GetPropertiesSize());
+
+            StackSizeData->InitializeStruct(NewStackSizeData.GetData());
+            StackSizeData->CopyScriptStruct(NewStackSizeData.GetData(), GetItemComponentData(StackSizeData));
+            *StackSize->ContainerPtrToValuePtr<int64>(NewStackSizeData.GetData()) = NewCount;
+
+            SetItemComponentData(StackSizeData, NewStackSizeData.GetData());
+            StackSizeData->DestroyStruct(NewStackSizeData.GetData());
+        }
 
         if (GetParentInventory().IsValid())
         {
@@ -606,7 +752,13 @@ void FFortItemEntry::SetLoadedAmmo(int32 NewLoadedAmmo)
 {
     if (GetLoadedAmmo() != NewLoadedAmmo)
     {
+        static auto LoadedAmmo = StaticStruct()->FindPropertyByName(FName(TEXT("LoadedAmmo")));
+        static auto LoadedAmmoHasBeenSet = LoadedAmmo ? EFortItemEntryState::NoneState : (EFortItemEntryState::Type)StaticEnum<EFortItemEntryState::Type>()->GetValueByName(FName(TEXT("EFortItemEntryState::LoadedAmmoHasBeenSet")));
+
         GetLoadedAmmo() = NewLoadedAmmo;
+
+        if (!LoadedAmmo)
+            SetStateValue(LoadedAmmoHasBeenSet, 1);
 
         if (GetParentInventory().IsValid())
         {
@@ -671,7 +823,20 @@ bool FFortItemEntry::GetStateValue(EFortItemEntryState::Type StateType, int32& O
 
 void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 IntValue)
 {
-    auto& StateValues = GetStateValues();
+    static auto StateValuesProperty = StaticStruct()->FindPropertyByName(FName(TEXT("StateValues")));
+    static auto StateValuesData = StateValuesProperty ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValues = StateValuesData ? StateValuesData->FindPropertyByName(FName(TEXT("StateValues"))) : nullptr;
+
+    TArray<uint8> NewStateValuesData;
+
+    if (StateValuesData)
+    {
+        NewStateValuesData.AddUninitialized(StateValuesData->GetPropertiesSize());
+        StateValuesData->InitializeStruct(NewStateValuesData.GetData());
+        StateValuesData->CopyScriptStruct(NewStateValuesData.GetData(), GetItemComponentData(StateValuesData));
+    }
+
+    auto& StateValues = *(StateValuesData ? DataStateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(NewStateValuesData.GetData()) : StateValuesProperty->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(this));
     int32 StateValueIndex = 0;
 
     while (StateValueIndex < StateValues.Num() && StateValues[StateValueIndex].GetStateType() != StateType)
@@ -681,11 +846,23 @@ void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 In
 
     if (StateValueIndex < StateValues.Num())
     {
+        if (StateValuesData && StateValues[StateValueIndex].GetIntValue() == IntValue)
+        {
+            StateValuesData->DestroyStruct(NewStateValuesData.GetData());
+            return;
+        }
+
         StateValues[StateValueIndex].GetIntValue() = IntValue;
     }
     else
     {
         new(StateValues) FFortItemEntryStateValue(StateType, IntValue);
+    }
+
+    if (StateValuesData)
+    {
+        SetItemComponentData(StateValuesData, NewStateValuesData.GetData());
+        StateValuesData->DestroyStruct(NewStateValuesData.GetData());
     }
 
     if (GetParentInventory().IsValid())
@@ -698,13 +875,34 @@ void FFortItemEntry::SetStateValue(EFortItemEntryState::Type StateType, int32 In
 
 void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
 {
-    auto& StateValues = GetStateValues();
+    static auto StateValuesProperty = StaticStruct()->FindPropertyByName(FName(TEXT("StateValues")));
+    static auto StateValuesData = StateValuesProperty ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValues = StateValuesData ? StateValuesData->FindPropertyByName(FName(TEXT("StateValues"))) : nullptr;
 
-    for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
+    auto& CurrentStateValues = GetStateValues();
+
+    for (int32 StateValueIndex = 0; StateValueIndex < CurrentStateValues.Num(); StateValueIndex++)
     {
-        if (StateValues[StateValueIndex].GetStateType() == StateType)
+        if (CurrentStateValues[StateValueIndex].GetStateType() == StateType)
         {
+            TArray<uint8> NewStateValuesData;
+
+            if (StateValuesData)
+            {
+                NewStateValuesData.AddUninitialized(StateValuesData->GetPropertiesSize());
+                StateValuesData->InitializeStruct(NewStateValuesData.GetData());
+                StateValuesData->CopyScriptStruct(NewStateValuesData.GetData(), GetItemComponentData(StateValuesData));
+            }
+
+            auto& StateValues = *(StateValuesData ? DataStateValues->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(NewStateValuesData.GetData()) : StateValuesProperty->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValue>>(this));
+
             StateValues.RemoveAt(StateValueIndex);
+
+            if (StateValuesData)
+            {
+                SetItemComponentData(StateValuesData, NewStateValuesData.GetData());
+                StateValuesData->DestroyStruct(NewStateValuesData.GetData());
+            }
 
             if (GetParentInventory().IsValid())
             {
@@ -718,11 +916,17 @@ void FFortItemEntry::RemoveStateValue(EFortItemEntryState::Type StateType)
     }
 }
 
-TArray<FFortItemEntryStateValueConstObject>& FFortItemEntry::GetStateValuesConstObject()
+const TArray<FFortItemEntryStateValueConstObject>& FFortItemEntry::GetStateValuesConstObject()
 {
     static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
 
-    return *StateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(this);
+    if (StateValuesConstObject)
+        return *StateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(this);
+
+    static auto StateValuesData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValuesConstObject = StateValuesData->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+
+    return *DataStateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(GetItemComponentData(StateValuesData));
 }
 
 const UObject* FFortItemEntry::GetStateConstObject(const FGameplayTag& StateType)
@@ -738,7 +942,20 @@ const UObject* FFortItemEntry::GetStateConstObject(const FGameplayTag& StateType
 
 void FFortItemEntry::SetStateConstObject(const FGameplayTag& StateType, const UObject* ObjectData)
 {
-    auto& StateValues = GetStateValuesConstObject();
+    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+    static auto StateValuesData = StateValuesConstObject ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValuesConstObject = StateValuesData ? StateValuesData->FindPropertyByName(FName(TEXT("StateValuesConstObject"))) : nullptr;
+
+    TArray<uint8> NewStateValuesData;
+
+    if (StateValuesData)
+    {
+        NewStateValuesData.AddUninitialized(StateValuesData->GetPropertiesSize());
+        StateValuesData->InitializeStruct(NewStateValuesData.GetData());
+        StateValuesData->CopyScriptStruct(NewStateValuesData.GetData(), GetItemComponentData(StateValuesData));
+    }
+
+    auto& StateValues = *(StateValuesData ? DataStateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(NewStateValuesData.GetData()) : StateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(this));
     int32 StateValueIndex = 0;
 
     while (StateValueIndex < StateValues.Num() && !(StateValues[StateValueIndex].GetStateType() == StateType))
@@ -749,13 +966,24 @@ void FFortItemEntry::SetStateConstObject(const FGameplayTag& StateType, const UO
     if (StateValueIndex < StateValues.Num())
     {
         if (StateValues[StateValueIndex].GetObjectData().Get() == ObjectData)
+        {
+            if (StateValuesData)
+                StateValuesData->DestroyStruct(NewStateValuesData.GetData());
+
             return;
+        }
 
         StateValues[StateValueIndex].GetObjectData() = (UObject*)ObjectData;
     }
     else
     {
         new(StateValues) FFortItemEntryStateValueConstObject(StateType, ObjectData);
+    }
+
+    if (StateValuesData)
+    {
+        SetItemComponentData(StateValuesData, NewStateValuesData.GetData());
+        StateValuesData->DestroyStruct(NewStateValuesData.GetData());
     }
 
     if (GetParentInventory().IsValid())
@@ -768,13 +996,34 @@ void FFortItemEntry::SetStateConstObject(const FGameplayTag& StateType, const UO
 
 void FFortItemEntry::RemoveStateConstObject(const FGameplayTag& StateType)
 {
-    auto& StateValues = GetStateValuesConstObject();
+    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+    static auto StateValuesData = StateValuesConstObject ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues"));
+    static auto DataStateValuesConstObject = StateValuesData ? StateValuesData->FindPropertyByName(FName(TEXT("StateValuesConstObject"))) : nullptr;
 
-    for (int32 StateValueIndex = 0; StateValueIndex < StateValues.Num(); StateValueIndex++)
+    auto& CurrentStateValues = GetStateValuesConstObject();
+
+    for (int32 StateValueIndex = 0; StateValueIndex < CurrentStateValues.Num(); StateValueIndex++)
     {
-        if (StateValues[StateValueIndex].GetStateType() == StateType)
+        if (CurrentStateValues[StateValueIndex].GetStateType() == StateType)
         {
+            TArray<uint8> NewStateValuesData;
+
+            if (StateValuesData)
+            {
+                NewStateValuesData.AddUninitialized(StateValuesData->GetPropertiesSize());
+                StateValuesData->InitializeStruct(NewStateValuesData.GetData());
+                StateValuesData->CopyScriptStruct(NewStateValuesData.GetData(), GetItemComponentData(StateValuesData));
+            }
+
+            auto& StateValues = *(StateValuesData ? DataStateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(NewStateValuesData.GetData()) : StateValuesConstObject->ContainerPtrToValuePtr<TArray<FFortItemEntryStateValueConstObject>>(this));
+
             StateValues.RemoveAt(StateValueIndex);
+
+            if (StateValuesData)
+            {
+                SetItemComponentData(StateValuesData, NewStateValuesData.GetData());
+                StateValuesData->DestroyStruct(NewStateValuesData.GetData());
+            }
 
             if (GetParentInventory().IsValid())
             {
@@ -788,24 +1037,59 @@ void FFortItemEntry::RemoveStateConstObject(const FGameplayTag& StateType)
     }
 }
 
-TArray<FFortWeaponModSlot>& FFortItemEntry::GetWeaponModSlots()
+const TArray<FFortWeaponModSlot>& FFortItemEntry::GetWeaponModSlots()
 {
     static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
 
-    return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+    if (WeaponModSlots)
+        return *WeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(this);
+
+    static auto WeaponModsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods"));
+    static auto DataWeaponModSlots = WeaponModsData->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+
+    return *DataWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(GetItemComponentData(WeaponModsData));
 }
 
-TArray<FFortSavedWeaponModSlot>& FFortItemEntry::GetSavedWeaponModSlots()
+const TArray<FFortSavedWeaponModSlot>& FFortItemEntry::GetSavedWeaponModSlots()
 {
     static auto SavedWeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("SavedWeaponModSlots")));
 
-    return *SavedWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(this);
+    if (SavedWeaponModSlots)
+        return *SavedWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(this);
+
+    static auto WeaponModsData = (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods"));
+    static auto DataSavedWeaponModSlots = WeaponModsData->FindPropertyByName(FName(TEXT("SavedWeaponModSlots")));
+
+    return *DataSavedWeaponModSlots->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(GetItemComponentData(WeaponModsData));
 }
 
 void FFortItemEntry::AppendWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot)
 {
-    GetWeaponModSlots().Add(WeaponModSlot);
-    GetSavedWeaponModSlots().Add(FFortSavedWeaponModSlot(WeaponModSlot));
+    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+    static auto SavedWeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("SavedWeaponModSlots")));
+    static auto WeaponModsData = WeaponModSlots ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods"));
+    static auto DataWeaponModSlots = WeaponModsData ? WeaponModsData->FindPropertyByName(FName(TEXT("WeaponModSlots"))) : nullptr;
+    static auto DataSavedWeaponModSlots = WeaponModsData ? WeaponModsData->FindPropertyByName(FName(TEXT("SavedWeaponModSlots"))) : nullptr;
+
+    TArray<uint8> NewWeaponModsData;
+
+    if (WeaponModsData)
+    {
+        NewWeaponModsData.AddUninitialized(WeaponModsData->GetPropertiesSize());
+        WeaponModsData->InitializeStruct(NewWeaponModsData.GetData());
+        WeaponModsData->CopyScriptStruct(NewWeaponModsData.GetData(), GetItemComponentData(WeaponModsData));
+    }
+
+    auto Container = WeaponModsData ? (void*)NewWeaponModsData.GetData() : (void*)this;
+
+    (WeaponModsData ? DataWeaponModSlots : WeaponModSlots)->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(Container)->Add(WeaponModSlot);
+    (WeaponModsData ? DataSavedWeaponModSlots : SavedWeaponModSlots)->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(Container)->Add(FFortSavedWeaponModSlot(WeaponModSlot));
+
+    if (WeaponModsData)
+    {
+        SetItemComponentData(WeaponModsData, NewWeaponModsData.GetData());
+        WeaponModsData->DestroyStruct(NewWeaponModsData.GetData());
+    }
 
     if (GetParentInventory().IsValid())
     {
@@ -817,12 +1101,36 @@ void FFortItemEntry::AppendWeaponModSlot(const FFortWeaponModSlot& WeaponModSlot
 
 void FFortItemEntry::SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeaponModSlots)
 {
-    GetWeaponModSlots() = InWeaponModSlots;
-    GetSavedWeaponModSlots().Reset(InWeaponModSlots.Num());
+    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+    static auto SavedWeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("SavedWeaponModSlots")));
+    static auto WeaponModsData = WeaponModSlots ? nullptr : (UScriptStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods"));
+    static auto DataWeaponModSlots = WeaponModsData ? WeaponModsData->FindPropertyByName(FName(TEXT("WeaponModSlots"))) : nullptr;
+    static auto DataSavedWeaponModSlots = WeaponModsData ? WeaponModsData->FindPropertyByName(FName(TEXT("SavedWeaponModSlots"))) : nullptr;
+
+    TArray<uint8> NewWeaponModsData;
+
+    if (WeaponModsData)
+    {
+        NewWeaponModsData.AddUninitialized(WeaponModsData->GetPropertiesSize());
+        WeaponModsData->InitializeStruct(NewWeaponModsData.GetData());
+        WeaponModsData->CopyScriptStruct(NewWeaponModsData.GetData(), GetItemComponentData(WeaponModsData));
+    }
+
+    auto Container = WeaponModsData ? (void*)NewWeaponModsData.GetData() : (void*)this;
+    auto& NewSavedWeaponModSlots = *(WeaponModsData ? DataSavedWeaponModSlots : SavedWeaponModSlots)->ContainerPtrToValuePtr<TArray<FFortSavedWeaponModSlot>>(Container);
+
+    *(WeaponModsData ? DataWeaponModSlots : WeaponModSlots)->ContainerPtrToValuePtr<TArray<FFortWeaponModSlot>>(Container) = InWeaponModSlots;
+    NewSavedWeaponModSlots.Reset(InWeaponModSlots.Num());
 
     for (auto& WeaponModSlot : InWeaponModSlots)
     {
-        GetSavedWeaponModSlots().Add(FFortSavedWeaponModSlot(WeaponModSlot));
+        NewSavedWeaponModSlots.Add(FFortSavedWeaponModSlot(WeaponModSlot));
+    }
+
+    if (WeaponModsData)
+    {
+        SetItemComponentData(WeaponModsData, NewWeaponModsData.GetData());
+        WeaponModsData->DestroyStruct(NewWeaponModsData.GetData());
     }
 
     if (GetParentInventory().IsValid())
@@ -835,8 +1143,8 @@ void FFortItemEntry::SetWeaponModSlots(const TArray<FFortWeaponModSlot>& InWeapo
 
 void FFortItemEntry::CopyWeaponModStateFrom(FFortItemEntry& Other)
 {
-    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
-    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject")));
+    static auto WeaponModSlots = StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots"))) ? StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots"))) : (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods")) ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods")))->FindPropertyByName(FName(TEXT("WeaponModSlots"))) : nullptr);
+    static auto StateValuesConstObject = StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject"))) ? StaticStruct()->FindPropertyByName(FName(TEXT("StateValuesConstObject"))) : (StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues")) ? ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_StateValues")))->FindPropertyByName(FName(TEXT("StateValuesConstObject"))) : nullptr);
 
     if (WeaponModSlots && Other.GetWeaponModSlots().Num() > 0)
         SetWeaponModSlots(Other.GetWeaponModSlots());

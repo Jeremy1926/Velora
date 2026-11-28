@@ -388,7 +388,7 @@ void AFortWeapon::InitializeFromItem(UFortWorldItem* Item)
     if (!GetInitializedWeaponItem())
         SetAmmoCount(Item->GetItemEntry().GetLoadedAmmo());
 
-    static auto WeaponModSlots = FFortItemEntry::StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots")));
+    static auto WeaponModSlots = FFortItemEntry::StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots"))) ? (UObject*)FFortItemEntry::StaticStruct()->FindPropertyByName(FName(TEXT("WeaponModSlots"))) : StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortItemComponentData_WeaponMods"));
 
     if (!WeaponModSlots)
         return;
