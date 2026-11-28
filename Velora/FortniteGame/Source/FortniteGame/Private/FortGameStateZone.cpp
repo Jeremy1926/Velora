@@ -193,6 +193,8 @@ void UFortCurieManager::HandleBuildingGridInitialized()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; mov rax, rsp; push rbx; sub rsp, 0x*; mov rbx, rcx; movups xmm0, [rdx+0x*]")
         .Or()
         .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; mov rax, rsp; push rbx; sub rsp, 0x*; mov rbx, rcx; mov r9d, 0x*; movups xmm0, [rdx+0x*]")
+        .Or()
+        .VirtualMatch(TEXT("/Script/FortniteGame.Default__FortCurieSpatialManager"), "test rdx, rdx; jz 0x*; mov rax, rsp; push rbx; sub rsp, 0x*; mov r9d, 0x*; movups xmm0, [rdx+0x*]")
         .Get();
 
     static auto FortCurieManagerComponentClass = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortCurieManagerComponent"));
