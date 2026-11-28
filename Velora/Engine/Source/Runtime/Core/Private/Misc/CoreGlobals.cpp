@@ -172,6 +172,10 @@ FOutputDeviceRedirector* GetGlobalLogSingleton()
         .String(TEXT("OCONSOLE"))
         .Find("call 0x*; mov rdx, [0x*]; mov rcx, rax; call 0x*")
         .Call()
+        .Or()
+        .String(TEXT("STAT_FEngineLoop_FlushThreadedLogs"))
+        .Find("call 0x*; mov rcx, rax; mov edx, r*; call 0x*")
+        .Call()
         .Get();
 
     return GetGlobalLogSingleton();
