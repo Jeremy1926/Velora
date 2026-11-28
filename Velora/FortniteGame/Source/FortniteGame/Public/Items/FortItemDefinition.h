@@ -3,6 +3,7 @@
 #include "McpItemDefinitionBase.h"
 #include "Internationalization/Text.h"
 #include "Containers/UnrealString.h"
+#include "Misc/Guid.h"
 #include "UObject/Class.h"
 
 class UAbilitySystemComponent;
@@ -126,4 +127,16 @@ public:
     int32 GetMaxStackSize(const UAbilitySystemComponent* AbilitySystemComponent = nullptr) const;
 
     FString GetPersistentName() const;
+};
+
+struct FItemVariantHandle
+{
+    FItemVariantHandle(UFortItemDefinition* InItem, const FGuid& InItemVariantGuid)
+        : Item(InItem)
+        , ItemVariantGuid(InItemVariantGuid)
+    {
+    }
+
+    UFortItemDefinition* Item;
+    FGuid ItemVariantGuid;
 };

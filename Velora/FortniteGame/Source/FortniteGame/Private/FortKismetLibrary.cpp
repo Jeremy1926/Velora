@@ -306,6 +306,16 @@ void UFortKismetLibrary::K2_GiveItemToPlayer(AFortPlayerController* PlayerContro
         Pickup->TossPickup(Location, Pawn, 0, true);
 }
 
+int32 UFortKismetLibrary::RemoveItemFromPlayer(AFortPlayerController* PlayerController, const FItemVariantHandle& ItemVariantHandle, int32 AmountToRemove, bool bForceRemoval)
+{
+    auto ItemDefinition = Cast<UFortWorldItemDefinition>(ItemVariantHandle.Item);
+
+    if (!PlayerController || !ItemDefinition)
+        return 0;
+
+    return K2_RemoveItemFromPlayer(PlayerController, ItemDefinition, AmountToRemove, bForceRemoval);
+}
+
 int32 UFortKismetLibrary::K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval)
 {
     DETOUR(UFortKismetLibrary, K2_RemoveItemFromPlayer, Anchor::Hook()

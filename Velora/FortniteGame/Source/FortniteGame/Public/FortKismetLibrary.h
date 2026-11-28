@@ -17,6 +17,7 @@ struct FFortItemEntry;
 struct FFrame;
 struct FGameplayTagContainer;
 struct FGuid;
+struct FItemVariantHandle;
 struct FTimespan;
 class FString;
 class IAbilitySystemInterface;
@@ -91,6 +92,8 @@ public:
     void execGiveItemToInventoryOwner(FFrame& Stack, void* const Z_Param__Result);
 
     static void K2_GiveItemToPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 NumberToGive);
+
+    static int32 RemoveItemFromPlayer(AFortPlayerController* PlayerController, const FItemVariantHandle& ItemVariantHandle, int32 AmountToRemove, bool bForceRemoval);
 
     static int32 K2_RemoveItemFromPlayer(AFortPlayerController* PlayerController, UFortWorldItemDefinition* ItemDefinition, int32 AmountToRemove, bool bForceRemoval);
 

@@ -871,6 +871,7 @@
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\NightNightBase.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\FortGameDeathPenalty.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\StatManager.cpp" />
+    <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerGameplay.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortPlayerControllerZone.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortLiveBroadcastController.cpp" />
     <ClCompile Include="..\FortniteGame\Source\FortniteGame\Private\Player\FortLiveSpectatorController.cpp" />
