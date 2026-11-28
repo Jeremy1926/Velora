@@ -141,6 +141,8 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
         .Or()
         .String("AFortAthenaMapInfo::PickSupplyDropLocation")
         .Start()
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortAthenaMapInfo:PickSupplyDropLocation"))
         .Get();
 
     TGameValue<FVector> Location;
