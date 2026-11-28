@@ -162,6 +162,13 @@ UFortItemDefinition* UFortWeaponModStationComponent::GetTransactionCurrency()
         .Entry(TEXT("/Script/WeaponModsCodeRuntime.Default__FortWeaponModStationComponent"))
         .Find("call 0x*; mov rcx, *; movaps xmm6, xmm0; call 0x*")
         .Call(2)
+        .Or()
+        .Exec(TEXT("/Script/WeaponModsCodeRuntime.FortWeaponModStationComponent:CanPlayerAffordModForWeapon"))
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/WeaponModsCodeRuntime.Default__FortWeaponModStationComponent"))
+        .Find("call 0x*; movaps xmm6, xmm0; mov rcx, *; call 0x*")
+        .Call(2)
         .Get();
 
     if (GetTransactionCurrency)
