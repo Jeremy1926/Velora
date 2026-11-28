@@ -193,6 +193,14 @@ bool FSparseDelegateStorage::RemoveAll(const UObject* DelegateOwner, const FName
         .Find("mov edx, [rax]; mov r8, *; call 0x*; mov [rbx], al")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.AutoDestroySubsystem:OnActorEndPlay"))
+        .Find("ret")
+        .Last("call 0x*")
+        .Target()
+        .Find("mov r8, *; call 0x*; mov [rbx], al")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return RemoveAll(DelegateOwner, DelegateName, UserObject);
