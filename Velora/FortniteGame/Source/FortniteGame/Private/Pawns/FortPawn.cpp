@@ -372,10 +372,10 @@ void AFortPawn::SetHealth(float NewHealth)
         .Optional()
         .AtCall());
 
-    Original(NewHealth);
-
     if (auto PlayerPawn = Cast<AFortPlayerPawnAthena>(this); PlayerPawn && GetIsDBNO())
         PlayerPawn->ForceReviveFromDBNO(GetController());
+
+    Original(NewHealth);
 }
 
 bool AFortPawn::DropLootOnDeath()
