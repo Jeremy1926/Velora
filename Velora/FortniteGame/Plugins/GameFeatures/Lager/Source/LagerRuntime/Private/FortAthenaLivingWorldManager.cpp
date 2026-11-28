@@ -407,6 +407,10 @@ int32 UFortAthenaLivingWorldManager::GetPendingActorSpawnEventRequestsOffset()
         .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("lea r15, [rcx+0x*]")
+        .Or()
+        .If(StaticClass() && StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned")))
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea r13, [rcx+0x*]; lea rax, [rsp+0x*]; mov [rsp+0x*], rax; movaps xmm0, *")
         .Disp();
 
     return PendingActorSpawnEventRequests;
@@ -2065,6 +2069,11 @@ FFortAthenaLivingWorldDensityGrid* UFortAthenaLivingWorldManager::GetActorDensit
         .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
         .Find("mov rdx, rdi; lea rcx, [r13+0x*]; lea r8, [r14+0x*]; call 0x*")
         .Find("lea rcx, [r13+0x*]")
+        .Optional()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea r8, [r14+0x*]; lea rcx, [r15+0x*]; mov rdx, rdi; call 0x*")
+        .Find("lea rcx, [r15+0x*]")
         .Optional()
         .Disp();
 

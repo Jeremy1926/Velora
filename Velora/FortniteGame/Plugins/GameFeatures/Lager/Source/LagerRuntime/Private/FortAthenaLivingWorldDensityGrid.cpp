@@ -50,6 +50,11 @@ const uint8* FFortAthenaLivingWorldDensityGrid::GetReplacePreRegistrationWithAct
         .Find("mov rdx, rdi; lea rcx, [r13+0x*]; lea r8, [r14+0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Native(TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:OnActorSpawned"))
+        .Find("lea r8, [r14+0x*]; lea rcx, [r15+0x*]; mov rdx, rdi; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return ReplacePreRegistrationWithActor;
