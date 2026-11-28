@@ -199,6 +199,14 @@ void UFortVehicleSeatWeaponComponent::OnPawnExitSeat(IFortVehicleInterface* Vehi
         .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
         .Start()
         .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r8, *; mov r9b, 0x1; mov rcx, *; mov rdx, *; ")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r8, *; mov rcx, *; mov r9b, 0x1; mov rdx, *; ")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .VirtualCaller(TEXT("/Script/FortniteGame.Default__FortVehicleSeatWeaponComponent"), "mov r9b, 0x1; mov rdx, *; mov r8, *; mov rcx, *; ")
         .Get();
 
     OnPawnExitSeat(this, Vehicle, PlayerPawn, SeatIdx);
