@@ -31,6 +31,11 @@ void UFortAIPerceptionSystem::ForceForgetEnemy(AActor* Enemy)
         .Find("lea rdx, [rbp-0x*]; call [rax+0x*]; lea rcx, *; call 0x*")
         .Find("mov rcx, r*; call 0x*")
         .Call()
+        .Or()
+        .String("PlayerSpawned")
+        .Start()
+        .Find("lea rdx, [rbp-0x*]; mov rax, [r*]; mov rcx, r*; call [rax+0x*]; lea rcx, [rbp-0x*]; call 0x*; mov rcx, r*; call 0x*")
+        .Call(2)
         .Get();
 
     ForceForgetEnemy(Enemy);
