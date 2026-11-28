@@ -119,6 +119,8 @@ struct FScalableFloat
     static UScriptStruct* StaticStruct();
 
     float GetValueAtLevel(float Level, const FString* ContextString = nullptr) const;
+
+    bool AsBool(float Level) const;
 };
 
 struct FGameplayTagCountContainer

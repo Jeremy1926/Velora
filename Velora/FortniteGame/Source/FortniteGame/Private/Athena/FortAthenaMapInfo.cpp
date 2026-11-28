@@ -79,7 +79,7 @@ void AFortAthenaMapInfo::SpawnLlamas()
 
     for (int32 Index = 0; Index < LlamaQuantity; Index++)
     {
-        const FVector SpawnLocation = PickSupplyDropLocation(MapCenter, Radius, DisableSupplyDropsSpawningOverWater && DisableSupplyDropsSpawningOverWater->GetInt() == 1, TraceStartZ, TraceEndZ);
+        const FVector SpawnLocation = PickSupplyDropLocation(MapCenter, Radius, DisableSupplyDropsSpawningOverWater && DisableSupplyDropsSpawningOverWater->GetInt() == 1, TraceStartZ, TraceEndZ, ShouldSupplyDropAvoidUnwalkableTerrain());
         const FRotator SpawnRotation{ 0.0f, FMath::FRand() * 360.0f, 0.0f };
 
         SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, LlamaClass, TraceStartZ, TraceEndZ);
@@ -133,7 +133,7 @@ void AFortAthenaMapInfo::InitializeFlightPath(AFortGameStateAthena* GameState, U
     InitializeFlightPath(this, GameState, GamePhaseLogic, bForceDropCenterToFirstSafeZone, PathMidpointSelectionRadiusMin, PathMidpointSelectionRadiusMax, LastStepPushCenterLine_Magnitude);
 }
 
-FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const
+FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ, bool bAvoidUnwalkableTerrain) const
 {
     static auto PickSupplyDropLocation = Anchor::Function<TGameValue<FVector>* (*)(const AFortAthenaMapInfo*, TGameValue<FVector>*, const TGameValue<FVector>&, float, bool, float, float)>(TEXT("AFortAthenaMapInfo::PickSupplyDropLocation"))
         .String(TEXT("PickSupplyDropLocation: Failed to find valid location using rejection.  Using safe zone location."))
@@ -145,7 +145,13 @@ FVector AFortAthenaMapInfo::PickSupplyDropLocation(const FVector& Center, float 
         .Native(TEXT("/Script/FortniteGame.FortAthenaMapInfo:PickSupplyDropLocation"))
         .Get();
 
+    static auto PickSupplyDropLocationFunction = (UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaMapInfo:PickSupplyDropLocation"));
+    static auto bTakesAvoidUnwalkableTerrain = PickSupplyDropLocationFunction && PickSupplyDropLocationFunction->FindPropertyByName(FName(TEXT("bAvoidUnwalkableTerrain")));
+
     TGameValue<FVector> Location;
+
+    if (bTakesAvoidUnwalkableTerrain)
+        return ((TGameValue<FVector>* (*)(const AFortAthenaMapInfo*, TGameValue<FVector>*, const TGameValue<FVector>&, float, bool, float, float, bool))PickSupplyDropLocation)(this, &Location, Center, Radius, bDisableSupplyDropsSpawningOverWater, TraceStartZ, TraceEndZ, bAvoidUnwalkableTerrain)->Get();
 
     return PickSupplyDropLocation(this, &Location, Center, Radius, bDisableSupplyDropsSpawningOverWater, TraceStartZ, TraceEndZ)->Get();
 }
@@ -324,6 +330,13 @@ const FScalableFloat* AFortAthenaMapInfo::GetSupplyDropMaxPlacementHeight() cons
     static auto SupplyDropMaxPlacementHeight = GetClass()->FindPropertyByName(FName(TEXT("SupplyDropMaxPlacementHeight")));
 
     return SupplyDropMaxPlacementHeight ? SupplyDropMaxPlacementHeight->ContainerPtrToValuePtr<FScalableFloat>(this) : nullptr;
+}
+
+bool AFortAthenaMapInfo::ShouldSupplyDropAvoidUnwalkableTerrain() const
+{
+    static auto bShouldSupplyDropAvoidUnwalkableTerrain = GetClass()->FindPropertyByName(FName(TEXT("bShouldSupplyDropAvoidUnwalkableTerrain")));
+
+    return bShouldSupplyDropAvoidUnwalkableTerrain && bShouldSupplyDropAvoidUnwalkableTerrain->ContainerPtrToValuePtr<FScalableFloat>(this)->AsBool(0.0f);
 }
 
 const FScalableFloat* AFortAthenaMapInfo::GetSafeZoneRadius() const

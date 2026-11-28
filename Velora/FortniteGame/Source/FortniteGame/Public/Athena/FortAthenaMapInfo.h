@@ -42,7 +42,7 @@ public:
 
     void InitializeFlightPath(AFortGameStateAthena* GameState, UFortGameStateComponent_BattleRoyaleGamePhaseLogic* GamePhaseLogic, bool bForceDropCenterToFirstSafeZone, float PathMidpointSelectionRadiusMin, float PathMidpointSelectionRadiusMax, float LastStepPushCenterLine_Magnitude);
 
-    FVector PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ) const;
+    FVector PickSupplyDropLocation(const FVector& Center, float Radius, bool bDisableSupplyDropsSpawningOverWater, float TraceStartZ, float TraceEndZ, bool bAvoidUnwalkableTerrain) const;
 
     AFortAthenaSupplyDrop* SpawnSupplyDropAtLocation(const FVector& SpawnLocation, const FRotator& SpawnRotation, UClass* InSupplyDropClass, float TraceStartZ, float TraceEndZ) const;
 
@@ -67,6 +67,8 @@ public:
     const FScalableFloat* GetSupplyDropMinPlacementHeight() const;
 
     const FScalableFloat* GetSupplyDropMaxPlacementHeight() const;
+
+    bool ShouldSupplyDropAvoidUnwalkableTerrain() const;
 
     const FScalableFloat* GetSafeZoneRadius() const;
 

@@ -131,7 +131,7 @@ void UFortConversationTaskNode_SupplyDrop::ProcessSupplyDrop(const FPendingSuppl
 
     const float TraceStartZ = MinTraceHeight->ContainerPtrToValuePtr<FScalableFloat>(SupplyDropInfo)->GetValueAtLevel(0.0f);
     const float TraceEndZ = MaxTraceHeight->ContainerPtrToValuePtr<FScalableFloat>(SupplyDropInfo)->GetValueAtLevel(0.0f);
-    const FVector SpawnLocation = MapInfo->PickSupplyDropLocation(Info.SpawnLocation, Info.Radius, DisableSupplyDropsSpawningOverWater && DisableSupplyDropsSpawningOverWater->GetValueOnAnyThread() == 1, TraceStartZ, TraceEndZ);
+    const FVector SpawnLocation = MapInfo->PickSupplyDropLocation(Info.SpawnLocation, Info.Radius, DisableSupplyDropsSpawningOverWater && DisableSupplyDropsSpawningOverWater->GetValueOnAnyThread() == 1, TraceStartZ, TraceEndZ, MapInfo->ShouldSupplyDropAvoidUnwalkableTerrain());
     const FRotator SpawnRotation{ 0.0f, FMath::FRand() * 360.0f, 0.0f };
 
     MapInfo->SpawnSupplyDropAtLocation(SpawnLocation, SpawnRotation, *SupplyDropClass->ContainerPtrToValuePtr<UClass*>(SupplyDropInfo), TraceStartZ, TraceEndZ);

@@ -47,6 +47,11 @@ float FScalableFloat::GetValueAtLevel(float Level, const FString* ContextString)
     return GetValueAtLevel(this, Level, ContextString);
 }
 
+bool FScalableFloat::AsBool(float Level) const
+{
+    return GetValueAtLevel(Level) > 0.0f;
+}
+
 bool FGameplayTagCountContainer::UpdateTagMap_Internal(const FGameplayTag& Tag, int32 CountDelta, bool bDeferParentTagsOnRemove)
 {
     static auto UpdateTagMap_Internal = Anchor::Function<bool (*)(FGameplayTagCountContainer*, const FGameplayTag&, int32, bool)>(TEXT("FGameplayTagCountContainer::UpdateTagMap_Internal"))
