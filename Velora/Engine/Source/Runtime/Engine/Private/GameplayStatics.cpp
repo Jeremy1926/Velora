@@ -56,6 +56,10 @@ AActor* UGameplayStatics::BeginDeferredActorSpawnFromClass(const UObject* WorldC
         .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
         .Find("add [*+0x20], *")
         .Find("mov rcx, [rbp-0x*]; lea rdx, [rbp-0x*]; mov r9b, *")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea rdx, [rbp-0x*]; mov rcx, [rbp-0x*]; mov r8, *; mov [rsp+0x28], *")
         .Get();
 
     static auto bTakesScaleMethod = ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/Engine.GameplayStatics:BeginDeferredActorSpawnFromClass")))->FindPropertyByName(FName(TEXT("TransformScaleMethod"))) != nullptr;
