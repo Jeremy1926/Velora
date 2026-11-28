@@ -36,6 +36,17 @@ void UActorComponent::RegisterComponentTickFunctions(bool bRegister)
     RegisterComponentTickFunctions(this, bRegister);
 }
 
+void UActorComponent::SetComponentTickEnabled(bool bEnabled)
+{
+    static auto SetComponentTickEnabled = Anchor::VirtualFunction<void (*)(UActorComponent*, bool)>(TEXT("UActorComponent::SetComponentTickEnabled"))
+        .Exec(TEXT("/Script/Engine.ActorComponent:SetComponentTickEnabled"))
+        .Find("setnz *")
+        .Find("call [rax+0x*]")
+        .Get();
+
+    SetComponentTickEnabled(this, bEnabled);
+}
+
 FActorComponentTickFunction& UActorComponent::GetPrimaryComponentTick()
 {
     static auto PrimaryComponentTick = StaticClass()->FindPropertyByName(FName(TEXT("PrimaryComponentTick")));

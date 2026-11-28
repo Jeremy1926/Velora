@@ -14,5 +14,7 @@ public:
 
     void RegisterComponentTickFunctions(bool bRegister);
 
+    void SetComponentTickEnabled(bool bEnabled);
+
     FActorComponentTickFunction& GetPrimaryComponentTick();
 };

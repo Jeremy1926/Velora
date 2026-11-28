@@ -204,6 +204,8 @@ public:
 
     void HandleInventoryLocalUpdate();
 
+    void HandleItemsUpdated(const TArray<UFortWorldItem*>& PreviousItemInstances);
+
     void SetItemRequiresUpdate(FFortItemEntry& ItemEntry);
 
     int32 GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const;

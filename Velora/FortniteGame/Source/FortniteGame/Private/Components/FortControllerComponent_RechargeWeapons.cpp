@@ -122,16 +122,56 @@ void UFortControllerComponent_RechargeWeapons::TickComponent(float DeltaTime, EL
     }
 }
 
+void UFortControllerComponent_RechargeWeapons::OnItemInstanceAdded(UFortWorldItem* Item)
+{
+    static auto OnItemInstanceAdded = Anchor::VirtualFunction<void (*)(UFortControllerComponent_RechargeWeapons*, UFortWorldItem*)>(TEXT("UFortControllerComponent_RechargeWeapons::OnItemInstanceAdded"))
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Is("sub rsp, 0x28; test rdx, rdx; jz 0x*; call 0x*; add rsp, 0x28; ret"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Is("test rdx, rdx; jnz 0x*; ret"); })
+        .Get();
+
+    if (!OnItemInstanceAdded)
+        return;
+
+    OnItemInstanceAdded(this, Item);
+    AttemptSetTickEnabledForItem(Item->GetItemGuid());
+}
+
+void UFortControllerComponent_RechargeWeapons::OnItemInstanceRemoved(UFortWorldItem* Item)
+{
+    static auto OnItemInstanceRemoved = Anchor::VirtualFunction<void (*)(UFortControllerComponent_RechargeWeapons*, UFortWorldItem*)>(TEXT("UFortControllerComponent_RechargeWeapons::OnItemInstanceRemoved"))
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Is("test rdx, rdx; jz 0x*; push rbx; sub rsp, 0x30") && Entry.Has("call [rax+0x*]; lea r*, [r*+0x*]; lea r*, [r*+0x*]; call 0x*; lea r*, [r*+0x*]; lea r*, [r*+0x*]; call 0x*"); })
+        .Get();
+
+    if (OnItemInstanceRemoved)
+        OnItemInstanceRemoved(this, Item);
+}
+
+void UFortControllerComponent_RechargeWeapons::OnWeaponConsumedAmmo(const FGuid& ItemGuid)
+{
+    DETOUR(UFortControllerComponent_RechargeWeapons, OnWeaponConsumedAmmo, Anchor::Hook()
+        .If(StaticClass())
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const ::Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const ::Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
+        .InChildVTablesCounted(StaticClass()));
+
+    Original(ItemGuid);
+
+    AttemptSetTickEnabledForItem(ItemGuid);
+}
+
+void UFortControllerComponent_RechargeWeapons::AttemptSetTickEnabledForItem(const FGuid& ItemGuid)
+{
+    auto RechargeData = FindRechargeDataForItem(ItemGuid);
+
+    if (RechargeData && RechargeData->GetServerStartTime() >= 0.0f && !GetPreventRecharging())
+        SetComponentTickEnabled(true);
+}
+
 void UFortControllerComponent_RechargeWeapons::HandleRechargeAmmo(const FGuid& ItemGuid)
 {
-    FCachedRechargeAmmoData* RechargeData = nullptr;
-
-    for (auto& Entry : GetWeaponToRechargeDataMap())
-    {
-        if (Entry.Key == ItemGuid)
-            RechargeData = Entry.Value;
-    }
-
+    auto RechargeData = FindRechargeDataForItem(ItemGuid);
     auto PlayerController = Cast<AFortPlayerController>(GetOwner());
     auto WorldInventory = PlayerController ? PlayerController->GetWorldInventory() : nullptr;
 
@@ -199,7 +239,11 @@ void UFortControllerComponent_RechargeWeapons::GetAmmoStackInfo(const FGuid& Ite
         .Target()
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
-        .Find("call 0x*", 2)
+        .Find("call 0x*; mov eax, [rsp+0x*]; dec eax")
+        .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
+        .Find("call 0x*; mov eax, [rsp+0x*]; dec eax")
         .Target()
         .Get();
 
@@ -210,6 +254,11 @@ bool UFortControllerComponent_RechargeWeapons::UpdateServerStartForItem(const FG
 {
     static auto UpdateServerStartForItem = Anchor::Function<bool (*)(UFortControllerComponent_RechargeWeapons*, const FGuid&, bool)>(TEXT("UFortControllerComponent_RechargeWeapons::UpdateServerStartForItem"))
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
+        .Find("mov r8b, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
         .Find("mov r8b, 0x1")
         .Find("call 0x*")
         .Target()
@@ -242,6 +291,17 @@ TArray<TPair<FGuid, FCachedRechargeAmmoData*>> UFortControllerComponent_Recharge
     }
 
     return Pairs;
+}
+
+FCachedRechargeAmmoData* UFortControllerComponent_RechargeWeapons::FindRechargeDataForItem(const FGuid& ItemGuid)
+{
+    for (auto& Entry : GetWeaponToRechargeDataMap())
+    {
+        if (Entry.Key == ItemGuid)
+            return Entry.Value;
+    }
+
+    return nullptr;
 }
 
 bool UFortControllerComponent_RechargeWeapons::GetPreventRecharging() const

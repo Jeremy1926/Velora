@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Items/FortInventory.h"
+#include "Components/FortControllerComponent_RechargeWeapons.h"
 #include "Items/FortWeaponItemDefinition.h"
+#include "Player/FortPlayerController.h"
 #include "Weapons/FortWeaponModItemDefinition.h"
 #include "GameplayTagContainer.h"
 #include "Engine/World.h"
@@ -49,6 +51,8 @@ void AFortInventory::HandleInventoryLocalUpdate()
         .Optional()
         .Get();
 
+    const auto PreviousItemInstances = GetInventory().GetItemInstances();
+
     if (InterfaceHandleInventoryLocalUpdate)
     {
         static auto FortInventoryInterface = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortInventoryInterface"));
@@ -64,17 +68,42 @@ void AFortInventory::HandleInventoryLocalUpdate()
 
             InterfaceHandleInventoryLocalUpdate(Interface);
         }
+    }
+    else
+    {
+        static auto HandleInventoryLocalUpdate = Anchor::Function<void (*)(AFortInventory*)>(TEXT("AFortInventory::HandleInventoryLocalUpdate"))
+            .Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate"))
+            .Find("jmp 0x*")
+            .Target()
+            .Get();
 
-        return;
+        HandleInventoryLocalUpdate(this);
     }
 
-    static auto HandleInventoryLocalUpdate = Anchor::Function<void (*)(AFortInventory*)>(TEXT("AFortInventory::HandleInventoryLocalUpdate"))
-        .Exec(TEXT("/Script/FortniteGame.FortInventory:HandleInventoryLocalUpdate"))
-        .Find("jmp 0x*")
-        .Target()
-        .Get();
+    HandleItemsUpdated(PreviousItemInstances);
+}
 
-    HandleInventoryLocalUpdate(this);
+void AFortInventory::HandleItemsUpdated(const TArray<UFortWorldItem*>& PreviousItemInstances)
+{
+    auto PlayerController = HasAuthority() ? Cast<AFortPlayerController>(GetOwner()) : nullptr;
+    auto RechargeWeapons = PlayerController && UFortControllerComponent_RechargeWeapons::StaticClass() ? PlayerController->FindComponentByClass<UFortControllerComponent_RechargeWeapons>() : nullptr;
+
+    if (!RechargeWeapons)
+        return;
+
+    auto& ItemInstances = GetInventory().GetItemInstances();
+
+    for (auto Item : PreviousItemInstances)
+    {
+        if (Item && !ItemInstances.Contains(Item))
+            RechargeWeapons->OnItemInstanceRemoved(Item);
+    }
+
+    for (auto Item : ItemInstances)
+    {
+        if (Item && !PreviousItemInstances.Contains(Item))
+            RechargeWeapons->OnItemInstanceAdded(Item);
+    }
 }
 
 int32 AFortInventory::GetOverflowFromAddingItem(const FFortItemEntry& ItemEntry) const
