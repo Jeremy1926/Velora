@@ -4076,6 +4076,25 @@ int32 UFortAthenaLivingWorldManager::RequestSpawnToAISpawnerSystem(UAthenaAISpaw
 
     const FTransform SpawnTransform(Rotation, Location, FVector(1.0f, 1.0f, 1.0f));
 
+    static auto bActorSpawnRequests = Anchor::Exists()
+        .String(TEXT("Added async actor(class=%s) spawn request(ID=%d) at %s."))
+        .Get();
+
+    if (bActorSpawnRequests)
+    {
+        const int32 RequestID = AISpawner ? AISpawner->RequestSpawn(ActorClass, SpawnTransform, TDelegate<void(AActor*, int32)>::CreateUObject(this, &UFortAthenaLivingWorldManager::OnActorSpawned)) : INDEX_NONE;
+
+        if (Config::bLogLivingWorld)
+            UE_LOG(LogVelora, Log, TEXT("LivingWorld actor spawn %s at %.0f %.0f %.0f: spawner request %d"), *ActorClass->GetName(), Location.X, Location.Y, Location.Z, RequestID);
+
+        if (RequestID == INDEX_NONE)
+            return NextActorRequestID--;
+
+        bOutCompleted = false;
+
+        return RequestID;
+    }
+
     FActorSpawnParameters SpawnParameters;
 
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

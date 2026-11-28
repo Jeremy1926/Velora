@@ -4,6 +4,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/Pawn.h"
 #include "Engine/World.h"
+#include "GameplayTagContainer.h"
 #include "Scanner.h"
 #include "Detour.h"
 
@@ -75,4 +76,17 @@ int32 UAthenaAISpawner::RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISp
         .Get();
 
     return RequestSpawn(this, AISpawnerComponentList, SpawnTransform);
+}
+
+int32 UAthenaAISpawner::RequestSpawn(UClass* ActorClass, const FTransform& SpawnTransform, const TDelegate<void(AActor*, int32)>& SpawnedCallback)
+{
+    static auto RequestSpawn = Anchor::Function<int32 (*)(UAthenaAISpawner*, UClass*, const TGameValue<FTransform>*, const TDelegate<void(AActor*, int32)>*, const FGameplayTag*, const void*)>(TEXT("UAthenaAISpawner::RequestSpawn actor class"))
+        .String(TEXT("Added async actor(class=%s) spawn request(ID=%d) at %s."))
+        .Start()
+        .Get();
+
+    const TGameValue<FTransform> GameSpawnTransform(SpawnTransform);
+    const FGameplayTag SpawningTag;
+
+    return RequestSpawn(this, ActorClass, &GameSpawnTransform, &SpawnedCallback, &SpawningTag, nullptr);
 }

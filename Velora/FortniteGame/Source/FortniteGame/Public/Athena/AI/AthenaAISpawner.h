@@ -17,4 +17,5 @@ class UAthenaAISpawner : public UObject
 {
 public:
     int32 RequestSpawn(UFortAthenaAISpawnerDataComponentList* AISpawnerComponentList, const FTransform& SpawnTransform, const TDelegate<void(AActor*, int32)>& SpawnedCallback = TDelegate<void(AActor*, int32)>());
+    int32 RequestSpawn(UClass* ActorClass, const FTransform& SpawnTransform, const TDelegate<void(AActor*, int32)>& SpawnedCallback);
 };
