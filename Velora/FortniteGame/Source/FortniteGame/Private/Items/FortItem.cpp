@@ -25,6 +25,16 @@ UFortItemDefinition* UFortItem::GetItemDefinitionBP() const
     return GetItemDefinitionBP(this);
 }
 
+EFortItemType UFortItem::GetType() const
+{
+    static auto GetType = Anchor::VirtualFunction<EFortItemType (*)(const UFortItem*)>(TEXT("UFortItem::GetType"))
+        .Exec(TEXT("/Script/FortniteGame.FortItem:GetType"))
+        .Find("call [*]")
+        .Get();
+
+    return GetType(this);
+}
+
 FGuid UFortItem::GetItemGuid() const
 {
     static auto GetItemGuid = Anchor::VirtualFunction<FGuid* (*)(const UFortItem*, FGuid*)>(TEXT("UFortItem::GetItemGuid"))

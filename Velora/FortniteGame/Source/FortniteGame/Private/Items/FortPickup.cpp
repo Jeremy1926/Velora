@@ -905,3 +905,21 @@ float AFortPickup::GetFlyTime() const
 
     return GetFlyTime(this);
 }
+
+void AFortPickup::InitializeDespawnManually(float InDespawnTime, float InStormDespawnTime, bool bRestartSimulation)
+{
+    static auto InitializeDespawnManually = Anchor::Function<void (*)(AFortPickup*, float, float, bool)>(TEXT("AFortPickup::InitializeDespawnManually"))
+        .Exec(TEXT("/Script/FortniteGame.FortPickup:SetDespawnTime"))
+        .Find("mov r9b, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .FieldPattern("F3 0F 11 89 %o F3 0F 11 91", StaticClass()->FindPropertyByName(FName(TEXT("DespawnTime"))))
+        .Start()
+        .Or()
+        .FieldPattern("80 B9 ? ? ? ? 03 75 ? F3 0F 11 89 %o F3 0F 11 91", StaticClass()->FindPropertyByName(FName(TEXT("DespawnTime"))))
+        .Get();
+
+    if (InitializeDespawnManually)
+        InitializeDespawnManually(this, InDespawnTime, InStormDespawnTime, bRestartSimulation);
+}

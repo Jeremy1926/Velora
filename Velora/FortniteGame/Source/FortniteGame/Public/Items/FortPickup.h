@@ -118,4 +118,6 @@ public:
     void SetPickupTarget(AFortPawn* InPickupTarget, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound);
 
     float GetFlyTime() const;
+
+    void InitializeDespawnManually(float InDespawnTime, float InStormDespawnTime, bool bRestartSimulation);
 };
