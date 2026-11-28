@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UObject/UObjectArray.h"
+#include "UObject/Field.h"
 #include "Scanner.h"
 
 FUObjectArray& GUObjectArray = *(FUObjectArray*)(Anchor::Data<uint8_t*>(TEXT("GUObjectArray.ObjObjects"))
@@ -207,6 +208,10 @@ UObjectBase* FUObjectItem::GetObject() const
 int32 FUObjectItem::GetFlags() const
 {
     static auto FlagsField = Anchor::Field<int32>(TEXT("FUObjectItem::Flags"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("(garbage) "))
+        .Last("mov e*, [r*+0x*]; mov [rsp+0x*], e*; mov r*, [rsp+0x*]; mov e*, [r*+0x*]; mov [rsp+0x*], e*")
+        .Or()
         .String(TEXT("STAT_AllocateObject"))
         .Start()
         .Find("cmp *, e*; jnl 0x*")
@@ -221,6 +226,10 @@ int32 FUObjectItem::GetFlags() const
 void FUObjectItem::SetRootSet()
 {
     static auto FlagsField = Anchor::Field<int32>(TEXT("FUObjectItem::Flags"))
+        .If(FField::IsClassEncoded())
+        .String(TEXT("(garbage) "))
+        .Last("mov e*, [r*+0x*]; mov [rsp+0x*], e*; mov r*, [rsp+0x*]; mov e*, [r*+0x*]; mov [rsp+0x*], e*")
+        .Or()
         .String(TEXT("STAT_AllocateObject"))
         .Start()
         .Find("cmp *, e*; jnl 0x*")
