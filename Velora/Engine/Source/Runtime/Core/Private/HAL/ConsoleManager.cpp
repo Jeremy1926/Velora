@@ -140,6 +140,9 @@ TConsoleVariableData<int32>* IConsoleObject::AsVariableInt()
         .Or()
         .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; call [*+0x*]; test rax, rax; jz *; mov rcx, rax; mov rdx, [rax]; call [*+0x*]")
         .Find("call [*+0x*]", 2)
+        .Or()
+        .String(TEXT("r.MobileHDR"), "lea rdx, [0x*]; mov rax, [rcx]; mov r8b, *; call [*+0x*]; test rax, rax; jz *; mov rdx, [rax]; mov rcx, rax; call [*+0x*]")
+        .Find("call [*+0x*]", 2)
         .Get();
 
     return AsVariableInt(this);
@@ -236,6 +239,9 @@ void IConsoleVariable::SetOnChangedCallback(const FConsoleVariableDelegate& Call
         .Find("call [r8+0x*]")
         .Or()
         .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; call [rax+0x*]; test rax, rax; jz 0x*; mov r8, [rax]")
+        .Find("call [r8+0x*]")
+        .Or()
+        .String(TEXT("Slate.EnableGlobalInvalidation"), "lea rdx, [0x*]; call [rax+0x*]; test rax, rax; jz 0x*; lea rdx, [rsp+0x*]; mov r8, [rax]")
         .Find("call [r8+0x*]")
         .Get();
 
