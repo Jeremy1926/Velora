@@ -920,6 +920,9 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
         .Or()
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea rcx, [*+0x*]; mov [*], *; mov byte ptr [*], 0x1; lea rdx, [*]; call 0x*; lea rcx, [0x*]; lea rdx, [*]; call 0x*")
+        .Or()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("lea r*, [r*+0x*]; mov r*b, [*]; inc [r*+0x14]")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
