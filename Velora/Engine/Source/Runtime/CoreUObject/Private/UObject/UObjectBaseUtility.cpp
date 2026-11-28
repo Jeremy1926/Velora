@@ -186,6 +186,11 @@ void* UObjectBaseUtility::GetInterfaceAddress(UClass* InterfaceClass)
         .Last("mov rcx, *; mov rdx, rax; call 0x*; test rax, rax")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("mov rcx, *; mov rdx, rax; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetInterfaceAddress(this, InterfaceClass);
