@@ -352,6 +352,9 @@ bool AFortAthenaAIBotController::WouldItemFitInBotInventory(UFortWorldItem* Item
         .Or()
         .FieldPattern("? 83 BF %o 00 88 03", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
         .Start()
+        .Or()
+        .FieldPattern("88 03 ? 39 AF %o 0F 84", AFortAthenaAIBotController::StaticClass() ? AFortAthenaAIBotController::StaticClass()->FindPropertyByName(FName(TEXT("CachedAIServicePlayerBots"))) : nullptr)
+        .Start()
         .Get();
 
     bool bOutSlotEvaluation = false;
