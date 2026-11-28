@@ -159,6 +159,11 @@ int32 UProperty::GetElementSize() const
         .Find("movsxd r*, dword ptr [r*+0x*]; imul r*, r*")
         .Last("mov e*, [r*+0x*]")
         .Decoded()
+        .Or()
+        .String(TEXT("Attempted to access index %d from array '%s' of length %d in '%s'!"))
+        .Start()
+        .Find("movsxd r*, dword ptr [r*+0x*]; movsxd r*, dword ptr [r*+0x*]; xor r*, 0x*")
+        .Decoded()
         .Get();
 
     return ElementSizeField ? ElementSizeField(this) : GetProperty()->ElementSize;
@@ -171,6 +176,12 @@ int32 UProperty::GetArrayDim() const
         .Start()
         .Find("movsxd r*, dword ptr [r*+0x*]; imul r*, r*")
         .Last("mov e*, [r*+0x*]")
+        .Decoded()
+        .Find("movsxd r*, dword ptr [r*+0x*]")
+        .Or()
+        .String(TEXT("Attempted to access index %d from array '%s' of length %d in '%s'!"))
+        .Start()
+        .Find("movsxd r*, dword ptr [r*+0x*]; movsxd r*, dword ptr [r*+0x*]; xor r*, 0x*")
         .Decoded()
         .Find("movsxd r*, dword ptr [r*+0x*]")
         .Get();
