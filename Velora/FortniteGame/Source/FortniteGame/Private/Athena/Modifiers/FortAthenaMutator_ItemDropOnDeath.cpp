@@ -61,6 +61,10 @@ void AFortAthenaMutator_ItemDropOnDeath::SpawnItems(AFortPawn* Pawn)
         .FieldFind("test byte ptr [*+%x], 0xfd", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("RespawnRequirements"))) : nullptr)
         .Find("call 0x*")
         .Target()
+        .Or()
+        .If(StaticClass())
+        .String(TEXT("[%s] Pickup Drops on Death for this source are disabled, pickup spawn aborted."))
+        .Start()
         .Inline());
 
     static auto DeathDropsEnabled = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Pickup.DeathDropsEnabled"));
