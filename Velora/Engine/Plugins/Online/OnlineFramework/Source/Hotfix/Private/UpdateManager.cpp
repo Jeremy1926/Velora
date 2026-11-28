@@ -94,6 +94,16 @@ FOnUpdateCheckComplete& UUpdateManager::OnUpdateCheckComplete()
         .Target()
         .Find("inc [rbx+0x*]; mov eax, [rbx+0x*]")
         .Find("mov rax, [rbx+0x*]")
+        .Or()
+        .String(TEXT("CheckComplete %s"))
+        .Start()
+        .Find("mov rcx, rbx; lea rax, [0x*]")
+        .Find("lea rax, [0x*]")
+        .Target()
+        .Find("jmp 0x*")
+        .Target()
+        .Find("inc [rbx+0x*]; mov eax, [rbx+0x*]")
+        .Find("mov rax, [rbx+0x*]")
         .Get();
 
     return *(FOnUpdateCheckComplete*)((uint8*)this + UpdateCheckCompleteDelegates);
