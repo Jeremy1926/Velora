@@ -1728,6 +1728,21 @@ namespace Anchor
             }
         }
 
+        void Copy(bool bEnable)
+        {
+            bCopy = bEnable;
+
+            if (bEnable)
+                CopyLow = ~0ull;
+        }
+
+        uint32_t Copied(const std::string& Text)
+        {
+            std::string Bytes(Text.size(), 0);
+
+            return CopyLow != ~0ull && Load(CopyLow, (uint32_t)Bytes.size(), (uint8_t*)Bytes.data()) && Bytes == Text ? (uint32_t)(CopyLow - Image) : 0;
+        }
+
         uint64_t Written() const
         {
             return Low <= High ? High - Low + 1 : 0;
@@ -2349,6 +2364,9 @@ namespace Anchor
                 Low = std::min<uint64_t>(Low, Address);
                 High = std::max<uint64_t>(High, Address + Count - 1);
             }
+
+            if (bCopy && Count && Address - Image < Size)
+                CopyLow = std::min<uint64_t>(CopyLow, Address);
         }
 
         void Store(uint64_t Address, uint32_t Count, const uint8_t* Bytes, bool bKnown)
@@ -2522,6 +2540,8 @@ namespace Anchor
         uint64_t TestedValue = 0;
         bool bFlags = false;
         bool bRecord = false;
+        bool bCopy = false;
+        uint64_t CopyLow = ~0ull;
         bool bZero = false;
         bool bSign = false;
         bool bCarry = false;
@@ -2798,7 +2818,49 @@ namespace Anchor
         return bDone && Machine.Recorded(Text);
     }
 
-    static bool Decrypt(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Head, const uint8_t* Branch, std::string& Text)
+    static void Tail(FMachine& Machine, const uint8_t* Branch, const std::string& Text, uint32_t& Copy)
+    {
+        FOperation Operation;
+        auto Address = Decode(Branch, Operation) ? Branch + Operation.Info.length : Branch;
+
+        Machine.Copy(true);
+
+        for (int32_t Steps = 0; Steps < 64 && Decode(Address, Operation); Steps++)
+        {
+            switch (Operation.Info.mnemonic)
+            {
+            case ZYDIS_MNEMONIC_MOV:
+            case ZYDIS_MNEMONIC_MOVZX:
+            case ZYDIS_MNEMONIC_MOVSX:
+            case ZYDIS_MNEMONIC_MOVSXD:
+            case ZYDIS_MNEMONIC_LEA:
+            case ZYDIS_MNEMONIC_MOVUPS:
+            case ZYDIS_MNEMONIC_MOVAPS:
+            case ZYDIS_MNEMONIC_MOVDQU:
+            case ZYDIS_MNEMONIC_MOVDQA:
+            case ZYDIS_MNEMONIC_MOVSD:
+            case ZYDIS_MNEMONIC_MOVSS:
+            case ZYDIS_MNEMONIC_MOVQ:
+            case ZYDIS_MNEMONIC_MOVD:
+            case ZYDIS_MNEMONIC_VMOVUPS:
+            case ZYDIS_MNEMONIC_VMOVAPS:
+            case ZYDIS_MNEMONIC_VMOVDQU:
+            case ZYDIS_MNEMONIC_VMOVDQA:
+                Machine.Execute(Operation, Address);
+                Address += Operation.Info.length;
+                continue;
+            default:
+                break;
+            }
+
+            break;
+        }
+
+        Machine.Copy(false);
+        Copy = Machine.Copied(Text);
+    }
+
+    static bool Decrypt(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Head, const uint8_t* Branch, std::string& Text, uint32_t& Copy)
     {
         DWORD64 ImageBase = 0;
         ZydisDecodedInstruction Info;
@@ -2846,17 +2908,22 @@ namespace Anchor
             Machine.Reset();
 
             if (Prepare(Machine, EntryBegin, Entry) && Run(Machine, Body, Head, Branch, Text))
+            {
+                Tail(Machine, Branch, Text, Copy);
+
                 return true;
+            }
         }
 
         return false;
     }
 
-    static void Sweep(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Begin, const uint8_t* End, std::vector<std::pair<const uint8_t*, const uint8_t*>>& Loops, std::vector<std::pair<std::string, uint32_t>>& Table)
+    static void Sweep(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Begin, const uint8_t* End, std::vector<std::pair<const uint8_t*, const uint8_t*>>& Loops, std::vector<std::tuple<std::string, uint32_t, uint32_t>>& Table)
     {
         FOperation Operation;
         ZydisDecodedInstruction Info;
         std::string Text;
+        uint32_t Copy = 0;
         std::unordered_map<const uint8_t*, FMachine::FState> Entries;
         std::unordered_set<const uint8_t*> Done;
         auto bBody = true;
@@ -2877,16 +2944,18 @@ namespace Anchor
 
             if (Found != Loops.end() && Found->first == Address)
             {
-                if (bFlow && !Done.contains(Address) && Run(Machine, Body, Found->first, Found->second, Text))
-                {
-                    Table.emplace_back(Text, (uint32_t)(Found->second - Base()));
-                    Done.insert(Address);
-                }
-
                 if (!Decode(Found->second, Info))
                     return;
 
                 Address = Found->second + Info.length;
+
+                if (bFlow && !Done.contains(Found->first) && Run(Machine, Body, Found->first, Found->second, Text))
+                {
+                    Tail(Machine, Found->second, Text, Copy);
+                    Table.emplace_back(Text, (uint32_t)(Found->second - Base()), Copy);
+                    Done.insert(Found->first);
+                }
+
                 bFlow = true;
                 continue;
             }
@@ -2911,7 +2980,8 @@ namespace Anchor
 
                 if (Jumped != Loops.end() && Jumped->first == Target && !Done.contains(Target) && Run(Machine, Body, Jumped->first, Jumped->second, Text))
                 {
-                    Table.emplace_back(Text, (uint32_t)(Jumped->second - Base()));
+                    Tail(Machine, Jumped->second, Text, Copy);
+                    Table.emplace_back(Text, (uint32_t)(Jumped->second - Base()), Copy);
                     Done.insert(Target);
                 }
             }
@@ -2921,14 +2991,15 @@ namespace Anchor
         }
     }
 
-    static const std::vector<std::pair<std::string, uint32_t>>& Decrypted()
+    static const std::vector<std::tuple<std::string, uint32_t, uint32_t>>& Decrypted()
     {
         static auto Table = []
         {
-            std::vector<std::pair<std::string, uint32_t>> Table;
+            std::vector<std::tuple<std::string, uint32_t, uint32_t>> Table;
             std::vector<std::tuple<const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*>> Failed;
             std::vector<std::pair<const uint8_t*, FOperation>> Body;
             std::string Text;
+            uint32_t Copy = 0;
             FMachine Machine;
             DWORD64 ImageBase = 0;
             auto Image = Base();
@@ -2955,8 +3026,8 @@ namespace Anchor
 
                     if (Head && Head >= Begin && Marker && Marker >= Head && Marker + 1 < Address && IsDecryption(Head, Address))
                     {
-                        if (Decrypt(Machine, Body, Head, Address, Text))
-                            Table.emplace_back(Text, (uint32_t)(Address - Image));
+                        if (Copy = 0; Decrypt(Machine, Body, Head, Address, Text, Copy))
+                            Table.emplace_back(Text, (uint32_t)(Address - Image), Copy);
                         else if (auto Chunk = RtlLookupFunctionEntry((DWORD64)Head, &ImageBase, nullptr))
                             Failed.emplace_back(Image + Chunk->BeginAddress, Image + Chunk->EndAddress, Head, Address);
                     }
@@ -2992,17 +3063,62 @@ namespace Anchor
         return Table;
     }
 
+    static const uint8_t* FindCopyReference(uint32_t Copy)
+    {
+        static auto Slots = []
+        {
+            std::vector<uint64_t> Slots;
+            std::vector<std::pair<uint64_t, uint64_t>> Writable;
+            auto Image = Base();
+            auto Size = ImageSize();
+
+            for (auto& Section : Sections())
+            {
+                if (Section.Characteristics & IMAGE_SCN_MEM_WRITE)
+                    Writable.emplace_back(Section.VirtualAddress, Section.VirtualAddress + Section.Misc.VirtualSize);
+            }
+
+            for (auto& Section : Sections())
+            {
+                if (Section.Characteristics & IMAGE_SCN_MEM_EXECUTE)
+                    continue;
+
+                for (uint64_t Offset = (Section.VirtualAddress + 7) & ~7ull; Offset + 8 <= Section.VirtualAddress + Section.Misc.VirtualSize; Offset += 8)
+                {
+                    auto Value = *(const uint64_t*)(Image + Offset) - (uint64_t)Image;
+
+                    if (Value < Size && std::any_of(Writable.begin(), Writable.end(), [Value](auto& Range) { return Value >= Range.first && Value < Range.second; }))
+                        Slots.push_back(Value << 32 | Offset);
+                }
+            }
+
+            std::sort(Slots.begin(), Slots.end());
+
+            return Slots;
+        }();
+
+        auto Reference = FindReference(Base() + Copy);
+
+        for (auto Entry = std::lower_bound(Slots.begin(), Slots.end(), (uint64_t)Copy << 32); !Reference && Entry != Slots.end() && (*Entry >> 32) == Copy; Entry++)
+            Reference = FindReference(Base() + (uint32_t)*Entry);
+
+        return Reference && (Reference[-1] & 0xFB) == 0x48 ? Reference - 1 : Reference;
+    }
+
     template<typename VisitorType>
     static void VisitDecrypted(const std::string& Text, size_t Terminator, bool bPrefix, VisitorType Visitor)
     {
         auto& Table = Decrypted();
 
-        for (auto Entry = std::lower_bound(Table.begin(), Table.end(), std::make_pair(Text, 0u)); Entry != Table.end() && !Entry->first.compare(0, Text.size(), Text); Entry++)
+        for (auto Entry = std::lower_bound(Table.begin(), Table.end(), std::make_tuple(Text, 0u, 0u)); Entry != Table.end() && !std::get<0>(*Entry).compare(0, Text.size(), Text); Entry++)
         {
-            auto& Plain = Entry->first;
+            auto& [Plain, Branch, Copy] = *Entry;
 
             if (bPrefix || Plain.size() == Text.size() || (Plain.size() >= Text.size() + Terminator && Plain.find_first_not_of('\0', Text.size()) >= Text.size() + Terminator))
-                Visitor(Base() + Entry->second);
+            {
+                auto Site = Copy ? FindCopyReference(Copy) : nullptr;
+                Visitor(Site ? Site : Base() + Branch);
+            }
         }
     }
 
