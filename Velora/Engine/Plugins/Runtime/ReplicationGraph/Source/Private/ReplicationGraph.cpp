@@ -267,6 +267,13 @@ TMap<FName, TMulticastDelegate<void, FName, UWorld*>>& UNetReplicationGraphConne
         .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x28)
         .Find("mov rdx, [rbp+0x*]; nop *; cdqe; lea rcx, [rax+rax*4]")
+        .Or()
+        .String(TEXT("UNetReplicationGraphConnection_NotifyActorChannelCleanedUp"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__NetReplicationGraphConnection"), 0x28)
+        .Find("movsxd rax, r8d; lea r*, [rax+rax*4]")
+        .Last("mov r*, [r*+0x*]")
         .Disp();
 
     return *(TMap<FName, TMulticastDelegate<void, FName, UWorld*>>*)((uint8*)this + OnClientVisibleLevelNameAddMap);
