@@ -154,6 +154,8 @@ void UFortControllerComponent_RechargeWeapons::OnWeaponConsumedAmmo(const FGuid&
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const ::Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov r8b, 0x1"); })
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const ::Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const ::Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rdx, *; mov r8b, 0x1"); })
         .InChildVTablesCounted(StaticClass()));
 
     Original(ItemGuid);
@@ -245,6 +247,10 @@ void UFortControllerComponent_RechargeWeapons::GetAmmoStackInfo(const FGuid& Ite
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
         .Find("call 0x*; mov eax, [rsp+0x*]; dec eax")
         .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rdx, *; mov r8b, 0x1"); })
+        .Find("call 0x*; mov eax, [rsp+0x*]; dec eax")
+        .Target()
         .Get();
 
     GetAmmoStackInfo(this, ItemGuid, OutMaxAmount, OutCurrentAmount);
@@ -259,6 +265,11 @@ bool UFortControllerComponent_RechargeWeapons::UpdateServerStartForItem(const FG
         .Target()
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rcx, *; mov r8b, 0x1"); })
+        .Find("mov r8b, 0x1")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortControllerComponent_RechargeWeapons"), [](const Anchor::FCode& Entry) { return Entry.Has("dec eax; cmp [rsp+0x*], eax; jnz 0x*; mov rdx, *; mov r8b, 0x1"); })
         .Find("mov r8b, 0x1")
         .Find("call 0x*")
         .Target()
