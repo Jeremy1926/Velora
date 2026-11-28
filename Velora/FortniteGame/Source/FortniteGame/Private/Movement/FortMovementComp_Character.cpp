@@ -144,6 +144,12 @@ void UFortMovementComp_Character::ServerUpdateReceivedPackMovementModeExtension(
             .Find("lea rdx, [rax+0x*]")
             .Find("call 0x*")
             .Target()
+            .Or()
+            .Pattern("33 DB ? 8A F0 ? 39 99 ? ? 00 00 ? 8B F2 ? 8B F9 74 ? E8")
+            .Start()
+            .Or()
+            .Pattern("33 DB ? 39 99 ? ? 00 00 ? 8A F0 ? 8B F2 ? 8B F9 74 ? E8")
+            .Start()
             .Get();
 
         static int32 ObjectForceManualEndSlot = 0;
