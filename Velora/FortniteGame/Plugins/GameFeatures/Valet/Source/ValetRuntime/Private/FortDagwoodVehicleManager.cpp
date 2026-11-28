@@ -38,10 +38,18 @@ void UFortDagwoodVehicleManager::OnVehicleSpawnsUpdated(UFortVehicleItemDefiniti
         .String(TEXT("Athena.AllowInoperableVehicles"))
         .Last("lea r8, [0x*]")
         .Target()
+        .Or()
+        .String(TEXT("Athena.AllowInoperableVehicles"))
+        .Find("lea r8, [0x*]")
+        .Target()
         .Get();
     static auto OverridePercentInoperable = Anchor::Data<float*>(TEXT("FortValetCVars::OverridePercentInoperable"))
         .String(TEXT("Athena.Valet.OverridePercentInoperable"))
         .Last("lea r8, [0x*]")
+        .Target()
+        .Or()
+        .String(TEXT("Athena.Valet.OverridePercentInoperable"))
+        .Find("lea r8, [0x*]")
         .Target()
         .Get();
 
