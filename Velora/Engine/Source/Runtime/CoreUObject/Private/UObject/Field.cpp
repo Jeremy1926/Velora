@@ -141,6 +141,11 @@ int32 UProperty::GetOffset_ForInternal() const
         .Find("movsxd r*, e*; add r*, r*; call [r*+0x*]")
         .Last("mov *, [r*+0x*]")
         .Decoded()
+        .Or()
+        .String(TEXT("'{Message}': Bad or missing property '{PropertyName}' when trying to call {FunctionName}"))
+        .Start()
+        .Find("movsxd r*, dword ptr [r*+0x*]; mov rax, [r*]; xor r*, 0x*; add r*, r*; call [r*+0x*]")
+        .Decoded()
         .Get();
 
     return Offset_Internal ? Offset_Internal(this) : GetProperty()->Offset_Internal;
