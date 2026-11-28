@@ -59,7 +59,19 @@ UFortWeaponItemDefinition*& FWeaponSeatDefinition::GetLastEquippedVehicleWeapon(
 
 TWeakObjectPtr<UFortWorldItem>& FWeaponSeatDefinition::GetVehicleGrantedWeaponItem()
 {
-    return *(TWeakObjectPtr<UFortWorldItem>*)(&GetLastEquippedVehicleWeapon() + 1);
+    static auto VehicleGrantedWeaponItem = Anchor::Offset(TEXT("FWeaponSeatDefinition::VehicleGrantedWeaponItem"))
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Last("lea rcx, [*+0x*]; call 0x*; test al, al; jz 0x*")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Last("mov eax, [*+0x*]; test eax, eax; js 0x*")
+        .Or()
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .Find("lea rcx, [*+0x*]; call 0x*; test al, al; jnz 0x*")
+        .Disp();
+
+    return VehicleGrantedWeaponItem ? *(TWeakObjectPtr<UFortWorldItem>*)((uint8*)this + VehicleGrantedWeaponItem) : *(TWeakObjectPtr<UFortWorldItem>*)(&GetLastEquippedVehicleWeapon() + 1);
 }
 
 TWeakObjectPtr<AFortWeapon>& FWeaponSeatDefinition::GetVehicleGrantedWeapon()
