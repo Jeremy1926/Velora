@@ -129,6 +129,12 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
         .Find("mov rax, [r*]; mov rdx, [rsp+0x*]; mov rcx, r*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .LogSlot(TEXT("IFortInventoryOwnerInterface::InitializeInventory"))
+        .Or()
+        .String(TEXT("[%s] Failed to initialize Inventory on Pawn=%s Controller=%s (Can't create/initialize inventory on AI)"))
+        .Start()
+        .Find("mov rax, [r*]; mov rdx, [rsp+0x*]; mov rcx, r*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("IFortInventoryOwnerInterface::InitializeInventory"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface")));
 
     Original(Items);
