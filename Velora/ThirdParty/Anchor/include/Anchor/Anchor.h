@@ -59,7 +59,9 @@ namespace Anchor
             Rol,
             Not,
             Neg,
-            Bswap
+            Bswap,
+            Test,
+            Select
         };
 
         struct FStep
@@ -107,6 +109,8 @@ namespace Anchor
         const uint8_t* Get(const wchar_t* Name) const;
 
     private:
+        FDecoder DecoderKeepingZero(const uint8_t* Test) const;
+
         const uint8_t* Address;
         bool bEntry;
     };

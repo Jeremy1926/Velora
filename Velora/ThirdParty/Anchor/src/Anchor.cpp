@@ -1107,6 +1107,195 @@ namespace Anchor
         return bKnown;
     }
 
+    static bool FindPathConstant(const std::vector<const uint8_t*>& Path, ZydisRegister Register, uint64_t& Value)
+    {
+        auto bNarrow = false;
+        FInstruction Instruction;
+
+        for (auto Index = Path.size(); Index-- > 0;)
+        {
+            if (!Decode(Path[Index], Instruction))
+                return false;
+
+            auto bWrites = false;
+
+            for (ZyanU8 Operand = 0; Operand < Instruction.Info.operand_count; Operand++)
+            {
+                auto& Written = Instruction.Operands[Operand];
+
+                if (Written.type == ZYDIS_OPERAND_TYPE_REGISTER && (Written.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE) && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Written.reg.value) == Register)
+                    bWrites = true;
+            }
+
+            if (!bWrites)
+                continue;
+
+            auto& Target = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+
+            if (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV || Target.type != ZYDIS_OPERAND_TYPE_REGISTER || (Target.size != 32 && Target.size != 64))
+                return false;
+
+            bNarrow |= Target.size == 32;
+
+            if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                Value = bNarrow ? (uint32_t)Source.imm.value.u : Source.imm.value.u;
+                return true;
+            }
+
+            if (Source.type != ZYDIS_OPERAND_TYPE_REGISTER || ZydisRegisterGetClass(Source.reg.value) == ZYDIS_REGCLASS_GPR16 || ZydisRegisterGetClass(Source.reg.value) == ZYDIS_REGCLASS_GPR8)
+                return false;
+
+            Register = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value);
+        }
+
+        return false;
+    }
+
+    FDecoder FCode::DecoderKeepingZero(const uint8_t* Test) const
+    {
+        FDecoder Result;
+        FDecoder Empty;
+        FInstruction Instruction;
+        std::vector<const uint8_t*> Path;
+
+        if (!Decode(Address, Instruction) || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER)
+            return Empty;
+
+        auto Register = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Instruction.Operands[0].reg.value);
+        auto Begin = FindRange(Address).first;
+
+        for (auto Next = Begin ? Begin : Address; Next < Test && Decode(Next, Instruction); Next += Instruction.Info.length)
+            Path.push_back(Next);
+
+        if (!Decode(Test, Instruction) || Instruction.Info.operand_count_visible != 2 || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[0].reg.value != Instruction.Operands[1].reg.value || (Instruction.Operands[0].size != 32 && Instruction.Operands[0].size != 64))
+            return Empty;
+
+        auto Width = (uint8_t)Instruction.Operands[0].size;
+        auto Branch = Test + Instruction.Info.length;
+
+        if (!Decode(Branch, Instruction) || (Instruction.Info.mnemonic != ZYDIS_MNEMONIC_JZ && Instruction.Info.mnemonic != ZYDIS_MNEMONIC_JNZ) || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            return Empty;
+
+        ZyanU64 Taken = 0;
+
+        if (!ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Instruction.Operands[0], (ZyanU64)Branch, &Taken)))
+            return Empty;
+
+        Path.push_back(Test);
+        Path.push_back(Branch);
+        Result.Steps[Result.Count++] = { FDecoder::EOperation::Test, Width, 0 };
+
+        auto bSetsZero = false;
+
+        for (auto Next = Instruction.Info.mnemonic == ZYDIS_MNEMONIC_JNZ ? (const uint8_t*)Taken : Branch + Instruction.Info.length; Result.Count < (int32_t)std::size(Result.Steps) && Decode(Next, Instruction); Next += Instruction.Info.length)
+        {
+            auto Category = Instruction.Info.meta.category;
+            auto Mnemonic = Instruction.Info.mnemonic;
+            auto& Target = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+            auto bTouched = false;
+
+            for (ZyanU8 Index = 0; Index < Instruction.Info.operand_count; Index++)
+            {
+                auto& Operand = Instruction.Operands[Index];
+
+                if ((Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.reg.value) == Register) || (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && (ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.base) == Register || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.index) == Register)))
+                    bTouched = true;
+            }
+
+            if (Mnemonic == ZYDIS_MNEMONIC_JNZ && bSetsZero && Target.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                ZyanU64 Skip = 0;
+                FInstruction Move;
+                auto After = Next + Instruction.Info.length;
+
+                if (!ZYAN_SUCCESS(ZydisCalcAbsoluteAddress(&Instruction.Info, &Target, (ZyanU64)Next, &Skip)) || !Decode(After, Move) || Move.Info.mnemonic != ZYDIS_MNEMONIC_MOV || Move.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Move.Operands[0].reg.value) != Register || Skip != (ZyanU64)(After + Move.Info.length))
+                    return Empty;
+
+                uint64_t Value = 0;
+                Path.push_back(Next);
+
+                if (Move.Operands[1].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    Value = Move.Operands[1].imm.value.u;
+                else if (Move.Operands[1].type != ZYDIS_OPERAND_TYPE_REGISTER || !FindPathConstant(Path, ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Move.Operands[1].reg.value), Value))
+                    return Empty;
+
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Select, Width, Width == 32 ? (uint32_t)Value : Value };
+
+                return Result;
+            }
+
+            if (Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET)
+                return Empty;
+
+            if (!bTouched)
+            {
+                Path.push_back(Next);
+                continue;
+            }
+
+            if (Mnemonic == ZYDIS_MNEMONIC_CMOVNZ && bSetsZero && Target.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value) == Register)
+            {
+                uint64_t Value = 0;
+
+                if (!FindPathConstant(Path, ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Target.reg.value), Value))
+                    return Empty;
+
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Select, Width, Width == 32 ? (uint32_t)Value : Value };
+
+                return Result;
+            }
+
+            auto bSelf = Target.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Target.reg.value) == Register && Target.size == Width;
+            auto bDecrement = (bSelf && Mnemonic == ZYDIS_MNEMONIC_DEC) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_SUB && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.s == 1) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_ADD && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.s == -1) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_LEA && Source.mem.index == ZYDIS_REGISTER_NONE && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.mem.base) == Register && Source.mem.disp.value == -1);
+
+            if (Result.Count == 1)
+            {
+                if (!bDecrement)
+                    return Empty;
+
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Sub, Width, 1 };
+                bSetsZero = Mnemonic != ZYDIS_MNEMONIC_LEA;
+                Path.push_back(Next);
+                continue;
+            }
+
+            if (!bSelf)
+                return Empty;
+
+            if (Instruction.Info.operand_count_visible == 1 && (Mnemonic == ZYDIS_MNEMONIC_NOT || Mnemonic == ZYDIS_MNEMONIC_NEG || Mnemonic == ZYDIS_MNEMONIC_BSWAP || Mnemonic == ZYDIS_MNEMONIC_DEC || Mnemonic == ZYDIS_MNEMONIC_INC))
+            {
+                auto Operation = Mnemonic == ZYDIS_MNEMONIC_NOT ? FDecoder::EOperation::Not : Mnemonic == ZYDIS_MNEMONIC_NEG ? FDecoder::EOperation::Neg : Mnemonic == ZYDIS_MNEMONIC_BSWAP ? FDecoder::EOperation::Bswap : Mnemonic == ZYDIS_MNEMONIC_DEC ? FDecoder::EOperation::Sub : FDecoder::EOperation::Add;
+                Result.Steps[Result.Count++] = { Operation, Width, Mnemonic == ZYDIS_MNEMONIC_DEC || Mnemonic == ZYDIS_MNEMONIC_INC ? 1ull : 0ull };
+                bSetsZero = Mnemonic != ZYDIS_MNEMONIC_NOT && Mnemonic != ZYDIS_MNEMONIC_BSWAP;
+                Path.push_back(Next);
+                continue;
+            }
+
+            if (Instruction.Info.operand_count_visible == 2 && (Mnemonic == ZYDIS_MNEMONIC_XOR || Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB || Mnemonic == ZYDIS_MNEMONIC_ROR || Mnemonic == ZYDIS_MNEMONIC_ROL))
+            {
+                uint64_t Value = 0;
+
+                if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    Value = Source.imm.value.u;
+                else if (Source.type != ZYDIS_OPERAND_TYPE_REGISTER || Mnemonic == ZYDIS_MNEMONIC_ROR || Mnemonic == ZYDIS_MNEMONIC_ROL || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value) == Register || !FindPathConstant(Path, ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value), Value))
+                    return Empty;
+
+                auto Operation = Mnemonic == ZYDIS_MNEMONIC_XOR ? FDecoder::EOperation::Xor : Mnemonic == ZYDIS_MNEMONIC_ADD ? FDecoder::EOperation::Add : Mnemonic == ZYDIS_MNEMONIC_SUB ? FDecoder::EOperation::Sub : Mnemonic == ZYDIS_MNEMONIC_ROR ? FDecoder::EOperation::Ror : FDecoder::EOperation::Rol;
+                Result.Steps[Result.Count++] = { Operation, Width, Width == 32 ? (uint32_t)Value : Value };
+                bSetsZero = Mnemonic != ZYDIS_MNEMONIC_ROR && Mnemonic != ZYDIS_MNEMONIC_ROL;
+                Path.push_back(Next);
+                continue;
+            }
+
+            return Empty;
+        }
+
+        return Empty;
+    }
+
     FDecoder FCode::Decoder() const
     {
         FDecoder Result;
@@ -1145,6 +1334,9 @@ namespace Anchor
 
             if (!bTouched)
                 continue;
+
+            if (!Result.Count && Instruction.Info.mnemonic == ZYDIS_MNEMONIC_TEST)
+                return DecoderKeepingZero(Next);
 
             auto& Target = Instruction.Operands[0];
             auto& Source = Instruction.Operands[1];
@@ -1225,6 +1417,14 @@ namespace Anchor
             case EOperation::Bswap:
                 Low = Step.Width == 64 ? _byteswap_uint64(Low) : _byteswap_ulong((uint32_t)Low);
                 break;
+            case EOperation::Test:
+                if (!Low)
+                    return 0;
+                break;
+            case EOperation::Select:
+                if (!Low)
+                    Low = Step.Value;
+                break;
             }
 
             Value = Low & Mask;
@@ -1235,7 +1435,7 @@ namespace Anchor
 
     int32_t FDecoder::Describe(wchar_t* Text, int32_t Size) const
     {
-        static const wchar_t* const Names[] = { L"xor", L"add", L"sub", L"ror", L"rol", L"not", L"neg", L"bswap" };
+        static const wchar_t* const Names[] = { L"xor", L"add", L"sub", L"ror", L"rol", L"not", L"neg", L"bswap", L"test", L"select" };
         int32_t Length = 0;
 
         if (Size > 0)
@@ -1244,7 +1444,7 @@ namespace Anchor
         for (int32_t Index = 0; Index < Count && Length >= 0 && Length < Size; Index++)
         {
             auto& Step = Steps[Index];
-            auto Written = Step.Operation >= EOperation::Not ? _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width) : _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d 0x%llX", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width, (unsigned long long)Step.Value);
+            auto Written = Step.Operation >= EOperation::Not && Step.Operation != EOperation::Select ? _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width) : _snwprintf_s(Text + Length, Size - Length, _TRUNCATE, L"%s%s%d 0x%llX", Index ? L", " : L"", Names[(int32_t)Step.Operation], Step.Width, (unsigned long long)Step.Value);
 
             Length = Written < 0 ? Size : Length + Written;
         }
