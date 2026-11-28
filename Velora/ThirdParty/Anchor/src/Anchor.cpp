@@ -1107,6 +1107,99 @@ namespace Anchor
         return bKnown;
     }
 
+    static const uint8_t* FindHalfSwap(const uint8_t* Begin, const uint8_t* Copy, ZydisRegister& Register, uint64_t& Key, std::vector<const uint8_t*>* Path)
+    {
+        FInstruction Instruction;
+
+        if (!Decode(Copy, Instruction) || Instruction.Info.mnemonic != ZYDIS_MNEMONIC_MOV || Instruction.Operands[0].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[1].type != ZYDIS_OPERAND_TYPE_REGISTER || Instruction.Operands[0].size != 32 || Instruction.Operands[1].size != 32 || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Instruction.Operands[1].reg.value) != Register)
+            return nullptr;
+
+        auto Swapped = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Instruction.Operands[0].reg.value);
+        auto bShiftLeft = false;
+        auto bShiftRight = false;
+        auto bHighKey = false;
+        auto bLowKey = false;
+        uint64_t HighKey = 0;
+        uint64_t LowKey = 0;
+        std::vector<const uint8_t*> Scanned = { Copy };
+
+        if (Swapped == Register)
+            return nullptr;
+
+        for (auto Next = Copy + Instruction.Info.length; Scanned.size() < 12 && Decode(Next, Instruction); Next += Instruction.Info.length)
+        {
+            auto& Target = Instruction.Operands[0];
+            auto& Source = Instruction.Operands[1];
+            auto Mnemonic = Instruction.Info.mnemonic;
+            auto TargetRegister = Target.type == ZYDIS_OPERAND_TYPE_REGISTER ? ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Target.reg.value) : ZYDIS_REGISTER_NONE;
+            auto SourceRegister = Source.type == ZYDIS_OPERAND_TYPE_REGISTER ? ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value) : ZYDIS_REGISTER_NONE;
+            auto bTouched = false;
+
+            for (ZyanU8 Index = 0; Index < Instruction.Info.operand_count; Index++)
+            {
+                auto& Operand = Instruction.Operands[Index];
+                auto Used = Operand.type == ZYDIS_OPERAND_TYPE_REGISTER ? ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.reg.value) : ZYDIS_REGISTER_NONE;
+
+                if (Used == Register || Used == Swapped || (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && (ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.base) == Register || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.base) == Swapped || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.index) == Register || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Operand.mem.index) == Swapped)))
+                    bTouched = true;
+            }
+
+            if (Instruction.Info.meta.category == ZYDIS_CATEGORY_COND_BR || Instruction.Info.meta.category == ZYDIS_CATEGORY_UNCOND_BR || Instruction.Info.meta.category == ZYDIS_CATEGORY_CALL || Instruction.Info.meta.category == ZYDIS_CATEGORY_RET)
+                return nullptr;
+
+            Scanned.push_back(Next);
+
+            if (!bTouched)
+                continue;
+
+            if (Target.size != 64 || Instruction.Info.operand_count_visible != 2)
+                return nullptr;
+
+            auto bKey = Mnemonic == ZYDIS_MNEMONIC_XOR && (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE || (SourceRegister != Register && SourceRegister != Swapped));
+
+            if (Mnemonic == ZYDIS_MNEMONIC_SHL && TargetRegister == Swapped && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.u == 32 && !bShiftLeft)
+            {
+                bShiftLeft = true;
+            }
+            else if (Mnemonic == ZYDIS_MNEMONIC_SHR && TargetRegister == Register && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.u == 32 && !bShiftRight)
+            {
+                bShiftRight = true;
+            }
+            else if (bKey && TargetRegister == Swapped && bShiftLeft && !bHighKey)
+            {
+                if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    HighKey = Source.imm.value.u;
+                else if (!FindConstant(Begin ? Begin : Copy, Next, SourceRegister, HighKey))
+                    return nullptr;
+
+                bHighKey = true;
+            }
+            else if (bKey && TargetRegister == Register && bShiftRight && !bLowKey)
+            {
+                if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    LowKey = Source.imm.value.u;
+                else if (!FindConstant(Begin ? Begin : Copy, Next, SourceRegister, LowKey))
+                    return nullptr;
+
+                bLowKey = true;
+            }
+            else if (Mnemonic == ZYDIS_MNEMONIC_OR && ((TargetRegister == Swapped && SourceRegister == Register) || (TargetRegister == Register && SourceRegister == Swapped)) && bShiftLeft && bShiftRight && bHighKey && bLowKey && !(HighKey & 0xFFFFFFFFull) && !(LowKey >> 32))
+            {
+                if (Path)
+                    Path->insert(Path->end(), Scanned.begin(), Scanned.end());
+
+                Register = TargetRegister;
+                Key = HighKey | LowKey;
+
+                return Next;
+            }
+            else
+                return nullptr;
+        }
+
+        return nullptr;
+    }
+
     static bool FindPathConstant(const std::vector<const uint8_t*>& Path, ZydisRegister Register, uint64_t& Value)
     {
         auto bNarrow = false;
@@ -1262,6 +1355,18 @@ namespace Anchor
                 continue;
             }
 
+            uint64_t SwapKey = 0;
+
+            if (auto SwapEnd = Result.Count + 2 <= (int32_t)std::size(Result.Steps) ? FindHalfSwap(Begin, Next, Register, SwapKey, &Path) : nullptr)
+            {
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Ror, 64, 32 };
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Xor, 64, SwapKey };
+                bSetsZero = true;
+                Next = SwapEnd;
+                Decode(Next, Instruction);
+                continue;
+            }
+
             if (!bSelf)
                 return Empty;
 
@@ -1337,6 +1442,17 @@ namespace Anchor
 
             if (!Result.Count && Instruction.Info.mnemonic == ZYDIS_MNEMONIC_TEST)
                 return DecoderKeepingZero(Next);
+
+            uint64_t SwapKey = 0;
+
+            if (auto SwapEnd = Result.Count + 2 <= (int32_t)std::size(Result.Steps) ? FindHalfSwap(Begin, Next, Register, SwapKey, nullptr) : nullptr)
+            {
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Ror, 64, 32 };
+                Result.Steps[Result.Count++] = { FDecoder::EOperation::Xor, 64, SwapKey };
+                Next = SwapEnd;
+                Decode(Next, Instruction);
+                continue;
+            }
 
             auto& Target = Instruction.Operands[0];
             auto& Source = Instruction.Operands[1];
