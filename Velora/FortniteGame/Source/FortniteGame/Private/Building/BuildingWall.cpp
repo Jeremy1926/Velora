@@ -53,6 +53,14 @@ void ABuildingWall::Open_Implementation(AController* ControllerInstigator)
         .Find("mov r9, [rax]; mov rcx, rax; *; *; call [r9+0x*]")
         .Find("call [r9+0x*]")
         .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:OpenActor"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Call(3)
+        .FindEither("mov r8b, *; mov r9, [rax]; mov rcx, rax; mov rdx, *; call [r9+0x*]", "mov r9, [rax]; mov r8b, *; mov rcx, rax; mov rdx, *; call [r9+0x*]")
+        .Find("call [r9+0x*]")
+        .LogSlot(TEXT("IOpenableInterface::Open_Implementation"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__BuildingWall"), TEXT("/Script/FortniteGame.OpenableInterface")));
 
     static auto DefaultObject = StaticClass()->GetDefaultObject(false);
