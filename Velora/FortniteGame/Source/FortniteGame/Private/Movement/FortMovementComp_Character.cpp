@@ -80,6 +80,11 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
         .FindEither("mov [rsp+0x20], rcx; mov rcx, r15; movaps xmm1, xmm*; call [rax+0x*]", "mov [rsp+0x20], rcx; movaps xmm2, xmm*; mov rcx, r15; movaps xmm1, xmm*; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("movaps xmm2, xmm*; mov r9b, *; mov [rsp+0x20], rcx; mov rcx, r15; call [rax+0x*]") || Entry.Has("movaps xmm1, xmm*; mov [rsp+0x20], rcx; mov rcx, r15; call [rax+0x*]"); })
+        .FindEither("movaps xmm2, xmm*; mov r9b, *; mov [rsp+0x20], rcx; mov rcx, r15; call [rax+0x*]", "movaps xmm1, xmm*; mov [rsp+0x20], rcx; mov rcx, r15; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
         .Inline());
 
