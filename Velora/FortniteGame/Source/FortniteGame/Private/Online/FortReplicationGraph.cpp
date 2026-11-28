@@ -320,6 +320,15 @@ TClassMap<EClassRepNodeMapping>& UFortReplicationGraph::GetClassRepNodePolicies(
         .Find("call 0x*")
         .Target()
         .Find("lea rcx, [r10+0x*]; mov rdx, r11; call 0x*")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortReplicationGraph"), 0x30)
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rdx, r11; lea rcx, [r10+0x*]; call 0x*")
+        .Find("lea rcx, [r10+0x*]")
         .Get();
 
     return *(TClassMap<EClassRepNodeMapping>*)((uint8*)this + ClassRepNodePolicies);
