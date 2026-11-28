@@ -2400,6 +2400,10 @@ int32& UFortReplicationGraphNode_PlayerStateFrequencyLimiter::GetCurrentFrameLis
         .String(TEXT("UFortReplicationGraphNode_PlayerStateFrequencyLimiter_GlobalPrepareForReplication"))
         .Start()
         .Find("mov ecx, [r*+0x*]; cmp ecx, *")
+        .Or()
+        .String(TEXT("UFortReplicationGraphNode_PlayerStateFrequencyLimiter_GlobalPrepareForReplication"))
+        .Start()
+        .Find("mov ecx, [r*+0x*]; mov eax, *; cmp ecx, 0xffffffff")
         .Disp();
 
     return *(int32*)((uint8*)this + CurrentFrameListIndex);
