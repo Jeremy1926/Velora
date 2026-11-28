@@ -26,6 +26,14 @@ void UGameplayStatics::GetAllActorsOfClass(const UObject* WorldContextObject, TS
         .Exec(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass"))
         .Find("add [*+0x20], *")
         .Find("lea rdx, [*]; mov r8, *; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass"))
+        .Find("add [*+0x20], *")
+        .Find("mov r8, *; lea rdx, [*]; call 0x*")
+        .Or()
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetAllActorsOfClass"))
+        .Find("add [*+0x20], *")
+        .Find("mov rcx, *; lea rdx, [*]; call 0x*")
         .Get();
 
     if (bClassByAddress)
