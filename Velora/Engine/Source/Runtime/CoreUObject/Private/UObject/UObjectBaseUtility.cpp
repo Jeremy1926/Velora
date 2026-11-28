@@ -167,6 +167,11 @@ void* UObjectBaseUtility::GetInterfaceAddress(UClass* InterfaceClass)
         .Last("call 0x*")
         .Call()
         .Call(2)
+        .Or()
+        .String(TEXT("STAT_McpItem_PostAdd"))
+        .Last("mov rcx, *; mov rdx, rax; call 0x*; test rax, rax")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     return GetInterfaceAddress(this, InterfaceClass);
