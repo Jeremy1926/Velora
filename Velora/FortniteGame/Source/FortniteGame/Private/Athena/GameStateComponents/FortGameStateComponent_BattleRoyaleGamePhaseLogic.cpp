@@ -562,6 +562,9 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::SetAircraftLock(bool bL
         .Or()
         .FieldPattern("80 B9 %o 00 ? 8A FA ? 8B D9 74 ? 84 D2 75 ? 80 B9 ? ? 00 00 03 77", StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked"))))
         .Start()
+        .Or()
+        .FieldPattern("80 B9 %o 00 40 8A FA 74 ? 84 D2 75 ? 80 B9 ? ? 00 00 03 77", StaticClass()->FindPropertyByName(FName(TEXT("bAircraftIsLocked"))))
+        .Start()
         .Get();
 
     SetAircraftLock(this, bLock);
@@ -1635,6 +1638,11 @@ TArray<FVector>& UFortGameStateComponent_BattleRoyaleGamePhaseLogic::GetSafeZone
         .Start()
         .Find("cmp *, [*+0x*]; jnl 0x*; lea rcx, [*]; mov rax, [*+0x*]; movsd *")
         .Find("mov rax, [*+0x*]")
+        .Or()
+        .String(TEXT("InitializeFlightPath: CustomDropZoneBox2D is invalid when bUseCustomDropZone is true"))
+        .Start()
+        .Find("cmp *, [*+0x*]; jnl 0x*; lea rcx, [*]; mov r8, [*+0x*]")
+        .Find("mov r8, [*+0x*]")
         .Disp();
 
     return *(TArray<FVector>*)((uint8*)this + SafeZoneLocations);
