@@ -68,6 +68,11 @@ const FFieldNetCache* FClassNetCache::GetFromField(FFieldVariant Field) const
         .Start()
         .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
         .Find("lea rcx, [*]; lea rdx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
+        .Or()
+        .String(TEXT("Can't send function '%s' on actor '%s' because client hasn't loaded the level '%s' containing it"))
+        .Start()
+        .Find("mov rcx, [*+0x*]; test *, *; cmovz *")
+        .Find("lea rdx, [*]; lea rcx, [*]; call 0x*; mov rcx, r*; mov rdx, rax; call 0x*")
         .Get();
 
     if (bVariantByReference)
