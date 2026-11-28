@@ -5,9 +5,12 @@
 #include <bit>
 #include <cstdarg>
 #include <cstdlib>
+#include <memory>
 #include <span>
 #include <string>
+#include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <Zydis.h>
 #include <Anchor/Anchor.h>
@@ -1289,7 +1292,7 @@ namespace Anchor
 
         for (auto Address = Begin; Address < Base() + Entry->EndAddress && Decode(Address, Instruction); Address += Instruction.Info.length)
         {
-            if (Instruction.Info.meta.category == ZYDIS_CATEGORY_COND_BR || Instruction.Info.meta.category == ZYDIS_CATEGORY_UNCOND_BR || Instruction.Info.mnemonic == ZYDIS_MNEMONIC_RET)
+            if (Address != Reference && (Instruction.Info.meta.category == ZYDIS_CATEGORY_COND_BR || Instruction.Info.meta.category == ZYDIS_CATEGORY_UNCOND_BR || Instruction.Info.mnemonic == ZYDIS_MNEMONIC_RET))
                 break;
 
             bClearsFile |= Match(Instruction.Text, "xor ecx, ecx");
@@ -1357,6 +1360,1485 @@ namespace Anchor
         return Found;
     }
 
+    struct FOperation
+    {
+        ZydisDecodedInstruction Info;
+        ZydisDecodedOperand Operands[ZYDIS_MAX_OPERAND_COUNT];
+    };
+
+    static const ZydisDecoder& OperationDecoder()
+    {
+        static auto Decoder = []
+        {
+            ZydisDecoder Decoder;
+            ZydisDecoderInit(&Decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+
+            return Decoder;
+        }();
+
+        return Decoder;
+    }
+
+    static bool Decode(const uint8_t* Address, FOperation& Operation)
+    {
+        return ZYAN_SUCCESS(ZydisDecoderDecodeFull(&OperationDecoder(), Address, ZYDIS_MAX_INSTRUCTION_LENGTH, &Operation.Info, Operation.Operands));
+    }
+
+    static bool Decode(const uint8_t* Address, ZydisDecodedInstruction& Info)
+    {
+        ZydisDecoderContext Context;
+
+        return ZYAN_SUCCESS(ZydisDecoderDecodeInstruction(&OperationDecoder(), &Context, Address, ZYDIS_MAX_INSTRUCTION_LENGTH, &Info));
+    }
+
+    static uint64_t Bits(uint32_t Size)
+    {
+        return Size >= 64 ? ~0ull : (1ull << Size) - 1;
+    }
+
+    class FMachine
+    {
+    public:
+        FMachine()
+        {
+            Image = (uint64_t)Base();
+            Size = ImageSize();
+
+            for (auto& Section : Sections())
+            {
+                if (!(Section.Characteristics & IMAGE_SCN_MEM_WRITE))
+                    Constants.emplace_back(Section.VirtualAddress, Section.VirtualAddress + Section.Misc.VirtualSize);
+            }
+        }
+
+        void Reset()
+        {
+            memset(Known, 0, sizeof(Known));
+            memset(VectorKnown, 0, sizeof(VectorKnown));
+            memset(Aliases, 0, sizeof(Aliases));
+            Registers[4] = 0x200000000000;
+            Registers[5] = 0x300000000000;
+            Known[4] = 0xFF;
+            Known[5] = 0xFF;
+            bFlags = false;
+            Tested = ZYDIS_REGISTER_NONE;
+            bRecord = false;
+            Low = ~0ull;
+            High = 0;
+            Generation++;
+        }
+
+        uint64_t StackPointer() const
+        {
+            return Registers[4];
+        }
+
+        void SetStackPointer(uint64_t Value)
+        {
+            Registers[4] = Value;
+            Known[4] = 0xFF;
+        }
+
+        void Clobber()
+        {
+            for (auto Index : { 0, 1, 2, 8, 9, 10, 11 })
+            {
+                Known[Index] = 0;
+                Aliases[Index] = 0;
+            }
+
+            for (auto Index = 0; Index < 6; Index++)
+                VectorKnown[Index] = 0;
+
+            bFlags = false;
+            Tested = ZYDIS_REGISTER_NONE;
+        }
+
+        struct FState
+        {
+            uint64_t Registers[16];
+            uint8_t Known[16];
+        };
+
+        void Capture(FState& State) const
+        {
+            memcpy(State.Registers, Registers, sizeof(Registers));
+            memcpy(State.Known, Known, sizeof(Known));
+        }
+
+        void Apply(const FState& State)
+        {
+            memcpy(Registers, State.Registers, sizeof(Registers));
+            memcpy(Known, State.Known, sizeof(Known));
+            memset(VectorKnown, 0, sizeof(VectorKnown));
+            memset(Aliases, 0, sizeof(Aliases));
+            bFlags = false;
+            Tested = ZYDIS_REGISTER_NONE;
+        }
+
+        void Preserve(const FState& State)
+        {
+            for (auto Index : { 3, 4, 5, 6, 7, 12, 13, 14, 15 })
+            {
+                Registers[Index] = State.Registers[Index];
+                Known[Index] = State.Known[Index];
+                Aliases[Index] = 0;
+            }
+        }
+
+        void Save()
+        {
+            Capture(Saved);
+        }
+
+        void Restore()
+        {
+            Apply(Saved);
+        }
+
+        void Refine(ZydisMnemonic Mnemonic, bool bTaken)
+        {
+            if (Tested == ZYDIS_REGISTER_NONE || !((Mnemonic == ZYDIS_MNEMONIC_JNZ && !bTaken) || (Mnemonic == ZYDIS_MNEMONIC_JZ && bTaken)))
+                return;
+
+            auto Slot = Describe(Tested).Slot;
+            auto Group = Slot >= 0 ? Aliases[Slot] : 0;
+            auto Value = TestedValue;
+
+            Write(Tested, Value, true);
+
+            for (auto Index = 0; Group && Index < 16; Index++)
+            {
+                if (Aliases[Index] == Group)
+                {
+                    Registers[Index] = Value;
+                    Known[Index] = 0xFF;
+                }
+            }
+        }
+
+        void Record(bool bEnable)
+        {
+            bRecord = bEnable;
+
+            if (bEnable)
+            {
+                Low = ~0ull;
+                High = 0;
+            }
+        }
+
+        uint64_t Written() const
+        {
+            return Low <= High ? High - Low + 1 : 0;
+        }
+
+        bool Overflowed() const
+        {
+            return Low <= High && High - Low >= 0x2000;
+        }
+
+        bool Recorded(std::string& Text)
+        {
+            if (Low > High || Overflowed())
+                return false;
+
+            Text.resize(High - Low + 1);
+
+            return Load(Low, (uint32_t)Text.size(), (uint8_t*)Text.data());
+        }
+
+        bool Condition(ZydisMnemonic Mnemonic, bool& bTaken) const
+        {
+            if (!bFlags)
+                return false;
+
+            switch (Mnemonic)
+            {
+            case ZYDIS_MNEMONIC_JZ:
+                bTaken = bZero;
+                return true;
+            case ZYDIS_MNEMONIC_JNZ:
+                bTaken = !bZero;
+                return true;
+            case ZYDIS_MNEMONIC_JB:
+                bTaken = bCarry;
+                return true;
+            case ZYDIS_MNEMONIC_JNB:
+                bTaken = !bCarry;
+                return true;
+            case ZYDIS_MNEMONIC_JBE:
+                bTaken = bCarry || bZero;
+                return true;
+            case ZYDIS_MNEMONIC_JNBE:
+                bTaken = !bCarry && !bZero;
+                return true;
+            case ZYDIS_MNEMONIC_JL:
+                bTaken = bSign != bOverflow;
+                return true;
+            case ZYDIS_MNEMONIC_JNL:
+                bTaken = bSign == bOverflow;
+                return true;
+            case ZYDIS_MNEMONIC_JLE:
+                bTaken = bZero || bSign != bOverflow;
+                return true;
+            case ZYDIS_MNEMONIC_JNLE:
+                bTaken = !bZero && bSign == bOverflow;
+                return true;
+            case ZYDIS_MNEMONIC_JS:
+                bTaken = bSign;
+                return true;
+            case ZYDIS_MNEMONIC_JNS:
+                bTaken = !bSign;
+                return true;
+            case ZYDIS_MNEMONIC_JO:
+                bTaken = bOverflow;
+                return true;
+            case ZYDIS_MNEMONIC_JNO:
+                bTaken = !bOverflow;
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        void Execute(const FOperation& Operation, const uint8_t* Address)
+        {
+            auto& Info = Operation.Info;
+            auto& Target = Operation.Operands[0];
+            auto& Source = Operation.Operands[1];
+            auto Width = Target.size;
+            auto Mask = Bits(Width);
+            uint64_t Left = 0;
+            uint64_t Right = 0;
+
+            switch (Info.mnemonic)
+            {
+            case ZYDIS_MNEMONIC_NOP:
+            case ZYDIS_MNEMONIC_INT3:
+                return;
+            case ZYDIS_MNEMONIC_MOV:
+                if (Width <= 64)
+                {
+                    auto bKnown = Get(Operation, Source, Address, Right);
+                    Set(Operation, Target, Address, Right, bKnown);
+
+                    if (Width >= 32 && Target.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Describe(Target.reg.value).Slot >= 0 && Describe(Source.reg.value).Slot >= 0)
+                    {
+                        auto& Group = Aliases[Describe(Source.reg.value).Slot];
+                        Group = Group ? Group : ++Alias;
+                        Aliases[Describe(Target.reg.value).Slot] = Group;
+                    }
+
+                    return;
+                }
+                break;
+            case ZYDIS_MNEMONIC_MOVZX:
+            {
+                auto bKnown = Get(Operation, Source, Address, Right);
+                Set(Operation, Target, Address, Right & Bits(Source.size), bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_MOVSX:
+            case ZYDIS_MNEMONIC_MOVSXD:
+            {
+                auto bKnown = Get(Operation, Source, Address, Right) && Source.size && Source.size <= 64;
+                auto Shift = 64 - (bKnown ? Source.size : 64);
+                Set(Operation, Target, Address, (uint64_t)((int64_t)(Right << Shift) >> Shift), bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_LEA:
+            {
+                auto bKnown = Effective(Operation, Source, Address, Right);
+                Set(Operation, Target, Address, Right, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_ADD:
+            case ZYDIS_MNEMONIC_SUB:
+            case ZYDIS_MNEMONIC_XOR:
+            case ZYDIS_MNEMONIC_AND:
+            case ZYDIS_MNEMONIC_OR:
+            case ZYDIS_MNEMONIC_CMP:
+            case ZYDIS_MNEMONIC_TEST:
+            {
+                if (!Width || Width > 64 || Info.operand_count_visible != 2)
+                    break;
+
+                auto bKnown = Get(Operation, Target, Address, Left);
+                bKnown = Get(Operation, Source, Address, Right) && bKnown;
+
+                if (Target.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Target.reg.value == Source.reg.value && (Info.mnemonic == ZYDIS_MNEMONIC_XOR || Info.mnemonic == ZYDIS_MNEMONIC_SUB))
+                {
+                    bKnown = true;
+                    Left = 0;
+                    Right = 0;
+                }
+
+                if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && ((Info.mnemonic == ZYDIS_MNEMONIC_OR && (Right & Mask) == Mask) || (Info.mnemonic == ZYDIS_MNEMONIC_AND && !(Right & Mask))))
+                {
+                    bKnown = true;
+                    Left = Right;
+                }
+
+                Left &= Mask;
+                Right &= Mask;
+
+                auto Sign = 1ull << (Width - 1);
+                uint64_t Result = 0;
+                auto bCarryOut = false;
+                auto bOverflowOut = false;
+
+                switch (Info.mnemonic)
+                {
+                case ZYDIS_MNEMONIC_ADD:
+                    Result = (Left + Right) & Mask;
+                    bCarryOut = Result < Left;
+                    bOverflowOut = ((Left ^ Result) & (Right ^ Result) & Sign) != 0;
+                    break;
+                case ZYDIS_MNEMONIC_SUB:
+                case ZYDIS_MNEMONIC_CMP:
+                    Result = (Left - Right) & Mask;
+                    bCarryOut = Left < Right;
+                    bOverflowOut = ((Left ^ Right) & (Left ^ Result) & Sign) != 0;
+                    break;
+                case ZYDIS_MNEMONIC_XOR:
+                    Result = Left ^ Right;
+                    break;
+                case ZYDIS_MNEMONIC_OR:
+                    Result = Left | Right;
+                    break;
+                default:
+                    Result = Left & Right;
+                    break;
+                }
+
+                SetFlags(Result, Width, bCarryOut, bOverflowOut, bKnown);
+
+                if (Target.type == ZYDIS_OPERAND_TYPE_REGISTER && ((Info.mnemonic == ZYDIS_MNEMONIC_TEST && Source.type == ZYDIS_OPERAND_TYPE_REGISTER && Source.reg.value == Target.reg.value) || (Info.mnemonic == ZYDIS_MNEMONIC_CMP && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)))
+                {
+                    Tested = Target.reg.value;
+                    TestedValue = Info.mnemonic == ZYDIS_MNEMONIC_CMP ? Right : 0;
+                }
+
+                if (Info.mnemonic != ZYDIS_MNEMONIC_CMP && Info.mnemonic != ZYDIS_MNEMONIC_TEST)
+                    Set(Operation, Target, Address, Result, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_INC:
+            case ZYDIS_MNEMONIC_DEC:
+            case ZYDIS_MNEMONIC_NOT:
+            case ZYDIS_MNEMONIC_NEG:
+            case ZYDIS_MNEMONIC_BSWAP:
+            {
+                if (!Width || Width > 64)
+                    break;
+
+                auto bKnown = Get(Operation, Target, Address, Left);
+                auto Sign = 1ull << (Width - 1);
+                uint64_t Result = 0;
+                Left &= Mask;
+
+                switch (Info.mnemonic)
+                {
+                case ZYDIS_MNEMONIC_INC:
+                    Result = (Left + 1) & Mask;
+                    SetFlags(Result, Width, bCarry, Result == Sign, bKnown);
+                    break;
+                case ZYDIS_MNEMONIC_DEC:
+                    Result = (Left - 1) & Mask;
+                    SetFlags(Result, Width, bCarry, Left == Sign, bKnown);
+                    break;
+                case ZYDIS_MNEMONIC_NOT:
+                    Result = ~Left & Mask;
+                    break;
+                case ZYDIS_MNEMONIC_NEG:
+                    Result = (0 - Left) & Mask;
+                    SetFlags(Result, Width, Left != 0, Left == Sign, bKnown);
+                    break;
+                default:
+                    Result = Width == 64 ? _byteswap_uint64(Left) : _byteswap_ulong((uint32_t)Left);
+                    break;
+                }
+
+                Set(Operation, Target, Address, Result, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_IMUL:
+            {
+                if (!Width || Width > 64 || Info.operand_count_visible < 2)
+                    break;
+
+                auto& Factor = Info.operand_count_visible == 3 ? Operation.Operands[2] : Source;
+                auto bKnown = Get(Operation, Info.operand_count_visible == 3 ? Source : Target, Address, Left);
+                bKnown = Get(Operation, Factor, Address, Right) && bKnown;
+                bFlags = false;
+                Tested = ZYDIS_REGISTER_NONE;
+                Set(Operation, Target, Address, (Left * Right) & Mask, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_SHL:
+            case ZYDIS_MNEMONIC_SHR:
+            case ZYDIS_MNEMONIC_SAR:
+            case ZYDIS_MNEMONIC_ROL:
+            case ZYDIS_MNEMONIC_ROR:
+            {
+                if (!Width || Width > 64)
+                    break;
+
+                auto bKnown = Get(Operation, Target, Address, Left);
+
+                if (Info.operand_count_visible >= 2)
+                    bKnown = Get(Operation, Source, Address, Right) && bKnown;
+                else
+                    Right = 1;
+
+                auto Count = (uint32_t)(Right & (Width == 64 ? 63 : 31));
+                uint64_t Result = 0;
+                Left &= Mask;
+
+                switch (Info.mnemonic)
+                {
+                case ZYDIS_MNEMONIC_SHL:
+                    Result = Count >= 64 ? 0 : (Left << Count) & Mask;
+                    break;
+                case ZYDIS_MNEMONIC_SHR:
+                    Result = Count >= 64 ? 0 : Left >> Count;
+                    break;
+                case ZYDIS_MNEMONIC_SAR:
+                    Result = (uint64_t)(((int64_t)(Left << (64 - Width)) >> (64 - Width)) >> Count) & Mask;
+                    break;
+                case ZYDIS_MNEMONIC_ROL:
+                    Count %= Width;
+                    Result = Count ? ((Left << Count) | (Left >> (Width - Count))) & Mask : Left;
+                    break;
+                default:
+                    Count %= Width;
+                    Result = Count ? ((Left >> Count) | (Left << (Width - Count))) & Mask : Left;
+                    break;
+                }
+
+                if (Info.mnemonic == ZYDIS_MNEMONIC_ROL || Info.mnemonic == ZYDIS_MNEMONIC_ROR)
+                    bFlags = bFlags && Count == 0;
+                else
+                    SetFlags(Result, Width, false, false, bKnown && Count);
+
+                Set(Operation, Target, Address, Result, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_XCHG:
+            {
+                if (!Width || Width > 64 || Info.operand_count_visible != 2)
+                    break;
+
+                auto bLeft = Get(Operation, Target, Address, Left);
+                auto bRight = Get(Operation, Source, Address, Right);
+                Set(Operation, Target, Address, Right, bRight);
+                Set(Operation, Source, Address, Left, bLeft);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_PUSH:
+            {
+                auto bKnown = Get(Operation, Target, Address, Left);
+                uint8_t Bytes[8];
+                memcpy(Bytes, &Left, sizeof(Bytes));
+                Registers[4] -= 8;
+                Store(Registers[4], 8, Bytes, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_POP:
+            {
+                uint8_t Bytes[8] = {};
+                auto bKnown = Load(Registers[4], 8, Bytes);
+                memcpy(&Left, Bytes, sizeof(Left));
+                Registers[4] += 8;
+                Set(Operation, Target, Address, Left, bKnown);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_MOVUPS:
+            case ZYDIS_MNEMONIC_MOVAPS:
+            case ZYDIS_MNEMONIC_MOVUPD:
+            case ZYDIS_MNEMONIC_MOVAPD:
+            case ZYDIS_MNEMONIC_MOVDQU:
+            case ZYDIS_MNEMONIC_MOVDQA:
+            case ZYDIS_MNEMONIC_LDDQU:
+            case ZYDIS_MNEMONIC_VMOVUPS:
+            case ZYDIS_MNEMONIC_VMOVAPS:
+            case ZYDIS_MNEMONIC_VMOVDQU:
+            case ZYDIS_MNEMONIC_VMOVDQA:
+            {
+                if (Width != 128 || Info.operand_count_visible != 2)
+                    break;
+
+                uint8_t Bytes[16];
+                auto Valid = GetVector(Operation, Source, Address, 16, Bytes);
+                SetVector(Operation, Target, Address, 16, Bytes, Valid, true);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_MOVQ:
+            case ZYDIS_MNEMONIC_MOVD:
+            case ZYDIS_MNEMONIC_VMOVQ:
+            case ZYDIS_MNEMONIC_VMOVD:
+            case ZYDIS_MNEMONIC_MOVSD:
+            case ZYDIS_MNEMONIC_MOVSS:
+            {
+                if (Info.operand_count_visible != 2 || (!IsVector(Target) && !IsVector(Source)))
+                    break;
+
+                auto Part = (uint32_t)std::min<uint16_t>(IsVector(Target) ? Source.size : Width, 64) / 8;
+                auto bMerge = (Info.mnemonic == ZYDIS_MNEMONIC_MOVSD || Info.mnemonic == ZYDIS_MNEMONIC_MOVSS) && IsVector(Target) && IsVector(Source);
+                uint8_t Bytes[16];
+                auto Valid = GetVector(Operation, Source, Address, Part, Bytes);
+                SetVector(Operation, Target, Address, Part, Bytes, Valid, !bMerge);
+
+                return;
+            }
+            case ZYDIS_MNEMONIC_XORPS:
+            case ZYDIS_MNEMONIC_PXOR:
+            case ZYDIS_MNEMONIC_VXORPS:
+            case ZYDIS_MNEMONIC_VPXOR:
+            {
+                auto& First = Info.operand_count_visible == 3 ? Source : Target;
+                auto& Second = Info.operand_count_visible == 3 ? Operation.Operands[2] : Source;
+
+                if (Width != 128 || !IsVector(Target))
+                    break;
+
+                uint8_t Bytes[16];
+                uint8_t Other[16];
+                auto Valid = GetVector(Operation, First, Address, 16, Bytes) & GetVector(Operation, Second, Address, 16, Other);
+
+                if (First.type == ZYDIS_OPERAND_TYPE_REGISTER && Second.type == ZYDIS_OPERAND_TYPE_REGISTER && First.reg.value == Second.reg.value)
+                    Valid = 0xFFFF;
+
+                for (auto Index = 0; Index < 16; Index++)
+                    Bytes[Index] = First.type == ZYDIS_OPERAND_TYPE_REGISTER && Second.type == ZYDIS_OPERAND_TYPE_REGISTER && First.reg.value == Second.reg.value ? 0 : Bytes[Index] ^ Other[Index];
+
+                SetVector(Operation, Target, Address, 16, Bytes, Valid, true);
+
+                return;
+            }
+            default:
+                break;
+            }
+
+            Invalidate(Operation, Address);
+        }
+
+    private:
+        struct FPage
+        {
+            uint64_t Number = 0;
+            uint32_t Used = 0;
+            uint32_t Stamps[0x1000] = {};
+            uint8_t Bytes[0x1000] = {};
+        };
+
+        struct FRegister
+        {
+            int8_t Slot = -1;
+            int8_t Vector = -1;
+            int8_t Lane = -1;
+            uint8_t Width = 0;
+            uint8_t Shift = 0;
+        };
+
+        static const FRegister& Describe(ZydisRegister Register)
+        {
+            static auto Table = []
+            {
+                std::array<FRegister, ZYDIS_REGISTER_MAX_VALUE + 1> Table{};
+
+                for (int32_t Value = 0; Value <= ZYDIS_REGISTER_MAX_VALUE; Value++)
+                {
+                    auto Current = (ZydisRegister)Value;
+                    auto Largest = ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Current);
+                    auto Class = ZydisRegisterGetClass(Current);
+                    auto Id = ZydisRegisterGetId(Current);
+                    auto& Entry = Table[Value];
+
+                    Entry.Width = (uint8_t)(ZydisRegisterGetWidth(ZYDIS_MACHINE_MODE_LONG_64, Current) / 8);
+
+                    if (ZydisRegisterGetClass(Largest) == ZYDIS_REGCLASS_GPR64 && Entry.Width && Entry.Width <= 8)
+                    {
+                        Entry.Slot = (int8_t)ZydisRegisterGetId(Largest);
+                        Entry.Shift = Current == ZYDIS_REGISTER_AH || Current == ZYDIS_REGISTER_CH || Current == ZYDIS_REGISTER_DH || Current == ZYDIS_REGISTER_BH ? 8 : 0;
+                    }
+
+                    if (Class == ZYDIS_REGCLASS_XMM && Id >= 0 && Id < 16)
+                        Entry.Vector = (int8_t)Id;
+
+                    if ((Class == ZYDIS_REGCLASS_XMM || Class == ZYDIS_REGCLASS_YMM || Class == ZYDIS_REGCLASS_ZMM) && Id >= 0 && Id < 16)
+                        Entry.Lane = (int8_t)Id;
+                }
+
+                return Table;
+            }();
+
+            return Table[(uint32_t)Register < Table.size() ? Register : ZYDIS_REGISTER_NONE];
+        }
+
+        static int32_t VectorIndex(ZydisRegister Register)
+        {
+            return Describe(Register).Vector;
+        }
+
+        static bool IsVector(const ZydisDecodedOperand& Operand)
+        {
+            return Operand.type == ZYDIS_OPERAND_TYPE_REGISTER && VectorIndex(Operand.reg.value) >= 0;
+        }
+
+        bool Read(ZydisRegister Register, uint64_t& Value) const
+        {
+            auto& Entry = Describe(Register);
+
+            if (Entry.Slot < 0)
+                return false;
+
+            auto Needed = (uint8_t)(((1u << Entry.Width) - 1) << (Entry.Shift / 8));
+
+            if ((Known[Entry.Slot] & Needed) != Needed)
+                return false;
+
+            Value = (Registers[Entry.Slot] >> Entry.Shift) & Bits(Entry.Width * 8);
+
+            return true;
+        }
+
+        void Write(ZydisRegister Register, uint64_t Value, bool bKnown)
+        {
+            auto& Entry = Describe(Register);
+
+            if (Entry.Slot < 0)
+            {
+                if (Entry.Lane >= 0)
+                    VectorKnown[Entry.Lane] = 0;
+
+                return;
+            }
+
+            if (Entry.Width >= 4)
+            {
+                Registers[Entry.Slot] = Value & Bits(Entry.Width * 8);
+                Known[Entry.Slot] = bKnown ? 0xFF : 0;
+            }
+            else
+            {
+                auto Field = Bits(Entry.Width * 8) << Entry.Shift;
+                auto Bytes = (uint8_t)(((1u << Entry.Width) - 1) << (Entry.Shift / 8));
+                Registers[Entry.Slot] = (Registers[Entry.Slot] & ~Field) | ((Value << Entry.Shift) & Field);
+                Known[Entry.Slot] = bKnown ? Known[Entry.Slot] | Bytes : Known[Entry.Slot] & ~Bytes;
+            }
+
+            if (Entry.Slot == 4 && !bKnown)
+                SetStackPointer(0x400000000000 + ((uint64_t)Generation << 20));
+
+            if (Tested != ZYDIS_REGISTER_NONE && Describe(Tested).Slot == Entry.Slot)
+                Tested = ZYDIS_REGISTER_NONE;
+
+            Aliases[Entry.Slot] = 0;
+        }
+
+        bool IsConstant(uint64_t Address) const
+        {
+            auto Offset = Address - Image;
+
+            if (Offset >= Size)
+                return false;
+
+            for (auto [Begin, End] : Constants)
+            {
+                if (Offset >= Begin && Offset < End)
+                    return true;
+            }
+
+            return false;
+        }
+
+        FPage* Page(uint64_t Address, bool bCreate)
+        {
+            auto Number = Address >> 12;
+
+            if (Recent && Recent->Number == Number && Recent->Used == Generation)
+                return Recent;
+
+            FPage* Free = nullptr;
+
+            for (auto& Entry : Pages)
+            {
+                if (Entry->Used != Generation)
+                {
+                    Free = Free ? Free : Entry.get();
+                    continue;
+                }
+
+                if (Entry->Number == Number)
+                    return Recent = Entry.get();
+            }
+
+            if (!bCreate)
+                return nullptr;
+
+            if (!Free)
+            {
+                if (Pages.size() >= 64)
+                    return nullptr;
+
+                Pages.push_back(std::make_unique<FPage>());
+                Free = Pages.back().get();
+            }
+
+            Free->Number = Number;
+            Free->Used = Generation;
+
+            return Recent = Free;
+        }
+
+        bool Load(uint64_t Address, uint32_t Count, uint8_t* Bytes)
+        {
+            for (uint32_t Offset = 0; Offset < Count; Offset++)
+            {
+                auto Byte = Address + Offset;
+
+                if (IsConstant(Byte))
+                {
+                    Bytes[Offset] = *(const uint8_t*)Byte;
+                    continue;
+                }
+
+                auto Found = Page(Byte, false);
+
+                if (!Found || Found->Stamps[Byte & 0xFFF] != Generation)
+                    return false;
+
+                Bytes[Offset] = Found->Bytes[Byte & 0xFFF];
+            }
+
+            return true;
+        }
+
+        void Store(uint64_t Address, uint32_t Count, const uint8_t* Bytes, uint32_t Valid)
+        {
+            for (uint32_t Offset = 0; Offset < Count; Offset++)
+            {
+                auto Byte = Address + Offset;
+                auto bKnown = Offset < 32 && ((Valid >> Offset) & 1);
+
+                if (IsConstant(Byte))
+                    continue;
+
+                if (auto Found = Page(Byte, bKnown))
+                {
+                    Found->Stamps[Byte & 0xFFF] = bKnown ? Generation : 0;
+                    Found->Bytes[Byte & 0xFFF] = Bytes[Offset];
+                }
+            }
+
+            if (bRecord && Count)
+            {
+                Low = std::min<uint64_t>(Low, Address);
+                High = std::max<uint64_t>(High, Address + Count - 1);
+            }
+        }
+
+        void Store(uint64_t Address, uint32_t Count, const uint8_t* Bytes, bool bKnown)
+        {
+            Store(Address, Count, Bytes, bKnown ? 0xFFFFu : 0u);
+        }
+
+        bool Effective(const FOperation& Operation, const ZydisDecodedOperand& Operand, const uint8_t* Address, uint64_t& Result) const
+        {
+            if (Operand.type != ZYDIS_OPERAND_TYPE_MEMORY || Operand.mem.segment == ZYDIS_REGISTER_FS || Operand.mem.segment == ZYDIS_REGISTER_GS)
+                return false;
+
+            uint64_t Value = 0;
+            uint64_t Part = 0;
+
+            if (Operand.mem.base == ZYDIS_REGISTER_RIP)
+                Value = (uint64_t)Address + Operation.Info.length;
+            else if (Operand.mem.base != ZYDIS_REGISTER_NONE)
+            {
+                if (!Read(Operand.mem.base, Part))
+                    return false;
+
+                Value = Part;
+            }
+
+            if (Operand.mem.index != ZYDIS_REGISTER_NONE)
+            {
+                if (!Read(Operand.mem.index, Part))
+                    return false;
+
+                Value += Part * Operand.mem.scale;
+            }
+
+            Result = Value + (uint64_t)Operand.mem.disp.value;
+
+            return true;
+        }
+
+        bool Get(const FOperation& Operation, const ZydisDecodedOperand& Operand, const uint8_t* Address, uint64_t& Value)
+        {
+            Value = 0;
+
+            switch (Operand.type)
+            {
+            case ZYDIS_OPERAND_TYPE_REGISTER:
+                return Read(Operand.reg.value, Value);
+            case ZYDIS_OPERAND_TYPE_IMMEDIATE:
+                Value = Operand.imm.value.u;
+                return true;
+            case ZYDIS_OPERAND_TYPE_MEMORY:
+            {
+                uint64_t Target = 0;
+                uint8_t Bytes[8] = {};
+
+                if (!Operand.size || Operand.size > 64 || !Effective(Operation, Operand, Address, Target) || !Load(Target, Operand.size / 8, Bytes))
+                    return false;
+
+                memcpy(&Value, Bytes, sizeof(Value));
+
+                return true;
+            }
+            default:
+                return false;
+            }
+        }
+
+        void Set(const FOperation& Operation, const ZydisDecodedOperand& Operand, const uint8_t* Address, uint64_t Value, bool bKnown)
+        {
+            if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER)
+                Write(Operand.reg.value, Value, bKnown);
+            else if (uint64_t Target = 0; Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && Operand.size && Operand.size <= 64 && Effective(Operation, Operand, Address, Target))
+            {
+                uint8_t Bytes[8];
+                memcpy(Bytes, &Value, sizeof(Bytes));
+                Store(Target, Operand.size / 8, Bytes, bKnown);
+            }
+        }
+
+        uint32_t GetVector(const FOperation& Operation, const ZydisDecodedOperand& Operand, const uint8_t* Address, uint32_t Count, uint8_t* Bytes)
+        {
+            memset(Bytes, 0, 16);
+
+            if (auto Vector = Operand.type == ZYDIS_OPERAND_TYPE_REGISTER ? VectorIndex(Operand.reg.value) : -1; Vector >= 0)
+            {
+                memcpy(Bytes, Vectors[Vector], 16);
+
+                return VectorKnown[Vector] & ((1u << Count) - 1);
+            }
+
+            if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY)
+            {
+                uint64_t Target = 0;
+
+                return Effective(Operation, Operand, Address, Target) && Load(Target, Count, Bytes) ? (1u << Count) - 1 : 0;
+            }
+
+            uint64_t Value = 0;
+            auto bKnown = Get(Operation, Operand, Address, Value);
+            memcpy(Bytes, &Value, std::min<uint32_t>(Count, 8));
+
+            return bKnown ? (1u << Count) - 1 : 0;
+        }
+
+        void SetVector(const FOperation& Operation, const ZydisDecodedOperand& Operand, const uint8_t* Address, uint32_t Count, const uint8_t* Bytes, uint32_t Valid, bool bZeroUpper)
+        {
+            if (auto Vector = Operand.type == ZYDIS_OPERAND_TYPE_REGISTER ? VectorIndex(Operand.reg.value) : -1; Vector >= 0)
+            {
+                auto Part = (1u << Count) - 1;
+
+                for (uint32_t Offset = 0; Offset < 16; Offset++)
+                    Vectors[Vector][Offset] = Offset < Count ? Bytes[Offset] : bZeroUpper ? 0 : Vectors[Vector][Offset];
+
+                VectorKnown[Vector] = (uint16_t)((Valid & Part) | (bZeroUpper ? ~Part & 0xFFFF : VectorKnown[Vector] & ~Part));
+
+                return;
+            }
+
+            if (Operand.type == ZYDIS_OPERAND_TYPE_MEMORY)
+            {
+                if (uint64_t Target = 0; Effective(Operation, Operand, Address, Target))
+                    Store(Target, Count, Bytes, Valid);
+
+                return;
+            }
+
+            uint64_t Value = 0;
+            memcpy(&Value, Bytes, std::min<uint32_t>(Count, 8));
+            Set(Operation, Operand, Address, Value, (Valid & ((1u << std::min<uint32_t>(Count, 8)) - 1)) == ((1u << std::min<uint32_t>(Count, 8)) - 1));
+        }
+
+        void SetFlags(uint64_t Result, uint32_t Width, bool bCarryOut, bool bOverflowOut, bool bKnown)
+        {
+            Tested = ZYDIS_REGISTER_NONE;
+            bFlags = bKnown;
+            bZero = (Result & Bits(Width)) == 0;
+            bSign = (Result >> (Width - 1)) & 1;
+            bCarry = bCarryOut;
+            bOverflow = bOverflowOut;
+        }
+
+        void Invalidate(const FOperation& Operation, const uint8_t* Address)
+        {
+            for (ZyanU8 Slot = 0; Slot < Operation.Info.operand_count; Slot++)
+            {
+                auto& Operand = Operation.Operands[Slot];
+
+                if (!(Operand.actions & ZYDIS_OPERAND_ACTION_MASK_WRITE))
+                    continue;
+
+                if (Operand.type == ZYDIS_OPERAND_TYPE_REGISTER)
+                    Write(Operand.reg.value, 0, false);
+                else if (uint64_t Target = 0; Operand.type == ZYDIS_OPERAND_TYPE_MEMORY && Effective(Operation, Operand, Address, Target))
+                {
+                    uint8_t Bytes[64] = {};
+                    Store(Target, std::min<uint32_t>(Operand.size / 8, 64), Bytes, false);
+                }
+            }
+
+            bFlags = false;
+            Tested = ZYDIS_REGISTER_NONE;
+        }
+
+        uint64_t Registers[16] = {};
+        uint8_t Known[16] = {};
+        uint8_t Vectors[16][16] = {};
+        uint16_t VectorKnown[16] = {};
+        FState Saved = {};
+        uint32_t Aliases[16] = {};
+        uint32_t Alias = 0;
+        ZydisRegister Tested = ZYDIS_REGISTER_NONE;
+        uint64_t TestedValue = 0;
+        bool bFlags = false;
+        bool bRecord = false;
+        bool bZero = false;
+        bool bSign = false;
+        bool bCarry = false;
+        bool bOverflow = false;
+        uint64_t Low = ~0ull;
+        uint64_t High = 0;
+        uint32_t Generation = 0;
+        uint64_t Image = 0;
+        uint64_t Size = 0;
+        std::vector<std::pair<uint64_t, uint64_t>> Constants;
+        std::vector<std::unique_ptr<FPage>> Pages;
+        FPage* Recent = nullptr;
+    };
+
+    static void Call(FMachine& Machine, const uint8_t* Function)
+    {
+        FMachine::FState Before;
+        FOperation Operation;
+
+        Machine.Capture(Before);
+        Machine.SetStackPointer(Machine.StackPointer() - 8);
+
+        for (int32_t Steps = 0; Function && Steps < 2048 && InCode(Function, 0, ZYDIS_MAX_INSTRUCTION_LENGTH) && Decode(Function, Operation); Steps++)
+        {
+            auto Category = Operation.Info.meta.category;
+
+            if (Category == ZYDIS_CATEGORY_RET)
+            {
+                Machine.Preserve(Before);
+
+                return;
+            }
+
+            if (Category == ZYDIS_CATEGORY_UNCOND_BR && Operation.Operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                Function = Private::Unhooked(Function + Operation.Info.length + Operation.Operands[0].imm.value.s);
+                continue;
+            }
+
+            if (Category == ZYDIS_CATEGORY_COND_BR || Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_SYSTEM || Category == ZYDIS_CATEGORY_INTERRUPT)
+                break;
+
+            Machine.Execute(Operation, Function);
+            Function += Operation.Info.length;
+        }
+
+        Machine.Preserve(Before);
+        Machine.Clobber();
+    }
+
+    static const uint8_t* Synchronize(const uint8_t* Begin, const uint8_t* End, const uint8_t** Previous)
+    {
+        ZydisDecodedInstruction Info;
+
+        for (auto Start = Begin; Start < Begin + 16 && Start < End; Start++)
+        {
+            const uint8_t* Last = nullptr;
+            auto Address = Start;
+
+            while (Address < End && Decode(Address, Info))
+            {
+                Last = Address;
+                Address += Info.length;
+            }
+
+            if (Address == End)
+            {
+                if (Previous)
+                    *Previous = Last;
+
+                return Start;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static bool IsEpilogue(const FOperation& Operation)
+    {
+        auto& Target = Operation.Operands[0];
+        auto& Source = Operation.Operands[1];
+        auto Mnemonic = Operation.Info.mnemonic;
+
+        if (Mnemonic == ZYDIS_MNEMONIC_POP)
+            return true;
+
+        if (Target.type != ZYDIS_OPERAND_TYPE_REGISTER)
+            return false;
+
+        if (Target.reg.value == ZYDIS_REGISTER_RSP && (Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB || Mnemonic == ZYDIS_MNEMONIC_LEA || Mnemonic == ZYDIS_MNEMONIC_MOV))
+            return true;
+
+        if (Source.type != ZYDIS_OPERAND_TYPE_MEMORY || (Source.mem.base != ZYDIS_REGISTER_RSP && Source.mem.base != ZYDIS_REGISTER_R11))
+            return false;
+
+        if (Mnemonic == ZYDIS_MNEMONIC_LEA)
+            return Target.reg.value == ZYDIS_REGISTER_R11;
+
+        switch (Target.reg.value)
+        {
+        case ZYDIS_REGISTER_RBX:
+        case ZYDIS_REGISTER_RBP:
+        case ZYDIS_REGISTER_RSI:
+        case ZYDIS_REGISTER_RDI:
+        case ZYDIS_REGISTER_R12:
+        case ZYDIS_REGISTER_R13:
+        case ZYDIS_REGISTER_R14:
+        case ZYDIS_REGISTER_R15:
+            return Mnemonic == ZYDIS_MNEMONIC_MOV;
+        default:
+            return ZydisRegisterGetClass(Target.reg.value) == ZYDIS_REGCLASS_XMM && ZydisRegisterGetId(Target.reg.value) >= 6 && (Mnemonic == ZYDIS_MNEMONIC_MOVAPS || Mnemonic == ZYDIS_MNEMONIC_MOVUPS || Mnemonic == ZYDIS_MNEMONIC_MOVDQA || Mnemonic == ZYDIS_MNEMONIC_MOVDQU);
+        }
+    }
+
+    static const uint8_t* Step(FMachine& Machine, const FOperation& Operation, const uint8_t* Address, const uint8_t* Begin, int32_t Steps, bool& bBody)
+    {
+        auto Next = Address + Operation.Info.length;
+        auto Category = Operation.Info.meta.category;
+
+        auto bEpilogue = Category == ZYDIS_CATEGORY_RET || IsEpilogue(Operation);
+
+        if (bBody && bEpilogue)
+            Machine.Save();
+
+        bBody = !bEpilogue;
+
+        if (Category == ZYDIS_CATEGORY_COND_BR)
+        {
+            auto Target = Next + Operation.Operands[0].imm.value.s;
+            bool bTaken = false;
+
+            if (Target < Address && Target >= Begin && Target + 0x200 > Address && Steps < 0x8000 && Machine.Condition(Operation.Info.mnemonic, bTaken) && bTaken)
+                return Target;
+
+            Machine.Refine(Operation.Info.mnemonic, false);
+
+            return Next;
+        }
+
+        if (Category == ZYDIS_CATEGORY_CALL)
+        {
+            if (Operation.Operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                Call(Machine, Private::Unhooked(Next + Operation.Operands[0].imm.value.s));
+            else
+                Machine.Clobber();
+        }
+        else if (Category == ZYDIS_CATEGORY_RET)
+            Machine.Restore();
+        else if (Category != ZYDIS_CATEGORY_UNCOND_BR)
+            Machine.Execute(Operation, Address);
+
+        return Next;
+    }
+
+    static bool Prepare(FMachine& Machine, const uint8_t* Begin, const uint8_t* End)
+    {
+        FOperation Operation;
+        auto bBody = true;
+        int32_t Steps = 0;
+
+        for (auto Address = Begin; Address < End; Steps++)
+        {
+            if (Steps >= 0x40000 || !Decode(Address, Operation))
+                return false;
+
+            Address = Step(Machine, Operation, Address, Begin, Steps, bBody);
+        }
+
+        return true;
+    }
+
+    static bool IsDecryption(const uint8_t* Head, const uint8_t* Branch)
+    {
+        ZydisDecodedInstruction Info;
+        auto Address = Head;
+        auto bMixed = false;
+        auto bStep = false;
+
+        while (Address < Branch && Decode(Address, Info))
+        {
+            auto Category = Info.meta.category;
+            auto Mnemonic = Info.mnemonic;
+            auto Immediate = Info.raw.imm[0].size ? (int64_t)Info.raw.imm[0].value.s : 0;
+
+            if (Category == ZYDIS_CATEGORY_CALL || Category == ZYDIS_CATEGORY_RET || Category == ZYDIS_CATEGORY_SYSTEM || Category == ZYDIS_CATEGORY_INTERRUPT)
+                return false;
+
+            bMixed |= Mnemonic == ZYDIS_MNEMONIC_XOR && (Info.attributes & ZYDIS_ATTRIB_HAS_MODRM) && Info.raw.modrm.mod != 3;
+            bStep |= Mnemonic == ZYDIS_MNEMONIC_IMUL || Mnemonic == ZYDIS_MNEMONIC_SHL || Mnemonic == ZYDIS_MNEMONIC_SHR || Mnemonic == ZYDIS_MNEMONIC_ROL || Mnemonic == ZYDIS_MNEMONIC_ROR || ((Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB || Mnemonic == ZYDIS_MNEMONIC_XOR) && (Immediate >= 0x100 || Immediate <= -0x100));
+            Address += Info.length;
+        }
+
+        return Address == Branch && bMixed && bStep && Decode(Branch, Info) && Info.meta.category == ZYDIS_CATEGORY_COND_BR;
+    }
+
+    static bool Run(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Head, const uint8_t* Branch, std::string& Text)
+    {
+        if (Body.empty() || Body.front().first != Head || Body.back().first != Branch)
+        {
+            Body.clear();
+
+            for (auto Address = Head; Address <= Branch && Body.size() < 512; )
+            {
+                Body.emplace_back(Address, FOperation());
+
+                auto& Operation = Body.back().second;
+
+                if (!Decode(Address, Operation))
+                {
+                    Body.clear();
+
+                    return false;
+                }
+
+                Address += Operation.Info.length;
+            }
+
+            if (Body.empty() || Body.back().first != Branch)
+            {
+                Body.clear();
+
+                return false;
+            }
+        }
+
+        auto Address = Head;
+        auto bDone = false;
+
+        Machine.Record(true);
+
+        for (int32_t Steps = 0; Steps < 0x20000 && (uint64_t)Steps < 0x100 + Machine.Written() * 0x40 && !Machine.Overflowed(); Steps++)
+        {
+            if (Address < Head || Address > Branch)
+            {
+                bDone = true;
+                break;
+            }
+
+            auto Found = std::lower_bound(Body.begin(), Body.end(), Address, [](const auto& Item, const uint8_t* Value) { return Item.first < Value; });
+
+            if (Found == Body.end() || Found->first != Address)
+                break;
+
+            auto& Operation = Found->second;
+            auto Next = Address + Operation.Info.length;
+            auto Category = Operation.Info.meta.category;
+
+            if (Category == ZYDIS_CATEGORY_COND_BR)
+            {
+                bool bTaken = false;
+
+                if (!Machine.Condition(Operation.Info.mnemonic, bTaken))
+                    break;
+
+                Address = bTaken ? Next + Operation.Operands[0].imm.value.s : Next;
+                continue;
+            }
+
+            if (Category == ZYDIS_CATEGORY_UNCOND_BR)
+            {
+                if (Operation.Operands[0].type != ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                    break;
+
+                Address = Next + Operation.Operands[0].imm.value.s;
+                continue;
+            }
+
+            Machine.Execute(Operation, Address);
+            Address = Next;
+        }
+
+        Machine.Record(false);
+
+        return bDone && Machine.Recorded(Text);
+    }
+
+    static bool Decrypt(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Head, const uint8_t* Branch, std::string& Text)
+    {
+        DWORD64 ImageBase = 0;
+        ZydisDecodedInstruction Info;
+        const uint8_t* Previous = nullptr;
+        std::vector<const uint8_t*> Entries;
+        auto Chunk = RtlLookupFunctionEntry((DWORD64)Head, &ImageBase, nullptr);
+        auto Floor = Chunk ? Base() + Chunk->BeginAddress : Head - 0x100;
+        auto Begin = std::max<const uint8_t*>(Floor, Head - 0x100);
+        auto Start = Synchronize(Begin, Head, &Previous);
+
+        if (!Start || (Begin == Floor && Start != Floor))
+            return false;
+
+        if (!Previous || !Decode(Previous, Info) || (Info.meta.category != ZYDIS_CATEGORY_UNCOND_BR && Info.meta.category != ZYDIS_CATEGORY_RET && Info.mnemonic != ZYDIS_MNEMONIC_INT3))
+            Entries.push_back(Head);
+        else
+        {
+            auto [RangeBegin, RangeEnd] = FindRange(Head);
+
+            for (auto Address = RangeBegin; Address && Address + 2 <= RangeEnd && Entries.size() < 4; Address++)
+            {
+                if (Address == Branch)
+                    continue;
+
+                if ((Address[0] == 0xE9 && Address + 5 <= RangeEnd && Address + 5 + *(int32_t*)(Address + 1) == Head) || (Address[0] == 0x0F && (Address[1] & 0xF0) == 0x80 && Address + 6 <= RangeEnd && Address + 6 + *(int32_t*)(Address + 2) == Head) || ((Address[0] == 0xEB || (Address[0] & 0xF0) == 0x70) && Address + 2 + (int8_t)Address[1] == Head))
+                    Entries.push_back(Address);
+            }
+        }
+
+        for (auto Entry : Entries)
+        {
+            auto EntryBegin = Start;
+
+            if (Entry != Head)
+            {
+                auto EntryChunk = RtlLookupFunctionEntry((DWORD64)Entry, &ImageBase, nullptr);
+                auto EntryFloor = EntryChunk ? Base() + EntryChunk->BeginAddress : Entry - 0x100;
+                auto EntryStart = std::max<const uint8_t*>(EntryFloor, Entry - 0x100);
+                EntryBegin = EntryStart == EntryFloor ? EntryStart : Synchronize(EntryStart, Entry, nullptr);
+            }
+
+            if (!EntryBegin)
+                continue;
+
+            Machine.Reset();
+
+            if (Prepare(Machine, EntryBegin, Entry) && Run(Machine, Body, Head, Branch, Text))
+                return true;
+        }
+
+        return false;
+    }
+
+    static void Sweep(FMachine& Machine, std::vector<std::pair<const uint8_t*, FOperation>>& Body, const uint8_t* Begin, const uint8_t* End, std::vector<std::pair<const uint8_t*, const uint8_t*>>& Loops, std::vector<std::pair<std::string, uint32_t>>& Table)
+    {
+        FOperation Operation;
+        ZydisDecodedInstruction Info;
+        std::string Text;
+        std::unordered_map<const uint8_t*, FMachine::FState> Entries;
+        std::unordered_set<const uint8_t*> Done;
+        auto bBody = true;
+        auto bFlow = true;
+
+        std::sort(Loops.begin(), Loops.end());
+        Machine.Reset();
+
+        for (auto [Address, Steps] = std::pair(Begin, 0); Address < End && Steps < 0x100000; Steps++)
+        {
+            if (!bFlow)
+            {
+                if (auto Entry = Entries.find(Address); Entry != Entries.end())
+                    Machine.Apply(Entry->second);
+            }
+
+            auto Found = std::lower_bound(Loops.begin(), Loops.end(), std::pair(Address, (const uint8_t*)nullptr));
+
+            if (Found != Loops.end() && Found->first == Address)
+            {
+                if (bFlow && !Done.contains(Address) && Run(Machine, Body, Found->first, Found->second, Text))
+                {
+                    Table.emplace_back(Text, (uint32_t)(Found->second - Base()));
+                    Done.insert(Address);
+                }
+
+                if (!Decode(Found->second, Info))
+                    return;
+
+                Address = Found->second + Info.length;
+                bFlow = true;
+                continue;
+            }
+
+            if (!Decode(Address, Operation))
+                return;
+
+            auto Category = Operation.Info.meta.category;
+
+            if ((Category == ZYDIS_CATEGORY_UNCOND_BR || Category == ZYDIS_CATEGORY_COND_BR) && Operation.Operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                auto Target = Address + Operation.Info.length + Operation.Operands[0].imm.value.s;
+
+                if (Target > Address && Target < End && !Entries.contains(Target))
+                    Machine.Capture(Entries[Target]);
+            }
+
+            if (Category == ZYDIS_CATEGORY_UNCOND_BR && Operation.Operands[0].type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+            {
+                auto Target = Address + Operation.Info.length + Operation.Operands[0].imm.value.s;
+                auto Jumped = std::lower_bound(Loops.begin(), Loops.end(), std::pair(Target, (const uint8_t*)nullptr));
+
+                if (Jumped != Loops.end() && Jumped->first == Target && !Done.contains(Target) && Run(Machine, Body, Jumped->first, Jumped->second, Text))
+                {
+                    Table.emplace_back(Text, (uint32_t)(Jumped->second - Base()));
+                    Done.insert(Target);
+                }
+            }
+
+            bFlow = Category != ZYDIS_CATEGORY_UNCOND_BR && Category != ZYDIS_CATEGORY_RET && Operation.Info.mnemonic != ZYDIS_MNEMONIC_INT3;
+            Address = Step(Machine, Operation, Address, Begin, Steps, bBody);
+        }
+    }
+
+    static const std::vector<std::pair<std::string, uint32_t>>& Decrypted()
+    {
+        static auto Table = []
+        {
+            std::vector<std::pair<std::string, uint32_t>> Table;
+            std::vector<std::tuple<const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*>> Failed;
+            std::vector<std::pair<const uint8_t*, FOperation>> Body;
+            std::string Text;
+            FMachine Machine;
+            DWORD64 ImageBase = 0;
+            auto Image = Base();
+
+            Body.reserve(512);
+
+            for (auto& Section : Sections())
+            {
+                if (!(Section.Characteristics & IMAGE_SCN_MEM_EXECUTE))
+                    continue;
+
+                auto Begin = Image + Section.VirtualAddress;
+                auto End = Begin + Section.Misc.VirtualSize;
+                const uint8_t* Marker = nullptr;
+
+                for (auto Address = Begin; Address + 6 <= End; Address++)
+                {
+                    const uint8_t* Head = nullptr;
+
+                    if ((Address[0] & 0xF0) == 0x70 && (int8_t)Address[1] < 0)
+                        Head = Address + 2 + (int8_t)Address[1];
+                    else if (Address[0] == 0x0F && (Address[1] & 0xF0) == 0x80 && *(int32_t*)(Address + 2) < 0 && *(int32_t*)(Address + 2) >= -0x1000)
+                        Head = Address + 6 + *(int32_t*)(Address + 2);
+
+                    if (Head && Head >= Begin && Marker && Marker >= Head && Marker + 1 < Address && IsDecryption(Head, Address))
+                    {
+                        if (Decrypt(Machine, Body, Head, Address, Text))
+                            Table.emplace_back(Text, (uint32_t)(Address - Image));
+                        else if (auto Chunk = RtlLookupFunctionEntry((DWORD64)Head, &ImageBase, nullptr))
+                            Failed.emplace_back(Image + Chunk->BeginAddress, Image + Chunk->EndAddress, Head, Address);
+                    }
+
+                    if ((Address[0] & 0xFC) == 0x30 && (Address[1] >> 6) != 3)
+                        Marker = Address;
+                }
+            }
+
+            std::sort(Failed.begin(), Failed.end());
+
+            for (size_t Index = 0; Index < Failed.size(); )
+            {
+                auto [Begin, End, Head, Branch] = Failed[Index];
+                std::vector<std::pair<const uint8_t*, const uint8_t*>> Loops;
+                auto Last = Branch;
+
+                for (; Index < Failed.size() && std::get<0>(Failed[Index]) == Begin; Index++)
+                {
+                    Loops.emplace_back(std::get<2>(Failed[Index]), std::get<3>(Failed[Index]));
+                    Last = std::max<const uint8_t*>(Last, std::get<3>(Failed[Index]));
+                }
+
+                Sweep(Machine, Body, Begin, std::min<const uint8_t*>({ End, Last + 0x2000, Begin + 0x80000 }), Loops, Table);
+            }
+
+            std::sort(Table.begin(), Table.end());
+            Table.erase(std::unique(Table.begin(), Table.end()), Table.end());
+
+            return Table;
+        }();
+
+        return Table;
+    }
+
+    template<typename VisitorType>
+    static void VisitDecrypted(const std::string& Text, size_t Terminator, bool bPrefix, VisitorType Visitor)
+    {
+        auto& Table = Decrypted();
+
+        for (auto Entry = std::lower_bound(Table.begin(), Table.end(), std::make_pair(Text, 0u)); Entry != Table.end() && !Entry->first.compare(0, Text.size(), Text); Entry++)
+        {
+            auto& Plain = Entry->first;
+
+            if (bPrefix || Plain.size() == Text.size() || (Plain.size() >= Text.size() + Terminator && Plain.find_first_not_of('\0', Text.size()) >= Text.size() + Terminator))
+                Visitor(Base() + Entry->second);
+        }
+    }
+
+    static const uint8_t* FindDecrypted(const std::string& Text, size_t Terminator, bool bPrefix)
+    {
+        const uint8_t* Found = nullptr;
+
+        VisitDecrypted(Text, Terminator, bPrefix, [&](const uint8_t* Site)
+        {
+            Found = Found && Found < Site ? Found : Site;
+        });
+
+        return Found;
+    }
+
+    static const uint8_t* FindDecrypted(const wchar_t* Text)
+    {
+        auto Length = wcslen(Text);
+        auto bPrefix = Length && Text[Length - 1] == L'*';
+        auto Size = bPrefix ? Length - 1 : Length;
+        auto Found = FindDecrypted(std::string((const char*)Text, Size * sizeof(wchar_t)), sizeof(wchar_t), bPrefix);
+
+        if (auto Narrow = NarrowText(Text); !Found && !Narrow.empty())
+            Found = FindDecrypted(Narrow.substr(0, Size), 1, bPrefix);
+
+        return Found;
+    }
+
+    static const uint8_t* FindDecrypted(const char* Text)
+    {
+        auto Length = strlen(Text);
+        auto bPrefix = Length && Text[Length - 1] == '*';
+
+        return FindDecrypted(std::string(Text, bPrefix ? Length - 1 : Length), 1, bPrefix);
+    }
+
     FCode String(const wchar_t* Text)
     {
         auto Reference = FindStringReference(Text);
@@ -1373,6 +2855,9 @@ namespace Anchor
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
 
+        if (!Reference)
+            Reference = FindDecrypted(Text);
+
         return FCode(FindLogCaller(Reference));
     }
 
@@ -1382,6 +2867,9 @@ namespace Anchor
 
         if (Reference && (Reference[-1] & 0xFB) == 0x48)
             Reference--;
+
+        if (!Reference)
+            Reference = FindDecrypted(Text);
 
         return FCode(FindLogCaller(Reference));
     }
@@ -1417,6 +2905,25 @@ namespace Anchor
                     FoundSize = EntrySize;
                 }
             }
+        }
+
+        if (!Found)
+        {
+            VisitDecrypted(std::string((const char*)Text, Size - sizeof(wchar_t)), sizeof(wchar_t), false, [&](const uint8_t* Site)
+            {
+                auto Entry = FindFunction(Site);
+
+                if (!Entry)
+                    return;
+
+                auto EntrySize = FindFunctionEnd(Entry) - (Image + Entry->BeginAddress);
+
+                if (!Found || EntrySize < FoundSize)
+                {
+                    Found = Site;
+                    FoundSize = EntrySize;
+                }
+            });
         }
 
         return FCode(Found);
