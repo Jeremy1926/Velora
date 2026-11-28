@@ -259,6 +259,12 @@ void UAbilitySystemComponent::MarkAbilitySpecDirty(FGameplayAbilitySpec& Spec, b
         .Find("mov r8b, 0x1; mov rcx, *; mov rdx, *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("GiveAbility called with an invalid Ability Class."))
+        .Start()
+        .Find("mov rcx, *; mov r8b, 0x1; mov rdx, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     MarkAbilitySpecDirty(this, Spec, WasAddOrRemove);
