@@ -16,6 +16,30 @@ uint32 UObjectBase::GetUniqueID() const
     return (uint32)(Index ? Index(this) : InternalIndex);
 }
 
+UClass* UObjectBase::GetClass() const
+{
+    static auto Class = Anchor::Field<UClass*>(TEXT("UObjectBase::ClassPrivate"))
+        .If(FField::IsClassEncoded())
+        .Exec(TEXT("/Script/Engine.GameplayStatics:GetObjectClass"))
+        .Find("test rax, rax; jz 0x*; mov r*, [rax+0x*]")
+        .Find("mov r*, [rax+0x*]")
+        .Get();
+
+    return Class ? Class(this) : ClassPrivate;
+}
+
+UObject* UObjectBase::GetOuter() const
+{
+    static auto Outer = Anchor::Field<UObject*>(TEXT("UObjectBase::OuterPrivate"))
+        .If(FField::IsClassEncoded())
+        .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetOuterObject"))
+        .Find("test rax, rax; jz 0x*; mov r*, [rax+0x*]")
+        .Find("mov r*, [rax+0x*]")
+        .Get();
+
+    return Outer ? Outer(this) : OuterPrivate;
+}
+
 FName UObjectBase::GetFName() const
 {
     static auto Name = Anchor::Field<NAME_INDEX>(TEXT("UObjectBase::NamePrivate"))

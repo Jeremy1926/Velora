@@ -14,15 +14,9 @@ public:
 
     uint32 GetUniqueID() const;
 
-    FORCEINLINE UClass* GetClass() const
-    {
-        return ClassPrivate;
-    }
+    UClass* GetClass() const;
 
-    FORCEINLINE UObject* GetOuter() const
-    {
-        return OuterPrivate;
-    }
+    UObject* GetOuter() const;
 
     FName GetFName() const;
 
