@@ -75,6 +75,11 @@ TSharedPtr<IAnalyticsProvider>* UFortGameInstance::GetServerAnalyticsProvider()
         .Find("cmp *, 0x1; jnz *")
         .Find("lea *, [*+0x*]")
         .Is("lea *, [*+0x*]; mov rdx, r*; mov rcx, r*; call 0x*")
+        .Or()
+        .String(TEXT("Changing GameSessionId from '%s' to '%s'"))
+        .Find("cmp *, 0x1; jnz *")
+        .Find("mov r8b, 0x1; lea *, [*+0x*]; call 0x*")
+        .Find("lea *, [*+0x*]")
         .Sum();
 
     return ServerAnalyticsProvider > 0 ? (TSharedPtr<IAnalyticsProvider>*)((uint8_t*)this + ServerAnalyticsProvider) : nullptr;
