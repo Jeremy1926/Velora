@@ -422,6 +422,12 @@ FTimerHandle* ABuildingGameplayActorSentry::GetReturnToIdleTimerHandle()
         .Find("cmp *, 0x6; jnz 0x*")
         .Call()
         .Find("lea *, [*+0x*]; mov *, [*]; mov [rsp+0x*], *")
+        .Or()
+        .FieldUser(TEXT("/Script/FortniteGame.Default__BuildingGameplayActorSentry"), "movss xmm*, dword ptr [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("LastNetworkReceiveTime"))))
+        .FieldFind("mov *, [*+%x]; cmp *, 0x2; jb 0x*", StaticClass()->FindPropertyByName(FName(TEXT("CurrentSentryState"))))
+        .Find("cmp *, 0x6; jnz 0x*")
+        .Call()
+        .Find("lea *, [*+0x*]; mov *, [*]; lea rdx, [rsp+0x*]; mov [rsp+0x*], *")
         .Disp();
 
     return ReturnToIdleTimerHandle ? (FTimerHandle*)((uint8*)this + ReturnToIdleTimerHandle) : nullptr;
