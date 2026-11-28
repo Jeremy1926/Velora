@@ -57,6 +57,10 @@ void UFortGameStateComponent_Campsite::BeginPlay()
         .If(StaticClass())
         .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "push rbx; sub rsp, 0x20; mov rax, [rcx+0x*]; mov rbx, rcx; mov eax, [rax+0x*]; bt eax, 0x12; jb 0x*; not eax")
         .LogSlot(TEXT("UActorComponent::BeginPlay"))
+        .Or()
+        .If(StaticClass())
+        .VirtualMatch(TEXT("/Script/Engine.Default__ActorComponent"), "push rbx; sub rsp, 0x20; mov rax, [rcx+0x*]; mov eax, [rax+0x*]; mov rbx, rcx; bt eax, 0x12; jb 0x*; test al, al; js 0x*")
+        .LogSlot(TEXT("UActorComponent::BeginPlay"))
         .InVTable(TEXT("/Script/CampsiteRuntime.Default__FortGameStateComponent_Campsite")));
 
     Original();
