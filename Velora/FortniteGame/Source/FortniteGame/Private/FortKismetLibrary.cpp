@@ -1351,6 +1351,10 @@ void UFortKismetLibrary::execK2_SpawnPickupInWorld(FFrame& Stack, void* const Z_
         .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
         .Find("xor r14d, r14d")
         .Find("setnz *; add [*+0x20], *; mov [rsi], r14; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld"))
+        .Find("xor r14d, r14d")
+        .Find("setnz *; add [*+0x20], *; mov rbx, [rsp+0x*]; mov [rsi], r14; add rsp, *")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:K2_SpawnPickupInWorld")));
 
