@@ -374,7 +374,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         LastState = State;
     }
 
-    AFortWeapon::FlushPendingUnequipRemovals();
+    if (!DETOUR_ORIGINAL(AFortPawn, UnequipCurrentWeapon))
+        AFortWeapon::FlushPendingUnequipRemovals();
 
     Original(DeltaSeconds, bIdleMode);
 }

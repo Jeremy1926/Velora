@@ -4,6 +4,7 @@
 #include "AI/FortAthenaAIBotController.h"
 #include "AI/FortAthenaAIRuntimeParameters_Inventory.h"
 #include "Athena/FortPlayerPawnAthena.h"
+#include "Weapons/FortWeapon.h"
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/Stack.h"
@@ -65,6 +66,25 @@ AFortWeapon* AFortPawn::GetCurrentWeapon() const
     static auto CurrentWeapon = GetClass()->FindPropertyByName(FName(TEXT("CurrentWeapon")));
 
     return *CurrentWeapon->ContainerPtrToValuePtr<AFortWeapon*>(this);
+}
+
+void AFortPawn::UnequipCurrentWeapon(bool bSetWeaponAttachment)
+{
+    DETOUR(AFortPawn, UnequipCurrentWeapon, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(AFortWeapon, OnUnEquip))
+        .Exec(TEXT("/Script/FortniteGame.FortPlayerPawn:UnequipCurrentWeaponById"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*")
+        .Target()
+        .Find("call 0x*")
+        .Target()
+        .FieldHas("lea rcx, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("OnWeaponUnEquippedDelegate"))))
+        .Inline());
+
+    Original(bSetWeaponAttachment);
+
+    AFortWeapon::FlushPendingUnequipRemovals();
 }
 
 AFortWeapon* AFortPawn::EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid)

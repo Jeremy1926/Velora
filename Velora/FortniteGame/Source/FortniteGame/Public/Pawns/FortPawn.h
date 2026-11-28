@@ -27,6 +27,8 @@ public:
 
     AFortWeapon* GetCurrentWeapon() const;
 
+    void UnequipCurrentWeapon(bool bSetWeaponAttachment);
+
     AFortWeapon* EquipWeaponDefinition(const UFortWeaponItemDefinition* WeaponData, const FGuid& ItemEntryGuid, const FGuid& TrackerGuid = FGuid());
 
     bool EquipBestWeapon();
