@@ -537,6 +537,16 @@ FActiveGameplayEffectHandle UFortKismetLibrary::ApplyGlobalEnvironmentGameplayEf
         .Find("mov r9d, *; mov rdx, *; lea r8, [rsp+0x*]; *; *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:ApplyGlobalEnvironmentGameplayEffectToActor"))
+        .Find("lea r8, [rsp+0x*]; mov rdx, *; mov r9d, *; mov [rsp+0x20], *; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FActiveGameplayEffectHandle ActiveGameplayEffectHandle;
