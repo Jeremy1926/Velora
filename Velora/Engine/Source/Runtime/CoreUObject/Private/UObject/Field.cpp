@@ -36,6 +36,11 @@ bool FField::IsClassEncoded()
         .Find("call 0x*; cmp r*, rax")
         .Last("mov r*, [r*+0x*]")
         .Decoded()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Length"))
+        .Find("mov eax, [rax+0x*]; bt rax, 0x*")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
         .Get();
 
     return bEncoded;
@@ -47,6 +52,11 @@ FFieldClass* FField::GetClass() const
         .String(TEXT("Attempted to access index {0} from array {1} of length {2}!"))
         .Start()
         .Find("call 0x*; cmp r*, rax")
+        .Last("mov r*, [r*+0x*]")
+        .Decoded()
+        .Or()
+        .Exec(TEXT("/Script/Engine.KismetArrayLibrary:Array_Length"))
+        .Find("mov eax, [rax+0x*]; bt rax, 0x*")
         .Last("mov r*, [r*+0x*]")
         .Decoded()
         .Get();
