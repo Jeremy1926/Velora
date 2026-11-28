@@ -100,10 +100,14 @@ void UFortKismetLibrary::GiveItemToInventoryOwner(TScriptInterface<IFortInventor
 void UFortKismetLibrary::GiveItemToInventoryOwnerWithVariant(TScriptInterface<IFortInventoryOwnerInterface> InventoryOwner, UFortWorldItemDefinition* ItemDefinition, const FGuid& ItemVariantGuid, int32 NumberToGive, bool bNotifyPlayer)
 {
     DETOUR(UFortKismetLibrary, GiveItemToInventoryOwnerWithVariant, Anchor::Hook()
+        .If([] { return ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")))->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr; })
         .Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode"))
         .Find("mov byte ptr [rsp+0x20], 0x1; mov [rsp+0x*], r*; mov [rsp+0x*], r*; call 0x*")
         .Find("call 0x*")
-        .If([] { return ((UStruct*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")))->FindPropertyByName(FName(TEXT("ItemVariantGuid"))) != nullptr; })
+        .Or()
+        .Native(TEXT("/Script/FortniteGame.FortPlayerControllerGameplay:StartGhostMode"))
+        .Find("mov [rsp+0x28], eax; mov byte ptr [rsp+0x20], 0x1; call 0x*")
+        .Find("call 0x*")
         .Optional()
         .AtCall());
 
