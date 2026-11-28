@@ -224,6 +224,25 @@ void UFortVehicleSeatWeaponComponent::OnPawnExitSeat(IFortVehicleInterface* Vehi
     OnPawnExitSeat(this, Vehicle, PlayerPawn, SeatIdx);
 }
 
+void UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, bool bEquipLastWeapon)
+{
+    DETOUR(UFortVehicleSeatWeaponComponent, UnEquipVehicleWeapon, Anchor::Hook()
+        .If(DETOUR_ORIGINAL(UFortVehicleSeatWeaponComponent, OnPawnEnterSeat) && DETOUR_ORIGINAL(AFortWeapon, OnUnEquip))
+        .String(TEXT("UFortVehicleSeatWeaponComponent::UnEquipVehicleWeapon failed to cleanup WeaponSeatDefinition.VehicleGrantedWeaponItem properly. PawnValid:%d"))
+        .Start()
+        .Inline());
+
+    auto bHadItem = WeaponSeatDefinition.GetVehicleGrantedWeaponItem().IsValid();
+    auto Weapon = WeaponSeatDefinition.GetVehicleGrantedWeapon().Get();
+
+    Original(FortPawn, WeaponSeatDefinition, bEquipLastWeapon);
+
+    AFortWeapon::FlushPendingUnequipRemovals();
+
+    if (Weapon && bHadItem && !WeaponSeatDefinition.GetVehicleGrantedWeaponItem().IsValid())
+        Weapon->AttemptRemoveGrantedAbilities(EFortWeaponAbilityRemovalReason::RemovedFromInventory);
+}
+
 void UFortVehicleSeatWeaponComponent::EquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, int32 ItemLevel)
 {
     auto PlayerController = FortPawn ? Cast<AFortPlayerControllerAthena>(FortPawn->GetController()) : nullptr;

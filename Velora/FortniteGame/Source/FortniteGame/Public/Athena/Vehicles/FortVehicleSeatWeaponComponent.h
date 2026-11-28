@@ -55,6 +55,8 @@ public:
 
     void EquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, int32 ItemLevel);
 
+    void UnEquipVehicleWeapon(AFortPawn* FortPawn, FWeaponSeatDefinition& WeaponSeatDefinition, bool bEquipLastWeapon);
+
     TArray<FWeaponSeatDefinition>& GetWeaponSeatDefinitions();
 
     bool GetSaveAndRestoreWeaponData() const;
