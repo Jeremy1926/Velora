@@ -516,6 +516,9 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         .Or()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .FieldPattern("C6 83 ? ? 00 00 00 ? 8B CB C6 83 %o 01 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .FieldPattern("C6 83 ? ? 00 00 00 C6 83 %o 01 ? 8B BB ? ? 00 00 ? 85 FF 75 ? ? 8B BB ? ? 00 00 ? 85 FF 74 ? ? 8D 54 24 ? ? 8B CB E8 ? ? ? ? 8B 57 ? ? 8B C0 ? 8D 8B ? ? 00 00 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
         .Get();
 
     if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes())
