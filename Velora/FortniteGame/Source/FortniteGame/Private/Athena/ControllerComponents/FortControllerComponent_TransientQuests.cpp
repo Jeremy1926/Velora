@@ -70,6 +70,12 @@ void UFortControllerComponent_TransientQuests::GrantTransientQuest(const UFortQu
         .Find("add [*+0x20], *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .FieldUserIn(TEXT("/Script/FortniteGame.Default__FortControllerComponent_TransientQuests"), "mov rdx, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("TargetQuestToGrant"))))
+        .FieldHas("mov rdx, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("ProtectorQuestToGrant"))))
+        .FieldFind("mov rdx, [*+%x]", StaticClass()->FindPropertyByName(FName(TEXT("TargetQuestToGrant"))))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     if (QuestDefToGrant)
