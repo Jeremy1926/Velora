@@ -478,11 +478,18 @@ void AFortGameStateAthena::OnPlaylistLootTableAssetsDataLoadCompleted()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .FieldPattern("C6 83 ? ? 00 00 00 C6 83 %o 01 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
         .Start()
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .FieldPattern("C6 83 ? ? 00 00 00 48 8B CB C6 83 %o 01 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+        .Start()
         .Inline());
 
     static auto bBroadcastsCurrentPlaylistLoaded = Anchor::Exists()
         .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
         .FieldPattern("C6 83 ? ? 00 00 00 C6 83 %o 01 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
+        .Or()
+        .If(StaticFindObject(nullptr, nullptr, TEXT("/Script/LagerRuntime.FortAthenaLivingWorldManager:QueryEventBudget")))
+        .FieldPattern("C6 83 ? ? 00 00 00 48 8B CB C6 83 %o 01 E8", AFortGameStateAthena::StaticClass()->FindPropertyByName(FName(TEXT("bPlaylistDataIsLoaded"))))
         .Get();
 
     if (UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes())
