@@ -117,6 +117,14 @@ AFortGameplayMutator* AFortGameStateAthena::GetMutatorByClass_Implementation(con
         .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
         .Find("add [*+0x20], *")
         .Find("lea r8, [*]; mov [r8], *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; call r*")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortGameStateAthena:GetMutatorByClass"))
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov rdx, *; mov rcx, *; call r*")
         .Get();
 
     if (bClassByAddress)
