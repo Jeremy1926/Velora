@@ -80,6 +80,13 @@ UFortAthenaAISpawnerDataComponentList* UFortAthenaAISpawnerData::CreateComponent
             .Find("mov rcx, rax; mov rdx, rdi; call 0x*")
             .Find("call 0x*")
             .Target()
+            .Or()
+            .Exec(TEXT("/Script/FortniteGame.FortAthenaAISpawnerData:CreateComponentListFromClass"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("mov rcx, rax; mov rdx, r*; call 0x*")
+            .Find("call 0x*")
+            .Target()
             .Get();
 
         auto SpawnerData = AISpawnerDataClass ? (UFortAthenaAISpawnerData*)AISpawnerDataClass->GetDefaultObject() : nullptr;
