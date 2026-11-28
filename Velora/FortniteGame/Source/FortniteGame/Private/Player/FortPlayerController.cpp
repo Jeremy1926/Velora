@@ -1382,6 +1382,16 @@ TMulticastDelegate<void, AFortPlayerController*, const FName&, const FName&>& FF
         .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
         .Find("lea rcx, [0x*]")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.PlayerController:ClientGotoState"))
+        .Has("bt eax, 0x8")
+        .Find("add [*+0x20], *")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("jmp [rax+0x*]")
+        .Entry(TEXT("/Script/FortniteGame.Default__FortPlayerController"))
+        .Find("lea rcx, [0x*]")
+        .Target()
         .Get();
 
     return *OnPlayerStateChangedEvent;
