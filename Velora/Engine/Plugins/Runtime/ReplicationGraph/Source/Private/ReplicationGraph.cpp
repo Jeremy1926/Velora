@@ -3831,6 +3831,13 @@ TArray<UNetConnection*>& UReplicationGraph::GetConnectionsNeedingsPostTickDispat
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x20)
         .Find("cmp [rcx+0x*], r*; jz 0x*; mov rax, [rcx]; xor edx, edx; call [rax+0x*]")
         .Last("mov r*, [r*+0x*]")
+        .Or()
+        .String(TEXT("UReplicationGraph_NotifyActorRenamed"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), 0x20)
+        .Find("cmp [rcx+0x*], r*; jz 0x*; xor edx, edx; mov rax, [rcx]; call [rax+0x*]")
+        .Last("mov r*, [r*+0x*]")
         .Disp();
 
     return *(TArray<UNetConnection*>*)((uint8*)this + ConnectionsNeedingsPostTickDispatchFlush);
