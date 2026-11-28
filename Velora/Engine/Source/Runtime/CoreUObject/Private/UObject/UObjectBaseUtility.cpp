@@ -59,6 +59,10 @@ FName UObjectBase::GetFName() const
         .Start()
         .Find("lea rcx, [r*+0x*]; mov edx, [r*+0x*]; call 0x*")
         .Find("mov edx, [r*+0x*]")
+        .Or()
+        .String(TEXT("Failed to bind native function %s.%s"))
+        .Start()
+        .Find("mov edx, [r*+0x*]; lea rcx, [r*+0x*]; call 0x*")
         .Get();
 
     return TGameLayout<FName>::Load(Name ? (const uint8*)this + Name.Offset : (const uint8*)&NamePrivate);
