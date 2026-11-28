@@ -164,6 +164,9 @@ UObject* StaticConstructObject_Internal(UClass* Class, UObject* InOuter, FName N
         .Or()
         .Pattern("33 DB 8B 81 80 00 00 00 ? 8B 51 08 ? 8B 29 48 8B F1 ? 8B 79 14 ? 8B 61 20")
         .Start()
+        .Or()
+        .Pattern("33 DB 48 8B F1 8B 81 80 00 00 00 ? 8B 51 08 8D 53 2A ? 8B 29 8D 7B 01 ? 8B 79 14 ? 8B 61 20")
+        .Start()
         .Get();
 
     if (StaticConstructObject_InternalWithParams)
