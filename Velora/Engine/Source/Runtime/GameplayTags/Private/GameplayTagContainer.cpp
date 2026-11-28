@@ -56,6 +56,13 @@ FString FGameplayTagContainer::ToString() const
         .Find("cmp [*+0x*], *; jle 0x*; lea rcx, [*+0x*]; lea rdx, [rbp-0x*]; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortConversationTaskNode:GetDisplayAssetForChoice"))
+        .Find("call [*+0x*]")
+        .SlotShift(TEXT("/Script/FortniteGame.Default__FortConversationTaskNode"), 0x10)
+        .Find("cmp [*+0x*], *; jle 0x*; lea rdx, [rbp-0x*]; lea rcx, [*+0x*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     FString Result;
