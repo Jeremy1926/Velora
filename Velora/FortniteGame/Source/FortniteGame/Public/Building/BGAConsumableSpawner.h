@@ -5,6 +5,7 @@
 #include "EnvironmentQuery/EnvQueryTypes.h"
 
 class UEnvQuery;
+class UEnvQueryInstanceBlueprintWrapper;
 
 class ABGAConsumableSpawner : public ABuildingActor
 {
@@ -14,6 +15,8 @@ public:
     void SpawnConsumables();
 
     void SpawnConsumablesAtLocations(TArray<FVector> Locations);
+
+    static void OnSpawnQueryFinished(UEnvQueryInstanceBlueprintWrapper* QueryInstance);
 
     static void TickPendingSpawns();
 

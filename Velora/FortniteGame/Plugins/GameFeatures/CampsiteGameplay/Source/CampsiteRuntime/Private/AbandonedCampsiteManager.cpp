@@ -214,6 +214,8 @@ void AAbandonedCampsiteManager::SpawnRandomCampsiteFromProfiles(TArray<FVector>&
 
 void AAbandonedCampsiteManager::StartEnvironmentalQuerySpawns(int32 NumCampsites)
 {
+    static auto NotifyQueryFinishedHandle = UEnvQueryInstanceBlueprintWrapper::GetNotifyQueryFinished().AddStatic(&AAbandonedCampsiteManager::OnSpawnQueryFinished);
+
     NumQueryCampsites = NumCampsites;
     QueryTicksWaited = 0;
     DeferredSpawnLocations.Empty();
@@ -221,6 +223,37 @@ void AAbandonedCampsiteManager::StartEnvironmentalQuerySpawns(int32 NumCampsites
 
     if (!SpawnQueryInstance.Get())
         NumQueryCampsites = 0;
+}
+
+void AAbandonedCampsiteManager::OnSpawnQueryFinished(UEnvQueryInstanceBlueprintWrapper* QueryInstance)
+{
+    auto Manager = SpawningManager.Get();
+
+    if (Manager && NumQueryCampsites > 0 && QueryInstance == SpawnQueryInstance.Get())
+        Manager->AddEnvironmentalQuerySpawns(QueryInstance->GetResultsAsLocations());
+}
+
+void AAbandonedCampsiteManager::AddEnvironmentalQuerySpawns(TArray<FVector> Locations)
+{
+    static auto MinimumDistance = IConsoleManager::Get().FindConsoleVariable(TEXT("Campsite.MinimumDistance"));
+    const float MinimumDistanceValue = MinimumDistance ? MinimumDistance->GetFloat() : 0.0f;
+
+    while (NumQueryCampsites > 0 && Locations.Num())
+    {
+        const int32 LocationIndex = FMath::RandHelper(Locations.Num());
+        const FVector Location = Locations[LocationIndex];
+
+        Locations.RemoveAt(LocationIndex);
+
+        if (!IsFarEnoughFromSpawns(Location, MinimumDistanceValue * MinimumDistanceValue))
+            continue;
+
+        DeferredSpawnLocations.Add(Location);
+        NumQueryCampsites--;
+    }
+
+    NumQueryCampsites = 0;
+    SpawnQueryInstance = nullptr;
 }
 
 void AAbandonedCampsiteManager::DeferredCampsiteSpawnLoop()
@@ -278,31 +311,16 @@ void AAbandonedCampsiteManager::TickDeferredCampsiteSpawns()
 
     if (NumQueryCampsites > 0)
     {
+        if (DETOUR_ORIGINAL(UEnvQueryInstanceBlueprintWrapper, OnQueryFinished))
+            return;
+
         auto QueryInstance = SpawnQueryInstance.Get();
         auto Locations = QueryInstance ? QueryInstance->GetResultsAsLocations() : TArray<FVector>();
 
         if (!Locations.Num() && QueryInstance && ++QueryTicksWaited < 300)
             return;
 
-        static auto MinimumDistance = IConsoleManager::Get().FindConsoleVariable(TEXT("Campsite.MinimumDistance"));
-        const float MinimumDistanceValue = MinimumDistance ? MinimumDistance->GetFloat() : 0.0f;
-
-        while (NumQueryCampsites > 0 && Locations.Num())
-        {
-            const int32 LocationIndex = FMath::RandHelper(Locations.Num());
-            const FVector Location = Locations[LocationIndex];
-
-            Locations.RemoveAt(LocationIndex);
-
-            if (!Manager->IsFarEnoughFromSpawns(Location, MinimumDistanceValue * MinimumDistanceValue))
-                continue;
-
-            DeferredSpawnLocations.Add(Location);
-            NumQueryCampsites--;
-        }
-
-        NumQueryCampsites = 0;
-        SpawnQueryInstance = nullptr;
+        Manager->AddEnvironmentalQuerySpawns(Locations);
     }
 
     Manager->DeferredCampsiteSpawnLoop();

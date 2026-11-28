@@ -7,6 +7,7 @@
 struct FFrame;
 struct FScalableFloat;
 class UEnvQuery;
+class UEnvQueryInstanceBlueprintWrapper;
 class AAbandonedCampsitePlacedSpawner;
 enum class EAthenaGamePhaseStep : uint8;
 
@@ -33,6 +34,10 @@ public:
     void SpawnCampsites();
 
     void StartEnvironmentalQuerySpawns(int32 NumCampsites);
+
+    static void OnSpawnQueryFinished(UEnvQueryInstanceBlueprintWrapper* QueryInstance);
+
+    void AddEnvironmentalQuerySpawns(TArray<FVector> Locations);
 
     void SpawnRandomCampsiteFromProfiles(TArray<FVector>& ProfileCampsiteLocations);
 

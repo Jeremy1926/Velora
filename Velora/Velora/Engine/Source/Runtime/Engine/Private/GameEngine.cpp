@@ -31,6 +31,7 @@
 #include "Athena/ControllerComponents/FortControllerComponent_TransientQuests.h"
 #include "Components/FortControllerComponent_RechargeWeapons.h"
 #include "Building/BGAConsumableSpawner.h"
+#include "EnvironmentQuery/EnvQueryInstanceBlueprintWrapper.h"
 #include "Building/BuildingGameplayActorTransientQuest.h"
 #include "Building/BuildingItemCollectorActor.h"
 #include "Building/BuildingGameplayActorSpawnMachine.h"
@@ -175,7 +176,8 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
             AssignedGameMode = GameMode;
         }
 
-        ABGAConsumableSpawner::TickPendingSpawns();
+        if (!DETOUR_ORIGINAL(UEnvQueryInstanceBlueprintWrapper, OnQueryFinished))
+            ABGAConsumableSpawner::TickPendingSpawns();
 
         if (!DETOUR_ORIGINAL(ABuildingItemCollectorActor, GrantOutput))
             ABuildingItemCollectorActor::TickPendingOutputs();

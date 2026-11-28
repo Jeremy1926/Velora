@@ -62,7 +62,25 @@ void ABGAConsumableSpawner::SpawnConsumables()
         QueryInstance->SetNamedParam(RuntimeParam.GetParamName(), Value);
     }
 
+    static auto NotifyQueryFinishedHandle = UEnvQueryInstanceBlueprintWrapper::GetNotifyQueryFinished().AddStatic(&ABGAConsumableSpawner::OnSpawnQueryFinished);
+
     PendingSpawns.Add(FPendingConsumableSpawn{ this, QueryInstance, 0 });
+}
+
+void ABGAConsumableSpawner::OnSpawnQueryFinished(UEnvQueryInstanceBlueprintWrapper* QueryInstance)
+{
+    for (int32 Index = PendingSpawns.Num() - 1; Index >= 0; Index--)
+    {
+        if (PendingSpawns[Index].QueryInstance.Get() != QueryInstance)
+            continue;
+
+        auto Spawner = PendingSpawns[Index].Spawner.Get();
+
+        PendingSpawns.RemoveAt(Index);
+
+        if (Spawner)
+            Spawner->SpawnConsumablesAtLocations(QueryInstance->GetResultsAsLocations());
+    }
 }
 
 void ABGAConsumableSpawner::SpawnConsumablesAtLocations(TArray<FVector> Locations)

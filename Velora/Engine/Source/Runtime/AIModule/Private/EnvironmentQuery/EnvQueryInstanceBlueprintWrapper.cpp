@@ -2,12 +2,20 @@
 #include "EnvironmentQuery/EnvQueryInstanceBlueprintWrapper.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UClass* UEnvQueryInstanceBlueprintWrapper::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper"));
 
     return Class;
+}
+
+TMulticastDelegate<void, UEnvQueryInstanceBlueprintWrapper*>& UEnvQueryInstanceBlueprintWrapper::GetNotifyQueryFinished()
+{
+    static TMulticastDelegate<void, UEnvQueryInstanceBlueprintWrapper*> NotifyQueryFinished;
+
+    return NotifyQueryFinished;
 }
 
 void UEnvQueryInstanceBlueprintWrapper::RunQuery(EEnvQueryRunMode::Type InRunMode, FEnvQueryRequest& QueryRequest)
@@ -63,6 +71,91 @@ void UEnvQueryInstanceBlueprintWrapper::RunQuery(EEnvQueryRunMode::Type InRunMod
         .Get();
 
     RunQuery(this, (uint8)InRunMode, &QueryRequest);
+}
+
+void UEnvQueryInstanceBlueprintWrapper::OnQueryFinished(TSharedPtr<FEnvQueryResult> Result)
+{
+    DETOUR(UEnvQueryInstanceBlueprintWrapper, OnQueryFinished, Anchor::Hook()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; *; mov edx, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; lea rcx, [*]; call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("lea r8, [*]; mov edx, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *; add r*, r*")
+        .Find("lea r8, [*]; *; mov edx, *")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Native(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("mov edx, *; lea r8, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov edx, *; mov rcx, *; lea r8, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Or()
+        .Exec(TEXT("/Script/AIModule.EnvQueryManager:RunEQSQuery"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov [rsp+0x20], rax; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov edx, *; mov rcx, *; lea r8, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Find("lea *, [0x*]")
+        .Target()
+        .IsCode()
+        .Has("mov *, [rdx+0x8]")
+        .Inline());
+
+    Original(Result);
+
+    GetNotifyQueryFinished().Broadcast(this);
 }
 
 TArray<FVector> UEnvQueryInstanceBlueprintWrapper::GetResultsAsLocations()
