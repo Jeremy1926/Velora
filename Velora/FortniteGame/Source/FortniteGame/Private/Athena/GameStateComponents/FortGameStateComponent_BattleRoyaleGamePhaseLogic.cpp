@@ -21,6 +21,8 @@
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "TimerManager.h"
 #include "Templates/Casts.h"
 #include "Math/UnrealMathUtility.h"
 #include "Misc/CommandLine.h"
@@ -54,6 +56,8 @@ PATCH(UFortGameStateComponent_BattleRoyaleGamePhaseLogic, ChoosePlayerStart, Anc
     .Optional()
     .Find("jnz 0x*")
     .Jump())
+
+static FTimerHandle SupplyDropWaveStartedSoundCueTimerHandle;
 
 UClass* UFortGameStateComponent_BattleRoyaleGamePhaseLogic::StaticClass()
 {
@@ -1056,6 +1060,7 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::InitializeSupplyDropLis
 
     GetLastSpawnedSupplyDropType() = 0;
     GetSupplyDropWaveStartedSoundCueTimer() = -1.0f;
+    UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, SupplyDropWaveStartedSoundCueTimerHandle);
     SupplyDropSpawnDataList.Reset();
 
     if (bUseDefaultSupplyDrops->GetPropertyValue_InContainer(Playlist))
@@ -1325,7 +1330,11 @@ void UFortGameStateComponent_BattleRoyaleGamePhaseLogic::UpdateZoneBasedSupplyDr
         if (!SpawnedSupplyDrops.Num() && GameState && SupplyDrop->GetWaveSpawnSoundCue())
         {
             *SupplyDropWaveStartedSoundCue->ContainerPtrToValuePtr<UObject*>(GameState) = SupplyDrop->GetWaveSpawnSoundCue();
-            GetSupplyDropWaveStartedSoundCueTimer() = GetWorld()->GetTimeSeconds() + 2.0f;
+
+            if (FTimerManager::CanSetTimers())
+                GetWorld()->GetTimerManager().SetTimer(SupplyDropWaveStartedSoundCueTimerHandle, this, &UFortGameStateComponent_BattleRoyaleGamePhaseLogic::RemoveSupplyDropWaveStartedSoundCue, 2.0f, false);
+            else
+                GetSupplyDropWaveStartedSoundCueTimer() = GetWorld()->GetTimeSeconds() + 2.0f;
         }
 
         ZoneBasedData.GetNumDropsRemainingInWave()--;
