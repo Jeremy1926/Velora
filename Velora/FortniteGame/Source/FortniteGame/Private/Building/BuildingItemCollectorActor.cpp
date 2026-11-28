@@ -227,6 +227,11 @@ void ABuildingItemCollectorActor::CheckDepositGoalReached(AFortPlayerController*
         .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
         .Reference("call 0x*; *; *; *; mov rcx, *; call 0x*; cmp ebx, eax; jnz 0x*")
         .Start()
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; *; *; *; *; call 0x*; cmp ebx, eax; jnz 0x*")
+        .Start()
         .Inline());
 
     auto& ControllingPlayer = GetControllingPlayer();
@@ -284,6 +289,14 @@ void ABuildingItemCollectorActor::GrantOutput(AFortPlayerController* Player, UFo
         .If(FColletorUnitInfo::StaticStruct())
         .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
         .Reference("call 0x*; *; *; *; mov rcx, *; call 0x*; cmp ebx, eax; jnz 0x*")
+        .Start()
+        .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
+        .Find("call [rax+0x*]")
+        .LogSlot(TEXT("ABuildingItemCollectorActor::GrantOutput"))
+        .Or()
+        .If(FColletorUnitInfo::StaticStruct())
+        .Native(TEXT("/Script/FortniteGame.BuildingItemCollectorActor:GetDepositGoal"))
+        .Reference("call 0x*; *; *; *; *; call 0x*; cmp ebx, eax; jnz 0x*")
         .Start()
         .FieldFind("comiss xmm0, [*+%x]; jb 0x*; mov *, *; mov *, *; mov *, *; mov *, *; call [rax+0x*]", StaticClass() ? StaticClass()->FindPropertyByName(FName(TEXT("DespensingDelayTime"))) : nullptr)
         .Find("call [rax+0x*]")
