@@ -52,7 +52,7 @@ void UFortControllerComponent_TransientQuests::GrantTransientQuest(const UFortQu
         .Target()
         .Find("lea rax, [0x*]")
         .Target()
-        .Find("mov rdx, *; mov rcx, *; call 0x*")
+        .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*")
         .Find("call 0x*")
         .Target()
         .Or()
