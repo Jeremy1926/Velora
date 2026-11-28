@@ -351,6 +351,12 @@ ENetMode UWorld::InternalGetNetMode() const
         .Reference("jmp 0x*")
         .Start()
         .Is("*; cmp qword ptr [rcx+0x*], *; mov rdx, rcx")
+        .Or()
+        .String(TEXT("Failed to determine if OSS is server in PIE, OSS requests will fail"))
+        .Start()
+        .Find("call 0x*; cmp eax, 0x2")
+        .Call()
+        .Is("*; cmp qword ptr [rcx+0x*], *; mov rdx, rcx")
         .Inline());
 
     if (GetNetDriver() != nullptr)
