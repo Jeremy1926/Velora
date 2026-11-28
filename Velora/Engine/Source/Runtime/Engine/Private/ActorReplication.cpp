@@ -107,6 +107,12 @@ void AActor::CallPreReplication(UNetDriver* NetDriver)
         .Find("call 0x*")
         .Target()
         .Is("test rdx, rdx; jz 0x*")
+        .Or()
+        .String(TEXT("Attempt to replicate function '%s' on Actor '%s' while it is in the middle of variable replication!"))
+        .Find("mov rdx, *; add [*], *; mov rcx, [*]; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Is("test rdx, rdx; jz 0x*")
         .Get();
 
     CallPreReplication(this, NetDriver);
