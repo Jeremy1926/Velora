@@ -90,6 +90,14 @@ void UFortMovementComp_Character::MoveAutonomous(float ClientTimeStamp, float De
         .Find("movaps xmm1, xmm*; mov r9b, *; mov [rsp+0x20], rcx; mov rcx, r15; call [rax+0x*]")
         .Find("call [rax+0x*]")
         .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortMovementComp_Character"), [](const ::Anchor::FCode& Entry) { return Entry.Has("cmp byte ptr [0x*], 0x1; jnz 0x*; mov rbx, [rdi+0x*]; movsxd rax, dword ptr [rdi+0x*]; lea rsi, [rbx+rax*8]") && Entry.Has("pop r15; pop r14; pop r13; pop r12; pop rdi; pop rsi; pop rbp; jmp 0x*"); })
+        .Find("pop r15; pop r14; pop r13; pop r12; pop rdi; pop rsi; pop rbp; jmp 0x*")
+        .Find("jmp 0x*")
+        .Target()
+        .Find("mov [rsp+0x20], rcx; mov rcx, r15; movaps xmm1, xmm*; call [rax+0x*]")
+        .Find("call [rax+0x*]")
+        .Entry(TEXT("/Script/Engine.Default__CharacterMovementComponent"))
         .Optional()
         .Inline());
 
