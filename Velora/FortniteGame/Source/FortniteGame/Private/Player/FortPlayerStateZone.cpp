@@ -108,6 +108,8 @@ void AFortPlayerStateZone::UpdateSimulatedAttributes()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortGliderPackSet"), [](const Anchor::FCode& Entry) { return Entry.Has("movaps xmm2, xmm6; mov rdx, rax; lea rcx, [rsp+0x*]; call 0x*; mov rdx, rax; mov rcx, rdi; call 0x*"); })
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortGliderPackSet"), [](const Anchor::FCode& Entry) { return Entry.Has("movaps xmm2, xmm6; mov rdx, rax; lea rcx, [rsp+0x*]; call 0x*; mov rcx, rdi; mov rdx, rax; call 0x*"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortGliderPackSet"), [](const Anchor::FCode& Entry) { return Entry.Has("movaps xmm2, xmm6; lea rcx, [rsp+0x*]; mov rdx, rax; call 0x*; mov rcx, rdi; mov rdx, rax; call 0x*"); })
         .Optional()
         .Get();
 
