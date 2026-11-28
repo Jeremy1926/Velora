@@ -888,6 +888,14 @@ void AFortPlayerPawn::OnBlueprintPlace()
         .Target()
         .Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*")
         .Call()
+        .Or()
+        .Event(TEXT("ServerCreateBuildingActor"))
+        .Caller()
+        .Find("lea r8, [rsp+0x*]; mov [rsp+0x20], al; mov rcx, *; call 0x*; test al, al")
+        .Find("call 0x*")
+        .Target()
+        .Find("mov rcx, [*+0x*]; test rcx, rcx; jz *; call 0x*")
+        .Call()
         .Get();
 
     OnBlueprintPlace(this);
