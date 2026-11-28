@@ -107,6 +107,12 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
                 BlockMcpPresetsWhenUsingLockerService->Set(TEXT("0"), ECVF_SetByCode);
         }
 
+        if (!IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.BlockMcpPresetsWhenUsingLockerService")))
+        {
+            if (auto QueryLockerOnClientWhenPlayerRegistered = IConsoleManager::Get().FindConsoleVariable(TEXT("Fort.Cosmetics.LoadoutSubsystem.QueryLockerOnClientWhenPlayerRegistered")))
+                QueryLockerOnClientWhenPlayerRegistered->Set(TEXT("1"), ECVF_SetByCode);
+        }
+
         IStreamingManager::Get().RemoveStreamingViews(RemoveStreamingViews_All);
         IStreamingManager::Get().Tick(0.0f);
 
