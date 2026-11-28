@@ -476,6 +476,11 @@ FFortAthenaLoadout& AFortAthenaAIBotController::GetCosmeticLoadoutBC()
 void* AFortAthenaAIBotController::DropInventoryItems(void* OutPickupsOrFortPawn, void* FortPawnOrPickupPostSpawnDelegate)
 {
     DETOUR(AFortAthenaAIBotController, DropInventoryItems, Anchor::Hook()
+        .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+        .Is("cmp [*+0x*], *; jz *; mov r*, *; mov r*, *; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Or()
         .String(TEXT("AFortAthenaAIBotController::DropLootOnDeath"))
         .Optional()
         .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
@@ -484,6 +489,10 @@ void* AFortAthenaAIBotController::DropInventoryItems(void* OutPickupsOrFortPawn,
         .AtCallsIn(Anchor::Address()
             .String(TEXT("AFortAthenaAIBotController::DropLootOnDeath"))
             .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+            .Start()
+            .Or()
+            .FieldPattern("38 ? %o", AFortPlayerPawnAthena::StaticClass()->FindPropertyByName(FName(TEXT("bShouldDropItemsOnDeath"))))
+            .Is("cmp [*+0x*], *; jz *; mov r*, *; mov r*, *; call 0x*")
             .Start()
             .Get()));
 
