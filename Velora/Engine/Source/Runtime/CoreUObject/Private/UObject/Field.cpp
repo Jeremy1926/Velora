@@ -196,6 +196,11 @@ uint8 UBoolProperty::GetByteOffset() const
         .Last("mov e*, [r*+0x*]")
         .Decoded()
         .Find("movzx eax, byte ptr [r*+0x*]")
+        .Or()
+        .Pattern("0F B6 ? ? 8A 0C ? 84 ? ? 0F 95 44 24 20")
+        .Last("movsxd r*, dword ptr [r*+0x*]")
+        .Decoded()
+        .Find("movzx eax, byte ptr [r*+0x*]")
         .Get();
 
     return ByteOffsetField ? ByteOffsetField(this) : GetProperty()->ByteOffset;
@@ -208,6 +213,11 @@ uint8 UBoolProperty::GetFieldMask() const
         .Last("mov e*, [r*+0x*]")
         .Decoded()
         .Find("test [r*+0x*], cl")
+        .Or()
+        .Pattern("0F B6 ? ? 8A 0C ? 84 ? ? 0F 95 44 24 20")
+        .Last("movsxd r*, dword ptr [r*+0x*]")
+        .Decoded()
+        .Find("test [r*+0x*], cl")
         .Get();
 
     return FieldMaskField ? FieldMaskField(this) : GetProperty()->FieldMask;
@@ -218,6 +228,11 @@ uint8 UBoolProperty::GetByteMask() const
     static auto FieldMaskField = Anchor::Field<uint8>(TEXT("FBoolProperty::FieldMask"))
         .Pattern("0F B6 ? ? 8A 0C ? 84 ? ? 0F 95 44 24 20")
         .Last("mov e*, [r*+0x*]")
+        .Decoded()
+        .Find("test [r*+0x*], cl")
+        .Or()
+        .Pattern("0F B6 ? ? 8A 0C ? 84 ? ? 0F 95 44 24 20")
+        .Last("movsxd r*, dword ptr [r*+0x*]")
         .Decoded()
         .Find("test [r*+0x*], cl")
         .Get();
