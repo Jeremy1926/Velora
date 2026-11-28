@@ -161,6 +161,12 @@ bool FGameplayTagQuery::Matches(const FGameplayTagContainer& Tags) const
         .Or()
         .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
         .Is("mov rax, rsp; mov [rax+0x*], rbx; push rdi; add rsp, *; mov rdi, rdx; xor ebx, ebx; mov r8, rcx; cmp [rcx+0x20], ebx")
+        .Or()
+        .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
+        .Is("mov rax, rsp; mov [rax+0x*], rbx; push rdi; sub rsp, 0x*; mov rdi, rdx; xor ebx, ebx; cmp [rcx+0x20], ebx; jz 0x*; mov [rax-0x*], rcx")
+        .Or()
+        .Native(TEXT("/Script/GameplayTags.BlueprintGameplayTagLibrary:DoesContainerMatchTagQuery"))
+        .Is("mov rax, rsp; mov [rax+0x*], rbx; push rdi; sub rsp, 0x*; xor ebx, ebx; cmp [rcx+0x20], ebx; mov rdi, rdx; jz 0x*; mov [rax-0x*], rcx")
         .Get();
 
     if (QueryMatches)
