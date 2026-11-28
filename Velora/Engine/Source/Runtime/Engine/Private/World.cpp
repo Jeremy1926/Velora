@@ -933,6 +933,10 @@ UWorld::FOnActorsInitialized& UWorld::GetOnActorsInitialized()
         .Or()
         .String(TEXT("Bringing up level for play took: %f"))
         .Last("lea r*, [r*+0x*]; mov r*b, [*]; inc [r*+0x14]")
+        .Or()
+        .String(TEXT("Bringing up level for play took: %f"))
+        .Last("mov r*b, *; lea r*, [r*+0x*]; inc [r*+0x14]")
+        .Find("lea r*, [r*+0x*]")
         .Disp();
 
     return *(FOnActorsInitialized*)((uint8*)this + OnActorsInitialized);
