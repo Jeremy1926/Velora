@@ -220,23 +220,10 @@ void UEnvQueryInstanceBlueprintWrapper::SetNamedParam(FName ParamName, float Val
             .Find("add rcx, 0x*")
             .Imm();
 
-        static auto Add = Anchor::Function<float* (*)(TMap<FName, float>*, FName*, float*)>(TEXT("TMap<FName, float>::Add"))
-            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
-            .Find("setnz *")
-            .Find("add [*+0x20], *")
-            .Find("call 0x*")
-            .Target()
-            .Or()
-            .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
-            .Find("setnz *; add r*, r*")
-            .Find("call 0x*")
-            .Target()
-            .Get();
-
         auto Instance = QueryInstance ? *(uint8**)((uint8*)this + QueryInstance) : nullptr;
 
         if (Instance && NamedParams)
-            Add((TMap<FName, float>*)(Instance + NamedParams), &ParamName, &Value);
+            FEnvQueryRequest::AddNamedParam(*(TMap<FName, float>*)(Instance + NamedParams), ParamName, Value);
 
         return;
     }

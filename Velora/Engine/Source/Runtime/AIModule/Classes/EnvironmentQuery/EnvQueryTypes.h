@@ -65,6 +65,8 @@ struct FEnvQueryRequest
 
     FEnvQueryRequest& SetFloatParam(FName ParamName, float Value);
 
+    static void AddNamedParam(TMap<FName, float>& NamedParams, FName ParamName, float Value);
+
     int32 Execute(EEnvQueryRunMode::Type RunMode, const FQueryFinishedSignature& FinishDelegate);
 
     UEnvQuery* QueryTemplate;

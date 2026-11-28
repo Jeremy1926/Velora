@@ -21,22 +21,48 @@ FVector FEnvQueryResult::GetItemAsLocation(int32 Index) const
 
 FEnvQueryRequest& FEnvQueryRequest::SetFloatParam(FName ParamName, float Value)
 {
-    static auto Add = Anchor::Function<float* (*)(TMap<FName, float>*, FName*, float*)>(TEXT("TMap<FName, float>::Add"))
+    AddNamedParam(NamedParams, ParamName, Value);
+
+    return *this;
+}
+
+void FEnvQueryRequest::AddNamedParam(TMap<FName, float>& NamedParams, FName ParamName, float Value)
+{
+    static auto Emplace = Anchor::Optional<FSetElementId* (*)(TMap<FName, float>*, FSetElementId*, const TPairInitializer<const FName&, const float&>*, bool*)>(TEXT("TSet<TTuple<FName, float>>::Emplace"))
         .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
-        .Find("setnz *")
-        .Find("add [*+0x20], *")
+        .Find("setnz *; add r*, r*")
+        .Find("lea r8, [*]; lea rax, [*]; lea rdx, [*]; mov [*], rax; call 0x*")
         .Find("call 0x*")
         .Target()
         .Or()
         .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
-        .Find("setnz *; add r*, r*")
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("mov [r8+0x8], rax; lea rdx, [*]; xor r9d, r9d; call 0x*")
+        .Find("call 0x*")
+        .Target()
+        .Get();
+
+    if (Emplace)
+    {
+        const TPairInitializer<const FName&, const float&> Initializer(ParamName, Value);
+        FSetElementId ElementId;
+
+        Emplace(&NamedParams, &ElementId, &Initializer, nullptr);
+
+        return;
+    }
+
+    static auto Add = Anchor::Function<float* (*)(TMap<FName, float>*, FName*, float*)>(TEXT("TMap<FName, float>::Add"))
+        .Exec(TEXT("/Script/AIModule.EnvQueryInstanceBlueprintWrapper:SetNamedParam"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("lea r*, [*]; call 0x*")
         .Find("call 0x*")
         .Target()
         .Get();
 
     Add(&NamedParams, &ParamName, &Value);
-
-    return *this;
 }
 
 UScriptStruct* FAIDynamicParam::StaticStruct()

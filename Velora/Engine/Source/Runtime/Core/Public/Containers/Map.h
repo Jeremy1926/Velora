@@ -10,6 +10,20 @@ struct TPair
     ValueType Value;
 };
 
+template<typename KeyInitType, typename ValueInitType>
+class TPairInitializer
+{
+public:
+    FORCEINLINE TPairInitializer(KeyInitType InKey, ValueInitType InValue)
+        : Key(InKey)
+        , Value(InValue)
+    {
+    }
+
+    KeyInitType Key;
+    ValueInitType Value;
+};
+
 template<typename KeyType, typename ValueType>
 struct TDefaultMapKeyFuncs
 {
