@@ -80,7 +80,10 @@ void Main()
     }
 
     if (Config::bGUI)
+    {
         FGUI::Run();
+        FGUI::bStartServer = true;
+    }
 }
 
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)

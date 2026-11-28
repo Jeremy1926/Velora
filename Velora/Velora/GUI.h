@@ -12,6 +12,7 @@ public:
 
     static void SetTitle(const TCHAR* InTitle);
 
+    static bool bStartServer;
     static bool bStartBus;
     static bool bStartShrinkSafeZone;
     static bool bSkipShrinkSafeZone;

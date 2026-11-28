@@ -25,6 +25,7 @@ UINT FGUI::ResizeHeight = 0;
 SRWLOCK FGUI::TitleLock = SRWLOCK_INIT;
 TCHAR FGUI::Title[128] = TEXT("Velora");
 bool FGUI::bTitleChanged = true;
+bool FGUI::bStartServer = false;
 bool FGUI::bStartBus = false;
 bool FGUI::bStartShrinkSafeZone = false;
 bool FGUI::bSkipShrinkSafeZone = false;
@@ -322,7 +323,11 @@ void FGUI::Draw()
                 ImGui::Dummy(ImVec2(0.f, ImGui::GetStyle().ItemSpacing.y * 2.f));
 
                 ImGui::Checkbox("Lategame", &Config::bLategame);
+
+                ImGui::BeginDisabled(bStartServer);
                 ImGui::Checkbox("Reload", &Config::bReload);
+                ImGui::EndDisabled();
+
                 ImGui::Checkbox("Infinite Ammo", &Config::bInfiniteAmmo);
                 ImGui::Checkbox("Infinite Materials", &Config::bInfiniteMaterials);
 
@@ -359,14 +364,21 @@ void FGUI::Draw()
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() - Style.WindowPadding.y - ImGui::GetFrameHeight() - Style.ItemSpacing.y - Style.SeparatorSize);
         ImGui::Separator();
 
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Execute").x - ImGui::CalcTextSize("Start Bus").x - Style.FramePadding.x * 4.f - Style.ItemSpacing.x * 2.f);
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Execute").x - ImGui::CalcTextSize(bStartServer ? "Start Bus" : "Start Server").x - Style.FramePadding.x * 4.f - Style.ItemSpacing.x * 2.f);
         ImGui::InputTextWithHint("##Command", "Console command", Command, sizeof(Command));
         ImGui::SameLine();
         ImGui::Button("Execute");
         ImGui::SameLine();
 
-        if (ImGui::Button("Start Bus"))
+        if (!bStartServer)
+        {
+            if (ImGui::Button("Start Server"))
+                bStartServer = true;
+        }
+        else if (ImGui::Button("Start Bus"))
+        {
             bStartBus = true;
+        }
     }
 
     ImGui::End();

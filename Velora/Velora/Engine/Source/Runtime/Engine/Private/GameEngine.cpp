@@ -74,7 +74,11 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
 
     const TCHAR* State = TEXT("Loading");
 
-    if (!GIsServer)
+    if (!GIsServer && Config::bGUI && !FGUI::bStartServer)
+    {
+        State = TEXT("Not Started");
+    }
+    else if (!GIsServer)
     {
         auto GameInstance = GetGameInstance();
 
