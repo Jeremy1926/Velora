@@ -100,6 +100,13 @@ FString UKismetSystemLibrary::GetPathName(const UObject* Object)
             .Start()
             .Or()
             .Pattern("48 89 5C 24 20 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 90 FE FF FF 48 81 EC 70 02 00 00 48 8B 05 ? ? ? ? 48 33 C4 48 89 85 60 01 00 00 4C 8D 6A 08 48 8B FA 48 8D 5A 0C 45 33 F6 4C 89 32 49 8B C0 48 8D 54 24 60 45 89 75 00 48 89 54 24 40 4C 8D 44 24 40 48 8D 54 24 60 44 89 33 48 89 54 24 48 48 8D 95 60 01 00 00 48 89 54 24 50 48 8B D0 44 88 74 24 58 E8")
+            .Or()
+            .Exec(TEXT("/Script/Engine.KismetSystemLibrary:GetPathName"))
+            .Find("setnz *")
+            .Find("add [*+0x20], *")
+            .Find("lea rdx, [*]; xor r8d, r8d; call 0x*")
+            .Find("call 0x*")
+            .Target()
             .Optional()
             .Get();
 
