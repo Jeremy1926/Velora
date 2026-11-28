@@ -33,6 +33,11 @@ UAbilitySystemComponent* UAbilitySystemBlueprintLibrary::GetAbilitySystemCompone
         .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
         .Find("setnz *; add r*, r*")
         .Find("call 0x*; mov rdx, rax; mov rcx, *; call 0x*; test rax, rax")
+        .Or()
+        .Exec(TEXT("/Script/GameplayAbilities.AbilitySystemBlueprintLibrary:GetAbilitySystemComponent"))
+        .Find("setnz *")
+        .Find("add [*+0x20], *")
+        .Find("call 0x*; mov rcx, *; mov rdx, rax; call 0x*; test rax, rax")
         .Get();
 
     if (bInlined)
