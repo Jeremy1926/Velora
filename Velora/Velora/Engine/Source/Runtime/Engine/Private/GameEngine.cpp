@@ -195,7 +195,9 @@ void UGameEngine::Tick(float DeltaSeconds, bool bIdleMode)
         UFortControllerComponent_TransientQuests::TickPlayerBountyThreatLevelUpdates();
         AAbandonedCampsiteManager::TickDeferredCampsiteSpawns();
         AFortPlayerStateZone::TickSimulatedAttributes(World);
-        UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(World, DeltaSeconds);
+
+        if (!DETOUR_ORIGINAL(UFortControllerComponent_RechargeWeapons, TickComponent))
+            UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(World, DeltaSeconds);
 
         if ((UFortAthenaLivingWorldManager::GetEventInstancesOffset() > 0 || UFortAthenaLivingWorldManager::HasEventRuntimes()) && World->GetGameState())
         {

@@ -3,12 +3,14 @@
 #include "Components/ActorComponent.h"
 #include "Containers/Array.h"
 #include "Containers/Map.h"
+#include "Engine/EngineBaseTypes.h"
 #include "Misc/Guid.h"
 #include "UObject/SoftObjectPtr.h"
 
 class UFortWorldItemDefinition;
 class UScriptStruct;
 class UWorld;
+struct FActorComponentTickFunction;
 
 struct FCachedRechargeAmmoData
 {
@@ -32,7 +34,7 @@ public:
 
     static void TickRechargingWeapons(UWorld* World, float DeltaSeconds);
 
-    void TickComponent(float DeltaTime);
+    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
     void HandleRechargeAmmo(const FGuid& ItemGuid);
 

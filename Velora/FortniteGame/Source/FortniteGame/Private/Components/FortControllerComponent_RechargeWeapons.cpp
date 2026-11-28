@@ -17,6 +17,7 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "Scanner.h"
+#include "Detour.h"
 
 UScriptStruct* FCachedRechargeAmmoData::StaticStruct()
 {
@@ -79,15 +80,30 @@ void UFortControllerComponent_RechargeWeapons::TickRechargingWeapons(UWorld* Wor
         auto PlayerController = PlayerState ? Cast<AFortPlayerController>(PlayerState->GetOwner()) : nullptr;
 
         if (auto RechargeWeapons = PlayerController ? PlayerController->FindComponentByClass<UFortControllerComponent_RechargeWeapons>() : nullptr)
-            RechargeWeapons->TickComponent(DeltaSeconds);
+            RechargeWeapons->TickComponent(DeltaSeconds, LEVELTICK_All, nullptr);
     }
 }
 
-void UFortControllerComponent_RechargeWeapons::TickComponent(float DeltaTime)
+void UFortControllerComponent_RechargeWeapons::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+    DETOUR(UFortControllerComponent_RechargeWeapons, TickComponent, Anchor::Hook()
+        .If(StaticClass())
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .Or()
+        .At(Scanner::Virtual<const void*>(&((UActorComponent*)UActorComponent::StaticClass()->GetDefaultObject(false))->GetPrimaryComponentTick(), sizeof(void*)))
+        .Call()
+        .Find("mulss xmm1, *")
+        .Find("call [*+0x*]")
+        .InChildVTablesCounted(StaticClass()));
+
+    if (DETOUR_ORIGINAL(UFortControllerComponent_RechargeWeapons, TickComponent))
+        Original(DeltaTime, TickType, ThisTickFunction);
+
     auto Owner = GetOwner();
 
-    if (!Owner || !Owner->HasAuthority() || GetPreventRecharging())
+    if (!FCachedRechargeAmmoData::StaticStruct() || !Owner || !Owner->HasAuthority() || GetPreventRecharging())
         return;
 
     const float ServerWorldTimeSeconds = UFortKismetLibrary::GetServerWorldTimeSeconds(this);
