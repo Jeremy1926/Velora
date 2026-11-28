@@ -356,6 +356,8 @@ IFortVehicleInterface* AFortPlayerPawn::GetVehicleInterface() const
 {
     static auto GetVehicleInterface = Anchor::VirtualFunction<IFortVehicleInterface* (*)(const AFortPlayerPawn*)>(TEXT("AFortPlayerPawn::GetVehicleInterface"))
         .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; push rdi; sub rsp, 0x20; mov rsi, [rcx+%x]; test rsi, rsi", StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle"))))
+        .Or()
+        .FieldVirtual(TEXT("/Script/FortniteGame.Default__FortPlayerPawn"), "mov [rsp+0x8], rbx; mov [rsp+0x10], rsi; mov [rsp+0x18], rdi; push r14; *; mov rsi, [rcx+%x]; test rsi, rsi", StaticClass()->FindPropertyByName(FName(TEXT("CurrentVehicle"))))
         .Optional()
         .Get();
 
