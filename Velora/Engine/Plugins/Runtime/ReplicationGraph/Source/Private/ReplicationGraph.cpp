@@ -4752,6 +4752,13 @@ FGlobalActorReplicationInfoMap& UReplicationGraph::GetGlobalActorReplicationInfo
         .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
         .Find("mov rdx, *; lea rcx, [*+0x*]; call 0x*")
         .Find("lea rcx, [*+0x*]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .SlotIn(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"))
+        .SlotShift(TEXT("/Script/ReplicationGraph.Default__ReplicationGraph"), -0x10)
+        .Find("lea rdx, [rbp+0x*]; lea rcx, [r*+0x*]; call 0x*; test r14b, r14b")
+        .Find("lea rcx, [*+0x*]")
         .Disp();
 
     return *(FGlobalActorReplicationInfoMap*)((uint8*)this + GlobalActorReplicationInfoMap);
