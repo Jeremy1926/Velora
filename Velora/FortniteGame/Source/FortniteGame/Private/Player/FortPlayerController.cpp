@@ -1135,6 +1135,10 @@ void AFortPlayerController::DropItemsOnPawnDestruction(AActor* DamageCauser, con
         .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("jmp 0x*") && ::Anchor::At(Entry.Target()).Has("mov rcx, *; mov [rsp+0x20], rsi; mov r9, *; mov r8, *; mov rdx, *; call 0x*"); })
         .Or()
         .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("jmp 0x*") && ::Anchor::At(Entry.Target()).Has("mov r9, *; mov r8, *; mov rcx, *; mov [rsp+0x20], rsi; mov rdx, *; call 0x*"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("jmp 0x*") && ::Anchor::At(Entry.Target()).Has("mov r9, *; mov [rsp+0x20], rsi; mov rcx, *; mov r8, *; mov rdx, *; call 0x*"); })
+        .Or()
+        .Virtual(TEXT("/Script/FortniteGame.Default__FortPlayerControllerAthena"), [](const ::Anchor::FCode& Entry) { return Entry.Is("jmp 0x*") && ::Anchor::At(Entry.Target()).Has("mov r9, *; mov r8, *; mov [rsp+0x20], rsi; mov rcx, *; mov rdx, *; call 0x*"); })
         .Optional()
         .Get();
 
