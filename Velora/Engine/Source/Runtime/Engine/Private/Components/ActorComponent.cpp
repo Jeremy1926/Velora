@@ -31,6 +31,8 @@ void UActorComponent::RegisterComponentTickFunctions(bool bRegister)
         .FieldUserIn(TEXT("/Script/Engine.Default__ActorComponent"), "lea r*, [rcx+%x]; mov r*, rcx; test dl, dl", StaticClass()->FindPropertyByName(FName(TEXT("PrimaryComponentTick"))))
         .Or()
         .FieldUserIn(TEXT("/Script/Engine.Default__ActorComponent"), "lea r*, [rcx+%x]; xor e*, e*; test dl, dl", StaticClass()->FindPropertyByName(FName(TEXT("PrimaryComponentTick"))))
+        .Or()
+        .FieldUserIn(TEXT("/Script/Engine.Default__ActorComponent"), "xor e*, e*; lea r*, [rcx+%x]; test dl, dl", StaticClass()->FindPropertyByName(FName(TEXT("PrimaryComponentTick"))))
         .Get();
 
     RegisterComponentTickFunctions(this, bRegister);
