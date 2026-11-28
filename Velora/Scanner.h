@@ -78,6 +78,11 @@ namespace Scanner
         return FCode(Function ? Anchor::Private::Unhooked(std::bit_cast<const uint8_t*>(Function->GetNativeFunc())) : nullptr, true);
     }
 
+    inline bool IsReachabilityBarrier(const uint8_t* Function)
+    {
+        return Function && Anchor::At(Function).Has("cmp dword ptr [r*+0x8], 0x40; jnl 0x*; movsxd rax, dword ptr [r*+0x8]; mov [r*+rax*8+0x10], r*");
+    }
+
     inline FCode Native(const TCHAR* FunctionPath)
     {
         auto Exec = Scanner::Exec(FunctionPath);
@@ -98,6 +103,9 @@ namespace Scanner
                         Barrier = Body.Find("lock or *");
                         Body = Body.Find("call 0x*");
                     }
+
+                    while (Body.Get() && IsReachabilityBarrier(Body.Target()))
+                        Body = Body.Find("call 0x*");
 
                     while (Body.Get() && (Anchor::At(Body.Target()).Is("sub rsp, 0x28; mov eax, [rcx+0xc]; cmp eax, [0x*]; jnl 0x*") || Anchor::At(Body.Target()).Is("sub rsp, 0x28; mov r8d, [0x*]; mov r9, [0x*]; cmp [rcx+0xc], r8d; jnl 0x*") || Anchor::At(Body.Target()).Is("mov [rsp+0x10], rbx; mov [rsp+0x18], rbp; mov [rsp+0x20], rsi; push rdi; push r12; push r13; push r14; push r15; sub rsp, 0x20; mov r8d, [0x*]; mov r9, [0x*]; cmp [rcx+0xc], r8d; jnl 0x*")))
                         Body = Body.Find("call 0x*");
@@ -133,6 +141,9 @@ namespace Scanner
                         Body = Body.Find("call 0x*");
                     }
 
+                    while (Body.Get() && IsReachabilityBarrier(Body.Target()))
+                        Body = Body.Find("call 0x*");
+
                     auto Return = Finish.Find("ret*");
 
                     return Body.Get() && (!Return.Get() || Body.Get() < Return.Get()) ? Body.Call() : FCode();
@@ -164,6 +175,9 @@ namespace Scanner
                     Barrier = Body.Find("lock or *");
                     Body = Body.Find("call 0x*");
                 }
+
+                while (Body.Get() && IsReachabilityBarrier(Body.Target()))
+                    Body = Body.Find("call 0x*");
 
                 auto Return = Finish.Find("ret*");
 
