@@ -35,16 +35,9 @@ FName::FName(EName N)
             .Pattern("48 89 5C 24 08 57 ? 83 ? ? ? 8B F9 8B DA E8 ? ? ? ? ? 8B D7 ? 81 ? ? ? ? ? 48 8D 0C 98 E8")
             .Or()
             .Pattern("48 89 5C 24 08 57 ? 83 ? ? 8B DA ? 8B F9 E8 ? ? ? ? ? 81 ? ? ? ? ? 48 8D 0C 98 ? 8B D7 E8")
+            .Or()
+            .Pattern("48 89 5C 24 08 57 ? 83 ? ? 8B DA ? 8B F9 E8 ? ? ? ? ? 81 ? ? ? ? ? ? 8B D7 48 8D 0C 98 E8")
             .Get();
-
-        ComparisonIndex = NAME_None;
-        Number = 0;
-
-        if (N != NAME_None)
-            FromValidEName(&ComparisonIndex, N);
-
-        if (N == NAME_None || ComparisonIndex != NAME_None)
-            return;
 
         static auto ToUnstableInt = Anchor::Optional<NAME_INDEX* (*)(const NAME_INDEX*, NAME_INDEX*)>(TEXT("FNameEntryId::ToUnstableInt"))
             .String(TEXT("RecordReplay: failed to create demo net driver!"))
@@ -62,6 +55,34 @@ FName::FName(EName N)
             .Target()
             .Is("test edx, edx; jnz 0x*")
             .Get();
+
+        static auto bDecodesEntry = Anchor::Exists()
+            .At((const void*)FromValidEName)
+            .Find("lea rcx, [rax+rbx*4]")
+            .Find("call 0x*")
+            .Target()
+            .Is("mov ecx, [rcx]; test ecx, ecx; jnz 0x*")
+            .Get();
+
+        static auto bEncodesEntry = Anchor::Exists()
+            .If(bDecodesEntry && FromUnstableInt)
+            .At((const void*)FromValidEName)
+            .FindCall((const void*)ToUnstableInt)
+            .Get();
+
+        NAME_INDEX Entry = NAME_None;
+        Number = 0;
+
+        if (N != NAME_None && (!bDecodesEntry || bEncodesEntry))
+            FromValidEName(&Entry, N);
+
+        ComparisonIndex = Entry;
+
+        if (bEncodesEntry)
+            FromUnstableInt(&ComparisonIndex, (uint32)Entry);
+
+        if (N == NAME_None || ComparisonIndex != NAME_None)
+            return;
 
         static auto GetNamePool = Anchor::Optional<const uint8* (*)()>(TEXT("GetNamePool"))
             .If(!!FromUnstableInt)
@@ -81,7 +102,6 @@ FName::FName(EName N)
         if (!DemoNetDriverEntry)
             return;
 
-        NAME_INDEX Entry = NAME_None;
         ToUnstableInt((const NAME_INDEX*)(GetNamePool() + DemoNetDriverEntry + (N - NAME_DemoNetDriver) * (int32)sizeof(NAME_INDEX)), &Entry);
         FromUnstableInt(&ComparisonIndex, (uint32)Entry);
 
