@@ -49,6 +49,9 @@ int32 FEnvQueryRequest::Execute(EEnvQueryRunMode::Type RunMode, const FQueryFini
         .Find("lea r8, [*]; mov edx, *; mov rcx, *; *; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .String(TEXT("Unknown owner of request: %s"))
+        .Start()
         .Get();
 
     return Execute(this, RunMode, &FinishDelegate);
