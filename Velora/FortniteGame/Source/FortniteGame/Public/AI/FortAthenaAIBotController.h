@@ -51,6 +51,8 @@ public:
 
     static bool HasRuntimeInventoryRestrictions();
 
+    static const TArray<FItemAndCount>* InitializingInventoryItems;
+
     AFortWeapon* EquipBestWeapon(bool bUpdateBB);
 
     void PlayEmote(const UFortMontageItemDefinitionBase* EmoteAsset);

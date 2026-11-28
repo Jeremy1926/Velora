@@ -3,28 +3,43 @@
 #include "Items/FortInventory.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 
-TArray<FItemAndCount> UFortAthenaAIBotInventoryItems::GetItems()
+UClass* UFortAthenaAIBotInventoryItems::StaticClass()
 {
-    static auto Items = (UArrayProperty*)GetClass()->FindPropertyByName(FName(TEXT("Items")));
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotInventoryItems"));
+
+    return Class;
+}
+
+TArray<FItemAndCount> UFortAthenaAIBotInventoryItems::GetItems(const TArray<FItemAndCount>& InItems)
+{
+    static auto Items = (UArrayProperty*)StaticClass()->FindPropertyByName(FName(TEXT("Items")));
 
     if (Items->GetInner()->GetSize() == sizeof(FItemAndCount))
-        return *Items->ContainerPtrToValuePtr<TArray<FItemAndCount>>(this);
+        return InItems;
 
     TArray<FItemAndCount> ItemsAndCounts;
 
     if (Items->GetInner()->GetSize() == sizeof(UFortItemDefinition*))
     {
-        for (auto ItemDefinition : *Items->ContainerPtrToValuePtr<TArray<UFortItemDefinition*>>(this))
+        for (auto ItemDefinition : *(const TArray<UFortItemDefinition*>*)&InItems)
             ItemsAndCounts.Add({ 1, ItemDefinition });
 
         return ItemsAndCounts;
     }
 
-    auto& Entries = *Items->ContainerPtrToValuePtr<TArray<uint8>>(this);
+    auto& Entries = *(const TArray<uint8>*)&InItems;
 
     for (int32 Index = 0; Index < Entries.Num(); Index++)
         ItemsAndCounts.Add(*(const FItemAndCount*)(Entries.GetData() + Index * Items->GetInner()->GetSize()));
 
     return ItemsAndCounts;
+}
+
+TArray<FItemAndCount> UFortAthenaAIBotInventoryItems::GetItems()
+{
+    static auto Items = GetClass()->FindPropertyByName(FName(TEXT("Items")));
+
+    return GetItems(*Items->ContainerPtrToValuePtr<TArray<FItemAndCount>>(this));
 }

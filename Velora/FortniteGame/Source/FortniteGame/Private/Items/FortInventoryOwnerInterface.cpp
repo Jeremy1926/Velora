@@ -143,6 +143,8 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
         .LogSlot(TEXT("IFortInventoryOwnerInterface::InitializeInventory"))
         .InInterfaceVTable(TEXT("/Script/FortniteGame.Default__FortAthenaAIBotController"), TEXT("/Script/FortniteGame.FortInventoryOwnerInterface")));
 
+    AFortAthenaAIBotController::InitializingInventoryItems = &Items;
+
     Original(Items);
 
     static auto DefaultObject = AFortAthenaAIBotController::StaticClass()->GetDefaultObject(false);
@@ -152,4 +154,6 @@ void IFortInventoryOwnerInterface::InitializeInventory(const TArray<FItemAndCoun
 
     if (!DETOUR_ORIGINAL(AFortAthenaAIBotController, EquipBestWeaponAfterStartingItems))
         BotController->AddStartingItemsToInventory();
+
+    AFortAthenaAIBotController::InitializingInventoryItems = nullptr;
 }

@@ -32,6 +32,8 @@
 #include "Scanner.h"
 #include "Detour.h"
 
+const TArray<FItemAndCount>* AFortAthenaAIBotController::InitializingInventoryItems = nullptr;
+
 UClass* AFortAthenaAIBotController::StaticClass()
 {
     static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortAthenaAIBotController"));
@@ -290,7 +292,9 @@ void AFortAthenaAIBotController::AddStartingItemsToInventory(bool bEquipBestWeap
 {
     TArray<FItemAndCount> Items;
 
-    if (auto StartupInventory = GetStartupInventory())
+    if (InitializingInventoryItems)
+        Items = UFortAthenaAIBotInventoryItems::GetItems(*InitializingInventoryItems);
+    else if (auto StartupInventory = GetStartupInventory())
         Items = StartupInventory->GetItems();
 
     if (auto Pickaxe = GetCosmeticLoadoutBC().GetPickaxe())
