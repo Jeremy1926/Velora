@@ -1281,6 +1281,7 @@ namespace Anchor
         Result.Steps[Result.Count++] = { FDecoder::EOperation::Test, Width, 0 };
 
         auto bSetsZero = false;
+        auto bSelectNext = false;
 
         for (auto Next = Instruction.Info.mnemonic == ZYDIS_MNEMONIC_JNZ ? (const uint8_t*)Taken : Branch + Instruction.Info.length; Result.Count < (int32_t)std::size(Result.Steps) && Decode(Next, Instruction); Next += Instruction.Info.length)
         {
@@ -1341,11 +1342,30 @@ namespace Anchor
                 return Result;
             }
 
+            if (bSelectNext)
+                return Empty;
+
             auto bSelf = Target.type == ZYDIS_OPERAND_TYPE_REGISTER && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Target.reg.value) == Register && Target.size == Width;
             auto bDecrement = (bSelf && Mnemonic == ZYDIS_MNEMONIC_DEC) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_SUB && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.s == 1) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_ADD && Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && Source.imm.value.s == -1) || (bSelf && Mnemonic == ZYDIS_MNEMONIC_LEA && Source.mem.index == ZYDIS_REGISTER_NONE && ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.mem.base) == Register && Source.mem.disp.value == -1);
 
             if (Result.Count == 1)
             {
+                if (!bDecrement && bSelf && Instruction.Info.operand_count_visible == 2 && (Mnemonic == ZYDIS_MNEMONIC_ADD || Mnemonic == ZYDIS_MNEMONIC_SUB))
+                {
+                    uint64_t Value = 0;
+
+                    if (Source.type == ZYDIS_OPERAND_TYPE_IMMEDIATE)
+                        Value = Source.imm.value.u;
+                    else if (Source.type != ZYDIS_OPERAND_TYPE_REGISTER || ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value) == Register || !FindPathConstant(Path, ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, Source.reg.value), Value))
+                        return Empty;
+
+                    Result.Steps[Result.Count++] = { Mnemonic == ZYDIS_MNEMONIC_ADD ? FDecoder::EOperation::Add : FDecoder::EOperation::Sub, Width, Width == 32 ? (uint32_t)Value : Value };
+                    bSetsZero = true;
+                    bSelectNext = true;
+                    Path.push_back(Next);
+                    continue;
+                }
+
                 if (!bDecrement)
                     return Empty;
 
