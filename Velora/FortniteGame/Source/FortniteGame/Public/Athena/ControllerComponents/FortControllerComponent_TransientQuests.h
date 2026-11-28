@@ -27,8 +27,6 @@ public:
 
     void GrantTransientQuest(TSoftObjectPtr<UFortQuestItemDefinition> QuestDefToGrantPtr);
 
-    void OnTransientQuestGranted(const UFortQuestItemDefinition* GrantedQuestDef);
-
     void StartPlayerBountyThreatLevelUpdates(float MediumThreatRange, float HighThreatRange, float ThreatRefreshRate);
 
     void StopPlayerBountyThreatLevelUpdates();

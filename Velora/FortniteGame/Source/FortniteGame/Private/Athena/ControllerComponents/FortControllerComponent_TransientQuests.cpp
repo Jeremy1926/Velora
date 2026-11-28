@@ -90,67 +90,6 @@ void UFortControllerComponent_TransientQuests::GrantTransientQuest(TSoftObjectPt
         return;
 
     GrantTransientQuest(QuestDefToGrant);
-    OnTransientQuestGranted(QuestDefToGrant);
-}
-
-void UFortControllerComponent_TransientQuests::OnTransientQuestGranted(const UFortQuestItemDefinition* GrantedQuestDef)
-{
-    static auto OnTransientQuestGranted = Anchor::Function<void (*)(UFortControllerComponent_TransientQuests*, const UFortQuestItemDefinition*)>(TEXT("UFortControllerComponent_TransientQuests::OnTransientQuestGranted"))
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
-        .Find("jmp 0x*")
-        .Target()
-        .Find("lea rdx, [rsp+*]; mov rcx, *; call 0x*")
-        .Find("call 0x*")
-        .Target()
-        .Find("lea rax, [0x*]")
-        .Target()
-        .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
-        .Find("lea rcx, [rsp+0x*]; call 0x*; mov rdx, rax; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Find("lea rax, [0x*]")
-        .Target()
-        .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
-        .Find("jmp 0x*")
-        .Target()
-        .Find("lea rcx, [0x*]")
-        .Target()
-        .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
-        .Find("jmp 0x*")
-        .Target()
-        .Find("lea rcx, [rsp+0x*]; call 0x*; mov rdx, rax; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Find("lea rax, [0x*]")
-        .Target()
-        .Find("xor r8d, r8d; mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Or()
-        .Exec(TEXT("/Script/FortniteGame.FortPlayerBountyGameplayAbility:BountyPoached"))
-        .Find("jmp 0x*")
-        .Target()
-        .Find("lea rax, [0x*]")
-        .Target()
-        .Find("mov rdx, *; mov rcx, *; call 0x*; mov rdx, *; mov rcx, *; call 0x*")
-        .Find("call 0x*", 2)
-        .Target()
-        .Get();
-
-    if (GrantedQuestDef)
-        OnTransientQuestGranted(this, GrantedQuestDef);
 }
 
 void UFortControllerComponent_TransientQuests::StartPlayerBountyThreatLevelUpdates(float MediumThreatRange, float HighThreatRange, float ThreatRefreshRate)
