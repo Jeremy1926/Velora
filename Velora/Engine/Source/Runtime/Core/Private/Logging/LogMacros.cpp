@@ -28,4 +28,9 @@ decltype(FMsg::Logf_Internal) FMsg::Logf_Internal = Anchor::Function<decltype(FM
     .Or()
     .String(TEXT("AddClientConnection: Added client connection: %s"))
     .Call()
+    .Or()
+    .String(TEXT("Script Msg: %s"))
+    .Find("call 0x*")
+    .Target()
+    .Is("mov r11, rsp; *; lea rax, [r11+0x30]")
     .Get();
