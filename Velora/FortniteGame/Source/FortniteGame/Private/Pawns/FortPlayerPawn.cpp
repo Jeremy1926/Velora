@@ -1269,6 +1269,14 @@ void FFortClientObservedStatArray::SetStatManager(UStatManager* InStatManager, A
         .FieldPattern("48 8D ? %o 45 33 C0 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
         .Find("call 0x*")
         .Target()
+        .Or()
+        .FieldPattern("? 8D ? %o ? 33 C0 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
+        .Find("call 0x*")
+        .Target()
+        .Or()
+        .FieldPattern("? 33 C0 ? 8D ? %o 33 D2 E8", AFortPlayerPawn::StaticClass()->FindPropertyByName(FName(TEXT("ClientObservedStats"))))
+        .Find("call 0x*")
+        .Target()
         .Get();
 
     SetStatManager(this, InStatManager, OwnerPawn);
