@@ -76,6 +76,12 @@ void FFrame::StepExplicitProperty(void* const Result, UProperty* Property)
         .Find("mov [r*+0x*], rax; call 0x*")
         .Find("call 0x*")
         .Target()
+        .Or()
+        .Exec(TEXT("/Script/Engine.Actor:K2_TeleportTo"))
+        .Find("cmovnz rcx, rax")
+        .Find("call 0x*")
+        .Target()
+        .Is("mov rax, [r8+0x*]; mov r9, r8")
         .Get();
 
     StepExplicitProperty(this, Result, Property);
