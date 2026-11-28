@@ -148,6 +148,11 @@ void UFortKismetLibrary::execGiveItemToInventoryOwner(FFrame& Stack, void* const
         .Find("call 0x*; mov rbx, [rsp+0x*]; mov [r13], rax; add rsp, *")
         .Call()
         .Has("call 0x*; mov rbx, [rsp+0x*]; mov rsi, [rsp+0x*]; xor eax, eax; add rsp, *")
+        .Or()
+        .Exec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner"))
+        .Find("call 0x*; mov rbx, [rsp+0x*]; mov [r13], rax; add rsp, *")
+        .Call()
+        .Has("call 0x*; xor eax, eax; mov rbx, [rsp+0x*]; mov rsi, [rsp+0x*]")
         .Optional()
         .InExec(TEXT("/Script/FortniteGame.FortKismetLibrary:GiveItemToInventoryOwner")));
 
