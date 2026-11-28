@@ -209,6 +209,11 @@ UObject* UObject::GetArchetypeFromRequiredInfo(UClass* Class, UObject* Outer, FN
         .Start()
         .Find("call 0x*; cmp r*, rax; jnz *")
         .Call()
+        .Or()
+        .Pattern("8B 81 80 00 00 00 33 DB ? 8B 51 08 ? 8B 29 48 8B F1 ? 8B 79 14 ? 8B 61 20")
+        .Start()
+        .Find("call 0x*; cmp r*, rax; jnz *")
+        .Call()
         .Get();
 
     return GetArchetypeFromRequiredInfoImpl(Class, Outer, Name, ObjectFlags, false, nullptr);
