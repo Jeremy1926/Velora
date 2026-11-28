@@ -6,5 +6,7 @@
 class UFortNearbyActorsPerceptionComponent : public UActorComponent
 {
 public:
+    static UClass* StaticClass();
+
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 };

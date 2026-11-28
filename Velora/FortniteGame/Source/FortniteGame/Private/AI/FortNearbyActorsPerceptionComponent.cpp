@@ -5,9 +5,17 @@
 #include "Templates/Casts.h"
 #include "UObject/Class.h"
 #include "UObject/UnrealType.h"
+#include "UObject/UObjectGlobals.h"
 #include "UObject/WeakObjectPtr.h"
 #include "Scanner.h"
 #include "Detour.h"
+
+UClass* UFortNearbyActorsPerceptionComponent::StaticClass()
+{
+    static auto Class = (UClass*)StaticFindObject(nullptr, nullptr, TEXT("/Script/FortniteGame.FortNearbyActorsPerceptionComponent"));
+
+    return Class;
+}
 
 void UFortNearbyActorsPerceptionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -17,7 +25,7 @@ void UFortNearbyActorsPerceptionComponent::TickComponent(float DeltaTime, ELevel
         .SlotIn(TEXT("/Script/FortniteGame.Default__FortNearbyActorsPerceptionComponent"))
         .Or()
         .If(::Anchor::Exists().String(TEXT("%s: AIDirector or AffiliationManager are nullptr, are you on the dedicated server side? AIDirector: %s, AffiliationManager: %s")).Get())
-        .InVTable(TEXT("/Script/FortniteGame.Default__FortNearbyActorsPerceptionComponent")));
+        .InChildVTablesCounted(StaticClass()));
 
     static auto CachedAIDirector = Anchor::Offset(TEXT("UFortNearbyActorsPerceptionComponent::CachedAIDirector"))
         .String(TEXT("%s: AIDirector or AffiliationManager are nullptr, are you on the dedicated server side? AIDirector: %s, AffiliationManager: %s"))
