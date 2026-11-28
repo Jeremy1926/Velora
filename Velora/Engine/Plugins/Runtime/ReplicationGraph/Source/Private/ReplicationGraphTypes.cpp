@@ -338,6 +338,11 @@ FGlobalActorReplicationEvents& FGlobalActorReplicationInfo::GetEvents()
         .Start()
         .Find("movdqa xmm0, [0x*]; lea rax, [rsp+0x*]; mov [rsp+0x*], r*; lea rdx, [r*+0x*]")
         .Find("lea rdx, [r*+0x*]")
+        .Or()
+        .String(TEXT("UReplicationGraph::FlushNetDormancy %s. WantsToBeDormant is changing*"))
+        .Start()
+        .Find("movdqa xmm0, [0x*]; lea rax, [rsp+0x*]; lea rdx, [r*+0x*]")
+        .Find("lea rdx, [r*+0x*]")
         .Disp();
 
     return *(FGlobalActorReplicationEvents*)((uint8*)this + DormancyFlush - offsetof(FGlobalActorReplicationEvents, DormancyFlush));
